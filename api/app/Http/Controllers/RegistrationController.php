@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Services\RegistrationService;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\GenerateOtpRequest;
+use App\Http\Requests\VerifyOtpRequest;
 
 class RegistrationController extends Controller
 {
@@ -112,4 +113,84 @@ class RegistrationController extends Controller
             return $this->sendErrorResponse('Failed to sent otp on email.');
         }
     }
+
+    public function verifyOtp(VerifyOtpRequest $request)
+    {
+        try {
+            $resp = $this->registrationService->verifyOtp($request);
+
+            if($resp == 1){
+                return $this->sendSuccessResponse("OTP verified.");
+            } elseif($resp == 2) {
+                return $this->sendSuccessResponse("Invalid OTP.");
+            } elseif($resp == 0){
+                return $this->sendSuccessResponse("Email not registered.");
+            } else {
+                return $this->sendSuccessResponse("OTP not verified.");
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to verify otp.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to verify otp.');
+        }
+    }
+
+
+    public function autocompleteOpenemisNo($id)
+    {
+        try {
+            $data = $this->registrationService->autocompleteOpenemisNo($id);
+
+            return $this->sendSuccessResponse("Candidate data found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find candidate data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find candidate data.');
+        }
+    }
+
+
+    public function autocompleteIdentityNo($id)
+    {
+        try {
+            $data = $this->registrationService->autocompleteIdentityNo($id);
+
+            return $this->sendSuccessResponse("Candidate data found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find candidate data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find candidate data.');
+        }
+    }
+
+
+    public function detailsByEmis($id)
+    {
+        try {
+            $data = $this->registrationService->detailsByEmis($id);
+
+            return $this->sendSuccessResponse("Candidate data found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find candidate data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find candidate data.');
+        }
+    }
+
 }
