@@ -386,6 +386,25 @@ class ConfigItemsTable extends AppTable
         $includes['configItems'] = ['include' => true, 'js' => ['config']];
     }
 
+    //POCOR-7059
+    public function onGetName(Event $event, Entity $entity)
+    {
+        if($entity->name == 'Latitude Length'){
+            $tooltipMessage  = "Length validation is applied after decimal place.";
+            return $entity->name.' <i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="' .
+            $tooltipMessage .
+            '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+        }
+
+        if($entity->name == 'Longitude Length'){
+            $tooltipMessage  = "Length validation is applied after decimal place.";
+            return $entity->name.' <i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="' .
+            $tooltipMessage .
+            '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+        }
+        
+    }
+    //End of POCOR-7059
 
 /******************************************************************************************************************
 **
