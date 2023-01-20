@@ -54,4 +54,15 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(UserIdentities::class, 'security_user_id', 'id');
     }
+
+
+    public function gender()
+    {
+        return $this->belongsTo(Gender::class, 'gender_id', 'id');
+    }
+
+    public function institutionStudent()
+    {
+        return $this->hasOne(InstitutionStudent::class, 'student_id', 'id');
+    }
 }

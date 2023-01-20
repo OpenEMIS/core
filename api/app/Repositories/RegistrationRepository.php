@@ -72,7 +72,9 @@ class RegistrationRepository extends Controller
     public function administrativeAreasList()
     {
         try {
-            $areaAdministratives = AreaAdministratives::select('id', 'name', 'parent_id')->with('areaAdministrativesChild:id,name,parent_id')->get();
+            /*$areaAdministratives = AreaAdministratives::select('id', 'name', 'parent_id')->with('areaAdministrativesChild:id,name,parent_id')->get();*/
+
+            $areaAdministratives = AreaAdministratives::select('id', 'name', 'parent_id')->get()->toArray();
             
             return $areaAdministratives;
         } catch (\Exception $e) {
@@ -93,7 +95,7 @@ class RegistrationRepository extends Controller
             $email = $request['email'];
 
             $isExists = SecurityUsers::where('email', $email)->first();
-            $isExists = 1;
+            //$isExists = 1;
             if($isExists){
                 $otpData = $this->getUniqueOtp($email);
                 $otp = $otpData['otp'];
@@ -106,7 +108,7 @@ class RegistrationRepository extends Controller
                         ->subject('OpenEMIS Registration OTP Verification.');
                 });
 
-                $insertData['security_user_id'] = 2;
+                $insertData['security_user_id'] = $isExists->id??2;
                 $insertData['verification_otp'] = $encodedOtp;
                 $insertData['created'] = Carbon::now()->toDateTimeString();
                 $store = SecurityUserCode::insert($insertData);
@@ -146,6 +148,98 @@ class RegistrationRepository extends Controller
             );
 
             return $this->sendErrorResponse('Failed to generate otp.');
+        }
+    }
+
+
+
+    public function verifyOtp($request)
+    {
+        try {
+            $params = $request->all();
+            $securityUser = SecurityUsers::where('email', $params['email'])->first();
+            if($securityUser){
+                $otp = $params['otp'];
+                $encodedOtp = base64_encode($otp);
+                $checkOtp = SecurityUserCode::where('verification_otp', $encodedOtp)
+                        ->where('security_user_id', $securityUser->id)
+                        ->first();
+                if($checkOtp){
+                    return 1;
+                } else {
+                    return 2;
+                }
+            } else {
+                return 0;
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to verify otp.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to verify otp.');
+        }
+    }
+
+
+    public function autocompleteOpenemisNo($id)
+    {
+        try {
+            $data = SecurityUsers::select('id as key', 'openemis_no as value')->where('openemis_no', 'LIKE', '%'.$id.'%')->get()->toArray();
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find candidate data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find candidate data.');
+        }
+    }
+
+
+    public function autocompleteIdentityNo($id)
+    {
+        try {
+            $data = SecurityUsers::select('id as key', 'identity_number as value')->where('identity_number', 'LIKE', '%'.$id.'%')->get()->toArray();
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find candidate data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find candidate data.');
+        }
+    }
+
+
+    public function detailsByEmis($id)
+    {
+        try {
+            $data = SecurityUsers::with(
+                    'gender',
+                    'nationalities',
+                    'institutionStudent',
+                    'institutionStudent.institution'
+                )
+                ->where('openemis_no', $id)
+                ->orWhere('identity_number', $id)
+                ->get();
+            return $data;
+            
+        } catch (\Exception $e) {
+            dd($e);
+            Log::error(
+                'Failed to find candidate data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find candidate data.');
         }
     }
 }
