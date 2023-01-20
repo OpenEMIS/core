@@ -3178,8 +3178,8 @@ class StaffTable extends ControllerActionTable
             ->find('all')
             ->leftJoin([$staff->alias() => $staff->table()],
                         [$staff->aliasField('staff_id = ') . $InstitutionStaffAttendances->aliasField('staff_id')])
-            ->leftJoin([$positions->alias() => $positions->table()],
-                        [$positions->aliasField('id = ') . $staff->aliasField('institution_position_id')])
+            /*->leftJoin([$positions->alias() => $positions->table()],
+                        [$positions->aliasField('id = ') . $staff->aliasField('institution_position_id')])*/
             ->where([
                 $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
                 $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
@@ -3204,7 +3204,6 @@ class StaffTable extends ControllerActionTable
                 ])
                 ->hydrate(false)
                 ->toArray();
-              //  print_r($allStaffAttendances->Sql());die;
         }
         $allStaffLeaves = $StaffLeaveTable
             ->find()

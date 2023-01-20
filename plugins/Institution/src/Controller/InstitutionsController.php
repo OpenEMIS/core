@@ -23,6 +23,7 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Security; //POCOR-5672
 use Cake\Utility\Text;//POCOR-5672
 use Cake\Datasource\ConnectionManager;
+use Cake\I18n\Time;
 
 class InstitutionsController extends AppController
 {
@@ -5453,6 +5454,8 @@ class InstitutionsController extends AppController
                                 $startDate=$value->start_date;
                                 $endDate=$value->end_date;
                             }
+
+                            $securityGroupUsers = $this->assignStudentRoleGroup($institutionId, $user_id);//POCOR-7146
                         }
                         $bodys = array();
                         $bodys = [   
@@ -7135,6 +7138,123 @@ class InstitutionsController extends AppController
             ];
 
             return $body;
+    }
 
+    /**
+     * POCOR-7146
+     * assign Role and group to student while creating student
+    **/ 
+    private function assignStudentRoleGroup($institutionId, $user_id) 
+    {
+        $securityRolesTbl = TableRegistry::get('security_roles');
+        $securityRoles = $securityRolesTbl->find()
+                                ->where([
+                                    $securityRolesTbl->aliasField('code') => 'STUDENT',
+                                ])->first();
+        //get student institution
+        $institutionTbl = TableRegistry::get('institutions');
+        $institutions = $institutionTbl->find()
+                                ->where([
+                                    $institutionTbl->aliasField('id') => $institutionId
+                                ])->first();
+        if(!empty($institutions) && $institutions->security_group_id !=''){
+             $securityGroupInstitutionsTbl = TableRegistry::get('security_group_institutions');
+             $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
+                                     ->where([
+                                         $securityGroupInstitutionsTbl->aliasField('security_group_id') => $institutions->security_group_id,
+                                         $securityGroupInstitutionsTbl->aliasField('institution_id') => $institutions->id
+                                     ])
+                                     ->first();
+             //save security group for institution
+             if(empty($securityGroupInstitutions)){
+                 $security_group_ins_data = [
+                             'security_group_id' => $institutions->security_group_id,
+                             'institution_id' => $institutionId,
+                             'created_user_id' => 1,
+                             'created' => new Time('NOW')
+                     ];
+                 $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
+                 $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
+             }
+             //check user already exist or not
+             $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+             $checkSecurityGroupUser = $securityGroupUsersTbl->find()
+                                     ->where([
+                                         $securityGroupUsersTbl->aliasField('security_user_id') => $user_id,
+                                         $securityGroupUsersTbl->aliasField('security_role_id') => $securityRoles->id
+                                     ])
+                                     ->first();
+             //check user_id with role is available or not in `security_group_users` group                       
+             if(empty($checkSecurityGroupUser)){
+                 $securityGroupUsers = $securityGroupUsersTbl->find()
+                                         ->where([
+                                             $securityGroupUsersTbl->aliasField('security_group_id') => $institutions->security_group_id,
+                                             $securityGroupUsersTbl->aliasField('security_user_id') => $user_id,
+                                             $securityGroupUsersTbl->aliasField('security_role_id') => $securityRoles->id,
+                                         ])
+                                         ->first();
+                 if(empty($securityGroupUsers)){
+                     //save user in security_group_users table first time 
+                     $id = Text::uuid();
+                     $security_group_data = [
+                                 'id' => $id,
+                                 'security_group_id' => $institutions->security_group_id,
+                                 'security_user_id' => $user_id,
+                                 'security_role_id' => $securityRoles->id,
+                                 'created_user_id' => 1,
+                                 'created' => new Time('NOW')
+                         ];
+                     $securityGroupUsersEntity = $securityGroupUsersTbl->newEntity($security_group_data);
+                     $securityGroupUsersTbl->save($securityGroupUsersEntity);
+                 }                        
+             }else{
+                 //update user's security_group_id in security_group_users table 
+                 $InstitutionStudentsTbl = TableRegistry::get('institution_students');
+                 $InstitutionStudentTransfersTbl = TableRegistry::get('institution_student_transfers');
+                 $InstitutionStudents = $InstitutionStudentsTbl
+                                         ->find()
+                                         ->select([
+                                             $InstitutionStudentsTbl->aliasField('student_id'),
+                                             $InstitutionStudentTransfersTbl->aliasField('institution_id'),
+                                             $InstitutionStudentTransfersTbl->aliasField('previous_institution_id')
+                                         ])
+                                         ->leftJoin([$InstitutionStudentTransfersTbl->alias() => $InstitutionStudentTransfersTbl->table()],
+                                             [
+                                                 $InstitutionStudentTransfersTbl->aliasField('student_id').'='.$InstitutionStudentsTbl->aliasField('student_id'),
+                                                 $InstitutionStudentTransfersTbl->aliasField('institution_id')=>$institutions->id
+                                             ]
+                                         )
+                                         ->where([
+                                             $InstitutionStudentsTbl->aliasField('student_id') => $checkSecurityGroupUser->security_user_id,
+                                             $InstitutionStudentsTbl->aliasField('institution_id') => $institutions->id,
+                                             $InstitutionStudentsTbl->aliasField('student_status_id') => 1//for enrolled status
+                                         ])
+                                         ->first();
+                 
+                 if(!empty($InstitutionStudents)){
+                     if(!empty($InstitutionStudents->institution_student_transfers['previous_institution_id'])){
+                         $PreviousInstitutions = $institutionTbl->find()
+                                 ->where([
+                                     $institutionTbl->aliasField('id') => $InstitutionStudents->institution_student_transfers['previous_institution_id']
+                                 ])
+                                 ->first();
+                                
+                         if($PreviousInstitutions->security_group_id == $checkSecurityGroupUser->security_group_id){
+                             $securityGroupUsersTbl->updateAll(
+                                 [
+                                     'security_group_id' => $institutions->security_group_id,
+                                     'created' => new Time('NOW')
+                                 ],
+                                 [
+                                     'security_group_id' => $PreviousInstitutions->security_group_id,
+                                     'security_user_id' => $checkSecurityGroupUser->security_user_id,
+                                     'security_role_id' => $checkSecurityGroupUser->security_role_id
+                                 ]
+                             );
+                         }
+                     }
+                 }
+             }
+        }
     }
 }
