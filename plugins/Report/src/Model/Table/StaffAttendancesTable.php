@@ -181,7 +181,7 @@ class StaffAttendancesTable extends ControllerActionTable
             //->where($conditions)
             //->distinct([$this->aliasField('staff_id')]);
 
-            $join['AcademicPeriods'] = [
+            $join['academic_periods'] = [
                 'type' => 'inner',
                 'table' => 'academic_periods',
                 'conditions' => [
@@ -200,12 +200,13 @@ class StaffAttendancesTable extends ControllerActionTable
                             $this->aliasField('end_date') . ' IS NOT NULL',
                             $this->aliasField('start_date') . ' >=' => 'academic_periods.end_date',
                             $this->aliasField('end_date') . ' <=' => 'academic_periods.end_date',
+                        ],
+                        [
+                            $this->aliasField('end_date') . ' IS NULL',
+                            $this->aliasField('start_date') . ' <=' => 'academic_periods.end_date',
                         ]
                     ],
-                    [
-                        $this->aliasField('end_date') . ' IS NULL',
-                        $this->aliasField('start_date') . ' <=' => 'academic_periods.end_date',
-                    ]
+                    
                 ],      
             ];
 
@@ -352,14 +353,14 @@ class StaffAttendancesTable extends ControllerActionTable
  ) staff_attendance_info",
     'conditions' => [
         'staff_attendance_info.academic_period_id = month_generator.academic_period_id',
-        'staff_attendance_info.staff_id = security_users.id',
+        'staff_attendance_info.staff_id = Users.id',
         'staff_attendance_info.year_name = month_generator.year_name',
         'staff_attendance_info.month_id  = month_generator.month_id'
     ],
     ];
-            
- $query->where($conditions)->group(['security_users.id','month_generator.year_name','month_generator.month_id'])
-->order(['institutions.code','security_users.openemis_no','month_generator.year_name','month_generator.month_id']);
+             
+ $query->where($conditions)->group(['Users.id','month_generator.year_name','month_generator.month_id'])
+->order(['institutions.code','Users.openemis_no','month_generator.year_name','month_generator.month_id']);
   $query->join($join);
 print_r($query->sql());die('pkk');
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($academicPeriodId, $startDate, $endDate, $year) {
