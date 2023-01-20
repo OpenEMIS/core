@@ -128,4 +128,105 @@ class RegistrationService extends Controller
         }
     }
 
+
+    public function verifyOtp($request)
+    {
+        try {
+            $data = $this->registrationRepository->verifyOtp($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to verify otp.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to verify otp.');
+        }
+    }
+
+
+    public function autocompleteOpenemisNo($id)
+    {
+        try {
+            $data = $this->registrationRepository->autocompleteOpenemisNo($id);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find candidate data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find candidate data.');
+        }
+    }
+
+
+    public function autocompleteIdentityNo($id)
+    {
+        try {
+            $data = $this->registrationRepository->autocompleteIdentityNo($id);
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find candidate data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find candidate data.');
+        }
+    }
+
+
+    public function detailsByEmis($id)
+    {
+        try {
+            $data = $this->registrationRepository->detailsByEmis($id)
+                ->map(function ($item, $key) {
+                    return [
+                        "openemis_no" => $item['openemis_no'],
+                        "first_name" => $item['first_name'],
+                        "middle_name" => $item['middle_name'],
+                        "third_name" => $item['third_name'],
+                        "last_name" => $item['last_name'],
+                        "preferred_name" => $item['preferred_name'],
+                        "email" => $item['email'],
+                        "address" => $item['address'],
+                        "postal_code" => $item['postal_code'],
+                        "address_area_id" => $item['address_area_id'],
+                        "birthplace_area_id" => $item['birthplace_area_id'],
+                        "identity_number" => $item['identity_number'],
+                        "gender_id" => [
+                            "key" => $item["gender"]["id"],
+                            "value" => $item["gender"]["name"],
+                        ],
+                        "date_of_birth" => $item['date_of_birth'],
+                        "nationality_id" => [
+                            "key" => (!empty($item["nationality"]["id"]))?$item["nationality"]["id"]:'',
+                            "value" => (!empty($item["nationality"]["name"]))?$item["nationality"]["name"]:'',
+                        ],
+                        "institution" => [
+                            "key" => (!empty($item["institutionStudent"]["institution"]["id"]))?$item["institutionStudent"]["institution"]["id"]:'',
+                            "value" => (!empty($item["institutionStudent"]["institution"]["name"]))?$item["institutionStudent"]["institution"]["name"]:'',
+                        ],
+                    ];
+                });
+            //dd($data);
+            return $data;
+            
+        } catch (\Exception $e) {
+            dd($e);
+            Log::error(
+                'Failed to find candidate data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find candidate data.');
+        }
+    }
 }

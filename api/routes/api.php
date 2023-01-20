@@ -107,3 +107,7 @@ Route::get('education-grades', 'RegistrationController@educationGradesList');
 Route::get('institution-drodown', 'RegistrationController@institutionDropdown');
 Route::get('administrative-areas', 'RegistrationController@administrativeAreasList');
 Route::post('generate-otp', 'RegistrationController@generateOtp');
+Route::post('verify-otp', 'RegistrationController@verifyOtp');
+Route::get('autocomplete-openemis-no/{id}', 'RegistrationController@autocompleteOpenemisNo');
+Route::get('autocomplete-identity-number/{id}', 'RegistrationController@autocompleteIdentityNo');
+Route::get('details-by-emis/{id}', 'RegistrationController@detailsByEmis');
