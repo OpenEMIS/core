@@ -19,6 +19,7 @@ class ConfigAuthenticationTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
+        //print_r('hi'); die;
         $this->table('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.Authentication');
@@ -27,12 +28,14 @@ class ConfigAuthenticationTable extends ControllerActionTable
         $this->toggle('search', false);
 
         $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
+
         $this->options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
             ->where([
                 'ConfigItemOptions.option_type' => 'yes_no',
                 'ConfigItemOptions.visible' => 1
             ])
             ->toArray();
+
     }
 
     public function validationDefault(Validator $validator)
