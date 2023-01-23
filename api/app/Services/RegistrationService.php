@@ -75,7 +75,7 @@ class RegistrationService extends Controller
                 function ($item, $key) {
                     return [
                         "id" => $item->id,
-                        "name" => $item->name
+                        "name" => $item->code.' - '.$item->name,
                     ];
                 }
             );
@@ -216,11 +216,10 @@ class RegistrationService extends Controller
                         ],
                     ];
                 });
-            //dd($data);
+            
             return $data;
             
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to find candidate data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -229,4 +228,46 @@ class RegistrationService extends Controller
             return $this->sendErrorResponse('Failed to find candidate data.');
         }
     }
+
+
+    public function nationalityList()
+    {
+        try {
+            $data = $this->registrationRepository->nationalityList()->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->name,
+                    ];
+                }
+            );
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find nationality list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find nationality list.');
+        }
+    }
+
+
+    public function institutionStudents($request)
+    {
+        try {
+            $data = $this->registrationRepository->institutionStudents($request);
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to register student.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to register student.');
+        }
+    }
+
 }

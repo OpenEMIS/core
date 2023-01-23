@@ -13,6 +13,8 @@ use App\Models\Institutions;
 use App\Models\AreaAdministratives;
 use App\Models\SecurityUsers;
 use App\Models\SecurityUserCode;
+use App\Models\Nationalities;
+use App\Models\StudentStatuses;
 use Mail;
 
 class RegistrationRepository extends Controller
@@ -55,9 +57,9 @@ class RegistrationRepository extends Controller
     public function institutionDropdown()
     {
         try {
-            $educationGrades = Institutions::select('id', 'name')->get();
+            $institutions = Institutions::select('id', 'name', 'code')->get();
             
-            return $educationGrades;
+            return $institutions;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -233,13 +235,102 @@ class RegistrationRepository extends Controller
             return $data;
             
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to find candidate data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
             return $this->sendErrorResponse('Failed to find candidate data.');
+        }
+    }
+
+
+    public function nationalityList()
+    {
+        try {
+            $nationalities = Nationalities::select('id', 'name')->get();
+            
+            return $nationalities;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find nationality list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find nationality list.');
+        }
+    }
+
+
+    public function institutionStudents($request)
+    {
+        try {
+            //dd($request->all());
+            if(isset($request['openemis_id'])){
+                $student = SecurityUsers::with(
+                        'gender',
+                        'nationalities',
+                        'institutionStudent',
+                        'institutionStudent.institution',
+                        'institutionStudent.studentStatus'
+                    )
+                    ->where('openemis_no', $request['openemis_id'])
+                    ->first();
+                
+                if($student){
+                    if($student == $request['date_of_birth']){
+                        if(isset($student['institutionStudent']['studentStatus']['name']) == 'Enrolled'){
+                            return 4; //registration unsuccessful – student already enrolled
+                        } else {
+                            //
+                        }
+                    } else {
+                        dd("qqq");
+                        return 2; //registration unsuccessful – student details do not match
+                    }
+                } else {
+                    dd("www");
+                    return 3; //registration unsuccessful – openemis_no not found
+                }
+
+            } elseif (isset($request['identity_number'])) {
+                $student = SecurityUsers::with(
+                        'gender',
+                        'nationalities',
+                        'institutionStudent',
+                        'institutionStudent.institution',
+                        'institutionStudent.studentStatus'
+                    )
+                    ->where('identity_number', $request['identity_number'])
+                    ->first();
+
+                if($student){
+                    if($student == $request['date_of_birth']){
+                        if(isset($student['institutionStudent']['studentStatus']['name']) == 'Enrolled'){
+                            return 4; //registration unsuccessful – student already enrolled
+                        } else {
+                            //
+                        }
+                    } else {
+                        dd("eee");
+                        return 2; //registration unsuccessful – student details do not match
+                    }
+                } else {
+                    dd("rrr");
+                    return 55; //registration unsuccessful – identity_number not found
+                }
+            } else {
+                dd("else");
+            }
+            
+        } catch (\Exception $e) {
+            dd($e);
+            Log::error(
+                'Failed to register student.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to register student.');
         }
     }
 }

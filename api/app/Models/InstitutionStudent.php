@@ -16,4 +16,9 @@ class InstitutionStudent extends Model
         return $this->belongsTo(Institutions::class, 'institution_id', 'id');
     }
 
+
+    public function studentStatus()
+    {
+        return $this->belongsTo(StudentStatuses::class, 'student_status_id', 'id');
+    }
 }
