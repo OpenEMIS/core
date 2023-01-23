@@ -350,7 +350,8 @@ class InstitutionPositionsTable extends ControllerActionTable
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('staff_position_grade_id', [
-            'type' => 'select',
+            // 'type' => 'select',
+            'type' => 'hidden',
             'entity' => $entity
         ]);
 
@@ -497,12 +498,11 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->fields['shift_id']['visible'] = false; //POCOR-6971
 
         $this->fields['staff_position_title_id']['sort'] = ['field' => 'StaffPositionTitles.order'];
-        $this->fields['staff_position_grade_id']['sort'] = ['field' => 'StaffPositionGrades.order'];
+        $this->fields['staff_position_grade_id']['sort'] = ['field' => 'StaffPositionGrades.order', 'type'=>'hidden'];
         $this->fields['assignee_id']['sort'] = ['field' => 'Assignees.first_name'];
 
         $this->setFieldOrder([
-            'position_no', 'staff_position_title_id',
-            'staff_position_grade_id'
+            'position_no', 'staff_position_title_id'
         ]);
 
         if ($extra['auto_search']) {
@@ -607,15 +607,15 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->fields['past_staff_list']['visible'] = false;
 
         $this->setFieldOrder([
-            'position_no', 'staff_position_title_id',
-            'staff_position_grade_id','shift_id',
+            'position_no', 'staff_position_title_id', 'shift_id',
         ]);
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('staff_position_grade_id', [
-            'type' => 'select',
+            // 'type' => 'select',
+            'type' => 'hidden',
             'entity' => $entity
         ]);
         $this->field('is_homeroom');
@@ -637,7 +637,6 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->field('is_homeroom');
 
         $this->setFieldOrder([
-            'staff_position_grade_id',
             'position_no',
             'staff_position_title_id',
             'is_homeroom',
@@ -711,6 +710,13 @@ class InstitutionPositionsTable extends ControllerActionTable
             $this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
         }
         return $entity;
+    }
+
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) 
+    {
+        if(!isset($entity->staff_position_grade_id)){
+            $entity->staff_position_grade_id = 0;
+        }
     }
 
 
