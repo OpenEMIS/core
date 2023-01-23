@@ -7,6 +7,7 @@ use App\Services\RegistrationService;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\GenerateOtpRequest;
 use App\Http\Requests\VerifyOtpRequest;
+use App\Http\Requests\InstitutionStudentStoreRequest;
 
 class RegistrationController extends Controller
 {
@@ -193,4 +194,52 @@ class RegistrationController extends Controller
         }
     }
 
+
+    public function nationalityList()
+    {
+        try {
+            $data = $this->registrationService->nationalityList();
+
+            return $this->sendSuccessResponse("Nationality list found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find nationality list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find nationality list.');
+        }
+    }
+
+
+
+    public function institutionStudents(InstitutionStudentStoreRequest $request)
+    {
+        try {
+            $data = $this->registrationService->institutionStudents($request);
+
+            if($data == 2){
+                return $this->sendErrorResponse("Student details do not match.");
+            }
+
+            if($data == 3){
+                return $this->sendErrorResponse("Openemis number not found.");
+            }
+
+
+            if($data == 4){
+                return $this->sendErrorResponse("Openemis number not found.");
+            }
+            
+        } catch (\Exception $e) {
+            dd($e);
+            Log::error(
+                'Failed to register student.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to register student.');
+        }
+    }
 }
