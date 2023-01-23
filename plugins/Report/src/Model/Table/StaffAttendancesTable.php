@@ -74,12 +74,13 @@ class StaffAttendancesTable extends ControllerActionTable
         $areaId = $requestData->area_education_id;
         $start_report_Date = $requestData->report_start_date;
         $end_report_Date = $requestData->report_end_date;
-        $startDate = date("Y-m-d", strtotime($start_report_Date));
-        $endDate = date("Y-m-d", strtotime($end_report_Date));
+        $startDates = date("Y-m-d", strtotime($start_report_Date));
+        $endDates = date("Y-m-d", strtotime($end_report_Date));
         $conditions = [];
         $join = [];
+        $where = [];
         $StaffAttendances = TableRegistry::get('Institution.InstitutionStaffAttendances');
-
+        $securityUsers = TableRegistry::get('security_users');
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
@@ -95,8 +96,15 @@ class StaffAttendancesTable extends ControllerActionTable
             $conditions[$this->aliasField('institution_id')]=$institutionId;
         }
 
-        if ($areaId != -1 && !empty($areaId)) {
+        /*if ($areaId != -1 && !empty($areaId)) {
             $conditions[$this->aliasField('Institutions.area_id')]=$areaId;
+        }*/
+
+        if(!empty($academicPeriodId)){
+           $where['institution_staff_attendances.academic_period_id'] = $academicPeriodId;
+        }
+        if (!empty($institutionId) && $institutionId != 0) {
+            $where['institution_staff_attendances.institution_id'] = $institutionId;
         }
         
         $query
@@ -111,11 +119,11 @@ class StaffAttendancesTable extends ControllerActionTable
                 ]),
                 'identity_type' => 'IdentityTypes.name',
                 'identity_number' => 'UserIdentity.number',
-                'openemis_no' => 'Users.openemis_no',
-                'first_name' => 'Users.first_name',
-                'middle_name' => 'Users.middle_name',
-                'third_name' => 'Users.third_name',
-                'last_name' => 'Users.last_name',
+                'openemis_no' => 'security_users.openemis_no',
+                'first_name' => 'security_users.first_name',
+                'middle_name' => 'security_users.middle_name',
+                'third_name' => 'security_users.third_name',
+                'last_name' => 'security_users.last_name',
                 'year_name' => 'month_generator.year_name',
                 'month_name' => 'month_generator.month_name',
                'day_1'=> "(SELECT IFNULL(staff_attendance_info.day_1, ''))",                                         
@@ -150,7 +158,9 @@ class StaffAttendancesTable extends ControllerActionTable
                 'day_30'=> "(SELECT IFNULL(staff_attendance_info.day_30, ''))",  
                 'day_31'=> "(SELECT IFNULL(staff_attendance_info.day_31, ''))",  
                ])
-            ->contain(['Users'])
+            ->innerJoin([$securityUsers->alias() => $securityUsers->table()],[
+                   $this->aliasField('staff_id = ') . $securityUsers->aliasField('id'),
+                ])
             ->innerJoin(['Institutions' => 'institutions'], [
                 'Institutions.id = ' . $this->aliasfield('institution_id'),
             ])
@@ -188,22 +198,22 @@ class StaffAttendancesTable extends ControllerActionTable
                     'OR' => [
                         [
                             $this->aliasField('end_date') . ' IS NOT NULL',
-                            $this->aliasField('start_date') . ' <=' => 'academic_periods.start_date',
-                            $this->aliasField('end_date') . ' >=' => 'academic_periods.start_date',
+                            $this->aliasField('start_date') . ' <=' => $startDate,
+                            $this->aliasField('end_date') . ' >=' => $startDate,
                         ],
                         [
                             $this->aliasField('end_date') . ' IS NOT NULL',
-                            $this->aliasField('start_date') . ' <=' => 'academic_periods.end_date',
-                            $this->aliasField('end_date') . ' >=' => 'academic_periods.end_date',
+                            $this->aliasField('start_date') . ' <=' => $endDate,
+                            $this->aliasField('end_date') . ' >=' => $endDate,
                         ],
                         [
                             $this->aliasField('end_date') . ' IS NOT NULL',
-                            $this->aliasField('start_date') . ' >=' => 'academic_periods.end_date',
-                            $this->aliasField('end_date') . ' <=' => 'academic_periods.end_date',
+                            $this->aliasField('start_date') . ' >=' => $endDate,
+                            $this->aliasField('end_date') . ' <=' => $endDate,
                         ],
                         [
                             $this->aliasField('end_date') . ' IS NULL',
-                            $this->aliasField('start_date') . ' <=' => 'academic_periods.end_date',
+                            $this->aliasField('start_date') . ' <=' => $endDate,
                         ]
                     ],
                     
@@ -341,8 +351,8 @@ class StaffAttendancesTable extends ControllerActionTable
 
             ,CASE WHEN DAY(institution_staff_attendances.date) = 31 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_31
         FROM institution_staff_attendances
-        WHERE institution_staff_attendances.academic_period_id = $academicPeriodId
-        AND institution_staff_attendances.institution_id = $institutionId
+        WHERE institution_staff_attendances.academic_period_id = 31
+        AND institution_staff_attendances.institution_id = 6
         GROUP BY institution_staff_attendances.staff_id
             ,institution_staff_attendances.date
     )) subq 
@@ -353,113 +363,20 @@ class StaffAttendancesTable extends ControllerActionTable
  ) staff_attendance_info",
     'conditions' => [
         'staff_attendance_info.academic_period_id = month_generator.academic_period_id',
-        'staff_attendance_info.staff_id = Users.id',
+        'staff_attendance_info.staff_id = security_users.id',
         'staff_attendance_info.year_name = month_generator.year_name',
         'staff_attendance_info.month_id  = month_generator.month_id'
     ],
     ];
              
- $query->where($conditions)->group(['Users.id','month_generator.year_name','month_generator.month_id'])
-->order(['institutions.code','Users.openemis_no','month_generator.year_name','month_generator.month_id']);
+ $query->where($conditions)->group(['security_users.id','month_generator.year_name','month_generator.month_id'])
+->order(['institutions.code','security_users.openemis_no','month_generator.year_name','month_generator.month_id']);
   $query->join($join);
-print_r($query->sql());die('pkk');
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($academicPeriodId, $startDate, $endDate, $year) {
-                return $results->map(function ($row) use ($academicPeriodId, $startDate, $endDate, $year) {
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row)  {
                     $row['referrer_full_name'] = $row['first_name'] .' '.$row['middle_name'].' '.$row['third_name'].' '. $row['last_name'];
-                     $row['year']  = $year;
-                    //POCOR-5181 start
-                    $StaffAttendances = TableRegistry::get('Institution.InstitutionStaffAttendances');
-                    $attendanceData = $StaffAttendances->find('all')
-                                    ->where([$StaffAttendances->aliasField('institution_id') => $row->institution_id,
-                                    $StaffAttendances->aliasField('staff_id') =>  $row->staff_id,
-                                    $StaffAttendances->aliasField('academic_period_id') =>
-                                    $academicPeriodId,
-                                    $StaffAttendances->aliasField('date').' >= ' => $startDate,
-                                    $StaffAttendances->aliasField('date').' <= ' => $endDate,
-                                    ])->group(['InstitutionStaffAttendances.date','InstitutionStaffAttendances.staff_id'])->toArray();
-                    
-                    if(!empty($attendanceData))
-                    {
-                        $i_max = 31;
-                        for( $i=1; $i<=$i_max; $i++ )
-                        { 
-                            
-                            $row['Day'.$i] = '';
-                            
-                        }
-                        foreach($attendanceData as $key=>$value)
-                        {
-                            if (!empty($value->date) && !empty($value->time_in) && !empty($value->time_out)) {
-                                $getDate = $value->date;
-                                $getTimeIn = $value->time_in;
-                                $getTimeOut = $value->time_out;
-                                $dateValue = $getDate->format('Y-m-d');
-                                $timeIn = $getTimeIn->format('H:i:s');
-                                $timeOut = $getTimeOut->format('H:i:s');
-                                $time = $timeIn.'-'.$timeOut;
-                            }
-                        
-                        if(!empty($dateValue)){
-                            $daytrim = date('d', strtotime($dateValue));
-                            $monthtrim = date('M', strtotime($dateValue));
-                            $yeartrim = date('Y', strtotime($dateValue));
-                            $day  = ltrim($daytrim, '0');
-                            $row['month']  = ltrim($monthtrim, '0');
-                           // $row['year']  = ltrim($yeartrim, '0');
-                            $i_max=31;
-                            for( $i=1; $i<=$i_max; $i++ )
-                                { 
-                                    if ($i == $day)
-                                    {
-                                        $row['Day'.$i] = $time;
-                                    }
-                                }
-                        }
-                    }
-                }
-                    //POCOR-5181 End
-
-                    /*$StaffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
-                    
-                    $customFieldData = $StaffCustomFieldValues->find()
-                        ->select([
-                            'custom_field_id' => 'StaffCustomFields.id',
-                            'staff_custom_field_values.text_value',
-                            'staff_custom_field_values.number_value',
-                            'staff_custom_field_values.decimal_value',
-                            'staff_custom_field_values.textarea_value',
-                            'staff_custom_field_values.date_value'
-                        ])
-                        ->innerJoin(
-                            ['StaffCustomFields' => 'staff_custom_fields'],
-                            [
-                                'StaffCustomFields.id = staff_custom_field_values.staff_custom_field_id'
-                            ]
-                        )
-                        ->where(['staff_custom_field_values.staff_id' => $row->staff_id])
-                        ->toArray();
-                    
-                    foreach($customFieldData as $data) {
-                        if(!empty($data->text_value)) {
-                            $row[$data->custom_field_id] = $data->text_value;
-                        } 
-                        if(!empty($data->number_value)) {
-                            $row[$data->custom_field_id] = $data->number_value;
-                        }
-                        if(!empty($data->decimal_value)) {
-                            $row[$data->custom_field_id] = $data->decimal_value;
-                        }
-                        if(!empty($data->textarea_value)) {
-                            $row[$data->custom_field_id] = $data->textarea_value;
-                        }
-                        if(!empty($data->date_value)) {
-                            $row[$data->custom_field_id] = $data->date_value;
-                            
-                        }
-                        
-                    }*/
-                  //  print_r($row);die;
                     return $row;
+
                 });
             });
 
@@ -470,13 +387,13 @@ print_r($query->sql());die('pkk');
         $newArray = [];
         $i_max = 31; //POCOR-5181
         $newArray[] = [
-            'key' => '',
+            'key' => 'institution_code',
             'field' => 'institution_code',
             'type' => 'string',
             'label' => __('Institution Code')
         ];
         $newArray[] = [
-            'key' => '',
+            'key' => 'institution_name',
             'field' => 'institution_name',
             'type' => 'string',
             'label' => __('Institution Name')
@@ -501,7 +418,7 @@ print_r($query->sql());die('pkk');
         ];
         
         $newArray[] = [
-            'key' => 'Users.openemis_no',
+            'key' => 'openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
             'label' => ''
@@ -515,50 +432,29 @@ print_r($query->sql());die('pkk');
         ];
 
         $newArray[] = [
-            'key' => 'year',
-            'field' => 'year',
+            'key' => 'year_name',
+            'field' => 'year_name',
             'type' => 'integer',
             'label' => __('Year')
         ];
 
         $newArray[] = [
-            'key' => 'month',
-            'field' => 'month',
+            'key' => 'month_name',
+            'field' => 'month_name',
             'type' => 'integer',
             'label' => __('Month')
         ];
+
         for( $i=1; $i<=$i_max; $i++ ) //POCOR-5181 
         { 
             $newArray[]=[
-            'key'   => '',
-            'field' => 'Day'.$i,
-            'type'  => 'integer',
-            'label' => __('Day'.$i),
+            'key'   => 'day_'.$i,
+            'field' => 'day_'.$i,
+            'type'  => 'string',
+            'label' => __('day_'.$i),
             ];
         }
-
-        /*$StaffCustomFields = TableRegistry::get('staff_custom_fields');
-                    
-        $customFieldData = $StaffCustomFields->find()
-            ->select([
-                'custom_field_id' => 'staff_custom_fields.id',
-                'custom_field' => 'staff_custom_fields.name'
-            ])
-            ->toArray();
         
-        foreach($customFieldData as $data) {
-            $custom_field_id = $data->custom_field_id;
-            $custom_field = $data->custom_field;
-            $newArray[] = [
-                'key' => '',
-                'field' => $custom_field_id,
-                'type' => 'string',
-                'label' => __($custom_field)
-            ];
-        }
-
-        $newFields = array_merge($newArray, $fields->getArrayCopy());
-        $fields->exchangeArray($newFields);*/
         $fields->exchangeArray($newArray);
     }
 
