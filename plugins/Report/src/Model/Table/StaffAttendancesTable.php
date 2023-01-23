@@ -66,6 +66,11 @@ class StaffAttendancesTable extends ControllerActionTable
 
     }
 
+    /**
+     *  POCOR-5181
+     * staff attendance sheet formate change in POCOR-5181
+    **/  
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);        
@@ -185,11 +190,6 @@ class StaffAttendancesTable extends ControllerActionTable
             ->leftJoin(['UserIdentity' => 'user_identities'], [
                 'UserIdentity.security_user_id = ' . $this->aliasfield('staff_id'),
             ]);
-            /*->leftJoin(['InstitutionStaffAttendances' => 'institution_staff_attendances'], [
-                'InstitutionStaffAttendances.staff_id = ' . $this->aliasfield('staff_id'),
-            ]);*/
-            //->where($conditions)
-            //->distinct([$this->aliasField('staff_id')]);
 
             $join['academic_periods'] = [
                 'type' => 'inner',
@@ -369,10 +369,10 @@ class StaffAttendancesTable extends ControllerActionTable
     ],
     ];
              
- $query->where($conditions)->group(['security_users.id','month_generator.year_name','month_generator.month_id'])
-->order(['institutions.code','security_users.openemis_no','month_generator.year_name','month_generator.month_id']);
-  $query->join($join);
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+    $query->where($conditions)->group(['security_users.id','month_generator.year_name','month_generator.month_id'])
+    ->order(['institutions.code','security_users.openemis_no','month_generator.year_name','month_generator.month_id']);
+    $query->join($join);
+    $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row)  {
                     $row['referrer_full_name'] = $row['first_name'] .' '.$row['middle_name'].' '.$row['third_name'].' '. $row['last_name'];
                     return $row;
