@@ -15,7 +15,11 @@ use App\Models\SecurityUsers;
 use App\Models\SecurityUserCode;
 use App\Models\Nationalities;
 use App\Models\StudentStatuses;
+use App\Models\RegistrationOtp;
+use App\Models\InstitutionStudent;
+use App\Models\ConfigItem;
 use Mail;
+use Illuminate\Support\Str;
 
 class RegistrationRepository extends Controller
 {
@@ -96,30 +100,26 @@ class RegistrationRepository extends Controller
         try {
             $email = $request['email'];
 
-            $isExists = SecurityUsers::where('email', $email)->first();
-            //$isExists = 1;
-            if($isExists){
-                $otpData = $this->getUniqueOtp($email);
-                $otp = $otpData['otp'];
-                $encodedOtp = $otpData['encodedOtp'];
+            $otpData = $this->getUniqueOtp($email);
+            $otp = $otpData['otp'];
+            $encodedOtp = $otpData['encodedOtp'];
 
-                $data['otp'] = $otp;
+            $data['otp'] = $otp;
 
-                Mail::send(['text'=>'generateOtp'], $data, function($message) {
-                    $message->to('ravi.verma111@mailinator.com', 'OpenEMIS User')
-                        ->subject('OpenEMIS Registration OTP Verification.');
-                });
+            Mail::send(['text'=>'generateOtp'], $data, function($message) use($email) {
+                $message->to($email, 'OpenEMIS User')
+                    ->subject('OpenEMIS Registration OTP Verification.');
+            });
 
-                $insertData['security_user_id'] = $isExists->id??2;
-                $insertData['verification_otp'] = $encodedOtp;
-                $insertData['created'] = Carbon::now()->toDateTimeString();
-                $store = SecurityUserCode::insert($insertData);
-                return 1;
-            } else {
-                return 0;
-            }
+            $insertData['email'] = $email;
+            $insertData['otp'] = $encodedOtp;
+            $insertData['is_expired'] = 0;
+            $insertData['created'] = Carbon::now()->toDateTimeString();
+            $store = RegistrationOtp::insert($insertData);
+            return 1;
             
         } catch (\Exception $e) {
+            dd($e);
             Log::error(
                 'Failed to sent otp on email.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -159,20 +159,17 @@ class RegistrationRepository extends Controller
     {
         try {
             $params = $request->all();
-            $securityUser = SecurityUsers::where('email', $params['email'])->first();
-            if($securityUser){
-                $otp = $params['otp'];
-                $encodedOtp = base64_encode($otp);
-                $checkOtp = SecurityUserCode::where('verification_otp', $encodedOtp)
-                        ->where('security_user_id', $securityUser->id)
-                        ->first();
-                if($checkOtp){
-                    return 1;
-                } else {
-                    return 2;
-                }
+            
+            $otp = $params['otp'];
+            $encodedOtp = base64_encode($otp);
+            $checkOtp = RegistrationOtp::where('otp', $encodedOtp)
+                    ->where('email', $params['email'])
+                    ->first();
+
+            if($checkOtp){
+                return 1;
             } else {
-                return 0;
+                return 2;
             }
             
         } catch (\Exception $e) {
@@ -278,18 +275,41 @@ class RegistrationRepository extends Controller
                     ->first();
                 
                 if($student){
-                    if($student == $request['date_of_birth']){
-                        if(isset($student['institutionStudent']['studentStatus']['name']) == 'Enrolled'){
+                    $dob = $student['date_of_birth']->format('Y-m-d');
+                    if($dob == $request['date_of_birth']){
+
+                        if(isset($student['institutionStudent']['studentStatus']['name']) && $student['institutionStudent']['studentStatus']['name'] == 'Enrolled'){
+                            
                             return 4; //registration unsuccessful – student already enrolled
                         } else {
-                            //
+                            $stuStatus = StudentStatuses::where('name', 'Pending')->first();
+                            $academicPeriod = AcademicPeriod::where('id', $request['academic_period_id'])->first();
+
+                            $storeStu['id'] = Str::uuid();
+                            $storeStu['student_status_id'] = $stuStatus->id??0;
+                            $storeStu['student_id'] = $student->id;
+                            $storeStu['education_grade_id'] = $request['education_grade_id'];
+                            $storeStu['academic_period_id'] = $request['academic_period_id'];
+                            $storeStu['start_date'] = $academicPeriod['start_date'];
+                            $storeStu['start_year'] = $academicPeriod['start_year'];
+                            $storeStu['end_date'] = $academicPeriod['end_date'];
+                            $storeStu['end_year'] = $academicPeriod['end_year'];
+                            $storeStu['institution_id'] = $request['institution_id'];
+                            $storeStu['previous_institution_student_id'] = $student['institutionStudent']['id']??NULL;
+                            $storeStu['created_user_id'] = 2;
+                            $storeStu['created'] = Carbon::now()->toDateTimeString();
+
+                            $store = InstitutionStudent::insert($storeStu);
+                            
+                            if(isset($request['otp'])){
+                                $sendMail = $this->sendSuccessMail($request);
+                            }
+                            return 1;
                         }
                     } else {
-                        dd("qqq");
                         return 2; //registration unsuccessful – student details do not match
                     }
                 } else {
-                    dd("www");
                     return 3; //registration unsuccessful – openemis_no not found
                 }
 
@@ -305,22 +325,47 @@ class RegistrationRepository extends Controller
                     ->first();
 
                 if($student){
-                    if($student == $request['date_of_birth']){
+                    $dob = $student['date_of_birth']->format('Y-m-d');
+                    if($dob == $request['date_of_birth']){
                         if(isset($student['institutionStudent']['studentStatus']['name']) == 'Enrolled'){
                             return 4; //registration unsuccessful – student already enrolled
                         } else {
-                            //
+                            $stuStatus = StudentStatuses::where('name', 'Pending')->first();
+                            $academicPeriod = AcademicPeriod::where('id', $request['academic_period_id'])->first();
+
+                            $storeStu['id'] = Str::uuid();
+                            $storeStu['student_status_id'] = $stuStatus->id??0;
+                            $storeStu['student_id'] = $student->id;
+                            $storeStu['education_grade_id'] = $request['education_grade_id'];
+                            $storeStu['academic_period_id'] = $request['academic_period_id'];
+                            $storeStu['start_date'] = $academicPeriod['start_date'];
+                            $storeStu['start_year'] = $academicPeriod['start_year'];
+                            $storeStu['end_date'] = $academicPeriod['end_date'];
+                            $storeStu['end_year'] = $academicPeriod['end_year'];
+                            $storeStu['institution_id'] = $request['institution_id'];
+                            $storeStu['previous_institution_student_id'] = $student['institutionStudent']['id']??NULL;
+                            $storeStu['created_user_id'] = 2;
+                            $storeStu['created'] = Carbon::now()->toDateTimeString();
+
+                            $store = InstitutionStudent::insert($storeStu);
+                            if(isset($request['otp'])){
+                                $sendMail = $this->sendSuccessMail($request);
+                            }
+                            return 1;
                         }
                     } else {
-                        dd("eee");
                         return 2; //registration unsuccessful – student details do not match
                     }
                 } else {
-                    dd("rrr");
-                    return 55; //registration unsuccessful – identity_number not found
+                    return 5; //registration unsuccessful – identity_number not found
                 }
             } else {
-                dd("else");
+                $configItem = ConfigItem::where('code', 'NewStudent')->first();
+                if(isset($configItem) && $configItem == 1){
+                    dd("add new student");
+                } else {
+                    return 6; //registration unsuccessful – not able to create new student
+                }
             }
             
         } catch (\Exception $e) {
@@ -333,5 +378,35 @@ class RegistrationRepository extends Controller
             return $this->sendErrorResponse('Failed to register student.');
         }
     }
+
+
+    public function sendSuccessMail($request)
+    {
+        try {
+            $param = $request->all();
+            
+            $encodedOtp = base64_encode($request['otp']??"");
+            $otpData = RegistrationOtp::where('otp', $encodedOtp)->first();
+
+            if($otpData){
+                $data = [];
+                $email = $otpData->email;
+                Mail::send(['text'=>'registrationSuccess'], $data, function($message) use ($email) {
+                    $message->to($email, 'OpenEMIS User')
+                        ->subject('OpenEMIS Registration Success Email.');
+                });
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to send success mail.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to send success mail.');
+        }
+    }
+
 }
 
