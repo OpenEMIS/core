@@ -484,9 +484,15 @@ class StudentWithdrawTable extends ControllerActionTable
     {
         $findstudent = TableRegistry::get('institution_students');
         $studentWithdraw = TableRegistry::get('institution_student_withdraw');
+
+        $step = TableRegistry::get('workflow_steps');
+        $stepStatusId =  $step->find()->where(['name'=>'Withdrawn'])->first()->id;
+
         $studentId = $entity->student_id;
+        
         $studentdata = $findstudent->find()->where(['student_status_id'=>1, 'student_id'=>$studentId,'education_grade_id'=>$entity->education_grade_id, 'academic_period_id'=>$entity->academic_period_id])->first();
-        $studentdraw = $studentWithdraw->find()->where(['status_id'=>76, 'student_id'=>$studentId,'education_grade_id'=>$entity->education_grade_id, 'academic_period_id'=>$entity->academic_period_id])->first();
+
+        $studentdraw = $studentWithdraw->find()->where(['status_id'=>$stepStatusId, 'student_id'=>$studentId,'education_grade_id'=>$entity->education_grade_id, 'academic_period_id'=>$entity->academic_period_id])->first();
         if(!empty($studentdata) && !empty($studentdraw)){
             return false;
         }else{
