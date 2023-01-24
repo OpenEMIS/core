@@ -192,7 +192,8 @@ class DataManagementCopyTable extends ControllerActionTable
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $data){
-        //This code is for update the corret academic period in institution_grade table [Start]
+        if($entity->features == "Institution programmes and Grade"){
+            //This code is for update the corret academic period in institution_grade table [Start]
         ini_set('memory_limit', '2G'); //POCOR-6893
         $connection = ConnectionManager::get('default');
         $EducationSystems = TableRegistry::get('Education.EducationSystems');
@@ -207,52 +208,7 @@ class DataManagementCopyTable extends ControllerActionTable
         $InstitutionGradesdata = $InstitutionGrades
                 ->find('all')
                 ->toArray();
-        // if(!empty($InstitutionGradesdata)){
-        //     foreach($InstitutionGradesdata AS $InstitutionGradesValue){
-        //         $EducationGradesData = $EducationGrades
-        //                             ->find()
-        //                             ->where([$EducationGrades->aliasField('id') =>$InstitutionGradesValue['education_grade_id']])
-        //                             ->All()
-        //                             ->toArray();
-                
-        //         $EducationProgrammesData = $EducationProgrammes
-        //                             ->find()
-        //                             ->where([$EducationProgrammes->aliasField('id') =>$EducationGradesData[0]['education_programme_id']])
-        //                             ->All()
-        //                             ->toArray();
-    
-        //         $EducationCyclesData = $EducationCycles
-        //                             ->find()
-        //                             ->where([$EducationCycles->aliasField('id') =>$EducationProgrammesData[0]['education_cycle_id']])
-        //                             ->All()
-        //                             ->toArray();
-                
-        //         $EducationLevelsData = $EducationLevels
-        //         ->find()
-        //         ->where(['id' => $EducationCyclesData[0]['education_level_id']])
-        //         ->toArray();
-    
-        //         $EducationSystemsData = $EducationSystems
-        //         ->find()
-        //         ->where(['id' => $EducationLevelsData[0]['education_system_id']])
-        //         ->first();
-    
-        //         $AcademicPeriodsData = $AcademicPeriods
-        //                 ->find()
-        //                 ->select(['start_date', 'start_year'])
-        //                 ->where(['id' => $EducationSystemsData['academic_period_id']])
-        //                 ->first();
-
-        //         if(!empty($AcademicPeriodsData)){
-        //             $InstitutionGrades->updateAll(
-        //                 ['start_date' => $AcademicPeriodsData['start_date'], 'start_year' => $AcademicPeriodsData['start_year']],    //field
-        //                 ['education_grade_id' => $InstitutionGradesValue['education_grade_id'], 'institution_id'=> $InstitutionGradesValue['institution_id']] //condition
-        //             );
-        //         }
-        //     }
-        // }
-
-        //This code is for update the corret academic period in institution_grade table [END]
+        
 
         //This code is for copy one academic period to onother[Start]
 
@@ -355,6 +311,33 @@ class DataManagementCopyTable extends ControllerActionTable
 
 
         //This code is for update the corret academic period in institution_grade table [END]
+        }
+        if($entity->features == "Institution Performance Outcomes"){
+            $this->log('=======>Before triggerPerformanceOutcomesShell', 'debug');
+            $this->triggePerformanceOutcomesShell('PerformanceOutcomes',$entity->from_academic_period, $entity->to_academic_period);
+            $this->log(' <<<<<<<<<<======== After triggerPerformanceOutcomesShell', 'debug');
+        }
+        
+    }
+
+    /*
+    * Function to copy outcome_criterias and outcome_templates to new academic period
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return boolean
+    * @ticket POCOR-6425
+    */
+    
+    public function triggePerformanceOutcomesShell($shellName,$from_academic_period = null, $to_academic_period = null)
+    {
+        $args = '';
+        $args .= !is_null($from_academic_period) ? ' '.$from_academic_period : '';
+        $args .= !is_null($to_academic_period) ? ' '.$to_academic_period : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
     }
 
     public function triggerCopyDataShell($shellName,$academicPeriodId = null)
