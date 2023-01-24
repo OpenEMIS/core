@@ -475,4 +475,23 @@ class StudentWithdrawTable extends ControllerActionTable
         } 
 
     }
+
+    /**
+     * POCOR-7097
+     * check if the student has an existing enrollment. If yes, this step cannot proceed.
+     * */
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $findstudent = TableRegistry::get('institution_students');
+        $studentWithdraw = TableRegistry::get('institution_student_withdraw');
+        $studentId = $entity->student_id;
+        $studentdata = $findstudent->find()->where(['student_status_id'=>1, 'student_id'=>$studentId,'education_grade_id'=>$entity->education_grade_id, 'academic_period_id'=>$entity->academic_period_id])->first();
+        $studentdraw = $studentWithdraw->find()->where(['status_id'=>76, 'student_id'=>$studentId,'education_grade_id'=>$entity->education_grade_id, 'academic_period_id'=>$entity->academic_period_id])->first();
+        if(!empty($studentdata) && !empty($studentdraw)){
+            return false;
+        }else{
+            return true;
+        }
+
+    }
 }
