@@ -305,7 +305,7 @@ class InstitutionsTable extends AppTable
 
     public function addAfterAction(Event $event, Entity $entity)
     {
-        if ($entity->has('feature')) {
+        if ($entity->has('feature')) { 
             $feature = $entity->feature;
 
             $fieldsOrder = ['feature'];
@@ -320,6 +320,13 @@ class InstitutionsTable extends AppTable
                 case 'Report.InstitutionAssociations':
                 case 'Report.InstitutionProgrammes':
                 case 'Report.InstitutionClasses':
+                    $fieldsOrder[] = 'academic_period_id';	/*POCOR-6637 :: START*/
+                    $fieldsOrder[] = 'area_level_id';	
+                    $fieldsOrder[] = 'area_education_id';	
+                    $fieldsOrder[] = 'institution_id';	
+                    $fieldsOrder[] = 'education_grade_id';	
+                    $fieldsOrder[] = 'format';
+                    break;  /*POCOR-6637 :: END*/
                 case 'Report.StudentAbsences':
                 case 'Report.StudentWithdrawalReport':
                 case 'Report.InstitutionSummaryReport':
@@ -503,7 +510,14 @@ class InstitutionsTable extends AppTable
             }
 
             $this->ControllerAction->setFieldOrder($fieldsOrder);
-        }
+        }else{  //POCOR-6637::Start
+            $fieldsOrder = ['feature'];
+            $fieldsOrder[] = 'area_level_id';
+            $fieldsOrder[] = 'area_education_id';
+            $fieldsOrder[] = 'institution_filter';
+            $fieldsOrder[] = 'format';
+            $this->ControllerAction->setFieldOrder($fieldsOrder);
+        }//POCOR-6637::END
     }
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
