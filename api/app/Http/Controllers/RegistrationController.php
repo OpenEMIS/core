@@ -96,13 +96,7 @@ class RegistrationController extends Controller
     {
         try {
             $resp = $this->registrationService->generateOtp($request);
-
-
-            if($resp == 0){
-                return $this->sendSuccessResponse("Email is not registered.", $resp);
-            } else {
-                return $this->sendSuccessResponse("Otp sent successfully.", $resp);
-            }
+            return $this->sendSuccessResponse("Otp sent successfully.", $resp);
             
             
         } catch (\Exception $e) {
@@ -217,23 +211,25 @@ class RegistrationController extends Controller
     public function institutionStudents(InstitutionStudentStoreRequest $request)
     {
         try {
-            $data = $this->registrationService->institutionStudents($request);
+            $resp = $this->registrationService->institutionStudents($request);
 
-            if($data == 2){
+            if($resp == 1){
+                return $this->sendSuccessResponse("Registration successful. We will contact you shortly.");
+            }elseif($resp == 2){
                 return $this->sendErrorResponse("Student details do not match.");
-            }
-
-            if($data == 3){
+            }elseif($resp == 3){
                 return $this->sendErrorResponse("Openemis number not found.");
-            }
-
-
-            if($data == 4){
-                return $this->sendErrorResponse("Openemis number not found.");
+            }elseif($resp == 4){
+                return $this->sendErrorResponse("Student already enrolled.");
+            }elseif($resp == 5){
+                return $this->sendErrorResponse("Identity number not found.");
+            }elseif($resp == 6){
+                return $this->sendErrorResponse("Not able to create new student.");
+            }else{
+                return $this->sendErrorResponse("Something went wrong.");
             }
             
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to register student.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
