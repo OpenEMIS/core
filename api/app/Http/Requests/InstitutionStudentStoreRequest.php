@@ -33,7 +33,7 @@ class InstitutionStudentStoreRequest extends FormRequest
             'institution_id' => 'required',
             'first_name' => 'required',
             'last_name' => 'required',
-            'gender' => 'required',
+            'gender_id' => 'required',
             'date_of_birth' => 'required'
         ];
     }
