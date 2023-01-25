@@ -119,7 +119,7 @@ class RegistrationController extends Controller
             } elseif($resp == 2) {
                 return $this->sendSuccessResponse("Invalid OTP.");
             } elseif($resp == 0){
-                return $this->sendSuccessResponse("Email not registered.");
+                return $this->sendSuccessResponse("OTP expired.");
             } else {
                 return $this->sendSuccessResponse("OTP not verified.");
             }
