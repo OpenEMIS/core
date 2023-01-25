@@ -130,232 +130,336 @@ class DataManagementCopyTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
         ini_set('memory_limit', '2G'); //POCOR-6893
-        if($entity->from_academic_period == $entity->to_academic_period){
-            $this->Alert->error('CopyData.genralerror', ['reset' => true]);
-            return false;
-        }
-
-        $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-        $EducationSystems = TableRegistry::get('Education.EducationSystems');
-        if($entity->to_academic_period){
-            
-            $ToAcademicPeriodsData = $AcademicPeriods
-            ->find()
-            ->select(['start_date', 'start_year','end_date'])
-            ->where(['id' => $entity->to_academic_period])
-            ->first();
-
-            $InstitutionGradesdata = $InstitutionGrades
-                ->find('all')
-                ->where(['start_date' => $ToAcademicPeriodsData['start_date']])
-                ->toArray();
-            if(!empty($InstitutionGradesdata)){
-                $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+        if($entity->features == "Institution programmes and Grade"){
+            if($entity->from_academic_period == $entity->to_academic_period){
+                $this->Alert->error('CopyData.genralerror', ['reset' => true]);
                 return false;
             }
-        }
-        if($entity->to_academic_period){
-            
-            $ToAcademicPeriodsData = $AcademicPeriods
-            ->find()
-            ->select(['start_date', 'start_year','end_date'])
-            ->where(['id' => $entity->to_academic_period])
-            ->first();
 
-            $EducationSystemsdata = $EducationSystems
+            $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $EducationSystems = TableRegistry::get('Education.EducationSystems');
+            if($entity->to_academic_period){
+                
+                $ToAcademicPeriodsData = $AcademicPeriods
+                ->find()
+                ->select(['start_date', 'start_year','end_date'])
+                ->where(['id' => $entity->to_academic_period])
+                ->first();
+
+                $InstitutionGradesdata = $InstitutionGrades
+                    ->find('all')
+                    ->where(['start_date' => $ToAcademicPeriodsData['start_date']])
+                    ->toArray();
+                if(!empty($InstitutionGradesdata)){
+                    $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+                    return false;
+                }
+            }
+            if($entity->to_academic_period){
+                
+                $ToAcademicPeriodsData = $AcademicPeriods
+                ->find()
+                ->select(['start_date', 'start_year','end_date'])
+                ->where(['id' => $entity->to_academic_period])
+                ->first();
+
+                $EducationSystemsdata = $EducationSystems
+                    ->find('all')
+                    ->where(['academic_period_id' => $entity->to_academic_period])
+                    ->toArray();
+                if(empty($EducationSystemsdata)){
+                    $this->Alert->error('CopyData.nodataexisteducationsystem', ['reset' => true]);
+                    return false;
+                }
+            }
+            if($entity->from_academic_period){
+                
+                $ToAcademicPeriodsData = $AcademicPeriods
+                ->find()
+                ->select(['start_date', 'start_year','end_date'])
+                ->where(['id' => $entity->from_academic_period])
+                ->first();
+
+                $InstitutionGradesdata = $InstitutionGrades
+                    ->find('all')
+                    ->where(['start_date' => $ToAcademicPeriodsData['start_date']])
+                    ->toArray();
+                if(empty($InstitutionGradesdata)){
+                    $this->Alert->error('CopyData.nodataexist', ['reset' => true]);
+                    return false;
+                }
+            }
+        }
+        if($entity->features == "Performance Competencies"){
+            if($entity->from_academic_period == $entity->to_academic_period){
+                $this->Alert->error('CopyData.genralerror', ['reset' => true]);
+                return false;
+            }
+            $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
+            $EducationSystems = TableRegistry::get('Education.EducationSystems');
+            if($entity->to_academic_period){
+                $ToAcademicPeriodsData = $AcademicPeriods
+                ->find()
+                ->select(['start_date', 'start_year','end_date'])
+                ->where(['id' => $entity->to_academic_period])
+                ->first();
+
+                $CompetencyCriteriasTable = TableRegistry::get('Competency.CompetencyCriterias');
+                $CompetencyTemplatesTable = TableRegistry::get('Competency.CompetencyTemplates');
+                $CompetencyItemsTable = TableRegistry::get('Competency.CompetencyItems');
+
+                $CompetencyCriteriasData = $CompetencyCriteriasTable
+                    ->find('all')
+                    ->where(['academic_period_id' => $entity->to_academic_period])
+                    ->toArray();
+
+                $CompetencyTemplatesData = $CompetencyTemplatesTable
                 ->find('all')
                 ->where(['academic_period_id' => $entity->to_academic_period])
                 ->toArray();
-            if(empty($EducationSystemsdata)){
-                $this->Alert->error('CopyData.nodataexisteducationsystem', ['reset' => true]);
-                return false;
-            }
-        }
-        if($entity->from_academic_period){
-            
-            $ToAcademicPeriodsData = $AcademicPeriods
-            ->find()
-            ->select(['start_date', 'start_year','end_date'])
-            ->where(['id' => $entity->from_academic_period])
-            ->first();
 
-            $InstitutionGradesdata = $InstitutionGrades
+                $CompetencyItemsData = $CompetencyItemsTable
                 ->find('all')
-                ->where(['start_date' => $ToAcademicPeriodsData['start_date']])
+                ->where(['academic_period_id' => $entity->to_academic_period])
                 ->toArray();
-            if(empty($InstitutionGradesdata)){
-                $this->Alert->error('CopyData.nodataexist', ['reset' => true]);
-                return false;
+
+                if(!empty($CompetencyCriteriasData) && !empty($CompetencyTemplatesData) && !empty($CompetencyItemsData)){
+                    $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+                    return false;
+                }
+                if(empty($CompetencyCriteriasData)){
+                    $entity->competency_criterias_value = 0;
+                }else{
+                    $entity->competency_criterias_value = 1;
+                }
+                if(empty($CompetencyTemplatesData)){
+                    $entity->competency_templates_value = 0;
+                }else{
+                    $entity->competency_templates_value = 1;
+                }
+                if(empty($CompetencyItemsData)){
+                    $entity->competency_items_value = 0;
+                }else{
+                    $entity->competency_items_value = 1;
+                }
+            }
+            if($entity->to_academic_period){
+                
+                $ToAcademicPeriodsData = $AcademicPeriods
+                ->find()
+                ->select(['start_date', 'start_year','end_date'])
+                ->where(['id' => $entity->to_academic_period])
+                ->first();
+
+                $EducationSystemsdata = $EducationSystems
+                    ->find('all')
+                    ->where(['academic_period_id' => $entity->to_academic_period])
+                    ->toArray();
+                if(empty($EducationSystemsdata)){
+                    $this->Alert->error('CopyData.nodataexisteducationsystem', ['reset' => true]);
+                    return false;
+                }
             }
         }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $data){
-        //This code is for update the corret academic period in institution_grade table [Start]
-        ini_set('memory_limit', '2G'); //POCOR-6893
-        $connection = ConnectionManager::get('default');
-        $EducationSystems = TableRegistry::get('Education.EducationSystems');
-        $EducationLevels = TableRegistry::get('Education.EducationLevels');
-        $EducationCycles = TableRegistry::get('Education.EducationCycles');
-        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        if($entity->features == "Institution programmes and Grade"){
+            //This code is for update the corret academic period in institution_grade table [Start]
+            ini_set('memory_limit', '2G'); //POCOR-6893
+            $connection = ConnectionManager::get('default');
+            $EducationSystems = TableRegistry::get('Education.EducationSystems');
+            $EducationLevels = TableRegistry::get('Education.EducationLevels');
+            $EducationCycles = TableRegistry::get('Education.EducationCycles');
+            $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
 
-        $InstitutionGradesdata = $InstitutionGrades
-                ->find('all')
-                ->toArray();
-        // if(!empty($InstitutionGradesdata)){
-        //     foreach($InstitutionGradesdata AS $InstitutionGradesValue){
-        //         $EducationGradesData = $EducationGrades
-        //                             ->find()
-        //                             ->where([$EducationGrades->aliasField('id') =>$InstitutionGradesValue['education_grade_id']])
-        //                             ->All()
-        //                             ->toArray();
-                
-        //         $EducationProgrammesData = $EducationProgrammes
-        //                             ->find()
-        //                             ->where([$EducationProgrammes->aliasField('id') =>$EducationGradesData[0]['education_programme_id']])
-        //                             ->All()
-        //                             ->toArray();
-    
-        //         $EducationCyclesData = $EducationCycles
-        //                             ->find()
-        //                             ->where([$EducationCycles->aliasField('id') =>$EducationProgrammesData[0]['education_cycle_id']])
-        //                             ->All()
-        //                             ->toArray();
-                
-        //         $EducationLevelsData = $EducationLevels
-        //         ->find()
-        //         ->where(['id' => $EducationCyclesData[0]['education_level_id']])
-        //         ->toArray();
-    
-        //         $EducationSystemsData = $EducationSystems
-        //         ->find()
-        //         ->where(['id' => $EducationLevelsData[0]['education_system_id']])
-        //         ->first();
-    
-        //         $AcademicPeriodsData = $AcademicPeriods
-        //                 ->find()
-        //                 ->select(['start_date', 'start_year'])
-        //                 ->where(['id' => $EducationSystemsData['academic_period_id']])
-        //                 ->first();
-
-        //         if(!empty($AcademicPeriodsData)){
-        //             $InstitutionGrades->updateAll(
-        //                 ['start_date' => $AcademicPeriodsData['start_date'], 'start_year' => $AcademicPeriodsData['start_year']],    //field
-        //                 ['education_grade_id' => $InstitutionGradesValue['education_grade_id'], 'institution_id'=> $InstitutionGradesValue['institution_id']] //condition
-        //             );
-        //         }
-        //     }
-        // }
-
-        //This code is for update the corret academic period in institution_grade table [END]
-
-        //This code is for copy one academic period to onother[Start]
-
-        $from_academic_period = $entity->from_academic_period;
-        $to_academic_period = $entity->to_academic_period;
-        $FromAcademicPeriodsData = $AcademicPeriods
-                        ->find()
-                        ->select(['start_date', 'start_year'])
-                        ->where(['id' => $from_academic_period])
-                        ->first();
-
-        $ToAcademicPeriodsData = $AcademicPeriods
-        ->find()
-        ->select(['start_date', 'start_year','end_date'])
-        ->where(['id' => $to_academic_period])
-        ->first();
-
-        $InstitutionGradesdataToInsert = $InstitutionGrades
-        ->find('all')
-        ->where(['start_year' => $FromAcademicPeriodsData['start_year']])
-        ->toArray();
+            $InstitutionGradesdata = $InstitutionGrades
+                    ->find('all')
+                    ->toArray();
+            // if(!empty($InstitutionGradesdata)){
+            //     foreach($InstitutionGradesdata AS $InstitutionGradesValue){
+            //         $EducationGradesData = $EducationGrades
+            //                             ->find()
+            //                             ->where([$EducationGrades->aliasField('id') =>$InstitutionGradesValue['education_grade_id']])
+            //                             ->All()
+            //                             ->toArray();
+                    
+            //         $EducationProgrammesData = $EducationProgrammes
+            //                             ->find()
+            //                             ->where([$EducationProgrammes->aliasField('id') =>$EducationGradesData[0]['education_programme_id']])
+            //                             ->All()
+            //                             ->toArray();
         
-        foreach($InstitutionGradesdataToInsert AS $InstitutionGradesdataValue){
+            //         $EducationCyclesData = $EducationCycles
+            //                             ->find()
+            //                             ->where([$EducationCycles->aliasField('id') =>$EducationProgrammesData[0]['education_cycle_id']])
+            //                             ->All()
+            //                             ->toArray();
+                    
+            //         $EducationLevelsData = $EducationLevels
+            //         ->find()
+            //         ->where(['id' => $EducationCyclesData[0]['education_level_id']])
+            //         ->toArray();
+        
+            //         $EducationSystemsData = $EducationSystems
+            //         ->find()
+            //         ->where(['id' => $EducationLevelsData[0]['education_system_id']])
+            //         ->first();
+        
+            //         $AcademicPeriodsData = $AcademicPeriods
+            //                 ->find()
+            //                 ->select(['start_date', 'start_year'])
+            //                 ->where(['id' => $EducationSystemsData['academic_period_id']])
+            //                 ->first();
+
+            //         if(!empty($AcademicPeriodsData)){
+            //             $InstitutionGrades->updateAll(
+            //                 ['start_date' => $AcademicPeriodsData['start_date'], 'start_year' => $AcademicPeriodsData['start_year']],    //field
+            //                 ['education_grade_id' => $InstitutionGradesValue['education_grade_id'], 'institution_id'=> $InstitutionGradesValue['institution_id']] //condition
+            //             );
+            //         }
+            //     }
+            // }
+
+            //This code is for update the corret academic period in institution_grade table [END]
+
+            //This code is for copy one academic period to onother[Start]
+
+            $from_academic_period = $entity->from_academic_period;
+            $to_academic_period = $entity->to_academic_period;
+            $FromAcademicPeriodsData = $AcademicPeriods
+                            ->find()
+                            ->select(['start_date', 'start_year'])
+                            ->where(['id' => $from_academic_period])
+                            ->first();
+
+            $ToAcademicPeriodsData = $AcademicPeriods
+            ->find()
+            ->select(['start_date', 'start_year','end_date'])
+            ->where(['id' => $to_academic_period])
+            ->first();
+
+            $InstitutionGradesdataToInsert = $InstitutionGrades
+            ->find('all')
+            ->where(['start_year' => $FromAcademicPeriodsData['start_year']])
+            ->toArray();
             
-            try{
-                $statement = $connection->prepare('INSERT INTO institution_grades 
-                (
-                education_grade_id, 
-                start_date,
-                start_year,
-                end_date,
-                end_year,
-                institution_id,
-                modified_user_id,
-                modified,
-                created_user_id,
-                created)
+            foreach($InstitutionGradesdataToInsert AS $InstitutionGradesdataValue){
                 
-                VALUES (:education_grade_id, 
-                :start_date, 
-                :start_year,
-                :end_date,
-                :end_year,
-                :institution_id,
-                :modified_user_id,
-                :modified,
-                :created_user_id,
-                :created)');
+                try{
+                    $statement = $connection->prepare('INSERT INTO institution_grades 
+                    (
+                    education_grade_id, 
+                    start_date,
+                    start_year,
+                    end_date,
+                    end_year,
+                    institution_id,
+                    modified_user_id,
+                    modified,
+                    created_user_id,
+                    created)
+                    
+                    VALUES (:education_grade_id, 
+                    :start_date, 
+                    :start_year,
+                    :end_date,
+                    :end_year,
+                    :institution_id,
+                    :modified_user_id,
+                    :modified,
+                    :created_user_id,
+                    :created)');
 
-                $statement->execute([
-                'education_grade_id' => $InstitutionGradesdataValue->education_grade_id,
-                'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
-                'start_year' => $ToAcademicPeriodsData['start_year'],
-                'end_date' => null,
-                'end_year' => null,
-                'institution_id' => $InstitutionGradesdataValue->institution_id,
-                'modified_user_id' => 2,
-                'modified' => date('Y-m-d H:i:s'),
-                'created_user_id' => 2,
-                'created' => date('Y-m-d H:i:s')
-                ]);
-            
-            }catch (PDOException $e) {
-                echo "<pre>";print_r($e);die;
+                    $statement->execute([
+                    'education_grade_id' => $InstitutionGradesdataValue->education_grade_id,
+                    'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
+                    'start_year' => $ToAcademicPeriodsData['start_year'],
+                    'end_date' => null,
+                    'end_year' => null,
+                    'institution_id' => $InstitutionGradesdataValue->institution_id,
+                    'modified_user_id' => 2,
+                    'modified' => date('Y-m-d H:i:s'),
+                    'created_user_id' => 2,
+                    'created' => date('Y-m-d H:i:s')
+                    ]);
+                
+                }catch (PDOException $e) {
+                    echo "<pre>";print_r($e);die;
+                }
             }
+
+            //This code is for copy one academic period to onother[END]
+
+
+            //This code is for update correct education grade[Start]
+            $from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
+            $to_end_date = $ToAcademicPeriodsData['end_date']->format('Y-m-d');
+            $to_start_year = $ToAcademicPeriodsData['start_year'];
+            $from_start_date = "'".$from_start_date."'";
+            $to_end_date = "'".$to_end_date."'";
+            $final_from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
+            $statement = $connection->prepare("SELECT education_systems.academic_period_id,correct_grade.id AS correct_grade_id,institution_grades.* FROM `institution_grades`
+            INNER JOIN education_grades wrong_grade ON wrong_grade.id = institution_grades.education_grade_id
+            INNER JOIN education_grades correct_grade ON correct_grade.code = wrong_grade.code
+            INNER JOIN education_programmes ON correct_grade.education_programme_id = education_programmes.id
+            INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+            INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+            INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+            LEFT JOIN academic_periods ON institution_grades.start_date BETWEEN $from_start_date AND $to_end_date
+            AND academic_periods.academic_period_level_id != -1
+            AND education_systems.academic_period_id = academic_periods.id
+            WHERE correct_grade.id != institution_grades.education_grade_id AND academic_periods.id=$to_academic_period");
+
+            $statement->execute();
+            $row = $statement->fetchAll(\PDO::FETCH_ASSOC);
+            // echo "<pre>";print_r($row);die;
+            foreach($row AS $rowData){
+                $InstitutionGrades->updateAll(
+                    ['education_grade_id' => $rowData['correct_grade_id']],    //field
+                    ['education_grade_id' => $rowData['education_grade_id'], 'institution_id'=>$rowData['institution_id'],  'start_date' => $final_from_start_date, 'start_year' => $to_start_year]
+                );
+            }
+            //This code is for update correct education grade[End]
+
+
+            //This code is for update the corret academic period in institution_grade table [END]
         }
-
-        //This code is for copy one academic period to onother[END]
-
-
-        //This code is for update correct education grade[Start]
-        $from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
-        $to_end_date = $ToAcademicPeriodsData['end_date']->format('Y-m-d');
-        $to_start_year = $ToAcademicPeriodsData['start_year'];
-        $from_start_date = "'".$from_start_date."'";
-        $to_end_date = "'".$to_end_date."'";
-        $final_from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
-        $statement = $connection->prepare("SELECT education_systems.academic_period_id,correct_grade.id AS correct_grade_id,institution_grades.* FROM `institution_grades`
-        INNER JOIN education_grades wrong_grade ON wrong_grade.id = institution_grades.education_grade_id
-        INNER JOIN education_grades correct_grade ON correct_grade.code = wrong_grade.code
-        INNER JOIN education_programmes ON correct_grade.education_programme_id = education_programmes.id
-        INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
-        INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
-        INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
-        LEFT JOIN academic_periods ON institution_grades.start_date BETWEEN $from_start_date AND $to_end_date
-        AND academic_periods.academic_period_level_id != -1
-        AND education_systems.academic_period_id = academic_periods.id
-        WHERE correct_grade.id != institution_grades.education_grade_id AND academic_periods.id=$to_academic_period");
-
-        $statement->execute();
-        $row = $statement->fetchAll(\PDO::FETCH_ASSOC);
-        // echo "<pre>";print_r($row);die;
-        foreach($row AS $rowData){
-            $InstitutionGrades->updateAll(
-                ['education_grade_id' => $rowData['correct_grade_id']],    //field
-                ['education_grade_id' => $rowData['education_grade_id'], 'institution_id'=>$rowData['institution_id'],  'start_date' => $final_from_start_date, 'start_year' => $to_start_year]
-            );
+        if($entity->features == "Performance Competencies"){
+            $this->log('=======>Before triggerPerformanceCompetenciesShell', 'debug');
+            $this->triggePerformanceCompetenciesShell('PerformanceCompetencies',$entity->from_academic_period, $entity->to_academic_period, $entity->competency_criterias_value, $entity->competency_templates_value, $entity->competency_items_value);
+            $this->log(' <<<<<<<<<<======== After triggerPerformanceCompetenciesShell', 'debug');
         }
-        //This code is for update correct education grade[End]
-
-
-        //This code is for update the corret academic period in institution_grade table [END]
     }
+
+    /*
+    * Function to copy competency_criterias, competency_templates and competency_items to new academic period
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return boolean
+    * @ticket POCOR-6424
+    */
+    
+    public function triggePerformanceCompetenciesShell($shellName, $from_academic_period, $to_academic_period = null, $competency_criterias_value = null, $competency_templates_value = null, $competency_items_value = null)
+    {
+        $args = '';
+        $args .= !is_null($from_academic_period) ? ' '.$from_academic_period : '';
+        $args .= !is_null($to_academic_period) ? ' '.$to_academic_period : '';
+        $args .= !is_null($competency_criterias_value) ? ' '.$competency_criterias_value : '';
+        $args .= !is_null($competency_templates_value) ? ' '.$competency_templates_value : '';
+        $args .= !is_null($competency_items_value) ? ' '.$competency_items_value : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
+     }
+
 
     public function triggerCopyDataShell($shellName,$academicPeriodId = null)
     {
@@ -372,7 +476,8 @@ class DataManagementCopyTable extends ControllerActionTable
 
     public function getFeatureOptions(){
         $options = [
-            'Institution programmes and Grade' => __('Institution programmes and Grade')
+            'Institution programmes and Grade' => __('Institution programmes and Grade'),
+            'Performance Competencies' => __('Performance Competencies')
         ];
         return $options;
     }
