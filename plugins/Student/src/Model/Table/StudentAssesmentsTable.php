@@ -94,7 +94,7 @@ class StudentAssesmentsTable extends ControllerActionTable
                     
                 ]
         ]);
-        //echo "<pre>";print_r($query->toArray());die;
+        
         // Academic Periods filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
@@ -109,7 +109,6 @@ class StudentAssesmentsTable extends ControllerActionTable
 
             $InstitutionStudents = TableRegistry::get('Assessment.AssessmentPeriods');
             $institutionQuery = $InstitutionStudents->find('list')
-                //->contain([''])
                 ->where([
                     'start_date >=' => $startDate,
                     'end_date <=' => $endDate
@@ -185,7 +184,6 @@ class StudentAssesmentsTable extends ControllerActionTable
     {
         $options = ['type' => 'student'];
         $tabElements = $this->controller->getAcademicTabElements($options);
-//echo "<pre>";print_r($tabElements);die;
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Assesments');
     }
