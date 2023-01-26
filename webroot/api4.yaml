@@ -31,7 +31,7 @@ tags:
     description: APIs for Institution Summary
   - name: Institution Grade Summary
     description: APIs for Institution Grade Summary
-  - name: Institution Infrastructure Summary
+  - name: Institution Room Type Summary
     description: APIs for Institution Infrastructure Summary
   - name: Institution Student Nationality Summary
     description: APIs for Institution Student Nationality Summary
@@ -859,10 +859,10 @@ paths:
           '400':
             description: Invalid status value        
         
-  /api/v4/institutions/infrastructure-summaries:
+  /api/v4/institutions/room-type-summaries:
       get:
         tags:
-          - Institution Infrastructure Summary
+          - Institution Room Type Summary
         summary: Get Infrastructure summary for all Institution
         description: Multiple grades can be provided with comma separated strings
         parameters:
@@ -880,19 +880,19 @@ paths:
                 schema:
                   type: array
                   items:
-                    $ref: '#/components/schemas/Institution-Infrastructure-Summary'         
+                    $ref: '#/components/schemas/Room-Type-Summaries'         
               application/xml:
                 schema:
                   type: array
                   items:
-                    $ref: '#/components/schemas/Institution-Infrastructure-Summary'
+                    $ref: '#/components/schemas/Room-Type-Summaries'
           '400':
             description: Invalid status value        
         
   /api/v4/institutions/{institutionId}/infrastructure-summaries:
       get:
         tags:
-          - Institution Infrastructure Summary
+          - Institution Room Type Summary
         summary: Get Infrastructure summary for one Institution
         description: Multiple grades can be provided with comma separated strings
         parameters:
@@ -917,12 +917,12 @@ paths:
                 schema:
                   type: array
                   items:
-                    $ref: '#/components/schemas/Institution-Infrastructure-Summary'         
+                    $ref: '#/components/schemas/Room-Type-Summaries'         
               application/xml:
                 schema:
                   type: array
                   items:
-                    $ref: '#/components/schemas/Institution-Infrastructure-Summary'
+                    $ref: '#/components/schemas/Room-Type-Summaries'
           '400':
             description: Invalid status value        
         
@@ -2110,7 +2110,7 @@ components:
           type: integer
           format: int
           example: 50
-    Institution-Infrastructure-Summary:
+    Room-Type-Summaries:
       type: object
       properties:
         institution_id:
