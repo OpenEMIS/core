@@ -70,16 +70,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User-Details'          
+                $ref: '#/components/schemas/login'          
             application/xml:
               schema:
-                $ref: '#/components/schemas/User-Details'
-        '400':
-          description: Invalid ID supplied
+                $ref: '#/components/schemas/login'
         '404':
-          description: Pet not found
-        '405':
-          description: Validation exception
+          description: Invalid Email or Password
+        '500':
+          description: Invalid Username
       
   /api/v4/institutions:
     get:
@@ -931,7 +929,7 @@ paths:
   /api/v4/institutions/student-nationality-summaries:
       get:
         tags:
-          - Institutions
+          - Institution Student Nationality Summary
         summary: Get All student nationality summaries for all Institution
         description: Multiple values can be provided with comma separated strings
         parameters:
@@ -998,7 +996,7 @@ paths:
   /api/v4/institutions/{institutionId}/grades/{gradeId}/student-nationality-summaries:
       get:
         tags:
-          - Institutions
+          - Institution Student Nationality Summary
         summary: Get student nationality summary from one Grade for one Institution
         description: Multiple values can be provided with comma separated strings
         parameters:
@@ -1917,135 +1915,135 @@ components:
     Institution-Summary:
       type: object
       properties:
-        institution_id :	
+        institution_id :  
           type: integer
           format: int
           example: 1
-        institution_code :	
+        institution_code :  
           type: string
           format: int
           example: 101
-        academic_period_id :	
+        academic_period_id :  
           type: integer
           format: int
           example: 111
-        academic_period_name :	
+        academic_period_name :  
           type: string
           format: int
           example: 2022-2023
-        total_grades :	
+        total_grades :  
           type: integer
           format: int
           example: 5
-        total_lands :	
+        total_lands :  
           type: integer
           format: int
           example: 1
-        total_land_size :	
+        total_land_size :  
           type: integer
           format: int
           example: 400
-        total_buildings :	
+        total_buildings :  
           type: integer
           format: int
           example: 2
-        total_building_sizes :	
+        total_building_sizes :  
           type: integer
           format: int
           example: 100
-        total_floors :	
+        total_floors :  
           type: integer
           format: int
           example: 4
-        total_floor_sizes :	
+        total_floor_sizes :  
           type: integer
           format: int
           example: 100
-        total_rooms :	
+        total_rooms :  
           type: integer
           format: int
           example: 20
-        total_room_sizes :	
+        total_room_sizes :  
           type: integer
           format: int
           example: 50
-        total_room_classrooms :	
+        total_room_classrooms :  
           type: integer
           format: int
           example: 20
-        total_room_classroom_sizes :	
+        total_room_classroom_sizes :  
           type: integer
           format: int
           example: 300
-        total_room_non_classrooms :	
+        total_room_non_classrooms :  
           type: integer
           format: int
           example: 20
-        total_room_non_classroom_sizes :	
+        total_room_non_classroom_sizes :  
           type: integer
           format: int
           example: 300
-        total_students_female :	
+        total_students_female :  
           type: integer
           format: int
           example: 50
-        total_students_male :	
+        total_students_male :  
           type: integer
           format: int
           example: 50
-        total_students :	
+        total_students :  
           type: integer
           format: int
           example: 100
-        total_staff_non_teaching_female :	
+        total_staff_non_teaching_female :  
           type: integer
           format: int
           example: 2
-        total_staff_non_teaching_male :	
+        total_staff_non_teaching_male :  
           type: integer
           format: int
           example: 2
-        total_staff_non_teaching :	
+        total_staff_non_teaching :  
           type: integer
           format: int
           example: 4
-        total_staff_teaching_female :	
+        total_staff_teaching_female :  
           type: integer
           format: int
           example: 2
-        total_staff_teaching_male :	
+        total_staff_teaching_male :  
           type: integer
           format: int
           example: 2
-        total_staff_teaching :	
+        total_staff_teaching :  
           type: integer
           format: int
           example: 4
-        total_staff_female :	
+        total_staff_female :  
           type: integer
           format: int
           example: 4
-        total_staff_male :	
+        total_staff_male :  
           type: integer
           format: int
           example: 4
-        total_staff :	
+        total_staff :  
           type: integer
           format: int
           example: 8
-        total_classes_female :	
+        total_classes_female :  
           type: integer
           format: int
           example: 2
-        total_classes_male :	
+        total_classes_male :  
           type: integer
           format: int
           example: 1
-        total_classes_mixed :	
+        total_classes_mixed :  
           type: integer
           format: int
           example: 3
-        total_classes :	
+        total_classes :  
           type: integer
           format: int
           example: 6
@@ -2723,22 +2721,14 @@ components:
           type: object
           format: timestamp
           example: "2000-01-01 12:00:00"
-  requestBodies:
-    Institutions:
-      description: Pet object that needs to be added to the store
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Institutions'
-        application/xml:
-          schema:
-            $ref: '#/components/schemas/Institutions'
-    UserArray:
-      description: List of user object
-      content:
-        application/json:
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/User-Details'
-  
+    login:
+      type: object
+      properties:
+        message:
+          type: string
+          format: varchar
+          example: "Logged In successfully"
+        data:
+          type: object
+          format: varchar
+          example: "{token:heyJoeXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9kZW1vLm9wZW5lbWlzLm9yZ1wvY29yZVwvYXBpXC92NFwvbG9naW4iLCJpYXQiOjE2NzQ3MDQ1NjUsImV4cCI6MTY3NDcwODE2NSwibmJmIjoxNjc0NzA0NTY1LCJqdGkiOiJBUElEaGtWak9FUHdzUXc2Iiwic3ViIjoyLCJwcnYiOiJlMjE0OWY2ZjU0YWJlZjFjN2Q2NjMzYTUzYzkyMmM1NzgxODA1ZThjIn0.7Qcz1wiCG9LDxxVOUgGAgkTyOCHqfQ5861QGg6xuPOI}"
