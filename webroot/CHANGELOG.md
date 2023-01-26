@@ -1,3 +1,11 @@
+### [3.77.8] - 2023-01-26
+- Implemented: Create swagger API v4 documentation
+- Bug Fixed: Institutions > Students > Academic > Assessments tab: Some changes to Assessment tab
+- Bug Fixed: Report: Report format filter should be listed below all other filters
+- Bug Fixed: Directory > Students > Academic > Report Cards> View: View details showing wrong details
+- Bug Fixed: Administration > Security > Groups > User Groups > List page: The list page header does not show the user group naming
+- Bug Fixed: Institutions>Students/Staff: User should be able to search for students and staffs in Internal Search
+
 ### [3.77.7] - 2023-01-20
 - Bug Fixed: Institution > Staff > Timetables: User is having issue with staffs not being able to view their timetable under Institution > Staff > Timetables
 - Bug Fixed: Institutions>Performance>Assessments: Student that is transferred from School A to School B back to School A is not appearing for one of the subjects that it has marks on
