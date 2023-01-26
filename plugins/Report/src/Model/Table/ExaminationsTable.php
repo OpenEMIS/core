@@ -163,6 +163,49 @@ class ExaminationsTable extends AppTable
             }
         }
     }
+    //POCOR-6637::START
+    public function addAfterAction(Event $event, Entity $entity)
+    {
+        if ($entity->has('feature')) {
+            $feature = $entity->feature;
+
+            $fieldsOrder = ['feature'];
+            switch ($feature) { 
+                case 'Report.RegisteredStudentsExaminationCentre':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'examination_centre_id';
+                    $fieldsOrder[] = 'examination_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'format';
+                    break;
+                case 'Report.NotRegisteredStudents':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'examination_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'format';
+                    break;
+                case 'Report.ExaminationResults': 
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'examination_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'format';
+                    break;
+                default:
+                    break;
+            }
+
+            $this->ControllerAction->setFieldOrder($fieldsOrder);
+        }else{
+            $fieldsOrder = ['feature'];
+            $fieldsOrder[] = 'academic_period_id';
+            $fieldsOrder[] = 'examination_centre_id';
+            $fieldsOrder[] = 'examination_id';
+            $fieldsOrder[] = 'institution_id';
+            $fieldsOrder[] = 'format';
+            $this->ControllerAction->setFieldOrder($fieldsOrder);
+        }
+    }
+    //POCOR-6637::END
 
     public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, Request $request)
     {
