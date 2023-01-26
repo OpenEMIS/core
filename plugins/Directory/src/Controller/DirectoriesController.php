@@ -645,7 +645,7 @@ class DirectoriesController extends AppController
 
                     $exists = false;
 
-                    if (in_array($model->alias(), ['Guardians'])) {
+                    if (in_array($model->alias(), ['Guardians', 'StudentReportCards'])) {
                         $params[$model->aliasField('student_id')] = $session->read('Directory.Directories.id');
                         $exists = $model->exists($params);
                     } elseif (in_array($model->alias(), ['Students'])) {
