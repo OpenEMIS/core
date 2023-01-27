@@ -33,7 +33,7 @@ class StudentAttendanceShell extends Shell
             $systemProcessId = $this->SystemProcesses->addProcess('DatabaseTransfer', getmypid(), 'Archive.TransferLogs', $this->args[0]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
             
-            while (!$exit) {
+            // while (!$exit) {
                 $recordToProcess = $this->getRecords($academicPeriodId);
                 $this->out($recordToProcess);
                 if ($recordToProcess) {
@@ -49,7 +49,7 @@ class StudentAttendanceShell extends Shell
                     $this->out('No records to update ('.Time::now().')');
                     $exit = true;
                 }
-            }
+            // }
             $this->out('End Update for Database Transfer Status ('. Time::now() .')');
             $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
         }else{
