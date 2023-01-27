@@ -1297,7 +1297,9 @@ class DirectoriesTable extends ControllerActionTable
     {
         //$institutionStudents = $this->institutionstudents;
         //print_r($institutionStudents->exists([$institutionStudents->aliasField($institutionStudents->foreignKey()) => $entity->id]));
-
+        //POCOR-7179[START] delete custom field becouse when user is created from directory it insert value in custom field
+        TableRegistry::get('student_custom_field_values')->deleteAll(['student_id' => $entity->id]);
+        //POCOR-7179[END]
         if($this->checkUsersChildRecords($entity)) {
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset'=>true]);
             $event->stopPropagation();
