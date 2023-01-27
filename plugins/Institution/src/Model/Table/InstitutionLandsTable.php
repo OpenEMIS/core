@@ -878,9 +878,11 @@ class InstitutionLandsTable extends ControllerActionTable
             ]
         ]);
 
+        //POCOR-6760[start]
         if($entity->land_status_id != self::END_OF_USAGE) {
             $this->field('end_date', ['entity' => $entity]);
         }
+        //POCOR-6760[end]
 
         $this->field('infrastructure_ownership_id', ['type' => 'select']);
         $this->field('infrastructure_condition_id', ['type' => 'select']);
