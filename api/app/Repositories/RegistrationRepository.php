@@ -19,6 +19,7 @@ use App\Models\RegistrationOtp;
 use App\Models\InstitutionStudent;
 use App\Models\ConfigItem;
 use App\Models\OpenemisTemp;
+use App\Models\InstitutionStudentAdmission;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
@@ -108,16 +109,22 @@ class RegistrationRepository extends Controller
 
             $data['otp'] = $otp;
 
+            $securityUser = SecurityUsers::where('email', $email)->first();
+            if(!$securityUser){
+                return 2;
+            }
+            
+
+            $insertData['security_user_id'] = $securityUser->id;
+            $insertData['verification_otp'] = $encodedOtp;
+            //$insertData['is_expired'] = 0;
+            $insertData['created'] = Carbon::now()->toDateTimeString();
+            $store = SecurityUserCode::insert($insertData);
+
             Mail::send(['text'=>'generateOtp'], $data, function($message) use($email) {
                 $message->to($email, 'OpenEMIS User')
                     ->subject('OpenEMIS Registration OTP Verification.');
             });
-
-            $insertData['email'] = $email;
-            $insertData['otp'] = $encodedOtp;
-            $insertData['is_expired'] = 0;
-            $insertData['created'] = Carbon::now()->toDateTimeString();
-            $store = RegistrationOtp::insert($insertData);
             return 1;
             
         } catch (\Exception $e) {
@@ -164,15 +171,13 @@ class RegistrationRepository extends Controller
             $otp = $params['otp'];
             $encodedOtp = base64_encode($otp);
 
-            $checkOtp = RegistrationOtp::where('otp', $encodedOtp)
-                    ->where('email', $params['email'])
-                    ->first();
+            $checkOtp = SecurityUserCode::where('verification_otp', $encodedOtp)->first();
 
             if($checkOtp){
-                if($checkOtp->is_expired == 1){
+                /*if($checkOtp->is_expired == 1){
                     return 0;
                 }
-                $update = RegistrationOtp::where('id', $checkOtp->id)->update(['is_expired' => 1]);
+                $update = RegistrationOtp::where('id', $checkOtp->id)->update(['is_expired' => 1]);*/
                 return 1;
             } else {
                 return 2;
@@ -311,6 +316,21 @@ class RegistrationRepository extends Controller
 
                             $store = InstitutionStudent::insert($storeStu);
                             
+
+                            //Creating Institution_student_Admission...
+                            $storeAdmission['start_date'] = $academicPeriod['start_date'];
+                            $storeAdmission['end_date'] = $academicPeriod['end_date'];
+                            $storeAdmission['student_id'] = $student->id;
+                            $storeAdmission['status_id'] = 81; //For Pending Approval..
+                            $storeAdmission['institution_id'] = $request['institution_id'];
+                            $storeAdmission['academic_period_id'] = $academicPeriod['id'];
+                            $storeAdmission['education_grade_id'] = $request['education_grade_id'];
+                            $storeAdmission['created_user_id'] = 2;
+                            $storeAdmission['created'] = Carbon::now()->toDateTimeString();
+
+                            $store = InstitutionStudentAdmission::insert($storeAdmission);
+
+
                             if(isset($request['otp'])){
                                 $sendMail = $this->sendSuccessMail($request);
                             }
@@ -371,6 +391,21 @@ class RegistrationRepository extends Controller
                                 $sendMail = $this->sendSuccessMail($request);
                             }
 
+
+
+                            //Creating Institution_student_Admission...
+                            $storeAdmission['start_date'] = $academicPeriod['start_date'];
+                            $storeAdmission['end_date'] = $academicPeriod['end_date'];
+                            $storeAdmission['student_id'] = $student->id;
+                            $storeAdmission['status_id'] = 81; //For Pending Approval..
+                            $storeAdmission['institution_id'] = $request['institution_id'];
+                            $storeAdmission['academic_period_id'] = $academicPeriod['id'];
+                            $storeAdmission['education_grade_id'] = $request['education_grade_id'];
+                            $storeAdmission['created_user_id'] = 2;
+                            $storeAdmission['created'] = Carbon::now()->toDateTimeString();
+
+                            $store = InstitutionStudentAdmission::insert($storeAdmission);
+
                             DB::commit();
                             return 1;
                         }
@@ -391,8 +426,8 @@ class RegistrationRepository extends Controller
                     $openemisNumber = $this->getNewOpenemisNo();
 
                     //Creating Security_User...
-                    $insertUser['username'] = '';
-                    $insertUser['password'] = '';
+                    $insertUser['username'] = $openemisNumber??Null;
+                    $insertUser['password'] = "";
                     $insertUser['openemis_no'] = $openemisNumber??Null;
                     $insertUser['first_name'] = $request['first_name'];
                     $insertUser['middle_name'] = $request['middle_name']??"";
@@ -445,6 +480,21 @@ class RegistrationRepository extends Controller
                         $storeStu['created'] = Carbon::now()->toDateTimeString();
 
                         $store = InstitutionStudent::insert($storeStu);
+                        
+
+                        //Creating Institution_student_Admission...
+                        $storeAdmission['start_date'] = $academicPeriod['start_date'];
+                        $storeAdmission['end_date'] = $academicPeriod['end_date'];
+                        $storeAdmission['student_id'] = $student->id;
+                        $storeAdmission['status_id'] = 81; //For Pending Approval..
+                        $storeAdmission['institution_id'] = $request['institution_id'];
+                        $storeAdmission['academic_period_id'] = $academicPeriod['id'];
+                        $storeAdmission['education_grade_id'] = $request['education_grade_id'];
+                        $storeAdmission['created_user_id'] = 2;
+                        $storeAdmission['created'] = Carbon::now()->toDateTimeString();
+
+                        $store = InstitutionStudentAdmission::insert($storeAdmission);
+
                         if(isset($request['otp'])){
                             $sendMail = $this->sendSuccessMail($request);
                         }
@@ -477,7 +527,9 @@ class RegistrationRepository extends Controller
             $param = $request->all();
             
             $encodedOtp = base64_encode($request['otp']??"");
-            $otpData = RegistrationOtp::where('otp', $encodedOtp)->first();
+            //$otpData = RegistrationOtp::where('otp', $encodedOtp)->first();
+            $otpData = SecurityUserCode::join('security_users', 'security_users.id', '=', 'security_user_codes.security_user_id')->where('verification_otp', $encodedOtp)->first();
+            
 
             if($otpData){
                 $data = [];
