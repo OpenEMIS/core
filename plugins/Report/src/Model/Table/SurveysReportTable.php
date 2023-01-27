@@ -109,15 +109,12 @@ class SurveysReportTable extends AppTable
             ->leftJoin(['Institutions' => 'institutions'], [
                 'InstitutionTypes.id = Institutions.institution_type_id'
             ])
-            ->leftJoin(['Institutions' => 'institutions'], [
+            ->leftJoin(['Areas' => $areas->table()], [
                 'Areas.id = Institutions.area_id'
             ])
-            ->leftJoin(['Areas' => 'Areas'], [
-                'AreaLevels.id = Areas.area_level_id'
-            ])
-            ->innerJoin([$areaLevels->alias() => $areaLevels->table()],
+            ->leftJoin([$areaLevels->alias() => $areaLevels->table()],
             [
-                $areaLevels->aliasField('id') . ' = '. $areas->aliasField('area_level_id')
+                $areaLevels->aliasField('id') . ' = '. 'Areas.area_level_id'
             ])
             ->contain([
                 'Institutions.Areas',
