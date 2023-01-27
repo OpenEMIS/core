@@ -31,10 +31,10 @@ class PORGI8 extends Migration
 
 
         //Creating backup 'zz_8_student_statuses' table...
-        DB::statement('CREATE TABLE `zz_8_student_statuses` LIKE `student_statuses`');
+        /*DB::statement('CREATE TABLE `zz_8_student_statuses` LIKE `student_statuses`');
         DB::statement('INSERT INTO `zz_8_student_statuses` SELECT * FROM `student_statuses`');
 
-        DB::statement("INSERT INTO `student_statuses` (`id`, `code`, `name`) VALUES (NULL, 'PENDINGADMISSION', 'Pending Admission')");
+        DB::statement("INSERT INTO `student_statuses` (`id`, `code`, `name`) VALUES (NULL, 'PENDINGADMISSION', 'Pending Admission')");*/
 
     }
 
@@ -51,7 +51,7 @@ class PORGI8 extends Migration
         DB::statement('RENAME TABLE `zz_8_config_items` TO `config_items`');
 
 
-        DB::statement('DROP TABLE IF EXISTS `student_statuses`');
-        DB::statement('RENAME TABLE `zz_8_student_statuses` TO `student_statuses`');
+        /*DB::statement('DROP TABLE IF EXISTS `student_statuses`');
+        DB::statement('RENAME TABLE `zz_8_student_statuses` TO `student_statuses`');*/
     }
 }
