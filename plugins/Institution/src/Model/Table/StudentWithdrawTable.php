@@ -482,17 +482,27 @@ class StudentWithdrawTable extends ControllerActionTable
      * */
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+
         $findstudent = TableRegistry::get('institution_students');
         $studentWithdraw = TableRegistry::get('institution_student_withdraw');
 
-        $step = TableRegistry::get('workflow_steps');
-        $stepStatusId =  $step->find()->where(['name'=>'Withdrawn'])->first()->id;
+        $WorkflowStepsTable = TableRegistry::get('workflow_steps');
+        $WorkflowsTable = TableRegistry::get('workflows');
+        $stepStatusId = $WorkflowStepsTable
+                            ->find()
+                            ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
+                                [ $WorkflowsTable->aliasField('id').'='.$WorkflowStepsTable->aliasField('workflow_id') ]
+                            )->where([
+                                $WorkflowsTable->aliasField('code') =>'STUDENT-WITHDRAW-001',
+                                $WorkflowStepsTable->aliasField('name') => 'Withdrawn'
+                            ])->first()->id;
 
         $studentId = $entity->student_id;
         
         $studentdata = $findstudent->find()->where(['student_status_id'=>1, 'student_id'=>$studentId,'education_grade_id'=>$entity->education_grade_id, 'academic_period_id'=>$entity->academic_period_id])->first();
-
+        
         $studentdraw = $studentWithdraw->find()->where(['status_id'=>$stepStatusId, 'student_id'=>$studentId,'education_grade_id'=>$entity->education_grade_id, 'academic_period_id'=>$entity->academic_period_id])->first();
+        
         if(!empty($studentdata) && !empty($studentdraw)){
             return false;
         }else{
