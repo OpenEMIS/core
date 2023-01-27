@@ -6,8 +6,12 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
+use Cake\Network\Request;
+use Cake\ORM\Behavior;
+use Cake\Network\Session;
 
 class StudentBehavioursTable extends AppTable {
+
 	public function initialize(array $config) {
 		parent::initialize($config);
 
@@ -26,12 +30,14 @@ class StudentBehavioursTable extends AppTable {
 		$this->ControllerAction->setFieldOrder(['institution_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'student_behaviour_category_id']);
 	}
         
-	public function beforeFind( Event $event, Query $query )
-	{   
-		$userData = $this->Session->read();
+	public function beforeFind(Event $event, Query $query, $options) 
+	{
+		
 		if (isset($this->controller->name) && $this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
-			if ($this->Session->read('Auth.User.is_guardian') == 1) {
+			if ($_SESSION['Auth']['User']['is_guardian'] == 1) {
+				$userData = $this->Session->read();
 				$sId = $this->Session->read('Student.ExaminationResults.student_id'); 
+				//$sId = $_SESSION['Student']['ExaminationResults']['student_id'];
 				/**
                  * Need to add current login id as param when no data found in existing variable
                  * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
@@ -45,7 +51,8 @@ class StudentBehavioursTable extends AppTable {
                 }
                 //# END: [POCOR-6548] Check if user data not found then add current login user data
 			} else {
-				$studentId = $this->Session->read('Auth.User.id');
+				//$studentId = $this->Session->read('Auth.User.id');
+				$studentId = $_SESSION['Auth']['User']['id'];
 			}
 		} 
 
