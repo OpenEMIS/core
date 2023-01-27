@@ -46,8 +46,7 @@ class SurveysReportTable extends AppTable
         $SurveyColumns = TableRegistry::get('survey_table_columns');
         $areas = TableRegistry::get('areas');
         $areaLevels = TableRegistry::get('area_levels');
-        $Areas = TableRegistry::get('AreaLevel.AreaLevels');
-
+        
         $condition = [];
         $requestData = json_decode($settings['process']['params']);
         $institutionID = $requestData->institution_id;
