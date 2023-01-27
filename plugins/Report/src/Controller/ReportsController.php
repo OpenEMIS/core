@@ -149,7 +149,7 @@ class ReportsController extends AppController
                 'Report.StaffExtracurriculars' => __('Staff Extracurricular'),
                 'Report.InstitutionStaffDetailed' => __('Detailed Staff Data'), //POCOR-6662
                 'Report.StaffSubjects' => __('Staff Subjects'), //POCOR-6688
-
+                'Report.StaffRequirements' => __('Staff Requirements'), // POCOR-5185
             ];
         } elseif ($module == 'Textbooks') {
             $options = [
