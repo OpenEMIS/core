@@ -370,7 +370,7 @@ class StaffAttendancesTable extends ControllerActionTable
     ];
              
     $query->where($conditions)->group(['security_users.id','month_generator.year_name','month_generator.month_id'])
-    ->order(['institutions.code','security_users.openemis_no','month_generator.year_name','month_generator.month_id']);
+    ->order(['Institutions.code','security_users.openemis_no','month_generator.year_name','month_generator.month_id']);
     $query->join($join);
     $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row)  {
