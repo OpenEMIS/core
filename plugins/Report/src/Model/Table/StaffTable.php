@@ -1,6 +1,7 @@
 <?php
 namespace Report\Model\Table;
 
+use App\Model\Traits\MessagesTrait;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -11,6 +12,7 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
 class StaffTable extends AppTable  {
+    use MessagesTrait; //POCOR-5185
     const NO_FILTER = 0; //POCOR-6779
     public function initialize(array $config) {
         $this->table('security_users');
@@ -74,6 +76,12 @@ class StaffTable extends AppTable  {
         }else if ($data[$this->alias()]['feature'] == 'Report.StaffHealthReports') {
             $options['validate'] = 'StaffHealthReports';
         }
+
+        //POCOR-5185[start]
+        if ($data[$this->alias()]['feature'] == 'Report.StaffRequirements') {
+            $options['validate'] = 'StaffRequirements';
+        }
+        //POCOR-5185[end]
     }
 
 
@@ -93,6 +101,9 @@ class StaffTable extends AppTable  {
         $this->ControllerAction->field('health_report_type',['type' => 'hidden']);
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']); //POCOR-6779
         $this->ControllerAction->field('education_subject_id', ['type' => 'hidden']); //POCOR-6779
+        $this->ControllerAction->field('student_per_teacher_ratio', ['type' => 'hidden']); //POCOR-5185
+        $this->ControllerAction->field('upper_tolerance', ['type' => 'hidden']); //POCOR-5185
+        $this->ControllerAction->field('lower_tolerance', ['type' => 'hidden']); //POCOR-5185
         $this->ControllerAction->field('format');
 
     }
@@ -163,7 +174,7 @@ class StaffTable extends AppTable  {
                 'Report.StaffQualifications','Report.StaffLicenses',
                 'Report.StaffEmploymentStatuses',
                 'Report.StaffTrainingReports','Report.StaffPositions','Report.PositionSummary',
-                'Report.StaffExtracurriculars','Report.InstitutionStaffDetailed','Report.StaffSubjects'])) {
+                'Report.StaffExtracurriculars','Report.InstitutionStaffDetailed','Report.StaffSubjects', 'Report.StaffRequirements'])) {
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
                 $currentPeriod = $AcademicPeriodTable->getCurrent();//POCOR-6662
@@ -190,7 +201,7 @@ class StaffTable extends AppTable  {
                 'Report.StaffLicenses','Report.StaffEmploymentStatuses',
                 'Report.StaffHealthReports','Report.StaffSalaries','Report.StaffTrainingReports',
                 'Report.StaffLeaveReport','Report.StaffPositions','Report.PositionSummary',
-                'Report.StaffDuties','Report.StaffExtracurriculars','Report.InstitutionStaffDetailed','Report.StaffSubjects']))) {
+                'Report.StaffDuties','Report.StaffExtracurriculars','Report.InstitutionStaffDetailed','Report.StaffSubjects', 'Report.StaffRequirements']))) {
                 $Areas = TableRegistry::get('AreaLevel.AreaLevels');
                 $entity = $attr['entity'];
 
@@ -223,7 +234,7 @@ class StaffTable extends AppTable  {
                 'Report.StaffLicenses','Report.StaffEmploymentStatuses',
                 'Report.StaffHealthReports','Report.StaffSalaries','Report.StaffTrainingReports',
                 'Report.StaffLeaveReport','Report.StaffPositions','Report.PositionSummary',
-                'Report.StaffDuties','Report.StaffExtracurriculars','Report.InstitutionStaffDetailed','Report.StaffSubjects'])) {
+                'Report.StaffDuties','Report.StaffExtracurriculars','Report.InstitutionStaffDetailed','Report.StaffSubjects', 'Report.StaffRequirements'])) {
                 $Areas = TableRegistry::get('Area.Areas');
                 $entity = $attr['entity'];
 
@@ -421,7 +432,7 @@ class StaffTable extends AppTable  {
                 'Report.StaffIdentities','Report.StaffContacts',
                 'Report.StaffQualifications','Report.StaffQualifications',
                 'Report.StaffLicenses','Report.StaffEmploymentStatuses','Report.StaffSalaries',
-                'Report.StaffTrainingReports','Report.StaffExtracurriculars','Report.InstitutionStaffDetailed','Report.StaffSubjects'])) {
+                'Report.StaffTrainingReports','Report.StaffExtracurriculars','Report.InstitutionStaffDetailed','Report.StaffSubjects', 'Report.StaffRequirements'])) {
                 $areaId = $this->request->data[$this->alias()]['area_education_id'];
                 if(!empty($areaId) && $areaId != -1) {
                     //Start:POCOR-6779
@@ -679,4 +690,78 @@ class StaffTable extends AppTable  {
             }
         }
     }
+
+    //POCOR-5185[start]
+    /***
+     * function to get value for student per teacher ratio on feature of staff requirements
+     * @author lakshman jangid
+     * @return array
+     * @ticket POCOR-5185
+    **/
+    public function onUpdateFieldStudentPerTeacherRatio(Event $event, array $attr, $action, Request $request)
+    {
+        $feature = $this->request->data[$this->alias()]['feature'] ?? null;
+        if ($feature && in_array($feature, ['Report.StaffRequirements'])) {
+            $attr['type'] = 'integer';
+            $attr['attr']['min'] = 0;
+            $attr['attr']['max'] = 150;
+            $attr['attr']['required'] = true;
+            //$attr['value'] = $attr->student_per_teacher_ration;
+            //$attr['attr']['value'] = $attr->student_per_teacher_ration;
+
+            return $attr;
+        }
+    }
+
+    /***
+     * function to get value for Upper Tolerance on feature of staff requirements
+     * @author lakshman jangid
+     * @return array
+     * @ticket POCOR-5185
+     **/
+    public function onUpdateFieldUpperTolerance(Event $event, array $attr, $action, Request $request)
+    {
+        if (in_array(($this->request->data[$this->alias()]['feature'] ?? null), ['Report.StaffRequirements'])) {
+            $attr['type'] = 'integer';
+            $attr['attr']['min'] = 0;
+            $attr['attr']['max'] = 100;
+            $attr['attr']['required'] = true;
+            $attr['attr']['label'] = __('Upper Tolerance') . ' <i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="It corresponds to the Cap that the user selects to restrict Year-over-Year decrease for Students and Staff data." tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+            return $attr;
+        }
+    }
+
+    /***
+     * function to get value for Lower Tolerance on feature of staff requirements
+     * @author lakshman jangid
+     * @return array
+     * @ticket POCOR-5185
+     **/
+    public function onUpdateFieldLowerTolerance(Event $event, array $attr, $action, Request $request)
+    {
+        if (in_array(($this->request->data[$this->alias()]['feature'] ?? null), ['Report.StaffRequirements'])) {
+            $attr['type'] = 'integer';
+            $attr['attr']['min'] = 0;
+            $attr['attr']['max'] = 100;
+            $attr['attr']['required'] = true;
+            $attr['attr']['label'] = __('Lower Tolerance') . ' <i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="It corresponds to the Cap that the user selects to restrict Year-over-Year increase for Students and Staff data." tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+            return $attr;
+        }
+    }
+
+    /***
+     * function to apply validation for empty values of staff requirements feature
+     * @author lakshman jangid
+     * @return object
+     * @ticket POCOR-5185
+     **/
+    public function validationStaffRequirements(Validator $validator)
+    {
+        return $validator->notEmpty(['area_level_id', 'area_education_id', 'institution_id', 'student_per_teacher_ratio', 'lower_tolerance', 'upper_tolerance'])
+            ->range('student_per_teacher_ratio', [0, 150], $this->getMessage('StaffRequirements.studentTeacherRatio'))
+            ->range('upper_tolerance', [0, 100], $this->getMessage('StaffRequirements.upperTolerance'))
+            ->range('lower_tolerance', [0, 100], $this->getMessage('StaffRequirements.lowerTolerance'));
+    }
+
+    //POCOR-5185[end]
 }
