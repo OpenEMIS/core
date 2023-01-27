@@ -8,6 +8,8 @@ use Cake\ORM\TableRegistry;
 use Attendance\Model\Table\StudentAttendanceTypesTable as AttendanceTypes;
 use Cake\Log\Log;
 use Cake\Event\Event;
+use DateTime;//POCOR-7183
+use Cake\I18n\Time;//POCOR-7183
 
 class StudentAttendanceMarkTypesTable extends AppTable
 {
@@ -164,6 +166,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
                         //$StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $dayId
                     ];
                 }else{
+                    $dayId = date('Y-m-d',strtotime($dayId));
                     $conditions = [
                         $StudentMarkTypeStatusGrades->aliasField('education_grade_id IN ') => $gradeList,
                         $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId,
@@ -214,6 +217,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
                         $StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $weekEndDay
                     ];
                 }else{
+                    $dayId = date('Y-m-d',strtotime($dayId));
                     $DayConditions = [
                         $StudentMarkTypeStatusGrades->aliasField('education_grade_id IN ') => $gradeList,
                         $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId,
