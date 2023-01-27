@@ -96,7 +96,13 @@ class RegistrationController extends Controller
     {
         try {
             $resp = $this->registrationService->generateOtp($request);
-            return $this->sendSuccessResponse("Otp sent successfully.", $resp);
+            if($resp == 1){
+                return $this->sendSuccessResponse("Otp sent successfully.", $resp);
+            } elseif ($resp == 2) {
+                return $this->sendErrorResponse("Email not registered.");
+            } else {
+                return $this->sendErrorResponse("Failed to sent otp on email.");
+            }
             
             
         } catch (\Exception $e) {
