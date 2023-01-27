@@ -54,9 +54,22 @@ class SurveysReportTable extends AppTable
         $surveySection = $requestData->survey_section;
         $tableQuestion = $requestData->table_question;
         $institutionStatus = $requestData->institution_status;
+        $areaId = $requestData->area_id;
+        $selectedArea = $requestData->area_id;
 
         if($institutionID > 0){
             $condition['Institutions.id'] = $institutionID;
+        }
+        if ($areaId != -1 && $areaId != '' && $areaId != 0) {
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }
+            $condition['Institutions.area_id IN'] = $allselectedAreas;
         }
         if (!empty($institutionStatus)) {
             $condition['Statuses.name'] = $institutionStatus;
@@ -170,6 +183,20 @@ class SurveysReportTable extends AppTable
                 return $row;
             });
         });
+    }
+
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                           ->where([
+                               $Areas->aliasField('parent_id') => $id
+                            ]) 
+                             ->toArray();
+       foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
