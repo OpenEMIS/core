@@ -33,7 +33,7 @@ class StudentAssessmentsShell extends Shell
             $systemProcessId = $this->SystemProcesses->addProcess('DatabaseTransfer', getmypid(), 'Archive.TransferLogs', $this->args[0]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
             
-            while (!$exit) {
+            // while (!$exit) {
                 $recordToProcess = $this->getRecords($academicPeriodId);
                 $this->out($recordToProcess);
                 if ($recordToProcess) {
@@ -49,7 +49,7 @@ class StudentAssessmentsShell extends Shell
                     $this->out('No records to update ('.Time::now().')');
                     $exit = true;
                 }
-            }
+            // }
             $this->out('End Update for StaffAttendances Transfer Status ('. Time::now() .')');
             $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
         }else{
@@ -93,7 +93,7 @@ class StudentAssessmentsShell extends Shell
         $Tablecollection = $archive_connection->schemaCollection();
         $tableSchema = $Tablecollection->listTables();
 
-        if (! in_array('assessment_item_results', $tableSchemaTwo)) {
+        if (! in_array('assessment_item_results', $tableSchema)) {
             $archive_connection->execute("CREATE TABLE IF NOT EXISTS `assessment_item_results` (
               `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
               `marks` decimal(6,2) DEFAULT NULL,
