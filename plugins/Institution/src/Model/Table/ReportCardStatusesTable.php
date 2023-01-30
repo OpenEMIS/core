@@ -1149,9 +1149,11 @@ class ReportCardStatusesTable extends ControllerActionTable
         $timZone = $ConfigItem->zonevalue;
         $value = '';
         if ($entity->has('report_card_completed_on')) {
-            $date = new DateTime($entity->report_card_completed_on, new DateTimeZone($timZone));
-            $date->setTimezone(new DateTimeZone($timZone));
-            $value = $date->format('F d, Y h:i:s');
+            if(!empty($timZone)){
+                $date = new DateTime($entity->report_card_completed_on, new DateTimeZone($timZone));
+                $date->setTimezone(new DateTimeZone($timZone));
+                $value = $date->format('F d, Y h:i:s');
+            }
         }
 
         return $value;
