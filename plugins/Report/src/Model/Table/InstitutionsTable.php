@@ -183,7 +183,8 @@ class InstitutionsTable extends AppTable
     {
         $validator = $this->validationDefault($validator);
         $validator = $validator
-            //->notEmpty('institution_type_id')
+           // ->notEmpty('area_level_id')
+            //->notEmpty('area_education_id')
             ->notEmpty('institution_id');
         return $validator;
     }
@@ -361,6 +362,15 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'position_status';
                     $fieldsOrder[] = 'format';
                     break;
+                case 'Report.StaffAttendances': //POCOR-5181
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'area_level_id';
+                    $fieldsOrder[] = 'area_education_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'start_date';
+                    $fieldsOrder[] = 'end_date';
+                    $fieldsOrder[] = 'format';
+                    break;    
                 case 'Report.InfrastructureNeeds':
                     $fieldsOrder[] = 'academic_period_id';
                     $fieldsOrder[] = 'area_level_id';
@@ -1473,6 +1483,7 @@ class InstitutionsTable extends AppTable
                                     'Report.InstitutionCases',
                                     //'Report.StudentAttendanceSummary',
                                     'Report.ClassAttendanceMarkedSummaryReport',
+                                    'Report.StaffAttendances'
                 ]) && isset($this->request->data[$this->alias()]['academic_period_id'])
                 ) {
 
@@ -1527,7 +1538,8 @@ class InstitutionsTable extends AppTable
             if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords',
                                     'Report.InstitutionCases',
                                     //'Report.StudentAttendanceSummary',
-                                    'Report.ClassAttendanceMarkedSummaryReport'
+                                    'Report.ClassAttendanceMarkedSummaryReport',
+                                    'Report.StaffAttendances'
                                     ])
                 ) {
 
