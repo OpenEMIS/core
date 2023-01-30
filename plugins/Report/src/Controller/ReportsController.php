@@ -185,7 +185,8 @@ class ReportsController extends AppController
             ];
         } elseif ($module == 'Surveys') {
             $options = [
-                'Report.Surveys' => __('Institutions')
+                'Report.Surveys' => __('Institutions'),
+                'Report.SurveysReport' => __('Survey Report'),
             ];
         } elseif ($module == 'InstitutionRubrics') {
             $options = [
