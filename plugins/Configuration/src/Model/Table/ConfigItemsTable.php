@@ -347,7 +347,7 @@ class ConfigItemsTable extends AppTable
         }
         return $attr;
     }
-
+ 
     public function onGetValue(Event $event, Entity $entity)
     {
         if ($entity->type == 'Custom Validation') {
