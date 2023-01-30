@@ -32,8 +32,9 @@ class StudentBehavioursTable extends AppTable {
         
 	public function beforeFind(Event $event, Query $query, $options) 
 	{
-		
+		//$userData = $this->Session->read();
 		if (isset($this->controller->name) && $this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
+			//if ($this->Session->read('Auth.User.is_guardian') == 1) {
 			if ($_SESSION['Auth']['User']['is_guardian'] == 1) {
 				$userData = $this->Session->read();
 				$sId = $this->Session->read('Student.ExaminationResults.student_id'); 
@@ -61,9 +62,13 @@ class StudentBehavioursTable extends AppTable {
 	    	$session = $this->request->session();
 	        $studentId = $session->read('Student.Students.id');
 	    }/*POCOR-6267 ends*/ 
-
-	    $conditions[$this->aliasField('student_id')] = $studentId;
-		$query->where($conditions, [], true);        
+	    if(!empty($studentId)){ //POCOR-7196
+		    $conditions[$this->aliasField('student_id')] = $studentId;
+			$query->where($conditions, [], true); 
+		}else{ // POCOR-7196
+			$query ;
+		}
+		     
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
