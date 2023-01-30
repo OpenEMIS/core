@@ -2514,7 +2514,8 @@ trait MessagesTrait
             'testConnectionSuccess' => 'Connection has been established successfully.',
             'testConnectionFail' => 'Please configure correct Connection to Archive Database.',
             'transferConnectionFail' => 'Please configure connection to Archive Database.',
-            'archiveConfigurationFail' => 'Please ensure configuration in Connection page is Online before Transferring data.'
+            'archiveConfigurationFail' => 'Please ensure configuration in Connection page is Online before Transferring data.',
+            'noDataToArchive' => 'There is no data to archive.'
         ],
         'CopyData' => [
             'genralerror' => 'To and from academic period can not be same.',
