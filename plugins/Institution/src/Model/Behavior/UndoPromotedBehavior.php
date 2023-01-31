@@ -86,9 +86,6 @@ class UndoPromotedBehavior extends UndoBehavior {
 				}
 			}
 		}
-		
 			return $studentIds;
-		
-		
 	}
 }
