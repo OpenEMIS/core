@@ -505,10 +505,10 @@ class StudentWithdrawTable extends ControllerActionTable
         
         if(!empty($studentdata) && !empty($studentdraw)){
             //POCOR-7209 start
-
             $message = __('Student is already enrolled');
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
             $event->stopPropagation();
+            
             //POCOR-7209 end
             return false;
         }else{
