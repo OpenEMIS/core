@@ -706,9 +706,6 @@ class StaffTable extends AppTable  {
             $attr['attr']['min'] = 0;
             $attr['attr']['max'] = 150;
             $attr['attr']['required'] = true;
-            //$attr['value'] = $attr->student_per_teacher_ration;
-            //$attr['attr']['value'] = $attr->student_per_teacher_ration;
-
             return $attr;
         }
     }
