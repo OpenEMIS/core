@@ -6,6 +6,8 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Institution\Model\Behavior\UndoBehavior;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Query;
+use Cake\ORM\ResultSet;
 
 class UndoPromotedBehavior extends UndoBehavior {
 	public function initialize(array $config) {
@@ -58,15 +60,10 @@ class UndoPromotedBehavior extends UndoBehavior {
 					$studentPromoteRecord = $institutionStudent->find()->where(['student_status_id'=>$promoteId, 'student_id'=>$studentId,'academic_period_id'=>$entity->academic_period_id])->first();
 					$promoteInstitutionId = $studentPromoteRecord->institution_id;
 					if($promoteInstitutionId != $enrolledInstitutionId && !empty($enrolledInstitutionId)){
-						//die('ok');
 						$message = __('There is an existing enrolment. Please contact ')."$institutionCode" .' - '. $institutionName;
-			            //$this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-			            //$event->stopPropagation();
-			            //return false;
-			            $undoPromote = false; //POCOR-6992 end
+			            return false; //POCOR-6992 end
 
 					}else{ // add if else condition in POCOR-6992
-						//die('pkkop0');
 	                    $prevInstitutionStudent = $this->deleteEnrolledStudents($studentId, $this->statuses['PROMOTED']);
 	                    $whereId = '';
 	                    $whereConditions = '';
@@ -89,16 +86,9 @@ class UndoPromotedBehavior extends UndoBehavior {
 				}
 			}
 		}
-		if($undoPromote == false){
-			
-			$message = __('There is an existing enrolment. Please contact');
-			          //  $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-			           // $event->stopPropagation();
-			//$this->_table->Alert->error($message, ['reset'=>true]);
-			return false ;
-		}else{
+		
 			return $studentIds;
-		}
+		
 		
 	}
 }
