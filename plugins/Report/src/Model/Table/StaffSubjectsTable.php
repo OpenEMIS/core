@@ -35,10 +35,12 @@ class StaffSubjectsTable extends AppTable  {
         $education_grade_id = $requestData->education_grade_id;
         //End:POCOR-6779
 
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $periodEntity = $AcademicPeriods->get($academicPeriodId);
-        $startDate = $periodEntity->start_date->format('Y-m-d');
-        $endDate = $periodEntity->end_date->format('Y-m-d');
+        $academicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        //POCOR-7095[start]
+        //$periodEntity = $AcademicPeriods->get($academicPeriodId);
+        //$startDate = $periodEntity->start_date->format('Y-m-d');
+        //$endDate = $periodEntity->end_date->format('Y-m-d');
+        //POCOR-7095[end]
         $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $Staff = TableRegistry::get('Security.Users');
         $Genders = TableRegistry::get('User.Genders');
@@ -54,8 +56,11 @@ class StaffSubjectsTable extends AppTable  {
         }
         $ins_SubId = $institutionStaffaa->id;
         //End:POCOR-6779
-        $conditions = [];
-        if (!empty($academicPeriodId)) {
+        $conditions = [
+            $academicPeriods->aliasField('id') => $academicPeriodId,
+        ];
+        //POCOR-7095[start]
+        /*if (!empty($academicPeriodId)) {
             if($this->aliasField('end_date') == null){
                 $conditions = [
                     $this->aliasField('start_date') . ' >=' => $startDate,
@@ -68,9 +73,10 @@ class StaffSubjectsTable extends AppTable  {
                 ];
             }
             
-        }
+        }*/
+        //POCOR-7095[end]
         //Start:POCOR-6779
-        if(!empty($indSubjectId)){
+        if(!empty($indSubjectId) && $ins_SubId){
             $conditions['institution_subject_id'] = $ins_SubId; 
         }
         //End:POCOR-6779
@@ -86,7 +92,7 @@ class StaffSubjectsTable extends AppTable  {
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',  
                 'nationality_id' => 'Users.nationality_id',             
-                'institution_subject_name' => 'InstitutionSubjects.name',
+                'institution_subject_name' => 'institution_subjects.name',
                 'teacher_empd_no' => $Staff->aliasField('openemis_no'),
                 'institution_subject_id'=> $this->aliasField('institution_subject_id'),
                 'openemis_no' => $Staff->aliasField('openemis_no'),
@@ -113,12 +119,12 @@ class StaffSubjectsTable extends AppTable  {
                         'Institutions.area_id'//POCOR-6779
                     ]
                 ],
-                'InstitutionSubjects' => [
+                /*'InstitutionSubjects' => [
                     'fields' => [
                         'InstitutionSubjects.name',
                         'InstitutionSubjects.id'
                     ]
-                ],
+                ],*/
                 'Users'=>[
                     'fields' =>[
                         'identity_number' => 'Users.identity_number',
@@ -152,6 +158,16 @@ class StaffSubjectsTable extends AppTable  {
                     $MainNationalities->aliasField('id = ') . $Staff->aliasField('nationality_id')
                 ]
             )
+            //POCOR-7095[start]
+            ->leftJoin([
+                $InstitutionSubjj->alias() => $InstitutionSubjj->table()], [
+                    $InstitutionSubjj->aliasField('id = ') . $this->aliasField('institution_subject_id')
+            ])
+            ->leftJoin([
+                $academicPeriods->alias() => $academicPeriods->table()], [
+                    $academicPeriods->aliasField('id = ') . $InstitutionSubjj->aliasField('academic_period_id')
+            ])
+            //POCOR-7095[end]
             ->where([$conditions])
             ->order(['institution_name']);
 
@@ -363,7 +379,7 @@ class StaffSubjectsTable extends AppTable  {
         ];	
 
 		$newFields[] = [
-            'key' => 'InstitutionSubjects.name',
+            'key' => 'institution_subjects.name',
             'field' => 'institution_subject_name',
             'type' => 'string',
             'label' => __('Subject')
