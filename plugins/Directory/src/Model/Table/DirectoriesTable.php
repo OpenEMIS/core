@@ -1297,7 +1297,9 @@ class DirectoriesTable extends ControllerActionTable
     {
         //$institutionStudents = $this->institutionstudents;
         //print_r($institutionStudents->exists([$institutionStudents->aliasField($institutionStudents->foreignKey()) => $entity->id]));
-
+        //POCOR-7179[START] delete custom field becouse when user is created from directory it insert value in custom field
+        TableRegistry::get('student_custom_field_values')->deleteAll(['student_id' => $entity->id]);
+        //POCOR-7179[END]
         if($this->checkUsersChildRecords($entity)) {
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset'=>true]);
             $event->stopPropagation();
@@ -1419,6 +1421,11 @@ class DirectoriesTable extends ControllerActionTable
             $institutionStaffShifts = TableRegistry::get('institution_staff_shifts')
                 ->find()->where(['staff_id' => $securityUserId])->count();
 
+            //// POCOR-7179[START]
+            $userNationalities = TableRegistry::get('user_nationalities')
+                ->find()->where(['security_user_id' => $securityUserId])->count();
+            // POCOR-7179[END]
+
             if($institutionClassStudents ||
                 $userActivities ||
                 $studentCustomFieldValues ||
@@ -1436,7 +1443,7 @@ class DirectoriesTable extends ControllerActionTable
                 $userSpecialNeedsServices ||
                 $userSpecialNeedsAssessments ||
                 $institutionCases ||
-                $institutionStaffShifts) {
+                $institutionStaffShifts || $userNationalities) {
                 $result = true;
             }
         }
