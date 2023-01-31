@@ -385,7 +385,7 @@ class InstitutionPositionsTable extends AppTable
             $type = array_key_exists($staffType, $options) ? $options[$staffType] : '';
 
             if (!empty($type)) {
-                $staffPositionTitleType .= ' - ' . $type;
+                $staffPositionTitleType .= $entity->staff_position_title['name'] . ' - ' . $type;
             }
         } else {
             Log::write('debug', $entity->name . ' has no staff_position_title...');
