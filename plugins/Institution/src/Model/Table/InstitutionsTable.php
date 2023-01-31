@@ -2213,4 +2213,28 @@ class InstitutionsTable extends ControllerActionTable
         ->toArray();   
         return $shiftOptionsOptions;
     }
+
+    //POCOR-7191::Start
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        if($this->checkInstitutionRecords($entity)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset'=>true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        }
+    }
+    
+    public function checkInstitutionRecords($entity)
+    {
+        $Id = $entity->id ?? 0;
+        $behaviorCategory = TableRegistry::get('institution_activities'); 
+        $data = $behaviorCategory->find()->where(['institution_id'=>$Id])->count(); 
+        if($data > 0)
+        {
+            return true;
+        }else{
+            return false;
+        }
+    }
+    //POCOR-7191::end
 }
