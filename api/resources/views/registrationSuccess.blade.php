@@ -1,6 +1,6 @@
 <p>Dear {{$first_name}} {{$last_name}},</p>
 <br>
-<p>One-time Passowrd (OTP) is {{$otp}}. This OTP expires in 1 hour.</p>
+<p>We have received your registration and we will begin processing them.</p>
 <br>
 <p>Best regards,</p>
 <p>OpenEMIS Support</p>
