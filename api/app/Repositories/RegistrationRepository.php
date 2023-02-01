@@ -107,13 +107,14 @@ class RegistrationRepository extends Controller
             $otp = $otpData['otp'];
             $encodedOtp = $otpData['encodedOtp'];
 
-            $data['otp'] = $otp;
-
             $securityUser = SecurityUsers::where('email', $email)->first();
             if(!$securityUser){
                 return 2;
             }
             
+            $data['otp'] = $otp;
+            $data['first_name'] = $securityUser->first_name;
+            $data['last_name'] = $securityUser->last_name;
 
             $insertData['security_user_id'] = $securityUser->id;
             $insertData['verification_otp'] = $encodedOtp;
@@ -123,7 +124,7 @@ class RegistrationRepository extends Controller
 
             Mail::send(['text'=>'generateOtp'], $data, function($message) use($email) {
                 $message->to($email, 'OpenEMIS User')
-                    ->subject('OpenEMIS Registration OTP Verification.');
+                    ->subject('OpenEMIS - One-time Password (OTP)');
             });
             return 1;
             
@@ -171,13 +172,20 @@ class RegistrationRepository extends Controller
             $otp = $params['otp'];
             $encodedOtp = base64_encode($otp);
 
-            $checkOtp = SecurityUserCode::where('verification_otp', $encodedOtp)->first();
+            $checkOtp = SecurityUserCode::select('security_user_codes.security_user_id','security_user_codes.verification_otp', 'security_user_codes.created')
+                ->join('security_users', 'security_users.id', '=', 'security_user_codes.security_user_id')
+                ->where('verification_otp', $encodedOtp)
+                ->where('security_users.email', $params['email'])
+                ->first();
 
+            
             if($checkOtp){
-                /*if($checkOtp->is_expired == 1){
+                $currentTime = date('Y-m-d h:i:s');
+                $otpExpTime = date('Y-m-d h:i:s', strtotime($checkOtp->created.'+1 hour'));
+
+                if($currentTime > $otpExpTime){
                     return 0;
                 }
-                $update = RegistrationOtp::where('id', $checkOtp->id)->update(['is_expired' => 1]);*/
                 return 1;
             } else {
                 return 2;
@@ -274,7 +282,6 @@ class RegistrationRepository extends Controller
     {
         DB::beginTransaction();
         try {
-            
             if($request['openemis_id'] != ""){
                 $student = SecurityUsers::with(
                         'gender',
@@ -532,11 +539,13 @@ class RegistrationRepository extends Controller
             
 
             if($otpData){
-                $data = [];
+                $data['first_name'] = $otpData->first_name;
+                $data['last_name'] = $otpData->last_name;
+
                 $email = $otpData->email;
                 Mail::send(['text'=>'registrationSuccess'], $data, function($message) use ($email) {
                     $message->to($email, 'OpenEMIS User')
-                        ->subject('OpenEMIS Registration Success Email.');
+                        ->subject('OpenEMIS - Successful Registration');
                 });
             }
 
