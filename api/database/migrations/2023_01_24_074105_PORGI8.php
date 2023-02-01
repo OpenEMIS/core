@@ -14,14 +14,14 @@ class PORGI8 extends Migration
     public function up()
     {
         // Creating registration_otp table...
-        Schema::create('registration_otp', function (Blueprint $table) {
+        /*Schema::create('registration_otp', function (Blueprint $table) {
             $table->id();
             $table->string('email');
             $table->string('otp');
             $table->boolean('is_expired');
             $table->datetime('modified')->nullable();
             $table->datetime('created');
-        });
+        });*/
 
         //Creating backup 'zz_8_config_item' table...
         DB::statement('CREATE TABLE `zz_8_config_items` LIKE `config_items`');
@@ -45,7 +45,7 @@ class PORGI8 extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('registration_otp');
+        //Schema::dropIfExists('registration_otp');
 
         DB::statement('DROP TABLE IF EXISTS `config_items`');
         DB::statement('RENAME TABLE `zz_8_config_items` TO `config_items`');
