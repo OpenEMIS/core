@@ -519,7 +519,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         // Class filter
         $classOptions = [];
         $selectedClass = !is_null($this->request->query('class_id')) ? $this->request->query('class_id') : -1;
-
+        $educationGradeByReportCardId = '';//POCOR-7212
         if ($selectedReportCard != -1) {
             $reportCardEntity = $this->ReportCards->find()->where(['id' => $selectedReportCard])->first();
             if (!empty($reportCardEntity)) {
@@ -532,6 +532,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ])
                     ->order([$Classes->aliasField('name')])
                     ->toArray();
+                $educationGradeByReportCardId = $reportCardEntity->education_grade_id;//POCOR-7212
             } else {
                 // if selected report card is not valid, do not show any students
                 $selectedClass = -1;
@@ -547,6 +548,10 @@ class ReportCardStatusesTable extends ControllerActionTable
         $where[$this->aliasField('institution_class_id')] = $selectedClass;
         $where[$this->aliasField('institution_id')] = $institutionId; //POCOR-6817
         $where[$this->aliasField('student_status_id NOT IN')] = 3; //POCOR-6817
+        //POCOR-7212 starts
+        if(!empty($educationGradeByReportCardId)){
+            $where[$this->aliasField('education_grade_id')] = $educationGradeByReportCardId; 
+        }//POCOR-7212 ends
         //End
 
         $query
