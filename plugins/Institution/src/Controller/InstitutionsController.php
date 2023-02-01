@@ -5285,6 +5285,7 @@ class InstitutionsController extends AppController
                     if(!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)){
                         $institutionClassSubjects = TableRegistry::get('institution_class_subjects');
                         $institutionSubjects = TableRegistry::get('institution_subjects');
+                        $educationGradesSubjects = TableRegistry::get('education_grades_subjects');//POCOR-7197
                         $SubjectsResult = $institutionClassSubjects
                             ->find()
                             ->select([
@@ -5298,9 +5299,15 @@ class InstitutionsController extends AppController
                             ])
                             ->LeftJoin([$institutionSubjects->alias() => $institutionSubjects->table()], [
                                 $institutionSubjects->aliasField('id =') . $institutionClassSubjects->aliasField('institution_subject_id')
-                            ])
+                            ])//POCOR-7197 starts
+                            ->InnerJoin([$educationGradesSubjects->alias() => $educationGradesSubjects->table()], [
+                                $institutionSubjects->aliasField('education_grade_id =') . $educationGradesSubjects->aliasField('education_grade_id'),
+                                $institutionSubjects->aliasField('education_subject_id =') . $educationGradesSubjects->aliasField('education_subject_id')
+                            ])//POCOR-7197 ends
                             ->where([
-                                $institutionClassSubjects->aliasField('institution_class_id') => $institutionClassId
+                                $institutionClassSubjects->aliasField('institution_class_id') => $institutionClassId,
+                                $institutionSubjects->aliasField('academic_period_id') => $academicPeriodId,//POCOR-7197
+                                $educationGradesSubjects->aliasField('auto_allocation !=') => 0//POCOR-7197
                             ])
                             ->toArray();
                            

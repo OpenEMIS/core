@@ -78,6 +78,7 @@ trait MessagesTrait
                 'restrictDelete' => 'The record cannot be deleted.',
                 'restrictDeleteBecauseAssociation' => 'Delete operation is not allowed as there are other information linked to this record.',
                 'NationalitiesRecordNoRemain' => 'There must be at least one Preferred Nationality',
+                'checkIdentities' => 'Please remove attached identity.',
                 'cascadeDelete' => 'All associated information related to this record will also be removed.',
                 'success' => 'The record has been deleted successfully.',
                 'failed' => 'The record is not deleted due to errors encountered.',
@@ -2514,7 +2515,8 @@ trait MessagesTrait
             'testConnectionSuccess' => 'Connection has been established successfully.',
             'testConnectionFail' => 'Please configure correct Connection to Archive Database.',
             'transferConnectionFail' => 'Please configure connection to Archive Database.',
-            'archiveConfigurationFail' => 'Please ensure configuration in Connection page is Online before Transferring data.'
+            'archiveConfigurationFail' => 'Please ensure configuration in Connection page is Online before Transferring data.',
+            'noDataToArchive' => 'There is no data to archive.'
         ],
         'CopyData' => [
             'genralerror' => 'To and from academic period can not be same.',
