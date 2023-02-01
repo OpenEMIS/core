@@ -103,14 +103,7 @@ class ReportsController extends AppController
                 'Report.ClassAttendanceMarkedSummaryReport' => __('Class Attendance Marked Summary Report'),
                 'Report.InfrastructureNeeds' => __('Infrastructure Needs'),
                 'Report.Income' => __('Income Report'),
-                'Report.Expenditure' => __('Expenditure Report'),
-                //Start:POCOR-4570
-                'Report.Uis' => __('UIS-A2&A9'),
-                'Report.Uis2' => __('UIS-A3,A5&A6'),
-                'Report.Uis3' => __('UIS-A10(1)'),
-                'Report.Uis4' => __('UIS-A10(2)'),
-                'Report.Uis5' => __('UIS-A13'),
-                //END:POCOR-4570
+                'Report.Expenditure' => __('Expenditure Report')
             ];
         } elseif ($module == 'Students') {
             $options = [
@@ -185,7 +178,8 @@ class ReportsController extends AppController
             ];
         } elseif ($module == 'Surveys') {
             $options = [
-                'Report.Surveys' => __('Institutions')
+                'Report.Surveys' => __('Institutions'),
+                'Report.SurveysReport' => __('Survey Report'),
             ];
         } elseif ($module == 'InstitutionRubrics') {
             $options = [

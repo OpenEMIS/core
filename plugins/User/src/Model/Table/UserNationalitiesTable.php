@@ -231,16 +231,26 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function beforeDelete(Event $event, Entity $entity)
     {
         //check whether has minimum one nationality record.
-        $query = $this
-                ->find()
-                ->where([
-                    $this->aliasfield('security_user_id') => $entity->security_user_id,
-                    $this->aliasfield('id <> ') => $entity->id
-                ])
-                ->count();
+        // POCOR-7179[START]
+        // $query = $this
+        //         ->find()
+        //         ->where([
+        //             $this->aliasfield('security_user_id') => $entity->security_user_id,
+        //             $this->aliasfield('id <> ') => $entity->id
+        //         ])
+        //         ->count();
 
-        if (!$query) {
-            $this->Alert->warning('general.delete.NationalitiesRecordNoRemain', ['reset' => true]);
+        $UserNationalities = TableRegistry::get('user_identities');
+        $checkexistingNationalities = $UserNationalities->find()
+            ->where([
+                $UserNationalities->aliasField('nationality_id') => $entity->nationality_id,
+                $UserNationalities->aliasField('security_user_id') => $entity->security_user_id,
+            ])->count();
+        // POCOR-7179[END]
+
+        if ($checkexistingNationalities) {
+            $this->Alert->warning('general.delete.checkIdentities', ['reset' => true]);
+            // $this->Alert->warning('general.delete.NationalitiesRecordNoRemain', ['reset' => true]);
             // $this->Alert->warning('UserNationalities.noRecordRemain', ['reset'=>true]);
             return false;
         }
