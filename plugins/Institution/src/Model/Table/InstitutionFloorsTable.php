@@ -772,7 +772,13 @@ class InstitutionFloorsTable extends ControllerActionTable
         $this->field('area');
         $this->field('floor_type_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('start_date', ['entity' => $entity]);
-        $this->field('end_date', ['entity' => $entity]);
+
+        //POCOR-6760[start]
+        if($entity->floor_status_id != self::END_OF_USAGE) {
+            $this->field('end_date', ['entity' => $entity]);
+        }
+        //POCOR-6760[end]
+
         $this->field('infrastructure_condition_id', ['type' => 'select']);
         $this->field('previous_institution_floor_id', ['type' => 'hidden']);
         $this->field('new_floor_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);

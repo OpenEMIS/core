@@ -891,7 +891,13 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->field('name');
         $this->field('room_type_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('start_date', ['entity' => $entity]);
-        $this->field('end_date', ['entity' => $entity]);
+
+        //POCOR-6760[start]
+        if($entity->room_status_id != self::END_OF_USAGE) {
+            $this->field('end_date', ['entity' => $entity]);
+        }
+        //POCOR-6760[end]
+
         $this->field('previous_institution_room_id', ['type' => 'hidden']);
         $this->field('infrastructure_condition_id', ['type' => 'select']);
         $this->field('subjects', [

@@ -374,6 +374,7 @@ class InstitutionPositionsTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
+    
     public function onExcelGetStaffPositionId(Event $event, Entity $entity)
     {
         $options = $this->getSelectOptions('Staff.position_types');
@@ -385,7 +386,9 @@ class InstitutionPositionsTable extends AppTable
             $type = array_key_exists($staffType, $options) ? $options[$staffType] : '';
 
             if (!empty($type)) {
-                $staffPositionTitleType .= ' - ' . $type;
+                // Start POCOR-7195
+                $staffPositionTitleType .= $entity->staff_position_title['name'] . ' - ' . $type;
+                // End POCOR-7195
             }
         } else {
             Log::write('debug', $entity->name . ' has no staff_position_title...');

@@ -33,7 +33,7 @@ class StudentAssessmentsShell extends Shell
             $systemProcessId = $this->SystemProcesses->addProcess('DatabaseTransfer', getmypid(), 'Archive.TransferLogs', $this->args[0]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
             
-            while (!$exit) {
+            // while (!$exit) {
                 $recordToProcess = $this->getRecords($academicPeriodId);
                 $this->out($recordToProcess);
                 if ($recordToProcess) {
@@ -49,7 +49,7 @@ class StudentAssessmentsShell extends Shell
                     $this->out('No records to update ('.Time::now().')');
                     $exit = true;
                 }
-            }
+            // }
             $this->out('End Update for StaffAttendances Transfer Status ('. Time::now() .')');
             $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
         }else{
@@ -93,7 +93,7 @@ class StudentAssessmentsShell extends Shell
         $Tablecollection = $archive_connection->schemaCollection();
         $tableSchema = $Tablecollection->listTables();
 
-        if (! in_array('assessment_item_results', $tableSchemaTwo)) {
+        if (! in_array('assessment_item_results', $tableSchema)) {
             $archive_connection->execute("CREATE TABLE IF NOT EXISTS `assessment_item_results` (
               `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
               `marks` decimal(6,2) DEFAULT NULL,
@@ -122,8 +122,7 @@ class StudentAssessmentsShell extends Shell
                     ->where([
                         'AssessmentItemResults.academic_period_id' => $academicPeriodId
                     ])
-                    ->toArray();
-
+                    ->toArray();              
         if(!empty($assessmentItemResultsData)){
             foreach($assessmentItemResultsData AS $data){
                 if(isset($data["modified_user_id"])){
@@ -203,12 +202,9 @@ class StudentAssessmentsShell extends Shell
             }
         }
 
-        if (in_array('assessment_item_results', $tableSchema)) {
-            $table_name = 'assessment_item_results';
-        }
-        $stmt1 = $connection->prepare("CREATE OR REPLACE VIEW assessment_item_results_archived AS SELECT * FROM assessment_item_results");
-        $stmt1->execute();
-        $assessmentItemResultsData->deleteAll(['academic_period_id' => $academicPeriodId]);
+        $connection->execute("CREATE TABLE IF NOT EXISTS `assessment_item_results_archived` LIKE `assessment_item_results`");
+        $connection->execute("INSERT INTO `assessment_item_results_archived` SELECT * FROM `assessment_item_results` WHERE academic_period_id = $academicPeriodId");
+        $connection->execute("DELETE FROM assessment_item_results WHERE academic_period_id = $academicPeriodId");
         //assessment_item_results[END]
         return true;
     }
