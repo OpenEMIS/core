@@ -1036,36 +1036,38 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
      * */
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $institutionStudent = TableRegistry::get('institution_students');
-        $studentTransfer = TableRegistry::get('institution_student_transfers');
+        $url  = $_SERVER['REQUEST_URI']; 
+        $stringUrl= 'category';
+        if (strpos($url, $stringUrl) == false) {
+            $institutionStudent = TableRegistry::get('institution_students');
+            $studentTransfer = TableRegistry::get('institution_student_transfers');
 
-        $WorkflowStepsTable = TableRegistry::get('workflow_steps');
-        $WorkflowsTable = TableRegistry::get('workflows');
-        $stepStatusId = $WorkflowStepsTable
-                            ->find()
-                            ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
-                                [ $WorkflowsTable->aliasField('id').'='.$WorkflowStepsTable->aliasField('workflow_id') ]
-                            )->where([
-                                $WorkflowsTable->aliasField('code') =>'STUDENT-TRANSFER-2001',
-                                $WorkflowStepsTable->aliasField('name') => 'Transferred'
-                            ])->first()->id;
-        $studentId = $entity->student_id;
-        
-        $StudentEnrollRecord = $institutionStudent->find()->where(['student_status_id'=>1, 'student_id'=>$studentId,'academic_period_id'=>$entity->academic_period_id])->first();
-        
-        $studentTransfers = $studentTransfer->find()->where(['status_id'=>$stepStatusId, 'student_id'=>$studentId, 'academic_period_id'=>$entity->academic_period_id])->first();
-        
-        if(!empty($StudentEnrollRecord) && !empty($studentTransfers)){
-            $message = __('Student is already enrolled');
-            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-            $event->stopPropagation();
-            return false;
-        }else{
-            return true;
+            $WorkflowStepsTable = TableRegistry::get('workflow_steps');
+            $WorkflowsTable = TableRegistry::get('workflows');
+            $stepStatusId = $WorkflowStepsTable
+                                ->find()
+                                ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
+                                    [ $WorkflowsTable->aliasField('id').'='.$WorkflowStepsTable->aliasField('workflow_id') ]
+                                )->where([
+                                    $WorkflowsTable->aliasField('code') =>'STUDENT-TRANSFER-2001',
+                                    $WorkflowStepsTable->aliasField('name') => 'Transferred'
+                                ])->first()->id;
+            $studentId = $entity->student_id;
+            
+            $StudentEnrollRecord = $institutionStudent->find()->where(['student_status_id'=>1, 'student_id'=>$studentId,'academic_period_id'=>$entity->academic_period_id])->first();
+            
+            $studentTransfers = $studentTransfer->find()->where(['status_id'=>$stepStatusId, 'student_id'=>$studentId, 'academic_period_id'=>$entity->academic_period_id])->first();
+            
+            if(!empty($StudentEnrollRecord) && !empty($studentTransfers)){
+                $message = __('Student is already enrolled');
+                $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                $event->stopPropagation();
+                return false;
+            }else{
+                return true;
+            }
         }
 
     }
-
-
 
 }
