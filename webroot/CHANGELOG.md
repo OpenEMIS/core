@@ -1,3 +1,18 @@
+### [3.77.9] - 2023-02-01
+- Implemented: 2.06 Reports > Staff > Monthly Report (Haaziree Report)
+- Implemented: Develop new reports : Reports > Surveys > Tables and Reports > Surveys > Tables
+- Implemented: Institutions>Performance>Report Cards: Past teacher is still showing in the report card
+- Implemented: Develop a migration script to create a summary table for student marks per grade and subject for all area levels
+- Bug Fixed: Institutions>Infrastructure>Overview: End date should show when status is end of usage
+- Bug Fixed: Institutions > Performances > Assessments > Archive Page: No data is showing
+- Bug Fixed: Institutions>Students>Withdraw: Student is having double enrolled status
+- Bug Fixed: Directory> Students/Staff > Nationalities: Unable to delete nationalities and user
+- Bug Fixed: Reports > Institutions > Positions: The column "title" in the report is not showing the full naming of the position
+- Bug Fixed: Administration > System Setup > Field Options > Student Behaviour: A 404 error was shown when deleting categories
+- Bug Fixed: Institutions>Students>Add: Subjects are showing even when auto allocation is set to no
+- Bug Fixed: Institutions>Performance>Report Cards: 404 error when generating report card
+- Bug Fixed: Report>Institution: UIS should not be inside
+
 ### [3.77.8] - 2023-01-26
 - Implemented: Create swagger API v4 documentation
 - Bug Fixed: Institutions > Students > Academic > Assessments tab: Some changes to Assessment tab
