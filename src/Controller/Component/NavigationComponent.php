@@ -706,6 +706,14 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.Associations'],
                 'params' => ['plugin' => 'Institution']
             ],
+
+            'Institutions.Curriculars' => [ //POCOR-6673
+                'title' => 'Curriculars',
+                'parent' => 'Institution.Academic',
+                'selected' => ['Institutions.Curriculars'],
+                'params' => ['plugin' => 'Institution']
+            ],
+
             'Institution.Feeders' => [
                 'title' => 'Feeders',
                 'parent' => 'Institution.Academic',
