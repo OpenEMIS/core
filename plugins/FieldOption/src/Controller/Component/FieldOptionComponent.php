@@ -37,6 +37,7 @@ class FieldOptionComponent extends Component
         'ReportCardCommentCodes' => ['className' => 'ReportCard.ReportCardCommentCodes', 'parent' => 'Institution'],
         'InstitutionCommitteeTypes' => ['className' => 'Institution.InstitutionCommitteeTypes', 'parent' => 'Institution'],
         'InstitutionAttachmentTypes' => ['className' => 'Institution.InstitutionAttachmentTypes', 'parent' => 'Institution'], //START:POCOR-5067
+        //POCOR-6673
 
     // Student
         'StudentAbsenceReasons' => ['className' => 'Institution.StudentAbsenceReasons', 'parent' => 'Student'],
@@ -122,6 +123,8 @@ class FieldOptionComponent extends Component
         'CommentTypes' => ['className' => 'User.CommentTypes', 'parent' => 'Others'],
         'BehaviourClassifications' => ['className' => 'Student.BehaviourClassifications', 'parent' => 'Others'],
         'DemographicWealthQuantileTypes' => ['className' => 'FieldOption.DemographicTypes', 'parent' => 'Others'],
+        'CurricularPositions' => ['className' => 'FieldOption.CurricularPositions', 'parent' => 'Others'],
+        
 
     // Infrastructure
         'InfrastructureOwnerships' => ['className' => 'FieldOption.InfrastructureOwnerships', 'parent' => 'Infrastructure'],
@@ -208,12 +211,13 @@ class FieldOptionComponent extends Component
     }
 
     public function getFieldOptions()
-    {
+    { //print_r($this->fieldOptions);die;
         return $this->fieldOptions;
     }
 
     public function getClassName($key)
     {
-        return $this->fieldOptions[$key]['className'];
+        //print_r($this->fieldOptions[$key]['className']);die;
+       return $this->fieldOptions[$key]['className'];
     }
 }
