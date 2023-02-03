@@ -122,7 +122,7 @@ class RegistrationRepository extends Controller
             $insertData['created'] = Carbon::now()->toDateTimeString();
             $store = SecurityUserCode::insert($insertData);
 
-            Mail::send(['text'=>'generateOtp'], $data, function($message) use($email) {
+            Mail::send('generateOtp', $data, function($message) use($email) {
                 $message->to($email, 'OpenEMIS User')
                     ->subject('OpenEMIS - One-time Password (OTP)');
             });
@@ -543,7 +543,12 @@ class RegistrationRepository extends Controller
                 $data['last_name'] = $otpData->last_name;
 
                 $email = $otpData->email;
-                Mail::send(['text'=>'registrationSuccess'], $data, function($message) use ($email) {
+                /*Mail::send(['text'=>'registrationSuccess'], $data, function($message) use ($email) {
+                    $message->to($email, 'OpenEMIS User')
+                        ->subject('OpenEMIS - Successful Registration');
+                });*/
+
+                Mail::send('registrationSuccess', $data, function($message) use ($email) {
                     $message->to($email, 'OpenEMIS User')
                         ->subject('OpenEMIS - Successful Registration');
                 });
