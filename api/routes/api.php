@@ -113,3 +113,4 @@ Route::get('autocomplete-openemis-no/{id}', 'RegistrationController@autocomplete
 Route::get('autocomplete-identity-number/{id}', 'RegistrationController@autocompleteIdentityNo');
 Route::get('details-by-emis/{id}', 'RegistrationController@detailsByEmis');
 Route::post('institution/students', 'RegistrationController@institutionStudents');
+Route::get('get-student-custom-fields', 'RegistrationController@getStudentCustomFields');

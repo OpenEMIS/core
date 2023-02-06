@@ -49,8 +49,8 @@ class RegistrationService extends Controller
             $data = $this->registrationRepository->educationGradesList()->map(
                 function ($item, $key) {
                     return [
-                        "id" => $item->id,
-                        "name" => $item->name
+                        "id" => $item->educaiton_grade_id,
+                        "name" => $item->educaiton_grade_name
                     ];
                 }
             );
@@ -267,6 +267,40 @@ class RegistrationService extends Controller
             );
 
             return $this->sendErrorResponse('Failed to register student.');
+        }
+    }
+
+
+    public function getStudentCustomFields()
+    {
+        try {
+            $data = $this->registrationRepository->getStudentCustomFields()->map(
+                function ($item, $key) {
+                    
+                    return [
+                        "student_custom_form_id" => $item->student_custom_form_id,
+                        "student_custom_field_id" => $item->student_custom_field_id,
+                        "section" => $item->section,
+                        "name" => $item->name,
+                        "is_mandatory" => $item->is_mandatory,
+                        "is_unique" => $item->is_unique,
+                        "order" => $item->order,
+                        "params" => $item->studentCustomField->params??Null,
+                        "field_type" => $item->studentCustomField->field_type??Null,
+                        "description" => $item->studentCustomField->description??Null
+                    ];
+                }
+            );
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find custom fields list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find custom fields list.');
         }
     }
 
