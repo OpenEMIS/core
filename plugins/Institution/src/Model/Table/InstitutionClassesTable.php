@@ -1655,6 +1655,7 @@ class InstitutionClassesTable extends ControllerActionTable
                             ->where($where)
                             ->where([
                                 $Staff->aliasField('staff_id NOT IN') => $staffIds,
+                                $Staff->aliasField('is_homeroom') => 1,//POCOR-5070
                                 $Staff->aliasField('start_date <= ') => $todayDate,
                                 'OR' => [
                                     [$Staff->aliasField('end_date >= ') => $todayDate],
@@ -1666,9 +1667,9 @@ class InstitutionClassesTable extends ControllerActionTable
                                 $Staff->Users->aliasField('first_name')
                             ]);
                             //if($homeTeacher) {
-                                $query  ->matching('Positions', function ($q) {
-                                    return $q->where(['Positions.is_homeroom' => 1]);
-                                });
+                                // $query  ->matching('Positions', function ($q) {
+                                //     return $q->where(['Positions.is_homeroom' => 1]);
+                                // });
                             //}   //POCOR-7014
                             $query->formatResults(function ($results) {
                                 $returnArr = [];
