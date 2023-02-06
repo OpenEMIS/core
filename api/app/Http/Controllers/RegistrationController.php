@@ -231,6 +231,8 @@ class RegistrationController extends Controller
                 return $this->sendErrorResponse("Identity number not found.");
             }elseif($resp == 6){
                 return $this->sendErrorResponse("Not able to create new student.");
+            }elseif($resp == 7){
+                return $this->sendErrorResponse("Invalid OTP.");
             }else{
                 return $this->sendErrorResponse("Something went wrong.");
             }
@@ -242,6 +244,24 @@ class RegistrationController extends Controller
             );
 
             return $this->sendErrorResponse('Failed to register student.');
+        }
+    }
+
+
+    public function getStudentCustomFields()
+    {
+        try {
+            $data = $this->registrationService->getStudentCustomFields();
+
+            return $this->sendSuccessResponse("Custom fields list found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find custom fields list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find custom fields list.');
         }
     }
 }

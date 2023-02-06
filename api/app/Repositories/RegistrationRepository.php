@@ -20,6 +20,8 @@ use App\Models\InstitutionStudent;
 use App\Models\ConfigItem;
 use App\Models\OpenemisTemp;
 use App\Models\InstitutionStudentAdmission;
+use App\Models\StudentCustomFormField;
+use App\Models\StudentCustomFieldValues;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
@@ -31,7 +33,7 @@ class RegistrationRepository extends Controller
     public function academicPeriodsList()
     {
         try {
-            $academicPeriods = AcademicPeriod::select('id', 'name')->orderBy('id','DESC')->get();
+            $academicPeriods = AcademicPeriod::select('id', 'name')->where('current', 1)->orderBy('id','DESC')->get();
             
             return $academicPeriods;
         } catch (\Exception $e) {
@@ -47,10 +49,26 @@ class RegistrationRepository extends Controller
     public function educationGradesList()
     {
         try {
-            $educationGrades = EducationGrades::select('id', 'name')->get();
+            //$educationGrades = EducationGrades::select('id', 'name')->get();
+
+            $educationGrades = EducationGrades::select(
+                        'academic_periods.id as academic_period_id',
+                        'academic_periods.name as academic_period_name',
+                        'academic_periods.code as academic_period_code',
+                        'education_grades.id as educaiton_grade_id',
+                        'education_grades.name as educaiton_grade_name'
+                    )
+                    ->join('education_programmes', 'education_programmes.id', '=', 'education_grades.education_programme_id')
+                    ->join('education_cycles', 'education_cycles.id', '=', 'education_programmes.education_cycle_id')
+                    ->join('education_levels', 'education_levels.id', '=', 'education_cycles.education_level_id')
+                    ->join('education_systems', 'education_systems.id', '=', 'education_levels.education_system_id')
+                    ->join('academic_periods', 'academic_periods.id', '=', 'education_systems.academic_period_id')
+                    ->where('academic_periods.current', 1)
+                    ->get();
             
             return $educationGrades;
         } catch (\Exception $e) {
+            dd($e);
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -282,7 +300,19 @@ class RegistrationRepository extends Controller
     {
         DB::beginTransaction();
         try {
+            //dd($request->all());
+
+            $encodedOtp = base64_encode($request['otp']??"");
+            //$otpData = RegistrationOtp::where('otp', $encodedOtp)->first();
+            $userData = SecurityUserCode::select('security_users.id as user_id')->join('security_users', 'security_users.id', '=', 'security_user_codes.security_user_id')->where('verification_otp', $encodedOtp)->first();
+
+            if(!$userData){
+                return 7; //Invalid otp...
+            }
+
+            
             if($request['openemis_id'] != ""){
+                Log::info('For User Registration using openemis id.');
                 $student = SecurityUsers::with(
                         'gender',
                         'nationalities',
@@ -302,13 +332,13 @@ class RegistrationRepository extends Controller
                             DB::commit();
                             return 4; //registration unsuccessful – student already enrolled
                         } else {
-                            $stuStatus = StudentStatuses::where('name', 'Pending Admission')->first();
+                            //$stuStatus = StudentStatuses::where('name', 'Pending Admission')->first();
                             $academicPeriod = AcademicPeriod::where('id', $request['academic_period_id'])->first();
 
                             
                             //Creating Institution_student...
                             $storeStu['id'] = Str::uuid();
-                            $storeStu['student_status_id'] = $stuStatus->id??1;
+                            $storeStu['student_status_id'] = 1;
                             $storeStu['student_id'] = $student->id;
                             $storeStu['education_grade_id'] = $request['education_grade_id'];
                             $storeStu['academic_period_id'] = $request['academic_period_id'];
@@ -318,10 +348,11 @@ class RegistrationRepository extends Controller
                             $storeStu['end_year'] = $academicPeriod['end_year'];
                             $storeStu['institution_id'] = $request['institution_id'];
                             $storeStu['previous_institution_student_id'] = $student['institutionStudent']['id']??NULL;
-                            $storeStu['created_user_id'] = 2;
+                            $storeStu['created_user_id'] = $userData->user_id;
                             $storeStu['created'] = Carbon::now()->toDateTimeString();
 
                             $store = InstitutionStudent::insert($storeStu);
+                            Log::info("## Stored in InstitutionStudent ##", $storeStu);
                             
 
                             //Creating Institution_student_Admission...
@@ -332,14 +363,18 @@ class RegistrationRepository extends Controller
                             $storeAdmission['institution_id'] = $request['institution_id'];
                             $storeAdmission['academic_period_id'] = $academicPeriod['id'];
                             $storeAdmission['education_grade_id'] = $request['education_grade_id'];
-                            $storeAdmission['created_user_id'] = 2;
+                            $storeAdmission['created_user_id'] = $userData->user_id;
                             $storeAdmission['created'] = Carbon::now()->toDateTimeString();
 
                             $store = InstitutionStudentAdmission::insert($storeAdmission);
+                            Log::info("## Stored in InstitutionStudentAdmission ##", $storeAdmission);
+
+                            $storeCustomField = $this->storeCustomField($request->custom_fields, $student->id, $userData->user_id);
 
 
                             if(isset($request['otp'])){
                                 $sendMail = $this->sendSuccessMail($request);
+                                Log::info("## Mail sent Successfully. ##");
                             }
 
                             DB::commit();
@@ -356,6 +391,7 @@ class RegistrationRepository extends Controller
                 }
 
             } elseif ($request['identity_number'] != "") {
+                Log::info('For User Registration using identity number.');
                 $student = SecurityUsers::with(
                         'gender',
                         'nationalities',
@@ -374,13 +410,13 @@ class RegistrationRepository extends Controller
                             DB::commit();
                             return 4; //registration unsuccessful – student already enrolled
                         } else {
-                            $stuStatus = StudentStatuses::where('name', 'Pending Admission')->first();
+                            //$stuStatus = StudentStatuses::where('name', 'Pending Admission')->first();
                             $academicPeriod = AcademicPeriod::where('id', $request['academic_period_id'])->first();
 
                             
                             //Creating Institution_student...
                             $storeStu['id'] = Str::uuid();
-                            $storeStu['student_status_id'] = $stuStatus->id??1;
+                            $storeStu['student_status_id'] = 1;
                             $storeStu['student_id'] = $student->id;
                             $storeStu['education_grade_id'] = $request['education_grade_id'];
                             $storeStu['academic_period_id'] = $request['academic_period_id'];
@@ -390,15 +426,13 @@ class RegistrationRepository extends Controller
                             $storeStu['end_year'] = $academicPeriod['end_year'];
                             $storeStu['institution_id'] = $request['institution_id'];
                             $storeStu['previous_institution_student_id'] = $student['institutionStudent']['id']??NULL;
-                            $storeStu['created_user_id'] = 2;
+                            $storeStu['created_user_id'] = $userData->user_id;
                             $storeStu['created'] = Carbon::now()->toDateTimeString();
 
                             $store = InstitutionStudent::insert($storeStu);
-                            if(isset($request['otp'])){
-                                $sendMail = $this->sendSuccessMail($request);
-                            }
+                            Log::info("## Stored in InstitutionStudent ##", $storeStu);
 
-
+                            
 
                             //Creating Institution_student_Admission...
                             $storeAdmission['start_date'] = $academicPeriod['start_date'];
@@ -408,10 +442,21 @@ class RegistrationRepository extends Controller
                             $storeAdmission['institution_id'] = $request['institution_id'];
                             $storeAdmission['academic_period_id'] = $academicPeriod['id'];
                             $storeAdmission['education_grade_id'] = $request['education_grade_id'];
-                            $storeAdmission['created_user_id'] = 2;
+                            $storeAdmission['created_user_id'] = $userData->user_id;
                             $storeAdmission['created'] = Carbon::now()->toDateTimeString();
 
                             $store = InstitutionStudentAdmission::insert($storeAdmission);
+
+                            Log::info("## Stored in InstitutionStudentAdmission ##", $storeAdmission);
+
+
+                            $storeCustomField = $this->storeCustomField($request->custom_fields, $student->id, $userData->user_id);
+
+
+                            if(isset($request['otp'])){
+                                $sendMail = $this->sendSuccessMail($request);
+                                Log::info("## Mail sent successfully. ##");
+                            }
 
                             DB::commit();
                             return 1;
@@ -425,6 +470,7 @@ class RegistrationRepository extends Controller
                     return 5; //registration unsuccessful – identity_number not found
                 }
             } else {
+                Log::info('For New User Registration.');
                 $configItem = ConfigItem::where('code', 'NewStudent')->first();
                 
                 if(isset($configItem) && $configItem['value'] == 1){
@@ -451,10 +497,11 @@ class RegistrationRepository extends Controller
                     $insertUser['nationality_id'] = $request['nationality_id'];
                     $insertUser['identity_type_id'] = $nationality->identity_type_id??Null;
                     $insertUser['identity_number'] = $request['identity_number'];
-                    $insertUser['created_user_id'] = 2;
+                    $insertUser['created_user_id'] = $userData->user_id;
                     $insertUser['created'] = Carbon::now()->toDateTimeString();
                     //dd($insertUser);
                     $userId = SecurityUsers::insertGetId($insertUser);
+                    Log::info("## Stored in SecurityUsers ##", $insertUser);
 
                     if($userId){
                         $student = SecurityUsers::with(
@@ -468,12 +515,12 @@ class RegistrationRepository extends Controller
                         ->first();
 
 
-                        $stuStatus = StudentStatuses::where('name', 'Pending Admission')->first();
+                        //$stuStatus = StudentStatuses::where('name', 'Pending Admission')->first();
                         $academicPeriod = AcademicPeriod::where('id', $request['academic_period_id'])->first();
 
                         //Creating Institution_student...
                         $storeStu['id'] = Str::uuid();
-                        $storeStu['student_status_id'] = $stuStatus->id??1;
+                        $storeStu['student_status_id'] = 1;
                         $storeStu['student_id'] = $student->id;
                         $storeStu['education_grade_id'] = $request['education_grade_id'];
                         $storeStu['academic_period_id'] = $request['academic_period_id'];
@@ -483,11 +530,12 @@ class RegistrationRepository extends Controller
                         $storeStu['end_year'] = $academicPeriod['end_year'];
                         $storeStu['institution_id'] = $request['institution_id'];
                         $storeStu['previous_institution_student_id'] = $student['institutionStudent']['id']??NULL;
-                        $storeStu['created_user_id'] = 2;
+                        $storeStu['created_user_id'] = $userData->user_id;
                         $storeStu['created'] = Carbon::now()->toDateTimeString();
 
                         $store = InstitutionStudent::insert($storeStu);
-                        
+                        Log::info("## Stored in InstitutionStudent ##", $storeStu);
+
 
                         //Creating Institution_student_Admission...
                         $storeAdmission['start_date'] = $academicPeriod['start_date'];
@@ -497,13 +545,19 @@ class RegistrationRepository extends Controller
                         $storeAdmission['institution_id'] = $request['institution_id'];
                         $storeAdmission['academic_period_id'] = $academicPeriod['id'];
                         $storeAdmission['education_grade_id'] = $request['education_grade_id'];
-                        $storeAdmission['created_user_id'] = 2;
+                        $storeAdmission['created_user_id'] = $userData->user_id;
                         $storeAdmission['created'] = Carbon::now()->toDateTimeString();
 
                         $store = InstitutionStudentAdmission::insert($storeAdmission);
 
+                        Log::info("## Stored in InstitutionStudentAdmission ##", $storeAdmission);
+
+
+                        $storeCustomField = $this->storeCustomField($request->custom_fields, $student->id, $userData->user_id);
+
                         if(isset($request['otp'])){
                             $sendMail = $this->sendSuccessMail($request);
+                            Log::info("## Mail sent successfully. ##");
                         }
 
                         DB::commit();
@@ -524,6 +578,42 @@ class RegistrationRepository extends Controller
             );
             DB::rollback();
             return $this->sendErrorResponse('Failed to register student.');
+        }
+    }
+
+
+    public function storeCustomField($customFields, $student_id, $user_id)
+    {
+        DB::beginTransaction();
+        try {
+            $cfArray = [];
+            foreach($customFields as $k => $cf){
+                $cfArray[$k]['id'] = Str::uuid();
+                $cfArray[$k]['student_custom_field_id'] = $cf['custom_field_id'];
+                $cfArray[$k]['text_value'] = $cf['text_value'];
+                $cfArray[$k]['number_value'] = $cf['number_value'];
+                $cfArray[$k]['decimal_value'] = $cf['decimal_value'];
+                $cfArray[$k]['textarea_value'] = $cf['textarea_value'];
+                $cfArray[$k]['time_value'] = $cf['time_value'];
+                $cfArray[$k]['date_value'] = $cf['date_value'];
+                $cfArray[$k]['file'] = $cf['file'];
+                $cfArray[$k]['student_id'] = $student_id;
+                $cfArray[$k]['created_user_id'] = $user_id;
+                $cfArray[$k]['created'] = Carbon::now()->toDateTimeString();
+            }
+
+            $store = StudentCustomFieldValues::insert($cfArray);
+            Log::info("## Stored in InstitutionStudentAdmission ##", $cfArray);
+            DB::commit();
+            return true;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to store custom fields.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            DB::rollback();
+            return $this->sendErrorResponse('Failed to custom fields.');
         }
     }
 
@@ -630,6 +720,25 @@ class RegistrationRepository extends Controller
             );
 
             return $this->sendErrorResponse('Failed to get new openemis number.');
+        }
+    }
+
+
+
+    public function getStudentCustomFields()
+    {
+        try {
+            $customFields = StudentCustomFormField::with('studentCustomField')->whereHas('studentCustomField')->where('student_custom_form_id', 1)->get();
+
+            return $customFields;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find custom fields list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find custom fields list.');
         }
     }
 
