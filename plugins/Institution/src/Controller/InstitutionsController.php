@@ -5629,6 +5629,7 @@ class InstitutionsController extends AppController
             $staffId = (array_key_exists('staff_id', $requestData))? $requestData['staff_id'] : 0;
             $previousInstitutionId = (array_key_exists('previous_institution_id', $requestData))? $requestData['previous_institution_id'] : 0;
             $comment = (array_key_exists('comment', $requestData))? $requestData['comment'] : '';
+            $is_homeroom = (array_key_exists('is_homeroom', $requestData))? $requestData['is_homeroom'] : 0;
             //when staff transfer in other institution end
             
             //get academic period data
