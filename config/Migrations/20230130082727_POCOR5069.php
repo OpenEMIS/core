@@ -33,7 +33,10 @@ class POCOR5069 extends AbstractMigration
             $this->execute("UPDATE `institution_staff` SET `staff_position_grade_id` = $staffPositionHomeroom WHERE `id`= $insStaffId");
         }
 
+        $this->execute('SET FOREIGN_KEY_CHECKS=0;');
         $this->execute('ALTER TABLE institution_positions DROP FOREIGN KEY insti_posit_fk_staff_posit_grade_id');
+        $this->execute("ALTER TABLE institution_staff ADD CONSTRAINT `insti_posit_fk_staff_posit_grade_id` FOREIGN KEY (`staff_position_grade_id`) REFERENCES staff_position_grades(`id`)");
+        $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         $this->execute('ALTER TABLE `institution_positions` DROP `staff_position_grade_id`');
         
     }
