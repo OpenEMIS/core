@@ -308,7 +308,7 @@ class RegistrationRepository extends Controller
                             
                             //Creating Institution_student...
                             $storeStu['id'] = Str::uuid();
-                            $storeStu['student_status_id'] = $stuStatus->id??0;
+                            $storeStu['student_status_id'] = $stuStatus->id??1;
                             $storeStu['student_id'] = $student->id;
                             $storeStu['education_grade_id'] = $request['education_grade_id'];
                             $storeStu['academic_period_id'] = $request['academic_period_id'];
@@ -380,7 +380,7 @@ class RegistrationRepository extends Controller
                             
                             //Creating Institution_student...
                             $storeStu['id'] = Str::uuid();
-                            $storeStu['student_status_id'] = $stuStatus->id??0;
+                            $storeStu['student_status_id'] = $stuStatus->id??1;
                             $storeStu['student_id'] = $student->id;
                             $storeStu['education_grade_id'] = $request['education_grade_id'];
                             $storeStu['academic_period_id'] = $request['academic_period_id'];
@@ -473,7 +473,7 @@ class RegistrationRepository extends Controller
 
                         //Creating Institution_student...
                         $storeStu['id'] = Str::uuid();
-                        $storeStu['student_status_id'] = $stuStatus->id??0;
+                        $storeStu['student_status_id'] = $stuStatus->id??1;
                         $storeStu['student_id'] = $student->id;
                         $storeStu['education_grade_id'] = $request['education_grade_id'];
                         $storeStu['academic_period_id'] = $request['academic_period_id'];
