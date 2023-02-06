@@ -6133,6 +6133,7 @@ class InstitutionsController extends AppController
                                                     $InstitutionPositions->aliasField('id') => $institutionPositionId,
                                                 ])
                                                 ->first();
+
                          //POCOR-7188[START]
                         $staffPositionTitles = TableRegistry::get('staff_position_titles');
                         $staffPositionTitlesTbl = $staffPositionTitles->find()
@@ -6145,10 +6146,23 @@ class InstitutionsController extends AppController
                         $SecurityGroupUsers = TableRegistry::get('security_group_users');
                         if(!empty($InstitutionPositionsTbl)){
                             $SecurityRoles = TableRegistry::get('security_roles');
-                            if($InstitutionPositionsTbl->is_homeroom == 1){
-                                $roleArr = ['STAFF', 'HOMEROOM_TEACHER'];
+                            $SecurityRolesTbl = $SecurityRoles->find()
+                                                        ->where([
+                                                            $SecurityRoles->aliasField('id') => $staffPositionTitlesTbl->security_role_id
+                                                        ])->first();
+                            // echo "<pre>";print_r($SecurityRolesTbl);die();
+                            if($is_homeroom == 1){
+                                if(!empty($SecurityRolesTbl)){
+                                    // $roleArr = ['STAFF', 'HOMEROOM_TEACHER', $SecurityRolesTbl->code];
+                                    $roleArr = ['HOMEROOM_TEACHER', $SecurityRolesTbl->code];
+                                }else{
+                                    // $roleArr = ['STAFF', 'HOMEROOM_TEACHER'];
+                                    $roleArr = ['TEACHER', 'HOMEROOM_TEACHER'];
+                                }
                             }else{
-                                $roleArr = ['STAFF'];
+                                
+                                // $roleArr = ['STAFF', "'".$SecurityRolesTbl->code."'"];
+                                $roleArr = ['TEACHER', $SecurityRolesTbl->code];
                             }
                             $SecurityRolesTbl = $SecurityRoles->find()
                                                         ->where([
