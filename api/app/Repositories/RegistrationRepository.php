@@ -325,6 +325,15 @@ class RegistrationRepository extends Controller
                 
                 if($student){
                     $dob = $student['date_of_birth']->format('Y-m-d');
+
+                    //To match the date string given in request params...
+                    $dobArr = explode("-", $dob);
+                    if(count($dobArr) > 0){
+                        $dobArr[1] = ltrim($dobArr[1], '0');
+                        $dobArr[2] = ltrim($dobArr[2], '0');
+                        $dob = $dobArr[0]."-".$dobArr[1]."-".$dobArr[2];
+                    }
+
                     if($dob == $request['date_of_birth']){
 
                         if(isset($student['institutionStudent']['studentStatus']['name']) && $student['institutionStudent']['studentStatus']['name'] == 'Enrolled'){
@@ -369,7 +378,10 @@ class RegistrationRepository extends Controller
                             $store = InstitutionStudentAdmission::insert($storeAdmission);
                             Log::info("## Stored in InstitutionStudentAdmission ##", $storeAdmission);
 
-                            $storeCustomField = $this->storeCustomField($request->custom_fields, $student->id, $userData->user_id);
+                            if(count($request->custom_fields) > 0){
+                                $storeCustomField = $this->storeCustomField($request->custom_fields, $student->id, $userData->user_id);
+                            }
+                            
 
 
                             if(isset($request['otp'])){
@@ -404,6 +416,15 @@ class RegistrationRepository extends Controller
 
                 if($student){
                     $dob = $student['date_of_birth']->format('Y-m-d');
+
+                    //To match the date string given in request params...
+                    $dobArr = explode("-", $dob);
+                    if(count($dobArr) > 0){
+                        $dobArr[1] = ltrim($dobArr[1], '0');
+                        $dobArr[2] = ltrim($dobArr[2], '0');
+                        $dob = $dobArr[0]."-".$dobArr[1]."-".$dobArr[2];
+                    }
+
                     if($dob == $request['date_of_birth']){
                         if(isset($student['institutionStudent']['studentStatus']['name']) == 'Enrolled'){
 
@@ -449,8 +470,10 @@ class RegistrationRepository extends Controller
 
                             Log::info("## Stored in InstitutionStudentAdmission ##", $storeAdmission);
 
-
-                            $storeCustomField = $this->storeCustomField($request->custom_fields, $student->id, $userData->user_id);
+                            if(count($request->custom_fields) > 0){
+                                $storeCustomField = $this->storeCustomField($request->custom_fields, $student->id, $userData->user_id);
+                            }
+                            
 
 
                             if(isset($request['otp'])){
@@ -552,8 +575,10 @@ class RegistrationRepository extends Controller
 
                         Log::info("## Stored in InstitutionStudentAdmission ##", $storeAdmission);
 
-
-                        $storeCustomField = $this->storeCustomField($request->custom_fields, $student->id, $userData->user_id);
+                        if(count($request->custom_fields) > 0){
+                            $storeCustomField = $this->storeCustomField($request->custom_fields, $student->id, $userData->user_id);
+                        }
+                        
 
                         if(isset($request['otp'])){
                             $sendMail = $this->sendSuccessMail($request);
