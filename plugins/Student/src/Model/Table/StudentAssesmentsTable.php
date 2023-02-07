@@ -71,6 +71,10 @@ class StudentAssesmentsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        //POCOR-7201[START]
+        $session = $this->Session;
+        $institutionId = $session->read('Institution.Institutions.id');
+        //POCOR-7201[END]
         $query->contain('Assessments');
         $query->contain('AssessmentPeriods');
         $query->contain('EducationSubjects');
@@ -100,6 +104,7 @@ class StudentAssesmentsTable extends ControllerActionTable
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        $where[$this->aliasField('institution_id')] = $institutionId;  // POCOR-7201
         //End
         //Assesment Period filter
         if(!empty($selectedAcademicPeriod)){
@@ -145,7 +150,8 @@ class StudentAssesmentsTable extends ControllerActionTable
         $institutionClassesId =  $entity->institution_class_id;
         $assessmentPeriodId =  '';
         $institutionId = $entity->institution_id;
-        $totalMark = $ItemResults->getTotalMarksForSubject($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId, $assessmentPeriodId, $institutionId );//POCOR-6479
+        // $totalMark = $ItemResults->getTotalMarksForSubject($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId, $assessmentPeriodId, $institutionId );//POCOR-6479
+        $totalMark = $ItemResults->getTotalMarksForAssessment($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId, $assessmentPeriodId, $institutionId );//POCOR-7201
         return round($totalMark->calculated_total, 2);
     }
 
