@@ -123,7 +123,8 @@ class FieldOptionComponent extends Component
         'CommentTypes' => ['className' => 'User.CommentTypes', 'parent' => 'Others'],
         'BehaviourClassifications' => ['className' => 'Student.BehaviourClassifications', 'parent' => 'Others'],
         'DemographicWealthQuantileTypes' => ['className' => 'FieldOption.DemographicTypes', 'parent' => 'Others'],
-        'CurricularPositions' => ['className' => 'FieldOption.CurricularPositions', 'parent' => 'Others'],
+        'CurricularPositions' => ['className' => 'FieldOption.CurricularPositions', 'parent' => 'Others'],//POCOR-6673
+        'CurricularTypes' => ['className' => 'FieldOption.CurricularTypes', 'parent' => 'Others'],//POCOR-6673
         
 
     // Infrastructure
