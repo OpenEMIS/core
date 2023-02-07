@@ -95,6 +95,14 @@ Route::group(
 
 
         Route::get('institutions/{id}/room-type-summaries', 'InstitutionController@institutionRoomTypeSummaries');
+
+
+
+        Route::get('systems/levels/cycles/programmes/grades/subjects', 'EducationSystemController@getAllEducationSystems');
+
+        Route::get('systems/{system_id}/levels/cycles/programmes/grades/subjects', 'EducationSystemController@getEducationStructureSystems');
+
+        Route::get('systems/{system_id}/levels/{level_id}/cycles/programmes/grades/subjects', 'EducationSystemController@getEducationStructureLevel');
     }
 );
 
