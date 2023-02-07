@@ -192,11 +192,13 @@ class FieldOptionsController extends AppController
     // public function DiagnosticsLevels()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
     //END:POCOR-6873
 
-    /*public function InstitutionCurricularTypes(){
+    //POCOR-6673
+    public function CurricularTypes(){
 
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); 
-    }*/
-
+    }
+    
+    //POCOR-6673
     public function CurricularPositions(){
 
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); 
