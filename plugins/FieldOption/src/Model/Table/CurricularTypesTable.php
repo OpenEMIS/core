@@ -5,14 +5,11 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
-/**
- * POCOR-6673
- */
-class CurricularPositionsTable extends ControllerActionTable
+class CurricularTypesTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
-        $this->table('curricular_positions');
+        $this->table('curricular_types');
         parent::initialize($config);
         
         $this->addBehavior('FieldOption.FieldOption');

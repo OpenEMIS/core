@@ -42,6 +42,7 @@ class InstitutionsController extends AppController
         'InstitutionClasses',
         'InstitutionSubjects',
         'InstitutionTextbooks',
+        'InstitutionCurricular',//POCOR-6673
 
         // students
         'Programmes',
@@ -461,6 +462,12 @@ class InstitutionsController extends AppController
     public function InstitutionTrips()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTrips']);
+    }
+
+    // POCOR-6673
+    public function InstitutionCurriculars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurriculars']);
     }
 
     public function changePageHeaderTrips($model, $modelAlias, $userType)

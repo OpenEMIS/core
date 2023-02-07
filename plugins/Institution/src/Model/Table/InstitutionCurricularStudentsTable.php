@@ -11,18 +11,18 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 
 
-class InstitutionCurricularTypesTable extends ControllerActionTable
+class InstitutionCurricularStudentsTable extends ControllerActionTable
 {
 	public function initialize(array $config)
 	{
-		$this->table('institution_curricular_types');
+		$this->table('institution_curricular_students');
 		parent::initialize($config);
         /*$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index', 'add'],
             'Staff' => ['index', 'add']
         ]);*/
-        $this->addBehavior('FieldOption.FieldOption');
+        
 	}
 	
 }
