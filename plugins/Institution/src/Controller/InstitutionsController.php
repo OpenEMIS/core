@@ -7264,4 +7264,49 @@ class InstitutionsController extends AppController
              }
         }
     }
+
+    /**
+     * POCOR-7224
+     * Changes to Behaviour for Withdraw.
+     * Stop the behavior in add student page. If Student in pending cancellation for withdraw
+    **/ 
+    public function checkStudentStatus($studentId,$academicPeriodId)
+    {
+        $institutionStudents = TableRegistry::get('institution_students');
+        $studentWithdraw = TableRegistry::get('institution_student_withdraw');
+
+        $WorkflowStepsTable = TableRegistry::get('workflow_steps');
+        $WorkflowsTable = TableRegistry::get('workflows');
+        $withdrawnId = TableRegistry::get('student_statuses')->findByCode('WITHDRAWN')->first()->id;
+
+        $stepStatusId = $WorkflowStepsTable
+                            ->find()
+                            ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
+                                [ $WorkflowsTable->aliasField('id').'='.$WorkflowStepsTable->aliasField('workflow_id') ]
+                            )->where([
+                                $WorkflowsTable->aliasField('code') =>'STUDENT-WITHDRAW-001',
+                                $WorkflowStepsTable->aliasField('name') => 'Withdrawn'
+                            ])->first()->id;
+        $PendingStepStatusId = $WorkflowStepsTable
+                            ->find()
+                            ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
+                                [ $WorkflowsTable->aliasField('id').'='.$WorkflowStepsTable->aliasField('workflow_id') ]
+                            )->where([
+                                $WorkflowsTable->aliasField('code') =>'STUDENT-WITHDRAW-001',
+                                $WorkflowStepsTable->aliasField('name') => 'Pending for Cancellation'
+                            ])->first()->id;
+        
+        $studentdata = $institutionStudents->find()->where(['student_status_id'=>$withdrawnId, 'student_id'=>$studentId, 'academic_period_id'=>$academicPeriodId])->first();
+
+        if($PendingStepStatusId != null){
+            $pendingStudentwithdraw = $studentWithdraw->find()->where(['status_id'=>$PendingStepStatusId, 'student_id'=>$studentId, 'academic_period_id'=>$entity->academic_period_id])->first();
+        }
+
+        if(!empty($studentdata) && !empty($pendingStudentwithdraw)){
+            return false; // show message here . can not proceed
+        }else{
+            return true;
+        }
+            
+    }
 }
