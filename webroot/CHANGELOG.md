@@ -1,3 +1,14 @@
+### [3.77.10] - 2023-02-08
+- Implemented: Develop a migration script to create a summary table for student marks grouped by student and subject
+- Implemented: Move homeroom teacher from add position page to add staff page
+- Bug Fixed: Institution > Performance > Assessments: The assessment marks for the student in the report and the assessment page are not the same
+- Bug Fixed: Institutions > Students > Undo: Changes to Behaviour for WIthdraw and Transfer
+- Bug Fixed: Institutions>Students>Withdraw: Message should show "Student is already enrolled"
+- Bug Fixed: Administration > Security > Roles > System Group > Add page: 404 error was shown when trying to add a new security role
+- Bug Fixed: Institutions>Attendance>Student: Students are not appearing
+- Bug Fixed: Institutions:Unable to delete institutions
+- Bug Fixed: Institutions>Performance>Report Cards: Students from a different grade are showing even though they are of a different grade
+
 ### [3.77.9] - 2023-02-01
 - Implemented: 2.06 Reports > Staff > Monthly Report (Haaziree Report)
 - Implemented: Develop new reports : Reports > Surveys > Tables and Reports > Surveys > Tables
