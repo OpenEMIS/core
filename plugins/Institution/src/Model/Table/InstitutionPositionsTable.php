@@ -1296,11 +1296,19 @@ class InstitutionPositionsTable extends ControllerActionTable
      * add shift dropdown
     */
     public function onUpdateFieldShiftId(Event $event, array $attr, $action, Request $request)
-    {   $shiftOptions = TableRegistry::get('shift_options'); 
-        $option = $shiftOptions->find('list')->toArray();
-        foreach($option as $key=>$result) {
-            $optionAll = $shiftOptions->find('all')->select(['stime'=>$shiftOptions->aliasField('start_time'),'etime'=>$shiftOptions->aliasField('end_time'),'name'=>$shiftOptions->aliasField('name')])->where([$shiftOptions->aliasField('id')=>$key])->first();
-            $option[$key] = $optionAll->name.': '.$optionAll->stime. ' - '.$optionAll->etime;
+    {   
+        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
+        $this->currentAcademicPeriod = $this->AcademicPeriods->get($currentAcademicPeriodId);
+        $currentAcademicPeriodIdd = $this->currentAcademicPeriod->id;
+        $institutionShifts = TableRegistry::get('institution_shifts');
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $option = [];
+        $optionAll = $institutionShifts->find('all')->select(['stime'=>$institutionShifts->aliasField('start_time'),'          etime'=>$institutionShifts->aliasField('end_time'),
+                      'shift_option_id'=>$institutionShifts->   aliasField('shift_option_id')])
+                    ->where([$institutionShifts->aliasField('location_institution_id')=>$institutionId, $institutionShifts->aliasField('academic_period_id')=>$currentAcademicPeriodIdd])->toArray();
+        foreach($optionAll as $key => $result){
+            $option[$result->shift_option_id] = $result->stime. ' - '.$result->etime;
         }
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'chosenSelect';
@@ -1308,7 +1316,6 @@ class InstitutionPositionsTable extends ControllerActionTable
             $attr['select'] = false;
             $attr['options'] = ['id' => '-- ' . __('Select Shift') . ' --']+$option;
             $attr['onChangeReload'] = 'changeStatus';
-
             return $attr;
         }
 
