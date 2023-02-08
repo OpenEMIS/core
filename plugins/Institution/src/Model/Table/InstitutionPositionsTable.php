@@ -37,7 +37,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
 
-        /*$this->belongsTo('InstitutionStaffs', ['className' => 'Institution.Staff', 'foreignKey' => 'institution_position_id',]);*/
+        /*$this->hasOne('InstitutionStaffs', ['className' => 'Institution.Staff', 'foreignKey' => 'institution_position_id',]);*/
 
         $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff', 'dependent' => true, 'cascadeCallbacks' => true]);
 
@@ -500,10 +500,12 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->fields['staff_position_title_id']['sort'] = ['field' => 'StaffPositionTitles.order'];
         $this->fields['staff_position_grade_id']['sort'] = ['field' => 'StaffPositionGrades.order'];
         $this->fields['assignee_id']['sort'] = ['field' => 'Assignees.first_name'];
+        $this->fields['is_homeroom']['visible'] = true;
+        $this->field('is_homeroom', ['visible' => true, 'attr' => ['label' => __('is_homeroom')]]);
 
         $this->setFieldOrder([
             'position_no', 'staff_position_title_id',
-            'staff_position_grade_id'
+            'staff_position_grade_id','is_homeroom'
         ]);
 
         if ($extra['auto_search']) {
@@ -544,6 +546,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     {
         $extra['auto_contain'] = false;
         $extra['auto_order'] = false;
+        $institutionStaff = TableRegistry::get('institution_staff');
 
         $query
             ->select([
@@ -553,8 +556,8 @@ class InstitutionPositionsTable extends ControllerActionTable
                 $this->aliasField('staff_position_title_id'),
                 $this->aliasField('staff_position_grade_id'),
                 $this->aliasField('assignee_id'),
-               
-                $this->aliasField('created')
+                $this->aliasField('created'),
+                'is_homeroom' => $institutionStaff->aliasField('is_homeroom'),
             ])
             ->contain([
                 'Statuses' => [
@@ -587,8 +590,9 @@ class InstitutionPositionsTable extends ControllerActionTable
                         'Assignees.preferred_name'
                     ]
                 ]
-            ]);
-
+                
+            ])->leftJoin([$institutionStaff->alias() => $institutionStaff->table()],
+                [$institutionStaff->aliasField('institution_position_id = ') . $this->aliasField('id')]);
         $sortList = ['position_no', 'StaffPositionTitles.order', 'StaffPositionGrades.order', 'created','Assignees.first_name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
@@ -1292,7 +1296,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     }
 
     /**
-     * POCOR-6971
+     * POCOR-6971 change in POCOR-7221
      * add shift dropdown
     */
     public function onUpdateFieldShiftId(Event $event, array $attr, $action, Request $request)
