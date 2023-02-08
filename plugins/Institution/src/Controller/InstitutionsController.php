@@ -5614,6 +5614,7 @@ class InstitutionsController extends AppController
             $startDate = (array_key_exists('start_date', $requestData))? date('Y-m-d', strtotime($requestData['start_date'])) : NULL;
             $endDate = (array_key_exists('end_date', $requestData) && !empty($requestData['end_date']))? date('Y-m-d', strtotime($requestData['end_date'])) : '';
             
+            $is_homeroom = (array_key_exists('is_homeroom', $requestData))? $requestData['is_homeroom'] : 0; //POCOR-5070
             //$institutionId = $this->request->session()->read('Institution.Institutions.id');
             $institutionId = (array_key_exists('institution_id', $requestData))? $requestData['institution_id'] : null;
             $staffTypeId = (array_key_exists('staff_type_id', $requestData))? $requestData['staff_type_id'] : null;
@@ -5877,6 +5878,7 @@ class InstitutionsController extends AppController
                         'staff_id' => $staffId,
                         'staff_type_id' => $staffTypeId,
                         'staff_status_id' => $statuses['ASSIGNED'],
+                        'is_homeroom' => $is_homeroom, //POCOR-5070
                         'institution_id' => $institutionId,
                         'institution_position_id' => $institutionPositionId,
                         'security_group_user_id' => (!empty($SecurityGroupUsersTbl))? $SecurityGroupUsersTbl->id : null,
@@ -6195,6 +6197,7 @@ class InstitutionsController extends AppController
                             'staff_type_id' => $staffTypeId,
                             'staff_status_id' => $statuses['ASSIGNED'],
                             'institution_id' => $institutionId,
+                            'is_homeroom' => $is_homeroom, //POCOR-5070
                             'institution_position_id' => $institutionPositionId,
                             'security_group_user_id' => (!empty($SecurityGroupUsersTbl))? $SecurityGroupUsersTbl->id : null,
                             'created_user_id' => $userId,

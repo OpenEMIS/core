@@ -502,6 +502,7 @@ class AssessmentResultsTable extends AppTable
                     [
                         $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
                         $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id'),
+                        $this->aliasField('institution_class_id = ') . $AssessmentItemResults->aliasField('institution_classes_id'), //POCOR-7201
                         $this->aliasField('institution_class_id') => $params['class_id']
                     ]
                 )
