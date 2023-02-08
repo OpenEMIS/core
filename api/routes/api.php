@@ -103,6 +103,14 @@ Route::group(
         Route::get('systems/{system_id}/levels/cycles/programmes/grades/subjects', 'EducationSystemController@getEducationStructureSystems');
 
         Route::get('systems/{system_id}/levels/{level_id}/cycles/programmes/grades/subjects', 'EducationSystemController@getEducationStructureLevel');
+
+        Route::get('systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/grades/subjects', 'EducationSystemController@getEducationStructureCycle');
+
+        Route::get('systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/subjects', 'EducationSystemController@getEducationStructureProgramme');
+
+        Route::get('systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/subjects', 'EducationSystemController@getEducationStructureGrade');
+
+        Route::get('systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/subjects/{subject_id}', 'EducationSystemController@getEducationStructureSubject');
     }
 );
 
