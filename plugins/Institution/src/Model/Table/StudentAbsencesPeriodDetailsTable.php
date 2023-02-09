@@ -210,7 +210,9 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
             //POCOR-7035[START]
             $data1 = [
                 'institution_id' => $institutionId,
-                'student_id' => $studentId
+                'student_id' => $studentId,
+                'start_date' => $date->format('Y-m-d'),//POCOR-7226
+                'end_date' => $date->format('Y-m-d')//POCOR-7226
             ];
             $InstitutionStudentAbsenceDays->deleteAll($data1);
             //POCOR-7035[END]
