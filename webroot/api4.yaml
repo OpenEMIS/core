@@ -23,6 +23,8 @@ tags:
     description: APIs for Institutions Classes
   - name: Institution Subjects
     description: APIs for Institution Subjects
+  - name: Institution Grade Subjects
+    description: APIs for Institution Grade Subjects
   - name: Institution Shifts
     description: APIs for Institutions Shifts
   - name: Institution Areas
@@ -89,7 +91,25 @@ paths:
       parameters:
         - name: academic_period_id
           in: query
-          description: The password for login in clear text
+          description: This is to filter the results based on the academic_period_id
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: header
+          description: This is to limit the number of result
+          required: false
+          schema:
+            type: integer
+        - name: order
+          in: header
+          description: This is to sort the results
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: header
+          description: This is to display the results based on the page number
           required: false
           schema:
             type: integer
@@ -118,20 +138,37 @@ paths:
       description: Multiple status values can be provided with comma separated strings
       operationId: institutionId
       parameters:
+        - name: academic_period_id
+          in: query
+          description: This is to filter the results based on the academic_period_id
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: header
+          description: This is to limit the number of result
+          required: false
+          schema:
+            type: integer
+        - name: order
+          in: header
+          description: This is to sort the results
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: header
+          description: This is to display the results based on the page number
+          required: false
+          schema:
+            type: integer
         - name: institutionId
           in: path
           description: Add Institution id to filter
           required: true
           schema:
             type: integer
-            format: int
-        - name: academic_period_id
-          in: query
-          description: The password for login in clear text
-          required: false
-          schema:
-            type: integer
-        
+            format: int        
       responses:
         '200':
           description: successful operation
@@ -159,7 +196,25 @@ paths:
       parameters:
         - name: academic_period_id
           in: query
-          description: The password for login in clear text
+          description: This is to filter the results based on the academic_period_id
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: header
+          description: This is to limit the number of result
+          required: false
+          schema:
+            type: integer
+        - name: order
+          in: header
+          description: This is to sort the results
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: header
+          description: This is to display the results based on the page number
           required: false
           schema:
             type: integer
@@ -187,6 +242,30 @@ paths:
       summary: Get All Grades for one Institution
       description: Multiple grades can be provided with comma separated strings
       parameters:
+        - name: academic_period_id
+          in: query
+          description: This is to filter the results based on the academic_period_id
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: header
+          description: This is to limit the number of result
+          required: false
+          schema:
+            type: integer
+        - name: order
+          in: header
+          description: This is to sort the results
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: header
+          description: This is to display the results based on the page number
+          required: false
+          schema:
+            type: integer
         - name: institutionId
           in: path
           description: Add Institution id to filter
@@ -194,12 +273,6 @@ paths:
           schema:
             type: integer
             format: int
-        - name: academic_period_id
-          in: query
-          description: The password for login in clear text
-          required: false
-          schema:
-            type: integer
       responses:
         '200':
           description: successful operation
@@ -224,13 +297,37 @@ paths:
         summary: Get All Grades for one Institution
         description: Multiple grades can be provided with comma separated strings
         parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
           - name: institutionId
             in: path
             description: Add Institution id to filter
             required: true
             schema:
               type: integer
-              format: int
+              format: int  
           - name: gradeId
             in: path
             description: Add grade id to filter
@@ -238,12 +335,6 @@ paths:
             schema:
               type: integer
               format: int
-          - name: academic_period_id
-            in: query
-            description: The password for login in clear text
-            required: false
-            schema:
-              type: integer
         responses:
           '200':
             description: successful operation
@@ -268,12 +359,30 @@ paths:
         summary: Get all class for all Institution
         description: Multiple classes can be provided with comma separated strings
         parameters:
-        - name: academic_period_id
-          in: query
-          description: The password for login in clear text
-          required: false
-          schema:
-            type: integer
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
         responses:
           '200':
             description: successful operation
@@ -298,19 +407,37 @@ paths:
         summary: Get All class for one Institution
         description: Multiple values can be provided with comma separated strings
         parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
           - name: institutionId
             in: path
             description: Add Institution id to filter
             required: true
             schema:
               type: integer
-              format: int
-          - name: academic_period_id
-            in: query
-            description: The password for login in clear text
-            required: false
-            schema:
-              type: integer
+              format: int  
         responses:
           '200':
             description: successful operation
@@ -335,6 +462,12 @@ paths:
         summary: Get one class for one Institution
         description: Multiple values can be provided with comma separated strings
         parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
           - name: institutionId
             in: path
             description: Add Institution id to filter
@@ -349,12 +482,6 @@ paths:
             schema:
               type: integer
               format: int
-          - name: academic_period_id
-            in: query
-            description: The password for login in clear text
-            required: false
-            schema:
-              type: integer
         responses:
           '200':
             description: successful operation
@@ -379,12 +506,12 @@ paths:
         summary: Get All Subjects for All Institution
         description: Multiple values can be provided with comma separated strings
         parameters:
-            - name: academic_period_id
-              in: query
-              description: The password for login in clear text
-              required: false
-              schema:
-                type: integer
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
         responses:
           '200':
             description: successful operation
@@ -418,7 +545,7 @@ paths:
               format: int
           - name: academic_period_id
             in: query
-            description: The password for login in clear text
+            description: This is to filter the results based on the academic_period_id
             required: false
             schema:
               type: integer
@@ -463,7 +590,7 @@ paths:
                 
           - name: academic_period_id
             in: query
-            description: The password for login in clear text
+            description: This is to filter the results based on the academic_period_id
             required: false
             schema:
               type: integer
@@ -482,8 +609,294 @@ paths:
                   items:
                     $ref: '#/components/schemas/Institution-Subjects'
           '400':
-            description: Invalid status value        
-        
+            description: Invalid status value     
+            
+  /api/v4/systems/levels/cycles/programmes/grades/subjects:
+      get:
+        tags:
+          - Institution All Grade Subjects
+        summary: Get All Grade Subjects
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'
+          '400':
+            description: Invalid status value
+  /api/v4/systems/{system_id}/levels/cycles/programmes/grades/subjects:
+      get:
+        tags:
+          - Institution Grade Subjects
+        summary: Get All Grade Subjects
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+            - name: academic_period_id
+              in: query
+              description: The academic_period_id 
+              required: false
+              schema:
+                type: integer
+                
+            - name: system_id
+              in: path
+              description: The level id
+              required: true
+              schema:
+                type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'
+          '400':
+            description: Invalid status value
+  
+  /api/v4/systems/{system_id}/levels/{level_id}/cycles/programmes/grades/subjects:
+      get:
+        tags:
+          - Institution Grade Subjects
+        summary: Get All Grade Subjects
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+            - name: academic_period_id
+              in: query
+              description: The academic_period_id 
+              required: false
+              schema:
+                type: integer
+            - name: system_id
+              in: path
+              description: The level id
+              required: true
+              schema:
+                type: integer
+            - name: level_id
+              in: path
+              description: The level id
+              required: true
+              schema:
+                type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'
+          '400':
+            description: Invalid status value
+  
+  /api/v4/systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/subjects:
+      get:
+        tags:
+          - Institution Grade Subjects
+        summary: Get All Grade Subjects
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+            - name: academic_period_id
+              in: query
+              description: academic_period_id 
+              required: false
+              schema:
+                type: integer
+            - name: system_id
+              in: path
+              description: The level id
+              required: true
+              schema:
+                type: integer
+            - name: level_id
+              in: path
+              description: education_level_id
+              required: true
+              schema:
+                type: integer
+            - name: cycle_id
+              in: path
+              description: education_cycle_id
+              required: true
+              schema:
+                type: integer
+            - name: programme_id
+              in: path
+              description: education_programme_id
+              required: true
+              schema:
+                type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'
+          '400':
+            description: Invalid status value
+            
+  /api/v4/systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/subjects:
+      get:
+        tags:
+          - Institution Grade Subjects
+        summary: Get All Grade Subjects
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+            - name: academic_period_id
+              in: query
+              description: academic_period_id 
+              required: false
+              schema:
+                type: integer
+            - name: system_id
+              in: path
+              description: The level id
+              required: true
+              schema:
+                type: integer
+            - name: level_id
+              in: path
+              description: education_level_id
+              required: true
+              schema:
+                type: integer
+            - name: cycle_id
+              in: path
+              description: education_cycle_id
+              required: true
+              schema:
+                type: integer
+            - name: programme_id
+              in: path
+              description: education_programme_id
+              required: true
+              schema:
+                type: integer
+            - name: grade_id
+              in: path
+              description: education_grade_id
+              required: true
+              schema:
+                type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'
+          '400':
+            description: Invalid status value
+  /api/v4/systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/subjects/{subject_id}:
+      get:
+        tags:
+          - Institution Grade Subjects
+        summary: Get All Grade Subjects
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+            - name: academic_period_id
+              in: query
+              description: academic_period_id 
+              required: false
+              schema:
+                type: integer
+            - name: system_id
+              in: path
+              description: The level id
+              required: true
+              schema:
+                type: integer
+            - name: level_id
+              in: path
+              description: education_level_id
+              required: true
+              schema:
+                type: integer
+            - name: cycle_id
+              in: path
+              description: education_cycle_id
+              required: true
+              schema:
+                type: integer
+            - name: programme_id
+              in: path
+              description: education_programme_id
+              required: true
+              schema:
+                type: integer
+            - name: grade_id
+              in: path
+              description: education_grade_id
+              required: true
+              schema:
+                type: integer
+            - name: subject_id
+              in: path
+              description: education_subject_id
+              required: true
+              schema:
+                type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'
+          '400':
+            description: Invalid status value
   /api/v4/institutions/shifts:
       get:
         tags:
@@ -493,7 +906,7 @@ paths:
         parameters:
           - name: academic_period_id
             in: query
-            description: The password for login in clear text
+            description: This is to filter the results based on the academic_period_id
             required: false
             schema:
               type: integer
@@ -530,7 +943,7 @@ paths:
               format: int
           - name: academic_period_id
             in: query
-            description: The password for login in clear text
+            description: This is to filter the results based on the academic_period_id
             required: false
             schema:
               type: integer
@@ -574,7 +987,7 @@ paths:
               format: int
           - name: academic_period_id
             in: query
-            description: The password for login in clear text
+            description: This is to filter the results based on the academic_period_id
             required: false
             schema:
               type: integer
@@ -696,7 +1109,7 @@ paths:
         parameters:
           - name: academic_period_id
             in: query
-            description: The password for login in clear text
+            description: This is to filter the results based on the academic_period_id
             required: false
             schema:
               type: integer
@@ -733,7 +1146,7 @@ paths:
               format: int
           - name: academic_period_id
             in: query
-            description: The password for login in clear text
+            description: This is to filter the results based on the academic_period_id
             required: false
             schema:
               type: integer
@@ -793,7 +1206,7 @@ paths:
               format: int
           - name: academic_period_id
             in: query
-            description: The password for login in clear text
+            description: This is to filter the results based on the academic_period_id
             required: false
             schema:
               type: integer
@@ -834,11 +1247,10 @@ paths:
             required: true
             schema:
               type: integer
-              format: int
-              
+              format: int              
           - name: academic_period_id
             in: query
-            description: The password for login in clear text
+            description: This is to filter the results based on the academic_period_id
             required: false
             schema:
               type: integer
@@ -868,7 +1280,7 @@ paths:
         parameters:
           - name: academic_period_id
             in: query
-            description: The password for login in clear text
+            description: This is to filter the results based on the academic_period_id
             required: false
             schema:
               type: integer
@@ -905,7 +1317,7 @@ paths:
               format: int
           - name: academic_period_id
             in: query
-            description: The password for login in clear text
+            description: This is to filter the results based on the academic_period_id
             required: false
             schema:
               type: integer
@@ -935,7 +1347,7 @@ paths:
         parameters:
           - name: academic_period_id
             in: query
-            description: The password for login in clear text
+            description: This is to filter the results based on the academic_period_id
             required: false
             schema:
               type: integer
@@ -972,7 +1384,7 @@ paths:
               format: int
           - name: academic_period_id
             in: query
-            description: The password for login in clear text
+            description: This is to filter the results based on the academic_period_id
             required: false
             schema:
               type: integer
@@ -1016,7 +1428,7 @@ paths:
               format: int
           - name: academic_period_id
             in: query
-            description: The password for login in clear text
+            description: This is to filter the results based on the academic_period_id
             required: false
             schema:
               type: integer
@@ -2504,6 +2916,178 @@ components:
           type: boolean
       xml:
         name: order
+    Education-System:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        level_name:
+          type: string
+          format: varchar
+          example: "National Education System"
+        academic_period_id:
+          type: integer
+          format: int11
+          example: 10
+        academic_period_name:
+          type: string
+          format: varchar
+          example: "2022-2023"
+        order:
+          type: integer
+          format: int11
+          example: 1
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        modified_user_id:
+          type: integer
+          format: int11
+          example: 1
+        modified:
+          type: string
+          format: varchar
+          example: "2023-01-01 12:00:00"
+        created_user_id:
+          type: integer
+          format: int11
+          example: 1
+        created:
+          type: integer
+          format: int11
+          example: "2023-01-01 12:00:00"
+        levels:
+          type: array
+          xml:
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/Education-Levels'
+    Education-Levels:
+      type: object
+      properties:
+        level_id:
+          type: integer
+          format: int11
+          example: 10
+        name:
+          type: string
+          format: varchar
+          example: "Primary Education Level"
+        order:
+          type: integer
+          format: int11
+          example: 1
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        modified_user_id:
+          type: integer
+          format: int11
+          example: 1
+        modified:
+          type: string
+          format: varchar
+          example: "2023-01-01 12:00:00"
+        created_user_id:
+          type: integer
+          format: int11
+          example: 1
+        created:
+          type: integer
+          format: int11
+          example: "2023-01-01 12:00:00"
+        levels:
+          type: array
+          xml:
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/Education-Cycles'
+    Education-Cycles:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 10
+        name:
+          type: string
+          format: varchar
+          example: "Primary Education Cycle"
+        order:
+          type: integer
+          format: int11
+          example: 1
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        modified_user_id:
+          type: integer
+          format: int11
+          example: 1
+        modified:
+          type: string
+          format: varchar
+          example: "2023-01-01 12:00:00"
+        created_user_id:
+          type: integer
+          format: int11
+          example: 1
+        created:
+          type: integer
+          format: int11
+          example: "2023-01-01 12:00:00"
+        levels:
+          type: array
+          xml:
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/Education-Programmes'
+    Education-Programmes:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 10
+        name:
+          type: string
+          format: varchar
+          example: "Primary Education Cycle"
+        order:
+          type: integer
+          format: int11
+          example: 1
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        modified_user_id:
+          type: integer
+          format: int11
+          example: 1
+        modified:
+          type: string
+          format: varchar
+          example: "2023-01-01 12:00:00"
+        created_user_id:
+          type: integer
+          format: int11
+          example: 1
+        created:
+          type: integer
+          format: int11
+          example: "2023-01-01 12:00:00"
+        levels:
+          type: array
+          xml:
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/Education-Grades'
     Education-Grades:
       type: object
       properties:
