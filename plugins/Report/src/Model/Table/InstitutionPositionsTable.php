@@ -90,7 +90,7 @@ class InstitutionPositionsTable extends AppTable
                 'area_administratives_code' => 'AreaAdministratives.code',
                 'area_administratives_name' => 'AreaAdministratives.name',
                 'assignee_id' => 'Assignees.id',
-                'is_homeroom' => $this->aliasField('is_homeroom'),
+                'is_homeroom' => 'InstitutionStaffs.is_homeroom',//POCOR-7229
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
                 'assignee_openemis_no' => 'SecurityUsersStaff.openemis_no',
@@ -314,7 +314,7 @@ class InstitutionPositionsTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionPositions.is_homeroom',
+            'key' => 'is_homeroom',
             'field' => 'is_homeroom',
             'type' => 'string',
             'label' => __('Homeroom Teacher')
