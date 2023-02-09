@@ -614,7 +614,7 @@ paths:
   /api/v4/systems/levels/cycles/programmes/grades/subjects:
       get:
         tags:
-          - Institution All Grade Subjects
+          - Institution Grade Subjects
         summary: Get All Grade Subjects
         description: Multiple values can be provided with comma separated strings
         parameters:
