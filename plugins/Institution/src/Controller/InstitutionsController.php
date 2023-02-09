@@ -5828,15 +5828,19 @@ class InstitutionsController extends AppController
                     $SecurityGroupUsers = TableRegistry::get('security_group_users');
                     if(!empty($InstitutionPositionsTbl)){
                         $SecurityRoles = TableRegistry::get('security_roles');
-                        if($InstitutionPositionsTbl->is_homeroom == 1){
-                            $roleArr = ['STAFF', 'HOMEROOM_TEACHER'];
+                        $SecurityRolesTbl = $SecurityRoles->find()
+                                                        ->where([
+                                                            $SecurityRoles->aliasField('id') => $staffPositionTitlesTbl->security_role_id
+                                                        ])->first();
+                        if($is_homeroom == 1){
+                            $roleArr = ['HOMEROOM_TEACHER', $SecurityRolesTbl->code];
                         }else{
-                            $roleArr = ['STAFF'];
+                            $roleArr = [$SecurityRolesTbl->code];
                         }
                         $SecurityRolesTbl = $SecurityRoles->find()
-                                            ->where([
-                                                $SecurityRoles->aliasField('code IN') => $roleArr
-                                            ])->toArray();
+                                                        ->where([
+                                                            $SecurityRoles->aliasField('code IN') => $roleArr
+                                                        ])->toArray();
                         //POCOR-7182
                         $institutionsTbl = TableRegistry::get('institutions');
                         $institutionsSecurityGroupId = $institutionsTbl->find()
@@ -5849,7 +5853,7 @@ class InstitutionsController extends AppController
                                     'id' => Text::uuid(),
                                     'security_group_id' =>$institutionsSecurityGroupId->security_group_id, // $institutionId POCOR-7182
                                     'security_user_id' => $staffId,
-                                    'security_role_id' => $staffPositionTitlesTbl->security_role_id, //// initial was $roleval->id then changed to $staffPositionTitlesTbl->security_role_id POCOR-7188[END]
+                                    'security_role_id' => $roleval->id, //// initial was $roleval->id then changed to $staffPositionTitlesTbl->security_role_id POCOR-7188[END]
                                     'created_user_id' => $userId,
                                     'created' => date('Y-m-d H:i:s')
                                 ];
@@ -6151,19 +6155,10 @@ class InstitutionsController extends AppController
                                                         ->where([
                                                             $SecurityRoles->aliasField('id') => $staffPositionTitlesTbl->security_role_id
                                                         ])->first();
-                            // echo "<pre>";print_r($SecurityRolesTbl);die();
                             if($is_homeroom == 1){
-                                if(!empty($SecurityRolesTbl)){
-                                    // $roleArr = ['STAFF', 'HOMEROOM_TEACHER', $SecurityRolesTbl->code];
-                                    $roleArr = ['HOMEROOM_TEACHER', $SecurityRolesTbl->code];
-                                }else{
-                                    // $roleArr = ['STAFF', 'HOMEROOM_TEACHER'];
-                                    $roleArr = ['TEACHER', 'HOMEROOM_TEACHER'];
-                                }
+                                $roleArr = ['HOMEROOM_TEACHER', $SecurityRolesTbl->code];
                             }else{
-                                
-                                // $roleArr = ['STAFF', "'".$SecurityRolesTbl->code."'"];
-                                $roleArr = ['TEACHER', $SecurityRolesTbl->code];
+                                $roleArr = [$SecurityRolesTbl->code];
                             }
                             $SecurityRolesTbl = $SecurityRoles->find()
                                                         ->where([
