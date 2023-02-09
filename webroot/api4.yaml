@@ -468,6 +468,24 @@ paths:
             required: false
             schema:
               type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
           - name: institutionId
             in: path
             description: Add Institution id to filter
@@ -512,6 +530,24 @@ paths:
             required: false
             schema:
               type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
         responses:
           '200':
             description: successful operation
@@ -536,6 +572,30 @@ paths:
         summary: Get All subjects for one Institution
         description: Multiple values can be provided with comma separated strings
         parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
           - name: institutionId
             in: path
             description: Add Institution id to filter
@@ -543,12 +603,6 @@ paths:
             schema:
               type: integer
               format: int
-          - name: academic_period_id
-            in: query
-            description: This is to filter the results based on the academic_period_id
-            required: false
-            schema:
-              type: integer
         responses:
           '200':
             description: successful operation
@@ -573,6 +627,30 @@ paths:
         summary: Get All Grades for one Institution
         description: Multiple values can be provided with comma separated strings
         parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
           - name: institutionId
             in: path
             description: Add Institution id to filter
@@ -587,13 +665,6 @@ paths:
             schema:
               type: integer
               format: int
-                
-          - name: academic_period_id
-            in: query
-            description: This is to filter the results based on the academic_period_id
-            required: false
-            schema:
-              type: integer
         responses:
           '200':
             description: successful operation
@@ -624,6 +695,24 @@ paths:
             required: false
             schema:
               type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
         responses:
           '200':
             description: successful operation
@@ -647,19 +736,36 @@ paths:
         summary: Get All Grade Subjects
         description: Multiple values can be provided with comma separated strings
         parameters:
-            - name: academic_period_id
-              in: query
-              description: The academic_period_id 
-              required: false
-              schema:
-                type: integer
-                
-            - name: system_id
-              in: path
-              description: The level id
-              required: true
-              schema:
-                type: integer
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+          - name: system_id
+            in: path
+            description: The level id
+            required: true
+            schema:
+              type: integer
         responses:
           '200':
             description: successful operation
@@ -684,24 +790,42 @@ paths:
         summary: Get All Grade Subjects
         description: Multiple values can be provided with comma separated strings
         parameters:
-            - name: academic_period_id
-              in: query
-              description: The academic_period_id 
-              required: false
-              schema:
-                type: integer
-            - name: system_id
-              in: path
-              description: The level id
-              required: true
-              schema:
-                type: integer
-            - name: level_id
-              in: path
-              description: The level id
-              required: true
-              schema:
-                type: integer
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+          - name: system_id
+            in: path
+            description: The level id
+            required: true
+            schema:
+              type: integer
+          - name: level_id
+            in: path
+            description: The level id
+            required: true
+            schema:
+              type: integer
         responses:
           '200':
             description: successful operation
@@ -726,36 +850,54 @@ paths:
         summary: Get All Grade Subjects
         description: Multiple values can be provided with comma separated strings
         parameters:
-            - name: academic_period_id
-              in: query
-              description: academic_period_id 
-              required: false
-              schema:
-                type: integer
-            - name: system_id
-              in: path
-              description: The level id
-              required: true
-              schema:
-                type: integer
-            - name: level_id
-              in: path
-              description: education_level_id
-              required: true
-              schema:
-                type: integer
-            - name: cycle_id
-              in: path
-              description: education_cycle_id
-              required: true
-              schema:
-                type: integer
-            - name: programme_id
-              in: path
-              description: education_programme_id
-              required: true
-              schema:
-                type: integer
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+          - name: system_id
+            in: path
+            description: The level id
+            required: true
+            schema:
+              type: integer
+          - name: level_id
+            in: path
+            description: education_level_id
+            required: true
+            schema:
+              type: integer
+          - name: cycle_id
+            in: path
+            description: education_cycle_id
+            required: true
+            schema:
+              type: integer
+          - name: programme_id
+            in: path
+            description: education_programme_id
+            required: true
+            schema:
+              type: integer
         responses:
           '200':
             description: successful operation
@@ -780,42 +922,60 @@ paths:
         summary: Get All Grade Subjects
         description: Multiple values can be provided with comma separated strings
         parameters:
-            - name: academic_period_id
-              in: query
-              description: academic_period_id 
-              required: false
-              schema:
-                type: integer
-            - name: system_id
-              in: path
-              description: The level id
-              required: true
-              schema:
-                type: integer
-            - name: level_id
-              in: path
-              description: education_level_id
-              required: true
-              schema:
-                type: integer
-            - name: cycle_id
-              in: path
-              description: education_cycle_id
-              required: true
-              schema:
-                type: integer
-            - name: programme_id
-              in: path
-              description: education_programme_id
-              required: true
-              schema:
-                type: integer
-            - name: grade_id
-              in: path
-              description: education_grade_id
-              required: true
-              schema:
-                type: integer
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+          - name: system_id
+            in: path
+            description: The level id
+            required: true
+            schema:
+              type: integer
+          - name: level_id
+            in: path
+            description: education_level_id
+            required: true
+            schema:
+              type: integer
+          - name: cycle_id
+            in: path
+            description: education_cycle_id
+            required: true
+            schema:
+              type: integer
+          - name: programme_id
+            in: path
+            description: education_programme_id
+            required: true
+            schema:
+              type: integer
+          - name: grade_id
+            in: path
+            description: education_grade_id
+            required: true
+            schema:
+              type: integer
         responses:
           '200':
             description: successful operation
@@ -839,48 +999,66 @@ paths:
         summary: Get All Grade Subjects
         description: Multiple values can be provided with comma separated strings
         parameters:
-            - name: academic_period_id
-              in: query
-              description: academic_period_id 
-              required: false
-              schema:
-                type: integer
-            - name: system_id
-              in: path
-              description: The level id
-              required: true
-              schema:
-                type: integer
-            - name: level_id
-              in: path
-              description: education_level_id
-              required: true
-              schema:
-                type: integer
-            - name: cycle_id
-              in: path
-              description: education_cycle_id
-              required: true
-              schema:
-                type: integer
-            - name: programme_id
-              in: path
-              description: education_programme_id
-              required: true
-              schema:
-                type: integer
-            - name: grade_id
-              in: path
-              description: education_grade_id
-              required: true
-              schema:
-                type: integer
-            - name: subject_id
-              in: path
-              description: education_subject_id
-              required: true
-              schema:
-                type: integer
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+          - name: system_id
+            in: path
+            description: The level id
+            required: true
+            schema:
+              type: integer
+          - name: level_id
+            in: path
+            description: education_level_id
+            required: true
+            schema:
+              type: integer
+          - name: cycle_id
+            in: path
+            description: education_cycle_id
+            required: true
+            schema:
+              type: integer
+          - name: programme_id
+            in: path
+            description: education_programme_id
+            required: true
+            schema:
+              type: integer
+          - name: grade_id
+            in: path
+            description: education_grade_id
+            required: true
+            schema:
+              type: integer
+          - name: subject_id
+            in: path
+            description: education_subject_id
+            required: true
+            schema:
+              type: integer
         responses:
           '200':
             description: successful operation
@@ -910,6 +1088,24 @@ paths:
             required: false
             schema:
               type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
         responses:
           '200':
             description: successful operation
@@ -934,6 +1130,30 @@ paths:
         summary: Get All Shifts for one Institution
         description: Multiple values can be provided with comma separated strings
         parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
           - name: institutionId
             in: path
             description: Add Institution id to filter
@@ -941,12 +1161,6 @@ paths:
             schema:
               type: integer
               format: int
-          - name: academic_period_id
-            in: query
-            description: This is to filter the results based on the academic_period_id
-            required: false
-            schema:
-              type: integer
         responses:
           '200':
             description: successful operation
@@ -971,6 +1185,30 @@ paths:
         summary: Get One Shift for one Institution
         description: Multiple values can be provided with comma separated strings
         parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
           - name: institutionId
             in: path
             description: Add Institution id to filter
@@ -985,12 +1223,6 @@ paths:
             schema:
               type: integer
               format: int
-          - name: academic_period_id
-            in: query
-            description: This is to filter the results based on the academic_period_id
-            required: false
-            schema:
-              type: integer
         responses:
           '200':
             description: successful operation
@@ -1113,6 +1345,24 @@ paths:
             required: false
             schema:
               type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
         responses:
           '200':
             description: successful operation
@@ -1137,6 +1387,30 @@ paths:
         summary: Get All Grades for one Institution
         description: Multiple grades can be provided with comma separated strings
         parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
           - name: institutionId
             in: path
             description: Add Institution id to filter
@@ -1144,12 +1418,6 @@ paths:
             schema:
               type: integer
               format: int
-          - name: academic_period_id
-            in: query
-            description: This is to filter the results based on the academic_period_id
-            required: false
-            schema:
-              type: integer
         responses:
           '200':
             description: successful operation
@@ -1197,6 +1465,30 @@ paths:
         summary: Get Grades Summary for one Institution
         description: Multiple values can be provided with comma separated strings
         parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
           - name: institutionId
             in: path
             description: Add Institution id to filter
@@ -1204,12 +1496,6 @@ paths:
             schema:
               type: integer
               format: int
-          - name: academic_period_id
-            in: query
-            description: This is to filter the results based on the academic_period_id
-            required: false
-            schema:
-              type: integer
         responses:
           '200':
             description: successful operation
@@ -1234,6 +1520,30 @@ paths:
         summary: Get Grade summary for one Institution
         description: Multiple values can be provided with comma separated strings
         parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
           - name: institutionId
             in: path
             description: Add Institution id to filter
@@ -1247,13 +1557,7 @@ paths:
             required: true
             schema:
               type: integer
-              format: int              
-          - name: academic_period_id
-            in: query
-            description: This is to filter the results based on the academic_period_id
-            required: false
-            schema:
-              type: integer
+              format: int    
         responses:
           '200':
             description: successful operation
@@ -1284,6 +1588,24 @@ paths:
             required: false
             schema:
               type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
         responses:
           '200':
             description: successful operation
@@ -1308,6 +1630,30 @@ paths:
         summary: Get Infrastructure summary for one Institution
         description: Multiple grades can be provided with comma separated strings
         parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
           - name: institutionId
             in: path
             description: Add Institution id to filter
@@ -1315,12 +1661,6 @@ paths:
             schema:
               type: integer
               format: int
-          - name: academic_period_id
-            in: query
-            description: This is to filter the results based on the academic_period_id
-            required: false
-            schema:
-              type: integer
         responses:
           '200':
             description: successful operation
@@ -1351,6 +1691,24 @@ paths:
             required: false
             schema:
               type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
         responses:
           '200':
             description: successful operation
@@ -1375,6 +1733,30 @@ paths:
         summary: Get All student nationality summaries for one Institution
         description: Multiple values can be provided with comma separated strings
         parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
           - name: institutionId
             in: path
             description: Add Institution id to filter
@@ -1382,12 +1764,6 @@ paths:
             schema:
               type: integer
               format: int
-          - name: academic_period_id
-            in: query
-            description: This is to filter the results based on the academic_period_id
-            required: false
-            schema:
-              type: integer
         responses:
           '200':
             description: successful operation
@@ -1412,6 +1788,30 @@ paths:
         summary: Get student nationality summary from one Grade for one Institution
         description: Multiple values can be provided with comma separated strings
         parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
           - name: institutionId
             in: path
             description: Add Institution id to filter
@@ -1426,12 +1826,6 @@ paths:
             schema:
               type: integer
               format: int
-          - name: academic_period_id
-            in: query
-            description: This is to filter the results based on the academic_period_id
-            required: false
-            schema:
-              type: integer
         responses:
           '200':
             description: successful operation
