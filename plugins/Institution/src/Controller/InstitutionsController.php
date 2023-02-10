@@ -465,9 +465,57 @@ class InstitutionsController extends AppController
     }
 
     // POCOR-6673
-    public function InstitutionCurriculars()
+    public function Curriculars($curriaction = 'index', $institutionCurricularId = null)
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurriculars']);
+        if ($curriaction == 'edit') {
+            $session = $this->request->session();
+            $roles = [];
+            $institutionCurricularId = $this->ControllerAction->paramsDecode($institutionCurricularId);
+            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            if (!$this->AccessControl->isAdmin() && $institutionId) {
+                $userId = $this->Auth->user('id');
+                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+                $AccessControl = $this->AccessControl;
+                $action = 'edit';
+                if (!$AccessControl->check(['Institutions', 'AllSubjects', $action], $roles)) {
+                    if ($AccessControl->check(['Institutions', 'Subjects', $action], $roles)) {
+                        $InstitutionCurricular = TableRegistry::get('institution_curriculars');
+                        $curricularRecord = $InstitutionCurricular->get($institutionCurricularId, ['contain' => ['Teachers']])->toArray();
+                        if (in_array($userId, array_column($curricularRecord['teachers']), 'id')) {
+                            $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
+                            return $this->redirect($url);
+                        }
+                    } else {
+                        $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
+                        return $this->redirect($url);
+                    }
+                }
+            }
+            $viewUrl = $this->ControllerAction->url('view');
+            $viewUrl['action'] = 'Curricular';
+            $viewUrl[0] = 'view';
+            $indexUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Subjects',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+            $alertUrl = [
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => 'setAlert',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+            $this->set('alertUrl', $alertUrl);
+            $this->set('viewUrl', $viewUrl);
+            $this->set('indexUrl', $indexUrl);
+            $this->set('institutionCurricularId', $institutionCurricularId['id']);
+            $this->set('institutionId', $institutionId);
+            $this->render('institution_curriculars_edit');
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurriculars']);
+        }
+        
     }
 
     public function changePageHeaderTrips($model, $modelAlias, $userType)
@@ -3341,14 +3389,15 @@ class InstitutionsController extends AppController
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Associations')]
+            'Associations' => ['text' => __('Associations')],
+            'Curriculars' => ['text' => __('Curriculars')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         // Programme will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
-            if (in_array($key, ['Programmes', 'Textbooks', 'Risks','Associations'])) {
+            if (in_array($key, ['Programmes', 'Textbooks', 'Risks','Associations','Curriculars'])) {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
             } else {
