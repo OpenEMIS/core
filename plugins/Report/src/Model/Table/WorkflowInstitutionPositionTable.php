@@ -6,8 +6,10 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
-
 use App\Model\Traits\OptionsTrait;
+use Cake\Network\Request;
+use Cake\Log\Log;
+use Cake\ORM\TableRegistry;
 
 class WorkflowInstitutionPositionTable extends AppTable
 {
@@ -38,12 +40,20 @@ class WorkflowInstitutionPositionTable extends AppTable
 
     public function onExcelGetIsHomeroom(Event $event, Entity $entity)
     {
+        $institutionStaff = TableRegistry::get('institution_staff');
+        $institutionPositions = TableRegistry::get('institution_positions');
+        
         $options = $this->getSelectOptions('general.yesno');
+        $homeroomData =  $institutionPositions->find('all')
+                         ->select(['is_homeroom'=> $institutionStaff->aliasField('is_homeroom')])
+                         ->leftJoin([$institutionStaff->alias() => $institutionStaff->table()],
+                            [$institutionStaff->aliasField('institution_position_id = ') . $this->aliasField('id')])
+                         ->first();
 
-        if (array_key_exists($entity->is_homeroom, $options)) {
+        if (!empty($homeroomData)) {
             return $options[$entity->is_homeroom];
+        }else{
+             return '';
         }
-
-        return '';
     }
 }
