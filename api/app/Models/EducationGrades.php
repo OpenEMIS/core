@@ -11,4 +11,10 @@ class EducationGrades extends Model
 
     public $timestamps = false;
     protected $table = "education_grades";
+
+
+    public function subjects()
+    {
+        return $this->belongsToMany(EducationSubjects::class, 'education_grades_subjects', 'education_grade_id', 'education_subject_id')->withPivot('hours_required', 'auto_allocation');
+    }
 }
