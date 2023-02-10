@@ -569,6 +569,8 @@ class StaffTable extends ControllerActionTable
         $this->fields['start_date']['type'] = 'date';
         $this->fields['institution_position_id']['order'] = 6;
         $this->fields['FTE']['visible'] = false;
+        $this->fields['is_homeroom']['type'] = 'integer'; //POCOR-7233
+       // $this->field('is_homeroom', ['visible' => true,'attr' => ['label' => __('is_homeroom')]]);
 
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
 
@@ -625,8 +627,7 @@ class StaffTable extends ControllerActionTable
                 $ConfigItemTable->aliasField('type') => 'Columns for Staff List Page'
             ])
             ->all();
-        /*echo "<pre>"; print_r($ConfigItem);
-        die;*/
+        
         foreach ($ConfigItem as $item) {
             if ($item->code == 'staff_photo') {
                 $this->field('photo_name', ['visible' => false]);
@@ -638,6 +639,7 @@ class StaffTable extends ControllerActionTable
             }
 
             if ($item->code == 'staff_openEMIS_ID') {
+
                 if ($item->value == 1) {
                     $this->field('openemis_no', ['visible' => true, 'before' => 'staff_id']);
                 } else {
@@ -701,7 +703,9 @@ class StaffTable extends ControllerActionTable
                     }
                 }
             }
+
         } //POCOR-6248 ends
+        //print_r($this->fields);die;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -854,7 +858,6 @@ class StaffTable extends ControllerActionTable
         $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
         $UserIdentities = TableRegistry::get('User.Identities');
         $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
-        $Position = TableRegistry::get('Institution.InstitutionPositions');
         $ConfigItem =   $ConfigItemTable
             ->find()
             ->where([
@@ -881,6 +884,7 @@ class StaffTable extends ControllerActionTable
                         'Staff.institution_id',
                         'Staff.institution_position_id',
                         'Staff.security_group_user_id',
+                        'Staff.is_homeroom',
                         'Positions.id',
                         'Positions.status_id',
                         'Positions.position_no',
@@ -889,6 +893,7 @@ class StaffTable extends ControllerActionTable
                         'Positions.position_no',
                         'Positions.institution_id',
                         'Positions.assignee_id',
+                       
                         'Users.id',
                         'Users.username',
                         'Users.openemis_no',
@@ -898,25 +903,26 @@ class StaffTable extends ControllerActionTable
                         'Users.last_name',
                         'Users.preferred_name',
                         'identity_type' => $IdentityTypes->aliasField('name'),
-                        "`" . $typesIdentity->identity_type . "`" => $UserIdentities->aliasField('number'), //POCRO-6583 added single quote as identity_type was not working for some clients
-                        'is_homeroom'=>$this->aliasField('is_homeroom')
+                        "`" . $typesIdentity->identity_type . "`" => $UserIdentities->aliasField('number') //POCRO-6583 added single quote as identity_type was not working for some clients
                     ])
                     ->leftJoin(
                         [$UserIdentities->alias() => $UserIdentities->table()],
                         [
                             $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
-                            $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id])
+                            $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id
+                        ]
+                    )
                     ->leftJoin(
                         [$IdentityTypes->alias() => $IdentityTypes->table()],
                         [
                             $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
                             //$IdentityTypes->aliasField('id = ') . $typesIdentity->id
-                        ])
-                    ->leftJoin([$Position->alias() => $Position->table()],
-                           [$Position->aliasField('id = ') . $this->aliasField('institution_position_id')]);
+                        ]
+                    );
             }
         }  //POCOR-6248 ends                  
         $this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
+      // echo "<pre>"; print_r($query->toArray());die;
     }
 
     //POCOR-6248 starts
@@ -1247,6 +1253,12 @@ class StaffTable extends ControllerActionTable
         return $value;
     }
 
+    public function onGetIsHomeroom(Event $event, Entity $entity)
+    {
+        $home =  ($entity->is_homeroom) ? __('Yes') : __('No');
+        return $home;
+    }
+
     public function onGetPositionType(Event $event, Entity $entity)
     {
         $options = $this->getSelectOptions('Position.types');
@@ -1295,7 +1307,6 @@ class StaffTable extends ControllerActionTable
             $staffCount = $institutionStaffQuery->group($this->aliasField('staff_id'))->count();
 
             unset($institutionStaffQuery);
-
             // Get Gender
             $InstitutionArray[__('Gender')] = $this->getDonutChart(
                 'institution_staff_gender',
@@ -1341,7 +1352,7 @@ class StaffTable extends ControllerActionTable
 
             $extra['elements'] = array_merge($extra['elements'], $indexElements);
 
-            $this->setFieldOrder(['photo_content', 'openemis_no', 'staff_id', 'institution_position_id', 'start_date', 'end_date', 'staff_status_id']);
+            $this->setFieldOrder(['photo_content', 'openemis_no', 'staff_id', 'institution_position_id', 'start_date', 'end_date', 'staff_status_id','is_homeroom']);
         }
     }
 
@@ -1365,6 +1376,7 @@ class StaffTable extends ControllerActionTable
         $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
         $assignedStudentToInstitution = $this->find()->where(['institution_id' => $institutionId])->count();
         $session->write('is_any_student', $assignedStudentToInstitution);
+
     }
 
     public function editBeforeQuery(Event $event, Query $query)
@@ -3120,7 +3132,7 @@ class StaffTable extends ControllerActionTable
         $InstitutionShiftsData = $InstitutionShiftsTable->find()
             ->select([$InstitutionShiftsTable->aliasField('start_time'), $InstitutionShiftsTable->aliasField('end_time'),$InstitutionShiftsTable->aliasField('id')])
             ->where([
-                $InstitutionShiftsTable->aliasField('shift_option_id') => 256, //add
+                $InstitutionShiftsTable->aliasField('shift_option_id') => $shiftId, //add
                 $InstitutionShiftsTable->aliasField('academic_period_id') => $academicPeriodId, //add
                 $InstitutionShiftsTable->aliasField('institution_id') => $institutionId //add
             ])->first();
@@ -3573,9 +3585,19 @@ class StaffTable extends ControllerActionTable
 
     }
 
-    public function onGetIsHomeroom(Event $event, Entity $entity)
+    /*public function onGetIsHomeroom(Event $event, Entity $entity)
     {
+        //echo "<pre>"; print_r($entity->is_homeroom);die;
+        $i = 1;
+        if($i==1){
+            return 'hi';
+        }else{
+         return 'hello';   
+        }
         $isHomeroom = $entity->is_homeroom;
-        return $this->getSelectOptions('general.yesno')[$isHomeroom];
-    }
+        //return $this->getSelectOptions('general.yesno')[$isHomeroom];
+        
+    }*/
+
+    
 }
