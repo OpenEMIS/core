@@ -854,6 +854,7 @@ class StaffTable extends ControllerActionTable
         $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
         $UserIdentities = TableRegistry::get('User.Identities');
         $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $Position = TableRegistry::get('Institution.InstitutionPositions');
         $ConfigItem =   $ConfigItemTable
             ->find()
             ->where([
@@ -888,7 +889,6 @@ class StaffTable extends ControllerActionTable
                         'Positions.position_no',
                         'Positions.institution_id',
                         'Positions.assignee_id',
-                        'Staff.is_homeroom',
                         'Users.id',
                         'Users.username',
                         'Users.openemis_no',
@@ -898,22 +898,22 @@ class StaffTable extends ControllerActionTable
                         'Users.last_name',
                         'Users.preferred_name',
                         'identity_type' => $IdentityTypes->aliasField('name'),
-                        "`" . $typesIdentity->identity_type . "`" => $UserIdentities->aliasField('number') //POCRO-6583 added single quote as identity_type was not working for some clients
+                        "`" . $typesIdentity->identity_type . "`" => $UserIdentities->aliasField('number'), //POCRO-6583 added single quote as identity_type was not working for some clients
+                        'is_homeroom'=>$this->aliasField('is_homeroom')
                     ])
                     ->leftJoin(
                         [$UserIdentities->alias() => $UserIdentities->table()],
                         [
                             $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
-                            $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id
-                        ]
-                    )
+                            $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id])
                     ->leftJoin(
                         [$IdentityTypes->alias() => $IdentityTypes->table()],
                         [
                             $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
                             //$IdentityTypes->aliasField('id = ') . $typesIdentity->id
-                        ]
-                    );
+                        ])
+                    ->leftJoin([$Position->alias() => $Position->table()],
+                           [$Position->aliasField('id = ') . $this->aliasField('institution_position_id')]);
             }
         }  //POCOR-6248 ends                  
         $this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
@@ -3571,5 +3571,11 @@ class StaffTable extends ControllerActionTable
 
         return $staffShiftsData;
 
+    }
+
+    public function onGetIsHomeroom(Event $event, Entity $entity)
+    {
+        $isHomeroom = $entity->is_homeroom;
+        return $this->getSelectOptions('general.yesno')[$isHomeroom];
     }
 }
