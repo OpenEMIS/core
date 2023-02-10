@@ -509,6 +509,7 @@ class StaffTable extends AppTable  {
                         'Report.StaffExtracurriculars',
                         'Report.InstitutionStaffDetailed'//POCOR-6662
                         ,'Report.StaffSubjects' //POCOR-6688
+                        ,'Report.StaffRequirements' //POCOR-5785
                     ])) {
                         if (!empty($institutionList) && count($institutionList) > 1) {
                            $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
@@ -723,6 +724,7 @@ class StaffTable extends AppTable  {
             $attr['attr']['min'] = 0;
             $attr['attr']['max'] = 100;
             $attr['attr']['required'] = true;
+            $attr['attr']['step'] = '.01';
             $attr['attr']['label'] = __('Upper Tolerance') . ' <i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="It corresponds to the Cap that the user selects to restrict Year-over-Year decrease for Students and Staff data." tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
             return $attr;
         }
@@ -741,6 +743,7 @@ class StaffTable extends AppTable  {
             $attr['attr']['min'] = 0;
             $attr['attr']['max'] = 100;
             $attr['attr']['required'] = true;
+            $attr['attr']['step'] = '.01';
             $attr['attr']['label'] = __('Lower Tolerance') . ' <i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="It corresponds to the Cap that the user selects to restrict Year-over-Year increase for Students and Staff data." tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
             return $attr;
         }
@@ -754,9 +757,9 @@ class StaffTable extends AppTable  {
      **/
     public function validationStaffRequirements(Validator $validator)
     {
-        return $validator->notEmpty(['area_level_id', 'area_education_id', 'institution_id', 'student_per_teacher_ratio', 'lower_tolerance', 'upper_tolerance'])
+        return $validator->notEmpty(['student_per_teacher_ratio', 'lower_tolerance', 'upper_tolerance'])
             ->range('student_per_teacher_ratio', [0, 150], $this->getMessage('StaffRequirements.studentTeacherRatio'))
-            ->range('upper_tolerance', [0, 100], $this->getMessage('StaffRequirements.upperTolerance'))
+            ->range('upper_tolerance', [0, 99999999], $this->getMessage('StaffRequirements.upperTolerance'))
             ->range('lower_tolerance', [0, 100], $this->getMessage('StaffRequirements.lowerTolerance'));
     }
 
