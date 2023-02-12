@@ -1,3 +1,10 @@
+### [3.77.11] - 2023-02-13
+- Implemented: Develop APIs for TDSM
+- Bug Fixed: Institutions>Staff>Add: Homeroom teacher role is not added when teacher is adding
+- Bug Fixed: Institutions>Appointment>Positions: Shift field should show according to the Institution shift level
+- Bug Fixed: Institutions > Attendance > Students: The user should be able to change the status of attendance
+- Bug Fixed: Report>Institution/Staff: Report are stuck in progress
+
 ### [3.77.10] - 2023-02-08
 - Implemented: Develop a migration script to create a summary table for student marks grouped by student and subject
 - Implemented: Move homeroom teacher from add position page to add staff page
