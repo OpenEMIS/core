@@ -5630,6 +5630,7 @@ class InstitutionsController extends AppController
             $staffId = (array_key_exists('staff_id', $requestData))? $requestData['staff_id'] : 0;
             $previousInstitutionId = (array_key_exists('previous_institution_id', $requestData))? $requestData['previous_institution_id'] : 0;
             $comment = (array_key_exists('comment', $requestData))? $requestData['comment'] : '';
+            $is_homeroom = (array_key_exists('is_homeroom', $requestData))? $requestData['is_homeroom'] : 0;
             //when staff transfer in other institution end
             
             //get academic period data
@@ -5828,15 +5829,19 @@ class InstitutionsController extends AppController
                     $SecurityGroupUsers = TableRegistry::get('security_group_users');
                     if(!empty($InstitutionPositionsTbl)){
                         $SecurityRoles = TableRegistry::get('security_roles');
-                        if($InstitutionPositionsTbl->is_homeroom == 1){
-                            $roleArr = ['STAFF', 'HOMEROOM_TEACHER'];
+                        $SecurityRolesTbl = $SecurityRoles->find()
+                                                        ->where([
+                                                            $SecurityRoles->aliasField('id') => $staffPositionTitlesTbl->security_role_id
+                                                        ])->first();
+                        if($is_homeroom == 1){
+                            $roleArr = ['HOMEROOM_TEACHER', $SecurityRolesTbl->code];
                         }else{
-                            $roleArr = ['STAFF'];
+                            $roleArr = [$SecurityRolesTbl->code];
                         }
                         $SecurityRolesTbl = $SecurityRoles->find()
-                                            ->where([
-                                                $SecurityRoles->aliasField('code IN') => $roleArr
-                                            ])->toArray();
+                                                        ->where([
+                                                            $SecurityRoles->aliasField('code IN') => $roleArr
+                                                        ])->toArray();
                         //POCOR-7182
                         $institutionsTbl = TableRegistry::get('institutions');
                         $institutionsSecurityGroupId = $institutionsTbl->find()
@@ -5849,7 +5854,7 @@ class InstitutionsController extends AppController
                                     'id' => Text::uuid(),
                                     'security_group_id' =>$institutionsSecurityGroupId->security_group_id, // $institutionId POCOR-7182
                                     'security_user_id' => $staffId,
-                                    'security_role_id' => $staffPositionTitlesTbl->security_role_id, //// initial was $roleval->id then changed to $staffPositionTitlesTbl->security_role_id POCOR-7188[END]
+                                    'security_role_id' => $roleval->id, //// initial was $roleval->id then changed to $staffPositionTitlesTbl->security_role_id POCOR-7188[END]
                                     'created_user_id' => $userId,
                                     'created' => date('Y-m-d H:i:s')
                                 ];
@@ -6135,6 +6140,7 @@ class InstitutionsController extends AppController
                                                     $InstitutionPositions->aliasField('id') => $institutionPositionId,
                                                 ])
                                                 ->first();
+
                          //POCOR-7188[START]
                         $staffPositionTitles = TableRegistry::get('staff_position_titles');
                         $staffPositionTitlesTbl = $staffPositionTitles->find()
@@ -6147,10 +6153,14 @@ class InstitutionsController extends AppController
                         $SecurityGroupUsers = TableRegistry::get('security_group_users');
                         if(!empty($InstitutionPositionsTbl)){
                             $SecurityRoles = TableRegistry::get('security_roles');
-                            if($InstitutionPositionsTbl->is_homeroom == 1){
-                                $roleArr = ['STAFF', 'HOMEROOM_TEACHER'];
+                            $SecurityRolesTbl = $SecurityRoles->find()
+                                                        ->where([
+                                                            $SecurityRoles->aliasField('id') => $staffPositionTitlesTbl->security_role_id
+                                                        ])->first();
+                            if($is_homeroom == 1){
+                                $roleArr = ['HOMEROOM_TEACHER', $SecurityRolesTbl->code];
                             }else{
-                                $roleArr = ['STAFF'];
+                                $roleArr = [$SecurityRolesTbl->code];
                             }
                             $SecurityRolesTbl = $SecurityRoles->find()
                                                         ->where([
@@ -6168,7 +6178,7 @@ class InstitutionsController extends AppController
                                         'id' => Text::uuid(),
                                         'security_group_id' => $institutionsSecurityGroupId->security_group_id,// $institutionId POCOR-7182
                                         'security_user_id' => $user_record_id,
-                                        'security_role_id' => $staffPositionTitlesTbl->security_role_id, //// initial was $roleval->id then changed to $staffPositionTitlesTbl->security_role_id POCOR-7188[END]
+                                        'security_role_id' => $roleval->id, //// initial was $roleval->id then changed to $staffPositionTitlesTbl->security_role_id POCOR-7188[END]
                                         'created_user_id' => $userId,
                                         'created' => date('Y-m-d H:i:s')
                                     ];
