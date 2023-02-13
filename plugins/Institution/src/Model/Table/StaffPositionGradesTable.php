@@ -12,7 +12,7 @@ class StaffPositionGradesTable extends ControllerActionTable
     {
         $this->table('staff_position_grades');
         parent::initialize($config);
-        $this->hasMany('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'staff_position_grade_id']);
+        // $this->hasMany('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'staff_position_grade_id']);
 
 		$this->belongsToMany('StaffPositionTitles', [
 			'className' => 'Institution.StaffPositionTitles',

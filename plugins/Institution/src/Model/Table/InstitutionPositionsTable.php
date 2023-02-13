@@ -33,15 +33,13 @@ class InstitutionPositionsTable extends ControllerActionTable
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
-        $this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
+        //$this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
 
-        /*$this->belongsTo('InstitutionStaffs', ['className' => 'Institution.Staff', 'foreignKey' => 'institution_position_id',]);*/
+        /*$this->belongsTo('InstitutionStaffs', ['className' => 'Institution.Staff', 'foreignKey' => 'institution_position_id',]);POCOR-5069*/
 
         $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff', 'dependent' => true, 'cascadeCallbacks' => true]);
-
-
         $this->hasMany('StaffPositions', ['className' => 'Staff.Positions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffTransferIn', ['className' => 'Institution.StaffTransferIn', 'foreignKey' => 'new_institution_position_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Workflow.Workflow');
@@ -72,7 +70,6 @@ class InstitutionPositionsTable extends ControllerActionTable
             ->where([$this->InstitutionStaff->aliasField('institution_position_id') => $transferredTo]);
 
         $SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
-
         $SecurityGroupUsersTable->updateAll(
             ['security_role_id' => $securityRole],
             ['id IN ' => $securityGroupUserIds]
@@ -93,6 +90,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 'provider' => 'custom'
             ])
            // ->requirePresence('shift_id')
+            /*POCOR-5069 Starts
             ->add('staff_position_grade_id', 'custom', [
                 'rule' => function ($value, $context) {
                     $StaffPositionTitlesGrades = TableRegistry::get('Institution.StaffPositionTitlesGrades');
@@ -114,60 +112,61 @@ class InstitutionPositionsTable extends ControllerActionTable
                     return !$result->isEmpty();
                 },
                 'message' => $this->getMessage('Import.staff_title_grade_not_match')
-            ])
-            ->requirePresence('is_homeroom', function ($context) {
-                if (array_key_exists('staff_position_title_id', $context['data']) && strlen($context['data']['staff_position_title_id']) > 0) {
-                    $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
-                    $titleId = $context['data']['staff_position_title_id'];
+            ])POCOR-5069 Ends*/
+            //Remove is_homeroom from position table-POCOR-5070
+            // ->requirePresence('is_homeroom', function ($context) {
+            //     if (array_key_exists('staff_position_title_id', $context['data']) && strlen($context['data']['staff_position_title_id']) > 0) {
+            //         $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            //         $titleId = $context['data']['staff_position_title_id'];
 
-                    $titleEntity = $StaffPositionTitles
-                        ->find()
-                        ->select([$StaffPositionTitles->aliasField('type')])
-                        ->where([$StaffPositionTitles->aliasField('id') => $titleId])
-                        ->first();
+            //         $titleEntity = $StaffPositionTitles
+            //             ->find()
+            //             ->select([$StaffPositionTitles->aliasField('type')])
+            //             ->where([$StaffPositionTitles->aliasField('id') => $titleId])
+            //             ->first();
 
-                    if (!is_null($titleEntity)) {
-                        $positionType = $titleEntity->type;
-                        return $positionType == 1;
-                    } else {
-                        return false;
-                    }
-                }
-                return false;
-            })
-            ->add('is_homeroom', 'ruleCheckHomeRoomTeacherAssignments', [
-                'rule' => 'checkHomeRoomTeacherAssignments',
-                'on' => function ($context) {
-                    //trigger validation only when homeroom teacher set to no and edit operation
-                    return ($context['data']['is_homeroom'] == 0 && !$context['newRecord']);
-                }
-            ])
-            ->add('is_homeroom', 'ruleIsHomeroomEmpty', [
-                // validations to ensure no value for is_homeroom field, if the selected title type is non-teaching type (0), for position import - POCOR-4258
-                'rule' => function ($value, $context) {
-                    return strlen($value) == 0;
-                },
-                'on' => function ($context) {
-                    if (array_key_exists('staff_position_title_id', $context['data']) && strlen($context['data']['staff_position_title_id']) > 0) {
-                        $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
-                        $titleId = $context['data']['staff_position_title_id'];
+            //         if (!is_null($titleEntity)) {
+            //             $positionType = $titleEntity->type;
+            //             return $positionType == 1;
+            //         } else {
+            //             return false;
+            //         }
+            //     }
+            //     return false;
+            // })
+            // ->add('is_homeroom', 'ruleCheckHomeRoomTeacherAssignments', [
+            //     'rule' => 'checkHomeRoomTeacherAssignments',
+            //     'on' => function ($context) {
+            //         //trigger validation only when homeroom teacher set to no and edit operation
+            //         return ($context['data']['is_homeroom'] == 0 && !$context['newRecord']);
+            //     }
+            // ])
+            // ->add('is_homeroom', 'ruleIsHomeroomEmpty', [
+            //     // validations to ensure no value for is_homeroom field, if the selected title type is non-teaching type (0), for position import - POCOR-4258
+            //     'rule' => function ($value, $context) {
+            //         return strlen($value) == 0;
+            //     },
+            //     'on' => function ($context) {
+            //         if (array_key_exists('staff_position_title_id', $context['data']) && strlen($context['data']['staff_position_title_id']) > 0) {
+            //             $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            //             $titleId = $context['data']['staff_position_title_id'];
 
-                        $titleEntity = $StaffPositionTitles
-                            ->find()
-                            ->select([$StaffPositionTitles->aliasField('type')])
-                            ->where([$StaffPositionTitles->aliasField('id') => $titleId])
-                            ->first();
+            //             $titleEntity = $StaffPositionTitles
+            //                 ->find()
+            //                 ->select([$StaffPositionTitles->aliasField('type')])
+            //                 ->where([$StaffPositionTitles->aliasField('id') => $titleId])
+            //                 ->first();
 
-                        if (!is_null($titleEntity)) {
-                            $positionType = $titleEntity->type;
-                            return $positionType == 0;
-                        } else {
-                            return false;
-                        }
-                    }
-                    return false;
-                }
-            ])
+            //             if (!is_null($titleEntity)) {
+            //                 $positionType = $titleEntity->type;
+            //                 return $positionType == 0;
+            //             } else {
+            //                 return false;
+            //             }
+            //         }
+            //         return false;
+            //     }
+            // ])
             ->add('shift_id', 'rulecheckShiftPresent', [ //POCOR-6971
                 'rule' => function ($value, $context) {
                     if($value == 0){
@@ -175,7 +174,6 @@ class InstitutionPositionsTable extends ControllerActionTable
                     }else{
                         return true;
                     }
-
                 }
             ])
             
@@ -195,6 +193,7 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        /*POCOR-5069 Starts
         if ($entity->has('is_homeroom') && $entity->dirty('is_homeroom')) {
             $currIsHomeroom = $entity->is_homeroom;
             // have to find all the staff that is holding this institution position
@@ -243,7 +242,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                     Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $entity->institution_id . ')');
                 }
             }
-        }
+        }POCOR-5069 Ends*/
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -277,16 +276,15 @@ class InstitutionPositionsTable extends ControllerActionTable
         }
     }
 
+    /*POCOR-5069 starts
     public function onUpdateFieldStaffPositionGradeId(Event $event, array $attr, $action, Request $request) 
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
-
             $positionGradeOptions = [];
             if ($entity->has('staff_position_title_id')) {
                 $positionGradeOptions = $this->StaffPositionGrades->getAvailablePositionGrades($entity->staff_position_title_id);
             }
-
             $attr['options'] = $positionGradeOptions;
         }
 
@@ -294,6 +292,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     }
 
 
+    
     public function onUpdateFieldIsHomeroom(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
@@ -327,7 +326,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 $attr['default'] = $isHomeroom;
             }
 
-            $attr['visible'] = $visibility;
+            $attr['visible'] = false; //POCOR-5070
         }
 
         return $attr;
@@ -337,7 +336,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     {
         $isHomeroom = $entity->is_homeroom;
         return $this->getSelectOptions('general.yesno')[$isHomeroom];
-    }
+    }POCOR-5069 Ends*/
 
     public function onGetStaffPositionTitleId(Event $event, Entity $entity)
     {
@@ -349,18 +348,17 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('staff_position_grade_id', [
-            // 'type' => 'select',
-            'type' => 'hidden',
+        /*POCOR-5069 starts $this->field('staff_position_grade_id', [
+            'type' => 'select',
             'entity' => $entity
-        ]);
+        ]);POCOR-5069 ends*/
 
         //POCOR-6971
         $this->field('shift_id', [
             'type' => 'select',
             'entity' => $entity
         ]);
-        $this->field('is_homeroom', ['entity' => $entity]);
+        //$this->field('is_homeroom', ['entity' => $entity]); POCOR-5069 
 
         // POCOR-3003 - [...] decision is to make Position Title not editable on the position edit page
         if ($entity->has('staff_position_title_id')) {
@@ -430,7 +428,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 ->find()
                 ->order([$this->StaffPositionTitles->aliasField('order')])
                 ->map(function ($row) use ($types) {
- // map() is a collection method, it executes the query
+                    // map() is a collection method, it executes the query
                     $row->name_and_type = $row->name . ' - ' . (array_key_exists($row->type, $types) ? $types[$row->type] : $row->type);
                     return $row;
                 })
@@ -490,7 +488,8 @@ class InstitutionPositionsTable extends ControllerActionTable
 ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('is_homeroom');
+        $this->field('grade');//PCOOR-5069
+        $this->field('homeroom_teacher');//PCOOR-5069
         $this->field('current_staff');
 
         $this->fields['current_staff_list']['visible'] = false;
@@ -498,11 +497,12 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->fields['shift_id']['visible'] = false; //POCOR-6971
 
         $this->fields['staff_position_title_id']['sort'] = ['field' => 'StaffPositionTitles.order'];
-        $this->fields['staff_position_grade_id']['sort'] = ['field' => 'StaffPositionGrades.order', 'type'=>'hidden'];
+        //$this->fields['staff_position_grade_id']['sort'] = ['field' => 'StaffPositionGrades.order'];//PCOOR-5069
         $this->fields['assignee_id']['sort'] = ['field' => 'Assignees.first_name'];
 
         $this->setFieldOrder([
-            'position_no', 'staff_position_title_id'
+            'position_no', 'staff_position_title_id',
+            //'staff_position_grade_id'//PCOOR-5069
         ]);
 
         if ($extra['auto_search']) {
@@ -538,6 +538,86 @@ class InstitutionPositionsTable extends ControllerActionTable
 
         return $value;
     }
+    //PCOOR-5069 Starts
+    public function onGetGrade(Event $event, Entity $entity)
+    {
+        $value = '';
+        $id = $entity->id;
+        $currentStaff = $this->getCurrentStaff($id)->toArray();
+        
+        $session = $this->Session;
+        $Staff = TableRegistry::get('institution_staff');
+        $StaffPositionGrades = TableRegistry::get('staff_position_grades');
+        if (empty($currentStaff[0])) {
+            $value = '-';
+        } else {
+            foreach ($currentStaff as $singleCurrentStaff) {
+                if ($singleCurrentStaff->user->id == end($currentStaff)->user->id) {
+                    $staffId = $singleCurrentStaff->user->id;
+                } else {
+                    $staffId = $singleCurrentStaff->user->id;
+                }
+                $currentStaff = $Staff
+                                ->find()
+                                ->select([
+                                    'staff_id'=>  $Staff->aliasField('id'),
+                                    'staff_position_grade_id'=> $Staff->aliasField('staff_position_grade_id'),
+                                    'staff_position_grade_name'=> $StaffPositionGrades->aliasField('name')
+                                ])
+                                ->LeftJoin([$StaffPositionGrades->alias() => $StaffPositionGrades->table()],
+                                        [
+                                            $StaffPositionGrades->aliasField('id') . ' = '. $Staff->aliasField('staff_position_grade_id')
+                                        ])
+                                ->where([
+                                    $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                                    $Staff->aliasField('institution_position_id') => $id,
+                                    $Staff->aliasField('staff_id') => $staffId
+                                ])->first();
+                if(!empty($currentStaff)){
+                    $value .= $currentStaff->staff_position_grade_name;
+                }
+            }
+        }
+
+        return $value;
+    }
+
+    public function onGetHomeroomTeacher(Event $event, Entity $entity)
+    {
+        $value = '';
+        $id = $entity->id;
+        $currentStaff = $this->getCurrentStaff($id)->toArray();
+        
+        $session = $this->Session;
+        $Staff = TableRegistry::get('institution_staff');
+        if (empty($currentStaff[0])) {
+            $value = '';
+        } else {
+            foreach ($currentStaff as $singleCurrentStaff) {
+                if ($singleCurrentStaff->user->id == end($currentStaff)->user->id) {
+                    $staffId = $singleCurrentStaff->user->id;
+                } else {
+                    $staffId = $singleCurrentStaff->user->id;
+                }
+                $currentStaff = $Staff
+                                ->find()
+                                ->select([
+                                    'staff_id'=>  $Staff->aliasField('id'),
+                                    'is_homeroom'=> $Staff->aliasField('is_homeroom'),
+                                ])
+                                ->where([
+                                    $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                                    $Staff->aliasField('institution_position_id') => $id,
+                                    $Staff->aliasField('staff_id') => $staffId
+                                ])->first();
+                if(!empty($currentStaff)){
+                    $isHomeroom = $currentStaff->is_homeroom;
+                    $value .= $this->getSelectOptions('general.yesno')[$isHomeroom];
+                }
+            }
+        }
+        return $value;
+    }//PCOOR-5069 Ends
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -550,9 +630,9 @@ class InstitutionPositionsTable extends ControllerActionTable
                 $this->aliasField('status_id'),
                 $this->aliasField('position_no'),
                 $this->aliasField('staff_position_title_id'),
-                $this->aliasField('staff_position_grade_id'),
+                //$this->aliasField('staff_position_grade_id'),
                 $this->aliasField('assignee_id'),
-                $this->aliasField('is_homeroom'),
+               
                 $this->aliasField('created')
             ])
             ->contain([
@@ -569,13 +649,13 @@ class InstitutionPositionsTable extends ControllerActionTable
                         'StaffPositionTitles.order'
                     ]
                 ],
-                'StaffPositionGrades'=> [
+                /*POCOR-5069 starts'StaffPositionGrades'=> [
                     'fields' => [
                         'StaffPositionGrades.id',
                         'StaffPositionGrades.name',
                         'StaffPositionGrades.order'
                     ]
-                ],
+                ],POCOR-5069 Ends*/
                 'Assignees'=> [
                     'fields' => [
                         'Assignees.id',
@@ -587,8 +667,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                     ]
                 ]
             ]);
-
-        $sortList = ['position_no', 'StaffPositionTitles.order', 'StaffPositionGrades.order', 'created','Assignees.first_name'];
+        $sortList = ['position_no', 'StaffPositionTitles.order'/*,POCOR-5069 'StaffPositionGrades.order'*/, 'created','Assignees.first_name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
@@ -607,18 +686,19 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->fields['past_staff_list']['visible'] = false;
 
         $this->setFieldOrder([
-            'position_no', 'staff_position_title_id', 'shift_id',
+            'position_no', 'staff_position_title_id',
+            //'staff_position_grade_id',POCOR-5069
+            'shift_id',
         ]);
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('staff_position_grade_id', [
-            // 'type' => 'select',
-            'type' => 'hidden',
+        /*POCOR-5069 Starts$this->field('staff_position_grade_id', [
+            'type' => 'select',
             'entity' => $entity
-        ]);
-        $this->field('is_homeroom');
+        ]);POCOR-5069 Ends*/
+        
         //POCOR-6971
         $this->field('shift_id', [
             'type' => 'select',
@@ -634,12 +714,10 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event)
     {
-        $this->field('is_homeroom');
-
         $this->setFieldOrder([
+            //'staff_position_grade_id',POCOR-5069
             'position_no',
             'staff_position_title_id',
-            'is_homeroom',
             'modified_user_id', 'modified', 'created_user_id', 'created',
             'current_staff_list', 'past_staff_list','shift_id'
         ]);
@@ -698,25 +776,16 @@ class InstitutionPositionsTable extends ControllerActionTable
             ->order([$Staff->aliasField('start_date')]);
         $this->fields['past_staff_list']['data'] = $pastStaff;
         // end Current Staff List field
-
         return true;
     }
 
     public function viewAfterAction(Event $event, Entity $entity)
     {
         $this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
-        
         if (!empty($entity->modified_user_id)) {
             $this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
         }
         return $entity;
-    }
-
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) 
-    {
-        if(!isset($entity->staff_position_grade_id)){
-            $entity->staff_position_grade_id = 0;
-        }
     }
 
 
@@ -791,11 +860,11 @@ class InstitutionPositionsTable extends ControllerActionTable
             $staffPositionsOptions = $this->find()
                 ->select([
                     'security_role_id' => 'SecurityRoles.id',
-                    'type' => 'StaffPositionTitles.type',
-                    'grade_name' => 'StaffPositionGrades.name'
+                    'type' => 'StaffPositionTitles.type'
+                    //'grade_name' => 'StaffPositionGrades.name'//POCOR-5069
                 ])
                 ->innerJoinWith('StaffPositionTitles.SecurityRoles')
-                ->innerJoinWith('StaffPositionGrades')
+                //->innerJoinWith('StaffPositionGrades')//POCOR-5069
                 ->where($positionConditions)
                 ->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
                 ->autoFields(true)
@@ -902,10 +971,10 @@ class InstitutionPositionsTable extends ControllerActionTable
                 $this->aliasField('status_id'),
                'position_no'=> $this->aliasField('position_no'),
                 $this->aliasField('staff_position_title_id'),
-                $this->aliasField('staff_position_grade_id'),
+                //$this->aliasField('staff_position_grade_id'),POCOR-5069 
                 $this->aliasField('assignee_id'),
                 $this->aliasField('institution_id'),
-                $this->aliasField('is_homeroom'),
+                
                 $this->aliasField('created')
             ])
             ->where([$this->aliasField('institution_id')=>$institutionId]);
@@ -917,7 +986,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                         'status_name'=>'Statuses.name',
                         //'staff_id'=>$position->aliasField('staff_id'),
                         'titles'=>'StaffPositionTitles.name',
-                        'grades'=>'StaffPositionGrades.name',
+                        //'grades'=>'StaffPositionGrades.name',
                         'institution_name' => 'Institutions.name',
                         'assignees_name' => $position->find()->func()->concat([
                             'Assignees.first_name' => 'literal',
@@ -944,13 +1013,13 @@ class InstitutionPositionsTable extends ControllerActionTable
                             'StaffPositionTitles.order'
                         ]
                     ],
-                    'StaffPositionGrades'=> [
+                    /*'StaffPositionGrades'=> [
                         'fields' => [
                             'StaffPositionGrades.id',
                           'grades'=>  'StaffPositionGrades.name',
                             'StaffPositionGrades.order'
                         ]
-                    ],
+                    ],*/
                     'Institutions'=> [
                         'fields' => [
                             'Institutions.id',
@@ -974,7 +1043,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 if(!empty($data)){
                     $row['status_name'] = $data->status_name;
                     $row['titles'] = $data->titles;
-                    $row['grades'] = $data->grades;
+                    //$row['grades'] = $data->grades;
                     $row['institution_name'] = $data->titles;
                     $row['assignees_name'] = $data->assignees_name;
                 }
@@ -982,7 +1051,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 return $row;
             });
         });
-            
+           
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
@@ -1006,8 +1075,8 @@ class InstitutionPositionsTable extends ControllerActionTable
             'label' =>  __('Title')
         ];
         $newArray[] = [
-            'key' => 'grades',
-            'field' => 'grades',
+            'key' => 'staff_position_grade_name',
+            'field' => 'staff_position_grade_name',
             'type' => 'string',
             'label' => __('Grade')
         ];
@@ -1023,12 +1092,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             'type' => 'string',
             'label' => __('Assignees')
         ];
-        $newArray[] = [
-            'key' => 'is_homeroom',
-            'field' => 'is_homeroom',
-            'type' => 'string',
-            'label' => __('Homeroom Teacher')
-        ];
+        
         $newArray[] = [
             'key' => 'openemis_id',
             'field' => 'openemis_id',
@@ -1069,10 +1133,11 @@ class InstitutionPositionsTable extends ControllerActionTable
         $fields->exchangeArray($newArray);
     }
 
+    /*POCOR-5069 Starts
     public function onExcelGetIsHomeroom(Event $event, Entity $entity)
     {
         return ($entity->is_homeroom) ? __('Yes') : __('No');
-    }
+    }POCOR-5069 Ends*/
 
     public function onExcelGetStaffPositionTitleId(Event $event, Entity $entity)
     {
@@ -1131,12 +1196,12 @@ class InstitutionPositionsTable extends ControllerActionTable
     */
     public function onExcelGetOpenemisId(Event $event, Entity $entity)
     {
-        
         $session = $this->Session;
         $position_id = $entity->id;
         $Staff = $this->Institutions->Staff;
         $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
         $UserIdentities = TableRegistry::get('User.Identities');
+        $StaffPositionGrades = TableRegistry::get('staff_position_grades');
         $entity->fte = '';
         $entity->openemis_no = '';
         $entity->staff_name = '';
@@ -1170,9 +1235,9 @@ class InstitutionPositionsTable extends ControllerActionTable
                     $entity->openemis_no = $currentStaff->openemis_no;
                     $IdentityTypeId = $currentStaff->identity_type_id;
                     $entity->staff_name = $currentStaff->first_name.' '.$currentStaff->middle_name.' '.$currentStaff->third_name.' '.$currentStaff->last_name ;
-                    $entity->status_name =  $currentStaff->status_name;
+                    $entity->status_name = $currentStaff->status_name;
                     
-                    $UserIdentitiesIds = $UserIdentities->find()->select(['number'=>'Identities.number','                 name'=>'IdentityTypes.name'])
+                    $UserIdentitiesIds = $UserIdentities->find()->select(['number'=>'Identities.number','name'=>'IdentityTypes.name'])
                                         ->leftJoin(
                                     [$IdentityTypes->alias() => $IdentityTypes->table()],
                                     [
@@ -1186,33 +1251,60 @@ class InstitutionPositionsTable extends ControllerActionTable
                     }
 
                 }
-        
+          
         return $entity->openemis_no;
     }
 
     public function onExcelGetFte(Event $event, Entity $entity)
     {
-        return $entity->fte ;
+        return $entity->fte;
     }
 
     public function onExcelGetStaffName(Event $event, Entity $entity)
     {
-        return $entity->staff_name ;
+        return $entity->staff_name;
     }
 
-    public function onExcelGetStatusName(Event $event, Entity $entity)
-    {
-        return $entity->status_name ;
-    }
+    //PCOOR-5069 Starts
+    public function onExcelGetStaffPositionGradeName(Event $event, Entity $entity)
+    {   
+        $session = $this->Session;
+        $position_id = $entity->id;
+        $Staff = $this->Institutions->Staff;
+        $StaffPositionGrades = TableRegistry::get('staff_position_grades');
+        $entity->staff_position_grade_name = '';
+        
+        $currentStaff = $Staff
+                        ->find()
+                        ->select([
+                            'staff_id'=>  $Staff->aliasField('staff_id'),
+                            'staff_position_grade_id'=>$Staff->aliasField('staff_position_grade_id'),
+                            'staff_position_grade_name'=>  $StaffPositionGrades->aliasField('name')
+                        ])
+                        ->LeftJoin([$StaffPositionGrades->alias() => $StaffPositionGrades->table()],
+                                [
+                                    $StaffPositionGrades->aliasField('id') . ' = '. $Staff->aliasField('staff_position_grade_id')
+                                ])
+                        ->where([
+                            $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                            $Staff->aliasField('institution_position_id') => $position_id,
+                        ])->first();
+                if(!empty($currentStaff)){
+                    $StaffId = $currentStaff->staff_id;
+                    $entity->staff_position_grade_name = $currentStaff->staff_position_grade_name;
+                }
+          
+        return $entity->staff_position_grade_name;
+    }//PCOOR-5069 Ends
 
     public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
-        return $entity->identity_type ;
+        return $entity->identity_type;
     }
 
     public function onExcelGetidentityNumber(Event $event, Entity $entity)
     {
-        return $entity->identity_number ;
+        return $entity->identity_number;
     }
 
     //POCOR-6925
@@ -1306,7 +1398,8 @@ class InstitutionPositionsTable extends ControllerActionTable
      * add shift dropdown
     */
     public function onUpdateFieldShiftId(Event $event, array $attr, $action, Request $request)
-    {   $shiftOptions = TableRegistry::get('shift_options'); 
+    {   
+        $shiftOptions = TableRegistry::get('shift_options'); 
         $option = $shiftOptions->find('list')->toArray();
         foreach($option as $key=>$result) {
             $optionAll = $shiftOptions->find('all')->select(['stime'=>$shiftOptions->aliasField('start_time'),'etime'=>$shiftOptions->aliasField('end_time'),'name'=>$shiftOptions->aliasField('name')])->where([$shiftOptions->aliasField('id')=>$key])->first();
