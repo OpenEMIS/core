@@ -26,6 +26,7 @@ class POCOR7225 extends AbstractMigration
     public function down()
     {
         // Drop summary tables
-        $this->execute('DROP TABLE IF EXISTS `survey_status_periods`');   
+        $this->execute('DROP TABLE IF EXISTS `survey_status_periods`');  
+        $this->execute('RENAME TABLE `z_7225_survey_status_periods` TO `survey_status_periods`'); 
     }
 }
