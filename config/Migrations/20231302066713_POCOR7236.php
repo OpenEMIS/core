@@ -2,6 +2,10 @@
 
 use Phinx\Migration\AbstractMigration;
 
+/**
+ * POCOR-7236 
+ * unique code validation
+**/
 class POCOR7236 extends AbstractMigration
 {
     // commit
