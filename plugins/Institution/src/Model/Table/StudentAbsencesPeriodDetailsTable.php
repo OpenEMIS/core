@@ -184,18 +184,21 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                         $absenceCount = $absenceCount+1;
 
                         $alertRulesTable = TableRegistry::get('alert_rules');
-                        $alertRuleData = $alertRulesTable->find('all',['feature'=>'Attendance'])->first();
-                        if($alertRuleData->threshold <= $absenceCount){
-                            if(!empty($userData->email)){
-                                $email = new Email('openemis');
-                                $emailSubject = 'OpenEMIS Attendance Alert for '.$insCode." - ".$insName;
-                                $emailMessage = "[THIS IS AN AUTOMATED MESSAGE - PLEASE DO NOT REPLY DIRECTLY TO THIS EMAIL]\n\nDear Principal,\n\nPlease be informed that the student ".$StudentOpenemis_no." - ".$StudentFirstName." ". $StudentLastName." have missed ".$absenceCount." days of class in ".$insCode." - ".$insName;
-                                $email
-                                    ->to($userData->email)
-                                    ->subject($emailSubject)
-                                    ->send($emailMessage);
+                        $alertRuleData = $alertRulesTable->find('all',['feature'=>'Attendance'])->toArray();
+                        foreach($alertRuleData as $alertRuleData1){
+                            if($alertRuleData1->threshold <= $absenceCount){
+                                if(!empty($userData->email)){
+                                    $email = new Email('openemis');
+                                    $emailSubject = 'OpenEMIS Attendance Alert for '.$insCode." - ".$insName;
+                                    $emailMessage = "[THIS IS AN AUTOMATED MESSAGE - PLEASE DO NOT REPLY DIRECTLY TO THIS EMAIL]\n\nDear Principal,\n\nPlease be informed that the student ".$StudentOpenemis_no." - ".$StudentFirstName." ". $StudentLastName." have missed ".$absenceCount." days of class in ".$insCode." - ".$insName;
+                                    $email
+                                        ->to($userData->email)
+                                        ->subject($emailSubject)
+                                        ->send($emailMessage);
+                                }
                             }
                         }
+                        
                         
                     }
                 }
