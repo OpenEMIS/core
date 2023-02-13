@@ -168,15 +168,35 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                     foreach($securityGroupUsersData as $securityGU){
                         $userTable = TableRegistry::get('security_users');
                         $userData = $userTable->get($securityGU->security_user_id);
-                        if(!empty($userData->email)){
-                            $email = new Email('openemis');
-                            $emailSubject = 'OpenEMIS - Absence Type ';
-                            $emailMessage = "Test Message Thank you.";
-                            $email
-                                ->to($userData->email)
-                                ->subject($emailSubject)
-                                ->send($emailMessage);
+                        $studentData = $userTable->get($entity->student_id);
+                        
+                        $insCode  = $institutionData->code;
+                        $insName  = $institutionData->name;
+                        $StudentOpenemis_no = $studentData->openemis_no;
+                        $StudentFirstName = $studentData->first_name;
+                        $StudentLastName =$studentData->last_name;
+                        $absenceCount = $this->find('all',['conditions' => ['student_id'=>$entity->student_id, 'institution_id'=>$entity->institution_id,'academic_period_id'=>$entity->academic_period_id
+                        // 'OR'=>[
+                        //     'absence_type_id'=>1,
+                        //     'absence_type_id'=>2
+                        // ] 
+                        ]])->count();
+                        $absenceCount = $absenceCount+1;
+
+                        $alertRulesTable = TableRegistry::get('alert_rules');
+                        $alertRuleData = $alertRulesTable->find('all',['feature'=>'Attendance','name'=>'Student Absent','enabled'=>1])->first();
+                        if($alertRuleData->threshold <= $absenceCount){
+                            if(!empty($userData->email)){
+                                $email = new Email('openemis');
+                                $emailSubject = 'OpenEMIS Attendance Alert for '.$insCode." - ".$insName;
+                                $emailMessage = "[THIS IS AN AUTOMATED MESSAGE - PLEASE DO NOT REPLY DIRECTLY TO THIS EMAIL]\n\nDear Principal,\n\nPlease be informed that the student ".$StudentOpenemis_no." - ".$StudentFirstName." ". $StudentLastName." have missed ".$absenceCount." days of class in ".$insCode." - ".$insName;
+                                $email
+                                    ->to($userData->email)
+                                    ->subject($emailSubject)
+                                    ->send($emailMessage);
+                            }
                         }
+                        
                     }
                 }
             }
