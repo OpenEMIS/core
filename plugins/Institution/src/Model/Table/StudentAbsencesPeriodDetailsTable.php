@@ -184,7 +184,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                         $absenceCount = $absenceCount+1;
 
                         $alertRulesTable = TableRegistry::get('alert_rules');
-                        $alertRuleData = $alertRulesTable->find('all',['feature'=>'Attendance','name'=>'Student Absent','enabled'=>1])->first();
+                        $alertRuleData = $alertRulesTable->find('all',['feature'=>'Attendance'])->first();
                         if($alertRuleData->threshold <= $absenceCount){
                             if(!empty($userData->email)){
                                 $email = new Email('openemis');
