@@ -218,7 +218,6 @@ class AssessmentsTable extends ControllerActionTable {
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         if ($this->action == 'edit'){
-            //echo "<pre>";print_r($requestData[$this->alias()]);die;
             $currentTimeZone = date("Y-m-d H:i:s");
             $assessmentId = $entity['id'];
             if (array_key_exists($this->alias(), $requestData)) {
