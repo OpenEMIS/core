@@ -150,42 +150,40 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                     $institutionData = $institutionTable->get($entity->institution_id);
                     $institutionSecurityGroupId = $institutionData->security_group_id;
     
-                    $alertRolesTable = TableRegistry::get('alerts_roles');
-                    $alertRolesData = $alertRolesTable->find('all',['fields'=>['security_role_id']])->toArray();
-                    $securityRoleIds='';
-                    foreach($alertRolesData as $alertRole){
-                        $securityRoleIds .= $alertRole->security_role_id.',';
-                    }
-                    $securityRoleIds = rtrim($securityRoleIds,',');
-    
-                    $securityGroupUsersTable = TableRegistry::get('security_group_users');
-                    $securityGroupUsersData = $securityGroupUsersTable->find()
-                                                ->where(['security_group_id'=>$institutionSecurityGroupId])
-                                                ->andWhere(['security_role_id in'=>$securityRoleIds])
-                                                ->group(['security_user_id'])
-                                                ->toArray();
-    
-                    foreach($securityGroupUsersData as $securityGU){
-                        $userTable = TableRegistry::get('security_users');
-                        $userData = $userTable->get($securityGU->security_user_id);
-                        $studentData = $userTable->get($entity->student_id);
-                        
-                        $insCode  = $institutionData->code;
-                        $insName  = $institutionData->name;
-                        $StudentOpenemis_no = $studentData->openemis_no;
-                        $StudentFirstName = $studentData->first_name;
-                        $StudentLastName =$studentData->last_name;
-                        $absenceCount = $this->find('all',['conditions' => ['student_id'=>$entity->student_id, 'institution_id'=>$entity->institution_id,'academic_period_id'=>$entity->academic_period_id
-                        // 'OR'=>[
-                        //     'absence_type_id'=>1,
-                        //     'absence_type_id'=>2
-                        // ] 
-                        ]])->count();
-                        $absenceCount = $absenceCount+1;
+                    
+                    $alertRulesTable = TableRegistry::get('alert_rules');
+                    $alertRuleData = $alertRulesTable->find('all',['feature'=>'StudentAttendance'])->toArray();
+                    foreach($alertRuleData as $alertRuleData1){
 
-                        $alertRulesTable = TableRegistry::get('alert_rules');
-                        $alertRuleData = $alertRulesTable->find('all',['feature'=>'Attendance'])->toArray();
-                        foreach($alertRuleData as $alertRuleData1){
+
+                        $alertRolesTable = TableRegistry::get('alerts_roles');
+                        $alertRolesData = $alertRolesTable->find('all',['conditions'=>['alert_rule_id'=>$alertRuleData1->id],'fields'=>['security_role_id']])->toArray();
+                        $securityRoleIds='';
+                        foreach($alertRolesData as $alertRole){
+                            $securityRoleIds .= $alertRole->security_role_id.',';
+                        }
+                        $securityRoleIds = rtrim($securityRoleIds,',');
+
+                        $securityGroupUsersTable = TableRegistry::get('security_group_users');
+                        $securityGroupUsersData = $securityGroupUsersTable->find()
+                                                    ->where(['security_group_id'=>$institutionSecurityGroupId])
+                                                    ->andWhere(['security_role_id in'=>$securityRoleIds])
+                                                    ->group(['security_user_id'])
+                                                    ->toArray();
+        
+                        foreach($securityGroupUsersData as $securityGU){
+                            $userTable = TableRegistry::get('security_users');
+                            $userData = $userTable->get($securityGU->security_user_id);
+                            $studentData = $userTable->get($entity->student_id);
+                            
+                            $insCode  = $institutionData->code;
+                            $insName  = $institutionData->name;
+                            $StudentOpenemis_no = $studentData->openemis_no;
+                            $StudentFirstName = $studentData->first_name;
+                            $StudentLastName =$studentData->last_name;
+                            $absenceCount = $this->find('all',['conditions' => ['student_id'=>$entity->student_id, 'institution_id'=>$entity->institution_id,'academic_period_id'=>$entity->academic_period_id
+                            ]])->count();
+                            $absenceCount = $absenceCount+1;
                             if($alertRuleData1->threshold <= $absenceCount){
                                 if(!empty($userData->email)){
                                     $email = new Email('openemis');
@@ -198,6 +196,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                                 }
                             }
                         }
+                        
                         
                         
                     }
