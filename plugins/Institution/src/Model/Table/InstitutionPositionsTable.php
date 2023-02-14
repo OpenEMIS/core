@@ -441,6 +441,16 @@ class InstitutionPositionsTable extends ControllerActionTable
         return $attr;
     }
 
+     /** Start POCOR-7216 */
+    public function onGetPositionNo(Event $event, Entity $entity)
+    {
+        $position = $entity['position_no'];
+        $position_arr = explode('-',$position);
+        return $position_arr[0];
+    }
+    /** End POCOR-7216 */
+
+
     public function getUniquePositionNo($institutionId = null)
     {
         $prefix = '';
@@ -595,6 +605,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $extra['options']['sortWhitelist'] = $sortList;
     }
 
+
 /******************************************************************************************************************
 **
 ** addEdit action methods
@@ -705,6 +716,11 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity)
     {
+        /** Start POCOR-7216 */
+        $position = $entity['position_no'];
+        $position_arr = explode('-',$position);
+        $entity['position_no'] = $position_arr[0];
+        /** End POCOR-7216 */
         $this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
         
         if (!empty($entity->modified_user_id)) {
@@ -972,6 +988,11 @@ class InstitutionPositionsTable extends ControllerActionTable
                     $row['institution_name'] = $data->titles;
                     $row['assignees_name'] = $data->assignees_name;
                 }
+                /** Start POCOR-7216 */
+                $position = $row['position_no'];
+                $position_arr = explode('-',$position);
+                $row['position_no'] = $position_arr[0];
+                 /** End POCOR-7216 */
 
                 return $row;
             });
