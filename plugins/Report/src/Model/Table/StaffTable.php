@@ -118,6 +118,16 @@ class StaffTable extends AppTable  {
                 $this->request->data[$this->alias()]['feature'] = key($option);
         }
         /*POCORO-6176 ends*/
+
+        //POCOR-5185[start]
+        if(isset($this->request->data[$this->alias()]['feature']) && $this->request->data[$this->alias()]['feature'] == 'Report.StaffRequirements') {
+            $this->fields['academic_period_id']['visible'] = false;
+            $this->fields['area_level_id']['visible'] = false;
+            $this->fields['area_education_id']['visible'] = false;
+            $this->fields['institution_id']['visible'] = false;
+        }
+        //POCOR-5185[end]
+
         return $attr;
     }
 
