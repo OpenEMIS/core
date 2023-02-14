@@ -158,19 +158,17 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 
                         $alertRolesTable = TableRegistry::get('alerts_roles');
                         $alertRolesData = $alertRolesTable->find('all',['conditions'=>['alert_rule_id'=>$alertRuleData1->id],'fields'=>['security_role_id']])->toArray();
-                        $securityRoleIds='';
+                        $securityRoleIds=[];
                         foreach($alertRolesData as $alertRole){
-                            $securityRoleIds .= $alertRole->security_role_id.',';
+                            $securityRoleIds[] = $alertRole->security_role_id;
                         }
-                        $securityRoleIds = rtrim($securityRoleIds,',');
-
+                       
                         $securityGroupUsersTable = TableRegistry::get('security_group_users');
                         $securityGroupUsersData = $securityGroupUsersTable->find()
-                                                    ->where(['security_group_id'=>$institutionSecurityGroupId])
-                                                    ->andWhere(['security_role_id in'=>$securityRoleIds])
+                                                    ->where(['security_group_id'=>$institutionSecurityGroupId,'security_role_id in'=> $securityRoleIds])
                                                     ->group(['security_user_id'])
                                                     ->toArray();
-        
+                                                    
                         foreach($securityGroupUsersData as $securityGU){
                             $userTable = TableRegistry::get('security_users');
                             $userData = $userTable->get($securityGU->security_user_id);
@@ -183,7 +181,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                             $StudentLastName =$studentData->last_name;
                             $absenceCount = $this->find('all',['conditions' => ['student_id'=>$entity->student_id, 'institution_id'=>$entity->institution_id,'academic_period_id'=>$entity->academic_period_id
                             ]])->count();
-                            $absenceCount = $absenceCount+1;
+                            $absenceCount = $absenceCount;
                             if($alertRuleData1->threshold <= $absenceCount){
                                 if(!empty($userData->email)){
                                     $email = new Email('openemis');
