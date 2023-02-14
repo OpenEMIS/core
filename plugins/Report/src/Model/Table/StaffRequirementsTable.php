@@ -30,10 +30,6 @@ class StaffRequirementsTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
 
-        //$academicPeriodId = $requestData->academic_period_id;
-        //$areaLevelId = $requestData->area_level_id;
-        //$areaId = $requestData->area_education_id;
-        //$institutionId = $requestData->institution_id;
         $studentPerTeacherRatio = $requestData->student_per_teacher_ratio;
         $upperTolerance = $requestData->upper_tolerance;
         $lowerTolerance = $requestData->lower_tolerance;
