@@ -17,7 +17,7 @@ class POCOR6584 extends AbstractMigration
         $this->execute('CREATE TABLE `z_6584_alert_rules` LIKE `alert_rules`');
         $this->execute('INSERT INTO `z_6584_alert_rules` SELECT * FROM `alert_rules`');
         $this->execute("UPDATE `alerts` SET `name` = 'Student Attendance' WHERE `alerts`.`name` = 'Attendance';");
-        $this->execute("UPDATE `alert_rules` SET `feature` = 'StusentAttendance' WHERE `alert_rules`.`feature` = 'Attendance';");
+        $this->execute("UPDATE `alert_rules` SET `feature` = 'StudentAttendance' WHERE `alert_rules`.`feature` = 'Attendance';");
     }
 
     public function down()
