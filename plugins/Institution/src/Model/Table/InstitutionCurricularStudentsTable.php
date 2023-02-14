@@ -12,17 +12,37 @@ use App\Model\Traits\MessagesTrait;
 
 
 class InstitutionCurricularStudentsTable extends ControllerActionTable
-{
-	public function initialize(array $config)
-	{
-		$this->table('institution_curricular_students');
-		parent::initialize($config);
-        /*$this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
-        $this->addBehavior('Restful.RestfulAccessControl', [
-            'Students' => ['index', 'add'],
-            'Staff' => ['index', 'add']
-        ]);*/
-        
-	}
+{	
+	use MessagesTrait;
+
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
+
+        $this->belongsTo('InstitutionCurriculars', ['className' => 'Institution.InstitutionCurriculars']);
+
+      //  $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+    }
+
+    /*public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $query = $this->request->query;
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $institutionId = $extra['institution_id'];
+        $selectedAcademicPeriodId = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+       
+        $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId);
+        $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
+        $extra['elements']['control'] = [
+            'name' => 'Institution.Associations/controls',
+            'data' => [
+                'academicPeriodOptions'=>$academicPeriodOptions,
+                'selectedAcademicPeriod'=>$selectedAcademicPeriodId
+            ],
+            'options' => [],
+            'order' => 3
+        ];
+
+    }*/
 	
 }

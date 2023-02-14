@@ -43,6 +43,7 @@ class InstitutionsController extends AppController
         'InstitutionSubjects',
         'InstitutionTextbooks',
         'InstitutionCurricular',//POCOR-6673
+        'InstitutionCurricularStudents',
 
         // students
         'Programmes',
@@ -464,57 +465,23 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTrips']);
     }
 
-    // POCOR-6673
-    public function Curriculars($curriaction = 'index', $institutionCurricularId = null)
+    //POCOR-6673
+    public function InstitutionCurriculars()
     {
-        if ($curriaction == 'edit') {
-            $session = $this->request->session();
-            $roles = [];
-            $institutionCurricularId = $this->ControllerAction->paramsDecode($institutionCurricularId);
-            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
-            if (!$this->AccessControl->isAdmin() && $institutionId) {
-                $userId = $this->Auth->user('id');
-                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-                $AccessControl = $this->AccessControl;
-                $action = 'edit';
-                if (!$AccessControl->check(['Institutions', 'AllSubjects', $action], $roles)) {
-                    if ($AccessControl->check(['Institutions', 'Subjects', $action], $roles)) {
-                        $InstitutionCurricular = TableRegistry::get('institution_curriculars');
-                        $curricularRecord = $InstitutionCurricular->get($institutionCurricularId, ['contain' => ['Teachers']])->toArray();
-                        if (in_array($userId, array_column($curricularRecord['teachers']), 'id')) {
-                            $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
-                            return $this->redirect($url);
-                        }
-                    } else {
-                        $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
-                        return $this->redirect($url);
-                    }
-                }
-            }
-            $viewUrl = $this->ControllerAction->url('view');
-            $viewUrl['action'] = 'Curricular';
-            $viewUrl[0] = 'view';
-            $indexUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'Subjects',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
-            ];
-            $alertUrl = [
-                'plugin' => 'Configuration',
-                'controller' => 'Configurations',
-                'action' => 'setAlert',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
-            ];
-            $this->set('alertUrl', $alertUrl);
-            $this->set('viewUrl', $viewUrl);
-            $this->set('indexUrl', $indexUrl);
-            $this->set('institutionCurricularId', $institutionCurricularId['id']);
-            $this->set('institutionId', $institutionId);
-            $this->render('institution_curriculars_edit');
-        } else {
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurriculars']);
-        }
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurriculars']);
+    }
+    //POCOR-6673
+    public function InstitutionCurricularStudents()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurricularStudents']);
+    }
+
+    // POCOR-6673
+    public function Curriculars($curriaction = 'index')
+    {
+        
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurriculars']);
+        
         
     }
 
@@ -533,7 +500,13 @@ class InstitutionsController extends AppController
                 $this->Navigation->addCrumb(__('Trips'));
                 $this->set('contentHeader', $header);
 
-            } 
+            }elseif($this->request->param('action') == 'InstitutionCurriculars') { //POCOR-6673
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Curriculars');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Curriculars'));
+                $this->set('contentHeader', $header);
+            }
         }
     }
 
@@ -3390,14 +3363,14 @@ class InstitutionsController extends AppController
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
             'Associations' => ['text' => __('Associations')],
-            'Curriculars' => ['text' => __('Curriculars')]
+          //  'Curriculars' => ['text' => __('Curriculars')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         // Programme will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
-            if (in_array($key, ['Programmes', 'Textbooks', 'Risks','Associations','Curriculars'])) {
+            if (in_array($key, ['Programmes', 'Textbooks', 'Risks','Associations'])) {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
             } else {
@@ -7319,5 +7292,22 @@ class InstitutionsController extends AppController
                  }
              }
         }
+    }
+
+    public function getCurricularsTabElements($options = [])
+    {
+        $queryString = $this->request->query('queryString');
+        $tabElements = [
+            'InstitutionCurriculars' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Curriculars', 'index', 'queryString' => $queryString],
+                'text' => __('Curriculars')
+            ],
+            'InstitutionCurricularStudents' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'InstitutionCurricularStudents', 'index', 'queryString' => $queryString],
+                'text' => __('Students')
+            ]
+        ];
+        //return $this->TabPermission->checkTabPermission($tabElements);
+        return $tabElements;
     }
 }
