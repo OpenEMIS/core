@@ -5222,7 +5222,7 @@ class InstitutionsController extends AppController
                             'end_date' => $endDate,
                             'student_id' => $user_record_id,
                             'status_id' => $workflowResults->workflowSteps_id, 
-                            'assignee_id' => 0,
+                            'assignee_id' => $this->Auth->user('id'), //POCOR7080
                             'institution_id' => $institutionId,
                             'academic_period_id' => $academicPeriodId,
                             'education_grade_id' => $educationGradeId,
