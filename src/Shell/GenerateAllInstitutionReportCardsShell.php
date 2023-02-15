@@ -18,6 +18,7 @@ class GenerateAllInstitutionReportCardsShell extends Shell
         $this->loadModel('CustomExcel.InstitutionReportCards');
         $this->loadModel('ReportCard.InstitutionReportCardProcesses');
         $this->loadModel('SystemProcesses');
+        ini_set("pcre.backtrack_limit", "5000000"); //POCOR-6744
     }
 
     public function main()
