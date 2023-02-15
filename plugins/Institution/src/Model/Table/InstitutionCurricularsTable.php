@@ -29,12 +29,13 @@ class InstitutionCurricularsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-
+        
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
-    {
+    {   
         $query = $this->request->query;
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $institutionId = $extra['institution_id'];
@@ -85,6 +86,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         $query = $this->request->query;
         $this->field('modified_user_id', ['visible' => false]);
+        $this->field('academic_period_id', ['visible' => false]);
         $this->field('modified', ['visible' => false]);
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
@@ -93,15 +95,11 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $this->field('total_students', ['visible' => ['index'=>true,'view' => false,'edit' =>false,'add'=>false]]);
         $this->field('type_id', ['visible' => ['index'=>false]]);
         $this->field('category', ['visible' => ['index'=>false]]);
+        $this->field('staff_id', ['visible' => ['index'=>true]]);
         $this->setFieldOrder([
-            'name','category','total_male_students', 'total_female_students', 'total_students'
+            'name', 'staff_id','category','total_male_students', 'total_female_students', 'total_students'
         ]);
-        if ($this->action == 'index') {
-            $tabElements = $this->controller->getCurricularsTabElements();
-            $this->controller->set('tabElements', $tabElements);
-            $this->controller->set('selectedAction', 'InstitutionCurriculars');
-           // $this->controller->set('selectedAction', 'InstitutionCurricularStudents');
-        }
+        
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
@@ -165,7 +163,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
             $attr['options'] = ['id' => '-- ' . __('Select Type') . ' --']+$getCurricularsType;
             $attr['onChangeReload'] = false;
         }elseif($action == 'edit'){
-           $curriculardecode = $this->paramsDecode($this->request->pass[1])['id'];
+            $curriculardecode = $this->paramsDecode($this->request->pass[1])['id'];
             $tyepId = $this->InstitutionCurriculars->get($curriculardecode)->type_id;
             $attr['type'] = 'readonly';
             $attr['value'] = $tyepId;
@@ -270,8 +268,23 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('total_male_students', ['visible' => false]);
-        $this->field('total_female_students', ['visible' => false]);
+        if ($this->action == 'view') {
+            $tabElements = $this->controller->getCurricularsTabElements();
+            $this->controller->set('tabElements', $tabElements);
+            $this->controller->set('selectedAction', 'InstitutionCurriculars');
+        }
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        session_start();
+        if(!empty($this->request->pass[1])){
+            $curricularId = $this->paramsDecode($this->request->pass[1])['id'];
+            $_SESSION["curricularId"] = $curricularId;
+
+         }
+        
+
     }
     
 }

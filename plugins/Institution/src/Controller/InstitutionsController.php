@@ -24,6 +24,7 @@ use Cake\Utility\Security; //POCOR-5672
 use Cake\Utility\Text;//POCOR-5672
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\Time;
+use Cake\Network\Session;
 
 class InstitutionsController extends AppController
 {
@@ -474,15 +475,6 @@ class InstitutionsController extends AppController
     public function InstitutionCurricularStudents()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurricularStudents']);
-    }
-
-    // POCOR-6673
-    public function Curriculars($curriaction = 'index')
-    {
-        
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurriculars']);
-        
-        
     }
 
     public function changePageHeaderTrips($model, $modelAlias, $userType)
@@ -7299,7 +7291,7 @@ class InstitutionsController extends AppController
         $queryString = $this->request->query('queryString');
         $tabElements = [
             'InstitutionCurriculars' => [
-                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Curriculars', 'index', 'queryString' => $queryString],
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'InstitutionCurriculars', 'view', 'queryString' => $queryString],
                 'text' => __('Curriculars')
             ],
             'InstitutionCurricularStudents' => [
@@ -7307,7 +7299,6 @@ class InstitutionsController extends AppController
                 'text' => __('Students')
             ]
         ];
-        //return $this->TabPermission->checkTabPermission($tabElements);
         return $tabElements;
     }
 }
