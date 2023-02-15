@@ -120,8 +120,8 @@ class POCOR6673 extends AbstractMigration
         $this->execute('CREATE TABLE IF NOT EXISTS `institution_curriculars` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
             `name` varchar(100) NOT NULL,
-            `category` int(1) NOT NULL DEFAULT 1,
-            `type` int(1) NOT NULL DEFAULT 1 COMMENT "1-curricular/0-extracurricular",
+            `category` int(1) NOT NULL DEFAULT 1 COMMENT "1-curricular/0-extracurricular",
+            `type_id` int(11),
             `institution_id` int(11),
             `academic_period_id` int(11),
             `total_male_students` int(11),
