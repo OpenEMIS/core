@@ -104,6 +104,26 @@ class UserGroupsTable extends ControllerActionTable
         ]);
     }
 
+    /** Start POCOR 7213 */
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $buttons['edit']['label'] =  '<i class="fa fa-edit"></i> Edit Group';
+        $manageUsersBtn = ['manage_users' => $buttons['view']];
+        $manageUsersBtn['manage_users']['url'] = [
+            'plugin' => 'Security',
+            'controller' => 'Securities',
+            'action' => 'UserGroupsList',
+            'userGroupId' => $entity->id,
+            'index'
+        ];
+        $manageUsersBtn['manage_users']['label'] = '<i class="fa fa-key"></i>' . __('Manage Users');
+        $buttons = array_merge($manageUsersBtn, $buttons);
+        return $buttons;
+    }
+    /** End POCOR 7213 */
+    
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('no_of_users', ['visible' => ['index' => true]]);
