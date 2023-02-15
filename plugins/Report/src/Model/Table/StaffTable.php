@@ -751,7 +751,7 @@ class StaffTable extends AppTable  {
         if (in_array(($this->request->data[$this->alias()]['feature'] ?? null), ['Report.StaffRequirements'])) {
             $attr['type'] = 'integer';
             $attr['attr']['min'] = 0;
-            $attr['attr']['max'] = 100;
+            $attr['attr']['max'] = 99999999;
             $attr['attr']['required'] = true;
             $attr['attr']['step'] = '.01';
             $attr['attr']['label'] = __('Lower Tolerance') . ' <i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="It corresponds to the Cap that the user selects to restrict Year-over-Year increase for Students and Staff data." tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
@@ -769,9 +769,14 @@ class StaffTable extends AppTable  {
     {
         return $validator->notEmpty(['student_per_teacher_ratio', 'lower_tolerance', 'upper_tolerance'])
             ->range('student_per_teacher_ratio', [0, 150], $this->getMessage('StaffRequirements.studentTeacherRatio'))
-            ->range('upper_tolerance', [0, 99999999], $this->getMessage('StaffRequirements.upperTolerance'))
-            ->range('lower_tolerance', [0, 100], $this->getMessage('StaffRequirements.lowerTolerance'));
+            ->range('lower_tolerance', [0, 100], $this->getMessage('StaffRequirements.lowerTolerance'))
+            ->add('lower_tolerance', 'comparison', [
+                'rule' => function ($value, $context) {
+                    return $value <= $context['data']['upper_tolerance'] ;
+                },
+                'message' => $this->getMessage('StaffRequirements.lowerToleranceCompare')
+            ])
+            ->range('upper_tolerance', [0, 99999999], $this->getMessage('StaffRequirements.upperTolerance'));
     }
-
     //POCOR-5185[end]
 }
