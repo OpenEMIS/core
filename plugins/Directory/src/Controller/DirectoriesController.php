@@ -645,7 +645,7 @@ class DirectoriesController extends AppController
 
                     $exists = false;
 
-                    if (in_array($model->alias(), ['Guardians'])) {
+                    if (in_array($model->alias(), ['Guardians', 'StudentReportCards'])) {
                         $params[$model->aliasField('student_id')] = $session->read('Directory.Directories.id');
                         $exists = $model->exists($params);
                     } elseif (in_array($model->alias(), ['Students'])) {
@@ -1152,13 +1152,14 @@ class DirectoriesController extends AppController
         }
 
         if (!empty($userTypeId)) {
-            if($userTypeId ==1){
+            //POCOR-7192 comment user_type condition starts
+            /*if($userTypeId ==1){
                 $conditions[$security_users->aliasField('is_student')] = 1;
             }else if($userTypeId ==2){
                 $conditions[$security_users->aliasField('is_staff')] = 1;
             }else if($userTypeId ==3){
                 $conditions[$security_users->aliasField('is_guardian')] = 1;
-            }
+            }*///POCOR-7192 Ends
         }
 
         //it is user for getting single user data
@@ -1240,13 +1241,14 @@ class DirectoriesController extends AppController
             //POCOR-5672 start new changes searching users by identity number
             $userTypeCondition = [];
             if (!empty($userTypeId)) {
-                if($userTypeId ==1){
+                //POCOR-7192 comment user_type condition starts
+                /*if($userTypeId ==1){
                     $userTypeCondition[$security_users->aliasField('is_student')] = 1;
                 }else if($userTypeId ==2){
                     $userTypeCondition[$security_users->aliasField('is_staff')] = 1;
                 }else if($userTypeId ==3){
                     $userTypeCondition[$security_users->aliasField('is_guardian')] = 1;
-                }
+                }*///POCOR-7192 ends
             }
             $identityCondition = [];
             if (!empty($identityTypeId) && !empty($identityNumber) && !empty($nationalityId)) {
@@ -1435,8 +1437,17 @@ class DirectoriesController extends AppController
             $education_grade_id = $institution_id = $institution_code = $institution_name = '';
             $CustomDataArray = [];
             if (!empty($userTypeId)) {
-                if($userTypeId == 1){
+                if($result['is_student'] == 1){
                     $account_type = 'Student';
+                }else if($result['is_staff'] == 1){
+                    $account_type = 'Staff';
+                }else if($result['is_guardian'] == 1){
+                    $account_type = 'Guardian';
+                }else{
+                    $account_type = 'Others';
+                }
+                if($userTypeId == 1){
+                    //$account_type = 'Student';
                     $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
                     $statuses = $StudentStatuses->findCodeList();
 
@@ -1475,7 +1486,7 @@ class DirectoriesController extends AppController
                     //get student custom data
                     $CustomDataArray = $this->getStudentCustomData($result['id']);
                 }else if($userTypeId == 2){
-                    $account_type = 'Staff';
+                    //$account_type = 'Staff';
                     $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
                     $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
                     
@@ -1541,9 +1552,9 @@ class DirectoriesController extends AppController
                     //get staff custom data
                     $CustomDataArray = $this->getStaffCustomData($result['id']);
                 }else if($userTypeId ==3){
-                    $account_type = 'Guardian';
+                    //$account_type = 'Guardian';
                 }else{
-                    $account_type = 'Others';
+                    //$account_type = 'Others';
                 }
             }
 

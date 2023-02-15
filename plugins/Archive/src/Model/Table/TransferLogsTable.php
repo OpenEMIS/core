@@ -250,9 +250,36 @@ use Cake\Utility\Security;
                 //     ['id' => $entity->academic_period_id, 'current'=> 0] //condition
                 // );
 
-                $this->log('=======>Before triggerStudentAttendanceShell', 'debug');
-                $this->triggerStudentAttendanceShell('StudentAttendance',$entity->academic_period_id);
-                $this->log(' <<<<<<<<<<======== After triggerStudentAttendanceShell', 'debug');
+                $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
+                $ClassAttendanceRecordsData = $ClassAttendanceRecords->find('all')
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                
+
+                $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+                $InstitutionStudentAbsencesData = $InstitutionStudentAbsences->find('all')
+                                                        ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                
+                                                        
+                $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+                $StudentAbsencesPeriodDetailsData = $StudentAbsencesPeriodDetails->find('all')
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                
+
+                $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+                $StudentAttendanceMarkedRecordsData = $StudentAttendanceMarkedRecords->find('all')
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+
+                 
+                $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+                $InstitutionStaffAttendancesData = $StudentAttendanceMarkTypes->find('all')
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                if(empty($ClassAttendanceRecordsData) && empty($InstitutionStudentAbsencesData) && empty($StudentAbsencesPeriodDetailsData) && empty($StudentAttendanceMarkedRecordsData) && empty($InstitutionStaffAttendancesData)){
+                    $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
+                }else{
+                    $this->log('=======>Before triggerStudentAttendanceShell', 'debug');
+                    $this->triggerStudentAttendanceShell('StudentAttendance',$entity->academic_period_id);
+                    $this->log(' <<<<<<<<<<======== After triggerStudentAttendanceShell', 'debug');
+                }
             }
             else{
                 $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
@@ -270,10 +297,21 @@ use Cake\Utility\Security;
                 //     ['editable' => 0, 'visible' => 0],    //field
                 //     ['id' => $entity->academic_period_id, 'current'=> 0] //condition
                 // );
-
-                $this->log('=======>Before triggerStaffAttendancesShell', 'debug');
-                $this->triggerStaffAttendancesShell('StaffAttendances',$entity->academic_period_id);
-                $this->log(' <<<<<<<<<<======== After triggerStaffAttendancesShell', 'debug');
+                $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
+                $InstitutionStaffAttendancesData = $InstitutionStaffAttendances->find('all')
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                
+                $StaffLeave = TableRegistry::get('Institution.StaffLeave');
+                $StaffLeaveData = $StaffLeave->find('all')
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                
+                if(empty($InstitutionStaffAttendancesData) && empty($StaffLeaveData)){
+                    $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
+                }else{
+                    $this->log('=======>Before triggerStaffAttendancesShell', 'debug');
+                    $this->triggerStaffAttendancesShell('StaffAttendances',$entity->academic_period_id);
+                    $this->log(' <<<<<<<<<<======== After triggerStaffAttendancesShell', 'debug');
+                }
             }
             else{
                 $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
@@ -286,15 +324,22 @@ use Cake\Utility\Security;
             $superAdmin = $session->read('Auth.User.super_admin');
             $is_connection_is_online = $session->read('is_connection_stablished');
             if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
-                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 // $AcademicPeriods->updateAll(
                 //     ['editable' => 0, 'visible' => 0],    //field
                 //     ['id' => $entity->academic_period_id, 'current'=> 0] //condition
                 // );
-
-                $this->log('=======>Before triggerStudentAssessmentsShell', 'debug');
-                $this->triggerStudentAssessmentsShell('StudentAssessments',$entity->academic_period_id);
-                $this->log(' <<<<<<<<<<======== After triggerStudentAssessmentsShell', 'debug');
+                $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+                $AssessmentItemResultsData = $AssessmentItemResults->find('all')
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                if(empty($AssessmentItemResultsData)){
+                    // echo "fsfs";die;
+                    $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
+                }else{
+                    $this->log('=======>Before triggerStudentAssessmentsShell', 'debug');
+                    $this->triggerStudentAssessmentsShell('StudentAssessments',$entity->academic_period_id);
+                    $this->log(' <<<<<<<<<<======== After triggerStudentAssessmentsShell', 'debug');
+                }
             }
             else{
                 $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);

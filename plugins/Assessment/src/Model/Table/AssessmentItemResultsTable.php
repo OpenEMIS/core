@@ -458,6 +458,42 @@ class AssessmentItemResultsTable extends AppTable
         return $totalMarks;
     }
 
+    /*
+    * Function is get the total mark of the subject
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return data
+    * @ticket POCOR-7201
+    */
+    public function getTotalMarksForAssessment($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId, $assessmentPeriodId, $institutionId)
+    {   
+        $query = $this->find();
+        $totalMarks = $query
+            ->select([
+                'calculated_total' => $query->newExpr('SUM(AssessmentItemResults.marks * AssessmentPeriods.weight)')
+            ])
+            ->matching('Assessments')
+            ->matching('AssessmentPeriods')
+            ->order([
+                $this->aliasField('created') => 'DESC'
+            ])
+            ->where([
+                $this->aliasField('student_id') => $studentId,
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('education_subject_id') => $educationSubjectId,
+                $this->aliasField('education_grade_id') => $educationGradeId,
+                $this->aliasField('education_grade_id') => $educationGradeId,
+                $this->aliasField('institution_id') => $institutionId,
+            ])
+            ->group([
+                $this->aliasField('student_id'),
+                $this->aliasField('assessment_id'),
+                $this->aliasField('education_subject_id')
+            ])
+            ->first();
+
+        return $totalMarks;
+    }
+
     /** 
     * API to get student's subject assessment results data
     * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>

@@ -86,6 +86,69 @@ class ScholarshipsTable extends AppTable  {
         return $attr;
     }
 
+    //POCOR-6637::START
+    public function addAfterAction(Event $event, Entity $entity)
+    {
+        if ($entity->has('feature')) {
+            $feature = $entity->feature;
+
+            $fieldsOrder = ['feature'];
+            switch ($feature) { 
+                case 'Report.Scholarships': 
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'scholarship_financial_assistance_type_id';
+                    $fieldsOrder[] = 'format';
+                    break;
+                case 'Report.ScholarshipApplications':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'examination_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'format';
+                    break;
+                case 'Report.RecipientPaymentStructures': 
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'scholarship_financial_assistance_type_id';
+                    $fieldsOrder[] = 'format';
+                    break;
+                case 'Report.RecipientAcademicStandings':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'scholarship_financial_assistance_type_id';
+                    $fieldsOrder[] = 'format';
+                    break;
+                case 'Report.ScholarshipRecipients': 
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'scholarship_financial_assistance_type_id';
+                    $fieldsOrder[] = 'format';
+                    break;
+                case 'Report.ScholarshipDisbursements': 
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'scholarship_financial_assistance_type_id';
+                    $fieldsOrder[] = 'format';
+                    break;
+                case 'Report.ScholarshipDisbursementsAmounts': 
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'scholarship_financial_assistance_type_id';
+                    $fieldsOrder[] = 'format';
+                    break;
+                case 'Report.ScholarshipEnrollments':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'scholarship_financial_assistance_type_id';
+                    $fieldsOrder[] = 'format';
+                    break;
+                default:
+                    break;
+            }
+            $this->ControllerAction->setFieldOrder($fieldsOrder);
+        }else{
+            $fieldsOrder = ['feature'];
+            $fieldsOrder[] = 'academic_period_id';
+            $fieldsOrder[] = 'scholarship_financial_assistance_type_id';
+            $fieldsOrder[] = 'format';
+            $this->ControllerAction->setFieldOrder($fieldsOrder);
+        }
+    }
+    //POCOR-6637::END
+
     public function onUpdateFieldScholarshipFinancialAssistanceTypeId(Event $event, array $attr, $action, Request $request) 
     {
         $financialAssistanceTypeOptions = $this->FinancialAssistanceTypes->getList()->toArray();
