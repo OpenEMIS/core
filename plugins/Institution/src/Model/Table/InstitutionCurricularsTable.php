@@ -91,7 +91,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $this->field('total_male_students', ['visible' => ['index'=>true,'view' => false, 'edit' => false,'add'=>false]]);
         $this->field('total_female_students', ['visible' => ['index'=>true,'view' => false,'edit' => false,'add'=>false]]);
         $this->field('total_students', ['visible' => ['index'=>true,'view' => false,'edit' =>false,'add'=>false]]);
-        $this->field('type', ['visible' => ['index'=>false]]);
+        $this->field('type_id', ['visible' => ['index'=>false]]);
         $this->field('category', ['visible' => ['index'=>false]]);
         $this->setFieldOrder([
             'name','category','total_male_students', 'total_female_students', 'total_students'
@@ -109,12 +109,12 @@ class InstitutionCurricularsTable extends ControllerActionTable
         
         $this->field('total_male_students', ['visible' => false]);
         $this->field('total_female_students', ['visible' => false]);
-        $this->field('type', ['type' => 'select']);
+        $this->field('type_id', ['type' => 'select']);
         $this->field('category', ['type' => 'select']);
         $this->field('staff_id', ['type' => 'select','visible' => false]);
         $this->field('academic_period_id', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true]]);
         $this->setFieldOrder([
-            'academic_period_id','name','category', 'type']);
+            'academic_period_id','name','category', 'type_id']);
     }
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
@@ -122,12 +122,12 @@ class InstitutionCurricularsTable extends ControllerActionTable
         
         $this->field('total_male_students', ['visible' => false]);
         $this->field('total_female_students', ['visible' => false]);
-        $this->field('type', ['type' => 'select']);
+        $this->field('type_id', ['type' => 'select']);
         $this->field('category', ['type' => 'select']);
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('staff_id', ['type' => 'select']);
         $this->setFieldOrder([
-            'academic_period_id','name','category', 'type','staff_id']);
+            'academic_period_id','name','category', 'type_id','staff_id']);
     }
 
     public function onUpdateFieldCategory(Event $event, array $attr, $action, Request $request)
@@ -152,7 +152,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
     }
 
 
-    public function onUpdateFieldType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTypeId(Event $event, array $attr, $action, Request $request)
     {
         $categoryId = $this->request->data[$this->alias()]['category'];
         $type = TableRegistry::get('curricular_types');
@@ -166,7 +166,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
             $attr['onChangeReload'] = false;
         }elseif($action == 'edit'){
            $curriculardecode = $this->paramsDecode($this->request->pass[1])['id'];
-            $tyepId = $this->InstitutionCurriculars->get($curriculardecode)->type;
+            $tyepId = $this->InstitutionCurriculars->get($curriculardecode)->type_id;
             $attr['type'] = 'readonly';
             $attr['value'] = $tyepId;
             $attr['attr']['value'] = $type->get($tyepId)->name;
@@ -214,10 +214,12 @@ class InstitutionCurricularsTable extends ControllerActionTable
     {
         if ($action == 'edit') {
             $staffOptions = [];
+            $this->InstitutionCurriculars = TableRegistry::get('institution_curriculars');
+            $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $curriculardecode = $this->paramsDecode($this->request->pass[1])['id'];
+            $selectedPeriod = $this->InstitutionCurriculars->get($curriculardecode)->academic_period_id;
 
             $entity = $attr['entity'];
-            $selectedPeriod = $this->request->data[$this->alias()]['academic_period_id'];
-
             if (!empty($selectedPeriod)) {
                 $institutionId = $this->Session->read('Institution.Institutions.id');
                 $Staff = TableRegistry::get('Institution.Staff');
@@ -234,14 +236,8 @@ class InstitutionCurricularsTable extends ControllerActionTable
             $attr['attr']['multiple'] = true;
             $attr['select'] = false;
             $attr['options'] = ['id' => '-- ' . __('Select Staff') . ' --']+$staffOptions;
-            $attr['onChangeReload'] = 'changeStatus';
-        } elseif ($action == 'edit') {
-            $entity = $attr['entity'];
-
-            $attr['type'] = 'readonly';
-            $attr['value'] = $entity->staff_id;
-            $attr['attr']['value'] = $entity->staff->name_with_id;
-        }
+            $attr['onChangeReload'] = false;
+        } 
         return $attr;
     }
 
@@ -269,6 +265,13 @@ class InstitutionCurricularsTable extends ControllerActionTable
                    }
                 }
             }                         
+    }
+
+
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('total_male_students', ['visible' => false]);
+        $this->field('total_female_students', ['visible' => false]);
     }
     
 }
