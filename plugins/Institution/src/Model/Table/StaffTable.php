@@ -569,8 +569,8 @@ class StaffTable extends ControllerActionTable
         $this->fields['start_date']['type'] = 'date';
         $this->fields['institution_position_id']['order'] = 6;
         $this->fields['FTE']['visible'] = false;
-        $this->fields['is_homeroom']['type'] = 'integer'; //POCOR-7233
-       // $this->field('is_homeroom', ['visible' => true,'attr' => ['label' => __('is_homeroom')]]);
+        //$this->fields['is_homeroom']['type'] = 'integer'; //POCOR-7233 visible column
+        $this->fields['is_homeroom']['visible'] = false; //POCOR-7233
 
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
 
@@ -3584,20 +3584,4 @@ class StaffTable extends ControllerActionTable
         return $staffShiftsData;
 
     }
-
-    /*public function onGetIsHomeroom(Event $event, Entity $entity)
-    {
-        //echo "<pre>"; print_r($entity->is_homeroom);die;
-        $i = 1;
-        if($i==1){
-            return 'hi';
-        }else{
-         return 'hello';   
-        }
-        $isHomeroom = $entity->is_homeroom;
-        //return $this->getSelectOptions('general.yesno')[$isHomeroom];
-        
-    }*/
-
-    
 }
