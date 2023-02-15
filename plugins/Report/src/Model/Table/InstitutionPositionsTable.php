@@ -90,7 +90,7 @@ class InstitutionPositionsTable extends AppTable
                 'area_administratives_code' => 'AreaAdministratives.code',
                 'area_administratives_name' => 'AreaAdministratives.name',
                 'assignee_id' => 'Assignees.id',
-                'is_homeroom' => $this->aliasField('is_homeroom'),
+                'is_homeroom' => 'InstitutionStaffs.is_homeroom',//POCOR-7229
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
                 'assignee_openemis_no' => 'SecurityUsersStaff.openemis_no',
@@ -314,7 +314,7 @@ class InstitutionPositionsTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionPositions.is_homeroom',
+            'key' => 'is_homeroom',
             'field' => 'is_homeroom',
             'type' => 'string',
             'label' => __('Homeroom Teacher')
@@ -374,6 +374,7 @@ class InstitutionPositionsTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
+    
     public function onExcelGetStaffPositionId(Event $event, Entity $entity)
     {
         $options = $this->getSelectOptions('Staff.position_types');
@@ -385,7 +386,9 @@ class InstitutionPositionsTable extends AppTable
             $type = array_key_exists($staffType, $options) ? $options[$staffType] : '';
 
             if (!empty($type)) {
-                $staffPositionTitleType .= ' - ' . $type;
+                // Start POCOR-7195
+                $staffPositionTitleType .= $entity->staff_position_title['name'] . ' - ' . $type;
+                // End POCOR-7195
             }
         } else {
             Log::write('debug', $entity->name . ' has no staff_position_title...');

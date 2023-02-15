@@ -26,6 +26,8 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'OpenEMIS_Classroom' => ['index']
         ]);
+
+        $this->setDeleteStrategy('restrict');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -63,6 +65,36 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
             ->toArray();
 
         return $unusedList;
+    }
+
+    /**
+     * POCOR-7196
+    **/ 
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+
+        if($this->checkStudentRecords($entity)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset'=>true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        }
+    }
+
+    /**
+     * POCOR-7196
+    **/
+    public function checkStudentRecords($entity)
+    {
+        $categoryId = $entity->id ?? 0;
+        $behaviorCategory = TableRegistry::get('student_behaviours');
+
+        $data = $behaviorCategory->find()->where(['student_behaviour_category_id'=>$categoryId])->count(); 
+        if($data > 0)
+        {
+            return true;
+        }else{
+            return false;
+        }
     }
 
 }

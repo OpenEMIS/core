@@ -1315,10 +1315,11 @@ class ReportCardsTable extends AppTable
                 $entity = [];
                 return $entity;
             }//POCOR-6327 ends
+
             $Staff = TableRegistry::get('institution_staff'); //POCOR-7157
             $endAssignment = TableRegistry::get('staff_statuses')->findByCode('END_OF_ASSIGNMENT')->first()->id; //POCOR-7157 pass this in where clause
+            $StudentSubjectStaff = TableRegistry::get('institution_subject_staff');
             foreach ($AssessmentItemData as $value) {
-                $StudentSubjectStaff = TableRegistry::get('institution_subject_staff');
                 $StudentSubjectStaffData = $StudentSubjectStaff->find()
                 ->select([
                     'staff_id' => $StudentSubjectStaff->aliasField('staff_id'),
@@ -1328,14 +1329,16 @@ class ReportCardsTable extends AppTable
                     'preferred_name' => 'SecurityUsers.preferred_name',
                     'gender_id' => 'SecurityUsers.gender_id', // POCOR[7033]
                 ])
-                 ->innerJoin(['SecurityUsers' => 'security_users'], [
-                    'SecurityUsers.id = ' . $StudentSubjectStaff->aliasField('staff_id')
-                ])
                 ->innerJoin([$Staff->alias() => $Staff->table()],
                     [$Staff->aliasField('staff_id = ') . $StudentSubjectStaff->aliasField('staff_id')])
+                ->innerJoin(['SecurityUsers' => 'security_users'], [
+                    'SecurityUsers.id = ' . $StudentSubjectStaff->aliasField('staff_id')
+                ])
                 ->where([
                     $StudentSubjectStaff->aliasField('institution_subject_id') => $value['institution_subject_id'],
-                    $Staff->aliasField('staff_status_id IS NOT') => $endAssignment
+                    $Staff->aliasField('staff_status_id IS NOT') => $endAssignment,
+                    $Staff->aliasField('institution_id') => $params['institution_id']
+
                 ])
                 ->toArray();
                 $name = [];

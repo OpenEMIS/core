@@ -314,7 +314,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         return [];
     }
 
-    function getPeriodOptions(institutionClassId, academicPeriodId,day_id, educationGradeId) {
+    function getPeriodOptions(institutionClassId, academicPeriodId,day_id, educationGradeId, weekStartDay, weekEndDay) {//POCOR-7183 add params weekStartDay, weekEndDay 
         var success = function(response, deferred) {
             var attendancePeriodList = response.data.data;
             console.log("attendancePeriodList", attendancePeriodList)
@@ -330,7 +330,9 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                 institution_class_id: institutionClassId,
                 academic_period_id: academicPeriodId,
                 day_id: day_id,
-                education_grade_id: educationGradeId
+                education_grade_id: educationGradeId,
+                week_start_day: weekStartDay,//POCOR-7183
+                week_end_day: weekEndDay//POCOR-7183
             })
             .ajax({success: success, defer: true});
     }
