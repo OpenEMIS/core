@@ -519,7 +519,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         // Class filter
         $classOptions = [];
         $selectedClass = !is_null($this->request->query('class_id')) ? $this->request->query('class_id') : -1;
-
+        $educationGradeByReportCardId = '';//POCOR-7212
         if ($selectedReportCard != -1) {
             $reportCardEntity = $this->ReportCards->find()->where(['id' => $selectedReportCard])->first();
             if (!empty($reportCardEntity)) {
@@ -532,6 +532,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ])
                     ->order([$Classes->aliasField('name')])
                     ->toArray();
+                $educationGradeByReportCardId = $reportCardEntity->education_grade_id;//POCOR-7212
             } else {
                 // if selected report card is not valid, do not show any students
                 $selectedClass = -1;
@@ -547,6 +548,10 @@ class ReportCardStatusesTable extends ControllerActionTable
         $where[$this->aliasField('institution_class_id')] = $selectedClass;
         $where[$this->aliasField('institution_id')] = $institutionId; //POCOR-6817
         $where[$this->aliasField('student_status_id NOT IN')] = 3; //POCOR-6817
+        //POCOR-7212 starts
+        if(!empty($educationGradeByReportCardId)){
+            $where[$this->aliasField('education_grade_id')] = $educationGradeByReportCardId; 
+        }//POCOR-7212 ends
         //End
 
         $query
@@ -558,6 +563,11 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'email_status_id' => $this->ReportCardEmailProcesses->aliasField('status'),
                 'email_error_message' => $this->ReportCardEmailProcesses->aliasField('error_message')
             ])
+            //POCOR-7153[START]
+            ->matching('StudentStatuses', function ($q) {
+                return $q->where(['StudentStatuses.code NOT IN ' => ['WITHDRAWN']]);
+            })
+            //POCOR-7153[END]
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
                     $this->StudentsReportCards->aliasField('student_id = ') . $this->aliasField('student_id'),
@@ -1144,9 +1154,11 @@ class ReportCardStatusesTable extends ControllerActionTable
         $timZone = $ConfigItem->zonevalue;
         $value = '';
         if ($entity->has('report_card_completed_on')) {
-            $date = new DateTime($entity->report_card_completed_on, new DateTimeZone($timZone));
-            $date->setTimezone(new DateTimeZone($timZone));
-            $value = $date->format('F d, Y h:i:s');
+            if(!empty($timZone)){
+                $date = new DateTime($entity->report_card_completed_on, new DateTimeZone($timZone));
+                $date->setTimezone(new DateTimeZone($timZone));
+                $value = $date->format('F d, Y h:i:s');
+            }
         }
 
         return $value;

@@ -100,6 +100,28 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']);
     }
+
+    public function Assesments()	
+    {	
+
+        $session = $this->request->session();
+
+        if ($session->check('Student.Students.id')) {
+            $studentId = $session->read('Student.Students.id');
+            $session->write('Student.Assesments.student_id', $studentId);
+
+            // tabs
+            $options = ['type' => 'student'];
+            $tabElements = $this->getAcademicTabElements($options);
+            $this->set('tabElements', $tabElements);
+            $this->set('selectedAction', 'Assessments');
+            // End
+
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssesments']);
+        }
+        //$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssisments']);	
+    }
+
     public function Nationalities()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']);
@@ -322,6 +344,7 @@ class StudentsController extends AppController
     // AngularJS
     public function Results()
     {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssisments']);
         $session = $this->request->session();
         $_archive = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
         $archiveUrl = $this->ControllerAction->url('index');
@@ -424,7 +447,7 @@ class StudentsController extends AppController
             if ($this->StudentUser->exists([$this->StudentUser->primaryKey() => $id])) {
                 $entity = $this->StudentUser->get($id);
                 $name = $entity->name;
-                $header = $action == 'Results' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
+                $header = $action == 'Assessments' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
                 $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
             } else {
                 $indexPage = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index'];
@@ -777,6 +800,18 @@ class StudentsController extends AppController
         ];
         return $this->TabPermission->checkTabPermission($tabElements);
     }
+
+    // public function getAssesmentTabElements($options = [])
+    // {
+    //     $queryString = $this->request->query('queryString');
+    //     $tabElements = [
+    //         'Competencies' => [
+    //             'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'StudentAssesments', 'view', 'queryString' => $queryString],
+    //             'text' => __('Items')
+    //         ]
+    //     ];
+    //     return $this->TabPermission->checkTabPermission($tabElements);
+    // }
 
     public function StudentScheduleTimetable()
     {

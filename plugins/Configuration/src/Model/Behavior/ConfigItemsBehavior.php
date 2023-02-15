@@ -38,11 +38,13 @@ class ConfigItemsBehavior extends Behavior
 
     public function buildSystemConfigFilters()
     {
+
         $toolbarElements = [
             ['name' => 'Configuration.controls', 'data' => [], 'options' => []]
         ];
         $this->model->controller->set('toolbarElements', $toolbarElements);
         $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+
         $typeList = $ConfigItem
             ->find('list', [
                 'keyField' => 'type',
@@ -51,14 +53,27 @@ class ConfigItemsBehavior extends Behavior
             ->order('type')
             ->where([$ConfigItem->aliasField('visible') => 1])
             ->toArray();
+            //echo"<pre>";print_r($typeList); die;
+             $typeLists = $ConfigItem
+            ->find('all', [
+                // 'fields' => 'label','type'
+                
+            ])
+            ->order('label')
+            ->where([$ConfigItem->aliasField('visible') => 1,'type' => 'Coordinates'])
+            ->toArray();
+            //echo"<pre>";print_r($typeLists); die;
         $typeOptions = array_keys($typeList);
         foreach ($typeOptions as $key => $value) {
+
             $value = $value != 'Authentication' ? $value : 'Sso';
+            // echo"<pre>";print_r($value); die;
             if (in_array($value, (array) Configure::read('School.excludedPlugins'))) {
                 unset($typeOptions[$key]);
             }
         }
         $selectedType = $this->model->queryString('type', $typeOptions);
+        
         $this->selectedType = $selectedType;
         $this->model->request->query['type_value'] = $typeOptions[$selectedType];
         $this->model->advancedSelectOptions($typeOptions, $selectedType);
@@ -72,7 +87,9 @@ class ConfigItemsBehavior extends Behavior
 
     public function checkController()
     {
+        //print_r('hi'); die;
         $typeValue = $this->model->request->query['type_value'];
+        
         $typeValue = Inflector::camelize($typeValue, ' ');
         $action = '';
         if ($this->isCAv4()) {

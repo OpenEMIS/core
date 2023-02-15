@@ -23,6 +23,7 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Security; //POCOR-5672
 use Cake\Utility\Text;//POCOR-5672
 use Cake\Datasource\ConnectionManager;
+use Cake\I18n\Time;
 
 class InstitutionsController extends AppController
 {
@@ -3326,7 +3327,7 @@ class InstitutionsController extends AppController
             'Behaviours' => ['text' => __('Behaviours')],
             'Outcomes' => ['text' => __('Outcomes')],
             'Competencies' => ['text' => __('Competencies')],
-            'Results' => ['text' => __('Assessments')],
+            'Assesments' => ['text' => __('Assessments')],
             'ExaminationResults' => ['text' => __('Examinations')],
             'ReportCards' => ['text' => __('Report Cards')],
             'Awards' => ['text' => __('Awards')],
@@ -5284,6 +5285,7 @@ class InstitutionsController extends AppController
                     if(!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)){
                         $institutionClassSubjects = TableRegistry::get('institution_class_subjects');
                         $institutionSubjects = TableRegistry::get('institution_subjects');
+                        $educationGradesSubjects = TableRegistry::get('education_grades_subjects');//POCOR-7197
                         $SubjectsResult = $institutionClassSubjects
                             ->find()
                             ->select([
@@ -5297,9 +5299,15 @@ class InstitutionsController extends AppController
                             ])
                             ->LeftJoin([$institutionSubjects->alias() => $institutionSubjects->table()], [
                                 $institutionSubjects->aliasField('id =') . $institutionClassSubjects->aliasField('institution_subject_id')
-                            ])
+                            ])//POCOR-7197 starts
+                            ->InnerJoin([$educationGradesSubjects->alias() => $educationGradesSubjects->table()], [
+                                $institutionSubjects->aliasField('education_grade_id =') . $educationGradesSubjects->aliasField('education_grade_id'),
+                                $institutionSubjects->aliasField('education_subject_id =') . $educationGradesSubjects->aliasField('education_subject_id')
+                            ])//POCOR-7197 ends
                             ->where([
-                                $institutionClassSubjects->aliasField('institution_class_id') => $institutionClassId
+                                $institutionClassSubjects->aliasField('institution_class_id') => $institutionClassId,
+                                $institutionSubjects->aliasField('academic_period_id') => $academicPeriodId,//POCOR-7197
+                                $educationGradesSubjects->aliasField('auto_allocation !=') => 0//POCOR-7197
                             ])
                             ->toArray();
                            
@@ -5453,6 +5461,8 @@ class InstitutionsController extends AppController
                                 $startDate=$value->start_date;
                                 $endDate=$value->end_date;
                             }
+
+                            $securityGroupUsers = $this->assignStudentRoleGroup($institutionId, $user_id);//POCOR-7146
                         }
                         $bodys = array();
                         $bodys = [   
@@ -5604,6 +5614,7 @@ class InstitutionsController extends AppController
             $startDate = (array_key_exists('start_date', $requestData))? date('Y-m-d', strtotime($requestData['start_date'])) : NULL;
             $endDate = (array_key_exists('end_date', $requestData) && !empty($requestData['end_date']))? date('Y-m-d', strtotime($requestData['end_date'])) : '';
             
+            $is_homeroom = (array_key_exists('is_homeroom', $requestData))? $requestData['is_homeroom'] : 0; //POCOR-5070
             //$institutionId = $this->request->session()->read('Institution.Institutions.id');
             $institutionId = (array_key_exists('institution_id', $requestData))? $requestData['institution_id'] : null;
             $staffTypeId = (array_key_exists('staff_type_id', $requestData))? $requestData['staff_type_id'] : null;
@@ -5619,6 +5630,7 @@ class InstitutionsController extends AppController
             $staffId = (array_key_exists('staff_id', $requestData))? $requestData['staff_id'] : 0;
             $previousInstitutionId = (array_key_exists('previous_institution_id', $requestData))? $requestData['previous_institution_id'] : 0;
             $comment = (array_key_exists('comment', $requestData))? $requestData['comment'] : '';
+            $is_homeroom = (array_key_exists('is_homeroom', $requestData))? $requestData['is_homeroom'] : 0;
             //when staff transfer in other institution end
             
             //get academic period data
@@ -5805,18 +5817,31 @@ class InstitutionsController extends AppController
                                             ])
                                             ->first();
 
+                    //POCOR-7188[START]
+                    $staffPositionTitles = TableRegistry::get('staff_position_titles');
+                    $staffPositionTitlesTbl = $staffPositionTitles->find()
+                                            ->where([
+                                                $staffPositionTitles->aliasField('id') => $InstitutionPositionsTbl->staff_position_title_id,
+                                            ])
+                                            ->first();
+                    //POCOR-7188[END]
+
                     $SecurityGroupUsers = TableRegistry::get('security_group_users');
                     if(!empty($InstitutionPositionsTbl)){
                         $SecurityRoles = TableRegistry::get('security_roles');
-                        if($InstitutionPositionsTbl->is_homeroom == 1){
-                            $roleArr = ['STAFF', 'HOMEROOM_TEACHER'];
+                        $SecurityRolesTbl = $SecurityRoles->find()
+                                                        ->where([
+                                                            $SecurityRoles->aliasField('id') => $staffPositionTitlesTbl->security_role_id
+                                                        ])->first();
+                        if($is_homeroom == 1){
+                            $roleArr = ['HOMEROOM_TEACHER', $SecurityRolesTbl->code];
                         }else{
-                            $roleArr = ['STAFF'];
+                            $roleArr = [$SecurityRolesTbl->code];
                         }
                         $SecurityRolesTbl = $SecurityRoles->find()
-                                            ->where([
-                                                $SecurityRoles->aliasField('code IN') => $roleArr
-                                            ])->toArray();
+                                                        ->where([
+                                                            $SecurityRoles->aliasField('code IN') => $roleArr
+                                                        ])->toArray();
                         //POCOR-7182
                         $institutionsTbl = TableRegistry::get('institutions');
                         $institutionsSecurityGroupId = $institutionsTbl->find()
@@ -5829,7 +5854,7 @@ class InstitutionsController extends AppController
                                     'id' => Text::uuid(),
                                     'security_group_id' =>$institutionsSecurityGroupId->security_group_id, // $institutionId POCOR-7182
                                     'security_user_id' => $staffId,
-                                    'security_role_id' => $roleval->id,
+                                    'security_role_id' => $roleval->id, //// initial was $roleval->id then changed to $staffPositionTitlesTbl->security_role_id POCOR-7188[END]
                                     'created_user_id' => $userId,
                                     'created' => date('Y-m-d H:i:s')
                                 ];
@@ -5858,6 +5883,7 @@ class InstitutionsController extends AppController
                         'staff_id' => $staffId,
                         'staff_type_id' => $staffTypeId,
                         'staff_status_id' => $statuses['ASSIGNED'],
+                        'is_homeroom' => $is_homeroom, //POCOR-5070
                         'institution_id' => $institutionId,
                         'institution_position_id' => $institutionPositionId,
                         'security_group_user_id' => (!empty($SecurityGroupUsersTbl))? $SecurityGroupUsersTbl->id : null,
@@ -6115,13 +6141,26 @@ class InstitutionsController extends AppController
                                                 ])
                                                 ->first();
 
+                         //POCOR-7188[START]
+                        $staffPositionTitles = TableRegistry::get('staff_position_titles');
+                        $staffPositionTitlesTbl = $staffPositionTitles->find()
+                                                ->where([
+                                                    $staffPositionTitles->aliasField('id') => $InstitutionPositionsTbl->staff_position_title_id,
+                                                ])
+                                                ->first();
+                        //POCOR-7188[END]
+
                         $SecurityGroupUsers = TableRegistry::get('security_group_users');
                         if(!empty($InstitutionPositionsTbl)){
                             $SecurityRoles = TableRegistry::get('security_roles');
-                            if($InstitutionPositionsTbl->is_homeroom == 1){
-                                $roleArr = ['STAFF', 'HOMEROOM_TEACHER'];
+                            $SecurityRolesTbl = $SecurityRoles->find()
+                                                        ->where([
+                                                            $SecurityRoles->aliasField('id') => $staffPositionTitlesTbl->security_role_id
+                                                        ])->first();
+                            if($is_homeroom == 1){
+                                $roleArr = ['HOMEROOM_TEACHER', $SecurityRolesTbl->code];
                             }else{
-                                $roleArr = ['STAFF'];
+                                $roleArr = [$SecurityRolesTbl->code];
                             }
                             $SecurityRolesTbl = $SecurityRoles->find()
                                                         ->where([
@@ -6139,7 +6178,7 @@ class InstitutionsController extends AppController
                                         'id' => Text::uuid(),
                                         'security_group_id' => $institutionsSecurityGroupId->security_group_id,// $institutionId POCOR-7182
                                         'security_user_id' => $user_record_id,
-                                        'security_role_id' => $roleval->id,
+                                        'security_role_id' => $roleval->id, //// initial was $roleval->id then changed to $staffPositionTitlesTbl->security_role_id POCOR-7188[END]
                                         'created_user_id' => $userId,
                                         'created' => date('Y-m-d H:i:s')
                                     ];
@@ -6168,6 +6207,7 @@ class InstitutionsController extends AppController
                             'staff_type_id' => $staffTypeId,
                             'staff_status_id' => $statuses['ASSIGNED'],
                             'institution_id' => $institutionId,
+                            'is_homeroom' => $is_homeroom, //POCOR-5070
                             'institution_position_id' => $institutionPositionId,
                             'security_group_user_id' => (!empty($SecurityGroupUsersTbl))? $SecurityGroupUsersTbl->id : null,
                             'created_user_id' => $userId,
@@ -7118,6 +7158,123 @@ class InstitutionsController extends AppController
             ];
 
             return $body;
+    }
 
+    /**
+     * POCOR-7146
+     * assign Role and group to student while creating student
+    **/ 
+    private function assignStudentRoleGroup($institutionId, $user_id) 
+    {
+        $securityRolesTbl = TableRegistry::get('security_roles');
+        $securityRoles = $securityRolesTbl->find()
+                                ->where([
+                                    $securityRolesTbl->aliasField('code') => 'STUDENT',
+                                ])->first();
+        //get student institution
+        $institutionTbl = TableRegistry::get('institutions');
+        $institutions = $institutionTbl->find()
+                                ->where([
+                                    $institutionTbl->aliasField('id') => $institutionId
+                                ])->first();
+        if(!empty($institutions) && $institutions->security_group_id !=''){
+             $securityGroupInstitutionsTbl = TableRegistry::get('security_group_institutions');
+             $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
+                                     ->where([
+                                         $securityGroupInstitutionsTbl->aliasField('security_group_id') => $institutions->security_group_id,
+                                         $securityGroupInstitutionsTbl->aliasField('institution_id') => $institutions->id
+                                     ])
+                                     ->first();
+             //save security group for institution
+             if(empty($securityGroupInstitutions)){
+                 $security_group_ins_data = [
+                             'security_group_id' => $institutions->security_group_id,
+                             'institution_id' => $institutionId,
+                             'created_user_id' => 1,
+                             'created' => new Time('NOW')
+                     ];
+                 $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
+                 $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
+             }
+             //check user already exist or not
+             $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+             $checkSecurityGroupUser = $securityGroupUsersTbl->find()
+                                     ->where([
+                                         $securityGroupUsersTbl->aliasField('security_user_id') => $user_id,
+                                         $securityGroupUsersTbl->aliasField('security_role_id') => $securityRoles->id
+                                     ])
+                                     ->first();
+             //check user_id with role is available or not in `security_group_users` group                       
+             if(empty($checkSecurityGroupUser)){
+                 $securityGroupUsers = $securityGroupUsersTbl->find()
+                                         ->where([
+                                             $securityGroupUsersTbl->aliasField('security_group_id') => $institutions->security_group_id,
+                                             $securityGroupUsersTbl->aliasField('security_user_id') => $user_id,
+                                             $securityGroupUsersTbl->aliasField('security_role_id') => $securityRoles->id,
+                                         ])
+                                         ->first();
+                 if(empty($securityGroupUsers)){
+                     //save user in security_group_users table first time 
+                     $id = Text::uuid();
+                     $security_group_data = [
+                                 'id' => $id,
+                                 'security_group_id' => $institutions->security_group_id,
+                                 'security_user_id' => $user_id,
+                                 'security_role_id' => $securityRoles->id,
+                                 'created_user_id' => 1,
+                                 'created' => new Time('NOW')
+                         ];
+                     $securityGroupUsersEntity = $securityGroupUsersTbl->newEntity($security_group_data);
+                     $securityGroupUsersTbl->save($securityGroupUsersEntity);
+                 }                        
+             }else{
+                 //update user's security_group_id in security_group_users table 
+                 $InstitutionStudentsTbl = TableRegistry::get('institution_students');
+                 $InstitutionStudentTransfersTbl = TableRegistry::get('institution_student_transfers');
+                 $InstitutionStudents = $InstitutionStudentsTbl
+                                         ->find()
+                                         ->select([
+                                             $InstitutionStudentsTbl->aliasField('student_id'),
+                                             $InstitutionStudentTransfersTbl->aliasField('institution_id'),
+                                             $InstitutionStudentTransfersTbl->aliasField('previous_institution_id')
+                                         ])
+                                         ->leftJoin([$InstitutionStudentTransfersTbl->alias() => $InstitutionStudentTransfersTbl->table()],
+                                             [
+                                                 $InstitutionStudentTransfersTbl->aliasField('student_id').'='.$InstitutionStudentsTbl->aliasField('student_id'),
+                                                 $InstitutionStudentTransfersTbl->aliasField('institution_id')=>$institutions->id
+                                             ]
+                                         )
+                                         ->where([
+                                             $InstitutionStudentsTbl->aliasField('student_id') => $checkSecurityGroupUser->security_user_id,
+                                             $InstitutionStudentsTbl->aliasField('institution_id') => $institutions->id,
+                                             $InstitutionStudentsTbl->aliasField('student_status_id') => 1//for enrolled status
+                                         ])
+                                         ->first();
+                 
+                 if(!empty($InstitutionStudents)){
+                     if(!empty($InstitutionStudents->institution_student_transfers['previous_institution_id'])){
+                         $PreviousInstitutions = $institutionTbl->find()
+                                 ->where([
+                                     $institutionTbl->aliasField('id') => $InstitutionStudents->institution_student_transfers['previous_institution_id']
+                                 ])
+                                 ->first();
+                                
+                         if($PreviousInstitutions->security_group_id == $checkSecurityGroupUser->security_group_id){
+                             $securityGroupUsersTbl->updateAll(
+                                 [
+                                     'security_group_id' => $institutions->security_group_id,
+                                     'created' => new Time('NOW')
+                                 ],
+                                 [
+                                     'security_group_id' => $PreviousInstitutions->security_group_id,
+                                     'security_user_id' => $checkSecurityGroupUser->security_user_id,
+                                     'security_role_id' => $checkSecurityGroupUser->security_role_id
+                                 ]
+                             );
+                         }
+                     }
+                 }
+             }
+        }
     }
 }
