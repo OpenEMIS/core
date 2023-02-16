@@ -441,7 +441,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         return $attr;
     }
 
-
+ 
     public function getUniquePositionNo($institutionId = null)
     {
         $prefix = '';

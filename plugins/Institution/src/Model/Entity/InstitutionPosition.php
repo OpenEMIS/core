@@ -15,7 +15,7 @@ class InstitutionPosition extends Entity
 		$name = $this->position_no;
 		// $name = explode('-',$this->position_no);
 		// $name = !empty($name) ? $name[0] : '';
-		// // END POCOR 7216
+		// // END POCOR 7216 
 		if (strlen($name) > 0) {
 			$name .= ' - ';
 		}
