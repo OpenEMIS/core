@@ -355,7 +355,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         ->first();
 
         /* START POCOR-7216 */
-
+ 
         // if($StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
         //     $entity->end_date = date('Y-m-d');
         // }
@@ -407,7 +407,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }else{
             $entity->end_date = $entity->start_date;
         }
-        
+
         /* END POCOR-7216 */
 
         // get associated data
