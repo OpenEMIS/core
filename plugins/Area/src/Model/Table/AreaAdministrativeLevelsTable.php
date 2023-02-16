@@ -112,7 +112,7 @@ class AreaAdministrativeLevelsTable extends ControllerActionTable
         $countryOptions = $this->Countries
             ->find('list')
             ->where([$this->Countries->aliasField('area_administrative_level_id') => $levelId])
-            ->order([$this->Countries->aliasField('name')])
+           // ->order([$this->Countries->aliasField('name')]) //POCOR-7256
             ->toArray();
         $selectedCountry = !is_null($this->request->query('country')) ? $this->request->query('country') : key($countryOptions);
 
