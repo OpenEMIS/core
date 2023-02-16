@@ -117,15 +117,21 @@ Route::group(
 
 
 //For PORGI-8 Routes...
-Route::get('academic-periods', 'RegistrationController@academicPeriodsList');
-Route::get('education-grades', 'RegistrationController@educationGradesList');
-Route::get('institution-drodown', 'RegistrationController@institutionDropdown');
-Route::get('administrative-areas', 'RegistrationController@administrativeAreasList');
-Route::get('nationalities', 'RegistrationController@nationalityList');
-Route::post('generate-otp', 'RegistrationController@generateOtp');
-Route::post('verify-otp', 'RegistrationController@verifyOtp');
-Route::get('autocomplete-openemis-no/{id}', 'RegistrationController@autocompleteOpenemisNo');
-Route::get('autocomplete-identity-number/{id}', 'RegistrationController@autocompleteIdentityNo');
-Route::get('details-by-emis/{id}', 'RegistrationController@detailsByEmis');
-Route::post('institution/students', 'RegistrationController@institutionStudents');
-Route::get('get-student-custom-fields', 'RegistrationController@getStudentCustomFields');
+Route::group(
+    ["middleware" => "authkeyvalidate"],
+    function () {
+        Route::get('academic-periods', 'RegistrationController@academicPeriodsList');
+        Route::get('education-grades', 'RegistrationController@educationGradesList');
+        Route::get('institution-drodown', 'RegistrationController@institutionDropdown');
+        Route::get('administrative-areas', 'RegistrationController@administrativeAreasList');
+        Route::get('nationalities', 'RegistrationController@nationalityList');
+        Route::post('generate-otp', 'RegistrationController@generateOtp');
+        Route::post('verify-otp', 'RegistrationController@verifyOtp');
+        Route::get('autocomplete-openemis-no/{id}', 'RegistrationController@autocompleteOpenemisNo');
+        Route::get('autocomplete-identity-number/{id}', 'RegistrationController@autocompleteIdentityNo');
+        Route::get('details-by-emis/{id}', 'RegistrationController@detailsByEmis');
+        Route::post('institution/students', 'RegistrationController@institutionStudents');
+        Route::get('get-student-custom-fields', 'RegistrationController@getStudentCustomFields');
+    }
+);
+
