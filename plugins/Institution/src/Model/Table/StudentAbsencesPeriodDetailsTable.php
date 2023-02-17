@@ -137,7 +137,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                 ])
                 ->count();
 
-            //POCOR-6584 :: START
+                //POCOR-6584 :: START
             $shellName = "AlertAttendance";
             if ($this->isShellStopExist($shellName)) {
                 $status = 0; // Stopped
@@ -152,10 +152,9 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
     
                     
                     $alertRulesTable = TableRegistry::get('alert_rules');
-                    $alertRuleData = $alertRulesTable->find('all',['feature'=>'StudentAttendance'])->toArray();
-                    foreach($alertRuleData as $alertRuleData1){
-
-
+                    $alertRuleData = $alertRulesTable->find('all',['conditions'=>['feature'=>'StudentAttendance']])->toArray();
+                   
+                    foreach($alertRuleData as $alertRuleData1){ 
                         $alertRolesTable = TableRegistry::get('alerts_roles');
                         $alertRolesData = $alertRolesTable->find('all',['conditions'=>['alert_rule_id'=>$alertRuleData1->id],'fields'=>['security_role_id']])->toArray();
                         $securityRoleIds=[];
@@ -168,33 +167,34 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                                                     ->where(['security_group_id'=>$institutionSecurityGroupId,'security_role_id in'=> $securityRoleIds])
                                                     ->group(['security_user_id'])
                                                     ->toArray();
-                                                    
-                        foreach($securityGroupUsersData as $securityGU){
-                            $userTable = TableRegistry::get('security_users');
-                            $userData = $userTable->get($securityGU->security_user_id);
-                            $studentData = $userTable->get($entity->student_id);
-                            
-                            $insCode  = $institutionData->code;
-                            $insName  = $institutionData->name;
-                            $StudentOpenemis_no = $studentData->openemis_no;
-                            $StudentFirstName = $studentData->first_name;
-                            $StudentLastName =$studentData->last_name;
-                            $absenceCount = $this->find('all',['conditions' => ['student_id'=>$entity->student_id, 'institution_id'=>$entity->institution_id,'academic_period_id'=>$entity->academic_period_id
-                            ]])->count();
-                            $absenceCount = $absenceCount;
-                            if($alertRuleData1->threshold <= $absenceCount){
-                                if(!empty($userData->email)){
-                                    $email = new Email('openemis');
-                                    $emailSubject = 'OpenEMIS Attendance Alert for '.$insCode." - ".$insName;
-                                    $emailMessage = "[THIS IS AN AUTOMATED MESSAGE - PLEASE DO NOT REPLY DIRECTLY TO THIS EMAIL]\n\nDear Principal,\n\nPlease be informed that the student ".$StudentOpenemis_no." - ".$StudentFirstName." ". $StudentLastName." have missed ".$absenceCount." days of class in ".$insCode." - ".$insName;
-                                    $email
-                                        ->to($userData->email)
-                                        ->subject($emailSubject)
-                                        ->send($emailMessage);
+                        if(!empty($securityGroupUsersData)){                                                  
+                            foreach($securityGroupUsersData as $securityGU){ 
+                                $userTable = TableRegistry::get('security_users');
+                                $userData = $userTable->get($securityGU->security_user_id);
+                                $studentData = $userTable->get($entity->student_id);
+                                
+                                $insCode  = $institutionData->code;
+                                $insName  = $institutionData->name;
+                                $StudentOpenemis_no = $studentData->openemis_no;
+                                $StudentFirstName = $studentData->first_name;
+                                $StudentLastName =$studentData->last_name;
+                                $absenceCount = $this->find('all',['conditions' => ['student_id'=>$entity->student_id, 'institution_id'=>$entity->institution_id,'academic_period_id'=>$entity->academic_period_id
+                                ]])->count();
+                                
+                                if((($alertRuleData1->threshold)-1) <= $absenceCount){
+                                    $absenceCount = $absenceCount+1;
+                                    if(!empty($userData->email)){
+                                        $email = new Email('openemis');
+                                        $emailSubject = 'OpenEMIS Attendance Alert for '.$insCode." - ".$insName;
+                                        $emailMessage = "[THIS IS AN AUTOMATED MESSAGE - PLEASE DO NOT REPLY DIRECTLY TO THIS EMAIL]\n\nDear Principal,\n\nPlease be informed that the student ".$StudentOpenemis_no." - ".$StudentFirstName." ". $StudentLastName." have missed ".$absenceCount." days of class in ".$insCode." - ".$insName;
+                                        $email
+                                            ->to($userData->email)
+                                            ->subject($emailSubject)
+                                            ->send($emailMessage);
+                                    }
                                 }
                             }
                         }
-                        
                         
                         
                     }
@@ -237,6 +237,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
             }
         }
     }
+    
 
     //POCOR-6584
     public function isShellStopExist($shellName)
@@ -244,12 +245,10 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         // folder to the shellprocesses.
         $dir = new Folder(ROOT . DS . 'tmp'); // path
         $filesArray = $dir->find($shellName.'.stop');
-
         return !empty($filesArray);
     }
 	
 	//POCOR-6584
-    
     public function deleteStudentAbsence($entity = null){
         $classId = $entity->institution_class_id;
         $academicPeriodId = $entity->academic_period_id;
