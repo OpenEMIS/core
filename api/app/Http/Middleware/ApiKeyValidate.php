@@ -17,12 +17,11 @@ class ApiKeyValidate
      */
     public function handle(Request $request, Closure $next)
     {
-        $username = env('API_USERNAME');
+        /*$username = env('API_USERNAME');
         $password = env('API_PASSWORD');
-        //$password = bcrypt($password);
-        $password = Hash::make($password);
-        $api_key = env('API_KEY');
-        //dd($username, $password, $api_key);
+        
+        $api_key = env('API_KEY');*/
+        
         return $next($request);
     }
 }
