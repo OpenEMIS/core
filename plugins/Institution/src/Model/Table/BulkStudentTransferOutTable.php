@@ -281,7 +281,7 @@ class BulkStudentTransferOutTable extends ControllerActionTable
                     }elseif($entity['student_transfer_in'][0]['status']['name']=='Pending Student Transfer'){
                         $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params); //POCOR-6961
                     }else{
-                        $assigneeOptions = ['-1' => __('Auto Assign')];
+                        $assigneeOptions = [$this->Auth->user('id') => __('Auto Assign')];//POCOR-7080
                     }
                     
                 }
