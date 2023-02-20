@@ -210,6 +210,7 @@ class InstitutionsController extends AppController
             'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
             'InstitutionStatistics'              => ['className' => 'Institution.InstitutionStatistics', 'actions' => ['index', 'add']],
             'InstitutionStandards'              => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
+            'ImportStudentCurriculars'  => ['className' => 'Institution.ImportStudentCurriculars', 'actions' => ['add']],//POCOR-6673
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -2237,6 +2238,9 @@ class InstitutionsController extends AppController
                 $header .= ' - '. __('Associations');
             } elseif($model->alias() == 'InstitutionStatistics'){
                 $header .= ' - '. __('Statistics');
+            }elseif ($model->alias() == 'InstitutionCurricularStudent') { //POCOR-6673
+                die('sds');
+                $header .= ' - '. __('Curriculars');
             } else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
@@ -3355,14 +3359,14 @@ class InstitutionsController extends AppController
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
             'Associations' => ['text' => __('Associations')],
-          //  'Curriculars' => ['text' => __('Curriculars')]
+            'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         // Programme will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
-            if (in_array($key, ['Programmes', 'Textbooks', 'Risks','Associations'])) {
+            if (in_array($key, ['Programmes', 'Textbooks', 'Risks','Associations','Curriculars'])) {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
             } else {
@@ -7286,6 +7290,7 @@ class InstitutionsController extends AppController
         }
     }
 
+    //POCOR-6673
     public function getCurricularsTabElements($options = [])
     {
         $queryString = $this->request->query('queryString');
@@ -7300,5 +7305,11 @@ class InstitutionsController extends AppController
             ]
         ];
         return $tabElements;
+    }
+
+    //POCOR-6673
+    public function StudentCurriculars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionCurricularStudent']);
     }
 }
