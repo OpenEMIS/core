@@ -31,7 +31,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-        $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('Excel', ['pages' => ['index','view']]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -281,10 +281,11 @@ class InstitutionCurricularsTable extends ControllerActionTable
         if(!empty($this->request->pass[1])){
             $curricularId = $this->paramsDecode($this->request->pass[1])['id'];
             $_SESSION["curricularId"] = $curricularId;
-
          }
-        
-
+    }
+    public function onGetCategory(Event $event, Entity $entity)
+    {
+        return $entity->category ? __('Curricular') : __('Extracurricular');
     }
     
 }
