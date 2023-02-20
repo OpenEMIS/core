@@ -21,10 +21,12 @@ class UpdateStaffLateAttendanceShell extends Shell
         parent::initialize();
         $this->loadModel('Institution.InstitutionStaffShifts');
         $this->loadModel('Institution.InstitutionShifts');
+        $this->loadModel('Institution.InstitutionPositions');//POCOR-7225
        
     }
 
-    public function main($staffId, $date)
+    //POCOR-7225 add institutionId, academicPeriodId in shell command
+    public function main($staffId, $date,$institutionId, $academicPeriodId)
     {   
         try {
             $connection = ConnectionManager::get('default');
@@ -35,8 +37,8 @@ class UpdateStaffLateAttendanceShell extends Shell
                 WHEN `institution_staff_attendances`.time_in = `institution_shifts`.start_time   THEN 1 
                 WHEN `institution_staff_attendances`.time_in > `institution_shifts`.start_time   THEN 3
                 END
-                WHERE `institution_staff_attendances`.`staff_id` = $staffId 
-                       AND `institution_staff_attendances`.date= '" . $date . "' " );
+                WHERE `institution_staff_attendances`.`staff_id` = $staffId AND `institution_shifts`.`institution_id` = $institutionId AND `institution_shifts`.`academic_period_id` = $academicPeriodId
+                       AND `institution_staff_attendances`.date= '" . $date . "'" );
             
             } catch (Exception $e) {
                  pr($e->getMessage());
