@@ -38,7 +38,8 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
             'targetForeignKey' => 'education_grade_id',
             'dependent' => true
         ]);
-        $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('Excel', ['pages' => ['index','view']]);
+        
 
     }
 
@@ -90,11 +91,31 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
+        $curricularIdGet = $_SESSION['curricularId'];
+        $curriculars = TableRegistry::get('institution_curriculars');
+        $academicPeriod = TableRegistry::get('academic_periods');
+        $curricularType = TableRegistry::get('curricular_types');
+        $curricularData = $curriculars->find()
+                            ->select(['name'=>$curriculars->aliasField('name'),'category'=>$curriculars->aliasField('category'),
+                                'academicPeriod'=>$academicPeriod->aliasField('name'),
+                                'curricularType'=>$curricularType->aliasField('name')
+                                        ])
+                            ->LeftJoin([$academicPeriod->alias() => $academicPeriod->table()],[
+                                $academicPeriod->aliasField('id').' = ' . $curriculars->aliasField('academic_period_id')
+                            ])
+                            ->LeftJoin([$curricularType->alias() => $curricularType->table()],[
+                                $curricularType->aliasField('id').' = ' . $curriculars->aliasField('type_id')
+                            ])
+                            ->where([$curriculars->aliasField('id') => $curricularIdGet])->first();
         
-        $this->field('academic_period_id', ['visible' => true,'type' => 'readonly']);
-        $this->field('name', ['visible' => true,'type' => 'readonly']);
-        $this->field('type', ['type' => 'select','type' => 'readonly']);
-        $this->field('category', ['type' => 'select','type' => 'readonly']);
+        $entity->name = $curricularData->name;
+        $entity->category = $curricularData->category ? __('Curricular') : __('Extracurricular');
+        $entity->academicPeriod = $curricularData->academicPeriod;
+        $entity->curricularType = $curricularData->curricularType;
+        $this->field('academic_period_id', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->academicPeriod, 'required' => true]]);
+        $this->field('name', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->name, 'required' => true]]);
+        $this->field('type', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->curricularType, 'required' => true]]);
+        $this->field('category', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->category, 'required' => true]]);
         $this->field('student_id', ['type' => 'select','visible' => true]);
         $this->field('institution_curricular_id', ['visible' => false]);
         $this->field('start_date',['attr' => ['label' => __('Start Date')]]);
@@ -156,6 +177,40 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
             $attr['attr']['multiple'] = false;
             $attr['select'] = false;
             $attr['options'] = ['id' => '-- ' . __('Select Position') . ' --']+$curricularPositionsList;
+            $attr['onChangeReload'] = false;  
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request)
+    {
+        $institutionStudents = TableRegistry::get('institution_students');
+        $securityUsers = TableRegistry::get('security_users');
+        $InstitutionCurriculars = TableRegistry::get('institution_curriculars');
+        $curricularIdGet = $_SESSION['curricularId'];
+        $academicPeriodId = $InstitutionCurriculars->find()->where(['id'=>$curricularIdGet])->first()->academic_period_id;
+        $session = $this->controller->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $studentData = $institutionStudents->find('all')->select
+                        ([
+                            'openemis_no'=>$securityUsers->aliasField('openemis_no'),
+                            'id'=>$securityUsers->aliasField('id'),
+                            'first_name'=>$securityUsers->aliasField('first_name'),
+                            'last_name'=>$securityUsers->aliasField('last_name'),
+                        ])
+                        ->LeftJoin([$securityUsers->alias() => $securityUsers->table()],[
+                            $securityUsers->aliasField('id').' = ' . $institutionStudents->aliasField('student_id')
+                        ])
+                        ->where(['student_status_id'=>1,'institution_id'=>$institutionId,'academic_period_id'=>$academicPeriodId])->toArray();
+        $studentList = [] ;
+        foreach($studentData as $student){
+                $studentList[$student->id] = $student->openemis_no.' - '.$student->first_name.' '.$student->last_name;
+        }
+        if ($action == 'add' || $action == 'edit') {
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = false;
+            $attr['options'] = ['id' => '-- ' . __('Select Student') . ' --']+$studentList;
             $attr['onChangeReload'] = false;  
         }
         return $attr;
