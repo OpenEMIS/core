@@ -19,12 +19,13 @@ class LoginController extends Controller
         try{
             
             $userCheck = SecurityUsers::where('username', $request->username)->first();
-            //dd($userCheck);
+            
             if($userCheck->super_admin == config('constants.canLogIn.superAdmin') || $userCheck->is_staff == config('constants.canLogIn.isStaff') || $userCheck->is_student == 1){
                 $input = $request->only('username', 'password');
                 $token = null;
-                
-                $apiCredentials = ApiCredentials::where('public_key', $api_key)->first();
+                $api_key = $request->api_key??"";
+
+                $apiCredentials = ApiCredentials::where('api_key', $api_key)->first();
                 if(!$apiCredentials){
                     return $this->sendErrorResponse("Invalid API key provided.");
                 }
