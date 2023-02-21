@@ -22,6 +22,7 @@ use App\Models\OpenemisTemp;
 use App\Models\InstitutionStudentAdmission;
 use App\Models\StudentCustomFormField;
 use App\Models\StudentCustomFieldValues;
+use App\Models\IdentityTypes;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
@@ -46,7 +47,7 @@ class RegistrationRepository extends Controller
         }
     }
 
-    public function educationGradesList($academic_period_id)
+    public function educationGradesList()
     {
         try {
             //$educationGrades = EducationGrades::select('id', 'name')->get();
@@ -63,8 +64,8 @@ class RegistrationRepository extends Controller
                     ->join('education_levels', 'education_levels.id', '=', 'education_cycles.education_level_id')
                     ->join('education_systems', 'education_systems.id', '=', 'education_levels.education_system_id')
                     ->join('academic_periods', 'academic_periods.id', '=', 'education_systems.academic_period_id')
-                    //->where('academic_periods.current', 1)
-                    ->where('academic_periods.id', $academic_period_id)
+                    ->where('academic_periods.current', 1)
+                    //->where('academic_periods.id', $academic_period_id)
                     ->get();
             
             return $educationGrades;
@@ -765,6 +766,23 @@ class RegistrationRepository extends Controller
             );
 
             return $this->sendErrorResponse('Failed to find custom fields list.');
+        }
+    }
+
+
+    public function identityTypeList()
+    {
+        try {
+            $identityTypes = IdentityTypes::select('id', 'name')->get();
+            
+            return $identityTypes;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find identity type list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find identity type list.');
         }
     }
 
