@@ -1,3 +1,15 @@
+### [3.78.0] - 2023-02-21
+- Implemented: Enhance the usability of the Admin > Security > Groups
+- Bug Fixed: Institutions > Staff > Change of Start Date : Upon submission, system adds an End Date to staff position
+- Bug Fixed: Institution > Survey > Forms: User is getting 404 error when setting the academic period
+- Bug Fixed: Institution > Performance > Assessments > Export: Getting 404 error
+- Bug Fixed: Institutions>Appointment>Positions>Add: Shift field does not show the shift name
+- Bug Fixed: Administration>Security>Roles>Add: Adds a validation if the security_roles.code exists
+- Bug Fixed: Personal > Staff > Career > Leave page: Users are unable to add or submit their leave requests even when permission is given
+- Bug Fixed: Administrations > Security > User Groups : Issue with assigning User groups to users
+- Bug Fixed: Administration > System Setup > Administrative Boundaries > Area Levels: The dropdown list in is in alphabetical order
+- Bug Fixed: Institutions>Staff>Staff1>Position: When approving end of assignment, user is getting 404 error
+
 ### [3.77.11] - 2023-02-13
 - Implemented: Develop APIs for TDSM
 - Bug Fixed: Institutions>Staff>Add: Homeroom teacher role is not added when teacher is adding
