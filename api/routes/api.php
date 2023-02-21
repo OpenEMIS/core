@@ -119,8 +119,9 @@ Route::group(
 
 
         Route::get('academic-periods/list', 'RegistrationController@academicPeriodsList');
-        Route::get('education-grades/{academic_period_id}/list', 'RegistrationController@educationGradesList');
+        Route::get('systems/levels/cycles/programmes/grades/list', 'RegistrationController@educationGradesList');
         Route::get('nationalities/list', 'RegistrationController@nationalityList');
+        Route::get('identity-types/list', 'RegistrationController@identityTypeList');
         Route::get('student-custom-fields', 'RegistrationController@getStudentCustomFields');
         Route::post('otp-generate', 'RegistrationController@generateOtp');
         Route::post('otp-verify', 'RegistrationController@verifyOtp');

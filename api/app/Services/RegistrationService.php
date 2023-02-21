@@ -43,10 +43,10 @@ class RegistrationService extends Controller
 
 
 
-    public function educationGradesList($academic_period_id)
+    public function educationGradesList()
     {
         try {
-            $data = $this->registrationRepository->educationGradesList($academic_period_id)->map(
+            $data = $this->registrationRepository->educationGradesList()->map(
                 function ($item, $key) {
                     return [
                         "id" => $item->educaiton_grade_id,
@@ -301,6 +301,29 @@ class RegistrationService extends Controller
             );
 
             return $this->sendErrorResponse('Failed to find custom fields list.');
+        }
+    }
+
+
+    public function identityTypeList()
+    {
+        try {
+            $data = $this->registrationRepository->identityTypeList()->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->name,
+                    ];
+                }
+            );
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find identity type list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find identity type list.');
         }
     }
 
