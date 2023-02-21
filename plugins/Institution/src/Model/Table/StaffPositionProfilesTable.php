@@ -353,6 +353,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
                         ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
                         ->first();
+
         if($StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
             $entity->end_date = date('Y-m-d');
         }
@@ -378,6 +379,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }else{
             $entity->end_date = $entity->start_date;
         }
+
         // get associated data
         $associatedData = $this->getAssociatedData($entity);
         
@@ -694,31 +696,40 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $newValue = $entity->end_date;
             if ($newValue != $oldValue) {
                 if (!empty($oldValue) && !empty($newValue)) {
-                    if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE' || $StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
-                        return $this->getStyling(__('Not Specified'), __('Not Specified'));
-                    }else{
-                        return $this->getStyling($this->formatDate($oldValue), $this->formatDate($newValue));
-                    }
+                    // START POCOR-7216
+                    return $this->getStyling($this->formatDate($oldValue), $this->formatDate($newValue));
+                    // if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE' || $StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
+                    //     return $this->getStyling(__('Not Specified'), __('Not Specified'));
+                    // }else{
+                    //     return $this->getStyling($this->formatDate($oldValue), $this->formatDate($newValue));
+                    // }
                 } else if (!empty($newValue)) {
-                    if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE' || $StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
-                        return $this->getStyling(__('Not Specified'), __('Not Specified'));
-                    }else{
-                        return $this->getStyling(__('Not Specified'), $this->formatDate($newValue));
-                    }
+                    return $this->getStyling(__('Not Specified'), $this->formatDate($newValue));
+                    // if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE' || $StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
+                    //     return $this->getStyling(__('Not Specified'), __('Not Specified'));
+                    // }else{
+                    //     return $this->getStyling(__('Not Specified'), $this->formatDate($newValue));
+                    // }
                 } else if (!empty($oldValue)) {
-                    if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE' || $StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
-                        return $this->getStyling(__('Not Specified'), __('Not Specified'));
-                    }else{
-                        return $this->getStyling($this->formatDate($oldValue), __('Not Specified'));
-                    }
+                    return $this->getStyling($this->formatDate($oldValue), __('Not Specified'));
+                    // if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE' || $StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
+                    //     return $this->getStyling(__('Not Specified'), __('Not Specified'));
+                    // }else{
+                    //     return $this->getStyling($this->formatDate($oldValue), __('Not Specified'));
+                    // }
                 }
+                // END POCOR-7216
             } else {
                 if (!empty($newValue)) {
-                    if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE' || $StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
-                        return $this->getStyling(__('Not Specified'), __('Not Specified'));
-                    }else{
-                        return $newValue;
-                    }
+                    // START POCOR-7216
+
+                    // if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE' || $StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
+                    //     return $this->getStyling(__('Not Specified'), __('Not Specified'));
+                    // }else{
+                    //     return $newValue;
+                    // }
+                    return $newValue;
+                    // END POCOR-7216
                 } else {
                     return __('Not Specified');
                 }
