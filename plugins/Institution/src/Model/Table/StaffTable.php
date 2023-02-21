@@ -302,7 +302,6 @@ class StaffTable extends ControllerActionTable
                         'status_id',
                         'position_no',
                         'staff_position_title_id',
-                        'staff_position_grade_id',
                         'institution_id'
                     ]
                 ],
@@ -884,7 +883,7 @@ class StaffTable extends ControllerActionTable
                         'Positions.status_id',
                         'Positions.position_no',
                         'Positions.staff_position_title_id',
-                        'Positions.staff_position_grade_id',
+                        // 'Positions.staff_position_grade_id',
                         'Positions.position_no',
                         'Positions.institution_id',
                         'Positions.assignee_id',
@@ -1004,7 +1003,7 @@ class StaffTable extends ControllerActionTable
             ])
             ->matching('StaffPositionTitles.SecurityRoles')
             ->contain(['Institutions'])
-            ->select(['security_role_id' => 'SecurityRoles.id', 'is_homeroom', 'Institutions.security_group_id'])
+            ->select(['security_role_id' => 'SecurityRoles.id'/*, 'is_homeroom'*/, 'Institutions.security_group_id'])//POCOR-7238 remove is_homeroom 
             ->first();
 
         $isHomeroomRole = !empty($positionEntity) && $positionEntity->is_homeroom;
@@ -1243,6 +1242,18 @@ class StaffTable extends ControllerActionTable
             $value = $entity->user->name;
         } else {
             $value = $entity->_matchingData['Users']->name;
+        }
+        return $value;
+    }
+
+    public function onGetIsHomeroom(Event $event, Entity $entity)
+    {
+    // echo "<pre>";print_r($entity);die;
+        $value = '';
+        if ($entity->has('user')) {
+            $value = $entity->is_homeroom;
+        } else {
+            $value = $entity->is_homeroom;
         }
         return $value;
     }
@@ -2123,12 +2134,12 @@ class StaffTable extends ControllerActionTable
                 return $q->where(['StaffPositionTitles.type' => $positionType]);
             });
         }
-        // if (!is_null($isHomeroom)) {
-        //     $query->matching('Positions', function ($q) use ($isHomeroom) {
-        //         // homeroom teachers only
-        //         return $q->where(['Positions.is_homeroom' => $isHomeroom]);
-        //     });
-        // }
+        if (!is_null($isHomeroom)) {
+            // $query->matching('Positions', function ($q) use ($isHomeroom) {
+                // homeroom teachers only
+                return $q->where([$this->aliasField('is_homeroom') => $institutionId]);
+            // });
+        }
         if (!is_null($staffId)) {
             $query->where([$this->aliasField('staff_id') => $staffId]);
         }
@@ -2163,6 +2174,7 @@ class StaffTable extends ControllerActionTable
             //->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
             ->where([
                 $this->aliasField('start_date <= ') => $todayDate,
+                $this->aliasField('is_homeroom') => 1,
                 'OR' => [
                     [$this->aliasField('end_date >= ') => $todayDate], //POCOR-6720
                     [$this->aliasField('end_date IS NULL')]
