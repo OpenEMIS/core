@@ -1752,6 +1752,9 @@ class InstitutionsController extends AppController
         if($this->request->params['action'] == 'checkConfigurationForExternalSearch'){
            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkConfigurationForExternalSearch';
         }
+        if($this->request->params['action'] == 'getStaffPosititonGrades'){
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStaffPosititonGrades';
+        }
         //for api purpose POCOR-5672 ends
         return $events;
     }
@@ -3512,12 +3515,20 @@ class InstitutionsController extends AppController
          * @ticket POCOR-6522
          */
         if ($selectedFTE > 0) {
+            $InsStaffTable = TableRegistry::get('Institution.Staff');//POCOR-5069
+            $StaffPositionGradesTbl = TableRegistry::get('staff_position_grades');//POCOR-5069
             $staffPositionsOptions = $StaffTable->Positions
                 ->find()
-                ->innerJoinWith('StaffPositionTitles.SecurityRoles')
-                ->innerJoinWith('StaffPositionGrades')
+                ->innerJoinWith('StaffPositionTitles.SecurityRoles')//POCOR-5069 starts
+                //->innerJoinWith('StaffPositionGrades')
+                /*->innerJoin([$InsStaffTable->alias() => $InsStaffTable->table()], [
+                    $InsStaffTable->aliasField('institution_position_id = ') . $StaffTable->Positions->aliasField('id'),
+                ])
+                ->innerJoin([$StaffPositionGradesTbl->alias() => $StaffPositionGradesTbl->table()], [
+                    $StaffPositionGradesTbl->aliasField('id = ') . $InsStaffTable->aliasField('staff_position_grade_id'),
+                ])*///POCOR-5069 ends
                 ->where($positionConditions)
-                ->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type', 'grade_name' => 'StaffPositionGrades.name'])
+                ->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type'/*, 'grade_name' => $StaffPositionGradesTbl->aliasField('name')*/])//POCOR-5069
                 ->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
                 ->autoFields(true)
                 ->toArray();
@@ -3545,12 +3556,10 @@ class InstitutionsController extends AppController
             ->hydrate(false)
             ->toArray();
         // end POCOR-4269
-
         // Adding the opt group
         $types = $this->getSelectOptions('Staff.position_types');
         $options = [];
         $excludePositions = array_column($excludePositions->toArray(), 'position_id');
-
         // POCOR-4269 if staff already held some position that position is unavailable anymore.
         if (!empty($positionHeldByStaff)) {
             foreach ($positionHeldByStaff as $value) {
@@ -3562,11 +3571,10 @@ class InstitutionsController extends AppController
         }
         // end POCOR-4269
         foreach ($staffPositionsOptions as $position) {
-            $name = $position->name . ' - ' . $position->grade_name;
+            $name = $position->name /*. ' - ' . $position->grade_name*/;//POCOR-5069
             $type = __($types[$position->type]);
             $options[] = ['value' => $position->id, 'group' => $type, 'name' => $name, 'disabled' => in_array($position->id, $excludePositions)];
         }
-
         $this->response->body(json_encode($options, JSON_UNESCAPED_UNICODE));
         $this->response->type('json');
         return $this->response;
@@ -4502,6 +4510,20 @@ class InstitutionsController extends AppController
         }
         echo json_encode($result_array);die;
     }
+    //POCOR-5069 starts
+    public function getStaffPosititonGrades()
+    {
+        $staff_position_grades = TableRegistry::get('staff_position_grades');
+        $staff_position_grades_result = $staff_position_grades
+            ->find()
+            ->select(['id','name'])
+            ->where(['visible' => 1])
+            ->toArray();
+        foreach($staff_position_grades_result AS $result){
+            $result_array[] = array("id" => $result['id'], "name" => $result['name']);
+        }
+        echo json_encode($result_array);die;
+    }//POCOR-5069 ends
 
     public function getStaffType()
     {
@@ -5630,7 +5652,7 @@ class InstitutionsController extends AppController
             $staffId = (array_key_exists('staff_id', $requestData))? $requestData['staff_id'] : 0;
             $previousInstitutionId = (array_key_exists('previous_institution_id', $requestData))? $requestData['previous_institution_id'] : 0;
             $comment = (array_key_exists('comment', $requestData))? $requestData['comment'] : '';
-            $is_homeroom = (array_key_exists('is_homeroom', $requestData))? $requestData['is_homeroom'] : 0;
+            $staff_position_grade_id = (array_key_exists('staff_position_grade_id', $requestData))? $requestData['staff_position_grade_id'] : '';//POCOR-7238
             //when staff transfer in other institution end
             
             //get academic period data
@@ -5849,20 +5871,30 @@ class InstitutionsController extends AppController
                         ->first();  
                         //POCOR-7182                         
                         if(!empty($SecurityRolesTbl)){
+                            $SecurityGroupUsersTbl = TableRegistry::get('security_group_users');
                             foreach ($SecurityRolesTbl as $rolekey => $roleval) {
-                                $entityGroupData = [
-                                    'id' => Text::uuid(),
-                                    'security_group_id' =>$institutionsSecurityGroupId->security_group_id, // $institutionId POCOR-7182
-                                    'security_user_id' => $staffId,
-                                    'security_role_id' => $roleval->id, //// initial was $roleval->id then changed to $staffPositionTitlesTbl->security_role_id POCOR-7188[END]
-                                    'created_user_id' => $userId,
-                                    'created' => date('Y-m-d H:i:s')
-                                ];
-                                //save in security_group_users table
-                                $entityGroupData = $SecurityGroupUsers->newEntity($entityGroupData);
-                                $entityGroupResult = $SecurityGroupUsers->save($entityGroupData);
-                                unset($entityGroupResult);
-                                unset($entityGroupData);
+                                //POCOR-7238 starts
+                                $countSecurityGroupUsers = $SecurityGroupUsersTbl->find()
+                                                            ->where([
+                                                                $SecurityGroupUsersTbl->aliasField('security_group_id') => $institutionsSecurityGroupId->security_group_id,
+                                                                $SecurityGroupUsersTbl->aliasField('security_user_id') => $staffId,
+                                                                $SecurityGroupUsersTbl->aliasField('security_role_id') => $roleval->id
+                                                            ])->count();
+                                if(empty($countSecurityGroupUsers)){
+                                    $entityGroupData = [
+                                        'id' => Text::uuid(),
+                                        'security_group_id' =>$institutionsSecurityGroupId->security_group_id, // $institutionId POCOR-7182
+                                        'security_user_id' => $staffId,
+                                        'security_role_id' => $roleval->id, //// initial was $roleval->id then changed to $staffPositionTitlesTbl->security_role_id POCOR-7188[END]
+                                        'created_user_id' => $userId,
+                                        'created' => date('Y-m-d H:i:s')
+                                    ];
+                                    //save in security_group_users table
+                                    $entityGroupData = $SecurityGroupUsers->newEntity($entityGroupData);
+                                    $entityGroupResult = $SecurityGroupUsers->save($entityGroupData);
+                                    unset($entityGroupResult);
+                                    unset($entityGroupData);
+                                }//POCOR-7238 ends
                             }
                         }
                     }                        
@@ -5887,6 +5919,7 @@ class InstitutionsController extends AppController
                         'institution_id' => $institutionId,
                         'institution_position_id' => $institutionPositionId,
                         'security_group_user_id' => (!empty($SecurityGroupUsersTbl))? $SecurityGroupUsersTbl->id : null,
+                        'staff_position_grade_id' => $staff_position_grade_id,//POCOR-7238 
                         'created_user_id' => $userId,
                         'created' => date('Y-m-d H:i:s')
                     ];
@@ -6210,6 +6243,7 @@ class InstitutionsController extends AppController
                             'is_homeroom' => $is_homeroom, //POCOR-5070
                             'institution_position_id' => $institutionPositionId,
                             'security_group_user_id' => (!empty($SecurityGroupUsersTbl))? $SecurityGroupUsersTbl->id : null,
+                            'staff_position_grade_id' => $staff_position_grade_id,//POCOR-7238 
                             'created_user_id' => $userId,
                             'created' => date('Y-m-d H:i:s')
                         ];
