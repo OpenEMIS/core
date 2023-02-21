@@ -43,10 +43,10 @@ class RegistrationService extends Controller
 
 
 
-    public function educationGradesList()
+    public function educationGradesList($academic_period_id)
     {
         try {
-            $data = $this->registrationRepository->educationGradesList()->map(
+            $data = $this->registrationRepository->educationGradesList($academic_period_id)->map(
                 function ($item, $key) {
                     return [
                         "id" => $item->educaiton_grade_id,

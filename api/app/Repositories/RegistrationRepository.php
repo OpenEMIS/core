@@ -46,7 +46,7 @@ class RegistrationRepository extends Controller
         }
     }
 
-    public function educationGradesList()
+    public function educationGradesList($academic_period_id)
     {
         try {
             //$educationGrades = EducationGrades::select('id', 'name')->get();
@@ -63,7 +63,8 @@ class RegistrationRepository extends Controller
                     ->join('education_levels', 'education_levels.id', '=', 'education_cycles.education_level_id')
                     ->join('education_systems', 'education_systems.id', '=', 'education_levels.education_system_id')
                     ->join('academic_periods', 'academic_periods.id', '=', 'education_systems.academic_period_id')
-                    ->where('academic_periods.current', 1)
+                    //->where('academic_periods.current', 1)
+                    ->where('academic_periods.id', $academic_period_id)
                     ->get();
             
             return $educationGrades;
