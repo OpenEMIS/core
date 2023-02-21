@@ -25,6 +25,11 @@ Route::group(
     ["middleware" => "auth.jwt"],
     function () {
         Route::get('institutions', 'InstitutionController@getInstitutionsList')->middleware('auth.jwt');
+
+        Route::get('institutions/list', 'RegistrationController@institutionDropdown');
+        Route::get('institutions/areas/list', 'RegistrationController@administrativeAreasList');
+
+
         Route::get('institutions/grades', 'InstitutionController@getGradesList');
         Route::get('institutions/classes', 'InstitutionController@getClassesList');
         Route::get('institutions/subjects', 'InstitutionController@getSubjectsList');
@@ -111,6 +116,15 @@ Route::group(
         Route::get('systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/subjects', 'EducationSystemController@getEducationStructureGrade');
 
         Route::get('systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/subjects/{subject_id}', 'EducationSystemController@getEducationStructureSubject');
+
+
+        Route::get('academic-periods/list', 'RegistrationController@academicPeriodsList');
+        Route::get('education-grades/{academic_period_id}/list', 'RegistrationController@educationGradesList');
+        Route::get('nationalities/list', 'RegistrationController@nationalityList');
+        Route::get('student-custom-fields', 'RegistrationController@getStudentCustomFields');
+        Route::post('otp-generate', 'RegistrationController@generateOtp');
+        Route::post('otp-verify', 'RegistrationController@verifyOtp');
+
     }
 );
 
@@ -120,18 +134,18 @@ Route::group(
 Route::group(
     ["middleware" => "authkeyvalidate"],
     function () {
-        Route::get('academic-periods', 'RegistrationController@academicPeriodsList');
-        Route::get('education-grades', 'RegistrationController@educationGradesList');
-        Route::get('institution-drodown', 'RegistrationController@institutionDropdown');
-        Route::get('administrative-areas', 'RegistrationController@administrativeAreasList');
-        Route::get('nationalities', 'RegistrationController@nationalityList');
-        Route::post('generate-otp', 'RegistrationController@generateOtp');
-        Route::post('verify-otp', 'RegistrationController@verifyOtp');
+        
+        
+        
+        
+        
+        
+        
         Route::get('autocomplete-openemis-no/{id}', 'RegistrationController@autocompleteOpenemisNo');
         Route::get('autocomplete-identity-number/{id}', 'RegistrationController@autocompleteIdentityNo');
         Route::get('details-by-emis/{id}', 'RegistrationController@detailsByEmis');
         Route::post('institution/students', 'RegistrationController@institutionStudents');
-        Route::get('get-student-custom-fields', 'RegistrationController@getStudentCustomFields');
+        
     }
 );
 
