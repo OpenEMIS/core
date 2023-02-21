@@ -969,8 +969,8 @@ class StaffTable extends ControllerActionTable
 
             $securityGroupId = $positionEntity->institution->security_group_id;
 
-            $isHomeroomRole = !empty($positionEntity) && $positionEntity->is_homeroom;
-            if (!empty($homeroomSecurityRoleId) && $isHomeroomRole) {
+           // $isHomeroomRole = !empty($positionEntity) && $positionEntity->is_homeroom; //POCOR-7257
+            if (!empty($homeroomSecurityRoleId)) {
                 $securityGroupUsersRecord = [
                     'security_role_id' => $homeroomSecurityRoleId,
                     'security_group_id' => $securityGroupId,
@@ -1010,11 +1010,11 @@ class StaffTable extends ControllerActionTable
             ])
             ->matching('StaffPositionTitles.SecurityRoles')
             ->contain(['Institutions'])
-            ->select(['security_role_id' => 'SecurityRoles.id', 'is_homeroom', 'Institutions.security_group_id'])
+            ->select(['security_role_id' => 'SecurityRoles.id', 'Institutions.security_group_id'])
             ->first();
 
-        $isHomeroomRole = !empty($positionEntity) && $positionEntity->is_homeroom;
-        if (!empty($homeroomSecurityRoleId) && $isHomeroomRole) {
+       // $isHomeroomRole = !empty($positionEntity) && $positionEntity->is_homeroom;//POCOR-7257
+        if (!empty($homeroomSecurityRoleId)) {
             $securityGroupId = $positionEntity->institution->security_group_id;
 
             $deleteEntity = $SecurityGroupUsersTable->find()
