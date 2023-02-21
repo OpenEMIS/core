@@ -442,6 +442,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         return $attr;
     }
 
+ 
     public function getUniquePositionNo($institutionId = null)
     {
         $prefix = '';
@@ -599,6 +600,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         }
         $extra['options']['sortWhitelist'] = $sortList;
     }
+
 
 /******************************************************************************************************************
 **
@@ -977,7 +979,6 @@ class InstitutionPositionsTable extends ControllerActionTable
                     $row['institution_name'] = $data->titles;
                     $row['assignees_name'] = $data->assignees_name;
                 }
-
                 return $row;
             });
         });
