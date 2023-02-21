@@ -4,7 +4,6 @@ namespace Institution\Model\Table;
 use DateTime;
 use DateInterval;
 use ArrayObject;
-
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -1307,14 +1306,19 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->currentAcademicPeriod = $this->AcademicPeriods->get($currentAcademicPeriodId);
         $currentAcademicPeriodIdd = $this->currentAcademicPeriod->id;
         $institutionShifts = TableRegistry::get('institution_shifts');
+        $shiftOptions = TableRegistry::get('shift_options'); //POCOR-7233 add shift name
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $option = [];
         $optionAll = $institutionShifts->find('all')->select(['stime'=>$institutionShifts->aliasField('start_time'),'          etime'=>$institutionShifts->aliasField('end_time'),
-                      'shift_option_id'=>$institutionShifts->   aliasField('shift_option_id')])
+                      'shift_option_id'=>$institutionShifts->   aliasField('shift_option_id'),
+                      'name'=>$shiftOptions->aliasField('name')
+                    ])
+                    ->leftJoin([$shiftOptions->alias() => $shiftOptions->table()],
+                    [$shiftOptions->aliasField('id = ') . $institutionShifts->aliasField('shift_option_id')])
                     ->where([$institutionShifts->aliasField('location_institution_id')=>$institutionId, $institutionShifts->aliasField('academic_period_id')=>$currentAcademicPeriodIdd])->toArray();
         foreach($optionAll as $key => $result){
-            $option[$result->shift_option_id] = $result->stime. ' - '.$result->etime;
-        }
+            $option[$result->shift_option_id] = $result->name.': '.$result->stime. ' - '.$result->etime;
+        } //POCOR-7233//add name
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'chosenSelect';
             $attr['attr']['multiple'] = false;

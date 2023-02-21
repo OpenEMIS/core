@@ -131,7 +131,11 @@ class SecurityRolesTable extends ControllerActionTable
                 'rule' => 'validateUnique',
                 'provider' => 'table'
             ])
-            ->notEmpty('code');
+            ->add('code', 'ruleUnique', [
+                'rule' => 'validateUnique',
+                'provider' => 'table',
+                'message' => __('Code must be unique')
+            ]); //POCOR-7236 code must ne unique
 
         return $validator;
     }
