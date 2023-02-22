@@ -351,8 +351,8 @@ class StaffAttendancesTable extends ControllerActionTable
 
             ,CASE WHEN DAY(institution_staff_attendances.date) = 31 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_31
         FROM institution_staff_attendances
-        WHERE institution_staff_attendances.academic_period_id = 31
-        AND institution_staff_attendances.institution_id = 6
+        WHERE institution_staff_attendances.academic_period_id = $academicPeriodId
+        AND institution_staff_attendances.institution_id = $institutionId
         GROUP BY institution_staff_attendances.staff_id
             ,institution_staff_attendances.date
     )) subq 
