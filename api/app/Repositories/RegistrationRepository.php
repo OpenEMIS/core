@@ -70,13 +70,12 @@ class RegistrationRepository extends Controller
             
             return $educationGrades;
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('Education Grade List Not Found');
+            return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }
 
@@ -239,10 +238,10 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function autocompleteIdentityNo($id)
+    public function autocompleteIdentityNo($identityTypeId, $identityNumber)
     {
         try {
-            $data = SecurityUsers::select('id as key', 'identity_number as value')->where('identity_number', 'LIKE', '%'.$id.'%')->get()->toArray();
+            $data = SecurityUsers::select('id as key', 'identity_number as value')->where('identity_type_id', $identityTypeId)->where('identity_number', 'LIKE', '%'.$identityNumber.'%')->get()->toArray();
             return $data;
             
         } catch (\Exception $e) {
