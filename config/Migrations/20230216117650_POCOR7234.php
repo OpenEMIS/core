@@ -29,7 +29,7 @@ class POCOR7234 extends AbstractMigration
         foreach($institutionGrades as $value){
             $year = $value->start_year;
             $institutionGradeId = $value->id;
-            $academicPeriodId = $academicPeriod->find()->where(['start_year'=>$year])->first()->id;
+            $academicPeriodId = $academicPeriod->find()->where(['start_year'=>$year,$academicPeriod->aliasField('academic_period_level_id') => 1])->first()->id;
             $this->execute("UPDATE `institution_grades` SET `academic_period_id` = $academicPeriodId WHERE `id`= $institutionGradeId");
 
         }
