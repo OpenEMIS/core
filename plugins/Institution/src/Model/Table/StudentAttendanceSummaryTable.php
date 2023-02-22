@@ -103,8 +103,8 @@ class StudentAttendanceSummaryTable extends AppTable
         $classId = $requestData->institution_class_id;
         $month = $requestData->month;
         $absentDays = TableRegistry::get('Institution. InstitutionStudentAbsences');
-        
-        //echo "<pre>";print_r($requestData).die;
+        $monthoption = ['01'=>"January",'02'=>"February",'03'=>"March",'04'=>"April",'05'=>"May",'06'=>"June",'07'=>"July",'08'=>"August",'09'=>"September",10=>"October",11=>"November",12=>"December"];
+       
         $subQuery = "(SELECT institution_class_students.*
         ,security_users.openemis_no
         ,CONCAT_WS(' ', security_users.first_name, security_users.middle_name, security_users.third_name, security_users.last_name) student_name
@@ -122,14 +122,13 @@ class StudentAttendanceSummaryTable extends AppTable
     AND institution_classes.academic_period_id = institution_class_students.academic_period_id
     INNER JOIN academic_periods
     ON academic_periods.id = institution_class_students.academic_period_id
-    WHERE academic_periods.id = 31
-    AND institutions.id = 6
+    WHERE academic_periods.id = $academicPeriodId
+    AND institutions.id = $institutionId
     AND institution_class_students.student_status_id = 1
     GROUP BY institution_class_students.student_id)";
+    
     $join=[];
     $conditions=[];
-
-
 
     $join['month_data'] = [
     'type' => 'cross',
@@ -149,7 +148,7 @@ class StudentAttendanceSummaryTable extends AppTable
     FROM institution_student_absences
     INNER JOIN academic_periods
     ON academic_periods.id = institution_student_absences.academic_period_id
-    WHERE academic_periods.id = 31
+    WHERE academic_periods.id = $academicPeriodId
     GROUP BY MONTH(institution_student_absences.date))",
     'conditions'=>[ ]
     ]; 
@@ -174,51 +173,40 @@ class StudentAttendanceSummaryTable extends AppTable
     FROM institution_student_absences
     INNER JOIN academic_periods
     ON academic_periods.id = institution_student_absences.academic_period_id
-    WHERE academic_periods.id = 31
-    AND institution_student_absences.institution_id = 6
+    WHERE academic_periods.id = $academicPeriodId
+    AND institution_student_absences.institution_id = $institutionId
     GROUP BY institution_student_absences.student_id,
     month(institution_student_absences.date))",
     'conditions'=>[
-    'absence_data.student_id' => 'students_data.student_id',
-    'absence_data.month_name' => 'month_data.month_name'
+        'absence_data.student_id = students_data.student_id',
+        'absence_data.month_name = month_data.month_name'
     ]
     ]; 
-        
-        $query
-            ->select([
-               
-                'openemis_no' => 'students_data.openemis_no',
-                'student_name' => 'students_data.student_name',
-                'institutions_code' => 'students_data.institutions_code',
-                'institutions_name'=>'students_data.institutions_name',
-                'institution_classes_name' => 'students_data.institution_classes_name',
-             
-                'month' => 'month_data.month_name',
-                'total_attended_days' => "(20 - IFNULL(absence_data.number_of_absences, 0))",
-                'total_absent_days' => "(IFNULL(absence_data.number_of_absences, 0))",
-                'attendance_rate' => "(CONCAT(ROUND((20 - IFNULL(absence_data.number_of_absences, 0)) / 20, 2) * 100, '%'))",
-           
-                ])
-            ->from(['students_data' => $subQuery])
-            
-        
-            ->order([
-                'students_data.institutions_name',
-                'students_data.institution_classes_name',
-                'students_data.openemis_no',
-                'month_data.month_id'
-            ]);
-
-            
-      
-
-
-
-    $query->join($join);
-    echo "<pre>";print_r($query->toArray()).die;
-
-            
-
+ 
+    $query
+        ->select([
+            'openemis_no' => 'students_data.openemis_no',
+            'student_name' => 'students_data.student_name',
+            'institutions_code' => 'students_data.institutions_code',
+            'institutions_name'=>'students_data.institutions_name',
+            'institution_classes_name' => 'students_data.institution_classes_name',
+            'month' => 'month_data.month_name',
+            'total_attended_days' => "(20 - IFNULL(absence_data.number_of_absences, 0))",
+            'total_absent_days' => "(IFNULL(absence_data.number_of_absences, '0 '))",
+            'attendance_rate' => "(CONCAT(ROUND((20 - IFNULL(absence_data.number_of_absences, 0)) / 20, 2) * 100, '%'))",
+            ])
+        ->from(['students_data' => $subQuery])
+        ->where([
+            'month_data.month_name' => $monthoption[$month],
+        ])
+        ->order([
+            'students_data.institutions_name',
+            'students_data.institution_classes_name',
+            'students_data.openemis_no',
+            'month_data.month_id'
+        ]);
+        $query->join($join);
+   
     }
 
     function getBetweenDates($startDate, $endDate)
