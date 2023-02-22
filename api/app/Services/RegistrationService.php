@@ -165,10 +165,10 @@ class RegistrationService extends Controller
     }
 
 
-    public function autocompleteIdentityNo($id)
+    public function autocompleteIdentityNo($identityTypeId, $identityNumber)
     {
         try {
-            $data = $this->registrationRepository->autocompleteIdentityNo($id);
+            $data = $this->registrationRepository->autocompleteIdentityNo($identityTypeId, $identityNumber);
 
             return $data;
             

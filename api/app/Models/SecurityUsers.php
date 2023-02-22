@@ -65,4 +65,9 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     {
         return $this->hasOne(InstitutionStudent::class, 'student_id', 'id');
     }
+
+    public function nationality()
+    {
+        return $this->belongsTo(Nationalities::class, 'nationality_id', 'id');
+    }
 }
