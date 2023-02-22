@@ -55,7 +55,14 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
         ]);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    {
+        //POCOR-7255 start
+        session_start();
+        $option = $entity->shift_id;
+        $_SESSION['shiftOptionId'] = $option;
+        unset($entity->shift_id); 
+        //POCOR-7255 end
         if (!$entity->isNew()) {
             // delete record if user removes the time in and comment
             $time_in = $entity->time_in;
@@ -66,15 +73,16 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
         }
     }
     
-    //POCOR-7225 add institutionId, academicPeriodId in shell command
+    //POCOR-7225 add institutionId, academicPeriodId, shiftOptionId in shell command
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        
-        $this->startUpdateStaffLateAttendance($entity->staff_id, $entity->date->format('Y-m-d'),$entity->institution_id,$entity->academic_period_id, $institutionId, $academicPeriodId);
+     
+        $shiftOptionId = $_SESSION['shiftOptionId']; //POCOR-7255 
+        $this->startUpdateStaffLateAttendance($entity->staff_id, $entity->date->format('Y-m-d'),$entity->institution_id,$entity->academic_period_id, $shiftOptionId);
     }
    
-    public function startUpdateStaffLateAttendance($staffId, $date, $institutionId, $academicPeriodId) {
-        $cmd  = ROOT . DS . 'bin' . DS . 'cake UpdateStaffLateAttendance '.$staffId.' '.$date.' '.$institutionId.' '.$academicPeriodId;
+    public function startUpdateStaffLateAttendance($staffId, $date, $institutionId, $academicPeriodId, $shiftOptionId) {
+        $cmd  = ROOT . DS . 'bin' . DS . 'cake UpdateStaffLateAttendance '.$staffId.' '.$date.' '.$institutionId.' '.$academicPeriodId.' '.$shiftOptionId;
         $logs = ROOT . DS . 'logs' . DS . 'UpdateStaffLateAttendance.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
         //shell_exec($cmd);
