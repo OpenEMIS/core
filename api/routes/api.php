@@ -125,28 +125,13 @@ Route::group(
         Route::get('student-custom-fields', 'RegistrationController@getStudentCustomFields');
         Route::post('otp-generate', 'RegistrationController@generateOtp');
         Route::post('otp-verify', 'RegistrationController@verifyOtp');
-
-    }
-);
-
-
-
-//For PORGI-8 Routes...
-Route::group(
-    ["middleware" => "authkeyvalidate"],
-    function () {
-        
-        
-        
-        
-        
-        
-        
-        Route::get('autocomplete-openemis-no/{id}', 'RegistrationController@autocompleteOpenemisNo');
-        Route::get('autocomplete-identity-number/{id}', 'RegistrationController@autocompleteIdentityNo');
+        Route::get('users/openemis_id/{openemis_id}', 'RegistrationController@autocompleteOpenemisNo');
+        Route::get('users/identity-types/{identity_type_id}/{identity_number}', 'RegistrationController@autocompleteIdentityNo');
         Route::get('details-by-emis/{id}', 'RegistrationController@detailsByEmis');
-        Route::post('institution/students', 'RegistrationController@institutionStudents');
-        
+        Route::post('institutions/{institution_id}/student-admission', 'RegistrationController@institutionStudents');
+
     }
 );
+
+
 
