@@ -60,8 +60,6 @@ class UserGroupsTable extends ControllerActionTable
             'through' => 'Security.SecurityGroupUsers',
             'dependent' => true
         ]);
-        
-
         // $this->setDeleteStrategy('restrict');
     }
 
@@ -93,7 +91,6 @@ class UserGroupsTable extends ControllerActionTable
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
 
-
         $this->field('area_id', ['title' => __('Area Education'), 'source_model' => 'Area.Areas', 'displayCountry' => false,'attr' => ['label' => __('Area Education')]]);
 
         $this->field('institution_id', [
@@ -104,6 +101,26 @@ class UserGroupsTable extends ControllerActionTable
         ]);
     }
 
+    /** Start POCOR 7213 */
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $buttons['edit']['label'] =  '<i class="fa fa-edit"></i> Edit Group';
+        $manageUsersBtn = ['manage_users' => $buttons['view']];
+        $manageUsersBtn['manage_users']['url'] = [
+            'plugin' => 'Security',
+            'controller' => 'Securities',
+            'action' => 'UserGroupsList',
+            'userGroupId' => $entity->id,
+            'index'
+        ];
+        $manageUsersBtn['manage_users']['label'] = '<i class="fa fa-key"></i>' . __('Manage Users');
+        $buttons = array_merge($manageUsersBtn, $buttons);
+        return $buttons;
+    }
+    /** End POCOR 7213 */
+    
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('no_of_users', ['visible' => ['index' => true]]);
@@ -123,9 +140,7 @@ class UserGroupsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $queryParams = $this->request->query;
-
         $query->find('notInInstitutions');
-
         // filter groups by users permission
         if ($this->Auth->user('super_admin') != 1) {
             $userId = $this->Auth->user('id');
@@ -265,7 +280,7 @@ class UserGroupsTable extends ControllerActionTable
                 $AreaDataVal[] =  $AreaResultData;
             }
         }
-        return (!empty($AreaDataVal))? implode(', ', $AreaDataVal): 'All area';
+        return (!empty($AreaDataVal))? implode(', ', $AreaDataVal): '';//POCOR-7254
     }
 
     /*
@@ -293,172 +308,168 @@ class UserGroupsTable extends ControllerActionTable
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
-            if($action == 'add'){
-                $areaId = isset($request->data) ? $request->data['UserGroups']['area_id']['_ids'] : 0;
-                $string_version = implode(',', $areaId);
-                $AreaT = TableRegistry::get('areas');                    
-                //Level-1
-                $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $string_version])->toArray();
-                $childArea =[];
-                $childAreaMain = [];
-                $childArea3 = [];
-                $childArea4 = [];
-                foreach($AreaData as $kkk =>$AreaData11 ){
-                    $childArea[$kkk] = $AreaData11->id;
-                }
-                //level-2
-                foreach($childArea as $kyy =>$AreaDatal2 ){ 
-                    $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
-                    foreach($AreaDatas as $ky =>$AreaDatal22 ){
-                        $childAreaMain[$kyy.$ky] = $AreaDatal22->id;
-                    }
-                }
-                //level-3
-                if(!empty($childAreaMain)){
-                    foreach($childAreaMain as $kyy =>$AreaDatal3 ){ 
-                        $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
-                        foreach($AreaDatass as $ky =>$AreaDatal222 ){
-                            $childArea3[$kyy.$ky] = $AreaDatal222->id;
-                        }
-                    }
-                }
-                
-                //level-4
-                if(!empty($childAreaMain)){
-                    foreach($childArea3 as $kyy =>$AreaDatal4 ){
-                        $AreaDatasss = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal4])->toArray();
-                        foreach($AreaDatasss as $ky =>$AreaDatal44 ){
-                            $childArea4[$kyy.$ky] = $AreaDatal44->id;
-                        }
-                    }
-                }
-                
-                $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
-                array_push($mergeArr,$string_version);
-                $mergeArr = array_unique($mergeArr);
-                $finalIds = implode(',',$mergeArr);
-                $areaId = explode(',',$finalIds);
-          
-            }else  { 
-                $areaId = isset($request->data) ? $request->data['UserGroups']['area_id']['_ids'] : 0;
-                //POCOR-6903: Start
-                $AreaLevelsTable = TableRegistry::get('Area.AreaLevels');
-                $AreaLevelsTableResult = $AreaLevelsTable
-                                ->find('list')
-                                ->toArray();
-                $string_version = implode(',', $areaId);
-                $AreaT = TableRegistry::get('areas');                    
-                //Level-1
-                $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $string_version])->toArray();
-                $childArea =[];
-                $childAreaMain = [];
-                $childArea3 = [];
-                $childArea4 = [];
-                foreach($AreaData as $kkk =>$AreaData11 ){
-                    $childArea[$kkk] = $AreaData11->id;
-                }
-                //level-2
-                foreach($childArea as $kyy =>$AreaDatal2 ){ 
-                    $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
-                    foreach($AreaDatas as $ky =>$AreaDatal22 ){
-                        $childAreaMain[$kyy.$ky] = $AreaDatal22->id;
-                    }
-                }
-                //level-3
-                if(!empty($childAreaMain)){
-                    foreach($childAreaMain as $kyy =>$AreaDatal3 ){ 
-                        $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
-                        foreach($AreaDatass as $ky =>$AreaDatal222 ){
-                            $childArea3[$kyy.$ky] = $AreaDatal222->id;
-                        }
-                    }
-                }
-                
-                //level-4
-                if(!empty($childAreaMain)){
-                    foreach($childArea3 as $kyy =>$AreaDatal4 ){
-                        $AreaDatasss = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal4])->toArray();
-                        foreach($AreaDatasss as $ky =>$AreaDatal44 ){
-                            $childArea4[$kyy.$ky] = $AreaDatal44->id;
-                        }
-                    }
-                }
-                
-                $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
-                array_push($mergeArr,$string_version);
-                $mergeArr = array_unique($mergeArr);
-                $finalIds = implode(',',$mergeArr);
-                $areaId = explode(',',$finalIds);
+        if($action == 'add'){
+            $areaId = isset($request->data) ? $request->data['UserGroups']['area_id']['_ids'] : 0;
+            $string_version = implode(',', $areaId);
+            $AreaT = TableRegistry::get('areas');                    
+            //Level-1
+            $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $string_version])->toArray();
+            $childArea =[];
+            $childAreaMain = [];
+            $childArea3 = [];
+            $childArea4 = [];
+            foreach($AreaData as $kkk =>$AreaData11 ){
+                $childArea[$kkk] = $AreaData11->id;
             }
-            $InstitutionsId = isset($request->data) ? $request->data['UserGroups']['institution_id']['_ids'] : 0;
-            $institutionList = [];
-            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-            $InstitutionStatusesTable = TableRegistry::get('Institution.Statuses');
-            $activeStatus = $InstitutionStatusesTable->getIdByCode('ACTIVE');
-            if(empty($InstitutionsId[1])){
-                if ($areaId[0] == -1 && count($areaId) == 1) {
-                    $flag = 0;
-                }else if($areaId[0] != -1 && count($areaId) >= 1){
-                    $flag = 1;
-                }else{
-                    $flag = 1;
+            //level-2
+            foreach($childArea as $kyy =>$AreaDatal2 ){ 
+                $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
+                foreach($AreaDatas as $ky =>$AreaDatal22 ){
+                    $childAreaMain[$kyy.$ky] = $AreaDatal22->id;
                 }
+            }
+            //level-3
+            if(!empty($childAreaMain)){
+                foreach($childAreaMain as $kyy =>$AreaDatal3 ){ 
+                    $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
+                    foreach($AreaDatass as $ky =>$AreaDatal222 ){
+                        $childArea3[$kyy.$ky] = $AreaDatal222->id;
+                    }
+                }
+            }
+            //level-4
+            if(!empty($childAreaMain)){
+                foreach($childArea3 as $kyy =>$AreaDatal4 ){
+                    $AreaDatasss = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal4])->toArray();
+                    foreach($AreaDatasss as $ky =>$AreaDatal44 ){
+                        $childArea4[$kyy.$ky] = $AreaDatal44->id;
+                    }
+                }
+            }
+            
+            $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
+            array_push($mergeArr,$string_version);
+            $mergeArr = array_unique($mergeArr);
+            $finalIds = implode(',',$mergeArr);
+            $areaId = explode(',',$finalIds);
+        }else  { 
+            $areaId = isset($request->data) ? $request->data['UserGroups']['area_id']['_ids'] : 0;
+            //POCOR-6903: Start
+            $AreaLevelsTable = TableRegistry::get('Area.AreaLevels');
+            $AreaLevelsTableResult = $AreaLevelsTable
+                            ->find('list')
+                            ->toArray();
+            $string_version = implode(',', $areaId);
+            $AreaT = TableRegistry::get('areas');                    
+            //Level-1
+            $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $string_version])->toArray();
+            $childArea =[];
+            $childAreaMain = [];
+            $childArea3 = [];
+            $childArea4 = [];
+            foreach($AreaData as $kkk =>$AreaData11 ){
+                $childArea[$kkk] = $AreaData11->id;
+            }
+            //level-2
+            foreach($childArea as $kyy =>$AreaDatal2 ){ 
+                $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
+                foreach($AreaDatas as $ky =>$AreaDatal22 ){
+                    $childAreaMain[$kyy.$ky] = $AreaDatal22->id;
+                }
+            }
+            //level-3
+            if(!empty($childAreaMain)){
+                foreach($childAreaMain as $kyy =>$AreaDatal3 ){ 
+                    $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
+                    foreach($AreaDatass as $ky =>$AreaDatal222 ){
+                        $childArea3[$kyy.$ky] = $AreaDatal222->id;
+                    }
+                }
+            }
+            
+            //level-4
+            if(!empty($childAreaMain)){
+                foreach($childArea3 as $kyy =>$AreaDatal4 ){
+                    $AreaDatasss = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal4])->toArray();
+                    foreach($AreaDatasss as $ky =>$AreaDatal44 ){
+                        $childArea4[$kyy.$ky] = $AreaDatal44->id;
+                    }
+                }
+            }
+            
+            $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
+            array_push($mergeArr,$string_version);
+            $mergeArr = array_unique($mergeArr);
+            $finalIds = implode(',',$mergeArr);
+            $areaId = explode(',',$finalIds);
+        }
+        $InstitutionsId = isset($request->data) ? $request->data['UserGroups']['institution_id']['_ids'] : 0;
+        $institutionList = [];
+        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $InstitutionStatusesTable = TableRegistry::get('Institution.Statuses');
+        $activeStatus = $InstitutionStatusesTable->getIdByCode('ACTIVE');
+        if(empty($InstitutionsId[1])){
+            if ($areaId[0] == -1 && count($areaId) == 1) {
+                $flag = 0;
+            }else if($areaId[0] != -1 && count($areaId) >= 1){
+                $flag = 1;
             }else{
                 $flag = 1;
             }
-           
-            if($areaId[0] != -1 || count($areaId) > 1){
-                $AreaArray = [];
-                $i=0;
-                foreach ($areaId as $akey => $aval) {
-                    if($aval != -1){
-                        $AreaArray[$i] = $aval;
-                        $i++;
-                    }
+        }else{
+            $flag = 1;
+        }
+       
+        if($areaId[0] != -1 || count($areaId) > 1){
+            $AreaArray = [];
+            $i=0;
+            foreach ($areaId as $akey => $aval) {
+                if($aval != -1){
+                    $AreaArray[$i] = $aval;
+                    $i++;
                 }
-                $conditions = [
-                    $InstitutionsTable->aliasField('area_id IN') => $AreaArray,
-                    $InstitutionsTable->aliasField('institution_status_id') => $activeStatus
-                ];
-            }else{ 
-                $conditions = [$InstitutionsTable->aliasField('institution_status_id') => $activeStatus];
             }
-            if ($areaId > 0) {
-                $institutionQuery = $InstitutionsTable
-                ->find('list', [
-                    'keyField' => 'id',
-                    'valueField' => 'code_name'
-                ])
-                ->where([
-                    $conditions
-                ])
-                ->order([
-                    $InstitutionsTable->aliasField('code') => 'ASC',
-                    $InstitutionsTable->aliasField('name') => 'ASC'
-                ]);
-            } 
-
-            else{
-                $institutionQuery = $InstitutionsTable
-                ->find('list', [
-                    'keyField' => 'id',
-                    'valueField' => 'code_name'
-                ])
-                ->where([
-                    $InstitutionsTable->aliasField('institution_status_id') => $activeStatus
-                ])
-                ->order([
-                    $InstitutionsTable->aliasField('code') => 'ASC',
-                    $InstitutionsTable->aliasField('name') => 'ASC'
-                ]);
-            }
-            $institutionList = $institutionQuery->toArray();
+            $conditions = [
+                //$InstitutionsTable->aliasField('area_id IN') => $AreaArray,//POCOR-7254
+                $InstitutionsTable->aliasField('institution_status_id') => $activeStatus
+            ];
+        }else{ 
+            $conditions = [$InstitutionsTable->aliasField('institution_status_id') => $activeStatus];
+        }
+        if ($areaId > 0) {
+            $institutionQuery = $InstitutionsTable
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'code_name'
+            ])
+            ->where([
+                $conditions
+            ])
+            ->order([
+                $InstitutionsTable->aliasField('code') => 'ASC',
+                $InstitutionsTable->aliasField('name') => 'ASC'
+            ]);
+        }else{
+            $institutionQuery = $InstitutionsTable
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'code_name'
+            ])
+            ->where([
+                $InstitutionsTable->aliasField('institution_status_id') => $activeStatus
+            ])
+            ->order([
+                $InstitutionsTable->aliasField('code') => 'ASC',
+                $InstitutionsTable->aliasField('name') => 'ASC'
+            ]);
+        }
+        $institutionList = $institutionQuery->toArray();
             
         $attr['type'] = 'chosenSelect';
         $attr['onChangeReload'] = true;
         $attr['attr']['multiple'] = true;
         $attr['options'] = $institutionList;
-        $attr['attr']['required'] = true;
+        $attr['attr']['required'] = false;//POCOR-7254
         
         return $attr;
     }
@@ -497,11 +508,8 @@ class UserGroupsTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
     {
         $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-        
-
         $dispatchTable = [];
         $dispatchTable[] = $SecurityGroupInstitutions;
-
         foreach ($dispatchTable as $model) {
             $model->dispatchEvent('Model.SecurityGroupInstitutions.afterSave', [$entity], $this);
         }
@@ -523,8 +531,6 @@ class UserGroupsTable extends ControllerActionTable
         $this->field('institution_id', [
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
         ]);
-       
-     
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -538,36 +544,35 @@ class UserGroupsTable extends ControllerActionTable
         if(!empty($SecurityGroupInstitutionsData)){ //POCOR-7187[END]
             $SecurityGroupId = $this->paramsDecode($this->request->params['pass'][1]);
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-                    return $results->map(function ($row){
-                        $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+                return $results->map(function ($row){
+                    $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
 
-                        $institution = TableRegistry::get('institutions');
-                        $SecurityGroupInstitutionsData = $SecurityGroupInstitutions->find()
-                        // ->contain(['Institutions'])
-                        ->select([
-                            $institution->aliasField('id')
-                        ])
-                        ->leftJoin([$institution->alias() => $institution->table()],[
-                            $SecurityGroupInstitutions->aliasField('institution_id = ').$institution->aliasField('id')
-                        ])
-                        ->where([$SecurityGroupInstitutions->aliasField('security_group_id')=>$row->id])
-                        ->toArray();
+                    $institution = TableRegistry::get('institutions');
+                    $SecurityGroupInstitutionsData = $SecurityGroupInstitutions->find()
+                    // ->contain(['Institutions'])
+                    ->select([
+                        $institution->aliasField('id')
+                    ])
+                    ->leftJoin([$institution->alias() => $institution->table()],[
+                        $SecurityGroupInstitutions->aliasField('institution_id = ').$institution->aliasField('id')
+                    ])
+                    ->where([$SecurityGroupInstitutions->aliasField('security_group_id')=>$row->id])
+                    ->toArray();
 
+                    if(!empty($SecurityGroupInstitutionsData)){
+                        foreach($SecurityGroupInstitutionsData AS $institutionData){
+                            $institutionArr[] = $institutionData->institutions['id'];
+                        }
 
-                        if(!empty($SecurityGroupInstitutionsData)){
-                            foreach($SecurityGroupInstitutionsData AS $institutionData){
-                                $institutionArr[] = $institutionData->institutions['id'];
-                            }
+                        $Institutions = TableRegistry::get('Institution.Institutions');
+                        $InstitutionsResult = $Institutions
+                            ->find()
+                            ->where(['id IN' => $institutionArr])
+                            ->all();
 
-                            $Institutions = TableRegistry::get('Institution.Institutions');
-                            $InstitutionsResult = $Institutions
-                                ->find()
-                                ->where(['id IN' => $institutionArr])
-                                ->all();
-
-                            foreach($InstitutionsResult AS $InstitutionsResultData){
-                                $InstitutionsData[] =  $InstitutionsResultData;
-                            }
+                        foreach($InstitutionsResult AS $InstitutionsResultData){
+                            $InstitutionsData[] =  $InstitutionsResultData;
+                        }
                         $row['institution_id'] = $InstitutionsData;
                         
                         $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
@@ -583,27 +588,24 @@ class UserGroupsTable extends ControllerActionTable
                         ->where([$SecurityGroupAreas->aliasField('security_group_id')=>$row->id])
                         ->toArray();
                         if ($SecurityGroupAreasData) {
-                        foreach($SecurityGroupAreasData AS $AreaData){
-                                    $areaArr[] = $AreaData->areas['id'];
-                                }
-                        $Areas = TableRegistry::get('Area.Areas');
+                            foreach($SecurityGroupAreasData AS $AreaData){
+                                $areaArr[] = $AreaData->areas['id'];
+                            }
+                            $Areas = TableRegistry::get('Area.Areas');
+                            $AreasResult = $Areas
+                                        ->find()
+                                        ->where(['id IN' => $areaArr])
+                                        ->all();
 
-                        $AreasResult = $Areas
-                                    ->find()
-                                    ->where(['id IN' => $areaArr])
-                                    ->all();
-
-                        foreach($AreasResult AS $AreaResultData){
-                                    $AreaDataVal[] =  $AreaResultData;
-                                }
-
-                                $row['area_id'] = $AreaDataVal;
+                            foreach($AreasResult AS $AreaResultData){
+                                $AreaDataVal[] =  $AreaResultData;
+                            }
+                            $row['area_id'] = $AreaDataVal;
                         }
                         return $row ;
                     }
-
-                    });
-                });  
+                });
+            });  
         }  
     }
 
@@ -643,6 +645,5 @@ class UserGroupsTable extends ControllerActionTable
                 $SecurityGroupAreas->save($securityArea);
             }
         }
-        
     }
 }

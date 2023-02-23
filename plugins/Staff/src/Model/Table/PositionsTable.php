@@ -183,6 +183,7 @@ class PositionsTable extends ControllerActionTable {
         $this->fields['end_year']['visible'] = false;
         $this->fields['FTE']['visible'] = false;
         $this->fields['security_group_user_id']['visible'] = false;
+        $this->fields['is_homeroom']['visible'] = false; //POCOR-5070
         $this->field('shift', ['after' => 'institution_position_id']);
 
         $this->setFieldOrder([

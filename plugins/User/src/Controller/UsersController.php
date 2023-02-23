@@ -160,6 +160,7 @@ class UsersController extends AppController
                 ->first();
 
             if (!is_null($userEntity) && !is_null($userEntity->email)) {
+
                 $userId = $userEntity->id;
                 $now = new DateTime();
                 $expiry = (new DateTime())->modify('+ 1hour');
@@ -199,14 +200,12 @@ class UsersController extends AppController
                     
                     $userEmail = $userEntity->email;
                     $name = $userEntity->name;
-                    $userId = $userEntity->id;
                     $url = Router::url([
                         'plugin' => 'User',
                         'controller' => 'Users',
                         'action' => 'resetPassword',
                         'token' => $checksum
                     ], true);
-                    $setdata =  $this->updateUserPassword($userId); //POCOR-7159 
 
                     /*POCOR-5284 Starts*/
                     $Themes = TableRegistry::get('Theme.Themes');
@@ -218,6 +217,7 @@ class UsersController extends AppController
                     } else {
                         $emailSubject = $getData->default_value;
                     }
+
                    /*POCOR-5284 Ends*/
                     $email = new Email('openemis');
                     $emailSubject = $emailSubject. '- Password Reset Request';
@@ -272,9 +272,10 @@ class UsersController extends AppController
                     $userEmail = $userEntity->email;
                     $username = $userEntity->username;
                     $name = $userEntity->name;
-                    $updateUserName = $this->updateUserName($userEmail, $username ,$userId); //POCOR-7159
+                    
 
                     try {
+                        $updateUserName = $this->updateUserName($username ,$userId); //POCOR-7159
                         /*
                         Subject: OpenEMIS - Username Recovery Request
                         Message Body: 
@@ -333,12 +334,13 @@ class UsersController extends AppController
                         ->find()
                         ->where([$Passwords->aliasField('id') => $userId])
                         ->first();
-
+                    
                     $requestData = $this->request->data;
                     $Passwords->patchEntity($userEntity, $requestData);
                     $errors = $userEntity->errors();
                     if (empty($errors)) {
                         if ($Passwords->save($userEntity)) {
+                            $setdata =  $this->updateUserPassword($userId); //POCOR-7159 
                             $SecurityUserPasswordRequests->delete($passwordRequestEntity);
                             $message = __('Your password has been reset successfully.');
                             $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
@@ -753,7 +755,7 @@ class UsersController extends AppController
                     'field_type' => 'string',
                     'old_value' => '',
                     'new_value' => '',
-                    'operation' => 'resetPassword',
+                    'operation' => 'resetPass',
                     'security_user_id' => $userId,
                     'created_user_id' => $userId,
                     'created' => $currentTimeZone,
@@ -767,7 +769,7 @@ class UsersController extends AppController
      * POCOR-7159
      * add data in user_activities table while updating password
     */
-    public function updateUserName($userEmail, $username ,$userId) 
+    public function updateUserName($username ,$userId) 
     {
         $userActivities = TableRegistry::get('user_activities');
         $currentTimeZone = date("Y-m-d H:i:s");
@@ -777,8 +779,8 @@ class UsersController extends AppController
                     'field' => 'username',
                     'field_type' => 'string',
                     'old_value' => $username,
-                    'new_value' => $userEmail,
-                    'operation' => 'resetUserName',
+                    'new_value' => $username,
+                    'operation' => 'resetName',
                     'security_user_id' => $userId,
                     'created_user_id' => $userId,
                     'created' => $currentTimeZone,

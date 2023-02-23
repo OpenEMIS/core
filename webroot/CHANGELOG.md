@@ -1,3 +1,66 @@
+### [3.78.0] - 2023-02-21
+- Implemented: Enhance the usability of the Admin > Security > Groups
+- Bug Fixed: Institutions > Staff > Change of Start Date : Upon submission, system adds an End Date to staff position
+- Bug Fixed: Institution > Survey > Forms: User is getting 404 error when setting the academic period
+- Bug Fixed: Institution > Performance > Assessments > Export: Getting 404 error
+- Bug Fixed: Institutions>Appointment>Positions>Add: Shift field does not show the shift name
+- Bug Fixed: Administration>Security>Roles>Add: Adds a validation if the security_roles.code exists
+- Bug Fixed: Personal > Staff > Career > Leave page: Users are unable to add or submit their leave requests even when permission is given
+- Bug Fixed: Administrations > Security > User Groups : Issue with assigning User groups to users
+- Bug Fixed: Administration > System Setup > Administrative Boundaries > Area Levels: The dropdown list in is in alphabetical order
+- Bug Fixed: Institutions>Staff>Staff1>Position: When approving end of assignment, user is getting 404 error
+
+### [3.77.11] - 2023-02-13
+- Implemented: Develop APIs for TDSM
+- Bug Fixed: Institutions>Staff>Add: Homeroom teacher role is not added when teacher is adding
+- Bug Fixed: Institutions>Appointment>Positions: Shift field should show according to the Institution shift level
+- Bug Fixed: Institutions > Attendance > Students: The user should be able to change the status of attendance
+- Bug Fixed: Report>Institution/Staff: Report are stuck in progress
+
+### [3.77.10] - 2023-02-08
+- Implemented: Develop a migration script to create a summary table for student marks grouped by student and subject
+- Implemented: Move homeroom teacher from add position page to add staff page
+- Bug Fixed: Institution > Performance > Assessments: The assessment marks for the student in the report and the assessment page are not the same
+- Bug Fixed: Institutions > Students > Undo: Changes to Behaviour for WIthdraw and Transfer
+- Bug Fixed: Institutions>Students>Withdraw: Message should show "Student is already enrolled"
+- Bug Fixed: Administration > Security > Roles > System Group > Add page: 404 error was shown when trying to add a new security role
+- Bug Fixed: Institutions>Attendance>Student: Students are not appearing
+- Bug Fixed: Institutions:Unable to delete institutions
+- Bug Fixed: Institutions>Performance>Report Cards: Students from a different grade are showing even though they are of a different grade
+
+### [3.77.9] - 2023-02-01
+- Implemented: 2.06 Reports > Staff > Monthly Report (Haaziree Report)
+- Implemented: Develop new reports : Reports > Surveys > Tables and Reports > Surveys > Tables
+- Implemented: Institutions>Performance>Report Cards: Past teacher is still showing in the report card
+- Implemented: Develop a migration script to create a summary table for student marks per grade and subject for all area levels
+- Bug Fixed: Institutions>Infrastructure>Overview: End date should show when status is end of usage
+- Bug Fixed: Institutions > Performances > Assessments > Archive Page: No data is showing
+- Bug Fixed: Institutions>Students>Withdraw: Student is having double enrolled status
+- Bug Fixed: Directory> Students/Staff > Nationalities: Unable to delete nationalities and user
+- Bug Fixed: Reports > Institutions > Positions: The column "title" in the report is not showing the full naming of the position
+- Bug Fixed: Administration > System Setup > Field Options > Student Behaviour: A 404 error was shown when deleting categories
+- Bug Fixed: Institutions>Students>Add: Subjects are showing even when auto allocation is set to no
+- Bug Fixed: Institutions>Performance>Report Cards: 404 error when generating report card
+- Bug Fixed: Report>Institution: UIS should not be inside
+
+### [3.77.8] - 2023-01-26
+- Implemented: Create swagger API v4 documentation
+- Bug Fixed: Institutions > Students > Academic > Assessments tab: Some changes to Assessment tab
+- Bug Fixed: Report: Report format filter should be listed below all other filters
+- Bug Fixed: Directory > Students > Academic > Report Cards> View: View details showing wrong details
+- Bug Fixed: Administration > Security > Groups > User Groups > List page: The list page header does not show the user group naming
+- Bug Fixed: Institutions>Students/Staff: User should be able to search for students and staffs in Internal Search
+
+### [3.77.7] - 2023-01-20
+- Bug Fixed: Institution > Staff > Timetables: User is having issue with staffs not being able to view their timetable under Institution > Staff > Timetables
+- Bug Fixed: Institutions>Performance>Assessments: Student that is transferred from School A to School B back to School A is not appearing for one of the subjects that it has marks on
+- Bug Fixed: Administration>System Setup>Configurations>Coordinates: Length validation issue
+- Bug Fixed: Institutions > Statistics > Standard Report : Marks Entered by Staff: Report is showing wrong data
+- Bug Fixed: Institutions>Students>Add: Students that are added are not added to the student user group
+- Bug Fixed: Institutions>Attendance>Shift: Slowness when loading
+- Bug Fixed: Personal/Institutions/Directory > Accounts : System should Insert into user_activities table when there is an update on the username and password fields
+- Bug Fixed: Institutions > Add Page : System throws error message when creating an institution
+
 ### [3.77.6] - 2023-01-17
 - Bug Fixed: Institutions > Performance > Student Report Cards: Report card are still showing
 - Bug Fixed: Institution > Attendance > Staff page: All users are not showing in the Institution > Attendance > Staff page list even though there are shifts assigned to them.
