@@ -62,6 +62,13 @@ class InstitutionPositionsTable extends AppTable
                                      ->where(['visible' => 1,'editable' => 1,'default' => 1])
                                      ->first();
         //End POCOR-6887
+        // Start POCOR-7203
+        $identity_id = 0;
+        if(!empty($birth_certificate_code_id)){
+            $identity_id = $birth_certificate_code_id->id;
+        }
+        // END POCOR-7203
+
         $requestData = json_decode($settings['process']['params']);
         $positionFilter = $requestData->position_filter;
         $teachingFilter = $requestData->teaching_filter;
@@ -193,7 +200,7 @@ class InstitutionPositionsTable extends AppTable
             $query->join($join)
             ->leftJoin([$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()], [
                     $UserIdentitiesTable->aliasField('security_user_id = ') . ' SecurityUsersStaff.id',
-                    $UserIdentitiesTable->aliasField('identity_type_id') . " = $birth_certificate_code_id->id",  //POCOR-6887
+                    $UserIdentitiesTable->aliasField('identity_type_id') . " = $identity_id",  // POCOR-7203  //POCOR-6887
                 ])
             ->leftJoin(
                 [$identity_types->alias() => $identity_types->table()],
