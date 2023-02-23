@@ -59,7 +59,44 @@ class AuditsTable extends AppTable
         $this->ControllerAction->field('report_end_date', ['type' => 'hidden']);
         $this->ControllerAction->field('sort_by', ['type' => 'hidden']);
     }
-
+    //POCOR-6637::START
+    public function addAfterAction(Event $event, Entity $entity)
+    {
+        if ($entity->has('feature')) {
+            $feature = $entity->feature;
+            $fieldsOrder = ['feature'];
+            switch ($feature) { 
+                case 'Report.AuditLogins':
+                    $fieldsOrder[] = 'report_start_date';
+                    $fieldsOrder[] = 'report_end_date';
+                    $fieldsOrder[] = 'sort_by';
+                    $fieldsOrder[] = 'format';
+                    break;
+                case 'Report.AuditInstitutions':
+                    $fieldsOrder[] = 'report_start_date';
+                    $fieldsOrder[] = 'report_end_date';
+                    $fieldsOrder[] = 'format';
+                    break;
+                case 'Report.AuditUsers': 
+                    $fieldsOrder[] = 'user_type';
+                    $fieldsOrder[] = 'report_start_date';
+                    $fieldsOrder[] = 'report_end_date';
+                    $fieldsOrder[] = 'format';
+                    break;
+                default:
+                    break;
+            }
+            $this->ControllerAction->setFieldOrder($fieldsOrder);
+        }else{
+            $fieldsOrder = ['feature'];
+            $fieldsOrder[] = 'report_start_date';
+            $fieldsOrder[] = 'report_end_date';
+            $fieldsOrder[] = 'sort_by';
+            $fieldsOrder[] = 'format';
+            $this->ControllerAction->setFieldOrder($fieldsOrder);
+        }
+    }
+    //POCOR-6637::END
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
         $this->checkForDateFields($requestData);

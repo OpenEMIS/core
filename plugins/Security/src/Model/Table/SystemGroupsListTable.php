@@ -37,7 +37,7 @@ class SystemGroupsListTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles', 'foreignKey' => 'security_role_id']);
 
-        $this->toggle('search', false);
+        $this->toggle('search', true);
         $this->toggle('add', false);
         $this->toggle('view', false);
         $this->toggle('edit', false);
@@ -93,6 +93,17 @@ class SystemGroupsListTable extends ControllerActionTable
         ->where([$this->aliasField('security_group_id')=>$userGroupId])
         ->order([$this->aliasField('created DESC')]);
 
+        //POCOR-7175 start
+        $queryParams = $this->request->query;
+        $search = $this->getSearchKey();
+
+        // CUSTOM SEACH - 
+        $extra['auto_search'] = false; // it will append an AND
+        if (!empty($search)) {
+            $query->find('byUserNameRole', ['search' => $search]);
+        }
+        //POCOR-7175 end
+
     }
 
 
@@ -106,6 +117,40 @@ class SystemGroupsListTable extends ControllerActionTable
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $userGroupId = $this->request->query['userGroupId'];    
         $entity->security_group_id = $userGroupId;
+    }
+
+    //POCOR-7175
+    public function findByUserNameRole(Query $query, array $options)
+    {
+        if (array_key_exists('search', $options)) {
+            $search = $options['search'];
+            $query
+            ->join([
+                [
+                    'table' => 'security_users', 'alias' => 'Users', 'type' => 'LEFT',
+                    'conditions' => ['security_users.id = ' . $this->aliasField('security_user_id')]
+                ],
+                [
+                    'table' => 'security_roles', 'alias' => 'SecurityRoles', 'type' => 'LEFT',
+                    'conditions' => [
+                        'security_roles.id = ' . $this->aliasField('security_role_id')]
+                ],
+                
+            ])
+            ->where([
+                    'OR' => [
+                        ['Users.openemis_no LIKE' => '%' . $search . '%'],
+                        ['Users.first_name LIKE' => '%' . $search . '%'],
+                        ['Users.last_name LIKE' => '%' . $search . '%'],
+                        ['Users.middle_name LIKE' => '%' . $search . '%'],
+                        ['Users.third_name LIKE' => '%' . $search . '%'],
+                        ['SecurityRoles.name LIKE' => '%' . $search . '%']
+                    ]
+                ]
+            );
+        }
+
+        return $query;
     }
     
 }

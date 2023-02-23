@@ -93,7 +93,7 @@ class StaffPositionsTable extends AppTable
                 'workflow_steps_name' => 'Statuses.name',
                 'position_no' => $this->aliasField('position_no'),
                 'staff_position_grade_name' => 'StaffPositionGrades.name',
-                'is_homeroom' => $this->aliasField('is_homeroom'),
+                'is_homeroom' => $InstitutionStaff->aliasField('is_homeroom'),//POCOR-7229
                 'openemis_no' => $Staff->aliasField('openemis_no'),
                 'first_name' => $Staff->aliasField('first_name'),
                 'last_name' => $Staff->aliasField('last_name'),
@@ -267,7 +267,7 @@ class StaffPositionsTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionPositions.is_homeroom',
+            'key' => 'is_homeroom',
             'field' => 'is_homeroom',
             'type' => 'string',
             'label' => __('Homeroom Teacher')

@@ -171,6 +171,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             nationality_id: StaffController.selectedStaffData.nationality_id,
             nationality_name: StaffController.selectedStaffData.nationality_name,
             username: StaffController.selectedStaffData.username,
+            is_homeroom: StaffController.selectedStaffData.is_homeroom, //POCOR-5070
             password: StaffController.isInternalSearchSelected ? '' : StaffController.selectedStaffData.password,
             postal_code: StaffController.selectedStaffData.postalCode,
             address: StaffController.selectedStaffData.address,

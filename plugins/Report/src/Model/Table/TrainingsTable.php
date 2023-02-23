@@ -211,6 +211,33 @@ class TrainingsTable extends AppTable
             return $attr;
         }
     }
+    //POCOR-6637::START
+    public function addAfterAction(Event $event, Entity $entity)
+    {
+        if ($entity->has('feature')) {
+            $feature = $entity->feature;
+
+            $fieldsOrder = ['feature'];
+            switch ($feature) { 
+                case 'Report.ReportTrainingNeedStatistics': 
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'institution_status';
+                    $fieldsOrder[] = 'format';
+                case 'Report.TrainersSessions': 
+                    $fieldsOrder[] = 'training_course_id';
+                    $fieldsOrder[] = 'start_date';
+                    $fieldsOrder[] = 'end_date';
+                    $fieldsOrder[] = 'trainer_name';
+                    $fieldsOrder[] = 'format';
+                    break;
+                default:
+                    break;
+            }
+
+            $this->ControllerAction->setFieldOrder($fieldsOrder);
+        }
+    }
+    //POCOR-6637::END
 
     public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
     {

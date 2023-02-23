@@ -33,6 +33,7 @@ class StaffProfileBehavior extends Behavior
                 $query->contain(['AcademicPeriods'])
                     ->where([
                         $model->aliasField('staff_id') => $staffId,
+                        $model->aliasField('is_homeroom') => 1, //POCOR-5070
                         $model->aliasField('institution_id') => $institutionId,
                         'AcademicPeriods.start_date <= ' => $newStartDate
                     ])
