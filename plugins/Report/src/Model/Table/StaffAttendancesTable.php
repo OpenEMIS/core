@@ -69,6 +69,7 @@ class StaffAttendancesTable extends ControllerActionTable
     /**
      *  POCOR-5181
      * staff attendance sheet formate change in POCOR-5181
+     *  add start date end date in where condition . POCOR-7259
     **/  
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
@@ -81,6 +82,8 @@ class StaffAttendancesTable extends ControllerActionTable
         $end_report_Date = $requestData->report_end_date;
         $startDates = date("Y-m-d", strtotime($start_report_Date));
         $endDates = date("Y-m-d", strtotime($end_report_Date));
+        $startMonth = date('m',strtotime($startDates));
+        $endMonth = date('m',strtotime($endDates));
         $conditions = [];
         $join = [];
         $where = [];
@@ -98,7 +101,7 @@ class StaffAttendancesTable extends ControllerActionTable
             $year  = $val['name'];
         }
         if (!empty($institutionId) && $institutionId != 0) {
-            $conditions[$this->aliasField('institution_id')]=$institutionId;
+            $conditions['institutions.id'] = $institutionId;
         }
 
         /*if ($areaId != -1 && !empty($areaId)) {
@@ -106,10 +109,7 @@ class StaffAttendancesTable extends ControllerActionTable
         }*/
 
         if(!empty($academicPeriodId)){
-           $where['institution_staff_attendances.academic_period_id'] = $academicPeriodId;
-        }
-        if (!empty($institutionId) && $institutionId != 0) {
-            $where['institution_staff_attendances.institution_id'] = $institutionId;
+           $conditions['academic_periods.id'] = $academicPeriodId;
         }
         
         $query
@@ -272,6 +272,7 @@ class StaffAttendancesTable extends ControllerActionTable
         WHERE academic_periods.id = $academicPeriodId
     ) d2
     WHERE m1 <= d2.end_date
+    AND MONTH(m1) BETWEEN $startMonth AND $endMonth
     ORDER BY m1
  )",
  'conditions' => ['month_generator.academic_period_id = academic_periods.id'],
@@ -353,6 +354,7 @@ class StaffAttendancesTable extends ControllerActionTable
         FROM institution_staff_attendances
         WHERE institution_staff_attendances.academic_period_id = $academicPeriodId
         AND institution_staff_attendances.institution_id = $institutionId
+        AND institution_staff_attendances.date BETWEEN "."'$startDates'"." AND "."'$endDates'"."
         GROUP BY institution_staff_attendances.staff_id
             ,institution_staff_attendances.date
     )) subq 
