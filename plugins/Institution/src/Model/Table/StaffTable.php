@@ -567,6 +567,8 @@ class StaffTable extends ControllerActionTable
         $this->fields['staff_id']['type'] = 'integer';
         $this->fields['start_date']['type'] = 'date';
         $this->fields['institution_position_id']['order'] = 6;
+        $this->fields['staff_position_grade_id']['visible'] = false;//PCOOR-7238
+        $this->fields['is_homeroom']['visible'] = false;//PCOOR-7238
         $this->fields['FTE']['visible'] = false;
 
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
