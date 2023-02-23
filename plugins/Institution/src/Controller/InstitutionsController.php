@@ -5050,7 +5050,7 @@ class InstitutionsController extends AppController
                     'requested_date' => null,
                     'student_id' => $studentId,
                     'status_id' => $workflowResults->workflowSteps_id,
-                    'assignee_id' => 0,
+                    'assignee_id' => $this->Auth->user('id'), //POCOR-7080
                     'institution_id' => $institutionId,
                     'academic_period_id' => $academicPeriodId,
                     'education_grade_id' => $educationGradeId,
@@ -5251,7 +5251,7 @@ class InstitutionsController extends AppController
                             'end_date' => $endDate,
                             'student_id' => $user_record_id,
                             'status_id' => $workflowResults->workflowSteps_id, 
-                            'assignee_id' => 0,
+                            'assignee_id' => $this->Auth->user('id'), //POCOR7080
                             'institution_id' => $institutionId,
                             'academic_period_id' => $academicPeriodId,
                             'education_grade_id' => $educationGradeId,
@@ -5968,7 +5968,7 @@ class InstitutionsController extends AppController
                     'new_institution_id' => $institutionId,
                     'previous_institution_id' => $previousInstitutionId,
                     'status_id' => $workflowResults->workflowSteps_id,
-                    'assignee_id' => 0,
+                    'assignee_id' => $this->Auth->user('id'), //POCOR-7080
                     'new_institution_position_id' => $institutionPositionId,
                     'new_staff_type_id' => $staffTypeId,
                     'new_FTE' => $fte,

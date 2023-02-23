@@ -170,7 +170,7 @@ class WorkflowsController extends AppController
             Log::write('debug', 'Auto Assign Assignee');
 
             $defaultKey = '';
-            $options = ['-1' => __('Auto Assign')];
+            $options = [$this->Auth->user('id') => __('Auto Assign')]; //POCOR-7080
         }
 
         $responseData = [
