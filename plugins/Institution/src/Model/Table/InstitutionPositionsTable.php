@@ -499,9 +499,6 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->fields['staff_position_title_id']['sort'] = ['field' => 'StaffPositionTitles.order'];
         //$this->fields['staff_position_grade_id']['sort'] = ['field' => 'StaffPositionGrades.order'];//PCOOR-5069
         $this->fields['assignee_id']['sort'] = ['field' => 'Assignees.first_name'];
-        $this->fields['is_homeroom']['visible'] = true;//PCOOR-5069
-        $this->field('is_homeroom', ['visible' => true, 'attr' => ['label' => __('is_homeroom')]]);//PCOOR-5069
-
         $this->setFieldOrder([
             'position_no', 'staff_position_title_id',
             //'staff_position_grade_id'//PCOOR-5069
