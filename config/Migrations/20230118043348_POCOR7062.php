@@ -1,5 +1,6 @@
 <?php
 use Migrations\AbstractMigration;
+use Cake\Datasource\ConnectionManager;
 
 class POCOR7062 extends AbstractMigration
 {
@@ -20,18 +21,37 @@ class POCOR7062 extends AbstractMigration
         $this->execute('INSERT INTO `zz_7062_user_special_needs_diagnostics` SELECT * FROM `user_special_needs_diagnostics`');
 
         //Drop foreign key
-        $this->execute('SET FOREIGN_KEY_CHECKS=0;');
-        $this->execute('ALTER TABLE user_special_needs_diagnostics DROP FOREIGN KEY IF EXISTS special_needs_diagnostics_degree_id;');
-        
 
+        $connection = ConnectionManager::get('default');
+
+        $dbConfig = $connection->config();
+        $dbname = $dbConfig['database']; 
+
+        $dataBaseName = "'".$dbname."'";
+
+        $query = "SELECT i.TABLE_NAME, i.CONSTRAINT_TYPE, i.CONSTRAINT_NAME, k.REFERENCED_TABLE_NAME, k.REFERENCED_COLUMN_NAME 
+        FROM information_schema.TABLE_CONSTRAINTS i 
+        LEFT JOIN information_schema.KEY_COLUMN_USAGE k ON i.CONSTRAINT_NAME = k.CONSTRAINT_NAME 
+        WHERE i.CONSTRAINT_TYPE = 'FOREIGN KEY' 
+        AND i.TABLE_SCHEMA = DATABASE()
+        AND i.TABLE_NAME = 'user_special_needs_diagnostics'";
+
+        $statement = $connection->prepare($query);
+
+        $statement->execute();
+
+        $results = $statement->fetchAll();
+
+        $statement->closeCursor();
+
+        if(!empty($results)){
+            foreach($results AS $fk){
+                $this->execute("ALTER TABLE user_special_needs_diagnostics DROP FOREIGN KEY  $fk[2]");
+            }
+        }
         //Add foreign key
         $this->execute('ALTER TABLE `user_special_needs_diagnostics` ADD FOREIGN KEY (`special_needs_diagnostics_degree_id`) REFERENCES `special_needs_diagnostics_degree`(`id`) ON DELETE RESTRICT ON UPDATE RESTRICT');
 
-        //Drop foreign key
-        $this->execute('ALTER TABLE user_special_needs_diagnostics DROP FOREIGN KEY IF EXISTS special_needs_diagnostics_type_id');
-
-        //Add foreign key
-        $this->execute('ALTER TABLE `user_special_needs_diagnostics` ADD FOREIGN KEY (`special_needs_diagnostics_type_id`) REFERENCES `special_needs_diagnostics_types`(`id`) ON DELETE RESTRICT ON UPDATE RESTRICT');
         $this->execute('SET SESSION FOREIGN_KEY_CHECKS=1;');
     }
 
