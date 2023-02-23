@@ -12,12 +12,13 @@ use Cake\ORM\TableRegistry;
 class StaffSubjectsTable extends AppTable  {
 	public function initialize(array $config) {
 		$this->table('institution_subject_staff');
+
 		parent::initialize($config);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		//$this->belongsTo('Institution.EducationGrades', ['className' => 'Institution.EducationGrades']);
-		
+
 		$this->addBehavior('Excel',[
             'excludes' => [],
             'pages' => ['index'],
@@ -25,206 +26,254 @@ class StaffSubjectsTable extends AppTable  {
 		$this->addBehavior('Report.ReportList');
 	}
 
-	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
-		$requestData = json_decode($settings['process']['params']);
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $requestData = json_decode($settings['process']['params']);
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
-        //Start:POCOR-6779
         $indSubjectId = $requestData->education_subject_id;
         $education_grade_id = $requestData->education_grade_id;
-        //End:POCOR-6779
+        $regionId = null;
+        $countryId = null;
 
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $periodEntity = $AcademicPeriods->get($academicPeriodId);
-        $startDate = $periodEntity->start_date->format('Y-m-d');
-        $endDate = $periodEntity->end_date->format('Y-m-d');
-        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
-        $Staff = TableRegistry::get('Security.Users');
-        $Genders = TableRegistry::get('User.Genders');
-        $MainNationalities = TableRegistry::get('FieldOption.Nationalities');
-        $InstitutionSubjj = TableRegistry::get('institution_subjects'); //POCOR-6779
-        //Start:POCOR-6779
-        if(!empty($academicPeriodId) && !empty($institutionId) && !empty($education_grade_id) && !empty($indSubjectId)){
-            $institutionStaffaa = $InstitutionSubjj->find()->where(['institution_id'=>$institutionId,'education_grade_id'=>$education_grade_id,'education_subject_id'=>$indSubjectId,'academic_period_id'=>$academicPeriodId])->first();
-        }else if(!empty($academicPeriodId) && !empty($education_grade_id) && !empty($indSubjectId)){
-            $institutionStaffaa = $InstitutionSubjj->find()->where(['education_grade_id'=>$education_grade_id,'education_subject_id'=>$indSubjectId,'academic_period_id'=>$academicPeriodId])->first();
-        }else if(!empty($academicPeriodId) && !empty($indSubjectId)){
-            $institutionStaffaa = $InstitutionSubjj->find()->where(['education_subject_id'=>$indSubjectId,'academic_period_id'=>$academicPeriodId])->first();
-        }
-        $ins_SubId = $institutionStaffaa->id;
-        //End:POCOR-6779
-        $conditions = [];
-        if (!empty($academicPeriodId)) {
-            if($this->aliasField('end_date') == null){
-                $conditions = [
-                    $this->aliasField('start_date') . ' >=' => $startDate,
-                    $this->aliasField('end_date') . ' <=' => $endDate
-                ];
-            }else{
-                $conditions = [
-                    $this->aliasField('start_date') . ' >=' => $startDate,
-                    $this->aliasField('start_date') . ' <=' => $endDate
-                ];
-            }
-            
-        }
-        //Start:POCOR-6779
-        if(!empty($indSubjectId)){
-            $conditions['institution_subject_id'] = $ins_SubId; 
-        }
-        //End:POCOR-6779
-        if (!empty($institutionId) && $institutionId > 0) {
-            $conditions['Institutions.id'] = $institutionId; 
-        }
-        if (!empty($areaId) && $areaId != -1) {
-            $conditions['Institutions.area_id'] = $areaId; 
-        }
-        $query
+        $academicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
+        $staff = TableRegistry::get('Security.Users');
+        $staffStatuses = TableRegistry::get('staff_statuses');
+        $staffQualifications = TableRegistry::get('staff_qualifications');
+        $qualificationTitles = TableRegistry::get('qualification_titles');
+        $qualificationLevels = TableRegistry::get('qualification_levels');
+        $staffQualificationsSpecialisations = TableRegistry::get('staff_qualifications_specialisations');
+        $qualificationSpecialisations = TableRegistry::get('qualification_specialisations');
+        $institutionPositions = TableRegistry::get('institution_positions');
+        $staffPositionTitles = TableRegistry::get('staff_position_titles');
+        $genders = TableRegistry::get('User.Genders');
+        $mainNationalities = TableRegistry::get('FieldOption.Nationalities');
+        $institutionSub = TableRegistry::get('institution_subjects');
+        $userIdentities = TableRegistry::get('user_identities');
+        $identityTypes = TableRegistry::get('identity_types');
+        $userNationalities = TableRegistry::get('user_nationalities');
+        $nationalities = TableRegistry::get('nationalities');
+        $securityUsers = TableRegistry::get('security_users');
+        $institutionClassSubjects = TableRegistry::get('institution_class_subjects');
+        $institutionClasses = TableRegistry::get('institution_classes');
+        $educationGrades = TableRegistry::get('education_grades');
+        $institutions = TableRegistry::get('institutions');
+        $areas = TableRegistry::get('areas');
+
+        // get all institution staff id
+        $institutionStaffTbl = $institutionStaff->find()
+            ->select(['staff_id' => $institutionStaff->aliasField('staff_id')])
+            ->innerJoin(['academic_periods' => $academicPeriods->table()], [
+                '((('. $institutionStaff->aliasField('end_date') .' IS NOT NULL AND '. $institutionStaff->aliasField('start_date') .' <= academic_periods.start_date AND '. $institutionStaff->aliasField('end_date') .' >= academic_periods.start_date) OR ('. $institutionStaff->aliasField('end_date') .' IS NOT NULL AND '. $institutionStaff->aliasField('start_date') .' <= academic_periods.end_date AND '. $institutionStaff->aliasField('end_date') .' >= academic_periods.end_date) OR ('. $institutionStaff->aliasField('end_date') .' IS NOT NULL AND '. $institutionStaff->aliasField('start_date') .' >= academic_periods.start_date AND '. $institutionStaff->aliasField('end_date') .' <= academic_periods.end_date)) OR ('. $institutionStaff->aliasField('end_date') .' IS NULL AND '. $institutionStaff->aliasField('start_date') .' <= academic_periods.end_date))'
+            ])
+            ->innerJoin(['staff_statuses' => $staffStatuses->table()], [
+                $staffStatuses->aliasField('id') . ' = ' . $institutionStaff->aliasField('staff_status_id')
+            ])
+            ->innerJoin(['institution_positions' => $institutionPositions->table()], [
+                $institutionPositions->aliasField('id') . ' = ' . $institutionStaff->aliasField('institution_position_id')
+            ])
+            ->innerJoin(['staff_position_titles' => $staffPositionTitles->table()], [
+                $staffPositionTitles->aliasField('id') . ' = ' . $institutionPositions->aliasField('staff_position_title_id')
+            ])
+            ->where([
+                $staffStatuses->aliasField('id') . ' = 1',
+                $staffPositionTitles->aliasField('type') . ' = 1',
+                'academic_periods.id = ' . $academicPeriodId,
+            ])
+            ->group([$institutionStaff->aliasField('staff_id')]);
+
+        // get all staff qualifications staff id - staff_qualification_titles
+        $staffQualificationsTbl = $staffQualifications->find()
             ->select([
-                'academic_period_id' => 'InstitutionSubjects.id',
-                'institution_code' => 'Institutions.code',
-                'institution_name' => 'Institutions.name',  
-                'nationality_id' => 'Users.nationality_id',             
-                'institution_subject_name' => 'InstitutionSubjects.name',
-                'teacher_empd_no' => $Staff->aliasField('openemis_no'),
-                'institution_subject_id'=> $this->aliasField('institution_subject_id'),
-                'openemis_no' => $Staff->aliasField('openemis_no'),
-                'staff_id' => $Staff->aliasField('id'),
-                'first_name' => $Staff->aliasField('first_name'),
-                'middle_name' => $Staff->aliasField('middle_name'),
-                'third_name' => $Staff->aliasField('third_name'),
-                'last_name' => $Staff->aliasField('last_name'),
-                'gender' => $Genders->aliasField('name'),
-                'nationality_name' => $MainNationalities->aliasField('name'),
-                'identity_type_id' => $Staff->aliasField('identity_type_id'),
-                'identity_number' => 'Users.identity_number',
-                'start_date' => $this->aliasField('start_date'),
-                'end_date' => $this->aliasField('end_date'),
-                
+                'staff_id'  => $staffQualifications->aliasField('staff_id'),
+                'staff_qualification_combined'  => 'GROUP_CONCAT(DISTINCT(qualification_levels.name))',
+                'staff_specialisation_combined'  => 'GROUP_CONCAT(DISTINCT(IFNULL(qualification_specialisations.name, "")))',
             ])
-            ->contain([
-              
-                'Institutions' => [
-                    'fields' => [
-                        'Institutions.id',
-                        'Institutions.name',
-                        'Institutions.code',
-                        'Institutions.area_id'//POCOR-6779
-                    ]
-                ],
-                'InstitutionSubjects' => [
-                    'fields' => [
-                        'InstitutionSubjects.name',
-                        'InstitutionSubjects.id'
-                    ]
-                ],
-                'Users'=>[
-                    'fields' =>[
-                        'identity_number' => 'Users.identity_number',
-                        'nationality_id' => 'Users.nationality_id',
-                    ]
-                ]
-              
+            ->innerJoin(['qualification_titles' => $qualificationTitles->table()], [
+                'qualification_titles.id = staff_qualifications.qualification_title_id'
             ])
-            ->leftJoin(
-                    [$InstitutionStaff->alias() => $InstitutionStaff->table()],
-                    [
-                        $InstitutionStaff->aliasField('institution_position_id = ') . $this->aliasField('id'),
-                        $InstitutionStaff->aliasField('institution_id = ') . $this->aliasField('institution_id')
-                    ]
-                )
-            ->leftJoin(
-                    [$Staff->alias() => $Staff->table()],
-                    [
-                        $Staff->aliasField('id = ') . $InstitutionStaff->aliasField('staff_id')
-                    ]
-                )
-            ->leftJoin(
-                    [$Genders->alias() => $Genders->table()],
-                    [
-                        $Genders->aliasField('id = ') . $Staff->aliasField('gender_id')
-                    ]
-                )
-            ->leftJoin(
-                [$MainNationalities->alias() => $MainNationalities->table()],
-                [
-                    $MainNationalities->aliasField('id = ') . $Staff->aliasField('nationality_id')
-                ]
-            )
-            ->where([$conditions])
-            ->order(['institution_name']);
+            ->innerJoin(['qualification_levels' => $qualificationLevels->table()], [
+                'qualification_levels.id = qualification_titles.qualification_level_id'
+            ])
+            ->innerJoin(['staff_qualifications_specialisations' => $staffQualificationsSpecialisations->table()], [
+                'staff_qualifications.id = staff_qualifications_specialisations.staff_qualification_id'
+            ])
+            ->innerJoin(['qualification_specialisations' => $qualificationSpecialisations->table()], [
+                'qualification_specialisations.id = staff_qualifications_specialisations.qualification_specialisation_id'
+            ])
+            ->group(['staff_qualifications.staff_id']);
 
-            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) { 
-                return $results->map(function ($row) { 
-                        //for identity type *********
-                        $IdentityTypesss = TableRegistry::get('identity_types');
-                        //Dynamic fields*******identity_types*****
-                        $user_identities_table = TableRegistry::get('user_identities');
-                        $userIdTypes = $user_identities_table->find()->where(['security_user_id'=>$row->staff_id])->all();
-                        //Start:POCOR-6779
-                        $defaultIdType = $IdentityTypesss->find()->where(['default' =>1 ])->first();
-                        $row['userIdentityTypes'] =[];
-                        foreach($userIdTypes as $ss =>$userIDType){
-                            if($userIDType->identity_type_id == $defaultIdType->id){   
-                                $row[str_replace(' ', '_',$defaultIdType->name)] = $userIDType->number;
-                            }else{
-                                $idTypeData = $IdentityTypesss->find()->where(['id'=>$userIDType->identity_type_id])->first();
-                                $row['other_ids'] .=  '(['.$idTypeData->name.'] - '.$userIDType->number.'),';
-                            }
-                        }
-                        $row['other_ids'] = rtrim( $row['other_ids'],',');
-                        //End:POCOR-6779
-                        //assign value in column
-                        foreach($row['userIdentityTypes'] as $sss =>$useroneIDType){
-                            $row[str_replace(" ","_",$useroneIDType->name)] = $useroneIDType->number;
-                        }
-                        //staff qulification staff_qualifications************
-                        $staffQualificationss = TableRegistry::get('staff_qualifications');
-                        $Qualificationss = TableRegistry::get('qualification_titles');
-                        $sQu= $staffQualificationss->find()->where(['staff_id'=>$row->staff_id])->order(['qualification_title_id'=>'DESC'])->first(); //POCOR-6779
+        // get user identities - default_staff_identities
+        $userIdentitiesTbl = $userIdentities->find()
+            ->select([
+                'security_user_id'  => $userIdentities->aliasField('security_user_id'),
+                'staff_default_identity_id' => 'GROUP_CONCAT('.$userIdentities->aliasField('id').')',
+                'staff_default_identity_number' => 'GROUP_CONCAT('.$userIdentities->aliasField('number').')',
+                'staff_default_identity_type' => 'GROUP_CONCAT(identity_types.name)',
+            ])
+            ->innerJoin(['identity_types' => $identityTypes->table()], [
+                'identity_types.id = ' . $userIdentities->aliasField('identity_type_id')
+            ])
+            ->where(['identity_types.default = 1'])
+            ->group([$userIdentities->aliasField('security_user_id')]);
 
-                        $qulifi = $Qualificationss->find()->where(['id'=>$sQu->qualification_title_id])->first();
-                        $row['qualification'] = $qulifi->name;
+        // get user identities security - other_staff_identities
+        $userIdentitiesSecurityTbl = $userIdentities->find()
+            ->select([
+                'security_user_id'  => $userIdentities->aliasField('security_user_id'),
+                'staff_other_identity_numbers' => 'GROUP_CONCAT(CONCAT(identity_types.name, ": ", user_identities.number))',
+            ])
+            ->innerJoin(['identity_types' => $identityTypes->table()], [
+                'identity_types.id = ' . $userIdentities->aliasField('identity_type_id')
+            ])
+            ->where(['identity_types.default != 1'])
+            ->group([$userIdentities->aliasField('security_user_id')]);
 
-                        //Field of stydy****************
-                        $sfieldofStydyT = TableRegistry::get('education_field_of_studies');
-                        $sfieldofStydy = $sfieldofStydyT->find()->where(['id'=>$sQu->education_field_of_study_id])->first();
-                        $row['field_of_study'] = $sfieldofStydy->name;
+        // get user nationalities security - staff_nationalities
+        $userNationalitiesTbl = $userNationalities->find()
+            ->select([
+                'security_user_id'  => $userNationalities->aliasField('security_user_id'),
+                'nationality_name' => 'GROUP_CONCAT(nationalities.name)',
+            ])
+            ->innerJoin(['nationalities' => $nationalities->table()], [
+                'nationalities.id = ' . $userNationalities->aliasField('nationality_id')
+            ])
+            ->where(['user_nationalities.preferred = 1'])
+            ->group([$userNationalities->aliasField('security_user_id')]);
 
-                        
-                       //grade
-                       $InstitutionSubjectT = TableRegistry::get('institution_subjects');
-                       $GradeT = TableRegistry::get('education_grades');
-                       $InstitutionSubjectDta = $InstitutionSubjectT->find()->where(['id' => $row->institution_subject_id])->first();
-                       $Grade = $GradeT->find()->where(['id'=>$InstitutionSubjectDta->education_grade_id])->first();
-                       $row['grades'] = $Grade->name;
+        $conditions = [
+            'academic_periods.id = ' . $academicPeriodId
+        ];
 
-                       //class***********
-                       $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-                       $Classes = TableRegistry::get('Institution.InstitutionClasses');
-                       $GradesClassData = $InstitutionClassSubjects->find()->where(['institution_subject_id'=>$row->institution_subject_id])->first();
-                       $classData = $Classes->find()->where(['id'=>$GradesClassData->institution_class_id])->first();
-                       $row['classes'] = $classData->name;
-                        
-                       //Start:POCOR-6779
-                       //Staff Area Name**
-                       $AreaT = TableRegistry::get('areas');
-                       $AreaData = $AreaT->find()->where(['id' => $row->institution->area_id])->first();
-                       $row['area_name'] = $AreaData->name;
+        if($areaId && $areaId != '-1') {
+            $areaIds = $areaId . ', ';
 
-                       //Staff Status Name**
-                       $institution_staffT = TableRegistry::get('institution_staff');
-                       $StaffStatusT = TableRegistry::get('staff_statuses');
-                       $insStaff = $institution_staffT->find()->where(['staff_id' => $row->staff_id,'institution_id'=>$row->institution->id])->first();
-                       $staffStatusss = $StaffStatusT->find()->where(['id' => $insStaff->staff_status_id])->first();
-                       
-                       $row['staff_status'] = $staffStatusss->name;
-                       //End:POCOR-6779
-                    return $row;
-                });
-            });
-	}
+            $parentId = $this->getParentAreaIds($areaId, $areas);
+            while ($parentId != null) {
+                $areaIds .= $parentId . ', ';
+                $parentId = $this->getParentAreaIds($parentId, $areas);
+            }
+
+            $conditions[] = 'areas.id in (' . trim($areaIds, ', ') . ')';
+        }
+
+        if($regionId && $regionId != '-1') {
+            $conditions[] = 'regions.id = ' . $regionId;
+        }
+
+        if($countryId && $countryId != '-1') {
+            $conditions[] = 'country.id = ' . $countryId;
+        }
+
+        if($institutionId && $institutionId != '-1') {
+            $conditions[] = 'institutions.id = ' . $institutionId;
+        }
+
+        if($education_grade_id && $education_grade_id != '-1') {
+            $conditions[] = 'education_grades.id = ' . $education_grade_id;
+        }
+
+        //Start:POCOR-6779
+        if (!empty($academicPeriodId) && !empty($institutionId) && !empty($education_grade_id) && !empty($indSubjectId)) {
+            $institutionStaffaa = $institutionSub->find()->where(['institution_id' => $institutionId, 'education_grade_id' => $education_grade_id, 'education_subject_id' => $indSubjectId, 'academic_period_id' => $academicPeriodId])->first();
+        } else if (!empty($academicPeriodId) && !empty($education_grade_id) && !empty($indSubjectId)) {
+            $institutionStaffaa = $institutionSub->find()->where(['education_grade_id' => $education_grade_id, 'education_subject_id' => $indSubjectId, 'academic_period_id' => $academicPeriodId])->first();
+        } else if (!empty($academicPeriodId) && !empty($indSubjectId)) {
+            $institutionStaffaa = $institutionSub->find()->where(['education_subject_id' => $indSubjectId, 'academic_period_id' => $academicPeriodId])->first();
+        }
+
+        $ins_SubId = $institutionStaffaa->id ?? 0;
+        if(!empty($indSubjectId) && $ins_SubId){
+            $conditions[] = $this->aliasField('institution_subject_id') . ' = ' . $ins_SubId;
+        }
+        //End:POCOR-6779
+
+        // main sql query to generate report
+        $query->select([
+            'area_education'    => 'areas.name',
+            'institution_code'  => 'institutions.code',
+            'institution'  => 'institutions.name',
+            'openEMIS_no'  => 'security_users.openemis_no',
+            'default_identity'  => 'IFNULL(default_staff_identities.staff_default_identity_number, "")',
+            'other_identities'  => 'IFNULL(other_staff_identities.staff_other_identity_numbers, "")',
+            'first_name'  => 'security_users.first_name',
+            'middle_name'  => 'IFNULL(security_users.middle_name, "")',
+            'third_name'  => 'IFNULL(security_users.third_name, "")',
+            'last_name'  => 'security_users.last_name',
+            'gender'  => 'genders.name',
+            'nationality'  => 'IFNULL(staff_nationalities.nationality_name, "")',
+            'staff_status'  => 'IF(staff_status.staff_id IS NULL, "Not Assigned", "Assigned")',
+            'qualification_title'  => 'IFNULL(staff_qualification_titles.staff_qualification_combined, "")',
+            'qualification_specializations'  => 'IFNULL(staff_qualification_titles.staff_specialisation_combined, "")',
+            'subject'  => 'institution_subjects.name',
+            'grade'  => 'education_grades.name',
+            'class'  => 'institution_classes.name',
+        ])
+        ->innerJoin(['security_users' => $securityUsers->table()], [
+            'security_users.id = ' . $this->aliasField('staff_id')
+        ])
+        ->leftJoin(['staff_status' => $institutionStaffTbl], [
+            'staff_status.staff_id = security_users.id'
+        ])
+        ->innerJoin(['genders' => $genders->table()], [
+            'genders.id = security_users.gender_id'
+        ])
+        ->innerJoin(['institution_subjects' => $institutionSub->table()], [
+            'institution_subjects.id = ' . $this->aliasField('institution_subject_id')
+        ])
+        ->innerJoin(['institution_class_subjects' => $institutionClassSubjects->table()], [
+            'institution_class_subjects.institution_subject_id = institution_subjects.id'
+        ])
+        ->innerJoin(['institution_classes' => $institutionClasses->table()], [
+            'institution_classes.id = institution_class_subjects.institution_class_id'
+        ])
+        ->innerJoin(['academic_periods' => $academicPeriods->table()], [
+            'academic_periods.id = institution_classes.academic_period_id',
+            'institution_subjects.academic_period_id = academic_periods.id',
+        ])
+        ->innerJoin(['education_grades' => $educationGrades->table()], [
+            'education_grades.id = institution_subjects.education_grade_id',
+        ])
+        ->innerJoin(['institutions' => $institutions->table()], [
+            'institutions.id = ' . $this->aliasField('institution_id'),
+        ])
+        ->innerJoin(['areas' => $areas->table()], [
+            'areas.id = institutions.area_id',
+        ])
+        ->innerJoin(['regions' => $areas->table()], [
+            'regions.id = areas.parent_id',
+        ])
+        ->innerJoin(['country' => $areas->table()], [
+            'country.id = regions.parent_id',
+        ])
+        ->leftJoin(['staff_qualification_titles' => $staffQualificationsTbl], [
+            'staff_qualification_titles.staff_id = ' . $this->aliasField('staff_id')
+        ])
+        ->leftJoin(['default_staff_identities' => $userIdentitiesTbl], [
+            'default_staff_identities.security_user_id = security_users.id'
+        ])
+        ->leftJoin(['other_staff_identities' => $userIdentitiesSecurityTbl], [
+            'other_staff_identities.security_user_id = security_users.id'
+        ])
+        ->leftJoin(['staff_nationalities' => $userNationalitiesTbl], [
+            'staff_nationalities.security_user_id = security_users.id'
+        ])
+        ->where($conditions)
+        ->order([
+            'institutions.code' => 'ASC',
+            'education_grades.name' => 'ASC',
+            'institution_classes.name' => 'ASC',
+            'security_users.first_name' => 'ASC',
+        ]);
+
+    }
+
+	private function getParentAreaIds($areaId, $areas)
+    {
+        return $areas->find()->select(['parent_id'])->where(['id = ' . $areaId])->first()->parent_id;
+    }
 
 
     function array_map_assoc( $callback , $array ){
@@ -244,43 +293,39 @@ class StaffSubjectsTable extends AppTable  {
         //Start:POCOR-6779
         $newFields[] = [
             'key' => '',
-            'field' => 'area_name',
+            'field' => 'area_education',
             'type' => 'string',
             'label' => __('Area Education')
         ];
         //End:POCOR-6779
         $newFields[] = [
-            'key' => 'Institutions.code',
+            'key' => '',
             'field' => 'institution_code',
             'type' => 'string',
             'label' => __('Institution Code')
         ];
-
         $newFields[] = [
-            'key' => 'Institutions.name',
-            'field' => 'institution_name',
+            'key' => '',
+            'field' => 'institution',
             'type' => 'string',
             'label' => __('Institution')
         ];
         //Start:POCOR-6779
         $newFields[] = [
-            'key' => 'openemis_no',
-            'field' => 'openemis_no',
+            'key' => '',
+            'field' => 'openEMIS_no',
             'type' => 'string',
-            'label' => __('OpenEMIS ID')
+            'label' => __('OpenEMIS No.')
         ];
-        
-
         $newFields[] = [
             'key' => '',
             'field' => str_replace(' ', '_',$defaultIdType->name),
             'type' => 'string',
-            'label' => __($defaultIdType->name)
+            'label' => __($defaultIdType->name) //Default Identity
         ];
-
         $newFields[] = [
             'key' => '',
-            'field' => 'other_ids',
+            'field' => 'other_identities',
             'type' => 'string',
             'label' => __('Other Identities')
         ];
@@ -292,38 +337,33 @@ class StaffSubjectsTable extends AppTable  {
             'type' => 'string',
             'label' => __('First Name')
         ];
-
 		$newFields[] = [
             'key' => 'middle_name',
             'field' => 'middle_name',
             'type' => 'string',
             'label' => __('Middle Name'),
         ];
-
         $newFields[] = [
             'key' => 'third_name',
             'field' => 'third_name',
             'type' => 'string',
             'label' => __('Third Name'),
         ];
-
         $newFields[] = [
             'key' => '',
             'field' => 'last_name',
             'type' => 'string',
             'label' => __('Last Name')
         ];
-
 		$newFields[] = [
             'key' => '',
             'field' => 'gender',
             'type' => 'string',
             'label' => __('Gender')
         ];
-
 		$newFields[] = [
             'key' => '',
-            'field' => 'nationality_name',
+            'field' => 'nationality',
             'type' => 'string',
             'label' => __('Nationality')
         ];
@@ -337,32 +377,31 @@ class StaffSubjectsTable extends AppTable  {
         //End:POCOR-6779
 		$newFields[] = [
             'key' => '',
-            'field' => 'qualification',
+            'field' => 'qualification_title',
             'type' => 'string',
             'label' => __('Qualification Title')
         ];
 		$newFields[] = [
             'key' => '',
-            'field' => 'field_of_study',
+            'field' => 'qualification_specializations',
             'type' => 'string',
-            'label' => __('Field Of Study')
-        ];	
-
+            'label' => __('Qualification Specializations')
+        ];
 		$newFields[] = [
-            'key' => 'InstitutionSubjects.name',
-            'field' => 'institution_subject_name',
+            'key' => '',
+            'field' => 'subject',
             'type' => 'string',
             'label' => __('Subject')
         ];	
 		$newFields[] = [
             'key' => '',
-            'field' => 'grades',
+            'field' => 'grade',
             'type' => 'string',
             'label' => __('Grade')
         ];	
 		$newFields[] = [
             'key' => '',
-            'field' => 'classes',
+            'field' => 'class',
             'type' => 'string',
             'label' => __('Class')
         ];	
