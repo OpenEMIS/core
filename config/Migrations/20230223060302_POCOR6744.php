@@ -23,10 +23,10 @@ class POCOR6744 extends AbstractMigration
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
 
         //alter foreign keys
-        $this->execute("ALTER TABLE `institution_report_cards` DROP FOREIGN KEY `insti_repor_cards_fk_repor_card_id`; ALTER TABLE `institution_report_cards` ADD CONSTRAINT `insti_repor_cards_fk_repor_card_id` FOREIGN KEY (`report_card_id`) REFERENCES `openemis_core`.`profile_templates`(`id`) ON DELETE RESTRICT ON UPDATE RESTRICT");
+        $this->execute("ALTER TABLE `institution_report_cards` DROP FOREIGN KEY `insti_repor_cards_fk_repor_card_id`; ALTER TABLE `institution_report_cards` ADD CONSTRAINT `insti_repor_cards_fk_repor_card_id` FOREIGN KEY (`report_card_id`) REFERENCES `profile_templates`(`id`) ON DELETE RESTRICT ON UPDATE RESTRICT");
 
-        $this->execute("ALTER TABLE `institution_report_card_processes` DROP FOREIGN KEY `insti_repor_card_proce_fk_repor_card_id`; ALTER TABLE `institution_report_card_processes` ADD CONSTRAINT `insti_repor_card_proce_fk_repor_card_id` FOREIGN KEY (`report_card_id`) REFERENCES `openemis_core`.`profile_templates`(`id`) ON DELETE RESTRICT ON UPDATE RESTRICT");
-        
+        $this->execute("ALTER TABLE `institution_report_card_processes` DROP FOREIGN KEY `insti_repor_card_proce_fk_repor_card_id`; ALTER TABLE `institution_report_card_processes` ADD CONSTRAINT `insti_repor_card_proce_fk_repor_card_id` FOREIGN KEY (`report_card_id`) REFERENCES `profile_templates`(`id`) ON DELETE RESTRICT ON UPDATE RESTRICT");
+
         // Set foreign key checks to enabled
         $this->execute('SET SESSION FOREIGN_KEY_CHECKS=1;');
     }
