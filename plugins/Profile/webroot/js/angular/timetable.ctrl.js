@@ -71,7 +71,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
             .then(function(scheduleIntervalData) {
                 //console.log('scheduleIntervalData', scheduleIntervalData);
                 vm.scheduleIntervalData = scheduleIntervalData;   
-                if(vm.scheduleIntervalDefaultId != null){
+                if(vm.scheduleIntervalDefaultId != ''){ //POCOR-6686
                     return TimetableSvc.getTimeslots(vm.scheduleIntervalDefaultId);
                 }else{
                     return TimetableSvc.getTimeslots(vm.scheduleIntervalData[0].id);
@@ -80,6 +80,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
             }, vm.error)
             .then(function(timeslotsData) {
                 //console.log('getTimeslots', timeslotsData);
+                vm.scheduleIntervalData1 = timeslotsData[0].institution_schedule_interval_id; //POCOR-6686
                 vm.scheduleTimeslots = timeslotsData;
                 return TimetableSvc.getWorkingDayOfWeek();
             }, vm.error)
@@ -96,7 +97,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
                 //console.log('timetableCustomizeColors', vm.timetableCustomizeColors);
                 //console.log('scheduleIntervalDefaultId: ', vm.scheduleIntervalDefaultId);
                 if(vm.scheduleIntervalDefaultId != null){
-                    return TimetableSvc.getTimetableLessons(vm.scheduleIntervalDefaultId, vm.staffId);
+                    return TimetableSvc.getTimetableLessons(vm.scheduleIntervalData1, vm.staffId); //POCOR-6686
                 }else{
                     return TimetableSvc.getTimetableLessons(vm.scheduleIntervalData[0].id, vm.staffId);
                 }
