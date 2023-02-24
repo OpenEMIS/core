@@ -1230,7 +1230,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Assesments', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards', //POCOR-5786 replace results to Assesments
                 'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentRisks', 'Students.Outcomes', 'Institutions.StudentProgrammes.view', 'Institutions.StudentProgrammes.edit',
-                'Students.Competencies', 'Students.AssessmentItemResultsArchived', 'Students.InstitutionStudentAbsencesArchived', 'Institutions.StudentTransition', 'Institutions.Associations','Institutions.StudentAssociations']
+                'Students.Competencies', 'Students.AssessmentItemResultsArchived', 'Students.InstitutionStudentAbsencesArchived', 'Institutions.StudentTransition', 'Institutions.Associations','Institutions.StudentAssociations','Institutions.StudentCurriculars']
             ],
             'Students.StudentScheduleTimetable' => [
                 'title' => 'Timetables',

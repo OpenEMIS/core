@@ -20,6 +20,7 @@ use App\Model\Traits\MessagesTrait;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Network\Session;
 
+//POCOR-6673
 class InstitutionCurricularsTable extends ControllerActionTable
 {
     use MessagesTrait;
@@ -93,7 +94,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $this->field('total_male_students', ['visible' => ['index'=>true,'view' => false, 'edit' => false,'add'=>false]]);
         $this->field('total_female_students', ['visible' => ['index'=>true,'view' => false,'edit' => false,'add'=>false]]);
         $this->field('total_students', ['visible' => ['index'=>true,'view' => false,'edit' =>false,'add'=>false]]);
-        $this->field('type_id', ['visible' => ['index'=>false]]);
+        $this->field('curricular_type_id', ['visible' => ['index'=>false]]);
         $this->field('category', ['visible' => ['index'=>false]]);
         $this->field('staff_id', ['visible' => ['index'=>true]]);
         $this->setFieldOrder([
@@ -107,12 +108,12 @@ class InstitutionCurricularsTable extends ControllerActionTable
         
         $this->field('total_male_students', ['visible' => false]);
         $this->field('total_female_students', ['visible' => false]);
-        $this->field('type_id', ['type' => 'select']);
+        $this->field('curricular_type_id', ['type' => 'select']);
         $this->field('category', ['type' => 'select']);
         $this->field('staff_id', ['type' => 'select','visible' => false]);
         $this->field('academic_period_id', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true]]);
         $this->setFieldOrder([
-            'academic_period_id','name','category', 'type_id']);
+            'academic_period_id','name','category', 'curricular_type_id']);
     }
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
@@ -120,12 +121,12 @@ class InstitutionCurricularsTable extends ControllerActionTable
         
         $this->field('total_male_students', ['visible' => false]);
         $this->field('total_female_students', ['visible' => false]);
-        $this->field('type_id', ['type' => 'select']);
+        $this->field('curricular_type_id', ['type' => 'select']);
         $this->field('category', ['type' => 'select']);
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('staff_id', ['type' => 'select']);
         $this->setFieldOrder([
-            'academic_period_id','name','category', 'type_id','staff_id']);
+            'academic_period_id','name','category', 'curricular_type_id','staff_id']);
     }
 
     public function onUpdateFieldCategory(Event $event, array $attr, $action, Request $request)
@@ -150,7 +151,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
     }
 
 
-    public function onUpdateFieldTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCurricularTypeId(Event $event, array $attr, $action, Request $request)
     {
         $categoryId = $this->request->data[$this->alias()]['category'];
         $type = TableRegistry::get('curricular_types');
@@ -164,7 +165,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
             $attr['onChangeReload'] = false;
         }elseif($action == 'edit'){
             $curriculardecode = $this->paramsDecode($this->request->pass[1])['id'];
-            $tyepId = $this->InstitutionCurriculars->get($curriculardecode)->type_id;
+            $tyepId = $this->InstitutionCurriculars->get($curriculardecode)->curricular_type_id;
             $attr['type'] = 'readonly';
             $attr['value'] = $tyepId;
             $attr['attr']['value'] = $type->get($tyepId)->name;
