@@ -130,8 +130,8 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                     $this->aliasField('academic_period_id') => $academicPeriodId,
                     $this->aliasField('date') => $date,
                     $this->aliasField('institution_id') => $institutionId,
-                    $this->aliasField('student_id') => $studentId,
-                    $this->aliasField('absence_type_id') => $absenceTypeId
+                    $this->aliasField('student_id') => $studentId
+                    // $this->aliasField('absence_type_id') => $absenceTypeId //POCOR-7205
                 ])
                 ->count();
 
