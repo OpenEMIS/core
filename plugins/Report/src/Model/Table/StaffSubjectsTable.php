@@ -10,21 +10,21 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
 class StaffSubjectsTable extends AppTable  {
-	public function initialize(array $config) {
-		$this->table('institution_subject_staff');
+    public function initialize(array $config) {
+        $this->table('institution_subject_staff');
 
-		parent::initialize($config);
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-		$this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
-		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-		//$this->belongsTo('Institution.EducationGrades', ['className' => 'Institution.EducationGrades']);
+        parent::initialize($config);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        //$this->belongsTo('Institution.EducationGrades', ['className' => 'Institution.EducationGrades']);
 
-		$this->addBehavior('Excel',[
+        $this->addBehavior('Excel',[
             'excludes' => [],
             'pages' => ['index'],
         ]);
-		$this->addBehavior('Report.ReportList');
-	}
+        $this->addBehavior('Report.ReportList');
+    }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
@@ -51,6 +51,7 @@ class StaffSubjectsTable extends AppTable  {
         $genders = TableRegistry::get('User.Genders');
         $mainNationalities = TableRegistry::get('FieldOption.Nationalities');
         $institutionSub = TableRegistry::get('institution_subjects');
+        $educationSubjects = TableRegistry::get('education_subjects'); //POCOR-7095
         $userIdentities = TableRegistry::get('user_identities');
         $identityTypes = TableRegistry::get('identity_types');
         $userNationalities = TableRegistry::get('user_nationalities');
@@ -78,8 +79,8 @@ class StaffSubjectsTable extends AppTable  {
                 $staffPositionTitles->aliasField('id') . ' = ' . $institutionPositions->aliasField('staff_position_title_id')
             ])
             ->where([
-                $staffStatuses->aliasField('id') . ' = 1',
-                $staffPositionTitles->aliasField('type') . ' = 1',
+                $institutionStaff->aliasField('staff_status_id') => 1,
+                $staffPositionTitles->aliasField('type') => 1,
                 'academic_periods.id = ' . $academicPeriodId,
             ])
             ->group([$institutionStaff->aliasField('staff_id')]);
@@ -167,31 +168,26 @@ class StaffSubjectsTable extends AppTable  {
             $conditions[] = 'country.id = ' . $countryId;
         }
 
-        if($institutionId && $institutionId != '-1') {
+        /*if($institutionId && $institutionId != '-1') {
             $conditions[] = 'institutions.id = ' . $institutionId;
         }
 
         if($education_grade_id && $education_grade_id != '-1') {
             $conditions[] = 'education_grades.id = ' . $education_grade_id;
-        }
+        }*/
 
-        //Start:POCOR-6779
-        if (!empty($academicPeriodId) && !empty($institutionId) && !empty($education_grade_id) && !empty($indSubjectId)) {
-            $institutionStaffaa = $institutionSub->find()->where(['institution_id' => $institutionId, 'education_grade_id' => $education_grade_id, 'education_subject_id' => $indSubjectId, 'academic_period_id' => $academicPeriodId])->first();
-        } else if (!empty($academicPeriodId) && !empty($education_grade_id) && !empty($indSubjectId)) {
-            $institutionStaffaa = $institutionSub->find()->where(['education_grade_id' => $education_grade_id, 'education_subject_id' => $indSubjectId, 'academic_period_id' => $academicPeriodId])->first();
-        } else if (!empty($academicPeriodId) && !empty($indSubjectId)) {
-            $institutionStaffaa = $institutionSub->find()->where(['education_subject_id' => $indSubjectId, 'academic_period_id' => $academicPeriodId])->first();
+        if (!empty($institutionId) && $institutionId != -1) {
+            $conditions['institutions.id'] = $institutionId; 
         }
-
-        $ins_SubId = $institutionStaffaa->id ?? 0;
-        if(!empty($indSubjectId) && $ins_SubId){
-            $conditions[] = $this->aliasField('institution_subject_id') . ' = ' . $ins_SubId;
+        if(!empty($education_grade_id) && $education_grade_id != -1) {
+            $conditions['education_grades.id'] = $education_grade_id;
         }
-        //End:POCOR-6779
+        if(!empty($indSubjectId) && $indSubjectId != -1) {
+            $conditions['education_subjects.id'] = $indSubjectId;
+        }
 
         // main sql query to generate report
-        $query->select([
+      $datas =   $query->select([
             'area_education'    => 'areas.name',
             'institution_code'  => 'institutions.code',
             'institution'  => 'institutions.name',
@@ -236,16 +232,20 @@ class StaffSubjectsTable extends AppTable  {
         ->innerJoin(['education_grades' => $educationGrades->table()], [
             'education_grades.id = institution_subjects.education_grade_id',
         ])
+
+        ->innerJoin(['education_subjects' => $educationSubjects->table()], [
+            'education_subjects.id = institution_subjects.education_subject_id',
+        ])
         ->innerJoin(['institutions' => $institutions->table()], [
             'institutions.id = ' . $this->aliasField('institution_id'),
         ])
-        ->innerJoin(['areas' => $areas->table()], [
+        ->leftJoin(['areas' => $areas->table()], [
             'areas.id = institutions.area_id',
         ])
-        ->innerJoin(['regions' => $areas->table()], [
+        ->leftJoin(['regions' => $areas->table()], [
             'regions.id = areas.parent_id',
         ])
-        ->innerJoin(['country' => $areas->table()], [
+        ->leftJoin(['country' => $areas->table()], [
             'country.id = regions.parent_id',
         ])
         ->leftJoin(['staff_qualification_titles' => $staffQualificationsTbl], [
@@ -268,9 +268,11 @@ class StaffSubjectsTable extends AppTable  {
             'security_users.first_name' => 'ASC',
         ]);
 
+        return $data;
+
     }
 
-	private function getParentAreaIds($areaId, $areas)
+    private function getParentAreaIds($areaId, $areas)
     {
         return $areas->find()->select(['parent_id'])->where(['id = ' . $areaId])->first()->parent_id;
     }
@@ -283,7 +285,7 @@ class StaffSubjectsTable extends AppTable  {
         return $r;
     }
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $IdentityTypesss = TableRegistry::get('identity_types');
         $userIdTypes = $IdentityTypesss->find()->all();
@@ -331,13 +333,13 @@ class StaffSubjectsTable extends AppTable  {
         ];
         //End:POCOR-6779
         
-		$newFields[] = [
+        $newFields[] = [
             'key' => '',
             'field' => 'first_name',
             'type' => 'string',
             'label' => __('First Name')
         ];
-		$newFields[] = [
+        $newFields[] = [
             'key' => 'middle_name',
             'field' => 'middle_name',
             'type' => 'string',
@@ -355,13 +357,13 @@ class StaffSubjectsTable extends AppTable  {
             'type' => 'string',
             'label' => __('Last Name')
         ];
-		$newFields[] = [
+        $newFields[] = [
             'key' => '',
             'field' => 'gender',
             'type' => 'string',
             'label' => __('Gender')
         ];
-		$newFields[] = [
+        $newFields[] = [
             'key' => '',
             'field' => 'nationality',
             'type' => 'string',
@@ -375,36 +377,36 @@ class StaffSubjectsTable extends AppTable  {
             'label' => __('Staff Status')
         ];
         //End:POCOR-6779
-		$newFields[] = [
+        $newFields[] = [
             'key' => '',
             'field' => 'qualification_title',
             'type' => 'string',
             'label' => __('Qualification Title')
         ];
-		$newFields[] = [
+        $newFields[] = [
             'key' => '',
             'field' => 'qualification_specializations',
             'type' => 'string',
             'label' => __('Qualification Specializations')
         ];
-		$newFields[] = [
+        $newFields[] = [
             'key' => '',
             'field' => 'subject',
             'type' => 'string',
             'label' => __('Subject')
-        ];	
-		$newFields[] = [
+        ];  
+        $newFields[] = [
             'key' => '',
             'field' => 'grade',
             'type' => 'string',
             'label' => __('Grade')
-        ];	
-		$newFields[] = [
+        ];  
+        $newFields[] = [
             'key' => '',
             'field' => 'class',
             'type' => 'string',
             'label' => __('Class')
-        ];	
+        ];  
         
         $fields->exchangeArray($newFields);
     }
