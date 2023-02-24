@@ -396,7 +396,6 @@ class DataManagementCopyTable extends ControllerActionTable
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$copyFrom.' '.$copyTo;
         $logs = ROOT . DS . 'logs' . DS . $shellName.'_copy.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
-        echo $shellCmd;die;
         $pid = exec($shellCmd);
         Log::write('debug', $shellCmd);
     }
