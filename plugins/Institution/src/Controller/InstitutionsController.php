@@ -2162,7 +2162,8 @@ class InstitutionsController extends AppController
                 'StudentProgrammes' => __('Programmes'),
                 'StudentRisks' => __('Risks'),
                 'StudentTextbooks' => __('Textbox'),
-                'StudentAssociations' => __('Associations')
+                'StudentAssociations' => __('Associations'),
+                'StudentCurriculars' => __('Curriculars') //POCOR-6673 in student tab
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -2238,10 +2239,9 @@ class InstitutionsController extends AppController
                 $header .= ' - '. __('Associations');
             } elseif($model->alias() == 'InstitutionStatistics'){
                 $header .= ' - '. __('Statistics');
-            }elseif ($model->alias() == 'InstitutionCurricularStudent') { //POCOR-6673
-                die('sds');
-                $header .= ' - '. __('Curriculars');
-            } else {
+            }/*elseif ($model->alias() == 'StudentCurriculars') { //POCOR-6673
+                $header .= ' - '. __('Student Curriculars');
+            }*/ else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
            
@@ -7310,6 +7310,6 @@ class InstitutionsController extends AppController
     //POCOR-6673
     public function StudentCurriculars()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionCurricularStudent']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurriculars']);
     }
 }
