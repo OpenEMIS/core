@@ -104,6 +104,12 @@ class StaffAttendancesTable extends ControllerActionTable
             $conditions['institutions.id'] = $institutionId;
         }
 
+        if (empty($institutionId) && $institutionId == 0) {
+            $institutionId = 0 ;
+        }else{
+            $institutionId = $institutionId;
+        }
+
         /*if ($areaId != -1 && !empty($areaId)) {
             $conditions[$this->aliasField('Institutions.area_id')]=$areaId;
         }*/
