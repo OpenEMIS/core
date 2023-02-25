@@ -87,7 +87,7 @@
                         </div>
                     </div>
                     <div class="row section-header header-space-lg">Search By Identity</div>
-                    <div ng-class="nationality_class" class="input select required">
+                    <div ng-class="nationality_class" class="input select">
                         <label><?= __('Nationality') ?></label>
                         <div class="input-select-wrapper">
                             <select name="User[nationality_id]" id="user-nationality_id"
@@ -99,7 +99,7 @@
                             </select>
                         </div>
                     </div>
-                    <div ng-class="identity_type_class" class="input select required">
+                    <div ng-class="identity_type_class" class="input select">
                         <label><?= __('Identity Type') ?></label>
                         <div class="input-select-wrapper">
                             <select name="User[identities_type_id]" id="user-identities_type_id"
@@ -111,10 +111,15 @@
                             </select>
                         </div>
                     </div>
-                    <div ng-class="identity_class" ng-show="selectedUserData.identity_type_name" class="input select required">
+                    <!-- Always show Identity Number POCOR-7245 -->
+                    <div ng-class="identity_class" class="input select">
                         <label><?= __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
                         <input ng-model="selectedUserData.identity_number" type="string">
                     </div>
+                    <!-- <div ng-class="identity_class" ng-show="selectedUserData.identity_type_name" class="input select required">
+                        <label><?= __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
+                        <input ng-model="selectedUserData.identity_number" type="string">
+                    </div> -->
                     <div class="row section-header header-space-lg">Search By Basic Information</div>
                     <div class="input string">
                         <label><?= __('OpenEMIS ID') ?></label>
