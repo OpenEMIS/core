@@ -86,11 +86,41 @@
                             <p>{{ error.relation_type_id }}</p>
                         </div>
                     </div>
+                    <div class="row section-header header-space-lg">Search By Identity</div>
+                    <div ng-class="nationality_class" class="input select required">
+                        <label><?= __('Nationality') ?></label>
+                        <div class="input-select-wrapper">
+                            <select name="User[nationality_id]" id="user-nationality_id"
+                                ng-options="option.id as option.name for option in nationalitiesOptions"
+                                ng-model="selectedUserData.nationality_id"
+                                ng-change="changeNationality()"
+                                >
+                                <option value="" >-- <?= __('Select') ?> --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div ng-class="identity_type_class" class="input select required">
+                        <label><?= __('Identity Type') ?></label>
+                        <div class="input-select-wrapper">
+                            <select name="User[identities_type_id]" id="user-identities_type_id"
+                                ng-options="option.id as option.name for option in identityTypeOptions"
+                                ng-model="selectedUserData.identity_type_id"
+                                ng-change="changeIdentityType()"
+                                >
+                                <option value="" >-- <?= __('Select') ?> --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div ng-class="identity_class" ng-show="selectedUserData.identity_type_name" class="input select required">
+                        <label><?= __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
+                        <input ng-model="selectedUserData.identity_number" type="string">
+                    </div>
+                    <div class="row section-header header-space-lg">Search By Basic Information</div>
                     <div class="input string">
                         <label><?= __('OpenEMIS ID') ?></label>
                         <input ng-model="selectedUserData.openemis_no" type="string">
                     </div>
-                    <div class="input string">
+                    <div class="input string required">
                         <label><?= __('First Name') ?></label>
                         <input ng-model="selectedUserData.first_name" ng-change="setName()" type="string">
                         <div ng-if="error.first_name" class="error-message">
@@ -105,7 +135,7 @@
                         <label><?= __('Third Name') ?></label>
                         <input ng-model="selectedUserData.third_name" ng-change="setName()" type="string">
                     </div>
-                    <div class="input string">
+                    <div class="input string required">
                         <label><?= __('Last Name') ?></label>
                         <input ng-model="selectedUserData.last_name" ng-change="setName()" type="string">
                         <div ng-if="error.last_name" class="error-message">
@@ -116,7 +146,7 @@
                         <label><?= __('Preferred Name') ?></label>
                         <input ng-model="selectedUserData.preferred_name" type="string">
                     </div>
-                    <div class="input select error">
+                    <div class="input select error required">
                         <label><?= __('Gender') ?></label>
                         <div class="input-select-wrapper">
                             <select name="Staff[gender_id]" id="staff-gender_id"
@@ -131,7 +161,7 @@
                             <p>{{ error.gender_id }}</p>
                         </div>
                     </div>
-                    <div class="input date">
+                    <div class="input date required">
                         <label for="User_date_of_birth"><?= __('Date Of Birth') ?></label>
                         <div class="input-group date " id="User_date_of_birth" style="">
                             <input type="text" class="form-control " name="User[date_of_birth]" ng-model="selectedUserData.date_of_birth">
@@ -141,34 +171,7 @@
                             <p>{{ error.date_of_birth }}</p>
                         </div>
                     </div>
-                    <div ng-class="nationality_class">
-                        <label><?= __('Nationality') ?></label>
-                        <div class="input-select-wrapper">
-                            <select name="User[nationality_id]" id="user-nationality_id"
-                                ng-options="option.id as option.name for option in nationalitiesOptions"
-                                ng-model="selectedUserData.nationality_id"
-                                ng-change="changeNationality()"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div ng-class="identity_type_class">
-                        <label><?= __('Identity Type') ?></label>
-                        <div class="input-select-wrapper">
-                            <select name="User[identities_type_id]" id="user-identities_type_id"
-                                ng-options="option.id as option.name for option in identityTypeOptions"
-                                ng-model="selectedUserData.identity_type_id"
-                                ng-change="changeIdentityType()"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div ng-class="identity_class" ng-show="selectedUserData.identity_type_name">
-                        <label><?= __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
-                        <input ng-model="selectedUserData.identity_number" type="string">
-                    </div>
+                   
                 </form>
             </div>
             <div class="step-pane sample-pane" ng-if="step === 'internal_search'">
