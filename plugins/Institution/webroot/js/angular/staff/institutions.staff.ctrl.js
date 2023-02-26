@@ -7,8 +7,6 @@ InstitutionStaffController.$inject = ['$location', '$q', '$scope', '$window', '$
 function InstitutionStaffController($location, $q, $scope, $window, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsStaffSvc, $rootScope) {
     // ag-grid vars
 
-    console.log("Nov 21 - Works")
-
     var StaffController = this;
 
     StaffController.pageSize = 10;
@@ -108,6 +106,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.mapBySection= mapBySection;
     StaffController.transferStaffNextStep = transferStaffNextStep;
     StaffController.checkConfigForExternalSearch = checkConfigForExternalSearch;
+    StaffController.isNextButtonShouldDisable = isNextButtonShouldDisable;
   
     
     $window.savePhoto = function(event) {
@@ -2379,5 +2378,18 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
+    }
+     function isNextButtonShouldDisable() {
+        const { step, selectedStaffData, isIdentityUserExist } = StaffController;
+        const { first_name, last_name, date_of_birth, gender_id } = selectedStaffData;
+      
+        if (isIdentityUserExist && step === "internal_search") {
+          return true;
+        }
+      
+        if (step === "external_search" && (!first_name|| !last_name || !date_of_birth|| !gender_id)) {
+          return true;
+        }
+        return false;
     }
 }
