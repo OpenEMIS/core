@@ -163,7 +163,7 @@
             <button
                 ng-if="(step=='summary')"
                 type="button" class="btn close-btn" ng-click="cancelProcess()" style="font-size: 12px;">Close</button>
-            <button  ng-disabled="isIdentityUserExist && step==='internal_search'" type="button" class="btn btn-default btn-next"
+            <button  ng-disabled="isNextButtonShouldDisable()" type="button" class="btn btn-default btn-next"
                 ng-if="step!=='confirmation' && step!=='summary'" ng-click="goToNextStep()" style="font-size: 12px;">Next</button>
             <button type="button" class="btn btn-default btn-next"
                 ng-if="step==='summary' && redirectToGuardian" ng-click="addGuardian()" style="font-size: 12px;">Add Guardian</button>

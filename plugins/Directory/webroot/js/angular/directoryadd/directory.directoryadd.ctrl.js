@@ -1555,4 +1555,17 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         });
     }
 
+    scope.isNextButtonShouldDisable = function isNextButtonShouldDisable() {
+        const { step, selectedUserData, isIdentityUserExist } = scope;
+        const { first_name, last_name, date_of_birth, gender_id } = selectedUserData;
+      
+        if (isIdentityUserExist && step === "internal_search") {
+          return true;
+        }
+      
+        if (step === "external_search" && (!first_name|| !last_name || !date_of_birth|| !gender_id)) {
+          return true;
+        }
+        return false;
+    }
 }
