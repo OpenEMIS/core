@@ -730,6 +730,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
     scope.goToPrevStep = function(){
         if(scope.isInternalSearchSelected) {
+            scope.isInternalSearchSelected=false;
             scope.step = 'internal_search';
             scope.internalGridOptions = null;
             scope.goToInternalSearch();
