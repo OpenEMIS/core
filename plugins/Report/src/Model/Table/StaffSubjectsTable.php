@@ -268,7 +268,7 @@ class StaffSubjectsTable extends AppTable  {
             'security_users.first_name' => 'ASC',
         ]);
 
-        return $data;
+        return $datas;
 
     }
 
