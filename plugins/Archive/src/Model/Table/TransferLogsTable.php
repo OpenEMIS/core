@@ -210,6 +210,7 @@ use Cake\Utility\Security;
                 $entity->academic_period_id = $entity['academic_period_id'];
                 $entity->generated_on = date("Y-m-d H:i:s");
                 $entity->generated_by = $this->Session->read('Auth.User.id');
+                $entity->features = $entity['features'];
             }
             // return $this->Alert->warning('Connection.transferConnectionFail');
             // return true;
