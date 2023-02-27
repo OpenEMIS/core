@@ -97,17 +97,21 @@ class StaffAttendancesTable extends ControllerActionTable
                    ->select(['name'=>$AcademicPeriods->aliasField('name')])
                    ->where(['id'=>$academicPeriodId])
                    ->limit(1);
+        $startDateone ="'".$startDates."'"; //POCOR-7259
+        $endDateone ="'".$endDates."'"; //POCOR-7259
+
+
         foreach($getyear->toArray() as $val) {
             $year  = $val['name'];
         }
         if (!empty($institutionId) && $institutionId != 0) {
-            $conditions['institutions.id'] = $institutionId;
+            $conditions['Institutions.id'] = $institutionId;
         }
 
-        if (empty($institutionId) && $institutionId == 0) {
-            $institutionId = 0 ;
+        if (empty($institutionId) && $institutionId == 0) { //POCOR-7259
+           $condition = NULL;
         }else{
-            $institutionId = $institutionId;
+            $condition = "AND institution_staff_attendances.institution_id = ".$institutionId;
         }
 
         /*if ($areaId != -1 && !empty($areaId)) {
@@ -359,8 +363,8 @@ class StaffAttendancesTable extends ControllerActionTable
             ,CASE WHEN DAY(institution_staff_attendances.date) = 31 THEN IF(institution_staff_attendances.time_in IS NULL, '', CONCAT(institution_staff_attendances.time_in, IF(institution_staff_attendances.time_out IS NULL, '', CONCAT('-', institution_staff_attendances.time_out)))) ELSE '' END day_31
         FROM institution_staff_attendances
         WHERE institution_staff_attendances.academic_period_id = $academicPeriodId
-        AND institution_staff_attendances.institution_id = $institutionId
-        AND institution_staff_attendances.date BETWEEN "."'$startDates'"." AND "."'$endDates'"."
+        AND institution_staff_attendances.date BETWEEN $startDateone  AND $endDateone
+        $condition
         GROUP BY institution_staff_attendances.staff_id
             ,institution_staff_attendances.date
     )) subq 
