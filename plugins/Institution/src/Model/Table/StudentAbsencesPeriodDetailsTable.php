@@ -10,6 +10,8 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
+use Cake\Filesystem\Folder;
+use Cake\Mailer\Email;
 
 use Cake\Log\Log;
 
@@ -135,6 +137,76 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                 ])
                 ->count();
 
+                //POCOR-6584 :: START
+            $shellName = "AlertAttendance";
+            if ($this->isShellStopExist($shellName)) {
+                $status = 0; // Stopped
+            } else {
+                $status = 1; // Running
+            }
+            if($status == 1){ 
+                if($absenceTypeId == 1 || $absenceTypeId ==2){
+                    $institutionTable = TableRegistry::get('institutions');
+                    $institutionData = $institutionTable->get($entity->institution_id);
+                    $institutionSecurityGroupId = $institutionData->security_group_id;
+    
+                    $alertRulesTable = TableRegistry::get('alert_rules');
+                    $alertRuleData = $alertRulesTable->find('all',['conditions'=>['feature'=>'StudentAttendance']])->toArray();
+                    if(!empty($alertRuleData)){      
+                        foreach($alertRuleData as $alertRuleData1){ 
+                            $alertRolesTable = TableRegistry::get('alerts_roles');
+                            $alertRolesData = $alertRolesTable->find('all',['conditions'=>['alert_rule_id'=>$alertRuleData1->id],'fields'=>['security_role_id']])->toArray();
+                            $securityRoleIds=[];
+                            if(!empty($alertRolesData)){
+                            
+                                foreach($alertRolesData as $alertRole){
+                                    $securityRoleIds[] = $alertRole->security_role_id;
+                                }
+                            
+                                $securityGroupUsersTable = TableRegistry::get('security_group_users');
+                                $securityGroupUsersData = $securityGroupUsersTable->find()
+                                                            ->where(['security_group_id'=>$institutionSecurityGroupId,'security_role_id in'=> $securityRoleIds])
+                                                            ->group(['security_user_id'])
+                                                            ->toArray();
+                                if(!empty($securityGroupUsersData)){                                                  
+                                    foreach($securityGroupUsersData as $securityGU){ 
+                                        $userTable = TableRegistry::get('security_users');
+                                        $userData = $userTable->get($securityGU->security_user_id);
+                                        $studentData = $userTable->get($entity->student_id);
+                                        
+                                        $insCode  = $institutionData->code;
+                                        $insName  = $institutionData->name;
+                                        $StudentOpenemis_no = $studentData->openemis_no;
+                                        $StudentFirstName = $studentData->first_name;
+                                        $StudentLastName =$studentData->last_name;
+                                        $absenceCount = $this->find('all',['conditions' => ['student_id'=>$entity->student_id, 'institution_id'=>$entity->institution_id,'academic_period_id'=>$entity->academic_period_id
+                                        ]])->count();
+                                        
+                                        if((($alertRuleData1->threshold)-1) <= $absenceCount){
+                                            $absenceCount = $absenceCount+1;
+                                            if(!empty($userData->email)){
+                                                $email = new Email('openemis');
+                                                $emailSubject = 'OpenEMIS Attendance Alert for '.$insCode." - ".$insName;
+                                                $emailMessage = "[THIS IS AN AUTOMATED MESSAGE - PLEASE DO NOT REPLY DIRECTLY TO THIS EMAIL]\n\nDear Principal,\n\nPlease be informed that the student ".$StudentOpenemis_no." - ".$StudentFirstName." ". $StudentLastName." have missed ".$absenceCount." days of class in ".$insCode." - ".$insName;
+                                                $email
+                                                    ->to($userData->email)
+                                                    ->subject($emailSubject)
+                                                    ->send($emailMessage);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+		                
+		                }
+                        
+                        
+                        
+                    }
+                }
+            }
+           //POCOR-6584 :: END
+
             // if count matches, the student is absences for full day
             if ($totalRecordCount == $periodCount) {
                 $fullDayRecordResult = $InstitutionStudentAbsences
@@ -171,6 +243,17 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         }
     }
     
+
+    //POCOR-6584
+    public function isShellStopExist($shellName)
+    {
+        // folder to the shellprocesses.
+        $dir = new Folder(ROOT . DS . 'tmp'); // path
+        $filesArray = $dir->find($shellName.'.stop');
+        return !empty($filesArray);
+    }
+	
+	//POCOR-6584
     public function deleteStudentAbsence($entity = null){
         $classId = $entity->institution_class_id;
         $academicPeriodId = $entity->academic_period_id;
