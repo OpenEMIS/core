@@ -50,11 +50,12 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $session = $this->controller->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
-        $selectedAcademicPeriodId = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
-       
-        $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId);
-        $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
-
+        $curricularIdGet = $_SESSION['curricularId'];
+        $curriculars = TableRegistry::get('institution_curriculars');
+        $getAcademicPeriodId = $curriculars->find()
+                            ->where([$curriculars->aliasField('id') => $curricularIdGet])
+                            ->first()->academic_period_id;
+        $selectedAcademicPeriodId = $getAcademicPeriodId;
         $this->Institutions = TableRegistry::get('Institution.Institutions');
         $extra['selectedEducationGradeId'] = $selectedEducationGradeId;
         if (!empty($selectedAcademicPeriodId)) {
