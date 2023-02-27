@@ -22,8 +22,8 @@ class InstitutionGradesTable extends ControllerActionTable
         $this->table('institution_grades');
         parent::initialize($config);
 
-        $this->belongsTo('EducationGrades',             ['className' => 'Education.EducationGrades']);
-        $this->belongsTo('Institutions',                ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('EducationGrades',['className' => 'Education.EducationGrades']);
+        $this->belongsTo('Institutions',['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
 
         //$this->hasMany('InstitutionGrades', ['className' => 'Institution.InstitutionGrades', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);//POCOR-6268 commented due to - unnecessary association
@@ -153,6 +153,7 @@ public function viewEditBeforeQuery(Event $event, Query $query)
 ******************************************************************************************************************/
 public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
 {
+
     $errors = $entity->errors();
     $process = function($model, $entity) use ($data, $errors) {
             /**
@@ -179,7 +180,7 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                     $grade['education_grade_id'] = $data['grades']['education_grade_id'];
                             // need to set programme value since it was marked as required in validationDefault()
                     $grade['programme'] = $entity->programme;
-
+                    $grade['academic_period_id'] = $entity->academic_period_id;//POCOR-7234
                     $Institutions = TableRegistry::get('Institution.Institutions');
                     $InstitutionData = $Institutions->find()
                                 ->select([
