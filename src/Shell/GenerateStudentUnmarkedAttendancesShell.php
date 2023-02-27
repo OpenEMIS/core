@@ -46,6 +46,7 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 			$workflows = $Workflows->find()->where(['id' => $workflowRule['workflow_id']])->first();
 			//6023 ends
 			$daysUnmarked = $rule['where']['days_unmarked'];
+			$securityRoleId = $rule['where']['security_role_id']; //POCOR-6363
 			$conditions['ClassAttendanceRecords.academic_period_id'] = $academicPeriodId;
 			$conditions['ClassAttendanceRecords.month'] = $month;
 			
@@ -104,13 +105,21 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 					unset($unmarked_dates_arr);
 					//6023 ends
 					$title = $classAttendanceRecord['institution_class']['name'] . ' ' . $classAttendanceRecord['institution_class']['institution']['code'] . ' - ' . $classAttendanceRecord['institution_class']['institution']['name'] . ' with ' . $daysUnmarked . ' day Student Unmarked Attendances';
-					
+					//POCOR-6363:: START
 					$institutionId = $classAttendanceRecord['institution_class']['institution']['id'];
-					
+					$INSTITUTIONS = TableRegistry::get('institutions');	
+					$INSTITITUTEDATA = $INSTITUTIONS->find('all',['conditions'=>['id'=>$institutionId]])->first();	
+					$securityGroupUsers = TableRegistry::get('security_group_users');	
+					$dataForAssigneeID = $securityGroupUsers->find('all',['conditions'=>['security_group_id'=>$INSTITITUTEDATA->security_group_id,'security_role_id'=>$securityRoleId]])->first();	
+					if(!empty($dataForAssigneeID)){	
+						$assigneeId = $dataForAssigneeID->security_user_id;	
+					}else{	
+						$assigneeId = 0;	
+					}
+					//POCOR-6363:: END
 					$recordId = $classAttendanceRecord['institution_class']['id'];
 					$feature = $workflowRule['feature'];					
 					$statusId = 59;
-					$assigneeId = 0;
 					$institutionId = $institutionId;
 					$workflowRuleId = $workflowRule['id'];
 					$linkedRecords = [
