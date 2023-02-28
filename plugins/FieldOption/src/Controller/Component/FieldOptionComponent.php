@@ -60,7 +60,7 @@ class FieldOptionComponent extends Component
         'StaffTypes' => ['className' => 'Staff.StaffTypes', 'parent' => 'Staff'],
         'StaffTrainingCategories' => ['className' => 'Staff.StaffTrainingCategories', 'parent' => 'Staff'],
         'StaffAttachmentTypes' => ['className' => 'Staff.StaffAttachmentTypes', 'parent' => 'Staff'], //START:POCOR-5067
-        'StaffPositionCategories' => ['className' => 'Staff.StaffPositionCategories', 'parent' => 'Staff'], //START:POCOR-6949
+        
 
     // Finance
         'Banks' => ['className' => 'FieldOption.Banks', 'parent' => 'Finance'],
@@ -77,6 +77,7 @@ class FieldOptionComponent extends Component
     // Position
         'StaffPositionGrades' => ['className' => 'Institution.StaffPositionGrades', 'parent' => 'Position'],
         'StaffPositionTitles' => ['className' => 'Institution.StaffPositionTitles', 'parent' => 'Position'],
+        'StaffPositionCategories' => ['className' => 'Staff.StaffPositionCategories', 'parent' => 'Position'], //START:POCOR-6949 //move to parent position POCOR-7243 
 
     // Qualification
         'QualificationLevels' => ['className' => 'FieldOption.QualificationLevels', 'parent' => 'Qualification'],
