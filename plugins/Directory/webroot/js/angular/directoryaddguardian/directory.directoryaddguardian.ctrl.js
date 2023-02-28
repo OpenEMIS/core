@@ -697,6 +697,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
     scope.goToPrevStep = function(){
         if(scope.isInternalSearchSelected) {
+            scope.isInternalSearchSelected=false;
             scope.step = 'internal_search';
             scope.internalGridOptions = null;
             scope.goToInternalSearch();
@@ -1238,5 +1239,18 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
+    }
+    scope.isNextButtonShouldDisable = function isNextButtonShouldDisable() {
+        const { step, selectedUserData, isIdentityUserExist } = scope;
+        const { first_name, last_name, date_of_birth, gender_id } = selectedUserData;
+      
+        if (isIdentityUserExist && step === "internal_search") {
+          return true;
+        }
+      
+        if (step === "external_search" && (!first_name|| !last_name || !date_of_birth|| !gender_id)) {
+          return true;
+        }
+        return false;
     }
 }
