@@ -20,6 +20,7 @@ use App\Model\Traits\MessagesTrait;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Network\Session;
 use Cake\I18n\Time;
+use Cake\Datasource\EntityInterface;
 
 class InstitutionCurricularStudentsTable extends ControllerActionTable
 {	
@@ -30,6 +31,8 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('InstitutionCurriculars', ['className' => 'Institution.InstitutionCurriculars']);
+        $this->belongsTo('CurricularPositions', ['className' => 'FieldOption.CurricularPositions']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 
         $this->belongsToMany('EducationGrades', [
             'className' => 'Education.EducationGrades',
@@ -38,9 +41,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
             'targetForeignKey' => 'education_grade_id',
             'dependent' => true
         ]);
-        $this->addBehavior('Excel', ['pages' => ['index','view']]);
-        
-
+        $this->addBehavior('Excel', ['pages' => ['index','view','edit']]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -86,21 +87,30 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $curricularIdGet = $_SESSION['curricularId'];
+        $gradeId  = $this->request->query['education_grade_id'];
         $session = $this->controller->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
         $institutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $grades = TableRegistry::get('education_grades');
         $institutionClass = TableRegistry::get('institution_classes');
         $curricularPositions = TableRegistry::get('curricular_positions');
+        $InstitutionCurriculars = TableRegistry::get('institution_curriculars');
         $Users = TableRegistry::get('security_users');
+        $curricularIdGet = $_SESSION['curricularId'];
+        $conditions = [];
+        $conditions[$this->aliasField('institution_curricular_id')]  = $curricularIdGet;
+        if($gradeId != -1){
+            $conditions[$grades->aliasField('id')]  = $gradeId;
+        }
         $query
             ->select([
+                        $this->aliasField('id'),
                           'openemis_no'=>  $Users->aliasField('openemis_no'),
-                          'studentName' =>  $Users->aliasField('first_name'),
-                         /* .''.$Users->aliasField('middle_name').''.$Users->aliasField('third_name').''.$Users->aliasField('last_name'),*/
+                          'student_name' =>  $Users->aliasField('first_name'),
                           'education_class' => $grades->aliasField('name'),
                           'institution_class' => $institutionClass->aliasField('name'),
-                           'curricularPositions' => $curricularPositions->aliasField('name')       
+                           'curricular_position' => $curricularPositions->aliasField('name'),     
+                            $InstitutionCurriculars->aliasField('name')       
                 ])
                 ->LeftJoin([$institutionClassStudents->alias() => $institutionClassStudents->table()],
                     [$institutionClassStudents->aliasField('student_id').' = ' . $this->aliasField('student_id')
@@ -116,17 +126,35 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
                 ])
                 ->LeftJoin([$curricularPositions->alias() => $curricularPositions->table()],
                     [$curricularPositions->aliasField('id').' = ' . $this->aliasField('curricular_position_id')
-                ]);
-                $this->field('institution_curricular_id', ['visible' => true]);
-                $this->field('start_date', ['visible' => false]);
-                $this->field('end_date', ['visible' => false]);
-                $this->field('hours', ['visible' => false]);
-                $this->field('points', ['visible' => false]);
-                $this->field('location', ['visible' => false]);
-                $this->field('comment', ['visible' => false]);
-                $this->field('comment', ['visible' => false]);
+                ])
+                ->LeftJoin([$InstitutionCurriculars->alias() => $InstitutionCurriculars->table()],
+                    [$InstitutionCurriculars->aliasField('id').' = ' . $this->aliasField('institution_curricular_id')
+                ])->where($conditions)->group([$this->aliasField('student_id')]);
 
-        
+        if (!$sortable) {
+            $query
+                ->order([
+                    $this->aliasField('student_id') => 'ASC'
+                ]);
+        }
+        $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
+        $query = $this->request->query;
+        $this->field('student_id', ['visible' => false]);
+        $this->field('institution_curricular_id', ['visible' => true]);
+        $this->field('curricular_position_id', ['visible' => true]);
+        $this->field('start_date', ['visible' => false]);
+        $this->field('end_date', ['visible' => false]);
+        $this->field('hours', ['visible' => false]);
+        $this->field('points', ['visible' => false]);
+        $this->field('location', ['visible' => false]);
+        $this->field('comment', ['visible' => false]);
+        $this->field('openemis_no', ['visible' => true]);
+        $this->field('education_class', ['visible' => true]);
+        $this->field('institution_class', ['visible' => true]);
+        $this->field('student_name', ['visible' => true]);
+
+        $this->setFieldOrder([
+        'student_name', 'openemis_no','education_class','institution_class', 'institution_curricular_id', 'curricular_position_id']);
                
     }
 
@@ -166,6 +194,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $this->field('location', ['visible' => true,]);
         $this->field('curricular_position_id', ['type' => 'select']);
         $this->field('comment', ['visible' => true]);
+        $this->field('id', ['visible' => true]);
     }
 
    public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
@@ -255,6 +284,13 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
             $attr['onChangeReload'] = false;  
         }
         return $attr;
+    }
+
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    {
+        
+        $entity->id = Text::uuid();
+        $entity->institution_curricular_id = $_SESSION['curricularId'];
     }
 	
 }
