@@ -27,7 +27,7 @@ class PORGI8 extends Migration
         DB::statement('CREATE TABLE `zz_8_config_items` LIKE `config_items`');
         DB::statement('INSERT INTO `zz_8_config_items` SELECT * FROM `config_items`');
 
-        DB::statement("INSERT INTO `config_items` (`id`, `name`, `code`, `type`, `label`, `value`, `value_selection`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (NULL, 'Allow OpenEMIS Registrations to Add New Students', 'NewStudent', 'Add New Student', 'New Student', '0', '', '0', '1', '1', 'Dropdown', 'completeness', NULL, NULL, '1', now())");
+        DB::statement("INSERT INTO `config_items` (`name`, `code`, `type`, `label`, `value`, `value_selection`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES ('Allow OpenEMIS Registrations to Add New Students', 'NewStudent', 'Add New Student', 'New Student', '1', '', '0', '1', '1', 'Dropdown', 'completeness', NULL, NULL, '1', now())");
 
 
         //Creating backup 'zz_8_student_statuses' table...
