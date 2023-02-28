@@ -1,3 +1,15 @@
+### [3.78.1] - 2023-02-28
+- Implemented: Develop Institutions > Statistics > Standard: Student Attendance Summary Report
+- Implemented: Design changes to add staff and student
+- Bug Fixed: Administration>Communication>Alert: Alerts > Attendance doesn't seem to be working
+- Bug Fixed: Institution>Profile>Institution: Report is stuck in progress
+- Bug Fixed: Implement database foreign keys for OpenEMIS Core-Fixing 404 errors
+- Bug Fixed: Adding of foreign keys back
+- Bug Fixed: Administration>Data Management>Archive: Feature name is not showing
+- Bug Fixed: Add academic_period_id to institutions_grade table
+- Bug Fixed: Institutions/Directory > Students/Staff/Users > Add page : System is able to add users with no mandatory fields added
+- Bug Fixed: Institutions > Staff > Import: The page shows a 404 error when clicking the download button for Staff Import
+
 ### [3.78.0] - 2023-02-21
 - Implemented: Enhance the usability of the Admin > Security > Groups
 - Bug Fixed: Institutions > Staff > Change of Start Date : Upon submission, system adds an End Date to staff position
