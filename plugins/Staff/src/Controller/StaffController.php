@@ -757,4 +757,12 @@ class StaffController extends AppController
         $this->set('institutionDefaultId', key($selectedInstitutionOptions));
         $this->set('ngController', 'TimetableCtrl as $ctrl');
     }
+
+    //POCOR-6673
+    public function StaffCurriculars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffCurriculars']);
+    }
+
+    
 }

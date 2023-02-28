@@ -52,7 +52,7 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id','name','institution_id','total_male_students','total_female_students','total_students']);
     }
 
-     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $staffId = $this->Session->read('Staff.Staff.id');
         if (!empty($staffId)) {
