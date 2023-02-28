@@ -111,6 +111,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.transferStudentNextStep = transferStudentNextStep;
     StudentController.checkConfigForExternalSearch = checkConfigForExternalSearch;
     StudentController.isIdentityUserExist = false;
+    StudentController.isNextButtonShouldDisable = isNextButtonShouldDisable;
 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
@@ -1697,5 +1698,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
+    }
+    function isNextButtonShouldDisable() {
+        const { step, selectedStudentData, isIdentityUserExist } = StudentController;
+        const { first_name, last_name, date_of_birth, gender_id } = selectedStudentData;
+      
+        if (isIdentityUserExist && step === "internal_search") {
+          return true;
+        }
+      
+        if (step === "external_search" && (!first_name|| !last_name || !date_of_birth|| !gender_id)) {
+          return true;
+        }
+        return false;
     }
 }
