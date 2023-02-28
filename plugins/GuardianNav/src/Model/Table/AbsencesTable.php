@@ -199,7 +199,8 @@ class AbsencesTable extends ControllerActionTable
             
             $query
                 ->find('all')
-                ->where($conditions);
+                ->where($conditions)
+                ->group(['subjects','periods' ]); //POCOR-7275
                 $extra['elements']['controls'] = ['name' => 'GuardianNav.Absences/controls', 'data' => [], 'options' => [], 'order' => 1];
         }
     }
