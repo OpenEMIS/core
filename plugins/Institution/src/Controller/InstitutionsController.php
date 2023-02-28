@@ -44,7 +44,7 @@ class InstitutionsController extends AppController
         'InstitutionSubjects',
         'InstitutionTextbooks',
         'InstitutionCurricular',//POCOR-6673
-        'InstitutionCurricularStudents',
+        'InstitutionCurricularStudents', //POCOR-6673
 
         // students
         'Programmes',
@@ -7312,4 +7312,6 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurriculars']);
     }
+
+    
 }

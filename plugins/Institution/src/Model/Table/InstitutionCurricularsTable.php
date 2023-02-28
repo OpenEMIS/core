@@ -240,17 +240,20 @@ class InstitutionCurricularsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
+        $entity->institution_curricular_id = $_SESSION['curricularId'];
         $curricularStaff = TableRegistry::get('institution_curricular_staff'); 
-        $curricularId = $entity->id; 
+        $curricularId = $entity->institution_curricular_id;
         $currentTimeZone = date("Y-m-d H:i:s");
             if(!empty($entity->staff_id['_ids'])){
                 $StaffIds = $entity->staff_id['_ids'];
                 foreach($StaffIds as $staffId){
                    $checkCurricularStaff = $curricularStaff->find()->where(['staff_id'=>$staffId, 'institution_curricular_id'=>$curricularId])->first(); 
+
                    if(empty($checkCurricularStaff)){
-                        $data = [        
+                        $data = [      
+                                    'id'=> Text::uuid(),  
                                     'staff_id' => $staffId,
                                     'institution_curricular_id' => $curricularId,
                                     'created_user_id' => 1,
@@ -259,7 +262,6 @@ class InstitutionCurricularsTable extends ControllerActionTable
                                     'modified' => $currentTimeZone,*/
                                 ];
                         $entity = $curricularStaff->newEntity($data);
-
                        $save =  $curricularStaff->save($entity);
                    }
                 }
@@ -287,6 +289,17 @@ class InstitutionCurricularsTable extends ControllerActionTable
     public function onGetCategory(Event $event, Entity $entity)
     {
         return $entity->category ? __('Curricular') : __('Extracurricular');
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+       if ($field == 'total_male_students') {
+            return  __('Male Students');
+        } else if ($field == 'total_female_students') {
+            return  __('Female Students');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
     
 }
