@@ -900,7 +900,8 @@ class InstitutionsTable extends AppTable
                              'Report.Uis4',
                              'Report.Uis5',
                              //END:POCOR-4570
-                             'Report.InstitutionPositionsSummaries'
+                             'Report.InstitutionPositionsSummaries',
+                             'Report.Curriculars'
 
 
                          ]
@@ -952,7 +953,8 @@ class InstitutionsTable extends AppTable
                 'Report.InfrastructureNeeds',
                 'Report.Income',
                 'Report.Expenditure',
-                'Report.InstitutionPositionsSummaries'
+                'Report.InstitutionPositionsSummaries',
+                'Report.Curriculars'
             ]))) {
                 $Areas = TableRegistry::get('AreaLevel.AreaLevels');
                 $entity = $attr['entity'];
@@ -1014,7 +1016,8 @@ class InstitutionsTable extends AppTable
                     'Report.InfrastructureNeeds',
                     'Report.Income',
                     'Report.Expenditure',
-                    'Report.InstitutionPositionsSummaries'
+                    'Report.InstitutionPositionsSummaries',
+                    'Report.Curriculars'
                 ]))) {
                 $Areas = TableRegistry::get('Area.Areas');
                 $entity = $attr['entity'];
@@ -1332,7 +1335,8 @@ class InstitutionsTable extends AppTable
                 'Report.InstitutionCases',
                 'Report.ClassAttendanceNotMarkedRecords',
                 'Report.ClassAttendanceMarkedSummaryReport',
-                'Report.InstitutionPositionsSummaries'
+                'Report.InstitutionPositionsSummaries',
+                'Report.Curriculars'
             ];
 
 
