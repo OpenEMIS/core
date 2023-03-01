@@ -138,23 +138,18 @@ class DataManagementCopyTable extends ControllerActionTable
         $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $EducationSystems = TableRegistry::get('Education.EducationSystems');
-        if($entity->to_academic_period){
-            
-            $ToAcademicPeriodsData = $AcademicPeriods
-            ->find()
-            ->select(['start_date', 'start_year','end_date'])
-            ->where(['id' => $entity->to_academic_period])
-            ->first();
 
-            $InstitutionGradesdata = $InstitutionGrades
-                ->find('all')
-                ->where(['start_date' => $ToAcademicPeriodsData['start_date']])
-                ->toArray();
-            if(!empty($InstitutionGradesdata)){
-                $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
-                return false;
-            }
-        }
+        $EducationLevels = TableRegistry::get('Education.EducationLevels');
+        $EducationCycles = TableRegistry::get('Education.EducationCycles');
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+
+        $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
+        $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
+        $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
+        $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
+        
         if($entity->to_academic_period){
             
             $ToAcademicPeriodsData = $AcademicPeriods
@@ -172,20 +167,81 @@ class DataManagementCopyTable extends ControllerActionTable
                 return false;
             }
         }
-        if($entity->from_academic_period){
-            
-            $ToAcademicPeriodsData = $AcademicPeriods
-            ->find()
-            ->select(['start_date', 'start_year','end_date'])
-            ->where(['id' => $entity->from_academic_period])
-            ->first();
+        if($entity->features == 'Institution Programmes, Grades and Subjects'){
+            $EducationSystemsdata = $EducationSystems
+                ->find('all')
+                ->where(['academic_period_id' => $entity->to_academic_period])
+                ->toArray();
 
+            $EducationLevelsData = $EducationLevels
+                ->find('all')
+                ->where(['education_system_id' => $EducationSystemsdata[0]->id])
+                ->toArray();
+            foreach ($EducationLevelsData as $level_key => $level_val) {
+                $level_data_id_arr[$level_key] = $level_val['id'];
+            }
+            $EducationCyclesData = $EducationCycles
+                ->find('all')
+                ->where(['education_level_id IN' => $level_data_id_arr])
+                ->toArray();
+            foreach ($EducationCyclesData as $cycle_key => $cycle_val) {
+                $cycle_data_id_arr[$cycle_key] = $cycle_val['id'];
+            }
+            $EducationProgrammesData = $EducationProgrammes
+                ->find('all')
+                ->where(['education_cycle_id IN' => $cycle_data_id_arr])
+                ->toArray();
+            foreach ($EducationProgrammesData as $programmes_key => $programmes_val) {
+                $programmes_data_id_arr[$programmes_key] = $programmes_val['id'];
+            }
+            $EducationGradesdata = $EducationGrades
+                ->find('all')
+                ->where(['education_programme_id IN' => $programmes_data_id_arr])
+                ->toArray();
+            foreach ($EducationGradesdata as $education_grades_key => $education_grades_val) {
+                $education_grades_id_arr[$education_grades_key] = $education_grades_val['id'];
+            }
             $InstitutionGradesdata = $InstitutionGrades
                 ->find('all')
-                ->where(['start_date' => $ToAcademicPeriodsData['start_date']])
+                ->where(['education_grade_id IN ' => $education_grades_id_arr])
                 ->toArray();
-            if(empty($InstitutionGradesdata)){
-                $this->Alert->error('CopyData.nodataexist', ['reset' => true]);
+            if(!empty($InstitutionGradesdata)){
+                $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+                return false;
+            }
+        }
+        if($entity->features == 'Shifts'){
+            $InstitutionShiftsData = $InstitutionShifts
+                ->find('all')
+                ->where(['academic_period_id ' => $entity->to_academic_period])
+                ->toArray();
+            if(!empty($InstitutionShiftsData)){
+                $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+                return false;
+            }
+        }
+        if($entity->features == 'Infrastructure'){
+            $InstitutionBuildingsData = $InstitutionBuildings
+                ->find('all')
+                ->where(['academic_period_id ' => $entity->to_academic_period])
+                ->toArray();
+
+            $InstitutionFloorsData = $InstitutionFloors
+                ->find('all')
+                ->where(['academic_period_id ' => $entity->to_academic_period])
+                ->toArray();
+
+            $InstitutionRoomsData = $InstitutionRooms
+                ->find('all')
+                ->where(['academic_period_id ' => $entity->to_academic_period])
+                ->toArray();
+
+            $InstitutionLandsData = $InstitutionLands
+                ->find('all')
+                ->where(['academic_period_id ' => $entity->to_academic_period])
+                ->toArray();
+            if(!empty($InstitutionBuildingsData) && !empty($InstitutionFloorsData) && !empty($InstitutionRoomsData) && !empty($InstitutionLandsData)){
+                $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
                 return false;
             }
         }
