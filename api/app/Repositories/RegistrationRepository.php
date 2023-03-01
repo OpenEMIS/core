@@ -313,6 +313,7 @@ class RegistrationRepository extends Controller
 
             
             if($request['openemis_id'] != ""){
+                
                 Log::info('For User Registration using openemis id.');
                 $student = SecurityUsers::with(
                         'gender',
@@ -373,13 +374,14 @@ class RegistrationRepository extends Controller
                             $storeAdmission['institution_id'] = $request['institution_id'];
                             $storeAdmission['academic_period_id'] = $academicPeriod['id'];
                             $storeAdmission['education_grade_id'] = $request['education_grade_id'];
+                            $storeAdmission['assignee_id'] = $userData->user_id;
                             $storeAdmission['created_user_id'] = $userData->user_id;
                             $storeAdmission['created'] = Carbon::now()->toDateTimeString();
 
                             $store = InstitutionStudentAdmission::insert($storeAdmission);
                             Log::info("## Stored in InstitutionStudentAdmission ##", $storeAdmission);
 
-                            if(count($request->custom_fields) > 0){
+                            if((isset($request->custom_fields)) && (count($request->custom_fields) > 0)){
                                 $storeCustomField = $this->storeCustomField($request->custom_fields, $student->id, $userData->user_id);
                             }
                             
@@ -404,6 +406,7 @@ class RegistrationRepository extends Controller
                 }
 
             } elseif ($request['identity_number'] != "") {
+                
                 Log::info('For User Registration using identity number.');
                 $student = SecurityUsers::with(
                         'gender',
@@ -464,6 +467,7 @@ class RegistrationRepository extends Controller
                             $storeAdmission['institution_id'] = $request['institution_id'];
                             $storeAdmission['academic_period_id'] = $academicPeriod['id'];
                             $storeAdmission['education_grade_id'] = $request['education_grade_id'];
+                            $storeAdmission['assignee_id'] = $userData->user_id;
                             $storeAdmission['created_user_id'] = $userData->user_id;
                             $storeAdmission['created'] = Carbon::now()->toDateTimeString();
 
@@ -471,7 +475,7 @@ class RegistrationRepository extends Controller
 
                             Log::info("## Stored in InstitutionStudentAdmission ##", $storeAdmission);
 
-                            if(count($request->custom_fields) > 0){
+                            if((isset($request->custom_fields)) && (count($request->custom_fields) > 0)){
                                 $storeCustomField = $this->storeCustomField($request->custom_fields, $student->id, $userData->user_id);
                             }
                             
@@ -569,6 +573,7 @@ class RegistrationRepository extends Controller
                         $storeAdmission['institution_id'] = $request['institution_id'];
                         $storeAdmission['academic_period_id'] = $academicPeriod['id'];
                         $storeAdmission['education_grade_id'] = $request['education_grade_id'];
+                        $storeAdmission['assignee_id'] = $userData->user_id;
                         $storeAdmission['created_user_id'] = $userData->user_id;
                         $storeAdmission['created'] = Carbon::now()->toDateTimeString();
 
@@ -576,7 +581,7 @@ class RegistrationRepository extends Controller
 
                         Log::info("## Stored in InstitutionStudentAdmission ##", $storeAdmission);
 
-                        if(count($request->custom_fields) > 0){
+                        if((isset($request->custom_fields)) && (count($request->custom_fields) > 0)){
                             $storeCustomField = $this->storeCustomField($request->custom_fields, $student->id, $userData->user_id);
                         }
                         
