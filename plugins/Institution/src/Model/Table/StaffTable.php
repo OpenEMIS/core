@@ -945,7 +945,6 @@ class StaffTable extends ControllerActionTable
     public function addStaffRole($staffEntity)
     {
         $positionEntity = null;
-
         if (empty($staffEntity->security_group_user_id)) {
             // every staff record in school will be linked to a security role record in security_group_users
             $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
@@ -1007,8 +1006,7 @@ class StaffTable extends ControllerActionTable
             ->contain(['Institutions'])
             ->select(['security_role_id' => 'SecurityRoles.id'/*, 'is_homeroom'*/, 'Institutions.security_group_id'])//POCOR-7238 remove is_homeroom 
             ->first();
-
-        $isHomeroomRole = !empty($positionEntity) && $positionEntity->is_homeroom;
+        /*$isHomeroomRole = !empty($positionEntity) && $positionEntity->is_homeroom;
         if (!empty($homeroomSecurityRoleId) && $isHomeroomRole) {
             $securityGroupId = $positionEntity->institution->security_group_id;
 
@@ -1024,13 +1022,66 @@ class StaffTable extends ControllerActionTable
                 $SecurityGroupUsersTable->delete($deleteEntity);
             }
         }
-
-        $conditions = [$SecurityGroupUsersTable->aliasField('id') => $securityGroupUserId];
-        if (!is_null($securityGroupUserId) && $SecurityGroupUsersTable->exists($conditions)) {
-            $groupUserEntity = $SecurityGroupUsersTable->get($securityGroupUserId);
-            $SecurityGroupUsersTable->delete($groupUserEntity);
-            $this->updateSecurityGroupUserId($staffEntity, null);
+        *///POCOR-7238 Starts
+        $InstitutionStaffTbl = TableRegistry::get('institution_staff');
+        $InstitutionStaffEntity = $InstitutionStaffTbl->find()
+                ->where([
+                    $InstitutionStaffTbl->aliasField('security_group_user_id') => $securityGroupUserId
+                ])
+                ->hydrate(false)
+                ->toArray();
+        $countSecurityGroupUserId = [];        
+        $countIsHomeroom = [];        
+        foreach ($InstitutionStaffEntity as $skey => $sval) {
+            $countSecurityGroupUserId[] = $sval['security_group_user_id'];
+            $countIsHomeroom[] = $sval['is_homeroom'];
         }
+
+        if((count($countSecurityGroupUserId) > 1) && (count($countIsHomeroom) > 1)){
+            $this->updateSecurityGroupUserId($staffEntity, null);
+        }else if((count($countSecurityGroupUserId) > 1) && (count($countIsHomeroom) < 2)){
+            if($staffEntity->is_homeroom == 1){
+                $securityGroupId = $positionEntity->institution->security_group_id;    
+                if(!empty($positionEntity)){
+                    $SecurityGroupUserTbl = TableRegistry::get('security_group_users');
+                    $conditions = [
+                        $SecurityGroupUserTbl->aliasField('security_group_id') => $securityGroupId,
+                        $SecurityGroupUserTbl->aliasField('security_user_id') => $staffEntity->staff_id,
+                        $SecurityGroupUserTbl->aliasField('security_role_id') => $homeroomSecurityRoleId
+                    ];
+                    $SecurityGroupUserData = $SecurityGroupUserTbl->find()->where($conditions)->hydrate(false)->first();
+                    if (!is_null($SecurityGroupUserData)) {
+                        $groupUserEntity = $SecurityGroupUsersTable->get($SecurityGroupUserData['id']);
+                        $SecurityGroupUsersTable->delete($groupUserEntity);
+                        $this->updateSecurityGroupUserId($staffEntity, null);
+                    }
+                }    
+            }else{
+                $this->updateSecurityGroupUserId($staffEntity, null);
+            }
+        }else if((count($countSecurityGroupUserId) == 1) && (count($countIsHomeroom) == 1)){
+            $conditions = [$SecurityGroupUsersTable->aliasField('id') => $securityGroupUserId];
+            if (!is_null($securityGroupUserId) && $SecurityGroupUsersTable->exists($conditions)) {
+                $groupUserEntity = $SecurityGroupUsersTable->get($securityGroupUserId);
+                $SecurityGroupUsersTable->delete($groupUserEntity);
+            }
+
+            $securityGroupId = $positionEntity->institution->security_group_id; 
+            if(!empty($positionEntity) && ($staffEntity->is_homeroom == 1)){
+                $SecurityGroupUserTbl = TableRegistry::get('security_group_users');
+                $homeroom_conditions = [
+                    $SecurityGroupUserTbl->aliasField('security_group_id') => $securityGroupId,
+                    $SecurityGroupUserTbl->aliasField('security_user_id') => $staffEntity->staff_id,
+                    $SecurityGroupUserTbl->aliasField('security_role_id') => $homeroomSecurityRoleId
+                ];
+                $SecurityGroupUserData = $SecurityGroupUserTbl->find()->where($homeroom_conditions)->hydrate(false)->first();
+                if (!is_null($SecurityGroupUserData)) {
+                    $homegroupUserEntity = $SecurityGroupUsersTable->get($SecurityGroupUserData['id']);
+                    $SecurityGroupUsersTable->delete($homegroupUserEntity);
+                }
+            } 
+            $this->updateSecurityGroupUserId($staffEntity, null);
+        }//POCOR-7238 Ends
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
