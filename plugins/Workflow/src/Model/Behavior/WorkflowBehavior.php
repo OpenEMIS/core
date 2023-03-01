@@ -2174,6 +2174,11 @@ class WorkflowBehavior extends Behavior
             if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
                 if (array_key_exists('assignee_id', $requestData[$this->WorkflowTransitions->alias()]) && !empty($requestData[$this->WorkflowTransitions->alias()]['assignee_id'])) {
                     $assigneeId = $requestData[$this->WorkflowTransitions->alias()]['assignee_id'];
+                    /**POCOR-7274 :: Start*/
+                    if(!empty($requestData['StudentTransferIn']['assignee_id'])){
+                        $assigneeId = $requestData['StudentTransferIn']['assignee_id'];
+                    }
+                    /**POCOR-7274 :: End */
                     if ($assigneeId == self::AUTO_ASSIGN) {
                         $this->autoAssignAssignee($entity);
                     } else {
