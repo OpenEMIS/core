@@ -222,6 +222,17 @@ class RemoveBehavior extends Behavior
                     $extra['config']['form'] = ['type' => 'DELETE'];
                     $this->recordHasAssociatedRecords = false;
                 }
+
+                /** Start POCOR-7253 */
+                if(!empty($cells)){
+                    foreach($cells as $key => $cell_val){
+                        if(in_array($cell_val[0], array('Academic Periods','Institution Custom Fields','User Groups'))){
+                            unset($cells[$key]);
+                        }
+                    }
+                }
+                $extra['cells'] = $cells;
+                /** End POCOR-7253 */
                 $extra['cells'] = $cells;
 
                 // check if force delete fields should be displayed
