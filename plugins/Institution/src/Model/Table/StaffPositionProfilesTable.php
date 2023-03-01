@@ -481,7 +481,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, $entity, $requestData, ArrayObject $extra)
     {
-        
         if (!$entity->errors()) {
             $StaffTable = TableRegistry::get('Institution.Staff');
             $url = $this->url('view');
@@ -542,20 +541,16 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         $data = $this->get($id)->toArray();
         $newEntity = $this->patchStaffProfile($data);
-
         // reject all pending transfers
         $this->rejectPendingTransfer($data);
-
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
         $InstitutionStaff->save($newEntity);
     }
 
     private function rejectPendingTransfer(array $data)
     {
-
         // reject all pending transfers
         $staffId = $data['staff_id'];
-
         $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
         $doneStatus = $InstitutionStaffTransfers::DONE;
 
@@ -604,7 +599,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         $entity = $WorkflowTransitions->newEntity($transition);
                         $WorkflowTransitions->save($entity);
                     }
-
                 }
             }
         }
@@ -755,7 +749,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-//        print_r($extra);die();
         $this->Session->delete('Institution.StaffPositionProfiles.viewBackUrl');
         if (isset($extra['toolbarButtons']['add'])) {
             unset($extra['toolbarButtons']['add']);
@@ -772,8 +765,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
         $selectedStatus = $this->request->query('staff_status_id');
-//        print_r($selectedStatus);die();
-
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -902,7 +893,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if ($action == 'add' || $action == 'edit') {
             $staffChangeTypes = $this->staffChangeTypesList;
             if (isset($request->data[$this->alias()])) {
-                // echo "<pre>";print_r($request->data);die;
                 if($request->data[$this->alias()]['staff_change_type_id'] == ''){
                     $attr['visible'] = false;
                 }
@@ -1006,11 +996,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         // }
 
         // return $attr;
-
-
-
         $entity = $attr['entity'];
-
         // start_date
         if (!$entity->has('start_date')) {
             $requestData = $this->request->data;
@@ -1050,7 +1036,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $staffChangeTypes = $this->staffChangeTypesList;
-            // echo "<pre>";print_r($request->data);die;
             if($request->data[$this->alias()]['staff_change_type_id'] == ''){
                 $attr['visible'] = false;
             }
@@ -1176,7 +1161,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function addOnInitialize(Event $event, Entity $entity)
     {
-
         $addOperation = $this->initialiseVariable($entity);
         if ($addOperation) {
             $institutionStaffId = $this->request->query('institution_staff_id');
