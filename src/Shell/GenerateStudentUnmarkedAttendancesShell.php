@@ -141,14 +141,18 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 					
 					$newEntity = $this->InstitutionCases->newEntity();
 					$newEntity = $this->InstitutionCases->patchEntity($newEntity, $caseData, $patchOptions);
-					$result = $this->InstitutionCases->save($newEntity);
+					$alreadyExistonSameDay = $this->InstitutionCases->find('all',['conditions'=>[strtotime('y-m-d','created')=>date('y-m-d'), 'status_id'=>$statusId, 'assignee_id !=' =>0]])->first();
+					if(empty($alreadyExistonSameDay)){
+						$result = $this->InstitutionCases->save($newEntity);
+						
+						$linkedRecords['institution_case_id'] = $result->id;
+						$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->newEntity();
+						$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->patchEntity($newEntityInstitutionCaseRecord, $linkedRecords, $patchOptions);
+						$this->InstitutionCaseRecords->save($newEntityInstitutionCaseRecord);
+						$this->sendEmail($rule['where']['security_role_id'], $institutionId, $daysUnmarked,$mailed_data);//6023 add param $mailed_data  
+						echo "saved";
+					}
 					
-					$linkedRecords['institution_case_id'] = $result->id;
-					$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->newEntity();
-					$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->patchEntity($newEntityInstitutionCaseRecord, $linkedRecords, $patchOptions);
-					$this->InstitutionCaseRecords->save($newEntityInstitutionCaseRecord);
-					$this->sendEmail($rule['where']['security_role_id'], $institutionId, $daysUnmarked,$mailed_data);//6023 add param $mailed_data  
-					echo "saved";
 				}
 			}
 		}
