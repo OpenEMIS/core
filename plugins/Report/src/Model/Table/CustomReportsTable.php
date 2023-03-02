@@ -197,6 +197,7 @@ class CustomReportsTable extends AppTable
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
+        ini_set('memory_limit', '-1');
         if ($action == 'add') {
             $queryParams = isset($this->request->data[$this->alias()]) ? $this->request->data[$this->alias()] : [];
             $queryParams['user_id'] = $this->Auth->user('id');
