@@ -20,15 +20,15 @@ class CurricularsTable extends AppTable
         $this->table('institution_curriculars');
         parent::initialize($config);
         
-        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-        $this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('CurricularTypes', ['className' => 'FieldOption.CurricularTypes']);
         
 
         $this->addBehavior('Excel', [
             'autoFields' => false
         ]);
         $this->addBehavior('Report.ReportList');
-       $this->addBehavior('Report.InstitutionSecurity');
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
@@ -41,13 +41,17 @@ class CurricularsTable extends AppTable
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
         $endDate = $periodEntity->end_date->format('Y-m-d');
-        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
-        $Staff = TableRegistry::get('Security.Users');
+        $InstitutionCurricularStaff = TableRegistry::get('Institution.InstitutionCurricularStaff');
+        $InstitutionCurricularStudent = TableRegistry::get('Institution.InstitutionCurricularStudents');
+        $InstitutionCurricularPosition = TableRegistry::get('curricular_positions');
+        $staff = TableRegistry::get('Security.Users');
+        $student = TableRegistry::get('Security.Users');
         $Genders = TableRegistry::get('User.Genders');
         $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
         $UserIdentities = TableRegistry::get('User.Identities');
         $conditions = [];
         
+        $conditions['AcademicPeriods.id'] = $academicPeriodId; 
         if (!empty($institutionId) && $institutionId > 0) {
             $conditions['Institutions.id'] = $institutionId; 
         }
@@ -58,38 +62,35 @@ class CurricularsTable extends AppTable
             ->select([
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',               
+                'academic_period_name' => 'AcademicPeriods.name',               
                 'area_code' => 'Areas.code',
                 'area_name' => 'Areas.name',
                 'area_administratives_code' => 'AreaAdministratives.code',
                 'area_administratives_name' => 'AreaAdministratives.name',
-                'assignee_id' => 'Assignees.id',
-                'workflow_steps_name' => 'Statuses.name',
-                'position_no' => $this->aliasField('position_no'),
-                'staff_position_grade_name' => 'StaffPositionGrades.name',
-                'is_homeroom' => $this->aliasField('is_homeroom'),
-                'openemis_no' => $Staff->aliasField('openemis_no'),
-                'first_name' => $Staff->aliasField('first_name'),
-                'last_name' => $Staff->aliasField('last_name'),
-                'gender' => $Genders->aliasField('name'),
-                'identity_type' => $IdentityTypes->aliasField('name'),
-                'identity_number' => $UserIdentities->aliasField('number')
+                'first_name_stu' => $student->aliasField('first_name'),
+                'last_name_stu' => $student->aliasField('last_name'),
+                'curricular_name' => $this->aliasField('name'),
+                'curricular_id' => $this->aliasField('id'),
+                'curricular_type' => 'CurricularTypes.name',
+                'category' => $this->aliasField('category'),
+                'staff_id' => $InstitutionCurricularStaff->aliasField('staff_id'),
+                'curricular_positions' => $InstitutionCurricularPosition->aliasField('name'),
+                'points' => $InstitutionCurricularStudent->aliasField('points'),
+                'hours' => $InstitutionCurricularStudent->aliasField('hours'),
+                'location' => $InstitutionCurricularStudent->aliasField('location'),
+                'comment' => $InstitutionCurricularStudent->aliasField('comment'),
+                'Student_name' => $query->func()->concat([
+                    'Users.first_name' => 'literal',
+                    " ",
+                    'Users.last_name' => 'literal'
+                    ]),
+                
             ])
             ->contain([
-                'Statuses' => [
+                'AcademicPeriods' => [
                     'fields' => [
-                        'Statuses.name'
-                    ]
-                ],
-                'StaffPositionTitles' => [
-                    'fields' => [
-                        'StaffPositionTitles.id',
-                        'StaffPositionTitles.name',
-                        'StaffPositionTitles.type'
-                    ]
-                ],
-                'StaffPositionGrades' => [
-                    'fields' => [
-                        'StaffPositionGrades.name'
+                        'AcademicPeriods.id',
+                        'AcademicPeriods.name'
                     ]
                 ],
                 'Institutions' => [
@@ -111,56 +112,55 @@ class CurricularsTable extends AppTable
                         'AreaAdministratives.code'
                     ]
                 ],
-                'Assignees' => [
+                'CurricularTypes' => [
                     'fields' => [
-                        'Assignees.id',
-                        'Assignees.first_name',
-                        'Assignees.middle_name',
-                        'Assignees.third_name',
-                        'Assignees.last_name',
-                        'Assignees.preferred_name'
+                        'CurricularTypes.id',
+                        'CurricularTypes.name'
                     ]
-                ]
+                ],
             ])
             ->leftJoin(
-                    [$InstitutionStaff->alias() => $InstitutionStaff->table()],
+                    [$InstitutionCurricularStaff->alias() => $InstitutionCurricularStaff->table()],
                     [
-                        $InstitutionStaff->aliasField('institution_position_id = ') . $this->aliasField('id'),
-                        $InstitutionStaff->aliasField('institution_id = ') . $this->aliasField('institution_id')
+                        $InstitutionCurricularStaff->aliasField('institution_curricular_id = ') . $this->aliasField('id'),
                     ]
                 )
             ->leftJoin(
-                    [$Staff->alias() => $Staff->table()],
+                    [$InstitutionCurricularStudent->alias() => $InstitutionCurricularStudent->table()],
                     [
-                        $Staff->aliasField('id = ') . $InstitutionStaff->aliasField('staff_id')
+                        $InstitutionCurricularStudent->aliasField('institution_curricular_id = ') . $this->aliasField('id')
                     ]
                 )
             ->leftJoin(
-                    [$Genders->alias() => $Genders->table()],
+                    [$InstitutionCurricularPosition->alias() => $InstitutionCurricularPosition->table()],
                     [
-                        $Genders->aliasField('id = ') . $Staff->aliasField('gender_id')
+                        $InstitutionCurricularPosition->aliasField('id = ') . $InstitutionCurricularStudent->aliasField('curricular_position_id')
                     ]
                 )
-            ->leftJoin(
-                    [$UserIdentities->alias() => $UserIdentities->table()],
+             ->leftJoin(
+                    [$student->alias() => $student->table()],
                     [
-                        $UserIdentities->aliasField('security_user_id = ') . $Staff->aliasField('id')
-                    ]
-                )
-            ->leftJoin(
-                    [$IdentityTypes->alias() => $IdentityTypes->table()],
+                        $student->aliasField('id = ') . $InstitutionCurricularStudent->aliasField('student_id')
+                    ])
+             ->leftJoin(
+                    [$staff->alias() => $staff->table()],
                     [
-                        $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
-                    ]
-                )
+                        $staff->aliasField('id = ') . $InstitutionCurricularStaff->aliasField('staff_id')
+                    ])
             ->where([$conditions])
-            ->andWhere([$this->aliasField('institution_id !=') => 0]) //POCOR-6777
-            ->order(['institution_name', 'position_no']);
+            ->group([$InstitutionCurricularStaff->aliasField('staff_id'),$InstitutionCurricularStudent->aliasField('student_id')]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
+
+        $newFields[] = [
+            'key' => 'academic_period_name',
+            'field' => 'academic_period_name',
+            'type' => 'integer',
+            'label' => __('Academic Period')
+        ];
 
         $newFields[] = [
             'key' => 'Institutions.code',
@@ -190,7 +190,7 @@ class CurricularsTable extends AppTable
             'label' => __('Area')
         ];
 
-        $newFields[] = [
+        /*$newFields[] = [
             'key' => 'AreaAdministratives.code',
             'field' => 'area_administratives_code',
             'type' => 'string',
@@ -202,126 +202,88 @@ class CurricularsTable extends AppTable
             'field' => 'area_administratives_name',
             'type' => 'string',
             'label' => __('Area Administrative')
+        ];*/
+
+        
+
+        $newFields[] = [
+            'key' => 'curricular_name',
+            'field' => 'curricular_name',
+            'type' => 'string',
+            'label' => __('Curricular Name')
         ];
 
         $newFields[] = [
-            'key' => 'Assignees.id',
-            'field' => 'assignee_id',
+            'key' => 'category',
+            'field' => 'category',
             'type' => 'string',
-            'label' => __('Assignee')
+            'label' => __('Category')
         ];
 
         $newFields[] = [
-            'key' => 'Statuses.name',
-            'field' => 'workflow_steps_name',
+            'key' => 'curricular_type',
+            'field' => 'curricular_type',
             'type' => 'string',
-            'label' => __('Status')
+            'label' => __('Type')
+        ];
+        $newFields[] = [
+            'key' => 'Student_name',
+            'field' => 'Student_name',
+            'type' => 'string',
+            'label' => __('Student Name')
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionPositions.position_no',
-            'field' => 'position_no',
-            'type' => 'string',
-            'label' => __('Number')
+            'key' => 'hours',
+            'field' => 'hours',
+            'type' => 'integer',
+            'label' => __('hours')
         ];
 
         $newFields[] = [
-            'key' => 'StaffPositionTitles.id',
-            'field' => 'staff_position_id',
+            'key' => 'points',
+            'field' => 'points',
             'type' => 'string',
-            'label' => __('Title')
+            'label' => __('Points')
+        ];
+        $newFields[] = [
+            'key' => 'curricular_positions',
+            'field' => 'curricular_positions',
+            'type' => 'string',
+            'label' => __('Curricular Positions')
         ];
 
         $newFields[] = [
-            'key' => 'StaffPositionGrades.name',
-            'field' => 'staff_position_grade_name',
+            'key' => 'location',
+            'field' => 'location',
             'type' => 'string',
-            'label' => __('Grade')
-        ];
-
-        $newFields[] = [
-            'key' => 'InstitutionPositions.is_homeroom',
-            'field' => 'is_homeroom',
-            'type' => 'string',
-            'label' => __('Homeroom Teacher')
+            'label' => __('Location')
         ];
         $newFields[] = [
-            'key' => '',
-            'field' => 'openemis_no',
+            'key' => 'comment',
+            'field' => 'comment',
             'type' => 'string',
-            'label' => __('OpenEMIS ID')
-        ];
-        $newFields[] = [
-            'key' => '',
-            'field' => 'first_name',
-            'type' => 'string',
-            'label' => __('First Name')
-        ];
-
-        $newFields[] = [
-            'key' => '',
-            'field' => 'last_name',
-            'type' => 'string',
-            'label' => __('Last Name')
-        ];
-        $newFields[] = [
-            'key' => '',
-            'field' => 'gender',
-            'type' => 'string',
-            'label' => __('Gender')
-        ];
-        $newFields[] = [
-            'key' => '',
-            'field' => 'identity_type',
-            'type' => 'string',
-            'label' => __('Default Identity Type')
-        ];
-        $newFields[] = [
-            'key' => '',
-            'field' => 'identity_number',
-            'type' => 'string',
-            'label' => __('Identity Number')
+            'label' => __('Comment')
         ];
 
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetStaffPositionId(Event $event, Entity $entity)
+    public function onExcelGetStaffId(Event $event, Entity $entity)
     {
-        $options = $this->getSelectOptions('Staff.position_types');
-        $staffPositionTitleType = '';
-
-        if ($entity->has('staff_position_title')) {
-            $staffPositionTitleType = $entity->staff_position_title->name;
-            $staffType = $entity->staff_position_title->type;
-            $type = array_key_exists($staffType, $options) ? $options[$staffType] : '';
-
-            if (!empty($type)) {
-                $staffPositionTitleType .= ' - ' . $type;
+        $classGrades = [];
+        $InstitutionCurricularStaff = TableRegistry::get('Institution.InstitutionCurricularStaff');
+        if ($entity->staff_id) {
+            foreach ($entity->Users as $key => $value) {
+                $classGrades[] = $value->name;
             }
-        } else {
-            Log::write('debug', $entity->name . ' has no staff_position_title...');
         }
 
-        return $staffPositionTitleType;
+        return implode(', ', $classGrades); //display as comma seperated
     }
 
-    public function onExcelGetInstitutionId(Event $event, Entity $entity)
+    public function onExcelGetCategory(Event $event, Entity $entity)
     {
-        return $entity->institution->code_name;
-    }
-
-    public function onExcelGetIsHomeroom(Event $event, Entity $entity)
-    {
-        $options = $this->getSelectOptions('general.yesno');
-        return $options[$entity->is_homeroom];
-    }
-
-    public function onExcelGetStaffName(Event $event, Entity $entity)
-    {
-        if ($entity->has('_matchingData')) {
-            return $entity->_matchingData['Users']->name;
-        }
-        return '';
+         return $entity->category ? __('Curricular') : __('Extracurricular');
     }
 }
