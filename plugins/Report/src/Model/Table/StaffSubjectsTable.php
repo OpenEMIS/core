@@ -36,7 +36,7 @@ class StaffSubjectsTable extends AppTable  {
         $education_grade_id = $requestData->education_grade_id;
         $regionId = null;
         $countryId = null;
-
+        $selectedArea = $requestData->area_education_id;
         $academicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $staff = TableRegistry::get('Security.Users');
@@ -148,33 +148,19 @@ class StaffSubjectsTable extends AppTable  {
             'academic_periods.id = ' . $academicPeriodId
         ];
 
-        if($areaId && $areaId != '-1') {
-            $areaIds = $areaId . ', ';
-
-            $parentId = $this->getParentAreaIds($areaId, $areas);
-            while ($parentId != null) {
-                $areaIds .= $parentId . ', ';
-                $parentId = $this->getParentAreaIds($parentId, $areas);
+        if(!empty($areaId) && $areaId != '-1') {
+            //POCOR-7095 start
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
             }
-
-            $conditions[] = 'areas.id in (' . trim($areaIds, ', ') . ')';
+                $conditions['Institutions.area_id IN'] = $allselectedAreas;
+                //POCOR-7095 end
         }
-
-        if($regionId && $regionId != '-1') {
-            $conditions[] = 'regions.id = ' . $regionId;
-        }
-
-        if($countryId && $countryId != '-1') {
-            $conditions[] = 'country.id = ' . $countryId;
-        }
-
-        /*if($institutionId && $institutionId != '-1') {
-            $conditions[] = 'institutions.id = ' . $institutionId;
-        }
-
-        if($education_grade_id && $education_grade_id != '-1') {
-            $conditions[] = 'education_grades.id = ' . $education_grade_id;
-        }*/
 
         if (!empty($institutionId) && $institutionId != -1) {
             $conditions['institutions.id'] = $institutionId; 
@@ -187,7 +173,7 @@ class StaffSubjectsTable extends AppTable  {
         }
 
         // main sql query to generate report
-      $datas =   $query->select([
+     $datas =   $query->select([
             'area_education'    => 'areas.name',
             'institution_code'  => 'institutions.code',
             'institution'  => 'institutions.name',
@@ -242,12 +228,12 @@ class StaffSubjectsTable extends AppTable  {
         ->leftJoin(['areas' => $areas->table()], [
             'areas.id = institutions.area_id',
         ])
-        ->leftJoin(['regions' => $areas->table()], [
+        /*->leftJoin(['regions' => $areas->table()], [
             'regions.id = areas.parent_id',
         ])
         ->leftJoin(['country' => $areas->table()], [
             'country.id = regions.parent_id',
-        ])
+        ])*/
         ->leftJoin(['staff_qualification_titles' => $staffQualificationsTbl], [
             'staff_qualification_titles.staff_id = ' . $this->aliasField('staff_id')
         ])
@@ -272,17 +258,20 @@ class StaffSubjectsTable extends AppTable  {
 
     }
 
-    private function getParentAreaIds($areaId, $areas)
-    {
-        return $areas->find()->select(['parent_id'])->where(['id = ' . $areaId])->first()->parent_id;
-    }
 
-
-    function array_map_assoc( $callback , $array ){
-        $r = array();
-        foreach ($array as $key=>$value)
-          $r[$key] = $callback($key,$value);
-        return $r;
+    //POCOR-7095
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                           ->where([
+                               $Areas->aliasField('parent_id') => $id
+                            ]) 
+                             ->toArray();
+       foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
