@@ -337,7 +337,7 @@ class StudentMarkTypesTable extends ControllerActionTable
     }
 
 
-    /* ublic function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
+    /* Public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $attr['type'] = 'readonly';
@@ -393,7 +393,11 @@ class StudentMarkTypesTable extends ControllerActionTable
             $attr['select'] = false;
             $attr['value'] = $attendancePerDay;
             $attr['attr']['value'] = $attendancePerDay;
-            $attr['onChangeReload'] = 'ChangeAttendancePerDay';           
+            $attr['onChangeReload'] = 'ChangeAttendancePerDay'; 
+            
+            if ($action == 'edit') { //POCOR-7277
+                $attr['type'] = 'readonly';
+            }          
 
             return $attr;           
     }    
