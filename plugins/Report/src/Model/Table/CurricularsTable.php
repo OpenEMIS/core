@@ -11,6 +11,11 @@ use Cake\Network\Request;
 use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 
+/**
+ * POCOR-6673
+ * Generate Curricular Report data
+ * get array data
+ */ 
 class CurricularsTable extends AppTable
 {
     use OptionsTrait;
@@ -44,6 +49,7 @@ class CurricularsTable extends AppTable
         $InstitutionCurricularStaff = TableRegistry::get('Institution.InstitutionCurricularStaff');
         $InstitutionCurricularStudent = TableRegistry::get('Institution.InstitutionCurricularStudents');
         $InstitutionCurricularPosition = TableRegistry::get('curricular_positions');
+        $InstitutionCurriculartypes = TableRegistry::get('curricular_types');
         $staff = TableRegistry::get('Security.Users');
         $student = TableRegistry::get('Security.Users');
         $Genders = TableRegistry::get('User.Genders');
@@ -71,7 +77,7 @@ class CurricularsTable extends AppTable
                 'last_name_stu' => $student->aliasField('last_name'),
                 'curricular_name' => $this->aliasField('name'),
                 'curricular_id' => $this->aliasField('id'),
-                'curricular_type' => 'CurricularTypes.name',
+                'curricular_type' => $InstitutionCurriculartypes->aliasField('name'),
                 'category' => $this->aliasField('category'),
                 'staff_id' => $InstitutionCurricularStaff->aliasField('staff_id'),
                 'curricular_positions' => $InstitutionCurricularPosition->aliasField('name'),
@@ -112,12 +118,6 @@ class CurricularsTable extends AppTable
                         'AreaAdministratives.code'
                     ]
                 ],
-                'CurricularTypes' => [
-                    'fields' => [
-                        'CurricularTypes.id',
-                        'CurricularTypes.name'
-                    ]
-                ],
             ])
             ->leftJoin(
                     [$InstitutionCurricularStaff->alias() => $InstitutionCurricularStaff->table()],
@@ -143,12 +143,12 @@ class CurricularsTable extends AppTable
                         $student->aliasField('id = ') . $InstitutionCurricularStudent->aliasField('student_id')
                     ])
              ->leftJoin(
-                    [$staff->alias() => $staff->table()],
+                    [$InstitutionCurriculartypes->alias() => $InstitutionCurriculartypes->table()],
                     [
-                        $staff->aliasField('id = ') . $InstitutionCurricularStaff->aliasField('staff_id')
+                        $InstitutionCurriculartypes->aliasField('id = ') . $this->aliasField('curricular_type_id')
                     ])
             ->where([$conditions])
-            ->group([$InstitutionCurricularStaff->aliasField('staff_id'),$InstitutionCurricularStudent->aliasField('student_id')]);
+            ->group([$this->aliasField('id')]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -226,6 +226,14 @@ class CurricularsTable extends AppTable
             'type' => 'string',
             'label' => __('Type')
         ];
+
+        $newFields[] = [
+            'key' => 'staff_name',
+            'field' => 'staff_name',
+            'type' => 'string',
+            'label' => __('Staff Name')
+        ];
+
         $newFields[] = [
             'key' => 'Student_name',
             'field' => 'Student_name',
@@ -269,17 +277,29 @@ class CurricularsTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetStaffId(Event $event, Entity $entity)
+    public function onExcelGetStaffName(Event $event, Entity $entity)
     {
-        $classGrades = [];
+        $staffdata = [];
         $InstitutionCurricularStaff = TableRegistry::get('Institution.InstitutionCurricularStaff');
-        if ($entity->staff_id) {
-            foreach ($entity->Users as $key => $value) {
-                $classGrades[] = $value->name;
-            }
+        $staff = TableRegistry::get('Security.Users');
+        $staff = $InstitutionCurricularStaff->find()
+                    ->select(['openemis_no' => $staff->aliasField('openemis_no'),
+                        'first_name' => $staff->aliasField('first_name'),
+                        'middle_name' => $staff->aliasField('middle_name'),
+                        'third_name' => $staff->aliasField('third_name'),
+                        'last_name' => $staff->aliasField('last_name')
+                    ])
+                    ->leftJoin(
+                    [$staff->alias() => $staff->table()],
+                    [
+                        $staff->aliasField('id = ') . $InstitutionCurricularStaff->aliasField('staff_id'),
+                    ])
+                    ->where([$InstitutionCurricularStaff->aliasField('institution_curricular_id') => $entity->curricular_id])->toArray();
+        foreach ($staff as $key => $value) {
+            $staffdata[] = $value->openemis_no.' '.$value->first_name.' '.$value->middle_name.' '.$value->third_name.' '.$value->last_name;
         }
 
-        return implode(', ', $classGrades); //display as comma seperated
+        return implode(', ', $staffdata); //display as comma seperated
     }
 
     public function onExcelGetCategory(Event $event, Entity $entity)
