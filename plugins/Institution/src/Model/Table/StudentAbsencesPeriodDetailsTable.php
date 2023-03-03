@@ -102,9 +102,9 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
             $this->deleteStudentAbsence($entity);
         }
 
-        if ($entity->isNew() || $entity->dirty('absence_type_id')) {
-            $this->updateStudentAbsencesRecord($entity);
-        }
+        // if ($entity->isNew() || $entity->dirty('absence_type_id')) {
+        //     $this->updateStudentAbsencesRecord($entity);
+        // }
     }
 
     public function updateStudentAbsencesRecord($entity = null)
@@ -169,6 +169,11 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                 $InstitutionStudentAbsences->save($absenceEntity);
             }
         }
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    {
+        $this->updateStudentAbsencesRecord($entity);
     }
     
     public function deleteStudentAbsence($entity = null){
