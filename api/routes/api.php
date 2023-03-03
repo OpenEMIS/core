@@ -25,6 +25,11 @@ Route::group(
     ["middleware" => "auth.jwt"],
     function () {
         Route::get('institutions', 'InstitutionController@getInstitutionsList')->middleware('auth.jwt');
+
+        Route::get('institutions/list', 'RegistrationController@institutionDropdown');
+        Route::get('institutions/areas/list', 'RegistrationController@administrativeAreasList');
+
+
         Route::get('institutions/grades', 'InstitutionController@getGradesList');
         Route::get('institutions/classes', 'InstitutionController@getClassesList');
         Route::get('institutions/subjects', 'InstitutionController@getSubjectsList');
@@ -111,7 +116,22 @@ Route::group(
         Route::get('systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/subjects', 'EducationSystemController@getEducationStructureGrade');
 
         Route::get('systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/subjects/{subject_id}', 'EducationSystemController@getEducationStructureSubject');
+
+
+        Route::get('academic-periods/list', 'RegistrationController@academicPeriodsList');
+        Route::get('systems/levels/cycles/programmes/grades/list', 'RegistrationController@educationGradesList');
+        Route::get('nationalities/list', 'RegistrationController@nationalityList');
+        Route::get('identity-types/list', 'RegistrationController@identityTypeList');
+        Route::get('student-custom-fields', 'RegistrationController@getStudentCustomFields');
+        Route::post('otp-generate', 'RegistrationController@generateOtp');
+        Route::post('otp-verify', 'RegistrationController@verifyOtp');
+        Route::get('users/openemis_id/{openemis_id}', 'RegistrationController@autocompleteOpenemisNo');
+        Route::get('users/identity-types/{identity_type_id}/{identity_number}', 'RegistrationController@autocompleteIdentityNo');
+        Route::get('details-by-emis/{id}', 'RegistrationController@detailsByEmis');
+        Route::post('institutions/{institution_id}/student-admission', 'RegistrationController@institutionStudents');
+
     }
 );
+
 
 
