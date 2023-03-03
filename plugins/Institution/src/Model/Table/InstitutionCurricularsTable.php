@@ -30,6 +30,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('CurricularTypes', ['className' => 'FieldOption.CurricularTypes']);
         
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->addBehavior('Excel', ['pages' => ['index','view']]);
@@ -301,5 +302,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    
     
 }

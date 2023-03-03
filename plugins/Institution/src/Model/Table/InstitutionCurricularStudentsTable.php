@@ -91,10 +91,12 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $session = $this->controller->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
         $institutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $grades = TableRegistry::get('education_grades');
         $institutionClass = TableRegistry::get('institution_classes');
         $curricularPositions = TableRegistry::get('curricular_positions');
         $InstitutionCurriculars = TableRegistry::get('institution_curriculars');
+        $institutionClassGrades = TableRegistry::get('institution_class_grades');
         $Users = TableRegistry::get('security_users');
         $curricularIdGet = $_SESSION['curricularId'];
         $conditions = [];
@@ -102,27 +104,34 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         if($gradeId != -1){
             $conditions[$grades->aliasField('id')]  = $gradeId;
         }
+
+        $conditions[$institutionStudents->aliasField('institution_id')]  = $institutionId;
+        $conditions[$InstitutionCurriculars->aliasField('institution_id')]  = $institutionId;
         $query
             ->select([
                         $this->aliasField('id'),
-                          'openemis_no'=>  $Users->aliasField('openemis_no'),
-                          'student_name' =>  $Users->aliasField('first_name'),
-                          'education_class' => $grades->aliasField('name'),
-                          'institution_class' => $institutionClass->aliasField('name'),
-                           'curricular_position' => $curricularPositions->aliasField('name'),     
-                            $InstitutionCurriculars->aliasField('name')       
+                        'openemis_no'=>  $Users->aliasField('openemis_no'),
+                        'student_name' =>  $Users->aliasField('first_name'),
+                        'education_grade' => $grades->aliasField('name'),
+                        'institution_class' => $institutionClass->aliasField('name'),
+                        'curricular_position' => $curricularPositions->aliasField('name'),     
+                        $InstitutionCurriculars->aliasField('name') ,      
+                        $InstitutionCurriculars->aliasField('id')       
                 ])
-                ->LeftJoin([$institutionClassStudents->alias() => $institutionClassStudents->table()],
-                    [$institutionClassStudents->aliasField('student_id').' = ' . $this->aliasField('student_id')
+                ->LeftJoin([$institutionStudents->alias() => $institutionStudents->table()],
+                    [$institutionStudents->aliasField('student_id').' = ' . $this->aliasField('student_id')
                 ])
                 ->LeftJoin([$Users->alias() => $Users->table()],
                     [$Users->aliasField('id').' = ' . $this->aliasField('student_id')
                 ])
                 ->LeftJoin([$grades->alias() => $grades->table()],
-                    [$grades->aliasField('id').' = ' . $institutionClassStudents->aliasField('education_grade_id')
+                    [$grades->aliasField('id').' = ' . $institutionStudents->aliasField('education_grade_id')
+                ])
+                ->LeftJoin([$institutionClassGrades->alias() => $institutionClassGrades->table()],
+                    [$institutionClassGrades->aliasField('education_grade_id').' = ' . $institutionStudents->aliasField('education_grade_id')
                 ])
                 ->LeftJoin([$institutionClass->alias() => $institutionClass->table()],
-                    [$institutionClass->aliasField('id').' = ' . $institutionClassStudents->aliasField('institution_class_id')
+                    [$institutionClass->aliasField('id').' = ' . $institutionClassGrades->aliasField('institution_class_id')
                 ])
                 ->LeftJoin([$curricularPositions->alias() => $curricularPositions->table()],
                     [$curricularPositions->aliasField('id').' = ' . $this->aliasField('curricular_position_id')
@@ -148,13 +157,14 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $this->field('points', ['visible' => false]);
         $this->field('location', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
-        $this->field('openemis_no', ['visible' => true]);
-        $this->field('education_class', ['visible' => true]);
+        $this->field('openemis_no', ['visible' => ['index'=>true,'view' => true]]);
+        $this->field('education_grade', ['visible' => true]);
         $this->field('institution_class', ['visible' => true]);
         $this->field('student_name', ['visible' => true]);
+        
 
         $this->setFieldOrder([
-        'student_name', 'openemis_no','education_class','institution_class', 'institution_curricular_id', 'curricular_position_id']);
+        'student_name', 'openemis_no','education_grade','institution_class', 'institution_curricular_id', 'curricular_position_id']);
                
     }
 
@@ -166,7 +176,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $curricularType = TableRegistry::get('curricular_types');
         $curricularData = $curriculars->find()
                             ->select(['name'=>$curriculars->aliasField('name'),'category'=>$curriculars->aliasField('category'),
-                                'academicPeriod'=>$academicPeriod->aliasField('name'),
+                                'academic_period'=>$academicPeriod->aliasField('name'),
                                 'curricularType'=>$curricularType->aliasField('name')
                                         ])
                             ->LeftJoin([$academicPeriod->alias() => $academicPeriod->table()],[
@@ -179,9 +189,9 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         
         $entity->name = $curricularData->name;
         $entity->category = $curricularData->category ? __('Curricular') : __('Extracurricular');
-        $entity->academicPeriod = $curricularData->academicPeriod;
+        $entity->academic_period = $curricularData->academic_period;
         $entity->curricularType = $curricularData->curricularType;
-        $this->field('academic_period_id', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->academicPeriod, 'required' => true]]);
+        $this->field('academic_period_id', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->academic_period, 'required' => true]]);
         $this->field('name', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->name, 'required' => true]]);
         $this->field('curricular_type_id', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->curricularType, 'required' => true]]);
         $this->field('category', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->category, 'required' => true]]);
@@ -195,6 +205,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $this->field('curricular_position_id', ['type' => 'select']);
         $this->field('comment', ['visible' => true]);
         $this->field('id', ['visible' => true]);
+
     }
 
    public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
@@ -291,6 +302,59 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         
         $entity->id = Text::uuid();
         $entity->institution_curricular_id = $_SESSION['curricularId'];
+    }
+
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('academic_period_id', ['visible' => true]);
+        $this->field('openemis_no', ['visible' => true]);
+        $this->field('category', ['visible' => true]);
+        $this->field('curricular_type_id', ['visible' => true]);
+    }
+
+    public function onGetCategory(Event $event, Entity $entity)
+    {
+        $entity->openemis_no ;
+     // echo "<pre>";  print_r($entity);die;
+        return $entity->category ? __('Curricular') : __('Extracurricular');
+    }
+
+    public function onGetOpenemisNo(Event $event, Entity $entity)
+    {
+
+        return $entity->user->openemis_no;
+    }
+
+    public function onGetCurricularTypeId(Event $event, Entity $entity)
+    {
+        $curricularsID =  $entity->institution_curricular_id;
+        $InstitutionCurriculars = TableRegistry::get('institution_curriculars');
+        $curricular_type = TableRegistry::get('curricular_types');
+        $data = $InstitutionCurriculars->find()
+                ->select(['name' => $curricular_type->aliasField('name')])
+                ->LeftJoin([$curricular_type->alias() => $curricular_type->table()],
+                    [$curricular_type->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('curricular_type_id')
+                ])
+                ->where([$InstitutionCurriculars->aliasField('id') => $curricularsID])
+                ->first();
+        return $data->name;
+
+    }
+
+    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+    {
+        $curricularsID =  $entity->institution_curricular_id;
+        $InstitutionCurriculars = TableRegistry::get('institution_curriculars');
+        $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $data = $InstitutionCurriculars->find()
+                ->select(['name' => $academicPeriod->aliasField('name')])
+                ->LeftJoin([$academicPeriod->alias() => $academicPeriod->table()],
+                    [$academicPeriod->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('academic_period_id')
+                ])
+                ->where([$InstitutionCurriculars->aliasField('id') => $curricularsID])
+                ->first();
+        return $data->name;
+
     }
 	
 }
