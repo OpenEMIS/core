@@ -306,12 +306,15 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
                 angular.forEach(staff.attendance, function(attendance) {
                     vm.allAttendances = vm.allAttendances + 1 ;
                     if (attendance.time_in) {
+                        alert('ok');
                         vm.allPresentCount = vm.allPresentCount + 1;
                     }
                     if (attendance.leave.length > 0) {
+                        alert('ok1');
                         vm.allLeaveCount = vm.allLeaveCount + 1;
                     }
                     if (attendance.absence_type_id == 3) {
+                        alert('ok2');
                        vm.allLateCount = vm.allLateCount + 1;
                     }
                 });
