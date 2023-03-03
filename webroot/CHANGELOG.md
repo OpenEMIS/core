@@ -1,3 +1,17 @@
+### [3.78.2] - 2023-03-02
+- Implemented: Develop APIs for Registrations
+- Implemented: Develop keys for all OpenEMIS Core APIs v4
+- Bug Fixed: Administration>Profile>Classes: Report is stuck in progress
+- Bug Fixed: Administration > System Setup > Field Options: Staff Position Titles: There are no options under the field for staff position categories even when staff position categories are configured
+- Bug Fixed: Institution > Students page: The drop-down list for the education grades is not in order
+- Bug Fixed: Administrations > DataManagement > Archive : Errors when Archiving data
+- Bug Fixed: Reports > Institution > Staff Attendance report: The fields to generate the report and the report itself do not match
+- Bug Fixed: Update api_credentials table to include api_key column
+- Bug Fixed: Appointments > Positions: Institution Positions is showing duplicates
+- Bug Fixed: Institutions>Students>Transfer: 404 error when transferring a student
+- Bug Fixed: Institutions>Students>Academic>Absences: The page is showing duplicate records
+- Bug Fixed: Administrations > Attendances: The system allows user to delete periods.
+
 ### [3.78.1] - 2023-02-28
 - Implemented: Develop Institutions > Statistics > Standard: Student Attendance Summary Report
 - Implemented: Design changes to add staff and student
