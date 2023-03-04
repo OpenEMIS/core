@@ -26,6 +26,7 @@ class ClassProfilesTable extends AppTable
     {
         $this->table('institutions');
         parent::initialize($config);
+        ini_set("pcre.backtrack_limit", "5000000"); //POCOR-6996
 
         $this->addBehavior('CustomExcel.ClassExcelReport', [
             'templateTable' => 'ProfileTemplate.ClassTemplates',
@@ -592,6 +593,7 @@ class ClassProfilesTable extends AppTable
      */
     public function onExcelTemplateInitialiseStudentDetails(Event $event, array $params, ArrayObject $extra)
     {
+        ini_set("memory_limit", "1G"); //POCOR-6996
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('institution_class_id', $params)) {
             $Users = TableRegistry::get('User.Users');
             $studentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
