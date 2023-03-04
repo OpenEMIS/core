@@ -93,7 +93,7 @@ class StudentAttendanceShell extends Shell
         $Tablecollection = $archive_connection->schemaCollection();
         $tableSchema = $Tablecollection->listTables();
 
-        if (! in_array('institution_class_attendance_records', $tableSchema)) {
+        /*if (! in_array('institution_class_attendance_records', $tableSchema)) {
             $archive_connection->execute("CREATE TABLE IF NOT EXISTS `institution_class_attendance_records` (
                 `institution_class_id` int(11) NOT NULL COMMENT 'link to institution_classes.id',
                 `academic_period_id` int(11) NOT NULL COMMENT 'link to academic_period.id',
@@ -266,7 +266,8 @@ class StudentAttendanceShell extends Shell
                 }
                 
             }
-        }
+        }*/
+        
         // if (in_array('institution_class_attendance_records', $tableSchema)) {
         //     $table_name = 'institution_class_attendance_records';
         // }
@@ -322,7 +323,7 @@ class StudentAttendanceShell extends Shell
 
         //institution_student_absences[START]
 
-        if (! in_array('institution_student_absences', $tableSchema)) {
+        /*if (! in_array('institution_student_absences', $tableSchema)) {
             $archive_connection->execute("CREATE TABLE IF NOT EXISTS `institution_student_absences` (
               `id` int(11) NOT NULL,
               `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
@@ -420,7 +421,7 @@ class StudentAttendanceShell extends Shell
                 }
                 
             }
-        }
+        }*/
 
         // if (in_array('institution_student_absences', $tableSchema)) {
         //     $table_name = 'institution_student_absences';
@@ -450,7 +451,7 @@ class StudentAttendanceShell extends Shell
         //institution_student_absences[END]
 
         //institution_student_absence_details[START]
-        if (! in_array('institution_student_absence_details', $tableSchema)) {
+        /*if (! in_array('institution_student_absence_details', $tableSchema)) {
             $archive_connection->execute("CREATE TABLE IF NOT EXISTS `institution_student_absence_details` (
                 `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
                 `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
@@ -565,7 +566,7 @@ class StudentAttendanceShell extends Shell
                 }
                 
             }
-        }
+        }*/
 
         // if (in_array('institution_student_absence_details', $tableSchema)) {
         //     $table_name = 'institution_student_absence_details';
@@ -606,7 +607,7 @@ class StudentAttendanceShell extends Shell
         //institution_student_absence_details[END]
 
         //student_attendance_marked_records[START]
-        if (! in_array('student_attendance_marked_records', $tableSchema)) {
+        /*if (! in_array('student_attendance_marked_records', $tableSchema)) {
             $archive_connection->execute("CREATE TABLE IF NOT EXISTS `student_attendance_marked_records` (
                 `institution_id` int(11) NOT NULL COMMENT 'links to instututions.id',
                 `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
@@ -672,7 +673,7 @@ class StudentAttendanceShell extends Shell
                 }
                 
             }
-        }
+        }*/
 
         // if (in_array('student_attendance_marked_records', $tableSchema)) {
         //     $table_name = 'student_attendance_marked_records';
@@ -702,7 +703,7 @@ class StudentAttendanceShell extends Shell
 
         //student_attendance_mark_types[START]
 
-        if (! in_array('student_attendance_mark_types', $tableSchema)) {
+        /*if (! in_array('student_attendance_mark_types', $tableSchema)) {
             $archive_connection->execute("CREATE TABLE IF NOT EXISTS `student_attendance_mark_types` (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
                 `name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -793,7 +794,7 @@ class StudentAttendanceShell extends Shell
                 }
                 
             }
-        }
+        }*/
 
         // if (in_array('student_attendance_mark_types', $tableSchema)) {
         //     $table_name = 'student_attendance_mark_types';
