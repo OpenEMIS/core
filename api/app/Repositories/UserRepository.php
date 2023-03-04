@@ -46,9 +46,16 @@ class UserRepository extends Controller
     {
         try {
             
-            $users = SecurityUsers::with('nationalities', 'identities')
+            $users = SecurityUsers::with(
+                    'gender',
+                    'nationalities',
+                    'institutionStudent',
+                    'institutionStudent.institution',
+                    'identities',
+                    'nationality'
+                )
                     ->where('id', $userId)
-                    ->first();
+                    ->get();
                     
             return $users;
             
