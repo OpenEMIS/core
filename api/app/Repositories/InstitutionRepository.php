@@ -44,8 +44,19 @@ class InstitutionRepository extends Controller
                 $col = $params['order'];
                 $institutions = $institutions->orderBy($col);
             }
-            $list = $institutions->paginate($limit);
-            //dd($list);
+            //$list = $institutions->paginate($limit)->toArray();
+            $list = $institutions->paginate($limit)->toArray();
+            
+            $resp = [];
+            foreach($list['data'] as $d){
+                if(isset($d['logo_content'])){
+                    $d['logo_content'] = base64_encode($d['logo_content']);
+                    //$d['logo_content'] = NULL;
+                }
+                $resp[] = $d;
+            }
+
+            $list['data'] = $resp;
             return $list;
         } catch (\Exception $e) {
             Log::error(
