@@ -70,6 +70,7 @@ class StudentAbsencesTable extends AppTable
         $grades = TableRegistry::get('education_grades');
         $academicPeriod = TableRegistry::get('academic_periods');
         $securityUsers = TableRegistry::get('security_users');
+        $selectedArea = $requestData->area_education_id;
         $conditions = [];
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
@@ -78,9 +79,18 @@ class StudentAbsencesTable extends AppTable
         if (!empty($institutionId) && $institutionId != '-1') {
             $conditions[$this->aliasField('institution_id')] = $institutionId;
         }
-        if ($areaId != -1) {
-            $conditions['Institutions.area_id'] = $areaId;
+        if ($areaId != -1 && $areaId != '') {
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }
+                $conditions['Institutions.area_id IN'] = $allselectedAreas;
         }
+
         $join = []; 
         $query
             ->select([
@@ -95,8 +105,8 @@ class StudentAbsencesTable extends AppTable
                 'identity_number'=> "(SELECT IFNULL(student_identities.identity_number, ''))",   
                 'address'=> "(SELECT IFNULL(Users.address, ''))",   
                 'contacts'=> "(SELECT IFNULL(contact_info.contacts, ''))",   
-                'period'=> "(SELECT IFNULL(period_info.period_name, ''))",   
-                'subject_name' => $InstitutionSubjects->aliasField('name'), 
+                'period_name'=> "(SELECT IF(institution_subjects.name IS NOT NULL, '', IFNULL(period_info.period_name, '')))",   
+                'subject_name' =>"(SELECT IFNULL(institution_subjects.name, ''))",
                 'education_grade_name'=> $grades->aliasField('name'),
                 'academic_period' => $academicPeriod->aliasField('name'),
                 'student_name' => $query->func()->concat([
@@ -310,8 +320,8 @@ class StudentAbsencesTable extends AppTable
             'label' => __('Date')
         ];
         $newFields[] = [
-            'key' => 'period',
-            'field' => 'period',
+            'key' => 'period_name',
+            'field' => 'period_name',
             'type' => 'string',
             'label' => __('Period')
         ];
@@ -330,6 +340,20 @@ class StudentAbsencesTable extends AppTable
         ];
         
         $fields->exchangeArray($newFields);
+    }
+
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                           ->where([
+                               $Areas->aliasField('parent_id') => $id
+                            ]) 
+                             ->toArray();
+       foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
     }
   
 }
