@@ -158,7 +158,7 @@ class StaffSubjectsTable extends AppTable  {
             }else{
                 $allselectedAreas = $selectedArea1;
             }
-                $conditions['Institutions.area_id IN'] = $allselectedAreas;
+                $conditions['institutions.area_id IN'] = $allselectedAreas;
                 //POCOR-7095 end
         }
 
