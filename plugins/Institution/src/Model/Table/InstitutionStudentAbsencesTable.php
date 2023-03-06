@@ -100,7 +100,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $events['InstitutionCase.onSetLinkedRecordsCheckCondition'] = 'onSetLinkedRecordsCheckCondition';
         $events['InstitutionCase.onSetCustomCaseSummary'] = 'onSetCustomCaseSummary';
         $events['InstitutionCase.onSetCaseRecord'] = 'onSetCaseRecord';
-        $events['Model.afterSaveCommit'] = ['callable' => 'afterSaveCommit', 'priority' => '9'];
+        $events['StudentAbsencesPeriodDetails.afterSave'] = ['callable' => 'afterSave']; //POCOR-7205
         $events['InstitutionCase.onBuildCustomQuery'] = 'onBuildCustomQuery';
         $events['InstitutionCase.onIncludeCustomExcelFields'] = 'onIncludeCustomExcelFields';
         $events['InstitutionCase.onSetFilterToolbarElement'] = 'onSetFilterToolbarElement';
@@ -341,7 +341,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             ])
             ->where([
                 $InstitutionStudentAbsenceDays->aliasField('student_id') => $entity->student_id,
-                // $InstitutionStudentAbsenceDays->aliasField('absence_type_id') => $entity->absence_type_id, // POCOR-7035
+                $InstitutionStudentAbsenceDays->aliasField('absence_type_id') => $entity->absence_type_id, // POCOR-7035
                 $InstitutionStudentAbsenceDays->aliasField('institution_id') => $entity->institution_id,
                 $InstitutionStudentAbsenceDays->aliasField('start_date') => $startDate,
                 $InstitutionStudentAbsenceDays->aliasField('end_date') => $endDate
@@ -443,8 +443,9 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 break;
         }
     }
-
-    public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
+    
+    //POCOR-7205
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         // $InstitutionStudentAbsenceDays = $this->InstitutionStudentAbsenceDays;
         // $startDate = $entity->start_date;
