@@ -270,7 +270,7 @@ class CustomReportsTable extends AppTable
             $attr['options'] = $periodOptions;
             $attr['default'] = $selectedPeriod;
             $attr['type'] = 'select';
-            $attr['select'] = false;
+            $attr['select'] = true; //POCOR-7241
             $attr['required'] = true;
             return $attr;
         }
@@ -407,8 +407,8 @@ class CustomReportsTable extends AppTable
                 $conditions[$institutions->aliasField('institution_type_id')] = $institutionTypeId;
             }
             //POCOR-7178 end
-
-            $periodGrades = $EducationGrades->find('list', ['keyField' => 'id', 
+            if(!empty($selectedPeriod)){ // POCOR-7241
+                $periodGrades = $EducationGrades->find('list', ['keyField' => 'id', 
                                 'valueField' => 'programme_grade_name'])
                             ->find('visible')
                             ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
@@ -421,7 +421,8 @@ class CustomReportsTable extends AppTable
                             ->where($conditions)
                             ->order([$EducationGrades->aliasField('id')])
                             ->toArray();
-
+            }
+            
             $attr['onChangeReload'] = true;
             $attr['options'] = $periodGrades;
             $attr['type'] = 'select';
