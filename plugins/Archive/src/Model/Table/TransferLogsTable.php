@@ -60,8 +60,8 @@ use Cake\Utility\Security;
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->statusOptions = [
-            self::IN_PROGRESS => __('In Progress'),
-            self::DONE => __('Done'),
+            self::IN_PROGRESS => __('Processing'),
+            self::DONE => __('Completed'),
             self::ERROR => __('Error')
         ];
     }
@@ -105,6 +105,7 @@ use Cake\Utility\Security;
         $this->field('academic_period_id');    
         $this->field('generated_on');
         $this->field('generated_by');
+        $this->field('p_id', ['visible' => false]);
         $this->field('features', ['sort' => false]); // POCOR-6816 
         $this->setFieldOrder(['academic_period_id','features','generated_on','generated_by']);
 
@@ -348,6 +349,7 @@ use Cake\Utility\Security;
                 $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
                 $AssessmentItemResultsData = $AssessmentItemResults->find('all')
                                     ->where(['academic_period_id' => $entity->academic_period_id])->limit(1)->toArray();
+                                    
                 if(empty($AssessmentItemResultsData)){
                     $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
                 }else{
