@@ -268,7 +268,7 @@ class CustomReportsTable extends AppTable
 
             $attr['onChangeReload'] = true;
             $attr['options'] = $periodOptions;
-            $attr['default'] = $selectedPeriod;
+            // $attr['default'] = $selectedPeriod; //POCOR-7241
             $attr['type'] = 'select';
             $attr['select'] = true; //POCOR-7241
             $attr['required'] = true;
