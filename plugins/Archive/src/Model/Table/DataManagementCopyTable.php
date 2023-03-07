@@ -293,6 +293,7 @@ class DataManagementCopyTable extends ControllerActionTable
                     $statement = $connection->prepare('INSERT INTO institution_grades 
                     (
                     education_grade_id, 
+                    academic_period_id,
                     start_date,
                     start_year,
                     end_date,
@@ -303,7 +304,8 @@ class DataManagementCopyTable extends ControllerActionTable
                     created_user_id,
                     created)
                     
-                    VALUES (:education_grade_id, 
+                    VALUES (:education_grade_id,
+                    :academic_period_id,
                     :start_date, 
                     :start_year,
                     :end_date,
@@ -316,6 +318,7 @@ class DataManagementCopyTable extends ControllerActionTable
 
                     $statement->execute([
                     'education_grade_id' => $InstitutionGradesdataValue->education_grade_id,
+                    'academic_period_id' => $to_academic_period,
                     'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
                     'start_year' => $ToAcademicPeriodsData['start_year'],
                     'end_date' => null,
