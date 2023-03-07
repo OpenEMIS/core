@@ -12,13 +12,14 @@ class POCOR7278 extends AbstractMigration
      */
     public function up()
     {
+         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
         // Backup table
         $this->execute('CREATE TABLE `zz_7278_institution_staff_position_profiles` LIKE `institution_staff_position_profiles`');
         $this->execute('INSERT INTO `zz_7278_institution_staff_position_profiles` SELECT * FROM `institution_staff_position_profiles`');
-
-
         // DROP foreign key relationship     
         $this->execute("ALTER TABLE institution_staff_position_profiles DROP FOREIGN KEY `insti_staff_posit_profi_fk_ass_id`;");
+
+        $this->execute('SET SESSION FOREIGN_KEY_CHECKS=1');
         
     }
          
