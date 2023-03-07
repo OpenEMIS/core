@@ -16,8 +16,9 @@ class StudentAssessmentsShell extends Shell
     public function initialize()
     {
         parent::initialize();
-        
         $this->loadModel('SystemProcesses');
+        $this->loadModel('CustomExcel.ReportCards');
+        $this->loadModel('Archive.TransferLogs');
     }
 
     public function main()
@@ -27,6 +28,7 @@ class StudentAssessmentsShell extends Shell
             $exit = false;           
             
             $academicPeriodId = $this->args[0];
+            $pid = $this->args[1];
 
             $this->out('Initializing Staff Attendances of data ('.Time::now().')');
 
@@ -34,13 +36,16 @@ class StudentAssessmentsShell extends Shell
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
             
             // while (!$exit) {
-                $recordToProcess = $this->getRecords($academicPeriodId);
+                $recordToProcess = $this->getRecords($academicPeriodId, $pid);
                 $this->out($recordToProcess);
                 if ($recordToProcess) {
                     try {
                         $this->out('Dispatching event to update Staff Attendances Transfer');
                         $this->out('End Update for StaffAttendances Transfer Status ('. Time::now() .')');
                     } catch (\Exception $e) {
+                        $this->TransferLogs->updateAll(['process_status' => 2], [
+                            'p_id' => $pid
+                        ]);
                         $this->out('Error in Staff Attendances Transfer');
                         $this->out($e->getMessage());
                         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::ERROR);
@@ -58,10 +63,11 @@ class StudentAssessmentsShell extends Shell
     }
 
     
-    public function getRecords($academicPeriodId){
+    public function getRecords($academicPeriodId, $pid){
         $connection = ConnectionManager::get('default');
 
         $DataManagementConnections = TableRegistry::get('Archive.DataManagementConnections');
+        $TransferLogs = TableRegistry::get('Archive.TransferLogs');
         $DataManagementConnectionsData = $DataManagementConnections->find('all')
             ->select([
                 'DataManagementConnections.host','DataManagementConnections.db_name','DataManagementConnections.host','DataManagementConnections.username','DataManagementConnections.password','DataManagementConnections.db_name'
@@ -206,6 +212,10 @@ class StudentAssessmentsShell extends Shell
         $connection->execute("INSERT INTO `assessment_item_results_archived` SELECT * FROM `assessment_item_results` WHERE academic_period_id = $academicPeriodId");
         $connection->execute("DELETE FROM assessment_item_results WHERE academic_period_id = $academicPeriodId");
         //assessment_item_results[END]
+
+        $this->TransferLogs->updateAll(['process_status' => 2], [
+            'p_id' => $pid
+        ]);
         return true;
     }
 
