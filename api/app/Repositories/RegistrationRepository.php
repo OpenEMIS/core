@@ -348,7 +348,7 @@ class RegistrationRepository extends Controller
 
                             
                             //Creating Institution_student...
-                            $storeStu['id'] = Str::uuid();
+                            /*$storeStu['id'] = Str::uuid();
                             $storeStu['student_status_id'] = 1;
                             $storeStu['student_id'] = $student->id;
                             $storeStu['education_grade_id'] = $request['education_grade_id'];
@@ -363,7 +363,7 @@ class RegistrationRepository extends Controller
                             $storeStu['created'] = Carbon::now()->toDateTimeString();
 
                             $store = InstitutionStudent::insert($storeStu);
-                            Log::info("## Stored in InstitutionStudent ##", $storeStu);
+                            Log::info("## Stored in InstitutionStudent ##", $storeStu);*/
                             
 
                             //Creating Institution_student_Admission...
@@ -440,7 +440,7 @@ class RegistrationRepository extends Controller
 
                             
                             //Creating Institution_student...
-                            $storeStu['id'] = Str::uuid();
+                            /*$storeStu['id'] = Str::uuid();
                             $storeStu['student_status_id'] = 1;
                             $storeStu['student_id'] = $student->id;
                             $storeStu['education_grade_id'] = $request['education_grade_id'];
@@ -455,7 +455,7 @@ class RegistrationRepository extends Controller
                             $storeStu['created'] = Carbon::now()->toDateTimeString();
 
                             $store = InstitutionStudent::insert($storeStu);
-                            Log::info("## Stored in InstitutionStudent ##", $storeStu);
+                            Log::info("## Stored in InstitutionStudent ##", $storeStu);*/
 
                             
 
@@ -547,7 +547,7 @@ class RegistrationRepository extends Controller
                         $academicPeriod = AcademicPeriod::where('id', $request['academic_period_id'])->first();
 
                         //Creating Institution_student...
-                        $storeStu['id'] = Str::uuid();
+                        /*$storeStu['id'] = Str::uuid();
                         $storeStu['student_status_id'] = 1;
                         $storeStu['student_id'] = $student->id;
                         $storeStu['education_grade_id'] = $request['education_grade_id'];
@@ -562,7 +562,7 @@ class RegistrationRepository extends Controller
                         $storeStu['created'] = Carbon::now()->toDateTimeString();
 
                         $store = InstitutionStudent::insert($storeStu);
-                        Log::info("## Stored in InstitutionStudent ##", $storeStu);
+                        Log::info("## Stored in InstitutionStudent ##", $storeStu);*/
 
 
                         //Creating Institution_student_Admission...
