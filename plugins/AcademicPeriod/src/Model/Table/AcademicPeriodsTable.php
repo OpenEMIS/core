@@ -259,20 +259,23 @@ class AcademicPeriodsTable extends AppTable
             }                                
         }
         //POCOR-5917 ends
-        $canCopy = $this->checkIfCanCopy($entity);
+        //POCOR-6825[START] : this functionality is moved to Administrations > Data management >Copy
+        
+        // $canCopy = $this->checkIfCanCopy($entity);
 
-        $shells = ['Infrastructure', 'Shift'];
-        if ($canCopy) {
-            // only trigger shell to copy data if is not empty
-            if ($entity->has('copy_data_from') && !empty($entity->copy_data_from)) {
-                $copyFrom = $entity->copy_data_from;
-                $copyTo = $entity->id;
-                foreach ($shells as $shell) {
-                    $this->triggerCopyShell($shell, $copyFrom, $copyTo);
-                }
-            }
-        }
+        // $shells = ['Infrastructure', 'Shift'];
+        // if ($canCopy) {
+        //     // only trigger shell to copy data if is not empty
+        //     if ($entity->has('copy_data_from') && !empty($entity->copy_data_from)) {
+        //         $copyFrom = $entity->copy_data_from;
+        //         $copyTo = $entity->id;
+        //         foreach ($shells as $shell) {
+        //             $this->triggerCopyShell($shell, $copyFrom, $copyTo);
+        //         }
+        //     }
+        // }
 
+        //POCOR-6825[END]
         if ($entity->dirty('current')) { //check whether default value has been changed
             if ($entity->current) {
                 $this->triggerUpdateInstitutionShiftTypeShell($entity->id);
@@ -310,11 +313,11 @@ class AcademicPeriodsTable extends AppTable
     public function afterAction(Event $event)
     {
         $this->ControllerAction->field('current');
-        $this->ControllerAction->field('copy_data_from', [
-            'type' => 'hidden',
-            'value' => 0,
-            'after' => 'current'
-        ]);
+        // $this->ControllerAction->field('copy_data_from', [
+        //     'type' => 'hidden',
+        //     'value' => 0,
+        //     'after' => 'current'
+        // ]);
         $this->ControllerAction->field('editable');
         foreach ($this->_fieldOrder as $key => $value) {
             if (!in_array($value, array_keys($this->fields))) {
@@ -1042,22 +1045,23 @@ class AcademicPeriodsTable extends AppTable
         });
     }
 
-    private function checkIfCanCopy(Entity $entity)
-    {
-        $canCopy = false;
+    //POCOR-6825[START] : unwanted method for this model
+    // private function checkIfCanCopy(Entity $entity)
+    // {
+    //     $canCopy = false;
 
-        $level = $this->Levels
-            ->find()
-            ->order([$this->Levels->aliasField('level ASC')])
-            ->first();
+    //     $level = $this->Levels
+    //         ->find()
+    //         ->order([$this->Levels->aliasField('level ASC')])
+    //         ->first();
 
-        // if is year level and set to current
-        if ($entity->academic_period_level_id == $level->id && $entity->current == 1) {
-            $canCopy = true;
-        }
+    //     // if is year level and set to current
+    //     if ($entity->academic_period_level_id == $level->id && $entity->current == 1) {
+    //         $canCopy = true;
+    //     }
 
-        return $canCopy;
-    }
+    //     return $canCopy;
+    // }
 
     public function triggerCopyShell($shellName, $copyFrom, $copyTo)
     {
