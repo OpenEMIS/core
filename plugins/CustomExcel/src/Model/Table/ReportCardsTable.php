@@ -547,28 +547,43 @@ class ReportCardsTable extends AppTable
                 $entity = [];
                 return $entity;
             }
-             
+            
+            $ModifiedSecurityUsers = TableRegistry::get('security_users');//POCOR-5054
             foreach ($AssessmentItemData as $value) {
                 $reprotCardComment = $StudentsReportCardsComments->find()
                 ->select([
                     'comment_code_name' => 'CommentCodes.name', 
                     'comment' => $StudentsReportCardsComments->aliasField('comments'),
-                    //POCOR-5227 Starts
-                    'security_user_openemis_no' => $SecurityUsers->aliasField('openemis_no'),
-                    'security_user_name' => $SecurityUsers->find()->func()->concat([
-                        'first_name' => 'literal',
+                    //POCOR-5054 Starts
+                    'created_security_user_openemis_no' => $SecurityUsers->aliasField('openemis_no'),
+                    'created_security_user_name' => $SecurityUsers->find()->func()->concat([
+                        $SecurityUsers->aliasField('first_name') => 'literal',
                         " ",
                         /*'middle_name' => 'literal',
                         " ",
                          'third_name' => 'literal',
                         " ",*/
-                        'last_name' => 'literal'
-                    ])//POCOR-5227 Ends
+                        $SecurityUsers->aliasField('last_name') => 'literal'
+                    ]),
+                    'modified_security_user_openemis_no' => 'ModifiedSecurityUsers.openemis_no',
+                    'modified_security_user_name' => $ModifiedSecurityUsers->find()->func()->concat([
+                        'ModifiedSecurityUsers.first_name' => 'literal',
+                        " ",
+                        /*'middle_name' => 'literal',
+                        " ",
+                         'third_name' => 'literal',
+                        " ",*/
+                        'ModifiedSecurityUsers.last_name' => 'literal'
+                    ])//POCOR-5054 Ends
                 ])
                 ->leftJoinWith('CommentCodes')
                 ->leftJoin([$SecurityUsers->alias() => $SecurityUsers->table()], [
                     $SecurityUsers->aliasField('id') . ' = ' .  $StudentsReportCardsComments->aliasField('created_user_id')
                 ])//POCOR-5227
+                //POCOR-5054 Starts
+                ->leftJoin(['ModifiedSecurityUsers' => $ModifiedSecurityUsers->table()], [
+                    'ModifiedSecurityUsers.id' . ' = ' .  $StudentsReportCardsComments->aliasField('modified_user_id')
+                ])//POCOR-5054 Ends
                 ->innerJoin([$ReportCardSubjects->alias() => $ReportCardSubjects->table()], [
                     $ReportCardSubjects->aliasField('report_card_id = ') .  $StudentsReportCardsComments->aliasField('report_card_id'),
                     $ReportCardSubjects->aliasField('education_grade_id = ') .  $StudentsReportCardsComments->aliasField('education_grade_id'),
@@ -585,13 +600,24 @@ class ReportCardsTable extends AppTable
                 ->autoFields(true)
                 ->hydrate(false)
                 ->first();
-                $entity[] = [
-                    'education_subject_id' => $value['education_subject_id'],
-                    'comment_code_name' => $reprotCardComment['comment_code_name'],
-                    'comments' => $reprotCardComment['comment'],
-                    'security_user_openemis_no' => $reprotCardComment['security_user_openemis_no'],//POCOR-5227
-                    'security_user_name' => $reprotCardComment['security_user_name']//POCOR-5227
-                ];
+                //POCOR-5054 Starts
+                if(!empty($reprotCardComment['modified_security_user_openemis_no'])){
+                    $entity[] = [
+                        'education_subject_id' => $value['education_subject_id'],
+                        'comment_code_name' => $reprotCardComment['comment_code_name'],
+                        'comments' => $reprotCardComment['comment'],
+                        'security_user_openemis_no' => $reprotCardComment['modified_security_user_openemis_no'],//POCOR-5227
+                        'security_user_name' => $reprotCardComment['modified_security_user_name']//POCOR-5227
+                    ];
+                }else{//POCOR-5054 Ends
+                    $entity[] = [
+                        'education_subject_id' => $value['education_subject_id'],
+                        'comment_code_name' => $reprotCardComment['comment_code_name'],
+                        'comments' => $reprotCardComment['comment'],
+                        'security_user_openemis_no' => $reprotCardComment['security_user_openemis_no'],//POCOR-5227
+                        'security_user_name' => $reprotCardComment['security_user_name']//POCOR-5227
+                    ];
+                }
                 /**POCOR-6810 ends*/ 
             }
             return $entity;

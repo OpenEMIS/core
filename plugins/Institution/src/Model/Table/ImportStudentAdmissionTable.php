@@ -173,7 +173,7 @@ class ImportStudentAdmissionTable extends AppTable {
 
         $tempRow['entity'] = $this->StudentAdmission->newEntity();
         $tempRow['end_date'] = false;
-        $tempRow['assignee_id'] = WorkflowBehavior::AUTO_ASSIGN;
+        $tempRow['assignee_id'] = $this->Auth->user('id'); //POCOR-7282
         $tempRow['institution_id'] = $this->institutionId;
         // Optional fields which will be validated should be set with a default value on initialisation
         $tempRow['institution_class_id'] = null;
