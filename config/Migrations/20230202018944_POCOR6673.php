@@ -17,6 +17,23 @@ class POCOR6673 extends AbstractMigration
         // Backup locale_contents table
         $this->execute('CREATE TABLE `z_6673_locale_contents` LIKE `locale_contents`');
         $this->execute('INSERT INTO `z_6673_locale_contents` SELECT * FROM `locale_contents`');
+
+        //backup
+        $this->execute('CREATE TABLE `z_6673_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `z_6673_security_functions` SELECT * FROM `security_functions`'); 
+
+        // security_functions
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 133');
+
+        //insert 
+        $record = [
+            [
+                'name' => 'Curriculars', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Academic', 'parent_id' => 8,'_view' => 'Curriculars.index|Curriculars.view', '_edit' => 'Curriculars.edit', '_add' => 'Curriculars.add', '_delete' => 'Curriculars.remove', '_execute' => NULL, 'order' => 1350, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ]
+        ];
+
+        $this->insert('security_functions', $record);
+
         // End
         $localeContent = [
 
@@ -184,5 +201,7 @@ class POCOR6673 extends AbstractMigration
         $this->execute('RENAME TABLE `z_6673_institution_curricular_students` TO `institution_curricular_students`');
         $this->execute('DROP TABLE IF EXISTS `institution_curricular_staff`');
         $this->execute('RENAME TABLE `z_6673_institution_curricular_staff` TO `institution_curricular_staff`');
+        $this->execute('RENAME TABLE `z_6673_security_functions` TO `security_functions`');
+        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 456');  
     }
 }

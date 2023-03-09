@@ -17,4 +17,16 @@ class CurricularPositionsTable extends ControllerActionTable
         
         $this->addBehavior('FieldOption.FieldOption');
     }
+
+    public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $curricularStudent = TableRegistry::get('institution_curricular_students'); 
+        $checkStudent =  $curricularStudent->find()->where([$curricularStudent->aliasField('curricular_position_id')=>$entity->id])->first();     
+             
+        if(!empty($checkStudent)){
+            $message = __('Its Associated with curricular Student ');
+            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+            $event->stopPropagation();
+        }
+    }
 }

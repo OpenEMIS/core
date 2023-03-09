@@ -23,7 +23,7 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->belongsTo('InstitutionCurriculars', ['className' => 'Institution.InstitutionCurriculars']);
         $this->belongsTo('CurricularPositions', ['className' => 'FieldOption.CurricularPositions']);
         $this->toggle('add', false);
-        $this->toggle('search', false);
+        $this->toggle('search', true);
         $this->toggle('edit', false);
         $this->toggle('view', false);
         $this->toggle('remove', false);
@@ -166,6 +166,19 @@ class StudentCurricularsTable extends ControllerActionTable
 
                 
  
+    }
+
+    private function setupTabElements()
+    {
+        $options['type'] = 'student';
+        $tabElements = $this->controller->getAcademicTabElements($options);
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
+    }
+
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {       
+        $this->setupTabElements();
     }
 
 
