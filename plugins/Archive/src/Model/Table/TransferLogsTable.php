@@ -237,6 +237,7 @@ use Cake\Utility\Security;
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $data){
+        ini_set('memory_limit', '-1');
         if($entity->features == "Student Attendance"){
             // /*flag the academic period table
             // academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
@@ -253,28 +254,28 @@ use Cake\Utility\Security;
 
                 $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
                 $ClassAttendanceRecordsData = $ClassAttendanceRecords->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
                 
 
                 $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
                 $InstitutionStudentAbsencesData = $InstitutionStudentAbsences->find('all')
-                                                        ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                                                        ->where(['academic_period_id' => $entity->academic_period_id])->count();
                 
                                                         
                 $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
                 $StudentAbsencesPeriodDetailsData = $StudentAbsencesPeriodDetails->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
                 
 
                 $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
                 $StudentAttendanceMarkedRecordsData = $StudentAttendanceMarkedRecords->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
 
                  
                 $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
                 $InstitutionStaffAttendancesData = $StudentAttendanceMarkTypes->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
-                if(empty($ClassAttendanceRecordsData) && empty($InstitutionStudentAbsencesData) && empty($StudentAbsencesPeriodDetailsData) && empty($StudentAttendanceMarkedRecordsData) && empty($InstitutionStaffAttendancesData)){
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
+                if(($ClassAttendanceRecordsData == 0) && ($InstitutionStudentAbsencesData == 0) && ($StudentAbsencesPeriodDetailsData == 0) && ($StudentAttendanceMarkedRecordsData == 0) && ($InstitutionStaffAttendancesData == 0)){
                     $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
                 }else{
                     $this->log('=======>Before triggerStudentAttendanceShell', 'debug');
@@ -300,13 +301,13 @@ use Cake\Utility\Security;
                 // );
                 $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
                 $InstitutionStaffAttendancesData = $InstitutionStaffAttendances->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
                 
                 $StaffLeave = TableRegistry::get('Institution.StaffLeave');
                 $StaffLeaveData = $StaffLeave->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
                 
-                if(empty($InstitutionStaffAttendancesData) && empty($StaffLeaveData)){
+                if(($InstitutionStaffAttendancesData == 0) && ($StaffLeaveData == 0)){
                     $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
                 }else{
                     $this->log('=======>Before triggerStaffAttendancesShell', 'debug');
@@ -332,7 +333,7 @@ use Cake\Utility\Security;
                 // );
                 $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
                 $AssessmentItemResultsData = $AssessmentItemResults->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->limit(1)->toArray();
                 if(empty($AssessmentItemResultsData)){
                     // echo "fsfs";die;
                     $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);

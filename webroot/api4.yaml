@@ -14,19 +14,21 @@ servers:
   - url: https://demo.openemis.org/core
 tags:
   - name: User Authentication
-    description: APIs for Login
+    description: APIs for User Authentication
+  - name: Academic Periods
+    description: APIs for Academic Periods
   - name: Education Structure Details
-    description: APIs for Institution Grade Subjects
+    description: APIs for Education Structure Details
   - name: Institutions
     description: APIs for Institutions
   - name: Institution Grades
     description: APIs for Institution Grades
   - name: Institution Classes
-    description: APIs for Institutions Classes
+    description: APIs for Institution Classes
   - name: Institution Subjects
     description: APIs for Institution Subjects
   - name: Institution Shifts
-    description: APIs for Institutions Shifts
+    description: APIs for Institution Shifts
   - name: Institution Areas
     description: APIs for Institution Areas
   - name: Institution Summary
@@ -34,13 +36,13 @@ tags:
   - name: Institution Grade Summary
     description: APIs for Institution Grade Summary
   - name: Institution Room Type Summary
-    description: APIs for Institution Infrastructure Summary
+    description: APIs for Institution Room Type Summary
   - name: Institution Student Nationality Summary
     description: APIs for Institution Student Nationality Summary
   - name: User Details
     description: APIs for User Details
   - name: Institution Staff
-    description: APIs for Institutions Staff
+    description: APIs for Institution Staff
   - name: Institution Positions
     description: APIs for Institution Positions
   - name: Locale Content Details
@@ -57,13 +59,13 @@ paths:
         - name: username
           in: query
           description: The user name for login
-          required: false
+          required: true
           schema:
             type: string
         - name: password
           in: query
           description: The password for login in clear text
-          required: false
+          required: true
           schema:
             type: string
       responses:
@@ -80,14 +82,480 @@ paths:
           description: Invalid Email or Password
         '500':
           description: Invalid Username
-      
+          
+  /api/v4/otp-generate:
+    post:
+      tags:
+        - User Authentication
+      summary: Generate OTP
+      description: API to Generate OTP
+      operationId: Generate OTP
+      parameters:
+        - name: email
+          in: query
+          description: The email address
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+        '404':
+          description: Invalid Email
+          
+  /api/v4/otp-verify:
+    post:
+      tags:
+        - User Authentication
+      summary: Verify OTP
+      description: API to Verify OTP
+      operationId: Verify OTP
+      parameters:
+        - name: One Time Password
+          in: query
+          description: The One Time Password
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+        '404':
+          description: Invalid OTP
+          
+  /api/v4/academic-periods/list:
+      get:
+        tags:
+          - Academic Periods
+        summary: Get current Academic Period
+        description: Multiple values can be provided with comma separated strings
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value
+            
+  /api/v4/systems/levels/cycles/programmes/grades/list:
+      get:
+        tags:
+          - Education Structure Details
+        summary: Get Current Grades
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value
+  
+  /api/v4/systems/levels/cycles/programmes/grades/subjects:
+      get:
+        tags:
+          - Education Structure Details
+        summary: Get All Grade Subjects
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'
+          '400':
+            description: Invalid status value
+  
+  /api/v4/systems/{system_id}/levels/cycles/programmes/grades/subjects:
+      get:
+        tags:
+          - Education Structure Details
+        summary: Get All Grade Subjects
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+          - name: system_id
+            in: path
+            description: The level id
+            required: true
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'
+          '400':
+            description: Invalid status value
+  
+  /api/v4/systems/{system_id}/levels/{level_id}/cycles/programmes/grades/subjects:
+      get:
+        tags:
+          - Education Structure Details
+        summary: Get All Grade Subjects
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+          - name: system_id
+            in: path
+            description: The level id
+            required: true
+            schema:
+              type: integer
+          - name: level_id
+            in: path
+            description: The level id
+            required: true
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'
+          '400':
+            description: Invalid status value
+  
+  /api/v4/systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/subjects:
+      get:
+        tags:
+          - Education Structure Details
+        summary: Get All Grade Subjects
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+          - name: system_id
+            in: path
+            description: The level id
+            required: true
+            schema:
+              type: integer
+          - name: level_id
+            in: path
+            description: education_level_id
+            required: true
+            schema:
+              type: integer
+          - name: cycle_id
+            in: path
+            description: education_cycle_id
+            required: true
+            schema:
+              type: integer
+          - name: programme_id
+            in: path
+            description: education_programme_id
+            required: true
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'
+          '400':
+            description: Invalid status value
+            
+  /api/v4/systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/subjects:
+      get:
+        tags:
+          - Education Structure Details
+        summary: Get All Grade Subjects
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+          - name: system_id
+            in: path
+            description: The level id
+            required: true
+            schema:
+              type: integer
+          - name: level_id
+            in: path
+            description: education_level_id
+            required: true
+            schema:
+              type: integer
+          - name: cycle_id
+            in: path
+            description: education_cycle_id
+            required: true
+            schema:
+              type: integer
+          - name: programme_id
+            in: path
+            description: education_programme_id
+            required: true
+            schema:
+              type: integer
+          - name: grade_id
+            in: path
+            description: education_grade_id
+            required: true
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'
+          '400':
+            description: Invalid status value
+
+  /api/v4/systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/subjects/{subject_id}:
+      get:
+        tags:
+          - Education Structure Details
+        summary: Get All Grade Subjects
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+          - name: system_id
+            in: path
+            description: The level id
+            required: true
+            schema:
+              type: integer
+          - name: level_id
+            in: path
+            description: education_level_id
+            required: true
+            schema:
+              type: integer
+          - name: cycle_id
+            in: path
+            description: education_cycle_id
+            required: true
+            schema:
+              type: integer
+          - name: programme_id
+            in: path
+            description: education_programme_id
+            required: true
+            schema:
+              type: integer
+          - name: grade_id
+            in: path
+            description: education_grade_id
+            required: true
+            schema:
+              type: integer
+          - name: subject_id
+            in: path
+            description: education_subject_id
+            required: true
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Education-System'
+          '400':
+            description: Invalid status value
+  
   /api/v4/institutions:
     get:
       tags:
         - Institutions
       summary: Get All Institutions
       description: Multiple Institution Details will be provided with comma separated strings
-      operationId: Institutions
       parameters:
         - name: academic_period_id
           in: query
@@ -186,6 +654,30 @@ paths:
         '400':
           description: Invalid status value
       
+  /api/v4/institutions/list:
+    get:
+      tags:
+        - Institutions
+      summary: Get List of Institutions
+      description: Multiple Institution Details will be provided with comma separated strings
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid status value
+            
+  /api/v4/institutions/areas/list:
+    get:
+      tags:
+        - Institutions
+      summary: Get Areas from Institutions
+      description: Multiple Details will be provided with comma separated strings
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid status value
+  
   /api/v4/institutions/grades:
     get:
       tags:
@@ -682,399 +1174,6 @@ paths:
           '400':
             description: Invalid status value     
             
-  /api/v4/systems/levels/cycles/programmes/grades/subjects:
-      get:
-        tags:
-          - Education Structure Details
-        summary: Get All Grade Subjects
-        description: Multiple values can be provided with comma separated strings
-        parameters:
-          - name: academic_period_id
-            in: query
-            description: This is to filter the results based on the academic_period_id
-            required: false
-            schema:
-              type: integer
-          - name: limit
-            in: header
-            description: This is to limit the number of result
-            required: false
-            schema:
-              type: integer
-          - name: order
-            in: header
-            description: This is to sort the results
-            required: false
-            schema:
-              type: string
-          - name: page
-            in: header
-            description: This is to display the results based on the page number
-            required: false
-            schema:
-              type: integer
-        responses:
-          '200':
-            description: successful operation
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Education-System'         
-              application/xml:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Education-System'
-          '400':
-            description: Invalid status value
-  /api/v4/systems/{system_id}/levels/cycles/programmes/grades/subjects:
-      get:
-        tags:
-          - Education Structure Details
-        summary: Get All Grade Subjects
-        description: Multiple values can be provided with comma separated strings
-        parameters:
-          - name: academic_period_id
-            in: query
-            description: This is to filter the results based on the academic_period_id
-            required: false
-            schema:
-              type: integer
-          - name: limit
-            in: header
-            description: This is to limit the number of result
-            required: false
-            schema:
-              type: integer
-          - name: order
-            in: header
-            description: This is to sort the results
-            required: false
-            schema:
-              type: string
-          - name: page
-            in: header
-            description: This is to display the results based on the page number
-            required: false
-            schema:
-              type: integer
-          - name: system_id
-            in: path
-            description: The level id
-            required: true
-            schema:
-              type: integer
-        responses:
-          '200':
-            description: successful operation
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Education-System'         
-              application/xml:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Education-System'
-          '400':
-            description: Invalid status value
-  
-  /api/v4/systems/{system_id}/levels/{level_id}/cycles/programmes/grades/subjects:
-      get:
-        tags:
-          - Education Structure Details
-        summary: Get All Grade Subjects
-        description: Multiple values can be provided with comma separated strings
-        parameters:
-          - name: academic_period_id
-            in: query
-            description: This is to filter the results based on the academic_period_id
-            required: false
-            schema:
-              type: integer
-          - name: limit
-            in: header
-            description: This is to limit the number of result
-            required: false
-            schema:
-              type: integer
-          - name: order
-            in: header
-            description: This is to sort the results
-            required: false
-            schema:
-              type: string
-          - name: page
-            in: header
-            description: This is to display the results based on the page number
-            required: false
-            schema:
-              type: integer
-          - name: system_id
-            in: path
-            description: The level id
-            required: true
-            schema:
-              type: integer
-          - name: level_id
-            in: path
-            description: The level id
-            required: true
-            schema:
-              type: integer
-        responses:
-          '200':
-            description: successful operation
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Education-System'         
-              application/xml:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Education-System'
-          '400':
-            description: Invalid status value
-  
-  /api/v4/systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/subjects:
-      get:
-        tags:
-          - Education Structure Details
-        summary: Get All Grade Subjects
-        description: Multiple values can be provided with comma separated strings
-        parameters:
-          - name: academic_period_id
-            in: query
-            description: This is to filter the results based on the academic_period_id
-            required: false
-            schema:
-              type: integer
-          - name: limit
-            in: header
-            description: This is to limit the number of result
-            required: false
-            schema:
-              type: integer
-          - name: order
-            in: header
-            description: This is to sort the results
-            required: false
-            schema:
-              type: string
-          - name: page
-            in: header
-            description: This is to display the results based on the page number
-            required: false
-            schema:
-              type: integer
-          - name: system_id
-            in: path
-            description: The level id
-            required: true
-            schema:
-              type: integer
-          - name: level_id
-            in: path
-            description: education_level_id
-            required: true
-            schema:
-              type: integer
-          - name: cycle_id
-            in: path
-            description: education_cycle_id
-            required: true
-            schema:
-              type: integer
-          - name: programme_id
-            in: path
-            description: education_programme_id
-            required: true
-            schema:
-              type: integer
-        responses:
-          '200':
-            description: successful operation
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Education-System'         
-              application/xml:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Education-System'
-          '400':
-            description: Invalid status value
-            
-  /api/v4/systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/subjects:
-      get:
-        tags:
-          - Education Structure Details
-        summary: Get All Grade Subjects
-        description: Multiple values can be provided with comma separated strings
-        parameters:
-          - name: academic_period_id
-            in: query
-            description: This is to filter the results based on the academic_period_id
-            required: false
-            schema:
-              type: integer
-          - name: limit
-            in: header
-            description: This is to limit the number of result
-            required: false
-            schema:
-              type: integer
-          - name: order
-            in: header
-            description: This is to sort the results
-            required: false
-            schema:
-              type: string
-          - name: page
-            in: header
-            description: This is to display the results based on the page number
-            required: false
-            schema:
-              type: integer
-          - name: system_id
-            in: path
-            description: The level id
-            required: true
-            schema:
-              type: integer
-          - name: level_id
-            in: path
-            description: education_level_id
-            required: true
-            schema:
-              type: integer
-          - name: cycle_id
-            in: path
-            description: education_cycle_id
-            required: true
-            schema:
-              type: integer
-          - name: programme_id
-            in: path
-            description: education_programme_id
-            required: true
-            schema:
-              type: integer
-          - name: grade_id
-            in: path
-            description: education_grade_id
-            required: true
-            schema:
-              type: integer
-        responses:
-          '200':
-            description: successful operation
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Education-System'         
-              application/xml:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Education-System'
-          '400':
-            description: Invalid status value
-  /api/v4/systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/subjects/{subject_id}:
-      get:
-        tags:
-          - Education Structure Details
-        summary: Get All Grade Subjects
-        description: Multiple values can be provided with comma separated strings
-        parameters:
-          - name: academic_period_id
-            in: query
-            description: This is to filter the results based on the academic_period_id
-            required: false
-            schema:
-              type: integer
-          - name: limit
-            in: header
-            description: This is to limit the number of result
-            required: false
-            schema:
-              type: integer
-          - name: order
-            in: header
-            description: This is to sort the results
-            required: false
-            schema:
-              type: string
-          - name: page
-            in: header
-            description: This is to display the results based on the page number
-            required: false
-            schema:
-              type: integer
-          - name: system_id
-            in: path
-            description: The level id
-            required: true
-            schema:
-              type: integer
-          - name: level_id
-            in: path
-            description: education_level_id
-            required: true
-            schema:
-              type: integer
-          - name: cycle_id
-            in: path
-            description: education_cycle_id
-            required: true
-            schema:
-              type: integer
-          - name: programme_id
-            in: path
-            description: education_programme_id
-            required: true
-            schema:
-              type: integer
-          - name: grade_id
-            in: path
-            description: education_grade_id
-            required: true
-            schema:
-              type: integer
-          - name: subject_id
-            in: path
-            description: education_subject_id
-            required: true
-            schema:
-              type: integer
-        responses:
-          '200':
-            description: successful operation
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Education-System'         
-              application/xml:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Education-System'
-          '400':
-            description: Invalid status value
   /api/v4/institutions/shifts:
       get:
         tags:
@@ -1842,7 +1941,8 @@ paths:
                     $ref: '#/components/schemas/Institution-Grades'
           '400':
             description: Invalid status value        
-        
+      
+  
   /api/v4/users:
       get:
         tags:
@@ -1897,6 +1997,131 @@ paths:
           '400':
             description: Invalid status value        
         
+  /api/v4/users/openemis_id/{openemis_id}:
+      get:
+        tags:
+          - User Details
+        summary: Get All User details
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+          - name: openemis_id
+            in: path
+            description: Add openemis_id to filter
+            required: true
+            schema:
+              type: string
+              format: varchar
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/User-Details'
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/User-Details'
+          '400':
+            description: Invalid status value        
+  
+  /api/v4/identity-types/list:
+      get:
+        tags:
+          - User Details
+        summary: Get All identity types
+        description: Multiple values can be provided with comma separated strings
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value     
+  
+  /api/v4/nationalities/list:
+      get:
+        tags:
+          - User Details
+        summary: Get All Nationalities
+        description: Multiple values can be provided with comma separated strings
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value     
+            
+  /api/v4/student-custom-fields:
+      get:
+        tags:
+          - User Details
+        summary: Get All Student Custom Fields
+        description: Multiple values can be provided with comma separated strings
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value  
+  
+  /api/v4/users/identity-types/{identity_type_id}/{identity_number}:
+      get:
+        tags:
+          - User Details
+        summary: Get All User details
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+          - name: identity_type_id
+            in: path
+            description: Add openemis_id to filter
+            required: true
+            schema:
+              type: string
+              format: varchar
+          - name: identity_number
+            in: path
+            description: Add openemis_id to filter
+            required: true
+            schema:
+              type: string
+              format: varchar
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/User-Details'
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/User-Details'
+          '400':
+            description: Invalid status value     
+            
+  /api/v4/institutions/{institutionId}/student-admission:
+      post:
+        tags:
+          - User Details
+        summary: Student Admission to an Institution
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+          - name: institutionId
+            in: path
+            description: Add Institution id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value  
+  
   /api/v4/institutions/staff:
       get:
         tags:
