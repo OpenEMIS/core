@@ -844,8 +844,8 @@ class StaffTable extends ControllerActionTable
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
             // Starts POCOR-6532
-            $query = $this->addSearchConditions($query, ['alias' => 'Users', 'aliasidentity' => 'Identities', 'searchTerm' => $search]);
-            // Ends POCOR-6532
+            $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+            // Ends POCOR-6532 //POCOR-7278
             $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
         } else {
             //POCOR-5690 remove check isAdvancedSearchEnabled for search data from list

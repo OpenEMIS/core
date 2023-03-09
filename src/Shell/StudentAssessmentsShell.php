@@ -93,7 +93,7 @@ class StudentAssessmentsShell extends Shell
         $Tablecollection = $archive_connection->schemaCollection();
         $tableSchema = $Tablecollection->listTables();
 
-        if (! in_array('assessment_item_results', $tableSchema)) {
+        /*if (! in_array('assessment_item_results', $tableSchema)) {
             $archive_connection->execute("CREATE TABLE IF NOT EXISTS `assessment_item_results` (
               `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
               `marks` decimal(6,2) DEFAULT NULL,
@@ -200,7 +200,7 @@ class StudentAssessmentsShell extends Shell
                     
                 }
             }
-        }
+        }*/
 
         $connection->execute("CREATE TABLE IF NOT EXISTS `assessment_item_results_archived` LIKE `assessment_item_results`");
         $connection->execute("INSERT INTO `assessment_item_results_archived` SELECT * FROM `assessment_item_results` WHERE academic_period_id = $academicPeriodId");
