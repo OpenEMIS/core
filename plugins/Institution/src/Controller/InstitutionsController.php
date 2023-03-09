@@ -2163,7 +2163,7 @@ class InstitutionsController extends AppController
                 'StudentRisks' => __('Risks'),
                 'StudentTextbooks' => __('Textbox'),
                 'StudentAssociations' => __('Associations'),
-                'StudentCurriculars' => __('Curriculars') //POCOR-6673 in student tab
+                //'StudentCurriculars' => __('Curriculars') //POCOR-6673 in student tab
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -3359,7 +3359,7 @@ class InstitutionsController extends AppController
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
             'Associations' => ['text' => __('Associations')],
-            'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673
+            'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673 for student tab section
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -3374,8 +3374,8 @@ class InstitutionsController extends AppController
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
             }
         }
-        //echo '<pre>';print_r($tabElements);die;
-        return $this->TabPermission->checkTabPermission($tabElements);
+        return $tabElements;
+        //return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getCareerTabElements($options = [])
