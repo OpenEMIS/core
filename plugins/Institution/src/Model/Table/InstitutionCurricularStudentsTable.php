@@ -22,6 +22,7 @@ use Cake\Network\Session;
 use Cake\I18n\Time;
 use Cake\Datasource\EntityInterface;
 
+//POCOR-6673
 class InstitutionCurricularStudentsTable extends ControllerActionTable
 {	
 	use MessagesTrait;
@@ -110,8 +111,8 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $query
             ->select([
                         $this->aliasField('id'),
+                        $this->aliasField('student_id'),
                         'openemis_no'=>  $Users->aliasField('openemis_no'),
-                        'student_name' =>  $Users->aliasField('first_name'),
                         'education_grade' => $grades->aliasField('name'),
                         'institution_class' => $institutionClass->aliasField('name'),
                         'curricular_position' => $curricularPositions->aliasField('name'),     
@@ -146,6 +147,16 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
                     $this->aliasField('student_id') => 'ASC'
                 ]);
         }
+        $extra['order'] = [$this->aliasField('name') => 'asc'];
+
+        $search = $this->getSearchKey();
+
+        // CUSTOM SEACH - Institution Code, Institution Name, Area Code and Area Name
+        $extra['auto_search'] = false; // it will append an AND
+        if (!empty($search)) {
+            $query->find('byStudentData', ['search' => $search]);
+        }
+
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         $query = $this->request->query;
         $this->field('student_id', ['visible' => false]);
@@ -162,7 +173,6 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $this->field('institution_class', ['visible' => true]);
         $this->field('student_name', ['visible' => true]);
         
-
         $this->setFieldOrder([
         'student_name', 'openemis_no','education_grade','institution_class', 'institution_curricular_id', 'curricular_position_id']);
                
@@ -314,8 +324,6 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function onGetCategory(Event $event, Entity $entity)
     {
-        $entity->openemis_no ;
-     // echo "<pre>";  print_r($entity);die;
         return $entity->category ? __('Curricular') : __('Extracurricular');
     }
 
@@ -356,5 +364,82 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         return $data->name;
 
     }
+
+    public function onGetStudentName(Event $event, Entity $entity)
+    {
+        $StudentId = $entity->student_id;
+        $users = TableRegistry::get('security_users'); 
+        $data = $this->find()->select(['first_name'=>$users->aliasField('first_name'),'middle_name'=>$users->aliasField('middle_name'),'third_name'=>$users->aliasField('third_name'),'last_name'=>$users->aliasField('last_name')])
+                ->leftJoin([$users->alias() => $users->table()],
+                    [$users->aliasField('id').' = ' . $this->aliasField('student_id')
+                ])
+                ->where([$this->aliasField('student_id') => $StudentId ])->first();
+        $student = $data->first_name.' '.$data->middle_name.' '.$data->third_name.' '.$data->last_name;
+        
+        return $student;
+    }
+
+    public function findByStudentData(Query $query, array $options)
+    {
+        if (array_key_exists('search', $options)) {
+            $search = $options['search'];
+            $query
+            ->join([
+                [
+                    'table' => 'security_users', 'alias' => 'SecurityUsers', 'type' => 'INNER',
+                    'conditions' => ['SecurityUsers.id = ' . $this->aliasField('student_id')]
+                ],
+                [
+                    'table' => 'institution_students', 'alias' => 'InstitutionStudents', 'type' => 'INNER',
+                    'conditions' => ['InstitutionStudents.student_id = ' . $this->aliasField('student_id')]
+                ],
+                [
+                    'table' => 'education_grades', 'alias' => 'EducationGrades', 'type' => 'LEFT',
+                    'conditions' => [
+                        'EducationGrades.id = ' . 'InstitutionStudents.education_grade_id',
+                    ]
+                ],
+                [
+                    'table' => 'institution_curriculars', 'alias' => 'InstitutionCurriculars', 'type' => 'INNER',
+                    'conditions' => ['InstitutionCurriculars.id = ' . $this->aliasField('institution_curricular_id')]
+                ],
+                [
+                    'table' => 'curricular_positions', 'alias' => 'CurricularPositions', 'type' => 'INNER',
+                    'conditions' => ['CurricularPositions.id = ' . $this->aliasField('curricular_position_id')]
+                ],
+            ])
+            ->where([
+                    'OR' => [
+                        ['SecurityUsers.openemis_no LIKE' => '%' . $search . '%'],
+                        ['SecurityUsers.first_name LIKE' => '%' . $search . '%'],
+                        ['SecurityUsers.middle_name LIKE' => '%' . $search . '%'],
+                        ['SecurityUsers.third_name LIKE' => '%' . $search . '%'],
+                        ['SecurityUsers.last_name LIKE' => '%' . $search . '%'],
+                        ['InstitutionCurriculars.name LIKE' => '%' . $search . '%'],
+                        ['CurricularPositions.name LIKE' => '%' . $search . '%'],
+                        ['EducationGrades.name LIKE' => '%' . $search . '%'],
+                        
+                    ]
+                ]
+            )
+            ->group($this->aliasField('student_id'))
+            ;
+        }
+
+        return $query;
+    }
+
+    public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $curricularStudent = TableRegistry::get('institution_curricular_students'); 
+        $checkStudent =  $curricularStudent->find()->where([$curricularStudent->aliasField('student_id')=>$entity->student_id])->first();     
+             
+        if(!empty($checkStudent)){
+            $message = __('Its Associated with Other Data');
+            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+            $event->stopPropagation();
+        }
+    }
+
 	
 }

@@ -62,8 +62,20 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $sortable = !is_null($this->request->query('sort')) ? true : false;
         $session = $this->controller->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
-        $query
-            ->select([
+        $curricularStudent = TableRegistry::get('institution_curricular_students');
+        $users = TableRegistry::get('security_users');
+        $data = $curricularStudent->find()
+                     ->select(['male_students' => "(
+                                 COUNT(DISTINCT(CASE WHEN security_users.gender_id = 1 THEN institution_curricular_students.student_id END)) )",
+                                'female_students' => "(
+                                 COUNT(DISTINCT(CASE WHEN security_users.gender_id = 2 THEN institution_curricular_students.student_id END)) )",
+                                'institution_curricular_id'
+                            ])
+                    ->innerJoin([$users->alias() => $users->table()],
+                    [$users->aliasField('id').' = ' . $curricularStudent->aliasField('student_id')])
+                    ->group([$curricularStudent->aliasField('student_id')]);
+
+        $query->select([
                 'id',
                 'name',
                 'total_male_students',
@@ -97,7 +109,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $this->field('total_students', ['visible' => ['index'=>true,'view' => false,'edit' =>false,'add'=>false]]);
         $this->field('curricular_type_id', ['visible' => ['index'=>false]]);
         $this->field('category', ['visible' => ['index'=>false]]);
-        $this->field('staff_id', ['visible' => ['index'=>true]]);
+        $this->field('staff_id', ['visible' => ['index'=>false]]);
         $this->setFieldOrder([
             'name', 'staff_id','category','total_male_students', 'total_female_students', 'total_students'
         ]);
@@ -259,8 +271,8 @@ class InstitutionCurricularsTable extends ControllerActionTable
                                     'institution_curricular_id' => $curricularId,
                                     'created_user_id' => 1,
                                     'created' => $currentTimeZone,
-                                    /*'modified_user_id' => 1,
-                                    'modified' => $currentTimeZone,*/
+                                    'modified_user_id' => 1,
+                                    'modified' => $currentTimeZone,
                                 ];
                         $entity = $curricularStaff->newEntity($data);
                        $save =  $curricularStaff->save($entity);
@@ -272,11 +284,11 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        if ($this->action == 'view') {
-            $tabElements = $this->controller->getCurricularsTabElements();
-            $this->controller->set('tabElements', $tabElements);
-            $this->controller->set('selectedAction', 'InstitutionCurriculars');
-        }
+        $tabElements = $this->controller->getCurricularsTabElements();
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', 'InstitutionCurriculars');
+        
+        $this->field('staff_id', ['visible' => true]);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -303,6 +315,36 @@ class InstitutionCurricularsTable extends ControllerActionTable
         }
     }
 
-    
+    public function onGetStaffId(Event $event, Entity $entity)
+    {
+        $curricularId = $entity->id ;
+        $curricularStaff = TableRegistry::get('institution_curricular_staff'); 
+        $users = TableRegistry::get('security_users'); 
+        $data = $curricularStaff->find()->select(['openemis_no'=>$users->aliasField('openemis_no'),'first_name'=>$users->aliasField('first_name'),'middle_name'=>$users->aliasField('middle_name'),'third_name'=>$users->aliasField('third_name'),'last_name'=>$users->aliasField('last_name')])
+                ->leftJoin([$users->alias() => $users->table()],
+                    [$users->aliasField('id').' = ' . $curricularStaff->aliasField('staff_id')
+                ])
+                ->where([$curricularStaff->aliasField('institution_curricular_id') => $curricularId ])->toArray();
+        $staff = [];
+        foreach($data as $value){
+            $staff[] = $value->openemis_no.' - '.$value->first_name.' '.$value->middle_name.' '.$value->third_name.' '.$value->last_name;
+        }
+        return implode(', ', $staff);
+    }
+
+    public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $curricularStaff = TableRegistry::get('institution_curricular_staff'); 
+        $curricularStudent = TableRegistry::get('institution_curricular_students'); 
+        $curriculars = TableRegistry::get('institution_curriculars'); 
+        $users = TableRegistry::get('security_users'); 
+        $checkStudent =  $curricularStudent->find()->where([$curricularStudent->aliasField('institution_curricular_id')=>$entity->id])->first();     
+        $checkStaff =  $curricularStaff->find()->where([$curricularStaff->aliasField('institution_curricular_id')=>$entity->id])->first();     
+        if(!empty($checkStudent) || !empty($checkStaff)){
+            $message = __('Its Associated with Other Data');
+            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+            $event->stopPropagation();
+        }
+    }
     
 }

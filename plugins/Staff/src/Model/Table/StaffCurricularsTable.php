@@ -10,6 +10,7 @@ use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use App\Model\Table\ControllerActionTable;
 
+//POCOR-6673
 class StaffCurricularsTable extends ControllerActionTable {
 
 	public function initialize(array $config) 
@@ -21,6 +22,7 @@ class StaffCurricularsTable extends ControllerActionTable {
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->toggle('add', false);
+        $this->toggle('search', true);
 	}
 
 	public function implementedEvents()
@@ -38,6 +40,17 @@ class StaffCurricularsTable extends ControllerActionTable {
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra) {
+        $this->setupTabElements();
+    }
+
+    private function setupTabElements() {
+        $options['type'] = 'staff';
+        $tabElements = $this->controller->getCareerTabElements($options);
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
     }
     
 
