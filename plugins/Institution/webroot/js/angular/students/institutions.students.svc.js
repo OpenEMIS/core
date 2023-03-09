@@ -1,15 +1,19 @@
 angular
-    .module('institutions.students.svc', ['kd.orm.svc'])
+    .module('institutions.students.svc', ['kd.orm.svc', 'kd.data.svc'])
     .service('InstitutionsStudentsSvc', InstitutionsStudentsSvc);
 
-InstitutionsStudentsSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc'];
+InstitutionsStudentsSvc.$inject = ['$http', '$q', '$window', 'KdOrmSvc', 'KdDataSvc'];
 
-function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
+function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
     var externalSource = null;
     var externalToken = null;
     var institutionId = null;
     var externalDataSourceMapping = {};
+    var selectedAddressAreaId = null;
+    var selectedBirthplcaeAreaId = null;
+    var selectedAddressArea = [];
+    var selectedBirthplcaeArea = [];
 
     var service = {
         init: init,
@@ -55,7 +59,22 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         getExternalSourceMapping: getExternalSourceMapping,
         generatePassword: generatePassword,
         translate: translate,
-        getStudentTransferReasons: getStudentTransferReasons
+        getStudentTransferReasons: getStudentTransferReasons,
+        getInternalSearchData: getInternalSearchData,
+        getExternalSearchData: getExternalSearchData,
+        getRedirectToGuardian: getRedirectToGuardian,
+        getRelationType: getRelationType,
+        saveStudentDetails: saveStudentDetails,
+        getStudentCustomFields: getStudentCustomFields,
+        getAddressAreaId: getAddressAreaId,
+        getBirthplaceAreaId: getBirthplaceAreaId,
+        getAddressArea: getAddressArea,
+        getBirthplaceArea: getBirthplaceArea,
+        getStudentTransferReason: getStudentTransferReason,
+        getDateOfBirthValidation: getDateOfBirthValidation,
+        getStartDateFromAcademicPeriod: getStartDateFromAcademicPeriod,
+        checkUserAlreadyExistByIdentity: checkUserAlreadyExistByIdentity,
+        checkConfigForExternalSearch: checkConfigForExternalSearch,
     };
 
     var models = {
@@ -130,6 +149,113 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         var externalSource = url;
     };
 
+    function getInternalSearchData(param) {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Directories/directoryInternalSearch';
+        $http.post(url, {params: param})
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+
+    function getExternalSearchData(param) {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Directories/directoryExternalSearch';
+        $http.post(url, {params: param})
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+
+    function getRelationType() {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Directories/getRelationshipType';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+
+    function getStudentTransferReason() {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/getStudentTransferReason';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+
+    function getRedirectToGuardian() {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Directories/getRedirectToGuardian';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+
+    function getStudentCustomFields(studentId){
+        var params = {
+            student_id: studentId,
+        };
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/studentCustomFields';
+        $http.post(url, {params: params})
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+
+    function getAddressAreaId () {
+        selectedAddressAreaId = $window.localStorage.getItem('address_area_id');
+        return JSON.parse(selectedAddressAreaId);
+    }
+
+    function getAddressArea () {
+        selectedAddressArea = $window.localStorage.getItem('address_area');
+        return JSON.parse(selectedAddressArea);
+    }
+
+    function getBirthplaceAreaId () {
+        selectedBirthplcaeAreaId = $window.localStorage.getItem('birthplace_area_id');
+        return JSON.parse(selectedBirthplcaeAreaId);
+    }
+
+    function getBirthplaceArea () {
+        selectedBirthplcaeArea = $window.localStorage.getItem('birthplace_area');
+        return JSON.parse(selectedBirthplcaeArea);
+    }
+
+    function saveStudentDetails(param) {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/saveStudentData';
+        $http.post(url, param)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+
     function getExternalStudentRecords(options) {
         var deferred = $q.defer();
         var vm = this;
@@ -140,7 +266,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             delete attr.private_key;
             delete attr.public_key;
             vm.externalSourceMapping = attr;
-            var url = angular.baseUrl + '/Configurations/getExternalUsers?page={page}&limit={limit}&first_name={first_name}&last_name={last_name}&identity_number={identity_number}&date_of_birth={date_of_birth}';
+            let url = angular.baseUrl + '/Configurations/getExternalUsers?page={page}&limit={limit}&first_name={first_name}&last_name={last_name}&identity_number={identity_number}&date_of_birth={date_of_birth}';
             var pageParams = {
                 limit: options['endRow'] - options['startRow'],
                 page: options['endRow'] / (options['endRow'] - options['startRow']),
@@ -177,7 +303,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     }
                 }
             }
-            var url = replaceURL.replace(/{\w+}/g, function(all) {
+            let url1 = replaceURL.replace(/{\w+}/g, function(all) {
                 return all in replacement ? replacement[all] : all;
             });
             externalSource = true;
@@ -185,7 +311,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             var opt = {
                 method: 'GET'
             }
-            return KdOrmSvc.customAjax(url, opt);
+            return KdOrmSvc.customAjax(url1, opt);
         }, function(error) {
             deferred.reject(error);
         })
@@ -738,19 +864,77 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     };
 
     function getAcademicPeriods() {
-        var success = function(response, deferred) {
-            var periods = response.data.data;
-            if (angular.isObject(periods) && periods.length > 0) {
-                deferred.resolve(periods);
-            } else {
-                deferred.reject('You need to configure Assessment Periods first');
-            }
-        };
-        return AcademicPeriods
-            .select(['id', 'name', 'current', 'start_date', 'end_date'])
-            .find('SchoolAcademicPeriod')
-            .ajax({success: success, defer: true});
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/getAcademicPeriod';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
     };
+
+    function getEducationGrades(param) {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/getEducationGrade';
+        $http.post(url, {params: param})
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+
+    function getClasses(params) {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/getClassOptions';
+        $http.post(url, {params: params})
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+
+    function getColumnDefs() {
+        var filterParams = {
+            cellHeight: 30
+        };
+        var columnDefs = [];
+
+        columnDefs.push({
+            headerName: "OpenEMIS ID",
+            field: "openemis_id",
+            filterParams: filterParams
+        });
+    };
+
+    function getUniqueOpenEmisId() {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/getUniqueOpenemisId/Student';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response.data.openemis_no);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+
+    function generatePassword() {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/getAutoGeneratedPassword';
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response.data.password);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
 
     //POCOR-6460[START]
     function getIdentityTypesExternalSave(identityTypesName) {
@@ -773,80 +957,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             .ajax({success: success, defer: true});
     };
     //POCOR-6460[END]
-
-    function getEducationGrades(options) {
-        var success = function(response, deferred) {
-            var educationGrades = response.data.data;
-            if (angular.isObject(educationGrades) && educationGrades.length > 0) {
-                deferred.resolve(educationGrades);
-            } else {
-                deferred.reject('You need to configure Education Grades first');
-            }
-        };
-
-        InstitutionGrades.select();
-
-        if (typeof options !== "undefined" && options.hasOwnProperty('academicPeriodId')) {
-            InstitutionGrades.find('EducationGradeInCurrentInstitution', {academic_period_id: options.academicPeriodId, institution_id: options.institutionId});
-        } else {
-            InstitutionGrades.find('EducationGradeInCurrentInstitution', {institution_id: options.institutionId});
-        }
-
-        return InstitutionGrades.ajax({success: success, defer: true});
-    };
-
-    function getClasses(options) {
-        var success = function(response, deferred) {
-            var classes = response.data.data;
-            // does not matter if no classes available
-            deferred.resolve(classes);
-        };
-        return InstitutionClasses
-            .select()
-            .find('ClassOptions', {
-                institution_id: options.institutionId,
-                academic_period_id: options.academicPeriodId,
-                grade_id: options.gradeId
-            })
-            .ajax({success: success, defer: true});
-    }
-
-    function getColumnDefs() {
-        var filterParams = {
-            cellHeight: 30
-        };
-        var columnDefs = [];
-
-        columnDefs.push({
-            headerName: "OpenEMIS ID",
-            field: "openemis_id",
-            filterParams: filterParams
-        });
-    };
-
-    function getUniqueOpenEmisId() {
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Institutions/getUniqueOpenemisId/Student';
-        $http.get(url)
-        .then(function(response){
-            deferred.resolve(response.data.openemis_no);
-        }, function(error) {
-            deferred.reject(error);
-        });
-        return deferred.promise;
-    }
-
-    function generatePassword() {
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Institutions/getAutoGeneratedPassword';
-        $http.get(url)
-        .then(function(response){
-            deferred.resolve(response.data.password);
-        }, function(error) {
-            deferred.reject(error);
-        });
-        return deferred.promise;
-    }
 
     function getAddNewStudentConfig() {
         return ConfigItems
@@ -886,4 +996,88 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             .select()
             .ajax({defer: true});
     }
+
+
+    // Validation for Check Student Admission Age [POCOR-5672]
+    // Request Params: date_of_birth(In 'Y-m-d' format), education_grade_id
+    // Response:
+    // [{ "max_age": 22, "min_age": -3, "validation_error": 1 }]
+
+    function getDateOfBirthValidation(params)
+    {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/checkStudentAdmissionAgeValidation';
+        $http.post(url, { params })
+            .then(function (response)
+            {
+                deferred.resolve(response);
+            }, function (error)
+            {
+                deferred.reject(error);
+            });
+        return deferred.promise;
+    };
+
+    // Url: /Institutions/getStartDateFromAcademicPeriod
+    // Request Params: academic_period_id
+    // Response: [{ "id": 31, "name": "2022", "start_date": "2022-01-01", "start_year": 2022, "end_date": "2022-12-31", "end_year": 2022 }]
+
+    function getStartDateFromAcademicPeriod(params)
+    {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/getStartDateFromAcademicPeriod';
+        $http.post(url, { params })
+            .then(function (response)
+            {
+                deferred.resolve(response);
+            }, function (error)
+            {
+                deferred.reject(error);
+            });
+        return deferred.promise;
+    };
+
+    /**
+     * Parameters are - identity_type_id, identity_number & nationality_id pass as a object
+     * If staff exist then user_exist will be 1 otherwise 0 & show the message as warning
+     * @required {identity_type_id} identity_type_id
+     * @required {identity_number} identity_number
+     * @required {nationality_id} nationality_id
+     * @returns {[{"user_exist":1,"status_code":2,"message":"User already exist with this nationality, identity type & identity type. Kindly select user from below list."}]}
+     */
+    function checkUserAlreadyExistByIdentity(params)
+    {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/checkUserAlreadyExistByIdentity';
+        $http.post(url, { params: params })
+            .then(function (response)
+            {
+                deferred.resolve(response);
+            }, function (error)
+            {
+                deferred.reject(error);
+            });
+        return deferred.promise;
+    }
+
+    /**
+     * Based on showExternalSearch property need to hide external search step in form wizard
+     * @returns {Case 1: for None  [{"value":"None","showExternalSearch ":false}]}
+    *  @returns {Case 2: for rest values [{"value":"OpenEMIS Identity","showExternalSearch ":true}]}
+     */
+    function checkConfigForExternalSearch()
+    {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/checkConfigurationForExternalSearch';
+        $http.get(url)
+            .then(function (response)
+            {
+                deferred.resolve(response.data[0]);
+            }, function (error)
+            {
+                deferred.reject(error);
+            });
+        return deferred.promise;
+    }
+
 };

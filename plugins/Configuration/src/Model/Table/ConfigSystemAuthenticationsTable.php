@@ -24,6 +24,7 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
+        //print_r('hi'); die;
         $this->table('system_authentications');
         parent::initialize($config);
         $this->hasOne('Google', ['className' => 'SSO.IdpGoogle', 'foreignKey' => 'system_authentication_id', 'dependent' => true]);

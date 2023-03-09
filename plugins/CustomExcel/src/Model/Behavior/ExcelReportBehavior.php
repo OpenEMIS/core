@@ -132,7 +132,7 @@ class ExcelReportBehavior extends Behavior
             $this->saveFileAssessment($objSpreadsheet, $temppath, $format, $params['student_id'],$paramVal);
         }else{
             Log::write('debug', 'ExcelReportBehavior1 >>> filepath2: ');
-            $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id']);
+            $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id'],$params['report_card_id']);
         }
 		
         if ($extra->offsetExists('temp_logo')) {
@@ -381,17 +381,17 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    public function saveFile($objSpreadsheet, $filepath, $format, $student_id)
+    public function saveFile($objSpreadsheet, $filepath, $format, $student_id, $report_card_id)
     {
         Log::write('debug', 'ExcelReportBehavior >>> saveFile: '.$format);
         $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
 
         if ($format == 'pdf') {
-            $this->savePDF($objSpreadsheet, $filepath, $student_id);
+            $this->savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id);
         } else {
 			// pdf
 			if(!empty($student_id)) {
-				$this->savePDF($objSpreadsheet, $filepath, $student_id);
+				$this->savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id);
 			}
             // xlsx
             $objWriter->save($filepath);

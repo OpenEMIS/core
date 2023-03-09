@@ -9,13 +9,18 @@ use Page\Traits\EncodingTrait;
 
 class ConfigurationsController extends AppController
 {
+
     use EncodingTrait;
 
     public function initialize()
     {
+        //print_r('hasi');
         parent::initialize();
+        //print_r('hasasasi');
         $this->loadComponent('Configuration.Configuration');
+        //print_r('hasi123'); 
         $this->ControllerAction->model('Configuration.ConfigItems', ['index', 'view', 'edit']);
+       // print_r('hasi343243');
     }
 
     public function beforeFilter(Event $event)
@@ -38,10 +43,12 @@ class ConfigurationsController extends AppController
     }
     public function Authentication()
     {
+
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAuthentication']);
     }
     public function AuthSystemAuthentications()
     {
+        // print_r('hi'); die;
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigSystemAuthentications']);
     }
     public function ExternalDataSource()

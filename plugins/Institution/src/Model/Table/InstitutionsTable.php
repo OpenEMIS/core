@@ -151,6 +151,14 @@ class InstitutionsTable extends ControllerActionTable
             'through' => 'Security.SecurityGroupInstitutions',
             'dependent' => true
         ]);
+        $this->belongsToMany('UserGroups', [
+            'className' => 'Security.UserGroups',
+            'joinTable' => 'security_group_institutions',
+            'foreignKey' => 'institution_id',
+            'targetForeignKey' => 'security_group_id',
+            'through' => 'Security.SecurityGroupInstitutions',
+            'dependent' => true
+        ]);
         //POCOR-6520 starts: add isset condition only
        if(isset(Router::getRequest()->params['pass'][0]) && Router::getRequest()->params['pass'][0]!='excel'){ //POCOR-6520 ends
 
@@ -884,18 +892,35 @@ class InstitutionsTable extends ControllerActionTable
             $entity->shift_type = 0;
         }
 
+        $userId = $_SESSION['Auth']['User']['id']; //POCOR-7166
+        //POCOR-7116 :Start
+        $insName = $entity->code. " - ". $entity->name;
+        $SecurityGroupsTable = TableRegistry::get('security_groups');
+        $SecurityGroupsEntity = [
+            'name' =>$insName,
+            'modified_user_id' => $userId, //POCOR-7166
+            'modified'=> NULL,
+            'created_user_id' =>$userId, //POCOR-7166
+            'created' => date('Y-m-d h:i:s')
+        ];
+        $SecurityGroups = $SecurityGroupsTable->newEntity($SecurityGroupsEntity);
+        if($SecurityGroupResult = $SecurityGroupsTable->save($SecurityGroups)){
+            $entity->security_group_id = $SecurityGroupResult->id;
+        }
+        //POCOR-7116 :End
+
         // adding debug log to monitor when there was a different between date_opened's year and year_opened
         $this->debugMonitorYearOpened($entity, $options);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $TransferConnections = TableRegistry::get('TransferConnections.TransferConnections');
-        $TransferConnectionsResult = $TransferConnections
+        $DataManagementConnections = TableRegistry::get('Archive.DataManagementConnections');
+        $DataManagementConnectionsResult = $DataManagementConnections
             ->find()
             ->select(['conn_status_id'])
             ->first();
-        $this->Session->write('is_connection_stablished', $TransferConnectionsResult->conn_status_id);
+        $this->Session->write('is_connection_stablished', $DataManagementConnectionsResult->conn_status_id);
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         // set action for webhook
         $this->webhookAction = $this->action;
@@ -1047,6 +1072,8 @@ class InstitutionsTable extends ControllerActionTable
                     
                 }
                 $InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
+                //POCOR-7189[START]
+                if(!empty($SurveyFormIds)){
                 $institutionSurveysDelete = $InstitutionSurveys->find()
                 ->where([
                     $InstitutionSurveys->aliasField('institution_id = ').$entity->id,
@@ -1054,6 +1081,8 @@ class InstitutionsTable extends ControllerActionTable
                     $InstitutionSurveys->aliasField('academic_period_id IN') => $multipleFormIds,
                 ])
                 ->toArray();
+                }
+                //POCOR-7189[END]
                 if (empty($institutionSurveysDelete)) {
                     
                     foreach ($SurveyStatusesIds as $key => $periodObj) {
@@ -1498,8 +1527,15 @@ class InstitutionsTable extends ControllerActionTable
                 'SecurityRoleFunctions.security_role_id' => $permission_id,
             ])
             ->first();
-            $addAccess = $securityRoleFunctionsData->_add;
-            // $addAccess = $this->AccessControl->check(['Institutions', 'add']);
+            //POCOR-7191::Start
+            $session = $this->Session;
+            $superAdmin = $session->read('Auth.User.super_admin');
+            if($superAdmin ==1){
+                $addAccess = $this->AccessControl->check(['Institutions', 'add']);
+            }else{
+                $addAccess = $securityRoleFunctionsData->_add;
+            }
+            //POCOR-7191::End
             //POCOR-6866[END]
             if ($data->count() == 1 && (!$addAccess || Configure::read('schoolMode'))) {
                 $entity = $data->first();
@@ -2184,4 +2220,54 @@ class InstitutionsTable extends ControllerActionTable
         ->toArray();   
         return $shiftOptionsOptions;
     }
+
+    //POCOR-7191::Start
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        if($this->checkInstitutionRecords($entity)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset'=>true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        }else{
+            $institutionTable = TableRegistry::get('institutions')
+                ->find()->where(['id' => $entity->id])->first();
+               if(TableRegistry::get('institutions')->delete($entity)){
+                $this->Alert->success('general.delete.success', ['reset'=>true]);
+                return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index', 'index']);
+               }
+        }
+    }
+    
+    public function checkInstitutionRecords($entity)
+    {
+        $result = false;
+        $institutionId = $entity->id ?? 0;
+
+        if($institutionId) {
+
+            // count all institution_activities
+            $institutionActivities = TableRegistry::get('institution_activities')
+                ->find()->where(['institution_id' => $institutionId])->count();
+
+            // count all institution_custom_field_values
+            $institutionCustomFieldValues = TableRegistry::get('institution_custom_field_values')
+                ->find()->where(['institution_id' => $institutionId])->count();
+
+            // count all institution_surveys
+            $institutionSurveys = TableRegistry::get('institution_surveys')
+                ->find()->where(['institution_id' => $institutionId])->count();
+
+            // count all security_group_institutions
+            $securityGroupInstitutions = TableRegistry::get('security_group_institutions')
+                ->find()->where(['institution_id' => $institutionId])->count();
+
+
+            if($institutionActivities || $institutionCustomFieldValues || $institutionSurveys || $securityGroupInstitutions) {
+                $result = true;
+            }
+
+        }
+        return $result;    
+    }
+    //POCOR-7191::end
 }
