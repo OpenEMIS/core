@@ -332,6 +332,11 @@ class NavigationComponent extends Component
                     $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
                     $userInfo = TableRegistry::get('Security.Users')->get($userId);
                 } 
+                //Start POCOR-7055
+                elseif ($action == 'StudentReportCards') {
+                    $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
+                    $userInfo = TableRegistry::get('Security.Users')->get($userId);
+                }//End POCOR-7055
                 /*POCOR-6286 ends*/
                 else{
                     $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
@@ -357,6 +362,7 @@ class NavigationComponent extends Component
                    $userType = 7;
                 }/*POCOR-6332 ends*/
             }
+
 
 			$userType = '';
 			if(!empty($userInfo)) {
@@ -1213,7 +1219,7 @@ class NavigationComponent extends Component
                 'title' => 'Academic',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards',
+                'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Assesments', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards', //POCOR-5786 replace results to Assesments
                 'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentRisks', 'Students.Outcomes', 'Institutions.StudentProgrammes.view', 'Institutions.StudentProgrammes.edit',
                 'Students.Competencies', 'Students.AssessmentItemResultsArchived', 'Students.InstitutionStudentAbsencesArchived', 'Institutions.StudentTransition', 'Institutions.Associations','Institutions.StudentAssociations']
             ],
@@ -1614,8 +1620,8 @@ class NavigationComponent extends Component
                 'title' => 'Guardians',
                 'parent' => 'Directories.Student',
                 'params' => ['plugin' => 'Directory'],
-                'selected' => ['Directories.StudentGuardians', 'Directories.StudentGuardianUser']
-            ],
+                'selected' => ['Directories.StudentGuardians', 'Directories.StudentGuardianUser', 'Directories.Addguardian']
+            ],//POCOR-7093 Addguardian condition
             'Directories.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'Directories.Student',
@@ -1747,6 +1753,11 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
+            'Reports.UisStatistics' => [
+                'title' => 'UIS Statistics',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ],
             'Map.index' => [
                 'title' => 'Map',
                 'parent' => 'Reports',
@@ -1764,7 +1775,7 @@ class NavigationComponent extends Component
     public function getAdministrationNavigation()
     {
         //for POCOR-5674 requirement
-        $connectionTable = TableRegistry::get('Archive.TransferConnections');
+        $connectionTable = TableRegistry::get('Archive.DataManagementConnections');
         $connectionData = $connectionTable->find()->select(['id'])->first()->toArray();
         $connectionId = $this->controller->paramsEncode(['id' => $connectionData['id']]);
         /*for POCOR-5674 */
@@ -1906,7 +1917,7 @@ class NavigationComponent extends Component
                 'title' => 'Groups',
                 'parent' => 'Security',
                 'params' => ['plugin' => 'Security'],
-                'selected' => ['Securities.UserGroups', 'Securities.SystemGroups']
+                'selected' => ['Securities.UserGroups','Securities.SystemGroups','Securities.UserGroupsList','Securities.SystemGroupsList']
             ],
 
             'Securities.Roles' => [

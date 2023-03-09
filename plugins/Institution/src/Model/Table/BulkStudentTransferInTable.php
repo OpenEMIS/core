@@ -271,7 +271,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
                         }
                     }
                     // $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
-                    $assigneeOptions = ['-1' => __('Auto Assign')];
+                    $assigneeOptions = [$this->Auth->user('id') => __('Auto Assign')]; //POCOR-7080
                 }
                 $attr['type'] = 'select';
                 $attr['options'] = $assigneeOptions;

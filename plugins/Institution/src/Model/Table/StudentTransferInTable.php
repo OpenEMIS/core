@@ -485,7 +485,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias(), $this->Institutions->alias(), $this->PreviousInstitutions->alias(), $this->CreatedUser->alias()])
+            ->contain([$this->Users->alias(), $this->Institutions->alias(), $this->PreviousInstitutions->alias(), $this->CreatedUser->alias(),'Assignees'])
             ->matching($Statuses->alias().'.'.$StepsParams->alias(), function ($q) use ($Statuses, $StepsParams, $doneStatus, $incomingInstitution) {
                 return $q->where([
                     $Statuses->aliasField('category <> ') => $doneStatus,
@@ -493,7 +493,8 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                     $StepsParams->aliasField('value') => $incomingInstitution
                 ]);
             })
-            ->where([$this->aliasField('assignee_id') => $userId])
+            ->where([$this->aliasField('assignee_id') => $userId,
+                'Assignees.super_admin IS NOT' => 1]) //POCOR-7102
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
                 return $results->map(function ($row) {
@@ -530,7 +531,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
     {
         // change in  POCOR-7027 add auto assign
-        $assigneeOptions = [-1 => __('Auto Assign')]; 
+        $assigneeOptions = [$this->Auth->user('id') => __('Auto Assign')]; //POCOR-7080
         $attr['options'] = $assigneeOptions;
         $attr['onChangeReload'] = 'changeStatus';
         return $attr;

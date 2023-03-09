@@ -61,7 +61,8 @@ class StaffController extends AppController
         'SpecialNeedsAssessments',
         'SpecialNeedsServices',
         'SpecialNeedsDevices',
-        'SpecialNeedsPlans'
+        'SpecialNeedsPlans',
+        'SpecialNeedsDiagnostics'
     ];
 
     public function initialize()
@@ -750,4 +751,11 @@ class StaffController extends AppController
         $this->set('institutionDefaultId', key($selectedInstitutionOptions));
         $this->set('ngController', 'TimetableCtrl as $ctrl');
     }
+
+    //POCOR-7062
+    public function SpecialNeedsDiagnostics()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDiagnostics']);
+    }
+    //End of POCOR-7062
 }

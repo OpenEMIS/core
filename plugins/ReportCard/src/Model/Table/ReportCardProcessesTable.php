@@ -53,6 +53,10 @@ class ReportCardProcessesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        //POCOR-7067 Starts
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $timeZone= $ConfigItems->value("time_zone");
+        date_default_timezone_set($timeZone);//POCOR-7067 Ends
         //Start:POCOR-6785 need to convert this custom query to cake query
         $ReportCardProcessesTable = TableRegistry::get('report_card_processes');
         $entitydata = $ReportCardProcessesTable->find('all',['conditions'=>[
@@ -60,26 +64,27 @@ class ReportCardProcessesTable extends ControllerActionTable
         ]])->where([$ReportCardProcessesTable->aliasField('modified IS NOT NULL')])->toArray();
     
         foreach($entitydata as $keyy =>$entity ){ 
+            //POCOR-7067 Starts
             $now = new DateTime();
-            $c_timestap = $now->getTimestamp();
+            $currentDateTime = $now->format('Y-m-d H:i:s');
+            $c_timestap = strtotime($currentDateTime);
             $modifiedDate = $entity->modified;
             //POCOR-6841 starts
             if($entity->status == 2){
-                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-                $timeZone= $ConfigItems->value("time_zone");
-                date_default_timezone_set($timeZone);
                 $currentTimeZone = new DateTime();
                 $modifiedDate = ($modifiedDate === null) ? $currentTimeZone : $modifiedDate;
-                $m_timestap =$modifiedDate->getTimestamp();
-                $diff_mins = abs($c_timestap - $m_timestap) / 60;
+                $m_timestap = strtotime($modifiedDate);
+                $interval  = abs($c_timestap - $m_timestap);
+                $diff_mins   = round($interval / 60);
                 if($diff_mins > 5 && $diff_mins < 30){
                     $entity->status = 1;
                     $ReportCardProcessesTable->save($entity);
                 }elseif($diff_mins > 30){
-                    $entity->status = -1;
+                    $entity->status = self::ERROR;
                     $entity->modified = $currentTimeZone;//POCOR-6841
                     $ReportCardProcessesTable->save($entity);
                 }
+                //POCOR-7067 Ends
             }//POCOR-6841 ends
         }
          //END:POCOR-6785

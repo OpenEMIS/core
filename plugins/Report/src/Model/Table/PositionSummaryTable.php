@@ -90,6 +90,7 @@ class PositionSummaryTable extends AppTable
                 'institution_name' => 'Institutions.name',               
                 'area_code' => 'Areas.code',
                 'area_name' => 'Areas.name',
+                'is_homeroom' => $InstitutionStaff->aliasField('is_homeroom'),//POCOR-7229
 			])
 			->contain([
                 'StaffPositionTitles' => [
@@ -274,6 +275,12 @@ class PositionSummaryTable extends AppTable
             'type' => 'string',
             'label' => __('Female')
         ];
+        $newFields[] = [
+            'key' => 'is_homeroom',
+            'field' => 'is_homeroom',
+            'type' => 'string',
+            'label' => __('Is Homeroom')
+        ]; //POCOR-7229
 
         $fields->exchangeArray($newFields);
     }
