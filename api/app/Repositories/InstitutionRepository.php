@@ -1223,6 +1223,10 @@ class InstitutionRepository extends Controller
                 $roomType = $roomType->orderBy($col);
             }
 
+            if(isset($params['academic_period_id'])){
+                $academic_period_id = $params['academic_period_id'];
+                $roomType = $roomType->where("academic_period_id", $academic_period_id);
+            }
 
             $limit = config('constants.defaultPaginateLimit');
 
