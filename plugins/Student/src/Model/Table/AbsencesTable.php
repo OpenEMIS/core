@@ -307,7 +307,8 @@ class AbsencesTable extends ControllerActionTable
             } else {
                 $query
                 ->find('all')
-                ->where($conditions);
+                ->where($conditions)
+                ->group(['subjects','periods' ]); //POCOR-7275
                 
             }
         }

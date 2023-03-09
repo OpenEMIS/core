@@ -1,3 +1,33 @@
+### [3.79.0] - 2023-03-08
+- Implemented: Add 'Modified by' from the Student Report Card comments page as a Placeholder in Student Report Card template
+- Implemented: Move the copy functions Academic Periods to Data Management
+- Implemented: Update APIs documention based on Registrations APIs
+- Bug Fixed: Report > Institutions > Positions: Report is stuck in progress
+- Bug Fixed: Institutions>Attendance>Student: Absence is not reflecting in institution_student_absences
+- Bug Fixed: Reports>Custom: Accumulative Student Marks per Grade and Subject getting 404 error
+- Bug Fixed: Administration>Communication>Alert: Message body does not follow what is configured in message
+- Bug Fixed: Institutions > Students > Academic > Absences: Changes to the report
+- Bug Fixed: API: Institution is not found
+- Bug Fixed: Institutions > Staff: 404 is showing
+- Bug Fixed: Institutions > Students/Staff > Add page: When user is using an unexisting OpenEMIS ID to search for user, the systems returns a list of user under External Search page.
+- Bug Fixed: Develop APIs for Registrations(12)
+- Bug Fixed: Institutions > Students > Import page: The system does not allow to import students due to some foreign key error
+- Bug Fixed: Migration Script : Configuration for Student Admission from OpenEMIS Registrations
+
+### [3.78.2] - 2023-03-02
+- Implemented: Develop APIs for Registrations
+- Implemented: Develop keys for all OpenEMIS Core APIs v4
+- Bug Fixed: Administration>Profile>Classes: Report is stuck in progress
+- Bug Fixed: Administration > System Setup > Field Options: Staff Position Titles: There are no options under the field for staff position categories even when staff position categories are configured
+- Bug Fixed: Institution > Students page: The drop-down list for the education grades is not in order
+- Bug Fixed: Administrations > DataManagement > Archive : Errors when Archiving data
+- Bug Fixed: Reports > Institution > Staff Attendance report: The fields to generate the report and the report itself do not match
+- Bug Fixed: Update api_credentials table to include api_key column
+- Bug Fixed: Appointments > Positions: Institution Positions is showing duplicates
+- Bug Fixed: Institutions>Students>Transfer: 404 error when transferring a student
+- Bug Fixed: Institutions>Students>Academic>Absences: The page is showing duplicate records
+- Bug Fixed: Administrations > Attendances: The system allows user to delete periods.
+
 ### [3.78.1] - 2023-02-28
 - Implemented: Develop Institutions > Statistics > Standard: Student Attendance Summary Report
 - Implemented: Design changes to add staff and student

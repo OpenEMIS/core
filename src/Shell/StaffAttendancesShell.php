@@ -93,7 +93,7 @@ class StaffAttendancesShell extends Shell
         $Tablecollection = $archive_connection->schemaCollection();
         $tableSchema = $Tablecollection->listTables();
 
-        if (! in_array('institution_staff_attendances', $tableSchema)) {
+        /*if (! in_array('institution_staff_attendances', $tableSchema)) {
             $archive_connection->execute("CREATE TABLE IF NOT EXISTS `institution_staff_attendances` (
               `id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
               `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
@@ -217,7 +217,7 @@ class StaffAttendancesShell extends Shell
                     
                 }
             }
-        }
+        }*/
 
         // if (in_array('institution_staff_attendances', $tableSchema)) {
         //     $table_name = 'institution_staff_attendances';
@@ -248,7 +248,7 @@ class StaffAttendancesShell extends Shell
 
         //institution_staff_leave[START]
 
-        if (! in_array('institution_staff_leave', $tableSchemaOne)) {
+        /*if (! in_array('institution_staff_leave', $tableSchemaOne)) {
             $archive_connection->execute("CREATE TABLE IF NOT EXISTS `institution_staff_leave` (
               `id` int(11) NOT NULL,
               `date_from` date NOT NULL,
@@ -393,7 +393,8 @@ class StaffAttendancesShell extends Shell
                 }catch (PDOException $e) {
                 }
             }
-        }
+        }*/
+        
         // if (in_array('institution_staff_leave', $tableSchema)) {
         //     $table_name = 'institution_staff_leave';
         // }
