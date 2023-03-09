@@ -97,6 +97,14 @@ class UndoStudentStatusTable extends AppTable
         if (isset($errors['student_id'])) {
             unset($errors['student_id']);
         }
+        //POCOR-6992 start
+        $institutionStudent = TableRegistry::get('institution_students');
+        $institution = TableRegistry::get('institutions');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $currentId = $StudentStatuses->getIdByCode('CURRENT');
+        $promoteId = $StudentStatuses->getIdByCode('PROMOTED');
+        //POCOR-6992 end
+
         if (!$errors) {
             if (array_key_exists($this->alias(), $data)) {
                 if (array_key_exists('students', $data[$this->alias()])) {
@@ -105,6 +113,26 @@ class UndoStudentStatusTable extends AppTable
                             $studentId = $obj['id'];
                             if ($studentId != 0) {
                                 $studentIds[$studentId] = $studentId;
+                                //POCOR-6992 start
+                                $studentEnrollRecord = $institutionStudent->find()->where(['student_status_id'=>$currentId, 'student_id'=>$studentId])->first();
+                                $enrolledInstitutionId = '';
+                                if(!empty($studentEnrollRecord)){
+                                    $enrolledInstitutionId = $studentEnrollRecord->institution_id;
+                                    $getInstitutions = $institution->find()->where(['id'=>$enrolledInstitutionId])->first();
+                                    $institutionCode = $getInstitutions->code;
+                                    $institutionName = $getInstitutions->name;
+                                }
+
+                                $studentPromoteRecord = $institutionStudent->find()->where(['student_status_id'=>$promoteId, 'student_id'=>$studentId,'academic_period_id'=>$entity->academic_period_id])->first();
+                                $promoteInstitutionId = $studentPromoteRecord->institution_id;
+                                if($promoteInstitutionId != $enrolledInstitutionId && !empty($enrolledInstitutionId)){
+                                    $message = __('There is an existing enrolment. Please contact ')."$institutionCode" .' - '. $institutionName;
+                                    $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                                    $url = $this->ControllerAction->url('view');
+                                    $url[0] = 'add';
+                                    $event->stopPropagation();
+                                    return $this->controller->redirect($url);
+                                } //POCOR-6992 end
                             } else {
                                 unset($data[$this->alias()]['students'][$key]);
                             }

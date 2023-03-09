@@ -513,7 +513,7 @@ class StudentUserTable extends ControllerActionTable
         // End POCOR-3010
 
         $this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
-
+        $this->fields['email']['type'] = 'string'; //POCOR-7056
         $this->fields['nationality_id']['type'] = 'readonly';
         $this->fields['nationality_id']['attr']['value'] = $entity->has('main_nationality') ? $entity->main_nationality->name : '';
 
@@ -1300,7 +1300,7 @@ class StudentUserTable extends ControllerActionTable
             'Behaviours' => ['text' => __('Behaviours')],
             'Outcomes' => ['text' => __('Outcomes')],
             'Competencies' => ['text' => __('Competencies')],
-            'Results' => ['text' => __('Assessments')],
+            'Assesments' => ['text' => __('Assessments')], //POCOR-5786
             'ExaminationResults' => ['text' => __('Examinations')],
             'ReportCards' => ['text' => __('Report Cards')],
             'Awards' => ['text' => __('Awards')],

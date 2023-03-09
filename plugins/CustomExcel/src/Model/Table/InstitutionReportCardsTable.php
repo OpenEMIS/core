@@ -21,6 +21,7 @@ class InstitutionReportCardsTable extends AppTable
     {
         $this->table('institutions');
         parent::initialize($config);
+        ini_set("pcre.backtrack_limit", "5000000"); //POCOR-6744
 
         $this->addBehavior('CustomExcel.InstitutionExcelReport', [
             'templateTable' => 'ProfileTemplate.ProfileTemplates',

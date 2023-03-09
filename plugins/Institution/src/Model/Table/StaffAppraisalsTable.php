@@ -197,7 +197,8 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $this->AppraisalForms->alias(),
                 $this->AppraisalPeriods->alias(),
                 $this->Institutions->alias(),
-                $this->CreatedUser->alias()
+                $this->CreatedUser->alias(),
+                'Assignees'
             ])
             ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([
@@ -205,8 +206,8 @@ class StaffAppraisalsTable extends ControllerActionTable
                 ]);
             })
             ->where([
-                $this->aliasField('assignee_id') => $userId
-            ])
+                $this->aliasField('assignee_id') => $userId,
+                'Assignees.super_admin IS NOT' => 1]) //POCOR-7102
             ->order([
                 $this->aliasField('created') => 'DESC'
             ])

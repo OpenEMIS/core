@@ -79,6 +79,7 @@ trait MessagesTrait
                 'restrictDelete' => 'The record cannot be deleted.',
                 'restrictDeleteBecauseAssociation' => 'Delete operation is not allowed as there are other information linked to this record.',
                 'NationalitiesRecordNoRemain' => 'There must be at least one Preferred Nationality',
+                'checkIdentities' => 'Please remove attached identity.',
                 'cascadeDelete' => 'All associated information related to this record will also be removed.',
                 'success' => 'The record has been deleted successfully.',
                 'failed' => 'The record is not deleted due to errors encountered.',
@@ -739,7 +740,8 @@ trait MessagesTrait
             'noRecords' => 'No Records'
         ],
         'Templates' => [
-            'addSuccess' => 'Competency Template was added successfully, please set up the Competency Items'
+            'addSuccess' => 'Competency Template was added successfully, please set up the Competency Items',
+            'alreadyexist' => 'The competency for the education grade has been added.',
         ],
         'Items' => [
             'addSuccess' => 'Competency Item was added successfully, please set up the Competency Criterias'
@@ -2514,7 +2516,8 @@ trait MessagesTrait
             'testConnectionSuccess' => 'Connection has been established successfully.',
             'testConnectionFail' => 'Please configure correct Connection to Archive Database.',
             'transferConnectionFail' => 'Please configure connection to Archive Database.',
-            'archiveConfigurationFail' => 'Please ensure configuration in Connection page is Online before Transferring data.'
+            'archiveConfigurationFail' => 'Please ensure configuration in Connection page is Online before Transferring data.',
+            'noDataToArchive' => 'There is no data to archive.'
         ],
         'CopyData' => [
             'genralerror' => 'To and from academic period can not be same.',

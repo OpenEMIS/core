@@ -64,26 +64,37 @@ class AssessmentItemResultsTable extends AppTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        //POCOR-6947
-        $institutionStudents = TableRegistry::get('institution_students');
-        $institutionStudentsData = $institutionStudents
-                                            ->find()
-                                            ->where([
-                                                $institutionStudents->aliasField('student_id') => $entity->student_id,
-                                                $institutionStudents->aliasField('education_grade_id') => $entity->education_grade_id,
-                                                $institutionStudents->aliasField('institution_id') => $entity->institution_id,
-                                                $institutionStudents->aliasField('academic_period_id') => $entity->academic_period_id
-                                            ])->toArray();
-        if(empty($institutionStudentsData)){
-            $response[] ="No academic records for this student";
+        //POCOR-6824 start
+        $institutionId = $entity->institution_id;
+        $InstitutionClassId = $entity->institution_classes_id;
+        $institutionClass = TableRegistry::get('institution_classes');
+        $findclass = $institutionClass->find()->select(['id'=>$institutionClass->aliasField('id')])->where([$institutionClass->aliasField('institution_id')=>$institutionId,$institutionClass->aliasField('id')=>$InstitutionClassId])->first();
+        if($findclass==null && $findclass['id']!=$InstitutionClassId){
+            $response[] ="No Institution class Id record Exist";
             $entity->errors($response);
-            return false;
-        }else{
-            if ($entity->isNew()) {
-                $entity->id = Text::uuid();
-            }
+            return false; 
+        }else{ //POCOR-6824 end add if else condition
+            //POCOR-6947
+            $institutionStudents = TableRegistry::get('institution_students');
+            $institutionStudentsData = $institutionStudents
+                                                ->find()
+                                                ->where([
+                                                    $institutionStudents->aliasField('student_id') => $entity->student_id,
+                                                    $institutionStudents->aliasField('education_grade_id') => $entity->education_grade_id,
+                                                    $institutionStudents->aliasField('institution_id') => $entity->institution_id,
+                                                    $institutionStudents->aliasField('academic_period_id') => $entity->academic_period_id
+                                                ])->toArray();
+            if(empty($institutionStudentsData)){
+                $response[] ="No academic records for this student";
+                $entity->errors($response);
+                return false;
+            }else{
+                if ($entity->isNew()) {
+                    $entity->id = Text::uuid();
+                }
 
-            $this->getAssessmentGrading($entity);
+                $this->getAssessmentGrading($entity);
+            }
         }
     }
 
@@ -436,6 +447,42 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('education_subject_id') => $educationSubjectId,
                 $this->aliasField('education_grade_id') => $educationGradeId,
                 $this->aliasField('education_grade_id') => $educationGradeId,
+            ])
+            ->group([
+                $this->aliasField('student_id'),
+                $this->aliasField('assessment_id'),
+                $this->aliasField('education_subject_id')
+            ])
+            ->first();
+
+        return $totalMarks;
+    }
+
+    /*
+    * Function is get the total mark of the subject
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return data
+    * @ticket POCOR-7201
+    */
+    public function getTotalMarksForAssessment($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId, $assessmentPeriodId, $institutionId)
+    {   
+        $query = $this->find();
+        $totalMarks = $query
+            ->select([
+                'calculated_total' => $query->newExpr('SUM(AssessmentItemResults.marks * AssessmentPeriods.weight)')
+            ])
+            ->matching('Assessments')
+            ->matching('AssessmentPeriods')
+            ->order([
+                $this->aliasField('created') => 'DESC'
+            ])
+            ->where([
+                $this->aliasField('student_id') => $studentId,
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('education_subject_id') => $educationSubjectId,
+                $this->aliasField('education_grade_id') => $educationGradeId,
+                $this->aliasField('education_grade_id') => $educationGradeId,
+                $this->aliasField('institution_id') => $institutionId,
             ])
             ->group([
                 $this->aliasField('student_id'),

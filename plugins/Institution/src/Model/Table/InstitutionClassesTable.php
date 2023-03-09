@@ -1306,6 +1306,8 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         /*POCOR-6566 starts*/
         $classId = $entity->id;
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
         $institutionId = $entity->institution_id;
         $periodId = $entity->academic_period_id;
         $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
@@ -1334,7 +1336,7 @@ class InstitutionClassesTable extends ControllerActionTable
                                     $InstitutionClassStudents->aliasField('institution_id') => $institutionId,
                                     $InstitutionClassStudents->aliasField('academic_period_id') => $periodId,
                                     $InstitutionClassStudents->aliasField('education_grade_id IN') => $grades,
-                                    $InstitutionClassStudents->aliasField('student_status_id') => 1  //POCOR-6733
+                                    $InstitutionClassStudents->aliasField('student_status_id IN') => [$statuses['GRADUATED'], $statuses['PROMOTED'],$statuses['CURRENT'], $statuses['REPEATED']]  //POCOR-6733
                                 ]);
         $count = 0;
         if (!empty($totalStudentRecord)) {
@@ -1375,7 +1377,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $totalMaleStudentRecord = $InstitutionClassStudents->find()
                                 ->contain('Users')
                                 ->matching('StudentStatuses', function ($q) {
-                                    return $q->where(['StudentStatuses.code' => 'CURRENT']);
+                                    return $q->where(['StudentStatuses.code IN' => ['CURRENT','REPEATED','PROMOTED','GRADUATED']]);
                                 })
                                 ->where([
                                     $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
@@ -1423,7 +1425,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $totalFemaleStudentRecord = $InstitutionClassStudents->find()
                                 ->contain('Users')
                                 ->matching('StudentStatuses', function ($q) {
-                                    return $q->where(['StudentStatuses.code' => 'CURRENT']);
+                                    return $q->where(['StudentStatuses.code IN' => ['CURRENT','REPEATED','PROMOTED','GRADUATED']]);
                                 })
                                 ->where([
                                     $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
@@ -1653,6 +1655,7 @@ class InstitutionClassesTable extends ControllerActionTable
                             ->where($where)
                             ->where([
                                 $Staff->aliasField('staff_id NOT IN') => $staffIds,
+                                $Staff->aliasField('is_homeroom') => 1,//POCOR-5070
                                 $Staff->aliasField('start_date <= ') => $todayDate,
                                 'OR' => [
                                     [$Staff->aliasField('end_date >= ') => $todayDate],
@@ -1664,9 +1667,9 @@ class InstitutionClassesTable extends ControllerActionTable
                                 $Staff->Users->aliasField('first_name')
                             ]);
                             //if($homeTeacher) {
-                                $query  ->matching('Positions', function ($q) {
-                                    return $q->where(['Positions.is_homeroom' => 1]);
-                                });
+                                // $query  ->matching('Positions', function ($q) {
+                                //     return $q->where(['Positions.is_homeroom' => 1]);
+                                // });
                             //}   //POCOR-7014
                             $query->formatResults(function ($results) {
                                 $returnArr = [];

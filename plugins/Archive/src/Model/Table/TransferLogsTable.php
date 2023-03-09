@@ -95,8 +95,8 @@ use Cake\Utility\Security;
         $this->field('academic_period_id');    
         $this->field('generated_on');
         $this->field('generated_by');
-
-        $this->setFieldOrder(['academic_period_id','generated_on','generated_by']);
+        $this->field('features', ['sort' => false]); // POCOR-6816 
+        $this->setFieldOrder(['academic_period_id','features','generated_on','generated_by']);
 
         //$this->Alert->info('Archive.backupReminder', ['reset' => false]);
     }
@@ -106,45 +106,64 @@ use Cake\Utility\Security;
         $condition = [$this->AcademicPeriods->aliasField('current').' <> ' => "1"];
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
         $this->field('academic_period_id', ['type' => 'select', 'options' => $academicPeriodOptions]);
-        
+        $this->field('features', ['type' => 'select', 'options' => $this->getFeatureOptions()]); // POCOR-6816 
         $this->field('id', ['visible' => false]);
         $this->field('generated_on', ['visible' => false]);
         $this->field('generated_by', ['visible' => false]);
         
-        $this->setFieldOrder(['academic_period_id']);
+        $this->setFieldOrder(['academic_period_id','features']); // POCOR-6816 
 
     }
 
     public function addOnInitialize(Event $event, Entity $entity)
     {
+        //POCOR-6816
+        $condition = [$this->AcademicPeriods->aliasField('current').' <> ' => "1"];
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
+        foreach($academicPeriodOptions AS $key => $val){
+            $transferLogdata = $this->find('all')
+                                    ->where(['academic_period_id' => $key])->toArray();
+            $getFeatureOptionsCount = count($this->getFeatureOptions());
+            if($getFeatureOptionsCount == count($transferLogdata)){
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $AcademicPeriods->updateAll(
+                    ['editable' => 0, 'visible' => 0],    //field
+                    ['id' => $key, 'current'=> 0] //condition
+                );
+            }
+        }
+        //POCOR-6816
+
+
+
         $this->Alert->info('Archive.backupReminder');
         try {
 
-            $transferConnections = TableRegistry::get('TransferConnections.TransferConnections');
-            $transferConnectionsData = $transferConnections->find('all')
+            $DataManagementConnections =  TableRegistry::get('Archive.DataManagementConnections');
+            $DataManagementConnectionsData = $DataManagementConnections->find('all')
                 ->select([
-                    'TransferConnections.host','TransferConnections.db_name','TransferConnections.host','TransferConnections.username','TransferConnections.password','TransferConnections.db_name'
+                    'DataManagementConnections.host','DataManagementConnections.db_name','DataManagementConnections.host','DataManagementConnections.username','DataManagementConnections.password','DataManagementConnections.db_name'
                 ])
                 ->first();
-            if ( base64_encode(base64_decode($transferConnectionsData['password'], true)) === $transferConnectionsData['password']){
-            $db_password = $this->decrypt($transferConnectionsData['password'], Security::salt());
+            if ( base64_encode(base64_decode($DataManagementConnectionsData['password'], true)) === $DataManagementConnectionsData['password']){
+            $db_password = $this->decrypt($DataManagementConnectionsData['password'], Security::salt());
             }
             else {
             $db_password = $dbConnection['db_password'];
             }
-            $connectiontwo = ConnectionManager::config($transferConnectionsData['db_name'], [
+            $connectiontwo = ConnectionManager::config($DataManagementConnectionsData['db_name'], [
                 'className' => 'Cake\Database\Connection',
                 'driver' => 'Cake\Database\Driver\Mysql',
                 'persistent' => false,
-                'host' => $transferConnectionsData['host'],
-                'username' => $transferConnectionsData['username'],
+                'host' => $DataManagementConnectionsData['host'],
+                'username' => $DataManagementConnectionsData['username'],
                 'password' => $db_password,
-                'database' => $transferConnectionsData['db_name'],
+                'database' => $DataManagementConnectionsData['db_name'],
                 'encoding' => 'utf8mb4',
                 'timezone' => 'UTC',
                 'cacheMetadata' => true,
             ]);
-            $connection = ConnectionManager::get($transferConnectionsData['db_name']);
+            $connection = ConnectionManager::get($DataManagementConnectionsData['db_name']);
             $connected = $connection->connect();
 
         }catch (Exception $connectionError) {
@@ -191,6 +210,7 @@ use Cake\Utility\Security;
                 $entity->academic_period_id = $entity['academic_period_id'];
                 $entity->generated_on = date("Y-m-d H:i:s");
                 $entity->generated_by = $this->Session->read('Auth.User.id');
+                $entity->features = $entity['features'];
             }
             // return $this->Alert->warning('Connection.transferConnectionFail');
             // return true;
@@ -217,27 +237,173 @@ use Cake\Utility\Security;
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $data){
+        if($entity->features == "Student Attendance"){
+            // /*flag the academic period table
+            // academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
+        
+            $session = $this->Session;
+            $superAdmin = $session->read('Auth.User.super_admin');
+            $is_connection_is_online = $session->read('is_connection_stablished');
+            if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
+                // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                // $AcademicPeriods->updateAll(
+                //     ['editable' => 0, 'visible' => 0],    //field
+                //     ['id' => $entity->academic_period_id, 'current'=> 0] //condition
+                // );
 
-        /*flag the academic period table
+                $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
+                $ClassAttendanceRecordsData = $ClassAttendanceRecords->find('all')
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                
+
+                $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+                $InstitutionStudentAbsencesData = $InstitutionStudentAbsences->find('all')
+                                                        ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                
+                                                        
+                $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+                $StudentAbsencesPeriodDetailsData = $StudentAbsencesPeriodDetails->find('all')
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                
+
+                $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+                $StudentAttendanceMarkedRecordsData = $StudentAttendanceMarkedRecords->find('all')
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+
+                 
+                $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+                $InstitutionStaffAttendancesData = $StudentAttendanceMarkTypes->find('all')
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                if(empty($ClassAttendanceRecordsData) && empty($InstitutionStudentAbsencesData) && empty($StudentAbsencesPeriodDetailsData) && empty($StudentAttendanceMarkedRecordsData) && empty($InstitutionStaffAttendancesData)){
+                    $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
+                }else{
+                    $this->log('=======>Before triggerStudentAttendanceShell', 'debug');
+                    $this->triggerStudentAttendanceShell('StudentAttendance',$entity->academic_period_id);
+                    $this->log(' <<<<<<<<<<======== After triggerStudentAttendanceShell', 'debug');
+                }
+            }
+            else{
+                $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+            }
+        }else if($entity->features == "Staff Attendances"){
+            /*flag the academic period table
             academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
         
-        $session = $this->Session;
-        $superAdmin = $session->read('Auth.User.super_admin');
-        $is_connection_is_online = $session->read('is_connection_stablished');
-        if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-            $AcademicPeriods->updateAll(
-                ['editable' => 0, 'visible' => 0],    //field
-                ['id' => $entity->academic_period_id, 'current'=> 0] //condition
-            );
+            $session = $this->Session;
+            $superAdmin = $session->read('Auth.User.super_admin');
+            $is_connection_is_online = $session->read('is_connection_stablished');
+            if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
+                // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                // $AcademicPeriods->updateAll(
+                //     ['editable' => 0, 'visible' => 0],    //field
+                //     ['id' => $entity->academic_period_id, 'current'=> 0] //condition
+                // );
+                $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
+                $InstitutionStaffAttendancesData = $InstitutionStaffAttendances->find('all')
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                
+                $StaffLeave = TableRegistry::get('Institution.StaffLeave');
+                $StaffLeaveData = $StaffLeave->find('all')
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                
+                if(empty($InstitutionStaffAttendancesData) && empty($StaffLeaveData)){
+                    $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
+                }else{
+                    $this->log('=======>Before triggerStaffAttendancesShell', 'debug');
+                    $this->triggerStaffAttendancesShell('StaffAttendances',$entity->academic_period_id);
+                    $this->log(' <<<<<<<<<<======== After triggerStaffAttendancesShell', 'debug');
+                }
+            }
+            else{
+                $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+            }
+        }else if($entity->features == "Student Assessments"){
+            // /*flag the academic period table
+            // academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
+        
+            $session = $this->Session;
+            $superAdmin = $session->read('Auth.User.super_admin');
+            $is_connection_is_online = $session->read('is_connection_stablished');
+            if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
+                // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                // $AcademicPeriods->updateAll(
+                //     ['editable' => 0, 'visible' => 0],    //field
+                //     ['id' => $entity->academic_period_id, 'current'=> 0] //condition
+                // );
+                $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+                $AssessmentItemResultsData = $AssessmentItemResults->find('all')
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                if(empty($AssessmentItemResultsData)){
+                    // echo "fsfs";die;
+                    $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
+                }else{
+                    $this->log('=======>Before triggerStudentAssessmentsShell', 'debug');
+                    $this->triggerStudentAssessmentsShell('StudentAssessments',$entity->academic_period_id);
+                    $this->log(' <<<<<<<<<<======== After triggerStudentAssessmentsShell', 'debug');
+                }
+            }
+            else{
+                $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+            }
+        }
+    }
 
-            $this->log('=======>Before triggerDatabaseTransferShell', 'debug');
-            $this->triggerDatabaseTransferShell('DatabaseTransfer',$entity->academic_period_id);
-            $this->log(' <<<<<<<<<<======== After triggerDatabaseTransferShell', 'debug');
-        }
-        else{
-            $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
-        }
+
+    /*
+    * Function to take backup from current database and put in archive database
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return data
+    * @ticket POCOR-6816
+    */
+
+    public function triggerStudentAttendanceShell($shellName,$academicPeriodId = null)
+    {
+        $args = '';
+        $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
+    }
+
+    /*
+    * Function to take backup from current database and put in archive database
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return data
+    * @ticket POCOR-6816
+    */
+
+    public function triggerStaffAttendancesShell($shellName,$academicPeriodId = null)
+    {
+        $args = '';
+        $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
+    }
+
+    /*
+    * Function to take backup from current database and put in archive database
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return data
+    * @ticket POCOR-6816
+    */
+
+    public function triggerStudentAssessmentsShell($shellName,$academicPeriodId = null)
+    {
+        $args = '';
+        $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
     }
 
     public function triggerDatabaseTransferShell($shellName,$academicPeriodId = null)
@@ -250,6 +416,19 @@ use Cake\Utility\Security;
         $shellCmd = $cmd . ' >> ' . $logs;
         exec($shellCmd);
         Log::write('debug', $shellCmd);
+    }
+
+    /**
+     * POCOR-6816 
+     * add features dropdown
+    */
+    public function getFeatureOptions(){
+        $options = [
+            'Student Attendance' => __('Student Attendance'),
+            'Staff Attendances' => __('Staff Attendances'),
+            'Student Assessments' => __('Student Assessments'),
+        ];
+        return $options;
     }
     
 }

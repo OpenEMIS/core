@@ -21,7 +21,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 {
     use OptionsTrait;
     use MessagesTrait;
-
+    private $fieldsOrder = ['status_id','assignee_id']; //POCOR-7171
     // Default Status
     const EXPIRED = -1;
     const IS_MANDATORY = 1;
@@ -193,7 +193,17 @@ class InstitutionSurveysTable extends ControllerActionTable
             }
         }
     }
+    //POCOR-7171:Start
+    public function beforeAction(Event $event, ArrayObject $extra) {
+		$this->field('assignee_id');
+		$this->setFieldOrder(['assignee_id']);
+	}
 
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        $this->setfieldOrder($this->fieldsOrder);
+    }
+    //POCOR-7171:End
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $broadcaster = $this;
@@ -1045,7 +1055,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->AcademicPeriods->alias(), $this->SurveyForms->alias(), $this->Institutions->alias(), $this->CreatedUser->alias()])
+            ->contain([$this->AcademicPeriods->alias(), $this->SurveyForms->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
             ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
@@ -1057,7 +1067,8 @@ class InstitutionSurveysTable extends ControllerActionTable
             )
             ->where([
                 $this->aliasField('assignee_id') => $userId,
-                $workflowStepsRoles->aliasField('security_role_id') => $roleId
+                $workflowStepsRoles->aliasField('security_role_id') => $roleId,
+                'Assignees.super_admin IS NOT' => 1, //POCOR-7102
             ])
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {

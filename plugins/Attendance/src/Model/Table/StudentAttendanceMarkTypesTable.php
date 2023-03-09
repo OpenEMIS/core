@@ -8,6 +8,8 @@ use Cake\ORM\TableRegistry;
 use Attendance\Model\Table\StudentAttendanceTypesTable as AttendanceTypes;
 use Cake\Log\Log;
 use Cake\Event\Event;
+use DateTime;//POCOR-7183
+use Cake\I18n\Time;//POCOR-7183
 
 class StudentAttendanceMarkTypesTable extends AppTable
 {
@@ -111,7 +113,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
                     
                                 ])
                              ->toArray();
-                if (isset($modelData)) {
+                if (empty($modelData)) {
                     $data[] = [
                     'id' => 1,
                     'name' => 'Period 1'
@@ -134,8 +136,8 @@ class StudentAttendanceMarkTypesTable extends AppTable
         }
     }
 
-    public function getAttendancePerDayOptionsByClass($classId, $academicPeriodId, $dayId, $educationGradeId)
-    {
+    public function getAttendancePerDayOptionsByClass($classId, $academicPeriodId, $dayId, $educationGradeId, $weekStartDay = '', $weekEndDay = '')
+    {// POCOR-7183 add parmas $weekStartDay, $weekEndDay
         $prefix = 'Period ';
         $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
@@ -146,11 +148,10 @@ class StudentAttendanceMarkTypesTable extends AppTable
                 'keyField' => 'education_grade_id',
                 'valueField' => 'education_grade_id'
             ])
-            ->where([$InstitutionClassGrades->aliasField('institution_class_id') => $classId,
-                    $InstitutionClassGrades->aliasField('education_grade_id') => $educationGradeId
-                    ])
-            ->all();
-
+            ->where([
+                $InstitutionClassGrades->aliasField('institution_class_id') => $classId,
+                $InstitutionClassGrades->aliasField('education_grade_id') => $educationGradeId
+            ])->all();
         // if($dayId == -1){
         //     $gradesResultSet = $gradesResultSet->toArray();
         // }else{
@@ -158,20 +159,20 @@ class StudentAttendanceMarkTypesTable extends AppTable
                 $gradeList = $gradesResultSet->toArray();
                 $attendencePerDay = 1;
                 if ($dayId == -1) {
-                $conditions = [
-                            $StudentMarkTypeStatusGrades->aliasField('education_grade_id IN ') => $gradeList,
+                    $conditions = [
+                        $StudentMarkTypeStatusGrades->aliasField('education_grade_id IN ') => $gradeList,
                         $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId,
                         //$StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $dayId,
                         //$StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $dayId
-                        ];
-                }
-                else{
+                    ];
+                }else{
+                    $dayId = date('Y-m-d',strtotime($dayId));
                     $conditions = [
-                            $StudentMarkTypeStatusGrades->aliasField('education_grade_id IN ') => $gradeList,
+                        $StudentMarkTypeStatusGrades->aliasField('education_grade_id IN ') => $gradeList,
                         $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId,
                         $StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $dayId,
                         $StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $dayId
-                        ];
+                    ];
                 }
 
                 $markResultSet = $this
@@ -181,64 +182,71 @@ class StudentAttendanceMarkTypesTable extends AppTable
                         $StudentAttendanceTypes->aliasField('code')
                     ])
                     ->leftJoin(
-                    [$StudentAttendanceTypes->alias() => $StudentAttendanceTypes->table()],
-                    [
-                     $StudentAttendanceTypes->aliasField('id = ') . $this->aliasField('student_attendance_type_id')
-                    ]
+                        [$StudentAttendanceTypes->alias() => $StudentAttendanceTypes->table()],
+                        [
+                         $StudentAttendanceTypes->aliasField('id = ') . $this->aliasField('student_attendance_type_id')
+                        ]
                     )
                     ->leftJoin(
-                    [$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()],
-                    [
-                     $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id = ') . $this->aliasField('id')
-                    ]
+                        [$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()],
+                        [
+                         $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id = ') . $this->aliasField('id')
+                        ]
                     )
                     ->leftJoin(
-                    [$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()],
-                    [
-                     $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id = ') . $StudentMarkTypeStatuses->aliasField('id')
-                    ]
-                    )
-                    ->where($conditions)
-                    
-                    ->all()
-                    ->first();
+                        [$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()],
+                        [
+                         $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id = ') . $StudentMarkTypeStatuses->aliasField('id')
+                        ]
+                    )->where($conditions)->all()->first();
 
                 $attendanceType = $markResultSet->StudentAttendanceTypes['code'];
                 if ($attendanceType != 'SUBJECT') {
                     if (!empty($markResultSet->attendance_per_day)) {
-                    $attendencePerDay = $markResultSet->attendance_per_day;
+                        $attendencePerDay = $markResultSet->attendance_per_day;
                     }
                 }
 
                 $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+                //POCOR-7183 starts
+                if($dayId == -1){
+                    $DayConditions = [
+                        $StudentMarkTypeStatusGrades->aliasField('education_grade_id IN ') => $gradeList,
+                        $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId,
+                        $StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $weekStartDay,
+                        $StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $weekEndDay
+                    ];
+                }else{
+                    $dayId = date('Y-m-d',strtotime($dayId));
+                    $DayConditions = [
+                        $StudentMarkTypeStatusGrades->aliasField('education_grade_id IN ') => $gradeList,
+                        $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId,
+                        $StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $dayId,
+                        $StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $dayId
+                    ];    
+                }//POCOR-7183 ends
                 $periodsData = $StudentAttendancePerDayPeriods
                                 ->find('all')
                                 ->leftJoin(
-                                            [$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()],
-                                            [
-                                             $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id = ') . $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id')
-                                            ]
-                                            )
-                                ->leftJoin(
-                                            [$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()],
-                                            [
-                                             $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id = ') . $StudentMarkTypeStatuses->aliasField('id')
-                                            ]
-                                            )
-                                ->where(
+                                    [$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()],
                                     [
-                                        $StudentMarkTypeStatusGrades->aliasField('education_grade_id IN ') => $gradeList,
-                                        $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId,
-                                        $StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $dayId,
-                                        $StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $dayId
-                                    ])
+                                     $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id = ') . $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id')
+                                    ]
+                                )
+                                ->leftJoin(
+                                    [$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()],
+                                    [
+                                     $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id = ') . $StudentMarkTypeStatuses->aliasField('id')
+                                    ]
+                                )
+                                ->where([ $DayConditions ])//POCOR-7183
                                 //->order(['order'=>'asc']) //POCOR-6059
                                 //->all()//POCOR-6059
                                 ->toArray();
 
                 $options = [];
-                $j = 0;  
                 $periodsDataId = [];
+                $j = 0;  
                 for ($k = 0; $k <= $attendencePerDay; ++$k) {
                   $periodsDataId[] =  $periodsData[$k]['id'];
                 }
@@ -247,7 +255,6 @@ class StudentAttendanceMarkTypesTable extends AppTable
                 asort($periodsDataId);
                 $periodsDataId = array_combine(range(1, count($periodsDataId)), array_values($periodsDataId));
                 $periodsDataId = array_flip($periodsDataId);  
-                
                 for ($i = 1; $i <= $attendencePerDay; ++$i) {
                     $options[] = [
                         'id' => (!empty($periodsDataId[$periodsData[$j]['id']])) ? $periodsDataId[$periodsData[$j]['id']] : $i,
@@ -255,7 +262,6 @@ class StudentAttendanceMarkTypesTable extends AppTable
                     ];
                     $j++;
                 }
-
                 return $options;
             } 
         //}
@@ -267,9 +273,10 @@ class StudentAttendanceMarkTypesTable extends AppTable
         $academicPeriodId = $options['academic_period_id'];
         $dayId = $options['day_id'];
         $educationGradeId = $options['education_grade_id'];
+        $weekStartDay = $options['week_start_day'];//POCOR-7183
+        $weekEndDay = $options['week_end_day'];//POCOR-7183
 
-        $attendanceOptions = $this->getAttendancePerDayOptionsByClass($institionClassId, $academicPeriodId, $dayId, $educationGradeId);
-
+        $attendanceOptions = $this->getAttendancePerDayOptionsByClass($institionClassId, $academicPeriodId, $dayId, $educationGradeId, $weekStartDay, $weekEndDay);// POCOR-7183 add params $weekStartDay, $weekEndDay
         return $query
             ->formatResults(function (ResultSetInterface $results) use ($attendanceOptions) {
                 return $attendanceOptions;

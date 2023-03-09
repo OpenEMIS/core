@@ -53,7 +53,7 @@ class ConfigItemsTable extends AppTable
         $this->ControllerAction->field('name', ['visible' => ['index'=>true]]);
         $this->ControllerAction->field('default_value', ['visible' => ['view'=>true]]);
         //POCOR-6248 change type 12 for Coordinates
-        if ($this->request->query['type'] == 12 && $this->request->query['type_value'] == 'Coordinates') {
+        if ($this->request->query['type_value'] == 'Coordinates') {
           $this->ControllerAction->field('default_value', ['visible' => ['index'=>true]]);
         }
 
@@ -62,7 +62,7 @@ class ConfigItemsTable extends AppTable
         $this->ControllerAction->field('value', ['visible' => true]);
         //POCOR-6248 start
         $this->ControllerAction->field('value_selection', ['visible' => false]);
-        if ($this->request->query['type'] == 11 && $this->request->query['type_value'] == 'Columns for Student List Page') {
+        if ($this->request->query['type_value'] == 'Columns for Student List Page') {
             $pass = $this->request->param('pass');
             if (is_array($pass) && !empty($pass)) {
                 $id = $this->paramsDecode($pass[0]);
@@ -72,7 +72,7 @@ class ConfigItemsTable extends AppTable
                 }
             }
         }
-        if ($this->request->query['type'] == 10 && $this->request->query['type_value'] == 'Columns for Staff List Page') {
+        if ($this->request->query['type_value'] == 'Columns for Staff List Page') {
             $pass = $this->request->param('pass');
             if (is_array($pass) && !empty($pass)) {
                 $id = $this->paramsDecode($pass[0]);
@@ -82,7 +82,7 @@ class ConfigItemsTable extends AppTable
                 }
             }
         }
-        if ($this->request->query['type'] == 9 && $this->request->query['type_value'] == 'Columns for Directory List Page') {
+        if ($this->request->query['type_value'] == 'Columns for Directory List Page') {
             $pass = $this->request->param('pass');
             if (is_array($pass) && !empty($pass)) {
                 $id = $this->paramsDecode($pass[0]);
@@ -154,7 +154,7 @@ class ConfigItemsTable extends AppTable
         }
         if (isset($entity)) {
             //POCOR-6248 starts
-            if((($this->request->query('type') == 11 && $this->request->query('type_value') == 'Columns for Student List Page') || ($this->request->query('type') == 10 && $this->request->query('type_value') == 'Columns for Staff List Page') || ($this->request->query('type') == 9 && $this->request->query('type_value') == 'Columns for Directory List Page')) && $entity->name == 'Identity Number'){
+            if((($this->request->query('type_value') == 'Columns for Student List Page') || ($this->request->query('type_value') == 'Columns for Staff List Page') || ($this->request->query('type_value') == 'Columns for Directory List Page')) && $entity->name == 'Identity Number'){
                 $this->fields['value']['attr']['label'] = 'Identity Number';
                 $this->fields['value']['attr']['required']= false;
 
@@ -386,6 +386,25 @@ class ConfigItemsTable extends AppTable
         $includes['configItems'] = ['include' => true, 'js' => ['config']];
     }
 
+    //POCOR-7059
+    public function onGetName(Event $event, Entity $entity)
+    {
+        if($entity->name == 'Latitude Length'){
+            $tooltipMessage  = "Length validation is applied after decimal place.";
+            return $entity->name.' <i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="' .
+            $tooltipMessage .
+            '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+        }
+
+        if($entity->name == 'Longitude Length'){
+            $tooltipMessage  = "Length validation is applied after decimal place.";
+            return $entity->name.' <i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="' .
+            $tooltipMessage .
+            '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+        }
+        
+    }
+    //End of POCOR-7059
 
 /******************************************************************************************************************
 **
