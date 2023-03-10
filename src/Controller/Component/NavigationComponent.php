@@ -113,6 +113,7 @@ class NavigationComponent extends Component
 
     public function checkPermissions(array &$navigations)
     {
+        //echo "<pre>";print_r($navigations);die;
         $linkOnly = [];
 
         //$ignoredPlugin = ['Profile']; // Plugin that will be excluded from checking //POCOR-5312
@@ -128,6 +129,7 @@ class NavigationComponent extends Component
         // Unset the children
         foreach ($navigations as $key => $value) {
             $rolesRestrictedTo = $roles;
+            //print_r($roles);die;
             if (isset($value['link']) && !$value['link']) {
                 $linkOnly[] = $key;
             } else {
@@ -149,7 +151,7 @@ class NavigationComponent extends Component
 
                 // $ignoredAction will be excluded from permission checking
                 if (array_key_exists('controller', $url) && !in_array($url['plugin'])) {
-//                    print_r($url);die();
+                 //   print_r($url);die();
                     if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
                         unset($navigations[$key]);
                     }
@@ -157,12 +159,12 @@ class NavigationComponent extends Component
             }
         }
         // unset the parents if there is no children
-        $linkOnly = array_reverse($linkOnly);
+        /*$linkOnly = array_reverse($linkOnly);
             foreach ($linkOnly as $link) {
                 if (!array_search($link, $this->array_column($navigations, 'parent'))) {
                     unset($navigations[$link]);
                 }
-            }
+            }*/
     }
 
     public function checkSelectedLink(array &$navigations)
