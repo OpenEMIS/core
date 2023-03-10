@@ -1752,6 +1752,9 @@ class InstitutionsController extends AppController
         if($this->request->params['action'] == 'checkConfigurationForExternalSearch'){
            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkConfigurationForExternalSearch';
         }
+        if($this->request->params['action'] == 'getCspdData'){ //POCOR-6930 starts
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getCspdData';
+        }//POCOR-6930 ends
         //for api purpose POCOR-5672 ends
         return $events;
     }
@@ -7276,6 +7279,147 @@ class InstitutionsController extends AppController
                      }
                  }
              }
+        }
+    }
+    /**
+     * Get User Data from CSPD api
+     * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+     * @return array
+     * @ticket POCOR-6930
+    **/ 
+    public function getCspdData()
+    {
+        error_reporting(0);
+        $this->autoRender = false;
+        $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
+        //$requestData['user_national_no'] = 9791048083;
+        if(!empty($requestData)){
+            $national_no = (array_key_exists('user_national_no', $requestData))? $requestData['user_national_no'] : null;
+            if(!empty($national_no)){
+                $externalDataSourceAttributesTbl = TableRegistry::get('external_data_source_attributes');
+                $externalDataSourceAttributesData = $externalDataSourceAttributesTbl
+                            ->find()
+                            ->select(['id','external_data_source_type','attribute_field','attribute_name','value'])
+                            ->where([
+                                $externalDataSourceAttributesTbl->aliasField('external_data_source_type') => 'Jordan CSPD'
+                            ])->hydrate(false)->toArray();
+                $config_Array = [];
+                foreach ($externalDataSourceAttributesData as $ex_key => $ex_val) {
+                    $config_Array[$ex_val['attribute_field']] = $ex_val['value'];
+                }
+                
+                if(!empty($config_Array['username']) && !empty($config_Array['password']) && !empty($config_Array['url'])){
+                    $soapUrl = $config_Array['url'];
+                    $soapUser = $config_Array['username'];  
+                    $soapPassword = $config_Array['password']; 
+                    // xml post structure
+                    $xml_post_string = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">
+                       <soapenv:Header>
+                            <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+                                <wsse:UsernameToken wsu:Id="UsernameToken-459">
+                                    <wsse:Username>'.$soapUser.'</wsse:Username>
+                                    <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">'.$soapPassword.'</wsse:Password>
+                                </wsse:UsernameToken>
+                            </wsse:Security>
+                        </soapenv:Header>
+                       <soapenv:Body>
+                          <tem:gePersonal>
+                             <!--Optional:-->
+                             <tem:nationalNo>'.$national_no.'</tem:nationalNo>
+                          </tem:gePersonal>
+                       </soapenv:Body>
+                    </soapenv:Envelope>
+                    ';// data from the form, e.g. some ID number
+                    $response = $this->CreateUsers->getResponseForCspd($soapUrl,$soapUser,$soapPassword,$xml_post_string);
+                    if(empty($response)){
+                        echo json_encode(['status_code' => 200 ,'message' => __('Response is empty.')]); 
+                    }else{
+                        $result_Array = [];
+                        foreach ($externalDataSourceAttributesData as $ex_key => $ex_val) {
+                            if(in_array($ex_val['attribute_field'],['username','password','url'])){
+                                unset($ex_val['attribute_field']);
+                            }else{
+                                $dataVal = array_shift(array_shift(array_shift(array_shift($this->CreateUsers->XMLtoArray($response)))));
+                                if(!empty($dataVal)){
+                                    $value = 'a:'.$ex_val['value'];
+                                    if($ex_val['attribute_field'] == 'first_name_mapping'){
+                                        $fieldKey = 'first_name';
+                                    }else if($ex_val['attribute_field'] == 'middle_name_mapping'){
+                                        $fieldKey = 'middle_name';
+                                    }else if($ex_val['attribute_field'] == 'third_name_mapping'){
+                                        $fieldKey = 'third_name';
+                                    }else if($ex_val['attribute_field'] == 'last_name_mapping'){
+                                        $fieldKey = 'last_name';
+                                    }else if($ex_val['attribute_field'] == 'gender_mapping'){
+                                        $fieldKey = 'gender_name';
+                                        $genders_types = TableRegistry::get('genders');
+                                        $genders_types_result = $genders_types
+                                               ->find()
+                                               ->select(['id','name'])
+                                               ->where([$genders_types->aliasField('name') => $dataVal[$value]])
+                                               ->first();
+                                        $result_Array['gender_id'] = $genders_types_result->id;
+                                    }else if($ex_val['attribute_field'] == 'date_of_birth_mapping'){
+                                        $fieldKey = 'date_of_birth';
+                                        $dataVal[$value] = date('Y-m-d', strtotime($dataVal[$value]));
+                                    }else if($ex_val['attribute_field'] == 'identity_type_mapping'){
+                                        $identity_types = TableRegistry::get('identity_types');
+                                        $identity_types_result = $identity_types
+                                               ->find()
+                                               ->select(['id','name'])
+                                               ->where([$identity_types->aliasField('default') => 1])
+                                               ->first();
+                                        $result_Array['identity_type_id'] = $identity_types_result->id;
+                                        $dataVal[$value] = $identity_types_result->name;
+                                        $fieldKey = 'identity_type_name';
+                                    }else if($ex_val['attribute_field'] == 'identity_number_mapping'){
+                                        $fieldKey = 'identity_number';
+                                    }else if($ex_val['attribute_field'] == 'address_mapping'){
+                                        $fieldKey = 'address';
+                                    }else if($ex_val['attribute_field'] == 'postal_mapping'){
+                                        $fieldKey = 'postal_code';
+                                    }else if($ex_val['attribute_field'] == 'nationality_mapping'){
+                                        $fieldKey = 'nationality_name';
+                                    }
+                                    $result_Array[$fieldKey] = $dataVal[$value];
+                                }else{
+                                    echo json_encode(['status_code' => 400 ,'message' => __('Invalid data.')]); 
+                                }
+                            }
+                        }
+                        //get guardians details
+                        $guardian_relations = TableRegistry::get('guardian_relations');
+                        $guardian_relations_result = $guardian_relations
+                               ->find()
+                               ->where([$guardian_relations->aliasField('international_code !=') => ''])
+                               ->hydrate(false)
+                               ->toArray();
+                        if(!empty($guardian_relations_result)){
+                            foreach ($guardian_relations_result as $gkey => $gval) {
+                                if(!empty($gval['international_code']) || !empty($gval['national_code'])){
+                                    $dataVal = array_shift(array_shift(array_shift(array_shift($this->CreateUsers->XMLtoArray($response)))));
+                                    if(!empty($dataVal)){
+                                        $value = 'a:'.$gval['international_code'];
+                                        if($gval['name'] == 'Father'){
+                                            $relationsfieldKey = 'father_national_no';
+                                        }else if($gval['name'] == 'Mother'){
+                                            $relationsfieldKey = 'mother_national_no';
+                                        }
+                                        $result_Array[$relationsfieldKey] = $dataVal[$value];
+                                    }
+                                }
+                            }
+                        }
+                        echo json_encode(['status_code' => 200,'message' => __('Get user details successfully.') ,'data' => $result_Array]); 
+                        die;
+                    }
+                }else{
+                    echo json_encode(['status_code' => 400 ,'message' => __('Invalid data.')]); 
+                }
+            }else{
+               echo json_encode(['status_code' => 400 ,'message' => __('Invalid data.')]); 
+            }
         }
     }
 }
