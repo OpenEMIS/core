@@ -544,11 +544,11 @@ class InstitutionRepository extends Controller
                     'areaAdministratives.areaAdministrativesChild:id,code,name,parent_id',
                     'areaEducation:id,code,name,parent_id',
                     'areaEducation.areaEducationChild:id,code,name,parent_id'
-                );
+                )->where('id', $institutionId);
 
             if(isset($params['order'])){
                 $col = $params['order'];
-                $areas = $areas->where('id', $institutionId)->orderBy($col);
+                $areas = $areas->orderBy($col);
             }
 
 
