@@ -166,6 +166,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function onUpdateFieldCurricularTypeId(Event $event, array $attr, $action, Request $request)
     {
+        $entity->institution_curricular_id = $_SESSION['curricularId'];
         $categoryId = $this->request->data[$this->alias()]['category'];
         $type = TableRegistry::get('curricular_types');
         $this->InstitutionCurriculars = TableRegistry::get('institution_curriculars');
@@ -177,7 +178,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
             $attr['options'] = ['id' => '-- ' . __('Select Type') . ' --']+$getCurricularsType;
             $attr['onChangeReload'] = false;
         }elseif($action == 'edit'){
-            $curriculardecode = $this->paramsDecode($this->request->pass[1])['id'];
+            $curriculardecode = $entity->institution_curricular_id;
             $tyepId = $this->InstitutionCurriculars->get($curriculardecode)->curricular_type_id;
             $attr['type'] = 'readonly';
             $attr['value'] = $tyepId;
@@ -188,6 +189,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
+        $entity->institution_curricular_id = $_SESSION['curricularId'];
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
         $this->InstitutionCurriculars = TableRegistry::get('institution_curriculars');
@@ -198,7 +200,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
                 $attr['default'] = $selectedPeriod;
                 $attr['onChangeReload'] = true;
             } else if ($action == 'edit') {
-                $curriculardecode = $this->paramsDecode($this->request->pass[1])['id'];
+                $curriculardecode = $entity->institution_curricular_id;
                 $academicPeriodId = $this->InstitutionCurriculars->get($curriculardecode)->academic_period_id;
                 $attr['type'] = 'readonly';
                 $attr['value'] = $academicPeriodId;
@@ -224,11 +226,12 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
     {
+        $entity->institution_curricular_id = $_SESSION['curricularId'];
         if ($action == 'edit') {
             $staffOptions = [];
             $this->InstitutionCurriculars = TableRegistry::get('institution_curriculars');
             $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-            $curriculardecode = $this->paramsDecode($this->request->pass[1])['id'];
+            $curriculardecode = $entity->institution_curricular_id;
             $selectedPeriod = $this->InstitutionCurriculars->get($curriculardecode)->academic_period_id;
 
             $entity = $attr['entity'];
