@@ -42,7 +42,10 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             return $validator
                 ->requirePresence('url')
                 ->requirePresence('username')
-                ->requirePresence('password');
+                ->requirePresence('password')
+                ->requirePresence('first_name_mapping')
+                ->requirePresence('last_name_mapping')
+                ->requirePresence('gender_mapping');
         }else{//POCOR-6930 Ends
             return $validator
                 ->requirePresence('client_id')
@@ -342,6 +345,17 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $this->field('url');
                 $this->field('username', ['type' => 'string', 'required' => 'required']);
                 $this->field('password', ['type' => 'string', 'required' => 'required']);
+                $this->field('first_name_mapping');
+                $this->field('middle_name_mapping');
+                $this->field('third_name_mapping');
+                $this->field('last_name_mapping');
+                $this->field('date_of_birth_mapping');
+                $this->field('gender_mapping');
+                $this->field('identity_type_mapping');
+                $this->field('identity_number_mapping');
+                $this->field('nationality_mapping');
+                $this->field('address_mapping');
+                $this->field('postal_mapping');
                 break;//POCOR-6930 Ends
 
             default:
