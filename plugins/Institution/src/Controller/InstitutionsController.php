@@ -2163,7 +2163,7 @@ class InstitutionsController extends AppController
                 'StudentRisks' => __('Risks'),
                 'StudentTextbooks' => __('Textbox'),
                 'StudentAssociations' => __('Associations'),
-                //'StudentCurriculars' => __('Curriculars') //POCOR-6673 in student tab
+                'StudentCurriculars' => __('Curriculars') //POCOR-6673 in student tab breadcrumb
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -3374,8 +3374,7 @@ class InstitutionsController extends AppController
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
             }
         }
-        return $tabElements;
-        //return $this->TabPermission->checkTabPermission($tabElements);
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getCareerTabElements($options = [])

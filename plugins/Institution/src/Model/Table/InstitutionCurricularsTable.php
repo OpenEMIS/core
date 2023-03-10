@@ -346,5 +346,11 @@ class InstitutionCurricularsTable extends ControllerActionTable
             $event->stopPropagation();
         }
     }
+
+    public function onGetTotalStudents(Event $event, Entity $entity)
+    {
+        $total = $entity->total_male_students + $entity->total_female_students ;
+        return $total;
+    }
     
 }

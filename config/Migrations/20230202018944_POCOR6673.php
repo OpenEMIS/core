@@ -22,19 +22,57 @@ class POCOR6673 extends AbstractMigration
         $this->execute('CREATE TABLE `z_6673_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `z_6673_security_functions` SELECT * FROM `security_functions`'); 
 
-        // security_functions
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 133');
+        // security_functions Set Permission
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 139');
+        //insert data in security function
+        $record = [
+            [
+                'name' => 'Curriculars', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Academic', 'parent_id' => 8,'_view' => 'Curriculars.index|Curriculars.view', '_edit' => 'Curriculars.edit', '_add' => 'Curriculars.add', '_delete' => 'Curriculars.remove', '_execute' => NULL, 'order' => 140, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ]
+        ];
+        $this->insert('security_functions', $record);
 
+        // security_functions for student curricular
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 435');
         //insert 
         $record = [
             [
-                'name' => 'Curriculars', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Academic', 'parent_id' => 8,'_view' => 'Curriculars.index|Curriculars.view', '_edit' => 'Curriculars.edit', '_add' => 'Curriculars.add', '_delete' => 'Curriculars.remove', '_execute' => NULL, 'order' => 1350, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+                'name' => 'Curriculars', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Students - Academic', 'parent_id' => 2000,'_view' => 'Curriculars.index|Curriculars.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 436, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ]
         ];
-
         $this->insert('security_functions', $record);
 
-        // End
+        // security_functions for staff curricular
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 237');
+        //insert 
+        $record = [
+            [
+                'name' => 'Curriculars', 'controller' => 'Staff', 'module' => 'Institutions', 'category' => 'Staff - Career', 'parent_id' => 3000,'_view' => 'Curriculars.index|Curriculars.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' =>238, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ]
+        ];
+        $this->insert('security_functions', $record);
+
+        // Remove permission in ExtraCurricular in staff
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 238');
+        //insert 
+        $record = [
+            [
+                'name' => 'Extracurriculars', 'controller' => 'Staff', 'module' => 'Institutions', 'category' => 'Staff - Career', 'parent_id' => 3000,'_view' => 'Extracurriculars.index|Extracurriculars.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 239, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ]
+        ];
+        $this->insert('security_functions', $record);
+
+        // Remove permission in ExtraCurricular in student
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 436');
+        //insert 
+        $record = [
+            [
+                'name' => 'Extracurriculars', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Students - Academic', 'parent_id' => 2000,'_view' => 'Extracurriculars.index|Extracurriculars.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 436, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+            ]
+        ];
+        $this->insert('security_functions', $record);
+
+        //Curricular data
         $localeContent = [
 
             [
