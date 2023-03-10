@@ -220,7 +220,7 @@ use Cake\Utility\Security;
             if($entity['academic_period_id'] == $AcademicPeriodsData->id){
                 $this->Alert->error('Archive.currentAcademic');
             }else{
-                $entity->p_id = posix_getpid();
+                $entity->p_id = getmypid();
                 $entity->process_status =  self::IN_PROGRESS;
                 $entity->academic_period_id = $entity['academic_period_id'];
                 $entity->generated_on = date("Y-m-d H:i:s");
