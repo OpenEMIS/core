@@ -151,7 +151,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
         $search = $this->getSearchKey();
 
-        // CUSTOM SEACH - Institution Code, Institution Name, Area Code and Area Name
+        // CUSTOM SEACH 
         $extra['auto_search'] = false; // it will append an AND
         if (!empty($search)) {
             $query->find('byStudentData', ['search' => $search]);
@@ -167,7 +167,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $this->field('hours', ['visible' => false]);
         $this->field('points', ['visible' => false]);
         $this->field('location', ['visible' => false]);
-        $this->field('comment', ['visible' => false]);
+        $this->field('comments', ['visible' => false]);
         $this->field('openemis_no', ['visible' => ['index'=>true,'view' => true]]);
         $this->field('education_grade', ['visible' => true]);
         $this->field('institution_class', ['visible' => true]);
@@ -213,7 +213,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $this->field('points', ['visible' => true,]);
         $this->field('location', ['visible' => true,]);
         $this->field('curricular_position_id', ['type' => 'select']);
-        $this->field('comment', ['visible' => true]);
+        $this->field('comments', ['visible' => true]);
         $this->field('id', ['visible' => true]);
 
     }
@@ -312,6 +312,13 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         
         $entity->id = Text::uuid();
         $entity->institution_curricular_id = $_SESSION['curricularId'];
+    }
+
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    {
+        $entity->institution_curricular_id = $_SESSION['curricularId'];
+        $entity->id = $entity->id;
+
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
@@ -439,6 +446,34 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
             $event->stopPropagation();
         }
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $curricularStudent = TableRegistry::get('institution_curricular_students');
+        $users = TableRegistry::get('security_users');
+        $countMaleFemale = $curricularStudent->find()
+                     ->select(['male_students' => "
+                                 (COUNT(DISTINCT(CASE WHEN security_users.gender_id = 1 THEN institution_curricular_students.student_id END))) ",
+                                'female_students' => "
+                                 (COUNT(DISTINCT(CASE WHEN security_users.gender_id = 2 THEN institution_curricular_students.student_id END))) "
+
+                                ])
+                    ->InnerJoin([$users->alias() => $users->table()],
+                    [$users->aliasField('id').' = ' . $curricularStudent->aliasField('student_id')])
+                    ->where([$curricularStudent->aliasField('institution_curricular_id') => $entity->institution_curricular_id])
+                    ->group([$curricularStudent->aliasField('student_id')]);
+        foreach($countMaleFemale as $value){
+            $maleStudents  = $value->male_students;
+            $femaleStudents  = $value->female_students;
+        }
+        $InstitutionCurriculars = TableRegistry::get('institution_curriculars');
+        $updateCurricular =   $InstitutionCurriculars->updateAll(
+                                ['total_male_students' => $maleStudents,'total_female_students'=>$femaleStudents],    //field
+                                [
+                                 'id' => $entity->institution_curricular_id, 
+                                ]);
+
     }
 
 	
