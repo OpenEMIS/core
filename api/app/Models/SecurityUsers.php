@@ -63,7 +63,7 @@ class SecurityUsers extends Authenticatable implements JWTSubject
 
     public function institutionStudent()
     {
-        return $this->hasOne(InstitutionStudent::class, 'student_id', 'id');
+        return $this->hasOne(InstitutionStudent::class, 'student_id', 'id')->orderBy('created', 'DESC');
     }
 
     public function nationality()
