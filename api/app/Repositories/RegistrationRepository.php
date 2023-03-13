@@ -313,7 +313,6 @@ class RegistrationRepository extends Controller
 
             
             if($request['openemis_id'] != ""){
-                
                 Log::info('For User Registration using openemis id.');
                 $student = SecurityUsers::with(
                         'gender',
@@ -406,7 +405,7 @@ class RegistrationRepository extends Controller
                 }
 
             } elseif ($request['identity_number'] != "") {
-                
+                //dd("elseif");
                 Log::info('For User Registration using identity number.');
                 $student = SecurityUsers::with(
                         'gender',
@@ -417,7 +416,7 @@ class RegistrationRepository extends Controller
                     )
                     ->where('identity_number', $request['identity_number'])
                     ->first();
-
+                //dd($student['institutionStudent']['studentStatus']['name']);
                 if($student){
                     $dob = $student['date_of_birth']->format('Y-m-d');
 
@@ -430,7 +429,7 @@ class RegistrationRepository extends Controller
                     }
 
                     if($dob == $request['date_of_birth']){
-                        if(isset($student['institutionStudent']['studentStatus']['name']) == 'Enrolled'){
+                        if(isset($student['institutionStudent']['studentStatus']['name']) === 'Enrolled'){
 
                             DB::commit();
                             return 4; //registration unsuccessful – student already enrolled
