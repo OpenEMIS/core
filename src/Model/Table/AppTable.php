@@ -342,6 +342,11 @@ class AppTable extends Table
     // Event: 'ControllerAction.Model.onInitializeButtons'
     public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra)
     {
+
+        // echo '<pre>';
+        // print_r($this->request->params); 
+        // echo $this->request->url;
+        // die;
         // needs clean up
         $controller = $event->subject()->_registry->getController();
         $access = $controller->AccessControl;
@@ -442,6 +447,355 @@ class AppTable extends Table
                 }
             }
         }
+        
+        // Start POCOR-5188
+        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Directory')){
+            $is_manual_exist = $this->getManualUrl('Reports','Directory');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Institutions')){
+            $is_manual_exist = $this->getManualUrl('Reports','Institution');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Students')){
+            $is_manual_exist = $this->getManualUrl('Reports','Students');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Staff')){
+            $is_manual_exist = $this->getManualUrl('Reports','Staff');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Textbooks')){
+            $is_manual_exist = $this->getManualUrl('Reports','Textbooks');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Performance')){
+            $is_manual_exist = $this->getManualUrl('Reports','Performance');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Examinations')){
+            $is_manual_exist = $this->getManualUrl('Reports','Examinations');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Trainings')){
+            $is_manual_exist = $this->getManualUrl('Reports','Trainings');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Scholarships')){
+            $is_manual_exist = $this->getManualUrl('Reports','Scholarships');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Surveys')){
+            $is_manual_exist = $this->getManualUrl('Reports','Surveys');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/InstitutionRubrics')){
+            $is_manual_exist = $this->getManualUrl('Reports','Rubrics');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/DataQuality')){
+            $is_manual_exist = $this->getManualUrl('Reports','Data Quality');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Audits')){
+            $is_manual_exist = $this->getManualUrl('Reports','Audits');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Workflows')){
+            $is_manual_exist = $this->getManualUrl('Reports','Workflows');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/UisStatistics')){
+            $is_manual_exist = $this->getManualUrl('Reports','UIS Statistics');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Map')){
+            $is_manual_exist = $this->getManualUrl('Reports','Map');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/CustomReports')){
+            $is_manual_exist = $this->getManualUrl('Reports','Custom');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        $parsedURL = explode('/',$this->request->url);
+        // echo $this->request->params['plugin'];
+        // echo '---';
+        // echo $this->request->params['controller'];
+        // echo '<pre>';
+        // print_r( $parsedURL ); die;
+        if(($this->request->params['plugin'] == 'Profile' && $this->request->params['controller'] == 'Profiles' && !empty($parsedURL) && $parsedURL[2] == 'Accounts')){
+            $is_manual_exist = $this->getManualUrl('Personal','Accounts');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Student' && $this->request->params['controller'] == 'Students' && !empty($parsedURL) && $parsedURL[1] == 'Behaviours')){
+            $is_manual_exist = $this->getManualUrl('Guardian','Behaviours');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        if(($this->request->params['plugin'] == 'Profile' && $this->request->params['controller'] == 'Profiles' && !empty($parsedURL) && $parsedURL[2] == 'History')){
+            $is_manual_exist = $this->getManualUrl('Personal','History');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        // End POCOR-5188
 
         if ($buttons->offsetExists('view') && $access->check($buttons['view']['url'], $roles)) {
             $indexButtons['view'] = $buttons['view'];
@@ -599,4 +953,19 @@ class AppTable extends Table
             $listener->dispatchEvent($eventKey, $params, $subject);
         }
     }
+
+    // Start POCOR-5188
+	public function getManualUrl($module, $function)
+    {
+        $manualTable = TableRegistry::get('Manuals');
+        $ManualContent =   $manualTable->find()->select(['url'])->where([
+                $manualTable->aliasField('function') => $function,
+                $manualTable->aliasField('module') => $module
+                ])->first();
+        if (!empty($ManualContent)) {
+			return ['status'=>'success', 'url'=>$ManualContent['url']];
+        }
+        return [];
+    }
+	// End POCOR-5188
 }

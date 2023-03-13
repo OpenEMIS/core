@@ -203,6 +203,27 @@ class StudentOutcomesTable extends ControllerActionTable
         }
 		
         $query->where($conditions);
+
+
+        // Start POCOR-5188
+        $toolbarButtons = $extra['toolbarButtons'];
+        $is_manual_exist = $this->getManualUrl('Guardian','Outcomes');       
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
+
+            $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+            $toolbarButtons['help']['type'] = 'button';
+            $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+            $toolbarButtons['help']['attr'] = $btnAttr;
+            $toolbarButtons['help']['attr']['title'] = __('Help');
+        }
+        // End POCOR-5188
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
