@@ -107,6 +107,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.transferStaffNextStep = transferStaffNextStep;
     StaffController.checkConfigForExternalSearch = checkConfigForExternalSearch;
     StaffController.isNextButtonShouldDisable = isNextButtonShouldDisable;
+    StaffController.fetchCspdData = fetchCspdData;
   
     
     $window.savePhoto = function(event) {
@@ -2391,5 +2392,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
           return true;
         }
         return false;
+    }
+
+    async function fetchCspdData() {
+        const { nationality_id } = StaffController.selectedStaffData;
+        const cspdData = await InstitutionsStaffSvc.getCspdData(
+            { user_national_no:'9552016857',}
+        );
+        debugger;
+        console.log(cspdData)
     }
 }
