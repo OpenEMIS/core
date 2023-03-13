@@ -291,10 +291,13 @@ use Cake\Utility\Security;
                 $InstitutionStaffAttendancesData = $StudentAttendanceMarkTypes->find('all')
                                     ->where(['academic_period_id' => $entity->academic_period_id])->count();
                 if(($ClassAttendanceRecordsData == 0) && ($InstitutionStudentAbsencesData == 0) && ($StudentAbsencesPeriodDetailsData == 0) && ($StudentAttendanceMarkedRecordsData == 0) && ($InstitutionStaffAttendancesData == 0)){
+                    $this->deleteAll([
+                        $this->aliasField('p_id') => $entity->p_id
+                    ]);
                     $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
                 }else{
                     $this->log('=======>Before triggerStudentAttendanceShell', 'debug');
-                    $this->triggerStudentAttendanceShell('StudentAttendance',$entity->academic_period_id);
+                    $this->triggerStudentAttendanceShell('StudentAttendance',$entity->academic_period_id, $entity->p_id);
                     $this->log(' <<<<<<<<<<======== After triggerStudentAttendanceShell', 'debug');
                 }
             }
@@ -323,10 +326,13 @@ use Cake\Utility\Security;
                                     ->where(['academic_period_id' => $entity->academic_period_id])->count();
                 
                 if(($InstitutionStaffAttendancesData == 0) && ($StaffLeaveData == 0)){
+                    $this->deleteAll([
+                        $this->aliasField('p_id') => $entity->p_id
+                    ]);
                     $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
                 }else{
                     $this->log('=======>Before triggerStaffAttendancesShell', 'debug');
-                    $this->triggerStaffAttendancesShell('StaffAttendances',$entity->academic_period_id);
+                    $this->triggerStaffAttendancesShell('StaffAttendances',$entity->academic_period_id, $entity->p_id);
                     $this->log(' <<<<<<<<<<======== After triggerStaffAttendancesShell', 'debug');
                 }
             }
@@ -351,6 +357,9 @@ use Cake\Utility\Security;
                                     ->where(['academic_period_id' => $entity->academic_period_id])->limit(1)->toArray();
                                     
                 if(empty($AssessmentItemResultsData)){
+                    $this->deleteAll([
+                        $this->aliasField('p_id') => $entity->p_id
+                    ]);
                     $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
                 }else{
                     $this->log('=======>Before triggerStudentAssessmentsShell', 'debug');
@@ -372,10 +381,11 @@ use Cake\Utility\Security;
     * @ticket POCOR-6816
     */
 
-    public function triggerStudentAttendanceShell($shellName,$academicPeriodId = null)
+    public function triggerStudentAttendanceShell($shellName,$academicPeriodId = null, $pid = null)
     {
         $args = '';
         $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
+        $args .= !is_null($pid) ? ' '.$pid : '';
 
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
         $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
@@ -391,10 +401,11 @@ use Cake\Utility\Security;
     * @ticket POCOR-6816
     */
 
-    public function triggerStaffAttendancesShell($shellName,$academicPeriodId = null)
+    public function triggerStaffAttendancesShell($shellName,$academicPeriodId = null, $pid = null)
     {
         $args = '';
         $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
+        $args .= !is_null($pid) ? ' '.$pid : '';
 
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
         $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
@@ -456,9 +467,13 @@ use Cake\Utility\Security;
     */
     public function onGetProcessStatus(Event $event, Entity $entity)
     {
-        if ($entity->has('process_status')) {
-            $value = $this->statusOptions[$entity->process_status];
-        } else {
+        if ($entity->process_status == 1) {
+            $value = $this->statusOptions[self::IN_PROGRESS];
+        } elseif($entity->process_status == 2) {
+            $value = $this->statusOptions[self::DONE];
+        } elseif($entity->process_status == 3) {
+            $value = $this->statusOptions[self::DONE];
+        }else{
             $value = $this->statusOptions[self::DONE];
         }
         return $value;
