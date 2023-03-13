@@ -165,7 +165,7 @@ trait PdfReportTrait
     {
         // To make the excel sheet to solid sheet
         $searchFormat = '.gridlines td { border:1px dotted black }';
-        $replaceFormat = '.gridlines td { border:1px solid black }';
+        $replaceFormat = '.gridlines td'; // POCOR-7090 // initialy it was: $replaceFormat = '.gridlines td { border:1px solid black }';  //removed to avoid unnecessary border.
         $headString = str_replace($searchFormat, $replaceFormat, $headString);
 
         $searchFormat = '.gridlines th { border:1px dotted black }';
