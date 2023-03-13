@@ -43,7 +43,7 @@ class StudentAssessmentsShell extends Shell
                         $this->out('Dispatching event to update Staff Attendances Transfer');
                         $this->out('End Update for StaffAttendances Transfer Status ('. Time::now() .')');
                     } catch (\Exception $e) {
-                        $this->TransferLogs->updateAll(['process_status' => 2], [
+                        $this->TransferLogs->updateAll(['process_status' => 3], [
                             'p_id' => $pid
                         ]);
                         $this->out('Error in Staff Attendances Transfer');
