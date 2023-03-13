@@ -193,6 +193,31 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
             'order' => 3
         ];
         // end element control
+
+        // Start POCOR-5188
+        $manualTable = TableRegistry::get('Manuals');
+        $ManualContent =   $manualTable->find()->select(['url'])->where([
+                $manualTable->aliasField('function') => 'Infrastructure WASH Sanitation',
+                $manualTable->aliasField('module') => 'Institutions'
+                ])->first();
+        
+        if(!empty($ManualContent['url'])){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
+    
+            $helpBtn['url'] = $ManualContent['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
