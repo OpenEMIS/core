@@ -68,13 +68,7 @@ class StudentAbsencesPerDaysTable extends AppTable
         $securityUsers = TableRegistry::get('security_users');
         $selectedArea = $requestData->area_education_id;
         $conditions = [];
-        if (!empty($academicPeriodId)) {
-            $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
-        }
 
-        if (!empty($institutionId) && $institutionId != '-1') {
-            $conditions[$this->aliasField('institution_id')] = $institutionId;
-        }
         if ($areaId != -1 && $areaId != '') {
             $areaIds = [];
             $allgetArea = $this->getChildren($selectedArea, $areaIds);
@@ -84,10 +78,14 @@ class StudentAbsencesPerDaysTable extends AppTable
             }else{
                 $allselectedAreas = $selectedArea1;
             }
-                $conditions['Institutions.area_id IN'] = $allselectedAreas;
+                //$conditions['institutions.area_id IN'] = $allselectedAreas;
+                $conditions = "AND institutions.area_id IN = ".$allselectedAreas;
         }
-
-        $join = [];
+        if (empty($institutionId) && $institutionId == 0) { 
+           $condition = NULL;
+        }else{
+            $condition = "AND institution_student_absence_details.institution_id = ".$institutionId;
+        }
 
         $subQuery = "(SELECT areas.code area_code
         ,areas.name area_name
@@ -170,6 +168,7 @@ class StudentAbsencesPerDaysTable extends AppTable
     WHERE institution_student_absence_details.subject_id = 0
     AND institution_student_absence_details.academic_period_id = $academicPeriodId
     AND institution_student_absence_details.absence_type_id != 3
+    $condition
     GROUP BY institutions.id 
         ,education_grades.id
         ,institution_classes.id
