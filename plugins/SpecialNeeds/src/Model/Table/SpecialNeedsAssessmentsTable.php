@@ -87,6 +87,27 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->field('date', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
         $this->setFieldOrder(['special_need_type_id', 'special_need_difficulty_id','assessor_id']);  //POCOR-6873
+
+
+        // Start POCOR-5188
+        $is_manual_exist = $this->getManualUrl('Personal','Assessments','Special Needs');       
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
+    
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
