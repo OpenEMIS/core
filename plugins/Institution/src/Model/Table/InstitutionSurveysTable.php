@@ -662,6 +662,20 @@ class InstitutionSurveysTable extends ControllerActionTable
     {
         $this->field('description');
         $this->setFieldOrder(['academic_period_id', 'survey_form_id', 'description']);
+        //POCOR-7290:: Start
+        $pass = $this->request->pass[1];
+        $prams = $this->paramsDecode($pass);
+        $institutionSurveyId = $prams['id'];
+        $institutionSurvey = $this->get($institutionSurveyId);
+
+        $academicPeriod = $this->AcademicPeriods->get($institutionSurvey->academic_period_id);
+        $startDate = date('Y-m-d', strtotime($academicPeriod->start_date));
+        $endDate = date('Y-m-d', strtotime($academicPeriod->end_date));
+        $currentDate = date('Y-m-d');
+        if(($currentDate >= $startDate) && ($currentDate >= $endDate)){
+            unset($extra['toolbarButtons']['edit']);
+        }
+        //POCOR-7290::End
     }
 
     public function viewAfterAction(Event $event, Entity $entity) {
@@ -672,6 +686,11 @@ class InstitutionSurveysTable extends ControllerActionTable
                 if ($entity->status->id == $workflowStep->id && !($workflowStep->is_removable)) {
                     $this->toggle('remove', false);
                 }
+                //POCOR-7290:: Start
+                if ($entity->status->id == $workflowStep->id && !($workflowStep->is_editable)) {
+                    $this->toggle('edit', false);
+                }
+                //POCOR-7290:: End
             }
         }
     }
