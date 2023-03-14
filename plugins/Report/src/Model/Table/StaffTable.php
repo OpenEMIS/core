@@ -474,12 +474,12 @@ class StaffTable extends AppTable  {
 
                     $institutionList = $institutionQuery->toArray();
                 }
-                if (empty($institutionList)) {
+                /*if (empty($institutionList)) {
                     $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
                     $attr['type'] = 'select';
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
-                } else {
+                } else {*/
                     if (in_array($feature, [
                         'Report.StaffPositions',
                         'Report.StaffLeaveReport',
@@ -500,12 +500,15 @@ class StaffTable extends AppTable  {
                         ,'Report.StaffSubjects' //POCOR-6688
                     ])) {
                         if (!empty($institutionList) && count($institutionList) > 1) {
-                           $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+
+                           $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')]+ $institutionList ;
                         } else {
-                            $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+                            
+                            $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                         }
                         
                     } else {
+                        
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
                     }
 
@@ -515,7 +518,7 @@ class StaffTable extends AppTable  {
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 }
-            }
+            //}
             return $attr;
         }
     }
