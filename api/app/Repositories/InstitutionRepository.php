@@ -544,11 +544,11 @@ class InstitutionRepository extends Controller
                     'areaAdministratives.areaAdministrativesChild:id,code,name,parent_id',
                     'areaEducation:id,code,name,parent_id',
                     'areaEducation.areaEducationChild:id,code,name,parent_id'
-                );
+                )->where('id', $institutionId);
 
             if(isset($params['order'])){
                 $col = $params['order'];
-                $areas = $areas->where('id', $institutionId)->orderBy($col);
+                $areas = $areas->orderBy($col);
             }
 
 
@@ -1223,6 +1223,10 @@ class InstitutionRepository extends Controller
                 $roomType = $roomType->orderBy($col);
             }
 
+            if(isset($params['academic_period_id'])){
+                $academic_period_id = $params['academic_period_id'];
+                $roomType = $roomType->where("academic_period_id", $academic_period_id);
+            }
 
             $limit = config('constants.defaultPaginateLimit');
 
