@@ -229,16 +229,6 @@ class POCOR6673 extends AbstractMigration
     {
         $this->execute('DROP TABLE IF EXISTS `locale_contents`');
         $this->execute('RENAME TABLE `z_6673_locale_contents` TO `locale_contents`');
-        $this->execute('DROP TABLE IF EXISTS `curricular_positions`');
-        $this->execute('RENAME TABLE `z_6673_curricular_positions` TO `curricular_positions`');
-        $this->execute('DROP TABLE IF EXISTS `curricular_types`');
-        $this->execute('RENAME TABLE `z_6673_curricular_types` TO `curricular_types`');
-        $this->execute('DROP TABLE IF EXISTS `institution_curriculars`');
-        $this->execute('RENAME TABLE `z_6673_institution_curriculars` TO `institution_curriculars`');
-        $this->execute('DROP TABLE IF EXISTS `institution_curricular_students`');
-        $this->execute('RENAME TABLE `z_6673_institution_curricular_students` TO `institution_curricular_students`');
-        $this->execute('DROP TABLE IF EXISTS `institution_curricular_staff`');
-        $this->execute('RENAME TABLE `z_6673_institution_curricular_staff` TO `institution_curricular_staff`');
         $this->execute('RENAME TABLE `z_6673_security_functions` TO `security_functions`');
         $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 456');  
     }
