@@ -57,6 +57,39 @@ $this->start('panelBody');
             <p ng-repeat="error in InstitutionClassStudentsController.postError.institution_shift_id">{{ error }}</p>
         </div>
     </div>
+
+    <div class="input select required error">
+        <label><?= __('Unit') ?></label>
+        <div class="input-select-wrapper">
+            <select name="InstitutionClasses[institution_unit_id]" id="institutionclasses-institution-unit-id"
+                ng-options="option.id as option.name for option in InstitutionClassStudentsController.unitOptions"
+                ng-model="InstitutionClassStudentsController.selectedUnit"
+                ng-init="InstitutionClassStudentsController.selectedUnit=null;"
+                >
+                <option value="" >-- <?= __('Select') ?> --</option>
+            </select>
+        </div>
+        <div ng-if="InstitutionClassStudentsController.postError.institution_unit_id" class="error-message">
+            <p ng-repeat="error in InstitutionClassStudentsController.postError.institution_unit_id">{{ error }}</p>
+        </div>
+    </div>
+
+    <div class="input select required error">
+        <label><?= __('Course') ?></label>
+        <div class="input-select-wrapper">
+            <select name="InstitutionClasses[institution_course_id]" id="institutionclasses-institution-course-id"
+                ng-options="option.id as option.name for option in InstitutionClassStudentsController.courseOptions"
+                ng-model="InstitutionClassStudentsController.selectedCourse"
+                ng-init="InstitutionClassStudentsController.selectedCourse=null;"
+                >
+                <option value="" >-- <?= __('Select') ?> --</option>
+            </select>
+        </div>
+        <div ng-if="InstitutionClassStudentsController.postError.institution_course_id" class="error-message">
+            <p ng-repeat="error in InstitutionClassStudentsController.postError.institution_course_id">{{ error }}</p>
+        </div>
+    </div>
+
     <div class="input select">
         <label><?= __('Home Room Teacher') ?></label>
         <div class="input-select-wrapper">

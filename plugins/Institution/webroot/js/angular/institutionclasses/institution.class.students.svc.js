@@ -12,6 +12,8 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdDataSvc) {
         getUnassignedStudent: getUnassignedStudent,
         translate: translate,
         getInstitutionShifts: getInstitutionShifts,
+        getInstitutionUnits: getInstitutionUnits,
+        getInstitutionCourses: getInstitutionCourses,
         getTeacherOptions: getTeacherOptions,
         saveClass: saveClass,
         getConfigItemValue: getConfigItemValue
@@ -21,6 +23,8 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdDataSvc) {
         InstitutionStaff: 'Institution.Staff',
         InstitutionClasses: 'Institution.InstitutionClasses',
         InstitutionShifts: 'Institution.InstitutionShifts',
+        InstitutionUnits: 'Institution.Unit',
+        InstitutionCourses: 'Institution.Course',
         Users: 'User.Users',
         ConfigItemsTable: 'Configuration.ConfigItems'
     };
@@ -64,6 +68,20 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdDataSvc) {
             deferred.resolve(response.data.data);
         };
         return InstitutionShifts.find('shiftOptions', {institution_id: institutionId, academic_period_id: academicPeriodId}).ajax({success: success, defer: true});
+    }
+
+    function getInstitutionUnits(institutionId, academicPeriodId) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+        return InstitutionUnits.find('unitOptions', {institution_id: institutionId, academic_period_id: academicPeriodId}).ajax({success: success, defer: true});
+    }
+
+    function getInstitutionCourses(institutionId, academicPeriodId) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+        return InstitutionCourses.find('courseOptions', {institution_id: institutionId, academic_period_id: academicPeriodId}).ajax({success: success, defer: true});
     }
 
     function getTeacherOptions(institutionId, academicPeriodId) {
