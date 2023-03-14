@@ -125,6 +125,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                 promises[1] = InstitutionClassStudentsSvc.getInstitutionShifts(response.institution_id, response.academic_period_id);
                 promises[2] = InstitutionClassStudentsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
                 promises[3] = InstitutionClassStudentsSvc.getConfigItemValue('max_students_per_class');
+                promises[4] = InstitutionClassStudentsSvc.getInstitutionUnits(response.institution_id, response.academic_period_id);
+                promises[5] = InstitutionClassStudentsSvc.getInstitutionCourses(response.institution_id, response.academic_period_id);
                 return $q.all(promises);
             }, function(error) {
                 console.log(error);
@@ -158,6 +160,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                 Controller.shiftOptions = promises[1];
                 Controller.mainTeacherOptions = promises[2];
                 Controller.maxStudentsPerClass = parseInt(promises[3]);
+                Controller.unitOptions = promises[4];
+                Controller.courseOptions = promises[5];
   
                 Controller.teacherOptions = Controller.changeStaff(Controller.selectedSecondaryTeacher);
                 Controller.secondaryTeacherOptions = Controller.changeStaff(Controller.selectedTeacher);
