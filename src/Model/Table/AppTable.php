@@ -955,14 +955,22 @@ class AppTable extends Table
     }
 
     // Start POCOR-5188
-	public function getManualUrl($module, $function)
+	public function getManualUrl($module, $function, $category='')
     {
         $manualTable = TableRegistry::get('Manuals');
-        $ManualContent =   $manualTable->find()->select(['url'])->where([
+        if ($category == ''){
+            $ManualContent =   $manualTable->find()->select(['url'])->where([
+                    $manualTable->aliasField('function') => $function,
+                    $manualTable->aliasField('module') => $module
+                    ])->first();
+        }else{
+            $ManualContent =   $manualTable->find()->select(['url'])->where([
                 $manualTable->aliasField('function') => $function,
-                $manualTable->aliasField('module') => $module
+                $manualTable->aliasField('module') => $module,
+                $manualTable->aliasField('category') => $category,
                 ])->first();
-        if (!empty($ManualContent)) {
+        }
+        if (!empty($ManualContent['url'])) {
 			return ['status'=>'success', 'url'=>$ManualContent['url']];
         }
         return [];

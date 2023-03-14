@@ -128,4 +128,27 @@ class ImmunizationsTable extends ControllerActionTable
             $this->aliasField('security_user_id') => $studentUserId
         ]);
     }
+
+    // Start POCOR-5188
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+		$is_manual_exist = $this->getManualUrl('Personal','Vaccinations','Health');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+    }
+    // End POCOR-5188
 }
