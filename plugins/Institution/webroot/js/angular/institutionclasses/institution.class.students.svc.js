@@ -72,6 +72,8 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdDataSvc) {
 
     function getInstitutionUnits(institutionId, academicPeriodId) {
         var success = function(response, deferred) {
+            console.log("response here");
+            console.log(response);
             deferred.resolve(response.data.data);
         };
         return InstitutionUnits.find('unitOptions', {institution_id: institutionId, academic_period_id: academicPeriodId}).ajax({success: success, defer: true});
