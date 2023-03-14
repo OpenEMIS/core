@@ -84,6 +84,26 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         $this->field('organization', ['visible' => false]);
         $this->field('special_needs_service_type_id', ['type' => 'pg_select(connection, table_name, assoc_array)']);
         $this->setFieldOrder(['special_needs_service_type_id']);
+
+        // Start POCOR-5188
+        $is_manual_exist = $this->getManualUrl('Personal','Services','Special Needs');       
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
+    
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
