@@ -55,6 +55,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
     Controller.alertUrl = '';
     Controller.redirectUrl = '';
     Controller.selectedShift = null;
+    Controller.selectedUnit = null;
+    Controller.selectedCourse = null;
     Controller.selectedTeacher = null;
     Controller.selectedSecondaryTeacher = [];
     Controller.className = '';
@@ -83,8 +85,9 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                     this.push(value.secondary_staff_id);
                 }, secondaryTeachers);
                 Controller.selectedSecondaryTeacher = secondaryTeachers;
-
                 Controller.selectedShift = response.institution_shift_id;
+                Controller.selectedUnit = response.institution_unit_id;
+                Controller.selectedCourse = response.institution_course_id;
                 Controller.className = response.name;
                 Controller.academicPeriodId = response.academic_period_id;
                 Controller.institutionId = response.institution_id;
@@ -259,6 +262,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         postData.name = Controller.className;
         postData.staff_id = Controller.selectedTeacher;
         postData.institution_shift_id = Controller.selectedShift;
+        postData.institution_unit_id = Controller.selectedUnit;
+        postData.institution_course_id = Controller.selectedCourse;
         postData.classStudents = classStudents;
         postData.institution_id = Controller.institutionId;
         postData.academic_period_id = Controller.academicPeriodId;

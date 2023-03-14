@@ -37,6 +37,8 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'institution_shift_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 
+        $this->belongsTo('InstitutionUnits', ['className' => 'Institution.Unit', 'foreignKey' => 'institution_unit_id']);
+        $this->belongsTo('InstitutionCourses', ['className' => 'Institution.Course', 'foreignKey' => 'institution_course_id']);
 
         $this->hasMany('ClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
         $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'saveStrategy' => 'replace', 'cascadeCallbacks' => true]);
@@ -152,6 +154,10 @@ class InstitutionClassesTable extends ControllerActionTable
     {
         if ($field == 'classes_secondary_staff') {
             return $this->getMessage($this->aliasField($field));
+        }else if ($field == 'institution_unit_id') {
+            return  __('Unit');
+        } else if ($field == 'institution_course_id') {
+            return  __('Course');
         }
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
@@ -198,9 +204,11 @@ class InstitutionClassesTable extends ControllerActionTable
             $id = $this->paramsDecode($this->request->pass[1]);
             if ($this->exists($id)) {
                 $selectedAcademicPeriodId = $this->get($id)->academic_period_id;
+                 $selectedInstitutionUnitId = $this->get($id)->institution_unit_id;
+                // $selectedAcademicPeriodId = $this->get($id)->academic_period_id;
             }
         }
-
+        $extra['selectedInstitutionUnitId'] = $selectedInstitutionUnitId;
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
         //POCOR-5852 starts
         if (empty($this->request->query['academic_period_id'])) {
@@ -222,6 +230,9 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $this->field('academic_period_id', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true]]);
         $this->field('institution_shift_id', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true]]);
+
+        $this->field('institution_unit_id', ['type' => 'select', 'visible' => ['index' => true, 'add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('institution_course_id', ['type' => 'select', 'visible' => ['index' => true, 'add' => true,'view' => true, 'edit' => true]]);
 
         $this->field('total_students', ['type' => 'integer', 'visible' => ['index' => true]]);
         $this->field('subjects', ['override' => true, 'type' => 'integer', 'visible' => ['index' => true]]);
@@ -262,7 +273,7 @@ class InstitutionClassesTable extends ControllerActionTable
         ]);
 
         $this->setFieldOrder([
-            'name','staff_id', 'classes_secondary_staff', 'multigrade', 'capacity', 'total_male_students', 'total_female_students', 'total_students', 'subjects'
+            'name','institution_unit_id','institution_course_id','staff_id', 'classes_secondary_staff', 'multigrade', 'capacity', 'total_male_students', 'total_female_students', 'total_students', 'subjects'
         ]);
     }
 
@@ -288,7 +299,10 @@ class InstitutionClassesTable extends ControllerActionTable
                     $staffOptions = $this->getStaffOptions($institutionId, $action, $selectedAcademicPeriodId);
                     $this->fields['staff_id']['options'] = $staffOptions;
                     $this->fields['staff_id']['select'] = false;
+
+                    $this->fields['institution_unit_id']['options'] = [];
                 }
+
                 /** POCOR-6721 ends */
             }
         }
@@ -320,6 +334,8 @@ class InstitutionClassesTable extends ControllerActionTable
                                 'Staff',
                                 'AcademicPeriods',
                                 'InstitutionShifts',
+                                'InstitutionUnits.UnitOptions',
+                                'InstitutionCourses.CourseOptions',
                                 'InstitutionShifts.ShiftOptions',
                                 'ClassesSecondaryStaff.SecondaryStaff',
                                 'Students'
@@ -470,6 +486,8 @@ class InstitutionClassesTable extends ControllerActionTable
                             'AcademicPeriods',
                             'InstitutionShifts',
                             'InstitutionShifts.ShiftOptions',
+                            'InstitutionUnits',
+                            'InstitutionCourses',
                             'ClassesSecondaryStaff.SecondaryStaff',
                             'Students',
                             'Students.Genders'
@@ -691,6 +709,48 @@ class InstitutionClassesTable extends ControllerActionTable
             'options' => [],
             'order' => 3
         ];
+
+        $configItems = TableRegistry::get('config_items');
+        $configItemsData = $configItems->find()->where(['type'=>'Columns for Institutions Classes List Page'])->toArray();
+        //echo "<pre>";print_r($configItemsData);die;
+        foreach($configItemsData as $configItemsData1){
+            if(($configItemsData1['code'] == 'class_name') && ($configItemsData1['value'] == 0)){
+                $this->fields['name']['visible'] = false;
+            }
+            if(($configItemsData1['code'] == 'class_unit') && ($configItemsData1['value'] == 0)){
+                $this->fields['institution_unit_id']['visible'] = false;
+            }
+            if(($configItemsData1['code'] == 'class_course') && ($configItemsData1['value'] == 0)){
+                $this->fields['institution_course_id']['visible'] = false;
+            }
+            if(($configItemsData1['code'] == 'class_homeroom_teacher') && ($configItemsData1['value'] == 0)){
+                $this->fields['staff_id']['visible'] = false;
+            }
+            if(($configItemsData1['code'] == 'class_secondary_teacher') && ($configItemsData1['value'] == 0)){
+                $this->fields['classes_secondary_staff']['visible'] = false;
+            }
+            if(($configItemsData1['code'] == 'class_multi_grade') && ($configItemsData1['value'] == 0)){
+                $this->fields['multigrade']['visible'] = false;
+            }
+            if(($configItemsData1['code'] == 'class_capacity') && ($configItemsData1['value'] == 0)){
+                $this->fields['capacity']['visible'] = false;
+            }
+            if(($configItemsData1['code'] == 'class_male_student') && ($configItemsData1['value'] == 0)){
+                $this->fields['total_male_students']['visible'] = false;
+            }
+            if(($configItemsData1['code'] == 'class_female_student') && ($configItemsData1['value'] == 0)){
+                $this->fields['total_female_students']['visible'] = false;
+            }
+            if(($configItemsData1['code'] == 'class_total_student') && ($configItemsData1['value'] == 0)){
+                $this->fields['total_students']['visible'] = false;
+            }
+            if(($configItemsData1['code'] == 'class_subjects') && ($configItemsData1['value'] == 0)){
+                $this->fields['subjects']['visible'] = false;
+            }
+            
+        }
+        
+        //$this->setFieldOrder('name','institution_unit_id','institution_course_id','');
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -705,6 +765,8 @@ class InstitutionClassesTable extends ControllerActionTable
                 'id',
                 'name',
                 'class_number',
+                'institution_unit_id',
+                'institution_course_id',
                 'capacity',
                 'staff_id',
                 'total_male_students',
@@ -734,6 +796,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     $this->aliasField('name') => 'ASC'
                 ]);
         }
+        //echo "<pre>";print_r($query->toArray());die;
     }
 
 
@@ -870,8 +933,19 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $this->field('total_students', ['visible' => true]);
 
+        $configItems = TableRegistry::get('config_items');
+        $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page'])->toArray();
+        foreach($configItemsData as $configItemsData1){
+            if(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 0)){
+                $this->fields['institution_unit_id']['visible'] = false;
+            }
+            if(($configItemsData1['code'] == 'class_ins_course') && ($configItemsData1['value'] == 0)){
+                $this->fields['institution_course_id']['visible'] = false;
+            }
+        }
+
         $this->setFieldOrder([
-            'academic_period_id', 'name', 'institution_shift_id', 'education_grades', 'capacity', 'total_male_students', 'total_female_students',
+            'academic_period_id', 'name', 'institution_shift_id', 'education_grades','institution_unit_id','institution_course_id', 'capacity', 'total_male_students', 'total_female_students',
             'total_students', 'staff_id', 'classes_secondary_staff', 'multigrade', 'students'
         ]);
 
@@ -971,6 +1045,8 @@ class InstitutionClassesTable extends ControllerActionTable
             $query->contain([
                 'AcademicPeriods',
                 'InstitutionShifts.ShiftOptions',
+                'InstitutionUnits',
+                'InstitutionCourses',
                 'EducationGrades',
                 'Staff',
                 'ClassesSecondaryStaff.SecondaryStaff',
@@ -989,6 +1065,8 @@ class InstitutionClassesTable extends ControllerActionTable
             $query->contain([
                 'AcademicPeriods',
                 'InstitutionShifts.ShiftOptions',
+                'InstitutionUnits',
+                'InstitutionCourses',
                 'EducationGrades',
                 'Staff',
                 'ClassesSecondaryStaff.SecondaryStaff',
@@ -1148,6 +1226,14 @@ class InstitutionClassesTable extends ControllerActionTable
         $academicPeriodOptions = $this->getAcademicPeriodOptions($entity->institution_id);
     }
 
+    public function editBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('institution_unit_id', ['visible' => true]);
+        $this->setFieldOrder([
+			'academic_period_id', 'name', 'institution_shift_id', 'institution_unit_id', 'institution_course_id'
+		]);
+    }
+
 
     /******************************************************************************************************************
     **
@@ -1212,10 +1298,35 @@ class InstitutionClassesTable extends ControllerActionTable
             $shiftOptions = [];
         }
 
+        
+        $unitOptions1 = $this->InstitutionUnits->getUnitOptions($institutionId, $selectedAcademicPeriodId);
+        $courseOptions1 = $this->InstitutionCourses->getCourseOptions($institutionId, $selectedAcademicPeriodId);
+       
+
+
+        // $InsUnit = TableRegistry::get('institution_units');
+        // $InsCourse =  TableRegistry::get('institution_courses');
+        
+
+        // $unitOptions[0] = "-------select----------";
+        // $courseOptions[0] = "-----------select--------";
+        //$unitOptions = $InsUnit->find('list',['keyField' => 'id', 'valueField' => 'name']);
+        //$courseOptions = $InsCourse->find('list',['keyField' => 'id', 'valueField' => 'name']);
+       // echo "<pre>";print_r($unitOptions->toArray());die;
+        //$courseOptions =[];
         $this->fields['institution_shift_id']['options'] = $shiftOptions;
-    $this->fields['institution_shift_id']['onChangeReload'] = true;
+        $this->fields['institution_shift_id']['onChangeReload'] = true;
+
+        $this->fields['institution_unit_id']['options'] = $unitOptions1;
+        $this->fields['institution_course_id']['options'] = $courseOptions1;
 
         if (empty($shiftOptions)) {
+            $this->Alert->warning($this->aliasField('noShift'));
+        }
+        if (empty($unitOptions)) {
+            $this->Alert->warning($this->aliasField('noShift'));
+        }
+        if (empty($courseOptions)) {
             $this->Alert->warning($this->aliasField('noShift'));
         }
 
@@ -1240,6 +1351,19 @@ class InstitutionClassesTable extends ControllerActionTable
         } else {
             return $entity->institution_shift->shift_option->name;
         }
+    }
+
+    public function getUnitId()
+    {
+        $InsUnit = TableRegistry::get('institution_units');
+        $unitOptions = $InsUnit->find('list',['keyField' => 'id', 'valueField' => 'name']);
+        return $unitOptions;
+    }
+    public function getCourseId()
+    {
+        $InsCourse =  TableRegistry::get('institution_courses');
+        $courseOptions = $InsCourse->find('list',['keyField' => 'id', 'valueField' => 'name']);
+        return $courseOptions;
     }
 
     public function onGetStaffId(Event $event, Entity $entity)
