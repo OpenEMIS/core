@@ -900,7 +900,8 @@ class InstitutionsTable extends AppTable
                              'Report.Uis4',
                              'Report.Uis5',
                              //END:POCOR-4570
-                             'Report.InstitutionPositionsSummaries'
+                             'Report.InstitutionPositionsSummaries',
+                             'Report.StudentAbsencesPerDays', //POCOR-7276
 
 
                          ]
@@ -952,7 +953,8 @@ class InstitutionsTable extends AppTable
                 'Report.InfrastructureNeeds',
                 'Report.Income',
                 'Report.Expenditure',
-                'Report.InstitutionPositionsSummaries'
+                'Report.InstitutionPositionsSummaries',
+                'Report.StudentAbsencesPerDays' //POCOR-7276
             ]))) {
                 $Areas = TableRegistry::get('AreaLevel.AreaLevels');
                 $entity = $attr['entity'];
@@ -1014,7 +1016,8 @@ class InstitutionsTable extends AppTable
                     'Report.InfrastructureNeeds',
                     'Report.Income',
                     'Report.Expenditure',
-                    'Report.InstitutionPositionsSummaries'
+                    'Report.InstitutionPositionsSummaries',
+                    'Report.StudentAbsencesPerDays' //POCOR-7276
                 ]))) {
                 $Areas = TableRegistry::get('Area.Areas');
                 $entity = $attr['entity'];
@@ -1332,7 +1335,8 @@ class InstitutionsTable extends AppTable
                 'Report.InstitutionCases',
                 'Report.ClassAttendanceNotMarkedRecords',
                 'Report.ClassAttendanceMarkedSummaryReport',
-                'Report.InstitutionPositionsSummaries'
+                'Report.InstitutionPositionsSummaries',
+                'Report.StudentAbsencesPerDays' //POCOR-7276
             ];
 
 
@@ -1611,28 +1615,29 @@ class InstitutionsTable extends AppTable
         }
     }
 
-    /*public function onUpdateFieldAttendanceType(Event $event, array $attr, $action, Request $request)
+    //POCOR-7276
+    public function onUpdateFieldAttendanceType(Event $event, array $attr, $action, Request $request)
     {
 
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.ClassAttendanceMarkedSummaryReport'
+            if (in_array($feature, ['Report.StudentAbsencesPerDays'
                 ]) && isset($this->request->data[$this->alias()]['academic_period_id'])
                 ) {
 
-                $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+                /*$StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
                 $attendanceOptions = $StudentAttendanceTypes
                 ->find('list')
-                ->toArray();
-
+                ->toArray();*/
+            $StudentAttendanceTypes = array(1=>'Period');
             $attr['type'] = 'select';
 
-            $attr['attr']['options'] = $attendanceOptions;
+            $attr['attr']['options'] = $StudentAttendanceTypes;
             $attr['onChangeReload'] = true;
             }
             return $attr;
         }
-    }*/
+    }
 
     public function onUpdateFieldSubjects(Event $event, array $attr, $action, Request $request)
     {
