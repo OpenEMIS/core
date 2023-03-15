@@ -694,7 +694,21 @@ class InstitutionSurveysTable extends ControllerActionTable
             }
         }
     }
+    //POCOR-7290:: Start
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
+        $academicPeriod = $this->AcademicPeriods->get($entity->academic_period_id);
+        $startDate = date('Y-m-d', strtotime($academicPeriod->start_date));
+        $endDate = date('Y-m-d', strtotime($academicPeriod->end_date));
+        $currentDate = date('Y-m-d');
+        if(($currentDate >= $startDate) && ($currentDate >= $endDate)){
+            unset($buttons['edit']);
+        }
+        return $buttons;
+    }
+    //POCOR-7290:: End
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $surveyFormId = $entity->survey_form_id;
