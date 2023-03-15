@@ -1034,9 +1034,10 @@ class StaffTable extends ControllerActionTable
         $countIsHomeroom = [];        
         foreach ($InstitutionStaffEntity as $skey => $sval) {
             $countSecurityGroupUserId[] = $sval['security_group_user_id'];
-            $countIsHomeroom[] = $sval['is_homeroom'];
+            if($sval['is_homeroom'] == 1){
+                $countIsHomeroom[] = $sval['is_homeroom'];
+            }
         }
-
         if((count($countSecurityGroupUserId) > 1) && (count($countIsHomeroom) > 1)){
             $this->updateSecurityGroupUserId($staffEntity, null);
         }else if((count($countSecurityGroupUserId) > 1) && (count($countIsHomeroom) < 2)){
@@ -1301,14 +1302,8 @@ class StaffTable extends ControllerActionTable
 
     public function onGetIsHomeroom(Event $event, Entity $entity)
     {
-    // echo "<pre>";print_r($entity);die;
-        $value = '';
-        if ($entity->has('user')) {
-            $value = $entity->is_homeroom;
-        } else {
-            $value = $entity->is_homeroom;
-        }
-        return $value;
+        $home =  ($entity->is_homeroom) ? __('Yes') : __('No');
+        return $home;
     }
 
     public function onGetPositionType(Event $event, Entity $entity)
@@ -1336,13 +1331,11 @@ class StaffTable extends ControllerActionTable
         $this->field('staff_status_id', ['type' => 'select']);
         $this->field('staff_id');
         $this->field('security_group_user_id', ['visible' => false]);
-
+        
         $this->fields['staff_id']['sort'] = ['field' => 'Users.first_name'];
 
         if ($this->action == 'index') {
             $InstitutionArray = [];
-
-
             $session = $this->Session;
             $institutionId = $session->read('Institution.Institutions.id');
 
@@ -1406,6 +1399,9 @@ class StaffTable extends ControllerActionTable
             $extra['elements'] = array_merge($extra['elements'], $indexElements);
 
             $this->setFieldOrder(['photo_content', 'openemis_no', 'staff_id', 'institution_position_id', 'start_date', 'end_date', 'staff_status_id']);
+        }else if ($this->action == 'view') {//POCOR-7238 starts
+            $this->field('is_homeroom', ['type' => 'text']);
+            $this->setFieldOrder(['photo_content', 'openemis_no','staff_type_id', 'staff_status_id', 'staff_id', 'institution_position_id', 'start_date', 'end_date', 'is_homeroom']);//POCOR-7238 ends
         }
     }
 
