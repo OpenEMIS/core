@@ -3494,8 +3494,8 @@ class InstitutionsController extends AppController
         $staffUserPriId = $SecurityUsersData->id;
         $expectedStaffStatuses = $this->getSpecificInstitutionStaff($institutionId, $staffUserPriId);
         if ( !empty($expectedStaffStatuses) ) {
-            $positionConditions[$StaffTable->Positions->aliasField('staff_position_title_id').' NOT IN '] = $expectedStaffStatuses;
-        }
+            $positionConditions[$StaffTable->Positions->aliasField('staff_position_title_id').' IN '] = $expectedStaffStatuses;
+        }//POCOR-7238 change condition Not IN to IN
         // END : POCOR-6450
         /**
          * @ticket POCOR-6522
