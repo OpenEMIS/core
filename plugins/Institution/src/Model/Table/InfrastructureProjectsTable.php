@@ -173,7 +173,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Institutions','Infrastructure Project');       
+        $is_manual_exist = $this->getManualUrl('Institutions','Infrastructure Project','Details');       
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',

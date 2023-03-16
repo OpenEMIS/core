@@ -63,7 +63,7 @@ class InfrastructureWashSewagesTable extends ControllerActionTable
         // end element control
         
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Institutions','Infrastructure WASH Sewage');       
+        $is_manual_exist = $this->getManualUrl('Institutions','Infrastructure WASH Sewage','Details');       
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',

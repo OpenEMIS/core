@@ -68,7 +68,7 @@ class ProfilesTable extends ControllerActionTable
         }
 
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Personal','Overview');
+        $is_manual_exist = $this->getManualUrl('Personal','Overview','General');
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',

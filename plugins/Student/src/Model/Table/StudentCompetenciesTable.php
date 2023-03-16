@@ -104,7 +104,7 @@ class StudentCompetenciesTable extends ControllerActionTable
 
         // Start POCOR-5188
         $toolbarButtons = $extra['toolbarButtons'];
-        $is_manual_exist = $this->getManualUrl('Guardian','Competencies');       
+        $is_manual_exist = $this->getManualUrl('Institutions','Competencies','Students - Academic');       
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',

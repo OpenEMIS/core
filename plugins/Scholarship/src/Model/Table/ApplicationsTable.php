@@ -185,6 +185,26 @@ class ApplicationsTable extends ControllerActionTable
         $this->fields['openemis_no']['sort'] = ['field' => 'Applicants.openemis_no'];
         $this->fields['applicant_id']['sort'] = ['field' => 'Applicants.first_name'];
         $this->fields['date_of_birth']['sort'] = ['field' => 'Applicants.date_of_birth'];
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Administration','Applications','Scholarships - Applications');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
