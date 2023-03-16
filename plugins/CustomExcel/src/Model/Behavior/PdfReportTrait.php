@@ -346,7 +346,7 @@ trait PdfReportTrait
             $sheetStatus = $objSpreadsheet->getSheet($sheetIndex)->getSheetState(); //POCOR-7077
             if($sheetStatus == 'visible'){ //POCOR-7077
                 // $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
-                $mpdf = new \Mpdf\Mpdf(array('mode' => 'utf-8', 'format' => [300, 190])); //POCOR-7090
+                $mpdf = new \Mpdf\Mpdf(array('mode' => 'utf-8', 'format' => [370, 190])); //POCOR-7090
                 $filepath = $basePath.'_'.$sheetIndex;
                 $writer->setSheetIndex($sheetIndex);
                 $writer->save($filepath);
@@ -452,7 +452,7 @@ trait PdfReportTrait
     private function mergePDFFiles(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
     {
         // $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
-        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [300, 190]]); //POCOR-7090
+        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [370, 190]]); //POCOR-7090
         $mpdf->SetTitle($title);
         $mpdf->SetAuthor($author);
         $mpdf->SetSubject($subject);
