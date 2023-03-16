@@ -1137,7 +1137,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 && StaffController.staffData.current_enrol_institution_name != ""
                 && StaffController.staffData.is_diff_school > 0)
             { 
-                StaffController.step = 'transfer_staff';
+                StaffController.step = 'summary';
                 StaffController.messageClass = 'alert-warning';
                 StaffController.message = `Staff is currently assigned to ${StaffController.staffData.currentlyAssignedTo}`
             } else
@@ -1157,7 +1157,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             {
                 StaffController.messageClass = 'alert-warning';
                 StaffController.message = `This staff is already allocated to ${StaffController.staffData.current_enrol_institution_code} - ${StaffController.staffData.current_enrol_institution_name}`;
-                StaffController.step = 'summary';
+                StaffController.step = 'add_staff';
                 StaffController.isInternalSearchSelected = false;
                 StaffController.generatePassword();
             } else

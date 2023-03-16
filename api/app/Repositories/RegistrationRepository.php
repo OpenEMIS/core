@@ -119,21 +119,44 @@ class RegistrationRepository extends Controller
 
     public function generateOtp($request)
     {
+        DB::beginTransaction();
         try {
             $email = $request['email'];
-
-            $otpData = $this->getUniqueOtp($email);
-            $otp = $otpData['otp'];
-            $encodedOtp = $otpData['encodedOtp'];
+            $blankLastName = 0;
 
             $securityUser = SecurityUsers::where('email', $email)->first();
             if(!$securityUser){
-                return 2;
+                $emailArr = explode("@", $email);
+                $user['password'] = "";
+                $user['first_name'] = $emailArr[0];
+                $user['last_name'] = $emailArr[0];
+                $user['email'] = $email;
+                $user['gender_id'] = 1;
+                $user['date_of_birth'] = Carbon::now()->toDateTimeString();
+                $user['status'] = 0;
+                $user['is_student'] = 0;
+                $user['is_staff'] = 0;
+                $user['is_guardian'] = 0;
+                $user['created_user_id'] = 2;
+                $user['created'] = Carbon::now()->toDateTimeString();
+
+                $newUserId = SecurityUsers::insertGetId($user);
+                $securityUser = SecurityUsers::where('id', $newUserId)->first();
+                $blankLastName = 1;
             }
+
+            $userId = $securityUser->id;
+            
+            $otpData = $this->getUniqueOtp();
+            $otp = $otpData['otp'];
+            $encodedOtp = $otpData['encodedOtp'];
             
             $data['otp'] = $otp;
             $data['first_name'] = $securityUser->first_name;
             $data['last_name'] = $securityUser->last_name;
+            if($blankLastName == 1){
+                $data['last_name'] = "";
+            }
 
             $insertData['security_user_id'] = $securityUser->id;
             $insertData['verification_otp'] = $encodedOtp;
@@ -145,9 +168,11 @@ class RegistrationRepository extends Controller
                 $message->to($email, 'OpenEMIS User')
                     ->subject('OpenEMIS - One-time Password (OTP)');
             });
+            DB::commit();
             return 1;
             
         } catch (\Exception $e) {
+            DB::rollback();
             Log::error(
                 'Failed to sent otp on email.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -313,7 +338,6 @@ class RegistrationRepository extends Controller
 
             
             if($request['openemis_id'] != ""){
-                
                 Log::info('For User Registration using openemis id.');
                 $student = SecurityUsers::with(
                         'gender',
@@ -406,7 +430,7 @@ class RegistrationRepository extends Controller
                 }
 
             } elseif ($request['identity_number'] != "") {
-                
+                //dd("elseif");
                 Log::info('For User Registration using identity number.');
                 $student = SecurityUsers::with(
                         'gender',
@@ -417,7 +441,7 @@ class RegistrationRepository extends Controller
                     )
                     ->where('identity_number', $request['identity_number'])
                     ->first();
-
+                //dd($student['institutionStudent']['studentStatus']['name']);
                 if($student){
                     $dob = $student['date_of_birth']->format('Y-m-d');
 
@@ -430,7 +454,7 @@ class RegistrationRepository extends Controller
                     }
 
                     if($dob == $request['date_of_birth']){
-                        if(isset($student['institutionStudent']['studentStatus']['name']) == 'Enrolled'){
+                        if(isset($student['institutionStudent']['studentStatus']['name']) === 'Enrolled'){
 
                             DB::commit();
                             return 4; //registration unsuccessful – student already enrolled
