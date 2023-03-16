@@ -92,7 +92,7 @@ class ProgrammesTable extends ControllerActionTable
 		]);
 
 		// Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Guardian','Programmes');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Programmes','Students - Academic');       
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',

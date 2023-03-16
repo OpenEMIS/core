@@ -265,7 +265,7 @@ class StudentUserTable extends ControllerActionTable
         }
 
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Guardian','Overview','General');       
+        $is_manual_exist = $this->getManualUrl('Institutions','Overview','Students - General');       
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',

@@ -331,6 +331,22 @@ class StaffController extends AppController
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', 'StaffAttendances');
         $this->set('ngController', 'StaffAttendancesCtrl as $ctrl');
+
+
+        // Start POCOR-5188
+        $manualTable = TableRegistry::get('Manuals');
+        $ManualContent =   $manualTable->find()->select(['url'])->where([
+                $manualTable->aliasField('function') => 'Attendances',
+                $manualTable->aliasField('module') => 'Institutions',
+                $manualTable->aliasField('category') => 'Staff - Career',
+                ])->first();
+        
+        if (!empty($ManualContent['url'])) {
+            $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
+        }else{
+            $this->set('is_manual_exist', []);
+        }
+        // End POCOR-5188
     }
 
     private function attachAngularModules()
@@ -756,5 +772,20 @@ class StaffController extends AppController
         $this->set('shiftDefaultId', $shiftDefaultId);
         $this->set('institutionDefaultId', key($selectedInstitutionOptions));
         $this->set('ngController', 'TimetableCtrl as $ctrl');
+
+        // Start POCOR-5188
+        $manualTable = TableRegistry::get('Manuals');
+        $ManualContent =   $manualTable->find()->select(['url'])->where([
+            $manualTable->aliasField('function') => 'Staff',
+            $manualTable->aliasField('module') => 'Institutions',
+            $manualTable->aliasField('category') => 'Timetable',
+                ])->first();
+        
+        if (!empty($ManualContent['url'])) {
+            $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
+        }else{
+            $this->set('is_manual_exist', []);
+        }
+        // End POCOR-5188
     }
 }

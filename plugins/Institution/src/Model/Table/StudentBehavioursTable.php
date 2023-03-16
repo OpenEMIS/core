@@ -150,6 +150,26 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->fields['student_id']['sort'] = ['field' => 'Students.first_name']; // POCOR-2547 adding sort
 
         $this->setFieldOrder(['openemis_no', 'student_id', 'date_of_behaviour', 'title', 'student_behaviour_category_id']);
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Institutions','Behaviour','Students - Academic');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
     }
     // setting up index page with required fields
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)

@@ -54,7 +54,7 @@ class TextbooksTable extends ControllerActionTable {
         $this->fields['textbook_id']['sort'] = ['field' => 'MainTextbooks.title'];
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Guardian','Textbooks');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Textbooks','Students - Academic');       
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',

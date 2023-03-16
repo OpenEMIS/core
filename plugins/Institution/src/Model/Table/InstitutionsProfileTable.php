@@ -213,7 +213,7 @@ class InstitutionsProfileTable extends ControllerActionTable
             ->toArray();	
 
             // Start POCOR-5188
-            $is_manual_exist = $this->getManualUrl('Institutions','Institution Profile Completness');       
+            $is_manual_exist = $this->getManualUrl('Institutions','Generate Institutions Profile','Profiles');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',

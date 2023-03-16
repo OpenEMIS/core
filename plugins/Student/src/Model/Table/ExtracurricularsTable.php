@@ -151,8 +151,9 @@ class ExtracurricularsTable extends ControllerActionTable {
 
         $extra['elements']['controls'] = ['name' => 'Student.Extracurriculars/controls', 'data' => [], 'options' => [], 'order' => 1];
 		// Start POCOR-5188
+
 		$toolbarButtons = $extra['toolbarButtons'];
-		$is_manual_exist = $this->getManualUrl('Guardian','Extracurriculars');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Extracurricular','Students - Academic');       
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',

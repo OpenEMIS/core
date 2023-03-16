@@ -43,6 +43,26 @@ class SalariesTable extends ControllerActionTable
                 ->where([$this->aliasField('staff_id') => $this->staffId])
                 ->select(['openemis_no' => 'Users.openemis_no']);
         }
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Institutions','Salary List','Staff - Finance');     
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -115,6 +135,26 @@ class SalariesTable extends ControllerActionTable
 
         $this->fields['gross_salary']['attr'] = array('data-compute-variable' => 'true', 'data-compute-operand' => 'plus', 'maxlength' => 9);
         $this->fields['net_salary']['attr'] = array('data-compute-target' => 'true', 'readonly' => true);
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Personal','Salaries','Staff - Finance');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)

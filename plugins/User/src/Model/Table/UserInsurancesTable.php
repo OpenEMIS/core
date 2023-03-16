@@ -83,7 +83,7 @@ class UserInsurancesTable extends ControllerActionTable
         /*POCOR-6307 Ends*/
 
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Institutions','Student Insurance');       
+        $is_manual_exist = $this->getManualUrl('Institutions','Student Insurance','Students - Health');       
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',

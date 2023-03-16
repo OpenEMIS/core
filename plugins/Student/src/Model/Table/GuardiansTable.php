@@ -122,7 +122,7 @@ class GuardiansTable extends ControllerActionTable
         $this->field('guardian_id');
 
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Guardian','Guardian','Students');       
+        $is_manual_exist = $this->getManualUrl('Institutions','Guardian Languages','Students - Guardians');       
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',

@@ -111,7 +111,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
     
     // Start POCOR-5188
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
-        $is_manual_exist = $this->getManualUrl('Institutions','Contacts - People');       
+        $is_manual_exist = $this->getManualUrl('Institutions','Contacts - People','General');       
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',

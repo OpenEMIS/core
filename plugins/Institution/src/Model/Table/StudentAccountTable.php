@@ -43,7 +43,7 @@ class StudentAccountTable extends AppTable {
 				// End PHPOE-1897
 			}
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Guardian','Overview','General');       
+        $is_manual_exist = $this->getManualUrl('Institutions','Accounts','Students');       
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
