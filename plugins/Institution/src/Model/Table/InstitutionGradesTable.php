@@ -76,6 +76,7 @@ class InstitutionGradesTable extends ControllerActionTable
         $this->field('end_date', ['default_date' => false]);
         $this->field('education_grade_id');
         $this->field('education_subject_id');
+        $this->field('academic_period_id');
 
         if ($this->action == 'add') {
             $this->field('start_date', ['value' => $startDate]);
@@ -153,7 +154,6 @@ public function viewEditBeforeQuery(Event $event, Query $query)
 ******************************************************************************************************************/
 public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
 {
-
     $errors = $entity->errors();
     $process = function($model, $entity) use ($data, $errors) {
             /**
@@ -215,8 +215,9 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                         $grade['end_date'] = $entity->end_date;
                     }
 
-                    $gradeEntities[] = $this->newEntity($grade);
 
+                    $gradeEntities[] = $this->newEntity($grade);
+                    
                     if ($gradeEntities[0]->errors()) {
                         $error = true;
                     }
@@ -283,6 +284,17 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                                         }
                                 }
                             }
+                            //POCOR-7298 start
+                            $lastInsertId = $entity->id;
+                            $academicPeriodId = $entity->academic_period_id;
+                            $insertAcademicPeriod =   $this->updateAll(
+                                                ['academic_period_id' => $academicPeriodId],    //field
+                                                [
+                                                 'id' => $lastInsertId, 
+                                                ] //condition
+                                                );
+                            //POCOR-7298 end
+
                         /*POCOR-6368 ends*/
                         if(!empty($this->controllerAction) && ($this->controllerAction == 'Programmes')) {
                                $educationGrades = TableRegistry::get('Education.EducationGrades');
@@ -1491,4 +1503,5 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
             return [];
         }
     }
+
 }
