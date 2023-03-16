@@ -51,12 +51,14 @@ class UserRepository extends Controller
                     'nationalities',
                     'institutionStudent',
                     'institutionStudent.institution',
+                    'institutionStudent.educationGrade',
+                    'institutionStudent.studentStatus',
                     'identities',
                     'nationality'
                 )
                     ->where('id', $userId)
                     ->get();
-                    
+            
             return $users;
             
         } catch (\Exception $e) {

@@ -89,6 +89,14 @@ class UserService extends Controller
                         "institution" => [
                             "key" => (!empty($item["institutionStudent"]["institution"]["id"]))?$item["institutionStudent"]["institution"]["id"]:'',
                             "value" => (!empty($item["institutionStudent"]["institution"]["name"]))?$item["institutionStudent"]["institution"]["name"]:'',
+                        ],
+                        "educationGrade" => [
+                            "key" => (!empty($item["institutionStudent"]["educationGrade"]["id"]))?$item["institutionStudent"]["educationGrade"]["id"]:'',
+                            "value" => (!empty($item["institutionStudent"]["educationGrade"]["name"]))?$item["institutionStudent"]["educationGrade"]["name"]:'',
+                        ],
+                        "studentStatus" => [
+                            "key" => (!empty($item["institutionStudent"]["studentStatus"]["id"]))?$item["institutionStudent"]["studentStatus"]["id"]:'',
+                            "value" => (!empty($item["institutionStudent"]["studentStatus"]["name"]))?$item["institutionStudent"]["studentStatus"]["name"]:'',
                         ]
                     ];
                     
