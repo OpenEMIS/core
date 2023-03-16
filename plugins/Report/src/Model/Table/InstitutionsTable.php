@@ -515,6 +515,14 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'education_grade_id';
                     $fieldsOrder[] = 'format';
                     break;
+                case 'Report.StudentAbsencesPerDays': //POCOR-7276
+                $fieldsOrder[] = 'academic_period_id';
+                $fieldsOrder[] = 'area_level_id';
+                $fieldsOrder[] = 'area_education_id';
+                $fieldsOrder[] = 'institution_id';
+                $fieldsOrder[] = 'attendance_type';
+                $fieldsOrder[] = 'format';
+                break;
                 default:
                     break;
             }
