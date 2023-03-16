@@ -18,6 +18,7 @@ class StudentAttendanceShell extends Shell
         parent::initialize();
         
         $this->loadModel('SystemProcesses');
+        $this->loadModel('Archive.TransferLogs');
     }
 
     public function main()
@@ -27,6 +28,7 @@ class StudentAttendanceShell extends Shell
             $exit = false;           
             
             $academicPeriodId = $this->args[0];
+            $pid = $this->args[1];
 
             $this->out('Initializing Transfer of data ('.Time::now().')');
 
@@ -34,14 +36,17 @@ class StudentAttendanceShell extends Shell
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
             
             // while (!$exit) {
-                $recordToProcess = $this->getRecords($academicPeriodId);
+                $recordToProcess = $this->getRecords($academicPeriodId, $pid);
                 $this->out($recordToProcess);
                 if ($recordToProcess) {
                     try {
-                        $this->out('Dispatching event to update Database Transfer');
-                        $this->out('End Update for Database Transfer Status ('. Time::now() .')');
+                        $this->out('Dispatching event to update Student Attendance Transfer');
+                        $this->out('End Update for Student Attendance Transfer Status ('. Time::now() .')');
                     } catch (\Exception $e) {
-                        $this->out('Error in Database Transfer');
+                        $this->TransferLogs->updateAll(['process_status' => 3], [
+                            'p_id' => $pid
+                        ]);
+                        $this->out('Error in Student Attendance Transfer');
                         $this->out($e->getMessage());
                         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::ERROR);
                     }
@@ -58,7 +63,7 @@ class StudentAttendanceShell extends Shell
     }
 
     
-    public function getRecords($academicPeriodId){
+    public function getRecords($academicPeriodId, $pid){
         $connection = ConnectionManager::get('default');
 
         $DataManagementConnections = TableRegistry::get('Archive.DataManagementConnections');
@@ -824,6 +829,10 @@ class StudentAttendanceShell extends Shell
         $connection->execute("INSERT INTO `student_attendance_mark_types_archived` SELECT * FROM `student_attendance_mark_types` WHERE academic_period_id = $academicPeriodId");
         $connection->execute("DELETE FROM student_attendance_mark_types WHERE academic_period_id = $academicPeriodId");
         //student_attendance_mark_types[END]
+
+        $this->TransferLogs->updateAll(['process_status' => 2], [
+            'p_id' => $pid
+        ]);
         return true;
     }
 

@@ -18,6 +18,7 @@ class StaffAttendancesShell extends Shell
         parent::initialize();
         
         $this->loadModel('SystemProcesses');
+        $this->loadModel('Archive.TransferLogs');
     }
 
     public function main()
@@ -27,6 +28,7 @@ class StaffAttendancesShell extends Shell
             $exit = false;           
             
             $academicPeriodId = $this->args[0];
+            $pid = $this->args[1];
 
             $this->out('Initializing Staff Attendances of data ('.Time::now().')');
 
@@ -34,13 +36,16 @@ class StaffAttendancesShell extends Shell
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
             
             // while (!$exit) {
-                $recordToProcess = $this->getRecords($academicPeriodId);
+                $recordToProcess = $this->getRecords($academicPeriodId, $pid);
                 $this->out($recordToProcess);
                 if ($recordToProcess) {
                     try {
                         $this->out('Dispatching event to update Staff Attendances Transfer');
                         $this->out('End Update for StaffAttendances Transfer Status ('. Time::now() .')');
                     } catch (\Exception $e) {
+                        $this->TransferLogs->updateAll(['process_status' => 3], [
+                            'p_id' => $pid
+                        ]);
                         $this->out('Error in Staff Attendances Transfer');
                         $this->out($e->getMessage());
                         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::ERROR);
@@ -58,7 +63,7 @@ class StaffAttendancesShell extends Shell
     }
 
     
-    public function getRecords($academicPeriodId){
+    public function getRecords($academicPeriodId, $pid){
         $connection = ConnectionManager::get('default');
 
         $DataManagementConnections = TableRegistry::get('Archive.DataManagementConnections');
@@ -428,6 +433,10 @@ class StaffAttendancesShell extends Shell
           $connection->execute("INSERT INTO `institution_staff_leave_archived` SELECT * FROM `institution_staff_leave` WHERE academic_period_id = $academicPeriodId");
           $connection->execute("DELETE FROM institution_staff_leave WHERE academic_period_id = $academicPeriodId");
         //institution_staff_leave[END]
+
+        $this->TransferLogs->updateAll(['process_status' => 2], [
+            'p_id' => $pid
+        ]);
         return true;
     }
 
