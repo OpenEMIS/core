@@ -198,7 +198,8 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
         $manualTable = TableRegistry::get('Manuals');
         $ManualContent =   $manualTable->find()->select(['url'])->where([
                 $manualTable->aliasField('function') => 'Infrastructure WASH Sanitation',
-                $manualTable->aliasField('module') => 'Institutions'
+                $manualTable->aliasField('module') => 'Institutions',
+                $manualTable->aliasField('category') => 'Details',
                 ])->first();
         
         if(!empty($ManualContent['url'])){

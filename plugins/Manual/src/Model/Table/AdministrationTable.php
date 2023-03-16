@@ -90,7 +90,6 @@ class AdministrationTable extends ControllerActionTable
         $this->field('visible', ['visible' => false]);   
         $this->field('controller', ['visible' => false]);   
         $this->field('module', ['visible' => false]);   
-        $this->field('category', ['visible' => false]);   
         $this->field('parent_id', ['visible' => false]);   
 
         $this->setFieldOrder(['category','function','url']);

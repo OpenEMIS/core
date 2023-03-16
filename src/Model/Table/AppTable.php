@@ -739,11 +739,6 @@ class AppTable extends Table
             }
         }
         $parsedURL = explode('/',$this->request->url);
-        // echo $this->request->params['plugin'];
-        // echo '---';
-        // echo $this->request->params['controller'];
-        // echo '<pre>';
-        // print_r( $parsedURL ); die;
         if(($this->request->params['plugin'] == 'Profile' && $this->request->params['controller'] == 'Profiles' && !empty($parsedURL) && $parsedURL[2] == 'Accounts')){
             $is_manual_exist = $this->getManualUrl('Personal','Accounts');
             if(!empty($is_manual_exist)){
@@ -780,6 +775,121 @@ class AppTable extends Table
         }
         if(($this->request->params['plugin'] == 'Profile' && $this->request->params['controller'] == 'Profiles' && !empty($parsedURL) && $parsedURL[2] == 'History')){
             $is_manual_exist = $this->getManualUrl('Personal','History');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+        // echo $this->request->params['plugin'];
+        // echo '---';
+        // echo $this->request->params['controller'];
+        // echo '<pre>';
+        // print_r( $parsedURL ); die;
+
+        if(($this->request->params['plugin'] == 'Configuration' && $this->request->params['controller'] == 'Configurations' && !empty($parsedURL) && $parsedURL[0] == 'Configurations')){
+            $is_manual_exist = $this->getManualUrl('Administration','Configurations','System Configurations');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+
+
+        if(($this->request->params['plugin'] == 'Security' && $this->request->params['controller'] == 'Securities' && !empty($parsedURL) && $parsedURL[1] == 'Users')){
+            $is_manual_exist = $this->getManualUrl('Administration','Users','Security');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+
+
+        if(($this->request->params['plugin'] == 'Workflow' && $this->request->params['controller'] == 'Workflows' && !empty($parsedURL) && $parsedURL[1] == 'Statuses')){
+            $is_manual_exist = $this->getManualUrl('Administration','Statuses','Workflows');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+
+        if(($this->request->params['plugin'] == 'Workflow' && $this->request->params['controller'] == 'Workflows' && !empty($parsedURL) && $parsedURL[1] == 'Workflows')){
+            $is_manual_exist = $this->getManualUrl('Administration','Workflows','Workflows');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+
+        if(($this->request->params['plugin'] == 'Workflow' && $this->request->params['controller'] == 'Workflows' && !empty($parsedURL) && $parsedURL[1] == 'Steps')){
+            $is_manual_exist = $this->getManualUrl('Administration','Steps','Workflows');
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+
+        if(($this->request->params['plugin'] == 'Workflow' && $this->request->params['controller'] == 'Workflows' && !empty($parsedURL) && $parsedURL[1] == 'Actions')){
+            $is_manual_exist = $this->getManualUrl('Administration','Actions','Workflows');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',

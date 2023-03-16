@@ -126,7 +126,7 @@ class InstitutionBusesTable extends ControllerActionTable
         $this->field('comment',['visible' => false]);
 
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Institutions','Buses');       
+        $is_manual_exist = $this->getManualUrl('Institutions','Buses','Transport');       
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',

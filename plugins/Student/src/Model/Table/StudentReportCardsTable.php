@@ -50,7 +50,7 @@ class StudentReportCardsTable extends ControllerActionTable
 
         // Start POCOR-5188
         $toolbarButtons = $extra['toolbarButtons'];
-        $is_manual_exist = $this->getManualUrl('Guardian','Report Cards (Excel)');       
+        $is_manual_exist = $this->getManualUrl('Institutions','Report Cards (PDF)','Students - Academic');       
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
@@ -64,7 +64,7 @@ class StudentReportCardsTable extends ControllerActionTable
             $toolbarButtons['help']['type'] = 'button';
             $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
             $toolbarButtons['help']['attr'] = $btnAttr;
-            $toolbarButtons['help']['attr']['title'] = __('Help');
+            $toolbarButtons['help']['attr']['title'] = __('Help: Report Cards (PDF)');
         }
         // End POCOR-5188
     }
