@@ -108,13 +108,13 @@ class InstitutionsTable extends AppTable
 
         /*POCOR-6333 starts*/
         $feature = $this->request->data[$this->alias()]['feature'];
-        if (in_array($feature, ['Report.Institutions'])) {
+        if (in_array($feature, ['Report.Institutions','Report.StudentAbsencesPerDays'])) {
             $validator = $validator
                     ->notEmpty('area_level_id')
                     ->notEmpty('area_education_id');
         }
         /*POCOR-6333 ends*/
-      if (in_array($feature, ['Report.WashReports'])) {
+      if (in_array($feature, ['Report.WashReports','Report.StudentAbsencesPerDaysTable'])) {
             $validator = $validator
                     ->notEmpty('institution_id');
         }
@@ -300,6 +300,9 @@ class InstitutionsTable extends AppTable
             $options['validate'] = 'infrastructureNeeds';
         } elseif ($data[$this->alias()]['feature'] == 'Report.StaffLeave') { //POCOR-5762
             $options['validate'] = 'StaffLeave';
+        }
+        elseif ($data[$this->alias()]['feature'] == 'Report.StudentAbsencesPerDays') { //POCOR-7276
+            $options['validate'] = 'StudentAbsencesPerDays';
         }
 
     }
@@ -516,12 +519,12 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'format';
                     break;
                 case 'Report.StudentAbsencesPerDays': //POCOR-7276
-                $fieldsOrder[] = 'academic_period_id';
-                $fieldsOrder[] = 'area_level_id';
-                $fieldsOrder[] = 'area_education_id';
-                $fieldsOrder[] = 'institution_id';
-                $fieldsOrder[] = 'attendance_type';
-                $fieldsOrder[] = 'format';
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'area_level_id';
+                    $fieldsOrder[] = 'area_education_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'attendance_type';
+                    $fieldsOrder[] = 'format';
                 break;
                 default:
                     break;
@@ -2175,5 +2178,12 @@ class InstitutionsTable extends AppTable
             }
             return $attr;
         }
+    }
+    public function validationStudentAbsencesPerDays(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('institution_id');
+        return $validator;
     }
 }
