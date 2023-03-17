@@ -109,24 +109,80 @@ class AttachmentsTable extends ControllerActionTable
             ]);
         }
 
-		// Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Attachments','Staff - General');       
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        // Start POCOR-5188
+		if($this->request->params['controller'] == 'Students'){
+			$is_manual_exist = $this->getManualUrl('Institutions','Attachments','Students - General');       
+			if(!empty($is_manual_exist)){
+				$btnAttr = [
+					'class' => 'btn btn-xs btn-default icon-big',
+					'data-toggle' => 'tooltip',
+					'data-placement' => 'bottom',
+					'escape' => false,
+					'target'=>'_blank'
+				];
+				$helpBtn['url'] = $is_manual_exist['url'];
+				$helpBtn['type'] = 'button';
+				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+				$helpBtn['attr'] = $btnAttr;
+				$helpBtn['attr']['title'] = __('Help');
+				$extra['toolbarButtons']['help'] = $helpBtn;
+			}
+		}else if($this->request->params['controller'] == 'Staff'){
+			$is_manual_exist = $this->getManualUrl('Institutions','Attachments','Staff - General');       
+			if(!empty($is_manual_exist)){
+				$btnAttr = [
+					'class' => 'btn btn-xs btn-default icon-big',
+					'data-toggle' => 'tooltip',
+					'data-placement' => 'bottom',
+					'escape' => false,
+					'target'=>'_blank'
+				];
+				$helpBtn['url'] = $is_manual_exist['url'];
+				$helpBtn['type'] = 'button';
+				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+				$helpBtn['attr'] = $btnAttr;
+				$helpBtn['attr']['title'] = __('Help');
+				$extra['toolbarButtons']['help'] = $helpBtn;
+			}
+		}elseif($this->request->params['controller'] == 'Directories'){ 
+			$is_manual_exist = $this->getManualUrl('Directory','Attachments','General');       
+			if(!empty($is_manual_exist)){
+				$btnAttr = [
+					'class' => 'btn btn-xs btn-default icon-big',
+					'data-toggle' => 'tooltip',
+					'data-placement' => 'bottom',
+					'escape' => false,
+					'target'=>'_blank'
+				];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
+				$helpBtn['url'] = $is_manual_exist['url'];
+				$helpBtn['type'] = 'button';
+				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+				$helpBtn['attr'] = $btnAttr;
+				$helpBtn['attr']['title'] = __('Help');
+				$extra['toolbarButtons']['help'] = $helpBtn;
+			}
+
+		}elseif($this->request->params['controller'] == 'Profiles'){ 
+            $is_manual_exist = $this->getManualUrl('Personal','Attachments','General');       
+            if(!empty($is_manual_exist)){ 
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+        
+                $helpBtn['url'] = $is_manual_exist['url'];
+                $helpBtn['type'] = 'button';
+                $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+                $helpBtn['attr'] = $btnAttr;
+                $helpBtn['attr']['title'] = __('Help');
+                $extra['toolbarButtons']['help'] = $helpBtn;
+            }
+
+        }
 		// End POCOR-5188
        
     }

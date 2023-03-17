@@ -151,7 +151,7 @@ class StudentBehavioursTable extends ControllerActionTable
 
         $this->setFieldOrder(['openemis_no', 'student_id', 'date_of_behaviour', 'title', 'student_behaviour_category_id']);
 
-        // Start POCOR-5188
+        // Start POCOR-5188 
 		$is_manual_exist = $this->getManualUrl('Institutions','Behaviour','Students - Academic');       
 		if(!empty($is_manual_exist)){
 			$btnAttr = [

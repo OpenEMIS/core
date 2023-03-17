@@ -338,6 +338,21 @@ class DirectoriesController extends AppController
             // End
 
             $this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
+
+            // Start POCOR-5188
+            $manualTable = TableRegistry::get('Manuals');
+            $ManualContent =   $manualTable->find()->select(['url'])->where([
+                    $manualTable->aliasField('function') => 'Assessments',
+                    $manualTable->aliasField('module') => 'Directory',
+                    $manualTable->aliasField('category') => 'Students - Academic',
+                    ])->first();
+            
+            if (!empty($ManualContent['url'])) {
+                $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
+            }else{
+                $this->set('is_manual_exist', []);
+            }
+            // End POCOR-5188
         }
     }
 
@@ -357,6 +372,21 @@ class DirectoriesController extends AppController
             // End
 
             $this->set('ngController', 'StudentExaminationResultsCtrl as StudentExaminationResultsController');
+
+            // Start POCOR-5188
+            $manualTable = TableRegistry::get('Manuals');
+            $ManualContent =   $manualTable->find()->select(['url'])->where([
+                    $manualTable->aliasField('function') => 'Examinations',
+                    $manualTable->aliasField('module') => 'Directory',
+                    $manualTable->aliasField('category') => 'Students - Academic',
+                    ])->first();
+            
+            if (!empty($ManualContent['url'])) {
+                $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
+            }else{
+                $this->set('is_manual_exist', []);
+            }
+            // End POCOR-5188
         }
     }
 
@@ -378,6 +408,21 @@ class DirectoriesController extends AppController
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', 'Attendances');
         $this->set('ngController', 'StaffAttendancesCtrl as $ctrl');
+
+        // Start POCOR-5188
+        $manualTable = TableRegistry::get('Manuals');
+        $ManualContent =   $manualTable->find()->select(['url'])->where([
+                $manualTable->aliasField('function') => 'Attendances',
+                $manualTable->aliasField('module') => 'Directory',
+                $manualTable->aliasField('category') => 'Staff - Career',
+                ])->first();
+        
+        if (!empty($ManualContent['url'])) {
+            $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
+        }else{
+            $this->set('is_manual_exist', []);
+        }
+        // End POCOR-5188
     }
 
     // End
