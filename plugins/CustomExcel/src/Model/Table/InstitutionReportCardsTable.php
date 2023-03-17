@@ -35,7 +35,7 @@ class InstitutionReportCardsTable extends AppTable
                 'InstitutionReportCards',
                 'Institutions',
                 'InstitutionShifts',
-                // 'InstitutionShiftType',
+                'InstitutionShiftType',
                 'Principal',
                 'DeputyPrincipal',
                 'InstitutionMaleStudents',
@@ -115,7 +115,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.afterRenderExcelTemplate'] = 'afterRenderExcelTemplate';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseProfiles'] = 'onExcelTemplateInitialiseProfiles';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
-            //    $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionShiftType'] = 'onExcelTemplateInitialiseInstitutionShiftType';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionShiftType'] = 'onExcelTemplateInitialiseInstitutionShiftType';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionContactPersons'] = 'onExcelTemplateInitialiseInstitutionContactPersons';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionShifts'] = 'onExcelTemplateInitialiseInstitutionShifts';
         $events['ExcelTemplates.Model.onExcelTemplateInitialisePrincipal'] = 'onExcelTemplateInitialisePrincipal';
@@ -567,98 +567,72 @@ class InstitutionReportCardsTable extends AppTable
             return $entity;
         }
     }
-    //  public function onExcelTemplateInitialiseInstitutionShiftType(Event $event, array $params, ArrayObject $extra){
-    //    if (array_key_exists('institution_id', $params) && array_key_exists('institution_id', $params)) {
-    //          $Institutions = TableRegistry::get('Institution.Institutions');
-    //          $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts ');
+    //POCOR -7272  Shift Type start
+    public function onExcelTemplateInitialiseInstitutionShiftType(Event $event, array $params, ArrayObject $extra){
 
-    //           $AcademicPeriod = TableRegistry::get('academic_periods');
-    //           $entity=$Institutions->find()
-    //                   ->select([
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
 
-    //                    'institution_id' => $Institution->aliasField(Institutions.id',
-    //                     'academic_period_id' => 'AcademicPeriod.id',
-    //                      'classification' => "CASE
-    //                             WHEN IFNULL(owner_shifts.owner_count,0) = 1 THEN 'Single Shift Owner'
-    //                             WHEN IFNULL(owner_shifts.owner_count,0) > 1 THEN 'Multiple Shift Owner'
-    //                             WHEN IFNULL(owner_shifts.owner_count,0) = 0 AND IFNULL(occupier_shifts.occupier_count,0) = 1 THEN 'Single Shift Occupier'
-    //                             WHEN IFNULL(owner_shifts.owner_count,0) = 0 AND IFNULL(occupier_shifts.occupier_count,0) > 1 THEN 'Multiple Shift Occupier'
-    //                             ELSE 'Others'
-    //                         END",
+           $academic_period=$params['academic_period_id'];
+           $institution_id=$params['institution_id'];
 
-
-    //             ])
-    //              ->innerJoinWith('AcademicPeriods')
-
-    //             ->leftJoin(
-    //            ['owner_shifts' => $InstitutionShifts->find()
-    //            ->select([
-    //             $InstitutionShifts->aliasField('institution_id'),
-    //             $InstitutionShifts->aliasField('academic_period_id'),
-
-    //             // 'institution_id',
-    //             // 'academic_period_id',
-    //             'owner_count' => $InstitutionShifts->find()->count('institution_id')
-    //         ])
-    //         ->group(['institution_id', 'academic_period_id'])
-    //     ],
-    //     ['institutions.id = owner_shifts.institution_id', 'academic_periods.id = owner_shifts.academic_period_id']
-    // )
-    // ->leftJoin(
-    //     ['occupier_shifts' => $InstitutionShifts->find()
-    //         ->select([
-    //             'institution_id' =>  $InstitutionShifts->aliasField('location_institution_id'),
-    //              $InstitutionShifts->aliasField('academic_period_id'),
-    //             // 'institution_id' => 'location_institution_id',
-    //             // 'academic_period_id',
-    //          'occupier_count' => $InstitutionShifts->find()->count('location_institution_id')
-    //         ])
-    //         ->group(['location_institution_id', 'academic_period_id'])
-    //     ],
-    //     ['institutions.id = occupier_shifts.institution_id', 'academic_periods.id = occupier_shifts.academic_period_id']
-    // )
-    //  ->where([
-    //      'institution_id' => $params['institution_id'],
-    //     'academic_periods.id' => $params['academic_period_id'],
-    //     'institutions.institution_status_id' => 1,
-
-    // ]);
-
-
-
-
-
-
-
-
-
-    //       $Institutions = TableRegistry::get('Institution.Institutions');
-
-    //    $entity = $Institutions
-    //           ->find()
-    //           ->select([                'institution_id' => 'institutions.id',                  'academic_period_id' => 'academic_periods.id',                  'classification' => 'CASE WHEN IFNULL(owner_shifts.owner_count,0) = 1 THEN \'Single Shift Owner\' WHEN IFNULL(owner_shifts.owner_count,0) > 1 THEN \'Multiple Shift Owner\' WHEN IFNULL(owner_shifts.owner_count,0) = 0 AND IFNULL(occupier_shifts.occupier_count,0) = 1 THEN \'Single Shift Occupier\' WHEN IFNULL(owner_shifts.owner_count,0) = 0 AND IFNULL(occupier_shifts.occupier_count,0) > 1 THEN \'Multiple Shift Occupier\' ELSE \'Others\' END'              ])
-    //           ->join([                  'table' => 'academic_periods',                  'type' => 'INNER',                  'conditions' => [                      'OR' => [                          [                              'institutions.date_closed IS NOT NULL',                              'institutions.date_opened <= academic_periods.start_date',                              'institutions.date_closed >= academic_periods.start_date'                          ],
-    //                       [                              'institutions.date_closed IS NOT NULL',                              'institutions.date_opened <= academic_periods.end_date',                              'institutions.date_closed >= academic_periods.end_date'                          ],
-    //                       [                              'institutions.date_closed IS NOT NULL',                              'institutions.date_opened >= academic_periods.start_date',                              'institutions.date_closed <= academic_periods.end_date'                          ],
-    //                       [                              'institutions.date_closed IS NULL',                              'institutions.date_opened <= academic_periods.end_date'                          ]
-    //                   ]
-    //               ]
-    //           ])
-    //           ->leftJoin(
-    //               ['owner_shifts' => '(SELECT institution_id, academic_period_id, COUNT(institution_id) AS owner_count FROM institution_shifts GROUP BY institution_id, academic_period_id)'],
-    //               [                      'institutions.id = owner_shifts.institution_id',                      'academic_periods.id = owner_shifts.academic_period_id'                  ]
-    //           )
-    //           ->leftJoin(
-    //               ['occupier_shifts' => '(SELECT location_institution_id AS institution_id, academic_period_id, COUNT(location_institution_id) AS occupier_count FROM institution_shifts GROUP BY location_institution_id, academic_period_id)'],
-    //               [                      'institutions.id = occupier_shifts.institution_id',                      'academic_periods.id = occupier_shifts.academic_period_id'                  ]
-    //           )
-    //           ->where([                  'academic_periods.id' => 32,   'academic_periods.id' => $params['institution_id'],               'institutions.institution_status_id' => 1              ]);
-
-//               echo ("<pre></pre>");
-//               print_r($entity->toArray());
-//               die();
-//     }
-// }
+            $connection = ConnectionManager::get('default');
+            $result = $connection->execute("SELECT `Institutions`.`id` AS `institution_id`, `academic_periods`.`id` AS `academic_periods`,
+    ( CASE WHEN IFNULL(owner_shifts.owner_count, 0) = 1 THEN 'Single Shift Owner' WHEN IFNULL(owner_shifts.owner_count, 0) > 1 THEN 'Multiple Shift Owner' WHEN IFNULL(owner_shifts.owner_count, 0) = 0 AND IFNULL(occupier_shifts.occupier_count, 0
+        ) = 1 THEN 'Single Shift Occupier' WHEN IFNULL(owner_shifts.owner_count, 0) = 0 AND IFNULL( occupier_shifts.occupier_count,
+            0) > 1 THEN 'Multiple Shift Occupier' ELSE 'Others' END) AS `occupier`
+            FROM
+                `institutions` `Institutions`
+            INNER JOIN `academic_periods` `academic_periods` ON
+                (
+                    (
+                        (
+                            Institutions.date_closed IS NOT NULL AND `Institutions`.`date_opened` <= academic_periods.start_date AND `Institutions`.`date_closed` >= academic_periods.start_date
+                        ) OR(
+                            Institutions.date_closed IS NOT NULL AND `Institutions`.`date_opened` <= academic_periods.end_date AND `Institutions`.`date_closed` >= academic_periods.end_date
+                        ) OR(
+                            Institutions.date_closed IS NOT NULL AND `Institutions`.`date_opened` >= academic_periods.start_date AND `Institutions`.`date_closed` <= academic_periods.end_date
+                        )
+                    ) OR(
+                        Institutions.date_closed IS NULL AND `Institutions`.`date_opened` <= academic_periods.end_date
+                    )
+                )
+            LEFT JOIN(
+                SELECT institution_id,
+                    academic_period_id,
+                    COUNT(institution_id) AS owner_count
+                FROM
+                    institution_shifts
+                GROUP BY
+                    institution_id,
+                    academic_period_id
+            ) `owner_shifts`
+            ON
+                (
+                    Institutions.id = owner_shifts.institution_id AND academic_periods.id = owner_shifts.academic_period_id
+                )
+            LEFT JOIN(
+                SELECT location_institution_id AS institution_id,
+                    academic_period_id,
+                    COUNT(location_institution_id) AS occupier_count
+                FROM
+                    institution_shifts
+                GROUP BY
+                    location_institution_id,
+                    academic_period_id
+            ) `occupier_shifts`
+            ON
+                (
+                    Institutions.id = occupier_shifts.institution_id AND academic_periods.id = occupier_shifts.academic_period_id
+                )
+            WHERE
+                (
+                    `academic_periods`.`id` =". $academic_period . " AND `Institutions`.`institution_status_id` = 1 AND `Institutions`.`id` =". $institution_id."
+                )
+                ")->fetch('assoc');
+            return $result;
+        }
+    }
+    //POCOR-7272 Shift Type ends
     public function onExcelTemplateInitialiseInfrastructureWashSanitationStaffs(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
@@ -730,6 +704,7 @@ class InstitutionReportCardsTable extends AppTable
             } else{
                 $entity = '0 ';
             }
+
             return $entity;
         }
     }
@@ -2063,7 +2038,7 @@ class InstitutionReportCardsTable extends AppTable
                     'female_student_special_need' => 0,
                     'total_student_special_need' => 0,
                     'syrian_students' => 0,
-                    'jordan_students'=>0
+                    'jordanian_students'=>0
                 ];
 
                 return $entity;
@@ -2247,8 +2222,11 @@ class InstitutionReportCardsTable extends AppTable
                 ->count()
                 ;
 
-                //POCOR-7272
-                  $jordanStudents = $InstitutionStudents
+
+                // POCOR-7272  Jordian Student start
+
+                  //ist way
+                  $jordanian_students = $InstitutionStudents
                 ->find()
                 ->innerJoin(
                 ['Users' => 'security_users'],
@@ -2263,20 +2241,49 @@ class InstitutionReportCardsTable extends AppTable
                 ]
                 )
                 ->group([
-                    'Users.id'
+                    'Users.id',
                 ])
                 ->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
-                ->where(['Nationalities.national_code' => 'jordan'])
+                ->where(['Nationalities.international_code' => 'Jordan'])
                 ->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
                 ->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
                 ->count()
-                ;
 
+                //But in this way we need to modify by including
+                  // ->where(['User_Nationalities.preferred'=> 1]) and doing inner join
+                 ;
 
+                 //2nd way
+                $education_grade_id=$value['id'];
+                $connection = ConnectionManager::get('default');
+                $query="SELECT count(student_nationalities.security_user_id) as  jordanian_students
+                                           FROM `institution_students`
+                                           LEFT JOIN(
+                                                     SELECT  user_nationalities.security_user_id,
+    	                                                     nationalities.name  as nationality_name
+                                                             FROM user_nationalities
+                                                     INNER JOIN nationalities
+                                                             ON  nationalities.id = user_nationalities.nationality_id
+                                                     WHERE user_nationalities.preferred = 1
+                                                             AND nationalities.international_code = 'Jordan'
+                                                     GROUP BY  user_nationalities.security_user_id
+                                           ) AS student_nationalities
+                                           ON student_nationalities.security_user_id = institution_students.student_id
+                                           INNER JOIN academic_periods
+                                           ON academic_periods.id = institution_students.academic_period_id
+                                           WHERE academic_periods.id = 32
+                                           And  institution_students.education_grade_id= $education_grade_id
+                                           And
+                                           IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date),
 
+                                           institution_students.student_status_id = 1, institution_students.student_status_id IN (1, 7, 6, 8))
+                                            GROUP BY institution_students.education_grade_id";
 
+                $result=$connection->execute($query)->fetch('assoc');
 
+                $jordanian_students=$result['jordanian_students'];
 
+                 // POCOR-7272  Jordian Student start
 
                 //POCOR-6328 starts
                 /*Subject Staff Temporary*/
@@ -2423,15 +2430,14 @@ class InstitutionReportCardsTable extends AppTable
                     'total_student_special_need' => $maleSpecialNeedData + $femaleSpecialNeedData,
                     'staff_type_temporary' => $temporary_staff,//POCOR-6328
                     'syrian_students' => $syrianStudents,
-                    'jordan_students'=>$jordanStudents
+                    'jordanian_students'=>$jordanian_students
                 ];
             }
-            // echo "<pre></pre>";
-            // print_r($entity);
-            // exit;
+
             return $entity;
         }
     }
+    
     //POCOR-6426 starts
     public function onExcelTemplateInitialiseInstitutionEducationGrade(Event $event, array $params, ArrayObject $extra)
     {
