@@ -2038,7 +2038,10 @@ class InstitutionReportCardsTable extends AppTable
                     'female_student_special_need' => 0,
                     'total_student_special_need' => 0,
                     'syrian_students' => 0,
-                    'jordanian_students'=>0
+                    'jordanian_students'=>0,//POCOR-7272
+                    'male_student_promotion'=>0,//POCOR-7272
+                    'female_student_promotion'=>0,//POCOR-7272
+                    'total_student_promotion'=>0//POCOR-7272
                 ];
 
                 return $entity;
@@ -2221,70 +2224,6 @@ class InstitutionReportCardsTable extends AppTable
                 ->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
                 ->count()
                 ;
-
-
-                // POCOR-7272  Jordian Student start
-
-                  //ist way
-                  $jordanian_students = $InstitutionStudents
-                ->find()
-                ->innerJoin(
-                ['Users' => 'security_users'],
-                [
-                    'Users.id = '. $InstitutionStudents->aliasField('student_id')
-                ]
-                )
-                ->innerJoin(
-                ['Nationalities' => 'nationalities'],
-                [
-                    'Nationalities.id = Users.nationality_id'
-                ]
-                )
-                ->group([
-                    'Users.id',
-                ])
-                ->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
-                ->where(['Nationalities.international_code' => 'Jordan'])
-                ->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
-                ->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
-                ->count()
-
-                //But in this way we need to modify by including
-                  // ->where(['User_Nationalities.preferred'=> 1]) and doing inner join
-                 ;
-
-                 //2nd way
-                $education_grade_id=$value['id'];
-                $connection = ConnectionManager::get('default');
-                $query="SELECT count(student_nationalities.security_user_id) as  jordanian_students
-                                           FROM `institution_students`
-                                           LEFT JOIN(
-                                                     SELECT  user_nationalities.security_user_id,
-    	                                                     nationalities.name  as nationality_name
-                                                             FROM user_nationalities
-                                                     INNER JOIN nationalities
-                                                             ON  nationalities.id = user_nationalities.nationality_id
-                                                     WHERE user_nationalities.preferred = 1
-                                                             AND nationalities.international_code = 'Jordan'
-                                                     GROUP BY  user_nationalities.security_user_id
-                                           ) AS student_nationalities
-                                           ON student_nationalities.security_user_id = institution_students.student_id
-                                           INNER JOIN academic_periods
-                                           ON academic_periods.id = institution_students.academic_period_id
-                                           WHERE academic_periods.id = 32
-                                           And  institution_students.education_grade_id= $education_grade_id
-                                           And
-                                           IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date),
-
-                                           institution_students.student_status_id = 1, institution_students.student_status_id IN (1, 7, 6, 8))
-                                            GROUP BY institution_students.education_grade_id";
-
-                $result=$connection->execute($query)->fetch('assoc');
-
-                $jordanian_students=$result['jordanian_students'];
-
-                 // POCOR-7272  Jordian Student start
-
                 //POCOR-6328 starts
                 /*Subject Staff Temporary*/
                 $InstitutionSubjectStaff = TableRegistry::get('institution_subject_staff');
@@ -2407,6 +2346,52 @@ class InstitutionReportCardsTable extends AppTable
                     ->count()
                 ;
                 $temporary_staff = $secondaryStaffData + $homeroomStaffData;
+
+                //POCOR-7272 Jordan Student Start
+                $connection = ConnectionManager::get('default');
+                $query="SELECT count(student_nationalities.security_user_id) as jordanian_students
+                           FROM `institution_students`
+                           LEFT JOIN(
+                                     SELECT  user_nationalities.security_user_id,
+                                             nationalities.name  as nationality_name
+                                             FROM user_nationalities
+                                     INNER JOIN nationalities
+                                             ON  nationalities.id = user_nationalities.nationality_id
+                                     WHERE user_nationalities.preferred = 1
+                                             AND nationalities.international_code = 'Jordan'
+                                     GROUP BY  user_nationalities.security_user_id
+                           ) AS student_nationalities
+                           ON student_nationalities.security_user_id = institution_students.student_id
+                           INNER JOIN academic_periods
+                           ON academic_periods.id = institution_students.academic_period_id
+                           WHERE academic_periods.id = ".$params['academic_period_id']." AND institution_students.institution_id = ".$params['institution_id']." And  institution_students.education_grade_id= ".$value['id']." And
+                           IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_students.student_status_id = 1, institution_students.student_status_id IN (1, 7, 6, 8))";
+                $result=$connection->execute($query)->fetch('assoc');
+                $jordanian_students= $result['jordanian_students'];
+                // POCOR-7272  Jordian Student End
+                //POCOR-7272 Male/Female/Total Student Promotion Rate Start
+                $maleStudentPromoted = $InstitutionStudents->find()
+                    ->contain('Users')
+                    ->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
+                    ->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+                    ->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
+                    ->where([$InstitutionStudents->aliasField('student_status_id') => 7])
+                    ->where([$InstitutionStudents->Users->aliasField('gender_id') => 1])
+                    ->hydrate(false)
+                    ->count()
+                ;
+                $femaleStudentPromoted = $InstitutionStudents->find()
+                    ->contain('Users')
+                    ->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
+                    ->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
+                    ->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
+                    ->where([$InstitutionStudents->aliasField('student_status_id') => 7])
+                    ->where([$InstitutionStudents->Users->aliasField('gender_id') => 2])
+                    ->hydrate(false)
+                    ->count()
+                ;
+                $totalStudentPromoted = $maleStudentPromoted + $femaleStudentPromoted;
+                //POCOR-7272 Male/Female/Total Student Promotion Rate End
                 //POCOR-6328 ends
                 $entity[] = [
                     'education_grade_name' => (!empty($value['name']) ? $value['name'] : ''),
@@ -2430,7 +2415,10 @@ class InstitutionReportCardsTable extends AppTable
                     'total_student_special_need' => $maleSpecialNeedData + $femaleSpecialNeedData,
                     'staff_type_temporary' => $temporary_staff,//POCOR-6328
                     'syrian_students' => $syrianStudents,
-                    'jordanian_students'=>$jordanian_students
+                    'jordanian_students'=>$jordanian_students,//POCOR-7272
+                    'male_student_promotion'=>$maleStudentPromoted,//POCOR-7272
+                    'female_student_promotion'=>$femaleStudentPromoted,//POCOR-7272
+                    'total_student_promotion'=>$totalStudentPromoted//POCOR-7272
                 ];
             }
 
