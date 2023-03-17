@@ -49,24 +49,44 @@ class StudentReportCardsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'institution_id', 'report_card_id', 'education_grade_id', 'institution_class_id']);
 
         // Start POCOR-5188
-        $toolbarButtons = $extra['toolbarButtons'];
-        $is_manual_exist = $this->getManualUrl('Institutions','Report Cards (PDF)','Students - Academic');       
-        if(!empty($is_manual_exist)){
-            $btnAttr = [
-                'class' => 'btn btn-xs btn-default icon-big',
-                'data-toggle' => 'tooltip',
-                'data-placement' => 'bottom',
-                'escape' => false,
-                'target'=>'_blank'
-            ];
+		if($this->request->params['controller'] == 'Students'){
+			$is_manual_exist = $this->getManualUrl('Institutions','Report Cards (PDF)','Students - Academic');       
+			if(!empty($is_manual_exist)){
+				$btnAttr = [
+					'class' => 'btn btn-xs btn-default icon-big',
+					'data-toggle' => 'tooltip',
+					'data-placement' => 'bottom',
+					'escape' => false,
+					'target'=>'_blank'
+				];
+				$helpBtn['url'] = $is_manual_exist['url'];
+				$helpBtn['type'] = 'button';
+				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+				$helpBtn['attr'] = $btnAttr;
+				$helpBtn['attr']['title'] = __('Help');
+				$extra['toolbarButtons']['help'] = $helpBtn;
+			}
+		}elseif($this->request->params['controller'] == 'Directories'){ 
+			$is_manual_exist = $this->getManualUrl('Directory','Report Cards (PDF)','Students - Academic');       
+			if(!empty($is_manual_exist)){
+				$btnAttr = [
+					'class' => 'btn btn-xs btn-default icon-big',
+					'data-toggle' => 'tooltip',
+					'data-placement' => 'bottom',
+					'escape' => false,
+					'target'=>'_blank'
+				];
 
-            $toolbarButtons['help']['url'] = $is_manual_exist['url'];
-            $toolbarButtons['help']['type'] = 'button';
-            $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
-            $toolbarButtons['help']['attr'] = $btnAttr;
-            $toolbarButtons['help']['attr']['title'] = __('Help: Report Cards (PDF)');
-        }
-        // End POCOR-5188
+				$helpBtn['url'] = $is_manual_exist['url'];
+				$helpBtn['type'] = 'button';
+				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+				$helpBtn['attr'] = $btnAttr;
+				$helpBtn['attr']['title'] = __('Help');
+				$extra['toolbarButtons']['help'] = $helpBtn;
+			}
+
+		}
+		// End POCOR-5188
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
