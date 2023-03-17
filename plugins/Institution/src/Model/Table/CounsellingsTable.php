@@ -94,6 +94,7 @@ class CounsellingsTable extends AppTable
         return $counselorOptions;
     }
 
+    //POCOR-7054 change dropdown query
     public function getRequesterOptions($institutionId)
     {        
         $InstitutionStaff = TableRegistry::get('institution_staff');
