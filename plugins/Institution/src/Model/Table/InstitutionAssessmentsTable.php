@@ -37,17 +37,36 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
     }
 
     public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {
-        ini_set('max_execution_time', '1200'); //POCOR-7232
+        set_time_limit(0);//POCOR-7268 starts
+        ini_set('memory_limit', -1);
+        ini_set('max_execution_time', 3000); //POCOR-7268 ends
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $institutionCode = $this->Institutions->get($institutionId)->code;
         $settings['file'] = str_replace($this->alias(), str_replace(' ', '_', $institutionCode).'_Results', $settings['file']);
     }
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
-        ini_set('max_execution_time', '1200'); //POCOR-7232
+        set_time_limit(0);//POCOR-7268 starts
+        ini_set('memory_limit', -1);
+        ini_set('max_execution_time', 3000); //POCOR-7268 ends
         $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-        $query = $InstitutionClassStudentsTable->find();
-
+        //POCOR-7268 starts
+        //$query = $InstitutionClassStudentsTable->find();
+        $limit = 10;
+        $loop_no = 0;
+        do {
+            $session = $this->request->session();
+            $academic_period_id = $session->read('academic_period_id');
+            $query = $InstitutionClassStudentsTable->find('all', array(
+                'conditions' => array($InstitutionClassStudentsTable->aliasField('academic_period_id') => $academic_period_id),
+                'limit'  => $limit,
+                'offset' => $limit * $loop_no,
+                //'order'  => 'id asc',
+                'recursive' => -1)
+            );
+            $loop_no++;
+        } while (count($query) == $limit);//POCOR-7268 ends
+        
         // For filtering all classes and my classes
         $AccessControl = $this->AccessControl;
         $userId = $this->Session->read('Auth.User.id');
