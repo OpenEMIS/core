@@ -50,7 +50,7 @@ class CommentsTable extends ControllerActionTable
     // Start POCOR-5188
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-		$is_manual_exist = $this->getManualUrl('Personal','Comments');       
+		$is_manual_exist = $this->getManualUrl('Personal','Comments','General');       
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',

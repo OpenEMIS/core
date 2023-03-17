@@ -796,6 +796,24 @@ class AppTable extends Table
         // echo '<pre>';
         // print_r( $parsedURL ); die;
 
+        if(($this->request->params['plugin'] == 'Directory' && $this->request->params['controller'] == 'Directories' && !empty($parsedURL) && $parsedURL[2] == 'Accounts')){
+            $is_manual_exist = $this->getManualUrl('Directory','Accounts','General');
+            if(!empty($is_manual_exist)){ 
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+                $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+                $toolbarButtons['help']['type'] = 'button';
+                $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+                $toolbarButtons['help']['attr'] = $btnAttr;
+                $toolbarButtons['help']['attr']['title'] = __('Help');
+            }
+        }
+
         if(($this->request->params['plugin'] == 'Configuration' && $this->request->params['controller'] == 'Configurations' && !empty($parsedURL) && $parsedURL[0] == 'Configurations')){
             $is_manual_exist = $this->getManualUrl('Administration','Configurations','System Configurations');
             if(!empty($is_manual_exist)){

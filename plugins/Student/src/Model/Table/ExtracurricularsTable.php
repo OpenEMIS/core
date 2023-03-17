@@ -150,24 +150,44 @@ class ExtracurricularsTable extends ControllerActionTable {
         //end
 
         $extra['elements']['controls'] = ['name' => 'Student.Extracurriculars/controls', 'data' => [], 'options' => [], 'order' => 1];
+
 		// Start POCOR-5188
+		if($this->request->params['controller'] == 'Students'){
+			$is_manual_exist = $this->getManualUrl('Institutions','Extracurricular','Students - Academic');       
+			if(!empty($is_manual_exist)){
+				$btnAttr = [
+					'class' => 'btn btn-xs btn-default icon-big',
+					'data-toggle' => 'tooltip',
+					'data-placement' => 'bottom',
+					'escape' => false,
+					'target'=>'_blank'
+				];
+				$helpBtn['url'] = $is_manual_exist['url'];
+				$helpBtn['type'] = 'button';
+				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+				$helpBtn['attr'] = $btnAttr;
+				$helpBtn['attr']['title'] = __('Help');
+				$extra['toolbarButtons']['help'] = $helpBtn;
+			}
+		}elseif($this->request->params['controller'] == 'Directories'){ 
+			$is_manual_exist = $this->getManualUrl('Directory','Extracurriculars','Students - Academic');       
+			if(!empty($is_manual_exist)){
+				$btnAttr = [
+					'class' => 'btn btn-xs btn-default icon-big',
+					'data-toggle' => 'tooltip',
+					'data-placement' => 'bottom',
+					'escape' => false,
+					'target'=>'_blank'
+				];
 
-		$toolbarButtons = $extra['toolbarButtons'];
-		$is_manual_exist = $this->getManualUrl('Institutions','Extracurricular','Students - Academic');       
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+				$helpBtn['url'] = $is_manual_exist['url'];
+				$helpBtn['type'] = 'button';
+				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+				$helpBtn['attr'] = $btnAttr;
+				$helpBtn['attr']['title'] = __('Help');
+				$extra['toolbarButtons']['help'] = $helpBtn;
+			}
 
-			$toolbarButtons['help']['url'] = $is_manual_exist['url'];
-			$toolbarButtons['help']['type'] = 'button';
-			$toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
-			$toolbarButtons['help']['attr'] = $btnAttr;
-			$toolbarButtons['help']['attr']['title'] = __('Help');
 		}
 		// End POCOR-5188
     }
