@@ -7296,7 +7296,7 @@ class InstitutionsController extends AppController
         $this->autoRender = false;
         $requestData = $this->request->input('json_decode', true);
         $requestData = $requestData['params'];
-        //$requestData['identity_number'] = 9791048083;
+        $requestData['identity_number'] = 9791048083;
         if(!empty($requestData)){
             $national_no = (array_key_exists('identity_number', $requestData))? $requestData['identity_number'] : null;
             if(!empty($national_no)){
@@ -7383,6 +7383,16 @@ class InstitutionsController extends AppController
                                     }else if($ex_val['attribute_field'] == 'postal_mapping'){
                                         $fieldKey = 'postal_code';
                                     }else if($ex_val['attribute_field'] == 'nationality_mapping'){
+                                        $nationalitiesTbl = TableRegistry::get('nationalities');
+                                        $nationalities = $nationalitiesTbl->find()
+                                            ->select(['id','name'])
+                                            ->where([
+                                                $nationalitiesTbl->aliasField('name') => $dataVal[$value],
+                                                $nationalitiesTbl->aliasField('visible') => 1,
+                                            ])
+                                            ->first();
+                                        $result_Array['nationality_id'] = (!empty($nationalities)) ? $nationalities->id : '';
+                                        $dataVal[$value] = (!empty($nationalities)) ? $nationalities->name : $dataVal[$value];
                                         $fieldKey = 'nationality_name';
                                     }
                                     $result_Array[$fieldKey] = $dataVal[$value];
