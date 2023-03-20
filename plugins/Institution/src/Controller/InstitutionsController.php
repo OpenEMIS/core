@@ -7309,7 +7309,7 @@ class InstitutionsController extends AppController
                             ])->hydrate(false)->toArray();
                 $config_Array = [];
                 foreach ($externalDataSourceAttributesData as $ex_key => $ex_val) {
-                    $config_Array[$ex_val['attribute_field']] = $ex_val['value'];
+                    $config_Array[$ex_val['attribute_field']] = trim($ex_val['value']);
                 }
                 
                 if(!empty($config_Array['username']) && !empty($config_Array['password']) && !empty($config_Array['url'])){
