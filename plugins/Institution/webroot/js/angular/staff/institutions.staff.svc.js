@@ -1096,7 +1096,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
     function getCspdData(params){
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institutions/getCspdData';
-        $http.get(url, { params: params })
+        $http.post(url, { params: params })
             .then(function (response)
             {
                 deferred.resolve(response);
