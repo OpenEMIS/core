@@ -111,10 +111,8 @@ class POCOR6863 extends AbstractMigration
 
     public function down(){
         $this->execute('DROP TABLE IF EXISTS `institution_units`');
-        $this->execute('RENAME TABLE `zz_6863_institution_units` TO `institution_units`');
 
         $this->execute('DROP TABLE IF EXISTS `institution_courses`');
-        $this->execute('RENAME TABLE `zz_6863_institution_courses` TO `institution_courses`');
 
         $this->execute('DROP TABLE IF EXISTS `institution_classes`');
         $this->execute('RENAME TABLE `zz_6863_institution_classes` TO `institution_classes`');
