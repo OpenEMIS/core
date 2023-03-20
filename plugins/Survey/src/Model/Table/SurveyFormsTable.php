@@ -49,7 +49,6 @@ class SurveyFormsTable extends CustomFormsTable
         parent::initialize($config);
         $this->hasMany('SurveyStatuses', ['className' => 'Survey.SurveyStatuses', 'dependent' => true, 'cascadeCallbacks' => true]);
         // The hasMany association for InstitutionSurveys and StudentSurveys is done in onBeforeDelete() and is added based on module to avoid conflict.
-        
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Rules' => ['index'],
             'OpenEMIS_Survey' => ['index']
@@ -91,8 +90,6 @@ class SurveyFormsTable extends CustomFormsTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        //echo "helloooooooooooooooooooooooo"; die;
-        //echo "<pre>";print_r($entity);die;
         if (!$entity->isNew()) {
             // allow additional custom filters to be added but not removed
             if ($entity->has('custom_filter_selection') && $entity->custom_filter_selection == self::CUSTOM_FILTER) {
@@ -206,12 +203,6 @@ class SurveyFormsTable extends CustomFormsTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if ($this->action == 'add') {
-            if($this->request->is('post')){
-              //  echo "<pre>";print_r($entity);die;
-            }
-            
-        }
         $this->setupFields($entity);
     }
 
