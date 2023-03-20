@@ -1754,6 +1754,9 @@ class InstitutionsController extends AppController
         }
         if($this->request->params['action'] == 'getCspdData'){ //POCOR-6930 starts
            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getCspdData';
+        }
+        if($this->request->params['action'] == 'getConfigurationForExternalSourceData'){ //POCOR-6930 starts
+           $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getConfigurationForExternalSourceData';
         }//POCOR-6930 ends
         //for api purpose POCOR-5672 ends
         return $events;
@@ -7293,9 +7296,9 @@ class InstitutionsController extends AppController
         $this->autoRender = false;
         $requestData = $this->request->input('json_decode', true);
         $requestData = $requestData['params'];
-        //$requestData['user_national_no'] = 9791048083;
+        //$requestData['identity_number'] = 9791048083;
         if(!empty($requestData)){
-            $national_no = (array_key_exists('user_national_no', $requestData))? $requestData['user_national_no'] : null;
+            $national_no = (array_key_exists('identity_number', $requestData))? $requestData['identity_number'] : null;
             if(!empty($national_no)){
                 $externalDataSourceAttributesTbl = TableRegistry::get('external_data_source_attributes');
                 $externalDataSourceAttributesData = $externalDataSourceAttributesTbl
@@ -7421,5 +7424,30 @@ class InstitutionsController extends AppController
                echo json_encode(['status_code' => 400 ,'message' => __('Invalid data.')]); 
             }
         }
+    }
+
+    /**
+     * Get Configuration For External Source Data
+     * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+     * @return array
+     * @ticket POCOR-6930
+    **/ 
+    public function getConfigurationForExternalSourceData()
+    {
+        $this->autoRender = false;
+        //get Configuration For External Source Data from config_items table
+        $configItemsTbl = TableRegistry::get('config_items');
+        $configItemsResult = $configItemsTbl
+            ->find()
+            ->where(['visible' => 1, 'code'=> 'external_data_source_type', 'type'=> 'External Data Source'])
+            ->hydrate(false)
+            ->toArray();
+
+        if (!empty($configItemsResult)) {
+            foreach ($configItemsResult as $k => $val) {
+                $result_array[] = array("id" => $val['id'], "name" => $val['name'], "code" => $val['code'], "type" => $val['type'], "value" => $val['value']);
+            }
+        }
+        echo json_encode($result_array);die;
     }
 }
