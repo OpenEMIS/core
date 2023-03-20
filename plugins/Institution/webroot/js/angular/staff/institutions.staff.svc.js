@@ -1088,8 +1088,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
 
     /**
      * @name  Url: /Institutions/getCspdData
-     * @description  Request Params: user_national_no
-     * @param {*} param  {user_national_no}
+     * @description  Request Params: identity_number
+     * @param {*} param  {identity_number}
      * @returns { "status_code":200,"message":"Get user details successfully.","data":{"third_name":"\u062d\u0633\u0646","nationality_name":"\u0627\u0631\u062f\u0646\u064a","gender_id":1,"gender_name":"Male","date_of_birth":"1979-02-15","address":"\u0627\u0644\u0630\u0631\u0627\u0639\/\u0642\u0635\u0628\u0629 \u0639\u0645\u0627\u0646","identity_type_id":160,"identity_type_name":"Birth Certificate","middle_name":"\u0635\u0627\u0644\u062d","postal_code":"0011101100601","first_name":"\u062d\u0633\u0646","identity_number":"9791048083","last_name":"\u062e\u0644\u064a\u0644","mother_national_no":"9552016857","father_national_no":"9551018573"}}
      */
 

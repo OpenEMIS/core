@@ -2395,11 +2395,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     async function fetchCspdData() {
-        const { nationality_id } = StaffController.selectedStaffData;
+        const { identity_number } = StaffController.selectedStaffData;
         const cspdData = await InstitutionsStaffSvc.getCspdData(
-            { user_national_no:'9552016857',}
+            { identity_number:9791048083}
         );
-        debugger;
+        
         console.log(cspdData)
     }
 }
