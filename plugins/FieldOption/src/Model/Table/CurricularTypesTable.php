@@ -36,4 +36,36 @@ class CurricularTypesTable extends ControllerActionTable
             $event->stopPropagation();
         }
     }
+
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('category');
+        $this->setFieldOrder([
+            'name','default','category', 'international_code','national_code']);
+    }
+
+    public function onUpdateFieldCategory(Event $event, array $attr, $action, Request $request)
+    {
+        $categories = array(1 =>'Curricular', 0=>'Extracurricular');
+        $entity = $attr['entity'];
+        if ($action == 'add') {
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = false;
+            $attr['options'] = ['id' => '-- ' . __('Select Category') . ' --']+$categories;
+            $attr['onChangeReload'] = 'changeStatus';
+        }
+        elseif ($action == 'edit') {
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = false;
+            $attr['options'] = ['id' => '-- ' . __('Select Category') . ' --']+$categories;
+            $attr['onChangeReload'] = 'changeStatus';
+        }
+        return $attr;
+    }
+    public function onGetCategory(Event $event, Entity $entity)
+    {
+        return $entity->category ? __('Curricular') : __('Extracurricular');
+    }
 }
