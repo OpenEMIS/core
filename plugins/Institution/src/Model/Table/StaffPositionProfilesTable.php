@@ -514,7 +514,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, $entity, $requestData, ArrayObject $extra)
     {
-
+        echo "<pre>";
+        print_r($entity);
+        exit;
         if (!$entity->errors()) {
             $StaffTable = TableRegistry::get('Institution.Staff');
             $url = $this->url('view');
@@ -535,6 +537,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if (in_array($nextWorkflowStepId, $approved)) {
             $data = $this->get($id)->toArray();
             $newEntity = $this->patchStaffProfile($data);
+
             if (is_null($newEntity)) {
                 $message = ['StaffPositionProfiles.notExists'];
                 $this->Session->write('Institution.StaffPositionProfiles.errors', $message);
@@ -573,7 +576,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function onApprove(Event $event, $id, Entity $workflowTransitionEntity)
     {
+
+
         $data = $this->get($id)->toArray();
+
         $newEntity = $this->patchStaffProfile($data);
 
         // reject all pending transfers
@@ -687,6 +693,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function onGetFTE(Event $event, Entity $entity)
     {
+
         if ($this->action == 'view') {
             $oldValue = ($entity->institution_staff->FTE * 100). '%';
             $newValue = '100%';
@@ -811,7 +818,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $this->fields['start_date']['type'] = 'date';
         $this->fields['institution_position_id']['order'] = 6;
         $this->fields['FTE']['visible'] = false;
-
+        // $this->fields['homeroom_teacher']['visible'] = false;
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
         $selectedStatus = $this->request->query('staff_status_id');
 //        print_r($selectedStatus);die();
@@ -831,6 +838,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
+
         if ($requestData[$this->alias()]['staff_change_type_id'] == $this->staffChangeTypesList['CHANGE_IN_FTE']) {
             $patchOptions['validate'] = 'IncludeEffectiveDate';
 
@@ -839,7 +847,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $staffRecordEntity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
             $entity->FTE = $staffRecordEntity->FTE;
             $entity->newFTE = $newFTE;
-
             if (empty($newEndDate)) {
                 if ($entity->start_date < date('Y-m-d')) {
                     $requestData[$this->alias()]['end_date'] = date('Y-m-d');
@@ -851,6 +858,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 $requestData[$this->alias()]['end_date'] = $endDate->format('Y-m-d');
             }
         }
+
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -874,7 +882,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $this->field('staff_change_type_id');
         $this->field('staff_type_id', ['type' => 'select']);
         $this->field('current_staff_type', ['before' => 'staff_type_id']);
-        $fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];S
+        $fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
         $this->field('FTE', ['type' => 'select', 'options' => $fteOptions, 'value' => $entity->FTE]);
         $this->field('institution_position_id', ['after' => 'staff_id', 'type' => 'readonly', 'attr' => ['value' => $this->Positions->get($this->getEntityProperty($entity, 'institution_position_id'))->name]]);
         $this->field('current_FTE', ['before' => 'FTE', 'type' => 'disabled', 'options' => $fteOptions]);
@@ -883,8 +891,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $this->field('current_shift');//POCOR-6928
         $this->field('new_shift');//POCOR-6928
         $this->field('current_shift_one');
-        $homeroomOptions = ['Homeroom Teacher' => '1', 'Not Homeroom Teacher' => '0'];//POCOR-7289
-        $this->field('homeroom_teacher',['type' => 'select', 'options' => $homeroomOptions]);//POCOR-7289
+         $this->field('current_FTE', ['before' => 'FTE', 'type' => 'disabled', 'options' => $fteOptions]);
+        $homeroomOptions = [  '1'=>'Homeroom Teacher', '0'=>'Not Homeroom Teacher' ];
+        $this->field('homeroom_teacher',['type' => 'select', 'options' => $homeroomOptions,'value'=>$entity->is_homeroom]);//POCOR-7289
+        $this->field('current_homeroom_teacher', ['before'=>'homeroom_teacher','type'=>'disabled','options'=>$homeroomOptions]);
+
 
     }
 
@@ -1180,7 +1191,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
             return true;
         }
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
+
         $staff = $InstitutionStaff->get($institutionStaffId);
+
         $approvedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'APPROVED');
         $closedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'CLOSED');
 
@@ -1214,6 +1227,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity)
     {
+
         $staffEntity = TableRegistry::get('Institution.Staff')->get($entity->institution_staff_id);
         $this->Session->write('Institution.StaffPositionProfiles.staffRecord', $staffEntity);
         $this->request->data[$this->alias()]['staff_change_type_id'] = $entity->staff_change_type_id;
@@ -1451,9 +1465,138 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
     }
     //POCOOR-7298 start
-     public function onUpdateFieldHomeroomTeacher(Event $event, array $attr, $action, Request $request)
-     {
-        // echo "hey";
-        //     $attr['visible'] = false;
-     }
+    //  public function onUpdateFieldHomeroomTeacher(Event $event, array $attr, $action, Request $request)
+    //  {
+
+    //     if ($action == 'add' || $action == 'edit') {
+    //         $staffChangeTypes = $this->staffChangeTypesList;
+    //         if (isset($request->data[$this->alias()])) {
+    //             if($request->data[$this->alias()]['staff_change_type_id'] == ''){
+    //                 $attr['visible'] = false;
+    //             }
+    //             else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['HOMEROOM_TEACHER'] || $request->data[$this->alias()]['staff_change_type_id'] == 6) {
+    //               $attr['visible']=true;
+    //               if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
+    //                     $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
+    //                      $options = $attr['options'];
+    //                      $attr['attr']['value'] = $options[strval($entity->is_homeroom)];
+    //                 }
+    //                 else{
+    //                     echo "none";
+    //                 }
+    //  }
+    //  return $attr;
+    // }}}
+
+     public function onUpdateFieldCurrentHomeroomTeacher(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $staffChangeTypes = $this->staffChangeTypesList;
+            if (isset($request->data[$this->alias()])) {
+
+                if($request->data[$this->alias()]['staff_change_type_id'] == ''){
+                    $attr['visible'] = false;
+                }
+                // else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_FTE']) {
+                else if ($request->data[$this->alias()]['staff_change_type_id'] != '' && $request->data[$this->alias()]['staff_change_type_id'] == 6) {
+                    $attr['visible'] = true;
+
+
+                       if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
+                        $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
+                         $options = $attr['options'];
+                         $entity->is_homeroom =  ($entity->is_homeroom) ? _($entity->is_homeroom) : _("0") ;
+                         $attr['attr']['value'] = $options[strval($entity->is_homeroom)];
+                       }
+                }
+                else {
+                    $attr['visible'] = false;
+                }
+            }
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldHomeroomTeacher(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $staffChangeTypes = $this->staffChangeTypesList;
+            if (isset($request->data[$this->alias()])) {
+                if($request->data[$this->alias()]['staff_change_type_id'] == ''){
+                    $attr['visible'] = false;
+                }
+                else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['HOMEROOM_TEACHER'] || $request->data[$this->alias()]['staff_change_type_id'] == 6) {
+                    $attr['type'] = 'select';
+                    if (isset($attr['options'])) {
+                        $options = $attr['options'];
+                        if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
+                            $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
+                            if (isset($options[strval($entity->is_homeroom)])) {
+                                unset($options[strval($entity->is_homeroom)]);
+                            }
+                        }
+                        $attr['options'] = $options;
+                    }
+                } else {
+                    $attr['type'] = 'hidden';
+                    if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
+                        $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
+                        $attr['value'] = $entity->is_homeroom;
+                    }
+                }
+            }
+        }
+        return $attr;
+    }
+
+    //     if ($this->action == 'view') {
+    //         // $oldValue = ($entity->institution_staff->FTE * 100). '%';
+    //         // $newValue = '100%';
+            // if ($entity->FTE < 1) {
+            //     $newValue = ($entity->FTE * 100) . '%';
+            // }
+
+            // if ($newValue != $oldValue) {
+            //     return $this->getStyling($oldValue, $newValue);
+            // } else {
+            //     return $newValue;
+    //         // }
+    //     }
+    // }
+    // public function onGetHomeroomTeacher(Event $event, Entity $entity)
+    // {
+    //     if ($this->action == 'view') {
+    //         $oldValue = ($entity->institution_staff->FTE * 100). '%';
+    //         $newValue = '100%';
+    //         if ($entity->FTE < 1) {
+    //             $newValue = ($entity->FTE * 100) . '%';
+    //         }
+
+    //         if ($newValue != $oldValue) {
+    //             return $this->getStyling($oldValue, $newValue);
+    //         } else {
+    //             return $newValue;
+    //         }
+    //     }
+    // }
+    //  if ($action == 'add' || $action == 'edit') {
+    //         $staffChangeTypes = $this->staffChangeTypesList;
+    //         if (isset($request->data[$this->alias()])) {
+    //             if($request->data[$this->alias()]['staff_change_type_id'] == ''){
+    //                 $attr['visible'] = false;
+    //             }
+    //             else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['HOMEROOM_TEACHER'] || $request->data[$this->alias()]['staff_change_type_id'] == 6) {
+    //               $attr['visible']=true;
+    //               if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
+    //                     $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
+    //                      $options = $attr['options'];
+    //                      $attr['attr']['value'] = $options[strval($entity->is_homeroom)];
+    //                 }
+    //                 else{
+    //                     echo "none";
+    //                 }
+    //  }
+    //  return $attr;
+    // }}}
 }
+
