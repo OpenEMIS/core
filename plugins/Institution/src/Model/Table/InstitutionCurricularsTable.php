@@ -287,59 +287,6 @@ class InstitutionCurricularsTable extends ControllerActionTable
         return compact('periodOptions', 'selectedPeriod');
     }
 
-    /*public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
-    {
-
-        $entity->institution_curricular_id = $_SESSION['curricularId'];
-        $curricularStaff = TableRegistry::get('institution_curricular_staff');
-        $getStaff = $curricularStaff->find()->select(['staff_id'])
-                    ->where([$curricularStaff->aliasField('institution_curricular_id') => $entity->institution_curricular_id])->toArray();
-        $staff = [];
-        if(!empty($getStaff)){
-            foreach($getStaff as $value){
-                $staff[] = $value->staff_id; 
-            }
-        }
-        if ($action == 'edit') {
-            $staffOptions = [];
-            $this->InstitutionCurriculars = TableRegistry::get('institution_curriculars');
-            $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-            $curriculardecode = $entity->institution_curricular_id;
-            $selectedPeriod = $this->InstitutionCurriculars->get($curriculardecode)->academic_period_id;
-            $entity = $attr['entity'];
-            if (!empty($selectedPeriod)) {
-                $institutionId = $this->Session->read('Institution.Institutions.id');
-                $Staff = TableRegistry::get('Institution.Staff');
-                $staffOptions = $Staff
-                ->find('list', ['keyField' => 'staff_id', 'valueField' => 'staff_name'])
-                ->matching('Users')
-                ->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
-                ->where([$Staff->aliasField('institution_id') => $institutionId,
-                        $Staff->aliasField('staff_id IN') => $staff])
-                ->order(['Users.first_name', 'Users.last_name'])
-                ->toArray();
-
-                $staffData = $Staff
-                ->find('list', ['keyField' => 'staff_id', 'valueField' => 'staff_name'])
-                ->matching('Users')
-                ->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
-                ->where([$Staff->aliasField('institution_id') => $institutionId])
-                ->order(['Users.first_name', 'Users.last_name'])
-                ->toArray();
-            }
-
-            $attr['type'] = 'chosenSelect';
-            $attr['attr']['multiple'] = true;
-           // $attr['options'] = ['id' => '-- ' . __('Select Staff') . ' --']+$staffOptions;
-            $attr['options'] = $staffData;
-            //$attr['onChangeReload'] = false;
-            $attr['value'] = $staffData;
-            $attr['attr']['value'] = implode(', ', $staffOptions);
-            $attr['placeholder'] = __('Select Staff');
-        } 
-        return $attr;
-    }
-*/
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
         $entity->institution_curricular_id = $_SESSION['curricularId'];
@@ -348,10 +295,14 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $currentTimeZone = date("Y-m-d H:i:s");
             if(!empty($entity->staff_id['_ids'])){
                 $StaffIds = $entity->staff_id['_ids'];
+                $checkCurricularStaff = $curricularStaff->find()->where(['institution_curricular_id'=>$curricularId])->toArray(); 
+                   if(!empty($checkCurricularStaff)){
+                       $deleteStaff =  $curricularStaff->deleteAll(['institution_curricular_id' => $curricularId]);
+                   }
                 foreach($StaffIds as $staffId){
-                   $checkCurricularStaff = $curricularStaff->find()->where(['staff_id'=>$staffId, 'institution_curricular_id'=>$curricularId])->first(); 
+                   $CurricularStaff = $curricularStaff->find()->where(['staff_id'=>$staffId, 'institution_curricular_id'=>$curricularId])->first(); 
 
-                   if(empty($checkCurricularStaff)){
+                   if(empty($CurricularStaff)){
                         $data = [      
                                     'id'=> Text::uuid(),  
                                     'staff_id' => $staffId,
@@ -440,75 +391,26 @@ class InstitutionCurricularsTable extends ControllerActionTable
         return $total;
     }
 
-    /*public function editBeforeAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        //show staff selected in multiselected dropdown, chosenselec
         $entity->institution_curricular_id = $_SESSION['curricularId'];
         $curricularStaff = TableRegistry::get('institution_curricular_staff');
         $getStaff = $curricularStaff->find()->select(['staff_id'])
-                    ->where([$curricularStaff->aliasField('institution_curricular_id') => $entity->institution_curricular_id]);
-                    //print_r($getStaff->Sql());die;
+                    ->where([$curricularStaff->aliasField('institution_curricular_id') => $entity->institution_curricular_id])->toArray();
         $staff = [];
+        $count = 0 ;
         if(!empty($getStaff)){
-            foreach($getStaff as $value){
-                $staff[] = $value->staff_id; 
+            foreach($getStaff as $key => $value){
+                $staff[$key] = ['id' => $value->staff_id]; 
             }
         }
-
-        $InstitutionStaff = TableRegistry::get('institution_staff');
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $UserData = TableRegistry::get('User.Users');
-        $session = $this->controller->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-        $this->InstitutionCurriculars = TableRegistry::get('institution_curriculars');
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $curriculardecode = $entity->institution_curricular_id;
-        $selectedPeriod = $this->InstitutionCurriculars->get($curriculardecode)->academic_period_id;
-        $join = [];
-        $join[''] = [
-        'type' => 'inner',
-        'table' => "(SELECT institution_staff.staff_id user_id
-                        FROM institution_staff
-                        INNER JOIN academic_periods
-                        ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
-                        WHERE academic_periods.id = $selectedPeriod
-                        AND institution_staff.institution_id = $institutionId
-                        AND institution_staff.staff_status_id = 1
-                        GROUP BY institution_staff.staff_id
-                            ) subq",
-                            'conditions' => ['subq.user_id = Users.id'],
-                ];
-        $requestorOptions = $UserData
-            ->find('list', [
-                'keyField' => 'id',
-                'valueField' => 'name_with_id'
-            ])
-            ->select([
-                    $UserData->aliasField('id'),
-                    $UserData->aliasField('openemis_no'),
-                    $UserData->aliasField('first_name'),
-                    $UserData->aliasField('middle_name'),
-                    $UserData->aliasField('third_name'),
-                    $UserData->aliasField('last_name')
-            ])->order([$UserData->aliasField('first_name'),]);
-
-          $data =   $requestorOptions->join($join)->toArray();
-        
-          $this->field('staff_id', [
-            'type' => 'chosenSelect',
-            'attr' => [
-                'label' => __('Staff')
-            ]
-        ]);
-        $this->fields['staff_id']['options'] = $data;
-        
-    }*/
-
-    /*public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $academicPeriodId = !is_null($entity->academic_period_id) ? $entity->academic_period_id : $AcademicPeriod->getCurrent();    
-        list($educationGradeOptions) = array_values($this->getSelectOptions($academicPeriodId));
-        $this->fields['education_grades']['options'] = $educationGradeOptions;
-    }*/
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($staff) {
+            return $results->map(function ($row) use($staff) {
+                $row['staff_id'] = $staff;
+                return $row;
+            });
+        });
+    }
     
 }
