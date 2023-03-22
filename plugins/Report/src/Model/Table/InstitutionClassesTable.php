@@ -52,6 +52,8 @@ class InstitutionClassesTable extends AppTable
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
+        $this->field('institution_unit_id', ['visible' => false]);//POCOR-6863
+        $this->field('institution_course_id', ['visible' => false]);//POCOR-6863
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
