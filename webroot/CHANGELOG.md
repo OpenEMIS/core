@@ -1,3 +1,16 @@
+### [3.79.1] - 2023-03-17
+- Implemented: Changes to Data Archiving feature in OpenEMIS Core - Part III
+- Implemented: Reports > Institutions : Develop Student Absences per Day report
+- Bug Fixed: Institutions > Performance > Report Cards : Font/Cell stylings are not the same as Excel
+- Bug Fixed: Reports > Staff > Staff Subjects: Report is empty
+- Bug Fixed: Followup to APIs for WebGIS
+- Bug Fixed: Institutions>Staff>Add: Staff details should be populated
+- Bug Fixed: API(Registration)-User needs to have an email in core to register students
+- Bug Fixed: Institutions>Survey>Forms: User is still able to edit the survey form even when the date is not within the date enabled and date disabled.
+- Bug Fixed: OpenEMIS Registrations-Unable to register students
+- Bug Fixed: Institutions > Academics > Programmes > Add: The page shows a 404 error when adding programme.
+- Bug Fixed: OpenEMIS Registrations-Filter by identity number is not showing education grade
+
 ### [3.79.0] - 2023-03-08
 - Implemented: Add 'Modified by' from the Student Report Card comments page as a Placeholder in Student Report Card template
 - Implemented: Move the copy functions Academic Periods to Data Management
