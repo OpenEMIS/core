@@ -1860,6 +1860,7 @@ class WorkflowBehavior extends Behavior
 
                 $entity = $this->getRecord();
                 $workflowStep = $this->getWorkflowStep($entity);
+              //  echo "<pre>";print_r($workflowStep);die;
                 $actionButtons = [];
                 if (!empty($workflowStep)) {
                     $isSchoolBased = $workflowStep->_matchingData['WorkflowModels']->is_school_based;
@@ -1922,6 +1923,7 @@ class WorkflowBehavior extends Behavior
                         // end
 
                         foreach ($workflowStep->workflow_actions as $actionKey => $actionObj) {
+
                             $eventKeys = $actionObj->event_key;
                             $eventsObject = new ArrayObject();
                             $subjectEvent = $this->_table->dispatchEvent('Workflow.getEvents', [$eventsObject], $this->_table);
@@ -1958,7 +1960,6 @@ class WorkflowBehavior extends Behavior
                             if (is_int($event->result)) {
                                 $autoAssignAssignee = $event->result;
                             }
-
                             $actionType = $actionObj->action;
                             $button = [
                                 'id' => $actionObj->id,
