@@ -44,8 +44,19 @@ class InstitutionRepository extends Controller
                 $col = $params['order'];
                 $institutions = $institutions->orderBy($col);
             }
-            $list = $institutions->paginate($limit);
-            //dd($list);
+            //$list = $institutions->paginate($limit)->toArray();
+            $list = $institutions->paginate($limit)->toArray();
+            
+            $resp = [];
+            foreach($list['data'] as $d){
+                if(isset($d['logo_content'])){
+                    $d['logo_content'] = base64_encode($d['logo_content']);
+                    //$d['logo_content'] = NULL;
+                }
+                $resp[] = $d;
+            }
+
+            $list['data'] = $resp;
             return $list;
         } catch (\Exception $e) {
             Log::error(
@@ -533,11 +544,11 @@ class InstitutionRepository extends Controller
                     'areaAdministratives.areaAdministrativesChild:id,code,name,parent_id',
                     'areaEducation:id,code,name,parent_id',
                     'areaEducation.areaEducationChild:id,code,name,parent_id'
-                );
+                )->where('id', $institutionId);
 
             if(isset($params['order'])){
                 $col = $params['order'];
-                $areas = $areas->where('id', $institutionId)->orderBy($col);
+                $areas = $areas->orderBy($col);
             }
 
 
@@ -1212,6 +1223,10 @@ class InstitutionRepository extends Controller
                 $roomType = $roomType->orderBy($col);
             }
 
+            if(isset($params['academic_period_id'])){
+                $academic_period_id = $params['academic_period_id'];
+                $roomType = $roomType->where("academic_period_id", $academic_period_id);
+            }
 
             $limit = config('constants.defaultPaginateLimit');
 

@@ -165,7 +165,7 @@ trait PdfReportTrait
     {
         // To make the excel sheet to solid sheet
         $searchFormat = '.gridlines td { border:1px dotted black }';
-        $replaceFormat = '.gridlines td { border:1px solid black }';
+        $replaceFormat = '.gridlines td'; // POCOR-7090 // initialy it was: $replaceFormat = '.gridlines td { border:1px solid black }';  //removed to avoid unnecessary border.
         $headString = str_replace($searchFormat, $replaceFormat, $headString);
 
         $searchFormat = '.gridlines th { border:1px dotted black }';
@@ -345,7 +345,8 @@ trait PdfReportTrait
         for ($sheetIndex = 0; $sheetIndex < $sheetCount; $sheetIndex++) {
             $sheetStatus = $objSpreadsheet->getSheet($sheetIndex)->getSheetState(); //POCOR-7077
             if($sheetStatus == 'visible'){ //POCOR-7077
-                $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
+                // $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
+                $mpdf = new \Mpdf\Mpdf(array('mode' => 'utf-8', 'format' => [370, 190])); //POCOR-7090
                 $filepath = $basePath.'_'.$sheetIndex;
                 $writer->setSheetIndex($sheetIndex);
                 $writer->save($filepath);
@@ -354,7 +355,10 @@ trait PdfReportTrait
                 $file = file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
 
                 // Remove all the redundant rows and columns
+                
                 $processedHtml = $this->processHtml($file, $sheetIndex);
+                $mpdf->SetFontSize(1);
+                $mpdf->SetDisplayMode('fullpage');
 
                 // Save the processed html into a temp pdf
                 $mpdf->AddPage('L');
@@ -447,7 +451,8 @@ trait PdfReportTrait
 
     private function mergePDFFiles(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
     {
-        $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
+        // $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
+        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [370, 190]]); //POCOR-7090
         $mpdf->SetTitle($title);
         $mpdf->SetAuthor($author);
         $mpdf->SetSubject($subject);
@@ -465,13 +470,17 @@ trait PdfReportTrait
                         $wh = $mpdf->getTemplateSize($tplId);
                         if (($p==1)){
                             $mpdf->state = 0;
-                             $mpdf->AddPage('L');
+                            $mpdf->SetFontSize(1);
+                            $mpdf->SetDisplayMode('fullpage');
+                            $mpdf->AddPage('L');
 
                             $mpdf->UseTemplate ($tplId);
                         }
                         else {
                             $mpdf->state = 1;
-                             $mpdf->AddPage('L');
+                            $mpdf->SetFontSize(1);
+                            $mpdf->SetDisplayMode('fullpage');
+                            $mpdf->AddPage('L');
 
                             $mpdf->UseTemplate($tplId);
                         }

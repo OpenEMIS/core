@@ -192,7 +192,8 @@ class ImportStaffTable extends AppTable
                         'StaffPositionTitles.name',
                         'StaffPositionTitles.type',
                         'Statuses.name',
-                        $lookedUpTable->aliasField('is_homeroom'),
+                        'is_homeroom' =>'Staff.is_homeroom',//POCOR-7260
+                       // $lookedUpTable->aliasField('is_homeroom'), //POCOR-7260
                         'total_fte' => $modelData->func()->sum('InstitutionStaff.FTE')
                     ])
                     ->contain(['StaffPositionTitles', 'Statuses'])
@@ -202,6 +203,9 @@ class ImportStaffTable extends AppTable
                             'DATE(InstitutionStaff.end_date) > DATE(NOW())',
                             'InstitutionStaff.end_date IS NULL'
                         ]
+                    ])
+                    ->leftJoin(['Staff' => 'institution_staff'], [ //POCOR-7260
+                        'Staff.institution_position_id = ' . $lookedUpTable->aliasField('id')
                     ])
                     ->where([
                         $lookedUpTable->aliasField('institution_id') => $institutionId,

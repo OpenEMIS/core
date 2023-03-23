@@ -197,6 +197,7 @@ class CustomReportsTable extends AppTable
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
+        ini_set('memory_limit', '-1');
         if ($action == 'add') {
             $queryParams = isset($this->request->data[$this->alias()]) ? $this->request->data[$this->alias()] : [];
             $queryParams['user_id'] = $this->Auth->user('id');
@@ -267,9 +268,9 @@ class CustomReportsTable extends AppTable
 
             $attr['onChangeReload'] = true;
             $attr['options'] = $periodOptions;
-            $attr['default'] = $selectedPeriod;
+            // $attr['default'] = $selectedPeriod; //POCOR-7241
             $attr['type'] = 'select';
-            $attr['select'] = false;
+            $attr['select'] = true; //POCOR-7241
             $attr['required'] = true;
             return $attr;
         }
@@ -406,8 +407,8 @@ class CustomReportsTable extends AppTable
                 $conditions[$institutions->aliasField('institution_type_id')] = $institutionTypeId;
             }
             //POCOR-7178 end
-
-            $periodGrades = $EducationGrades->find('list', ['keyField' => 'id', 
+            if(!empty($selectedPeriod)){ // POCOR-7241
+                $periodGrades = $EducationGrades->find('list', ['keyField' => 'id', 
                                 'valueField' => 'programme_grade_name'])
                             ->find('visible')
                             ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
@@ -420,7 +421,8 @@ class CustomReportsTable extends AppTable
                             ->where($conditions)
                             ->order([$EducationGrades->aliasField('id')])
                             ->toArray();
-
+            }
+            
             $attr['onChangeReload'] = true;
             $attr['options'] = $periodGrades;
             $attr['type'] = 'select';

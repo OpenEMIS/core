@@ -46,6 +46,7 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 			$workflows = $Workflows->find()->where(['id' => $workflowRule['workflow_id']])->first();
 			//6023 ends
 			$daysUnmarked = $rule['where']['days_unmarked'];
+			$securityRoleId = $rule['where']['security_role_id']; //POCOR-6363
 			$conditions['ClassAttendanceRecords.academic_period_id'] = $academicPeriodId;
 			$conditions['ClassAttendanceRecords.month'] = $month;
 			
@@ -104,13 +105,21 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 					unset($unmarked_dates_arr);
 					//6023 ends
 					$title = $classAttendanceRecord['institution_class']['name'] . ' ' . $classAttendanceRecord['institution_class']['institution']['code'] . ' - ' . $classAttendanceRecord['institution_class']['institution']['name'] . ' with ' . $daysUnmarked . ' day Student Unmarked Attendances';
-					
+					//POCOR-6363:: START
 					$institutionId = $classAttendanceRecord['institution_class']['institution']['id'];
-					
+					$INSTITUTIONS = TableRegistry::get('institutions');	
+					$INSTITITUTEDATA = $INSTITUTIONS->find('all',['conditions'=>['id'=>$institutionId]])->first();	
+					$securityGroupUsers = TableRegistry::get('security_group_users');	
+					$dataForAssigneeID = $securityGroupUsers->find('all',['conditions'=>['security_group_id'=>$INSTITITUTEDATA->security_group_id,'security_role_id'=>$securityRoleId]])->first();	
+					if(!empty($dataForAssigneeID)){	
+						$assigneeId = $dataForAssigneeID->security_user_id;	
+					}else{	
+						$assigneeId = 0;	
+					}
+					//POCOR-6363:: END
 					$recordId = $classAttendanceRecord['institution_class']['id'];
 					$feature = $workflowRule['feature'];					
 					$statusId = 59;
-					$assigneeId = 0;
 					$institutionId = $institutionId;
 					$workflowRuleId = $workflowRule['id'];
 					$linkedRecords = [
@@ -132,14 +141,18 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 					
 					$newEntity = $this->InstitutionCases->newEntity();
 					$newEntity = $this->InstitutionCases->patchEntity($newEntity, $caseData, $patchOptions);
-					$result = $this->InstitutionCases->save($newEntity);
+					$alreadyExistonSameDay = $this->InstitutionCases->find('all',['conditions'=>[strtotime('y-m-d','created')=>date('y-m-d'), 'status_id'=>$statusId, 'assignee_id !=' =>0]])->first();
+					if(empty($alreadyExistonSameDay)){
+						$result = $this->InstitutionCases->save($newEntity);
+						
+						$linkedRecords['institution_case_id'] = $result->id;
+						$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->newEntity();
+						$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->patchEntity($newEntityInstitutionCaseRecord, $linkedRecords, $patchOptions);
+						$this->InstitutionCaseRecords->save($newEntityInstitutionCaseRecord);
+						$this->sendEmail($rule['where']['security_role_id'], $institutionId, $daysUnmarked,$mailed_data);//6023 add param $mailed_data  
+						echo "saved";
+					}
 					
-					$linkedRecords['institution_case_id'] = $result->id;
-					$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->newEntity();
-					$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->patchEntity($newEntityInstitutionCaseRecord, $linkedRecords, $patchOptions);
-					$this->InstitutionCaseRecords->save($newEntityInstitutionCaseRecord);
-					$this->sendEmail($rule['where']['security_role_id'], $institutionId, $daysUnmarked,$mailed_data);//6023 add param $mailed_data  
-					echo "saved";
 				}
 			}
 		}

@@ -666,7 +666,10 @@ class InstitutionPositionsTable extends ControllerActionTable
                         'Assignees.preferred_name'
                     ]
                 ]
-            ]);
+                
+            ])->leftJoin([$institutionStaff->alias() => $institutionStaff->table()],
+                [$institutionStaff->aliasField('institution_position_id = ') . $this->aliasField('id')])
+            ->distinct([$this->aliasField('position_no')]);
         $sortList = ['position_no', 'StaffPositionTitles.order'/*,POCOR-5069 'StaffPositionGrades.order'*/, 'created','Assignees.first_name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);

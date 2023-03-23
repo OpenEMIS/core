@@ -37,10 +37,15 @@ use Cake\Utility\Security;
      * @param array $config The configuration for the Table.
      * @return void
      */
+    // for status
+    private $statusOptions = [];
+    CONST IN_PROGRESS = 1;
+    CONST DONE = 2;
+    CONST ERROR = 3;
     public function initialize(array $config)
     {
         parent::initialize($config);
-
+        
         $this->table('transfer_logs');
         $this->displayField('id');
         $this->primaryKey('id');
@@ -54,6 +59,11 @@ use Cake\Utility\Security;
         $this->toggle('view', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->statusOptions = [
+            self::IN_PROGRESS => __('Processing'),
+            self::DONE => __('Completed'),
+            self::ERROR => __('Error')
+        ];
     }
 
     /**
@@ -95,6 +105,7 @@ use Cake\Utility\Security;
         $this->field('academic_period_id');    
         $this->field('generated_on');
         $this->field('generated_by');
+        $this->field('p_id', ['visible' => false]);
         $this->field('features', ['sort' => false]); // POCOR-6816 
         $this->setFieldOrder(['academic_period_id','features','generated_on','generated_by']);
 
@@ -110,6 +121,8 @@ use Cake\Utility\Security;
         $this->field('id', ['visible' => false]);
         $this->field('generated_on', ['visible' => false]);
         $this->field('generated_by', ['visible' => false]);
+        $this->field('process_status', ['visible' => false]);
+        $this->field('p_id', ['visible' => false]);
         
         $this->setFieldOrder(['academic_period_id','features']); // POCOR-6816 
 
@@ -207,9 +220,12 @@ use Cake\Utility\Security;
             if($entity['academic_period_id'] == $AcademicPeriodsData->id){
                 $this->Alert->error('Archive.currentAcademic');
             }else{
+                $entity->p_id = getmypid();
+                $entity->process_status =  self::IN_PROGRESS;
                 $entity->academic_period_id = $entity['academic_period_id'];
                 $entity->generated_on = date("Y-m-d H:i:s");
                 $entity->generated_by = $this->Session->read('Auth.User.id');
+                $entity->features = $entity['features'];
             }
             // return $this->Alert->warning('Connection.transferConnectionFail');
             // return true;
@@ -236,6 +252,7 @@ use Cake\Utility\Security;
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $data){
+        ini_set('memory_limit', '-1');
         if($entity->features == "Student Attendance"){
             // /*flag the academic period table
             // academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
@@ -252,32 +269,35 @@ use Cake\Utility\Security;
 
                 $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
                 $ClassAttendanceRecordsData = $ClassAttendanceRecords->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
                 
 
                 $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
                 $InstitutionStudentAbsencesData = $InstitutionStudentAbsences->find('all')
-                                                        ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                                                        ->where(['academic_period_id' => $entity->academic_period_id])->count();
                 
                                                         
                 $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
                 $StudentAbsencesPeriodDetailsData = $StudentAbsencesPeriodDetails->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
                 
 
                 $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
                 $StudentAttendanceMarkedRecordsData = $StudentAttendanceMarkedRecords->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
 
                  
                 $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
                 $InstitutionStaffAttendancesData = $StudentAttendanceMarkTypes->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
-                if(empty($ClassAttendanceRecordsData) && empty($InstitutionStudentAbsencesData) && empty($StudentAbsencesPeriodDetailsData) && empty($StudentAttendanceMarkedRecordsData) && empty($InstitutionStaffAttendancesData)){
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
+                if(($ClassAttendanceRecordsData == 0) && ($InstitutionStudentAbsencesData == 0) && ($StudentAbsencesPeriodDetailsData == 0) && ($StudentAttendanceMarkedRecordsData == 0) && ($InstitutionStaffAttendancesData == 0)){
+                    $this->deleteAll([
+                        $this->aliasField('p_id') => $entity->p_id
+                    ]);
                     $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
                 }else{
                     $this->log('=======>Before triggerStudentAttendanceShell', 'debug');
-                    $this->triggerStudentAttendanceShell('StudentAttendance',$entity->academic_period_id);
+                    $this->triggerStudentAttendanceShell('StudentAttendance',$entity->academic_period_id, $entity->p_id);
                     $this->log(' <<<<<<<<<<======== After triggerStudentAttendanceShell', 'debug');
                 }
             }
@@ -299,17 +319,20 @@ use Cake\Utility\Security;
                 // );
                 $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
                 $InstitutionStaffAttendancesData = $InstitutionStaffAttendances->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
                 
                 $StaffLeave = TableRegistry::get('Institution.StaffLeave');
                 $StaffLeaveData = $StaffLeave->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
                 
-                if(empty($InstitutionStaffAttendancesData) && empty($StaffLeaveData)){
+                if(($InstitutionStaffAttendancesData == 0) && ($StaffLeaveData == 0)){
+                    $this->deleteAll([
+                        $this->aliasField('p_id') => $entity->p_id
+                    ]);
                     $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
                 }else{
                     $this->log('=======>Before triggerStaffAttendancesShell', 'debug');
-                    $this->triggerStaffAttendancesShell('StaffAttendances',$entity->academic_period_id);
+                    $this->triggerStaffAttendancesShell('StaffAttendances',$entity->academic_period_id, $entity->p_id);
                     $this->log(' <<<<<<<<<<======== After triggerStaffAttendancesShell', 'debug');
                 }
             }
@@ -331,13 +354,16 @@ use Cake\Utility\Security;
                 // );
                 $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
                 $AssessmentItemResultsData = $AssessmentItemResults->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->toArray();
+                                    ->where(['academic_period_id' => $entity->academic_period_id])->limit(1)->toArray();
+                                    
                 if(empty($AssessmentItemResultsData)){
-                    // echo "fsfs";die;
+                    $this->deleteAll([
+                        $this->aliasField('p_id') => $entity->p_id
+                    ]);
                     $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
                 }else{
                     $this->log('=======>Before triggerStudentAssessmentsShell', 'debug');
-                    $this->triggerStudentAssessmentsShell('StudentAssessments',$entity->academic_period_id);
+                    $this->triggerStudentAssessmentsShell('StudentAssessments',$entity->academic_period_id, $entity->p_id);
                     $this->log(' <<<<<<<<<<======== After triggerStudentAssessmentsShell', 'debug');
                 }
             }
@@ -355,10 +381,11 @@ use Cake\Utility\Security;
     * @ticket POCOR-6816
     */
 
-    public function triggerStudentAttendanceShell($shellName,$academicPeriodId = null)
+    public function triggerStudentAttendanceShell($shellName,$academicPeriodId = null, $pid = null)
     {
         $args = '';
         $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
+        $args .= !is_null($pid) ? ' '.$pid : '';
 
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
         $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
@@ -374,10 +401,11 @@ use Cake\Utility\Security;
     * @ticket POCOR-6816
     */
 
-    public function triggerStaffAttendancesShell($shellName,$academicPeriodId = null)
+    public function triggerStaffAttendancesShell($shellName,$academicPeriodId = null, $pid = null)
     {
         $args = '';
         $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
+        $args .= !is_null($pid) ? ' '.$pid : '';
 
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
         $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
@@ -393,10 +421,11 @@ use Cake\Utility\Security;
     * @ticket POCOR-6816
     */
 
-    public function triggerStudentAssessmentsShell($shellName,$academicPeriodId = null)
+    public function triggerStudentAssessmentsShell($shellName,$academicPeriodId = null, $pid = null)
     {
         $args = '';
         $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
+        $args .= !is_null($pid) ? ' '.$pid : '';
 
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
         $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
@@ -428,6 +457,26 @@ use Cake\Utility\Security;
             'Student Assessments' => __('Student Assessments'),
         ];
         return $options;
+    }
+
+     /*
+    * Function to show status on view page
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return data
+    * @ticket POCOR-7237
+    */
+    public function onGetProcessStatus(Event $event, Entity $entity)
+    {
+        if ($entity->process_status == 1) {
+            $value = $this->statusOptions[self::IN_PROGRESS];
+        } elseif($entity->process_status == 2) {
+            $value = $this->statusOptions[self::DONE];
+        } elseif($entity->process_status == 3) {
+            $value = $this->statusOptions[self::DONE];
+        }else{
+            $value = $this->statusOptions[self::DONE];
+        }
+        return $value;
     }
     
 }
