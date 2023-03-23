@@ -105,7 +105,7 @@ class SurveyFormsTable extends CustomFormsTable
                 foreach ($postedEntity['custom_filters'] as $key => $obj) {
                     $postedFilters[$obj->id] = $obj->name;
                 }
-
+                
                 $compareFilters = array_intersect_key($originalFilters, $postedFilters);
                 if (sizeof($originalFilters) != sizeof($compareFilters)) {
                     $differentFilters = array_diff_key($originalFilters, $postedFilters);
@@ -121,6 +121,83 @@ class SurveyFormsTable extends CustomFormsTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        //POCOR-7263::Start
+        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $InstitutionSurveyT = TableRegistry::get('institution_surveys');
+        $InstitutionTypesT = TableRegistry::get('institution_types');
+        $SurveyFormsFilters = TableRegistry::get('survey_forms_filters');
+        $currentAcademicPeriodId = $AcademicPeriod->AcademicPeriods->getCurrent();
+        if($entity->custom_filter_selection == 1){
+            foreach($entity['custom_filters'] as $k=>$customFilter){
+                $insTypeId = $customFilter->id;
+                $surveyFormId = $customFilter['_joinData']['survey_form_id'];
+                $insList = $Institutions->find('all',['conditions'=>['institution_type_id'=>$insTypeId]])->toArray();
+                foreach($insList as $kk=>$ins){
+                    $alreatExist = $InstitutionSurveyT->find('all',['conditions'=> [
+                        'academic_period_id'=>$currentAcademicPeriodId,
+                        'survey_form_id'=>$surveyFormId,
+                        'institution_id'=> $ins->id
+                    ]])->first();
+                    if(empty($alreatExist)){
+                        $entity = $InstitutionSurveyT->newEntity([
+                            'status_id' =>1,
+                            'academic_period_id'=>$currentAcademicPeriodId,
+                            'survey_form_id'=>$surveyFormId,
+                            'institution_id'=> $ins->id,
+                            'assignee_id'=>0,
+                            'created_user_id'=>$this->Auth->user('id'),
+                            'created'=> date('Y-m-d h:i:s')
+                        ]);
+                        $InstitutionSurveyT->save($entity);
+                    }
+                    
+                }
+            }
+        }else{
+            $surveyFormId = $entity->id;
+            $insList = $Institutions->find('all')->toArray();
+            foreach($insList as $kk=>$ins){
+                $alreatExist = $InstitutionSurveyT->find('all',['conditions'=> [
+                    'academic_period_id'=>$currentAcademicPeriodId,
+                    'survey_form_id'=>$surveyFormId,
+                    'institution_id'=> $ins->id
+                ]])->first();
+                if(empty($alreatExist)){
+                    $entity = $InstitutionSurveyT->newEntity([
+                        'status_id' =>1,
+                        'academic_period_id'=>$currentAcademicPeriodId,
+                        'survey_form_id'=>$surveyFormId,
+                        'institution_id'=> $ins->id,
+                        'assignee_id'=>0,
+                        'created_user_id'=>$this->Auth->user('id'),
+                        'created'=> date('Y-m-d h:i:s')
+                    ]);
+                    if($saveSurvey = $InstitutionSurveyT->save($entity)){ 
+                        $InstitutionTypes = $InstitutionTypesT->find('all')->toArray();
+                        foreach($InstitutionTypes as $ki => $InstitutionType){
+                            $exixtData = $SurveyFormsFilters->find('all',['conditions'=>['survey_form_id'=>$saveSurvey->survey_form_id, 'survey_filter_id' => $InstitutionType->id ]])->first();
+                            if(empty($exixtData)){
+                                $surveyFormFilterData = [
+                                    'survey_form_id' => $saveSurvey->survey_form_id,
+                                    'survey_filter_id' => $InstitutionType->id
+                                ];
+                                $surveyFormFilterEntity = $SurveyFormsFilters->newEntity($surveyFormFilterData);
+                                if ($SurveyFormsFilters->save($surveyFormFilterEntity)) {
+                                } else {
+                                    Log::write('debug', $surveyFormFilterEntity->errors());
+                                }
+                            }
+                            
+                        }
+                    }
+                }
+            }
+
+            
+            
+        }
+        //POCOR-7263::End
         $this->setAllCustomFilter($entity);
     }
 

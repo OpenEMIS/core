@@ -1,3 +1,17 @@
+### [3.80.0] - 2023-03-23
+- Implemented: Develop school profile placeholders
+- Implemented: Move grade from add position page to add staff page
+- Implemented: Add 2 extra column for class unit and class course
+- Implemented: Changes to the Administration > System Setup > APIs > Credentials page
+- Bug Fixed: Administrations > System Setup > Field Options: The limit character is at 50 now
+- Bug Fixed: Administration > Security > Roles page: When permission is enable to edit/add, user is still unable to edit/add
+- Bug Fixed: Administration > Workflows > Rules : Unmarked attendances should be triggered only once a day
+- Bug Fixed: Institutions>Staff>Add: When adding staff, security_group_users in institution_staff table is null
+- Bug Fixed: Institutions > Staff > Add page: The page does not navigate to other pages
+- Bug Fixed: Institutions>Students>Counselling>Add: 504 error when adding
+- Bug Fixed: Institutions > Performance > Assessments: Data is showing boxes and funny characters
+- Bug Fixed: Institutions > Survey > Forms: Unable to see all/newly created surveys
+
 ### [3.79.1] - 2023-03-17
 - Implemented: Changes to Data Archiving feature in OpenEMIS Core - Part III
 - Implemented: Reports > Institutions : Develop Student Absences per Day report
