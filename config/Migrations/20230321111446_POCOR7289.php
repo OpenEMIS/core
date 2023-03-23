@@ -9,7 +9,7 @@ class POCOR7289 extends AbstractMigration
 
     public function up()
     {
-      $this->execute("INSERT INTO `staff_change_types` (`id`,`code`, `name`) VALUES ( '6','CHANGE_IN_HOMEROOM_TEACHER', 'Change In Homeroom Teacher')");
+      $this->execute("INSERT INTO `staff_change_types` (`id`,`code`, `name`) VALUES ( '6','HOMEROOM_TEACHER', 'Homeroom Teacher')");
     }
 
     public function down(){
