@@ -419,7 +419,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
     {
         if(in_array($action, ['add','edit'])) { 
-            $assigneeOptions = [-1 => __('Auto Assign')]; 
+            $assigneeOptions = [$this->Auth->user('id') => __('Auto Assign')]; //POCOR-7080
             $attr['options'] = $assigneeOptions;
             $attr['onChangeReload'] = 'changeStatus';
             return $attr;

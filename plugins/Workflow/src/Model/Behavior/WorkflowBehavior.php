@@ -504,9 +504,16 @@ class WorkflowBehavior extends Behavior
                     $filterOptions = $newEvent->result;
                 }
                 // End
-
+                //POCOR-7263::Start
                 $filterOptions = ['-1' => '-- ' . __('Select') . ' --'] + $filterOptions;
-                $selectedFilter = $this->_table->queryString('filter', $filterOptions);
+                $url = $_SERVER['QUERY_STRING'];
+                $data = explode('=', $url);
+                $filterOne = $data[1];
+                $filterTwo = $data[2];
+                $firstVal = preg_replace('/\D/', '', $filterOne);
+                $selectedFilter = $firstVal;
+                //POCOR-7263::End
+               // $selectedFilter = $this->_table->queryString('filter', $filterOptions);
                 $this->_table->advancedSelectOptions($filterOptions, $selectedFilter);
                 $this->_table->controller->set(compact('filterOptions', 'selectedFilter'));
                 // End
@@ -2174,6 +2181,11 @@ class WorkflowBehavior extends Behavior
             if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
                 if (array_key_exists('assignee_id', $requestData[$this->WorkflowTransitions->alias()]) && !empty($requestData[$this->WorkflowTransitions->alias()]['assignee_id'])) {
                     $assigneeId = $requestData[$this->WorkflowTransitions->alias()]['assignee_id'];
+                    /**POCOR-7274 :: Start*/
+                    if(!empty($requestData['StudentTransferIn']['assignee_id'])){
+                        $assigneeId = $requestData['StudentTransferIn']['assignee_id'];
+                    }
+                    /**POCOR-7274 :: End */
                     if ($assigneeId == self::AUTO_ASSIGN) {
                         $this->autoAssignAssignee($entity);
                     } else {
