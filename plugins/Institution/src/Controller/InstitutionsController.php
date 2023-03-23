@@ -484,7 +484,61 @@ class InstitutionsController extends AppController
 
     public function AssessmentItemResultsArchived()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
+        $classId = $this->ControllerAction->getQueryString('class_id');
+        $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
+        $institutionId = $this->ControllerAction->getQueryString('institution_id');
+        $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
+        $roles = [];
+
+        if (!$this->AccessControl->isAdmin()) {
+            $userId = $this->Auth->user('id');
+            $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+        }
+
+        $this->set('_roles', $roles);
+
+        // POCOR-3983 check institution status
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $isActive = $Institutions->isActive($institutionId);
+        if ($isActive) {
+            $_edit = $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles);
+        } else {
+            $_edit = false;
+        }
+        // end POCOR-3983
+
+        $this->set('_edit', $_edit);
+        $this->set('_excel', $this->AccessControl->check(['Institutions', 'Assessments', 'excel'], $roles));
+        $url = $this->ControllerAction->url('index');
+        $url['plugin'] = 'Institution';
+        $url['controller'] = 'Institutions';
+        $url['action'] = 'resultsExport';
+
+        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
+        if ($hasTemplate) {
+            $queryString = $this->request->query('queryString');
+            $customUrl = Router::url([
+                            'plugin' => 'Institution',
+                            'controller' => 'Institutions',
+                            'action' => 'reportCardGenerate',
+                            'add',
+                            'queryString' => $queryString
+                        ]);
+
+            $this->set('reportCardGenerate',$customUrl);
+           
+            $exportPDF_Url = $this->ControllerAction->url('index');
+            $exportPDF_Url['plugin'] = 'CustomExcel';
+            $exportPDF_Url['controller'] = 'CustomExcels';
+            $exportPDF_Url['action'] = 'exportPDF';
+            $exportPDF_Url[0] = 'AssessmentResults';
+            $this->set('exportPDF', Router::url($exportPDF_Url));
+        }
+
+        $this->set('excelUrl', Router::url($url));
+        $this->set('ngController', 'InstitutionsAssessmentArchiveCtrl');
+        // $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
     }
 
     public function InstitutionTransportProviders()
@@ -1985,6 +2039,13 @@ class InstitutionsController extends AppController
                     'alert.svc',
                     'institutions.results.ctrl',
                     'institutions.results.svc'
+                ]);
+                break;
+            case 'AssessmentItemResultsArchived':
+                $this->Angular->addModules([
+                    'alert.svc',
+                    'institutions.results.archive.ctrl',
+                    'institutions.results.archive.svc'
                 ]);
                 break;
             case 'Surveys':
