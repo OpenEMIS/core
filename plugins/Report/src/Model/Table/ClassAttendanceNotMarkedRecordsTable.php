@@ -53,6 +53,11 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $this->workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
     }
+    public function beforeAction(Event $event)
+    {
+        $this->field('institution_unit_id', ['visible' => false]);//POCOR-6863
+        $this->field('institution_course_id', ['visible' => false]);//POCOR-6863
+    }
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {

@@ -730,6 +730,19 @@ class InstitutionShiftsTable extends ControllerActionTable
                 ->distinct()
                 ->first();
     }
+    public function findUnitOptions(Query $query, array $options)
+    {
+       
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+       
+        $institutionClasses = TableRegistry::get('institution_units');
+       // $query11 = $institutionClasses->find('list',['keyField' => 'id', 'valueField' => 'name']);
+        $query11 = $institutionClasses->find('all',['fields' => ['id', 'name']]);
+        echo json_encode($query11->toArray());die;
+
+        //return $query11;
+    }
 
     public function findShiftOptions(Query $query, array $options)
     {

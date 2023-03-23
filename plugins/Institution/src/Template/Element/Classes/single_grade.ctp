@@ -22,6 +22,8 @@
 				<thead>
 					<tr>
 						<th><?= $this->Label->get('InstitutionClasses.class'); ?></th>
+						<th><?= $this->Label->get('InstitutionClasses.unit'); ?></th>
+						<th><?= $this->Label->get('InstitutionClasses.course'); ?> </th>
 						<th><?= $this->Label->get('InstitutionClasses.staff_id'); ?></th>
 						<th><?= $this->Label->get('InstitutionClasses.secondary_staff_id'); ?> </th>
 					</tr>
@@ -94,6 +96,27 @@
 								'value' => $startingClassNumber
 							));?>
 						</td>
+
+						<td><?php
+						echo $this->Form->input(sprintf('MultiClasses.%d.institution_unit_id', $i), array(
+							'options' => $attr['data']['unitOptions'],
+							'label' => false,
+							'div' => false,
+							'between' => false,
+							'after' => false
+						));
+
+						?>
+						<td><?php
+						echo $this->Form->input(sprintf('MultiClasses.%d.institution_course_id', $i), array(
+							'options' => $attr['data']['courseOptions'],
+							'label' => false,
+							'div' => false,
+							'between' => false,
+							'after' => false
+						));
+
+						?>
 
 						<td><?php
 						echo $this->Form->input(sprintf('MultiClasses.%d.staff_id', $i), array(
