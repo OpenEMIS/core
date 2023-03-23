@@ -16,7 +16,7 @@ use Cake\Validation\Validator;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
-
+use Cake\Utility\Text;
 class StaffPositionProfilesTable extends ControllerActionTable
 {
     use OptionsTrait;
@@ -514,9 +514,60 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, $entity, $requestData, ArrayObject $extra)
     {
-        echo "<pre>";
-        print_r($entity);
-        exit;
+        //POCOR 7289 tables updation start for homeroom
+
+        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $SecurityGroupUsers=TableRegistry::get('security_group_users');
+        //No homeroom teacher
+        if($entity->homeroom_teacher==0)
+        {
+        $count=$InstitutionStaff->find()
+                                ->where(["institution_id"=>$entity->institution_id,
+                                        "staff_id"=>$entity->staff_id,
+                                        "is_homeroom"=>1,
+                                        "staff_status_id"=>1,
+                                        "id !="=>$entity->institution_staff_id
+
+                                ])->count();
+
+        if($count==0){
+        $SecurityGroupUsers->deleteAll([
+                             'security_user_id' => $entity->staff_id,
+                             'security_group_id' => $entity->institution_id,
+                             'security_role_id' => 5
+                             ]);}
+         }
+        // Homeroom Teacher
+         if($entity->homeroom_teacher==1)
+        {
+         $id=$SecurityGroupUsers->find()
+                                ->select($this->aliasField('id'))
+                                ->where([
+                             'security_user_id' => $entity->staff_id,
+                             'security_group_id' => $entity->institution_id,
+                             'security_role_id' => 5
+                                ])->first();
+        if(!isset($id)){
+
+            $user=$SecurityGroupUsers->newEntity();
+            $user->id=Text::uuid();
+            $user->security_user_id = $entity->staff_id;
+            $user->security_group_id =$entity->institution_id;
+            $user->created_user_id= $entity->created_user_id;
+            $user->created= $entity->created;
+            $SecurityGroupUsers->save($user);
+         }
+        }
+        //Both case
+        $query=$InstitutionStaff->query();
+        $query ->update()
+               ->set(['is_homeroom' => $requestData->homeroom_teacher])
+               ->where(['id' => $entity->institution_staff_id])
+               ->execute();
+
+
+        //POCOR 7289 tables updation end  for homeroom
+
         if (!$entity->errors()) {
             $StaffTable = TableRegistry::get('Institution.Staff');
             $url = $this->url('view');
@@ -526,8 +577,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $this->Session->write('Institution.StaffPositionProfiles.addSuccessful', true);
             return $this->controller->redirect($url);
         }
-    }
 
+    }
     public function workflowBeforeTransition(Event $event, $requestData)
     {
         $errors = true;
@@ -818,7 +869,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $this->fields['start_date']['type'] = 'date';
         $this->fields['institution_position_id']['order'] = 6;
         $this->fields['FTE']['visible'] = false;
-        // $this->fields['homeroom_teacher']['visible'] = false;
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
         $selectedStatus = $this->request->query('staff_status_id');
 //        print_r($selectedStatus);die();
@@ -892,9 +942,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $this->field('new_shift');//POCOR-6928
         $this->field('current_shift_one');
          $this->field('current_FTE', ['before' => 'FTE', 'type' => 'disabled', 'options' => $fteOptions]);
-        $homeroomOptions = [  '1'=>'Homeroom Teacher', '0'=>'Not Homeroom Teacher' ];
+        $homeroomOptions = [  '1'=>'Homeroom Teacher', '0'=>'Not Homeroom Teacher' ];//POCOR 7289
         $this->field('homeroom_teacher',['type' => 'select', 'options' => $homeroomOptions,'value'=>$entity->is_homeroom]);//POCOR-7289
-        $this->field('current_homeroom_teacher', ['before'=>'homeroom_teacher','type'=>'disabled','options'=>$homeroomOptions]);
+        $this->field('current_homeroom_teacher', ['before'=>'homeroom_teacher','type'=>'disabled','options'=>$homeroomOptions]);//POCOR-7289
 
 
     }
@@ -1464,30 +1514,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
             return $entity->assignee_id;
         }
     }
-    //POCOOR-7298 start
-    //  public function onUpdateFieldHomeroomTeacher(Event $event, array $attr, $action, Request $request)
-    //  {
 
-    //     if ($action == 'add' || $action == 'edit') {
-    //         $staffChangeTypes = $this->staffChangeTypesList;
-    //         if (isset($request->data[$this->alias()])) {
-    //             if($request->data[$this->alias()]['staff_change_type_id'] == ''){
-    //                 $attr['visible'] = false;
-    //             }
-    //             else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['HOMEROOM_TEACHER'] || $request->data[$this->alias()]['staff_change_type_id'] == 6) {
-    //               $attr['visible']=true;
-    //               if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
-    //                     $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
-    //                      $options = $attr['options'];
-    //                      $attr['attr']['value'] = $options[strval($entity->is_homeroom)];
-    //                 }
-    //                 else{
-    //                     echo "none";
-    //                 }
-    //  }
-    //  return $attr;
-    // }}}
-
+     //Pocor 7289 homeroom teachers option start
      public function onUpdateFieldCurrentHomeroomTeacher(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
@@ -1497,7 +1525,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 if($request->data[$this->alias()]['staff_change_type_id'] == ''){
                     $attr['visible'] = false;
                 }
-                // else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['CHANGE_IN_FTE']) {
+
                 else if ($request->data[$this->alias()]['staff_change_type_id'] != '' && $request->data[$this->alias()]['staff_change_type_id'] == 6) {
                     $attr['visible'] = true;
 
@@ -1531,9 +1559,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         $options = $attr['options'];
                         if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                             $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
-                            if (isset($options[strval($entity->is_homeroom)])) {
+                            $entity->is_homeroom =  ($entity->is_homeroom) ? _($entity->is_homeroom) : _("0") ;
+
                                 unset($options[strval($entity->is_homeroom)]);
-                            }
+                            
+
                         }
                         $attr['options'] = $options;
                     }
@@ -1548,55 +1578,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
         return $attr;
     }
+    //Pocor 7289 homeroom teachers option end
 
-    //     if ($this->action == 'view') {
-    //         // $oldValue = ($entity->institution_staff->FTE * 100). '%';
-    //         // $newValue = '100%';
-            // if ($entity->FTE < 1) {
-            //     $newValue = ($entity->FTE * 100) . '%';
-            // }
 
-            // if ($newValue != $oldValue) {
-            //     return $this->getStyling($oldValue, $newValue);
-            // } else {
-            //     return $newValue;
-    //         // }
-    //     }
-    // }
-    // public function onGetHomeroomTeacher(Event $event, Entity $entity)
-    // {
-    //     if ($this->action == 'view') {
-    //         $oldValue = ($entity->institution_staff->FTE * 100). '%';
-    //         $newValue = '100%';
-    //         if ($entity->FTE < 1) {
-    //             $newValue = ($entity->FTE * 100) . '%';
-    //         }
-
-    //         if ($newValue != $oldValue) {
-    //             return $this->getStyling($oldValue, $newValue);
-    //         } else {
-    //             return $newValue;
-    //         }
-    //     }
-    // }
-    //  if ($action == 'add' || $action == 'edit') {
-    //         $staffChangeTypes = $this->staffChangeTypesList;
-    //         if (isset($request->data[$this->alias()])) {
-    //             if($request->data[$this->alias()]['staff_change_type_id'] == ''){
-    //                 $attr['visible'] = false;
-    //             }
-    //             else if ($request->data[$this->alias()]['staff_change_type_id'] == $staffChangeTypes['HOMEROOM_TEACHER'] || $request->data[$this->alias()]['staff_change_type_id'] == 6) {
-    //               $attr['visible']=true;
-    //               if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
-    //                     $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
-    //                      $options = $attr['options'];
-    //                      $attr['attr']['value'] = $options[strval($entity->is_homeroom)];
-    //                 }
-    //                 else{
-    //                     echo "none";
-    //                 }
-    //  }
-    //  return $attr;
-    // }}}
 }
 
