@@ -1133,7 +1133,6 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
                     angular.forEach(periods, function(period, key) {
                         periodObj[period.id] = period;
                     }, periodObj);
-
                     if (angular.isObject(subjectStudents) && subjectStudents.length > 0) {
                         var studentId = null;
                         var currentStudentId = null;
@@ -1148,8 +1147,10 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
                         var resultType = null;
 
                         angular.forEach(subjectStudents, function(subjectStudent, key) {
+                            console.log("subjectStudent");
+                            console.log(subjectStudent);
                             currentStudentId = parseInt(subjectStudent.student_id);
-                            totalMarks = parseInt(subjectStudent.total_mark);
+                            totalMarks = parseInt(subjectStudent.InstitutionSubjectStudents.total_mark);
                             assessmentPeriodId = subjectStudent.assessment_period_id;
                             if (assessmentPeriodId != null && angular.isDefined(gradingTypes[assessmentPeriodId])) {
                                 resultType = gradingTypes[assessmentPeriodId].assessment_grading_type.result_type;
@@ -1168,8 +1169,8 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
                                     openemis_id: subjectStudent._matchingData.Users.openemis_no,
                                     name: subjectStudent._matchingData.Users.first_name,
                                     student_id: currentStudentId,
-                                    student_status_id: subjectStudent.student_status_id,
-                                    // student_status_name: subjectStudent.student_status.name,
+                                    student_status_id: subjectStudent.StudentStatuses.student_status_id,
+                                    student_status_name: subjectStudent.StudentStatuses.name,
                                     total_mark: '',
                                     is_dirty: false,
                                     save_error: {}
@@ -1196,20 +1197,20 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
 
                             if (isMarksType) {
                                 console.log("1");
-                                var marks = parseFloat(subjectStudent.AssessmentItemResults.marks);
+                                var marks = parseFloat(subjectStudent.marks);
                                 if (!isNaN(marks)) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = marks;
                                 }
                             } else if (isGradesType) {
                                 console.log("2");
-                                if (subjectStudent.AssessmentItemResults.assessment_grading_option_id != null && subjectStudent.AssessmentItemResults.marks == null) {
-                                    studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.AssessmentItemResults.assessment_grading_option_id;
+                                if (subjectStudent.assessment_grading_option_id != null && subjectStudent.marks == null) {
+                                    studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.assessment_grading_option_id;
                                 }
                             } else if (isDurationType) {
                                 console.log("3");
-                                var duration = parseFloat(subjectStudent.AssessmentItemResults.marks);
+                                var duration = parseFloat(subjectStudent.marks);
                                 if (!isNaN(duration)) {
-                                    studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.AssessmentItemResults.marks;
+                                    studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.marks;
                                 }
                             }
                         }, rowData);
