@@ -55,6 +55,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
     Controller.alertUrl = '';
     Controller.redirectUrl = '';
     Controller.selectedShift = null;
+    Controller.selectedUnit = null;
+    Controller.selectedCourse = null;
     Controller.selectedTeacher = null;
     Controller.selectedSecondaryTeacher = [];
     Controller.className = '';
@@ -83,8 +85,9 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                     this.push(value.secondary_staff_id);
                 }, secondaryTeachers);
                 Controller.selectedSecondaryTeacher = secondaryTeachers;
-
                 Controller.selectedShift = response.institution_shift_id;
+                Controller.selectedUnit = response.institution_unit_id;
+                Controller.selectedCourse = response.institution_course_id;
                 Controller.className = response.name;
                 Controller.academicPeriodId = response.academic_period_id;
                 Controller.institutionId = response.institution_id;
@@ -122,6 +125,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                 promises[1] = InstitutionClassStudentsSvc.getInstitutionShifts(response.institution_id, response.academic_period_id);
                 promises[2] = InstitutionClassStudentsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
                 promises[3] = InstitutionClassStudentsSvc.getConfigItemValue('max_students_per_class');
+                promises[4] = InstitutionClassStudentsSvc.getInstitutionUnits(response.institution_id, response.academic_period_id);
+                promises[5] = InstitutionClassStudentsSvc.getInstitutionCourses(response.institution_id, response.academic_period_id);
                 return $q.all(promises);
             }, function(error) {
                 console.log(error);
@@ -155,6 +160,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                 Controller.shiftOptions = promises[1];
                 Controller.mainTeacherOptions = promises[2];
                 Controller.maxStudentsPerClass = parseInt(promises[3]);
+                Controller.unitOptions = promises[4];
+                Controller.courseOptions = promises[5];
   
                 Controller.teacherOptions = Controller.changeStaff(Controller.selectedSecondaryTeacher);
                 Controller.secondaryTeacherOptions = Controller.changeStaff(Controller.selectedTeacher);
@@ -259,6 +266,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         postData.name = Controller.className;
         postData.staff_id = Controller.selectedTeacher;
         postData.institution_shift_id = Controller.selectedShift;
+        postData.institution_unit_id = Controller.selectedUnit;
+        postData.institution_course_id = Controller.selectedCourse;
         postData.classStudents = classStudents;
         postData.institution_id = Controller.institutionId;
         postData.academic_period_id = Controller.academicPeriodId;

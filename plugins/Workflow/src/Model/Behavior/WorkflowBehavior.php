@@ -504,9 +504,16 @@ class WorkflowBehavior extends Behavior
                     $filterOptions = $newEvent->result;
                 }
                 // End
-
+                //POCOR-7263::Start
                 $filterOptions = ['-1' => '-- ' . __('Select') . ' --'] + $filterOptions;
-                $selectedFilter = $this->_table->queryString('filter', $filterOptions);
+                $url = $_SERVER['QUERY_STRING'];
+                $data = explode('=', $url);
+                $filterOne = $data[1];
+                $filterTwo = $data[2];
+                $firstVal = preg_replace('/\D/', '', $filterOne);
+                $selectedFilter = $firstVal;
+                //POCOR-7263::End
+               // $selectedFilter = $this->_table->queryString('filter', $filterOptions);
                 $this->_table->advancedSelectOptions($filterOptions, $selectedFilter);
                 $this->_table->controller->set(compact('filterOptions', 'selectedFilter'));
                 // End
