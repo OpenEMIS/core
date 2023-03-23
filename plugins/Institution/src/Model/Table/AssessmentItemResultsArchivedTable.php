@@ -27,6 +27,8 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+        $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
         $this->belongsTo('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods']);
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('AcademicPeriod.Period');
@@ -83,39 +85,58 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
 
     public function findStudentResultsArchived(Query $query, array $options)
     {
+        $institutionId = $options['institution_id'];
+        $classId = $options['class_id'];
+        $assessmentId = $options['assessment_id'];
+        $periodId = $options['academic_period_id'];
+        $subjectId = $options['subject_id'];
+        $gradeId = $options['grade_id'];
         $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $educationSubjectId = $InstitutionSubjects->get($subjectId)->education_subject_id;
         $Users = $this->Users;
+        $StudentStatuses = $this->StudentStatuses;
+        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');//POCOR-6468 starts
         return $query
         ->select([
             $this->aliasField('id'),
             $this->aliasField('marks'),
             $this->aliasField('assessment_grading_option_id'),
             $this->aliasField('assessment_period_id'),
-            // $this->aliasField('student_id'),
-            // $this->aliasField('institution_id'),
-            // $this->aliasField('academic_period_id'),
-            // $this->aliasField('education_grade_id'),
-            // $this->aliasField('education_subject_id'),//POCOR-6479 
+
+            $this->aliasField('student_id'),
+            $this->aliasField('institution_id'),
+            $this->aliasField('academic_period_id'),
+            $this->aliasField('education_grade_id'),
+            $this->aliasField('education_subject_id'),//POCOR-6479 
             // $this->aliasField('student_status_id'),
-            // $this->aliasField('total_mark'),
+            $InstitutionSubjectStudents->aliasField('total_mark'),
+
             $Users->aliasField('openemis_no'),
             $Users->aliasField('first_name'),
             $Users->aliasField('middle_name'),
             $Users->aliasField('third_name'),
             $Users->aliasField('last_name'),
-            $Users->aliasField('preferred_name')
-            // $StudentStatuses->aliasField('code'),
-            // $StudentStatuses->aliasField('name')
+            $Users->aliasField('preferred_name'),
+            $StudentStatuses->aliasField('code'),
+            $StudentStatuses->aliasField('name')
         ])
         ->matching('Users')
+        // ->contain('StudentStatuses')
         ->leftJoin(
             [$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()],
             [
                 $this->aliasField('student_id = ') . $InstitutionSubjectStudents->aliasField('student_id')
             ]
         )
+        ->leftJoin(
+            [$StudentStatuses->alias() => $StudentStatuses->table()],
+            [
+                $InstitutionSubjectStudents->aliasField('student_status_id = ') . $StudentStatuses->aliasField('id')
+            ]
+        )//POCOR-6468 starts
         ->where([
-            // $InstitutionSubjectStudents->aliasField('institution_subject_id') => $subjectId
+            $this->aliasField('education_subject_id') => $educationSubjectId
         ])
         ->group([
             $InstitutionSubjectStudents->aliasField('student_id'),
@@ -125,7 +146,38 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         ])
         ->order([
             $InstitutionSubjectStudents->aliasField('student_id')
-        ]);
+        ]) 
+        ->formatResults(function ($results) {
+            $arrResults = is_array($results) ? $results : $results->toArray();
+            foreach ($arrResults as &$result) {
+                $result['student_status']['name'] = __($result['student_status']['name']);
+            }
+            return $arrResults;
+        })
+        ->formatResults(function ($results1) {
+            $arrResults1 = is_array($results1) ? $results1 : $results1->toArray();
+            foreach ($arrResults1 as &$result) {
+                $assessmentItemResults = TableRegistry::get('assessment_item_results_archived');
+                $assessmentItemResultsData = $this->find()
+                        ->select([
+                            $this->aliasField('marks')
+                        ])
+                        ->order([
+                            $this->aliasField('created') => 'DESC',
+                            $this->aliasField('modified') => 'DESC'
+                        ])
+                        ->where([
+                            $this->aliasField('student_id') => $result['student_id'],
+                            $this->aliasField('academic_period_id') => $result['AssessmentItemResults']['academic_period_id'],
+                            $this->aliasField('education_grade_id') => $result['AssessmentItemResults']['education_grade_id'],
+                            $this->aliasField('assessment_period_id') => $result['AssessmentItemResults']['assessment_period_id'],
+                            $this->aliasField('education_subject_id') => $result['AssessmentItemResults']['education_subject_id'],
+                        ])
+                        ->first();
+                    $result['AssessmentItemResults']['marks'] = $assessmentItemResultsData->marks;
+            }
+            return $arrResults1;
+        }); //POCOR-6573 ends;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
