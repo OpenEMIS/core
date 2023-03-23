@@ -104,6 +104,7 @@ class SingleGradeBehavior extends Behavior
             'onChangeReload' => true,
             'select' => false
         ]);
+        
 
         $model->field('number_of_classes', [
             'type' => 'select',
@@ -126,12 +127,18 @@ class SingleGradeBehavior extends Behavior
             unset($secondaryStaffOptions[0]);
         }
 
+        $unitOptions = $model->getUnitId($institutionId =null,  $selectedAcademicPeriodId=null);
+        $courseOptions = $model->getCourseId($institutionId =null,  $selectedAcademicPeriodId=null);
+       
+
         $model->field('single_grade_field', [
             'type'      => 'element',
             'element'   => 'Institution.Classes/single_grade',
             'data'      => [    'numberOfClasses'   => $numberOfClasses,
                                 // 'staffOptions'      => $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId,0, $institutionShiftId,$homeTeacher),
                                 'staffOptions'      => $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId,0),
+                                'unitOptions'       => $unitOptions,
+                                'courseOptions'     => $courseOptions,
                                 'existedClasses'    => $model->getExistedClasses($institutionId, $selectedAcademicPeriodId, $selectedEducationGradeId),
                                 'grade'             => $grade,
                                 'secondaryStaffAttr' => [
@@ -150,6 +157,8 @@ class SingleGradeBehavior extends Behavior
         $model->fields['classes_secondary_staff']['visible'] = false;
         $model->fields['classes_secondary_staff']['type'] = 'hidden';
         $model->fields['total_male_students']['visible'] = false;
+        $model->fields['institution_unit_id']['type'] = 'hidden';
+        $model->fields['institution_course_id']['visible'] = false;
         $model->fields['total_female_students']['visible'] = false;   
         $model->setFieldOrder([
             'academic_period_id', 'education_grade', 'institution_shift_id', 'class_number', 'number_of_classes', 'capacity', 'single_grade_field'
