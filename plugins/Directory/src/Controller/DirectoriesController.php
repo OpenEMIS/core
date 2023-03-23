@@ -1873,7 +1873,7 @@ class DirectoriesController extends AppController
         $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
         $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
         $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
-        $dateOfBirth = (array_key_exists('date_of_birth', $requestData))? date('Y-m-d', strtotime($requestData['date_of_birth'])): null;
+        $dateOfBirth = (array_key_exists('date_of_birth', $requestData) && !empty($requestData['date_of_birth']))? date('Y-m-d', strtotime($requestData['date_of_birth'])): null;
         $limit = (array_key_exists('limit', $requestData)) ? $requestData['limit']: 10;
         $page = (array_key_exists('page', $requestData)) ? $requestData['page']: 1;
         $id = (array_key_exists('id', $requestData)) ? $requestData['id']: '';
