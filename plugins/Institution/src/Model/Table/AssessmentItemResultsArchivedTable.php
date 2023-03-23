@@ -42,6 +42,12 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
             'excludes' => ['id'],
             'autoFields' => false
         ]);
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Results' => ['index', 'add'],
+            'SubjectStudents' => ['index'],
+            'OpenEMIS_Classroom' => ['index']
+        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra) {
@@ -73,6 +79,53 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         //         'title' => __('Back')
         //     ]
         // ];
+    }
+
+    public function findStudentResultsArchived(Query $query, array $options)
+    {
+        $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $Users = $this->Users;
+        return $query
+        ->select([
+            $this->aliasField('id'),
+            $this->aliasField('marks'),
+            $this->aliasField('assessment_grading_option_id'),
+            $this->aliasField('assessment_period_id'),
+            // $this->aliasField('student_id'),
+            // $this->aliasField('institution_id'),
+            // $this->aliasField('academic_period_id'),
+            // $this->aliasField('education_grade_id'),
+            // $this->aliasField('education_subject_id'),//POCOR-6479 
+            // $this->aliasField('student_status_id'),
+            // $this->aliasField('total_mark'),
+            $Users->aliasField('openemis_no'),
+            $Users->aliasField('first_name'),
+            $Users->aliasField('middle_name'),
+            $Users->aliasField('third_name'),
+            $Users->aliasField('last_name'),
+            $Users->aliasField('preferred_name')
+            // $StudentStatuses->aliasField('code'),
+            // $StudentStatuses->aliasField('name')
+        ])
+        ->matching('Users')
+        ->leftJoin(
+            [$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()],
+            [
+                $this->aliasField('student_id = ') . $InstitutionSubjectStudents->aliasField('student_id')
+            ]
+        )
+        ->where([
+            // $InstitutionSubjectStudents->aliasField('institution_subject_id') => $subjectId
+        ])
+        ->group([
+            $InstitutionSubjectStudents->aliasField('student_id'),
+            //Added for POCOR-6558[START]
+            $this->aliasField('assessment_period_id')
+            //Added for POCOR-6558[END]
+        ])
+        ->order([
+            $InstitutionSubjectStudents->aliasField('student_id')
+        ]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
