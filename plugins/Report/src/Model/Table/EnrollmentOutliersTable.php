@@ -49,8 +49,8 @@ class EnrollmentOutliersTable extends AppTable  {
 	
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
 	{
-		$requestData = json_decode($settings['process']['params']);
-        $academicPeriodId = $requestData->academic_period_id;
+		/*$requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;*/
         $academicPeriodId = 32;
 		$conditions = [];
 		$conditionQuery = [];
@@ -60,10 +60,10 @@ class EnrollmentOutliersTable extends AppTable  {
         $institutions = TableRegistry::get('institutions');
         $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         $connection = ConnectionManager::get('default');
-        $statement = $connection->prepare("SELECT main_query.academic_period_name AS 'Academic Period'
-    ,main_query.institution_code AS 'Institution Code'
-    ,main_query.institution_name AS 'Institution'
-    ,main_query.count_students AS 'Number of Students'
+        $statement = $connection->prepare("SELECT main_query.academic_period_name 
+    ,main_query.institution_code 
+    ,main_query.institution_name 
+    ,main_query.count_students 
 						FROM
 						(
 						    SELECT academic_periods.name academic_period_name 	
@@ -92,26 +92,42 @@ class EnrollmentOutliersTable extends AppTable  {
 						WHERE main_query.count_students NOT BETWEEN subq.min_enrolment AND subq.max_enrolment");
         $statement->execute();
 
-       $enroll = $statement->fetchAll(\PDO::FETCH_ASSOC);
-       /*$row = [];
-       foreach($enroll as $key => $value){
+       $list = $statement->fetchAll(\PDO::FETCH_ASSOC);
+       /*$academic_period = $list[0]['Academic Period'];
+       $institution_code = $list[0]['Institution Code'];
+       $institution_name = $list[0]['Institution'];
+       $count_students = $list[0]['Number of Students'];*/
+       $row = [];
+       foreach($list as $key => $value){
        	$row['academic_period'] = $value['academic_period_name'];
        	$row['institution_code'] = $value['institution_code'];
        	$row['institution_name'] = $value['institution_name'];
        	$row['total_students'] = $value['count_students'];
-       }*/
+       }
+       /*$query[] = [
+       		'academic_period' => $academic_period,
+       		'institution_code' => $institution_code,
+       ];*/
+
+      // print_r($row);die('pkk');
+       return $row;
        
         
 	}
 
-
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+	/*public function onExcelGetStatus(Event $event, Entity $entity)
     {
+    }*/
+
+
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+    	//print_r($fields);die;
 
     	$extraFields = [];
         $extraFields[] = [
-            'key' => 'Academic Period',
-            'field' => 'Academic Period',
+            'key' => '',
+            'field' => 'academic_period',
             'type' => 'integer',
             'label' => __('Academic Period')
         ];
