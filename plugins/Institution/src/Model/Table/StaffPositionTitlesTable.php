@@ -155,11 +155,19 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	public function onUpdateFieldStaffPositionCategoriesId(Event $event, array $attr, $action, Request $request) 
 	{
         if ($action == 'add' || $action == 'edit') {
-        	list($levelOptions, $selectedLevel) = array_values($this->getTypeOptions($request));
+        	list($levelOptions, $selectedLevel) = array_values($this->getTypeOptions($request, $action));//POCOR-7292 add param action
         	$attr['options'] = $levelOptions;
         	if ($action == 'add') {
         		$attr['default'] = $selectedLevel;
-        	}
+        	}else if($action == 'edit'){//POCOR-7292 starts
+        		$typeId= $this->paramsDecode($request->params['pass'][1]);
+        		$StaffPositionTitles = TableRegistry::get('staff_position_titles');
+        		$Options = $StaffPositionTitles
+					            ->find()
+					            ->where([$StaffPositionTitles->aliasField('id') => $typeId['id']])
+					            ->first();
+				$attr['value'] = $levelOptions[$Options->staff_position_categories_id];
+        	}//POCOR-7292 ends
         }
 		return $attr;
 	}
@@ -171,17 +179,26 @@ class StaffPositionTitlesTable extends ControllerActionTable
      * @ticket POCOR-6950
      */
 
-	public function getTypeOptions($request)
+	public function getTypeOptions($request, $action = null)//POCOR-7292 add param $action
     {
 		$type = $request->data['StaffPositionTitles']['type'];
-        $StaffPositionCategories = TableRegistry::get('Staff.StaffPositionCategories');
-        $levelOptions = $StaffPositionCategories
+		$StaffPositionCategories = TableRegistry::get('Staff.StaffPositionCategories');
+        //POCOR-7292 starts
+        if($action == 'edit'){
+    		$StaffPositionTitlesPass= $this->paramsDecode($request->params['pass'][1]);
+    		$StaffPositionTitles = TableRegistry::get('staff_position_titles');
+    		$Options = $StaffPositionTitles
+				            ->find()
+				            ->where([$StaffPositionTitles->aliasField('id') => $StaffPositionTitlesPass['id']])
+				            ->first();
+			$type = !empty($Options) ? $Options->type : '';         
+		}//POCOR-7292 ends
+		$levelOptions = $StaffPositionCategories
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->where([ $StaffPositionCategories->aliasField('type') => $type ])
             ->toArray();
            
          $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
-
          return compact('levelOptions', 'selectedLevel');
     }
 
