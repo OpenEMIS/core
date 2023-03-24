@@ -210,6 +210,27 @@ class InstitutionDistributionsTable extends ControllerActionTable
         $this->field('quantity_received');
         $this->field('comment',['visible' => false]);
         $this->setFieldOrder(['meal_programmes_id','date_received','quantity_received','delivery_status']);
+
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Institutions','Meals Distribution','Meals');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
     }
 
      public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)

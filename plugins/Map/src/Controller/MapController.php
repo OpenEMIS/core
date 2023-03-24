@@ -28,6 +28,22 @@ class MapController extends AppController
 	{
 		$this->set('ngController', 'MapCtrl as MapController');
         $this->set('noBreadcrumb', true);
+
+
+        // Start POCOR-5188
+        $manualTable = TableRegistry::get('Manuals');
+        $ManualContent =   $manualTable->find()->select(['url'])->where([
+                $manualTable->aliasField('function') => 'Map',
+                $manualTable->aliasField('module') => 'Reports',
+                $manualTable->aliasField('category') => 'Reports',
+                ])->first();
+        
+        if (!empty($ManualContent['url'])) {
+            $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
+        }else{
+            $this->set('is_manual_exist', []);
+        }
+        // End POCOR-5188
 	}
 
 	private function attachAngularModules()
