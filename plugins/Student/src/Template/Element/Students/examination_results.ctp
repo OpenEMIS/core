@@ -1,7 +1,30 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
 <?= $this->Html->script('Student.angular/examination_results/student.examination_results.svc', ['block' => true]); ?>
 <?= $this->Html->script('Student.angular/examination_results/student.examination_results.ctrl', ['block' => true]); ?>
+<?php
+$this->start('toolbar');
+?>
+	<a href="javascript:void(0)" ng-show="$ctrl.action == 'view'">
+        <button ng-click="$ctrl.ExportTimetable()" class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Download') ?>" >
+            <i class="fa kd-download" ></i>
+        </button>
+    </a>
+    <?php /*************** Start POCOR-5188 */ ?>
+    <?php 
+        if(!empty($is_manual_exist)):
+    ?>
 
+    <a href="<?php echo $is_manual_exist['url']; ?>" target="_blank">
+        <button  class="btn btn-xs btn-default icon-big"  data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Help') ?>" >
+        <i class="fa fa-question-circle"></i>
+        </button>
+    </a>
+    <?php endif ?>
+    <?php /*************** End POCOR-5188 */ ?>
+    
+<?php
+$this->end();
+?>
 <?php
 $this->start('panelBody');
 ?>
