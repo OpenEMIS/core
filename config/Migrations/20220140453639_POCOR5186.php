@@ -36,7 +36,7 @@ class POCOR5186 extends AbstractMigration
 
         // add column 
         $table = $this->table('student_behaviours');
-        $table
+        /*$table
             ->addColumn('assignee_id', 'integer', [
                 'comment' => 'links to security_users.id',
                 'default' => null,
@@ -53,7 +53,7 @@ class POCOR5186 extends AbstractMigration
                 'after' => 'institution_id'
             ])
             ->addIndex('status_id')
-            ->update();
+            ->update();*/
 
         // add wrokflow behaviour    
         $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
@@ -63,6 +63,7 @@ class POCOR5186 extends AbstractMigration
         $workflow_models = $this->query("SELECT * FROM workflow_models order by id DESC LIMIT 1 ");
         $workflow_models_id = $workflow_models->fetchAll();
         $workflow_models_id = $workflow_models_id[0]['id'];
+
 
         $workflowModelData = [
             [
@@ -76,8 +77,6 @@ class POCOR5186 extends AbstractMigration
             ]
         ];
         $this->insert('workflow_models', $workflowModelData);
-
-
         $get_workflow_models_last_inserted_id = $this->query("SELECT * FROM workflow_models WHERE `name` = 'Institutions > Behaviour > Students' AND `model` = 'Institution.StudentBehaviours'");
         $workflow_models_last_inserted_id = $get_workflow_models_last_inserted_id->fetchAll();
         $workflow_models_last_inserted_id_value = $workflow_models_last_inserted_id[0]['id'];
@@ -139,7 +138,7 @@ class POCOR5186 extends AbstractMigration
         // Get the workflowSteps for the created workflowsteps
         $openStatusId = $WorkflowStepsTable->find()
             ->where([
-                $WorkflowStepsTable->aliasField('workflow_id') => $workflow_models_last_inserted_id_value,
+                $WorkflowStepsTable->aliasField('workflow_id') => $workflowId,
                 $WorkflowStepsTable->aliasField('category') => 1,
                 $WorkflowStepsTable->aliasField('name') => 'Open'
             ])
@@ -148,16 +147,15 @@ class POCOR5186 extends AbstractMigration
 
         $pendingForApprovalStatusId = $WorkflowStepsTable->find()
             ->where([
-                $WorkflowStepsTable->aliasField('workflow_id') => $workflow_models_last_inserted_id_value,
+                $WorkflowStepsTable->aliasField('workflow_id') => $workflowId,
                 $WorkflowStepsTable->aliasField('category') => 2,
                 $WorkflowStepsTable->aliasField('name') => 'Pending Approval'
             ])
             ->extract('id')
             ->first();
-
         $activeStatusId = $WorkflowStepsTable->find()
             ->where([
-                $WorkflowStepsTable->aliasField('workflow_id') => $workflow_models_last_inserted_id_value,
+                $WorkflowStepsTable->aliasField('workflow_id') => $workflowId,
                 $WorkflowStepsTable->aliasField('category') => 3,
                 $WorkflowStepsTable->aliasField('name') => 'Closed'
             ])
