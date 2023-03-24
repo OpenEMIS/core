@@ -108,7 +108,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.transferStaffNextStep = transferStaffNextStep;
     StaffController.checkConfigForExternalSearch = checkConfigForExternalSearch;
     StaffController.isNextButtonShouldDisable = isNextButtonShouldDisable;
-    StaffController.fetchCspdData = fetchCspdData;
     StaffController.getCSPDSearchData=getCSPDSearchData;
   
     
@@ -1342,7 +1341,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function setStaffDataFromExternalSearchData(selectedData)
     {
-        // 9791048083
+        // DOCS: Demo nationality_number for test usage : 9791048083
         if(StaffController.externalSearchSourceName==='Jordan CSPD'){
             InstitutionsStaffSvc.getUniqueOpenEmisId().then((response)=> {
                const selectedObjectWithOpenemisNo =  Object.assign({}, selectedData, {'openemis_no':response})
@@ -2467,19 +2466,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         return false;
     }
 
-    async function fetchCspdData() {
-        const { identity_number } = StaffController.selectedStaffData;
-        const cspdData = await InstitutionsStaffSvc.getCspdData(
-            { identity_number:9791048083}
-        );
-        
-        console.log(cspdData)
-    }
     function getCSPDSearchData() {
         var param = {            
             identity_number: StaffController.selectedStaffData.identity_number,
         };
-        /* var param = {identity_number:9791048083}; */
         var dataSource = {
             pageSize: StaffController.pageSize,
             getRows: function (params) {
@@ -2491,7 +2481,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     var gridData = [response.data.data];
                     if(!gridData)gridData = [];
                     gridData.forEach((data) => {
-                        data.name = data['first_name'] + data['middle_name'] + data['last_name'];
+                        data.name = `${data['first_name']} ${data['middle_name']} ${data['last_name']}`;
                         data.gender = data['gender_name'];
                         data.nationality = data['nationality_name'];
                         data.identity_type = data['identity_type_name'];
@@ -2499,7 +2489,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                         data.nationality_id = data['nationality_id'];
                         data.identity_type_id = data['identity_type_id'];
                     });
-                    var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
+                    var totalRowCount = gridData.length === 0 ? 1 : gridData.length;
                     return StaffController.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
