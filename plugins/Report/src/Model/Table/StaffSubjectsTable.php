@@ -280,6 +280,7 @@ class StaffSubjectsTable extends AppTable  {
         $userIdTypes = $IdentityTypesss->find()->all();
         $defaultIdType = $IdentityTypesss->find()->where(['default' =>1 ])->first();
 
+
         $newFields = [];
         //Start:POCOR-6779
         $newFields[] = [
@@ -308,12 +309,18 @@ class StaffSubjectsTable extends AppTable  {
             'type' => 'string',
             'label' => __('OpenEMIS No.')
         ];
-        $newFields[] = [
-            'key' => '',
-            'field' => str_replace(' ', '_',$defaultIdType->name),
-            'type' => 'string',
-            'label' => __($defaultIdType->name) //Default Identity
-        ];
+
+        //POCOR-7307 add if condition
+        if(!empty($defaultIdType))
+        {
+            $newFields[] = [
+                'key' => '',
+                'field' => str_replace(' ', '_',$defaultIdType->name),
+                'type' => 'string',
+                'label' => __($defaultIdType->name) //Default Identity
+            ];
+        }
+        //POCOR-7307 end
         $newFields[] = [
             'key' => '',
             'field' => 'other_identities',
