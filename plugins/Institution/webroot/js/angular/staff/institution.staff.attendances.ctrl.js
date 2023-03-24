@@ -1,16 +1,16 @@
 angular.module('institution.staff.attendances.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institution.staff.attendances.svc'])
     .controller('InstitutionStaffAttendancesCtrl', InstitutionStaffAttendancesController);
 
-InstitutionStaffAttendancesController.$inject = ['$scope', '$q', '$window', '$http', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionStaffAttendancesSvc'];
+InstitutionStaffAttendancesController.$inject = ['$scope','$timeout' ,'$q', '$window', '$http', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionStaffAttendancesSvc'];
 
-function InstitutionStaffAttendancesController($scope, $q, $window, $http, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionStaffAttendancesSvc) {
+function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $http, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionStaffAttendancesSvc) {
     var vm = this;
-
+    
     vm.action = 'view';
     vm.excelUrl = '';
     vm.staffId;
     vm.institutionId;
-	vm.ownView = 0;
+    vm.ownView = 0;
     vm.ownEdit = 0;
     vm.otherView = 0;
     vm.otherEdit = 0;
@@ -44,7 +44,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     vm.allPresentCount = 0;
     vm.allLeaveCount = 0;
     vm.allLateCount = 0;
-    
+    vm.globalLateCount = 0;
     // gridOptions
     vm.gridReady = false;
     vm.gridOptions = {
@@ -216,7 +216,7 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
             start_time: vm.selectedShiftStartTime,
             end_time: vm.selectedShiftEndTime,
             day_date: vm.selectedDayDate,
-			own_attendance_view: vm.ownView,
+            own_attendance_view: vm.ownView,
             own_attendance_edit: vm.ownEdit,
             other_attendance_view: vm.otherView,
             other_attendance_edit: vm.otherEdit,
@@ -293,13 +293,16 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     }
 
     vm.setAllStaffAttendances = function(staffList) {
+        // UtilsSvc.isAppendLoader(true);
         vm.allPresentCount = 0;
         vm.totalStaff = 0;
         vm.allAttendances = 0;
         vm.allLeaveCount = 0;
         vm.allLateCount = 0;
+        vm.count = 0;
         vm.staffList = staffList;
         vm.totalStaff = staffList.length;
+        vm.lateCountUpdated = false;
         if (staffList.length > 0) {
             angular.forEach(staffList, function(staff) {
                 // for All Days Dashboard
@@ -312,10 +315,15 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
                         vm.allLeaveCount = vm.allLeaveCount + 1;
                     }
                     if (attendance.absence_type_id == 3) {
-                       vm.allLateCount = vm.allLateCount + 1;
+                        vm.allLateCount = vm.allLateCount + 1;
+                        vm.globalLateCount = vm.allLateCount
                     }
                 });
+                // $scope.$apply();
             });
+            
+            //console.log(vm.allPresentCount);
+            //console.log(vm.allLateCount);
             if (vm.allPresentCount == 0) {
                 vm.allPresentCount = '-';
             }
@@ -325,8 +333,11 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
             if (vm.allLateCount == 0) {
                 vm.allLateCount = '-';
             }
+            $timeout(function() {
+                vm.allLateCount = vm.globalLateCount; // replace 'NEW VALUE' with the update//POCOR-7255
+            })
         }
-    }
+  }
 
     vm.setGridData = function() {
         if (angular.isDefined(vm.gridOptions.api)) {
@@ -368,11 +379,24 @@ function InstitutionStaffAttendancesController($scope, $q, $window, $http, Utils
     };
 
     vm.onBackClick = function() {
-        vm.setAllStaffAttendances(vm.staffList);
+        // vm.setAllStaffAttendances(vm.staffList); //POCOR-7255 comment this line
+        $window.localStorage.setItem('back',true)
         vm.action = 'view';
         vm.gridOptions.context.action = vm.action;
         vm.setColumnDef();
         AlertSvc.reset($scope);
+        InstitutionStaffAttendancesSvc.getAllStaffAttendances(vm.getAllStaffAttendancesParams())
+        .then(function(allStaffAttendances) {
+            vm.setAllStaffAttendances(allStaffAttendances);
+            // Update the allLateCount variable with the new data
+            vm.allLateCount = 0;
+            for (var i = 0; i < allStaffAttendances.length; i++) {
+                if (allStaffAttendances[i].lateCount) {
+                vm.allLateCount += parseInt(allStaffAttendances[i].lateCount);
+                }
+            }
+        });
+        //console.log('hello')
     };
 
     vm.onExcelClick = function() {
