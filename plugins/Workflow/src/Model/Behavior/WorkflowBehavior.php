@@ -1089,7 +1089,8 @@ class WorkflowBehavior extends Behavior
         // for approve action
         if (isset($data[$model->alias()]['validate_approve'])) {
             if (isset($data[$model->alias()]['workflow_assignee_id']) && !empty($data[$model->alias()]['workflow_assignee_id'])) {
-                $data['WorkflowTransitions']['assignee_id'] = $data[$model->alias()]['workflow_assignee_id'];
+                //$data['WorkflowTransitions']['assignee_id'] = $data[$model->alias()]['workflow_assignee_id'];
+                $data['WorkflowTransitions']['assignee_id'] = $model->Auth->user('id');//POCOR-7301 and POCOR-7311
             }
         }
     }
