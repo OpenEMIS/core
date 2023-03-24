@@ -161,7 +161,6 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->field('time_of_behaviour', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('category_id', ['visible' => false]);//POCOR-5186
-       // $this->field('status', ['visible' => false]);//POCOR-5186
         $this->field('assignee_id', ['visible' => false]);//POCOR-5186
         $this->field('status_id', ['visible' => true]);//POCOR-5186
 
@@ -258,6 +257,15 @@ class StudentBehavioursTable extends ControllerActionTable
             $query->order([$this->Students->aliasField('first_name'), $this->Students->aliasField('last_name')]);
         }
         // end POCOR-2547
+
+        $queryParams = $this->request->query;
+        $search = $this->getSearchKey();
+
+        // CUSTOM SEACH - 
+        $extra['auto_search'] = false; // it will append an AND
+        if (!empty($search)) {
+            $query->find('ByUserData', ['search' => $search]);
+        }
     }
     // POCOR 6154 end
 
@@ -995,9 +1003,40 @@ class StudentBehavioursTable extends ControllerActionTable
         }
         return null;
     }
-
-    public function findWorkbench(Query $query, array $options)
+    
+    public function findByUserData(Query $query, array $options)
     {
+        if (array_key_exists('search', $options)) {
+            $search = $options['search'];
+            $query
+            ->join([
+                [
+                    'table' => 'security_users', 'alias' => 'Students', 'type' => 'LEFT',
+                    'conditions' => ['security_users.id = ' . $this->aliasField('student_id')]
+                ],
+                [
+                    'table' => 'student_behaviour_category', 'alias' => 'StudentBehaviourCategories', 'type' => 'LEFT',
+                    'conditions' => ['student_behaviour_category.id = ' . $this->aliasField('student_behaviour_category_id')]
+                ],
+                
+                
+            ])
+            ->where([
+                    'OR' => [
+                        ['Students.openemis_no LIKE' => '%' . $search . '%'],
+                        ['Students.first_name LIKE' => '%' . $search . '%'],
+                        ['Students.last_name LIKE' => '%' . $search . '%'],
+                        ['Students.middle_name LIKE' => '%' . $search . '%'],
+                        ['StudentBehaviourCategories.name LIKE' => '%' . $search . '%'],
+                        [$this->aliasField('title').' LIKE' => '%' . $search . '%'],
+                        [$this->aliasField('date_of_behaviour').' LIKE' => '%' . $search . '%'],
+                        
+                    ]
+                ]
+            );
+        }
+
+        return $query;
     }
    
 
