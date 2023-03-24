@@ -129,9 +129,142 @@ class EducationGradesTable extends ControllerActionTable
         }
         //webhook Education Grade update -- start
     }
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+         echo "<pre>";
+         print_r($entity);
+         die();
+        //$institutionStudents = $this->institutionstudents;
+        //print_r($institutionStudents->exists([$institutionStudents->aliasField($institutionStudents->foreignKey()) => $entity->id]));
+        //POCOR-7179[START] delete custom field becouse when user is created from directory it insert value in custom field
+        // TableRegistry::get('student_custom_field_values')->deleteAll(['student_id' => $entity->id]);
+        //POCOR-7179[END]
+        if($this->checkUsersChildRecords($entity)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset'=>true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        }
+    }
+
+    private function checkUsersChildRecords($entity)
+    {
+        $result = false;
+        $securityGradeId = $entity->id ?? 0;
+
+
+        if($securityUserId) {
+            // count all institution_class_students
+            $institutionClassStudents = TableRegistry::get('institution_class_students')
+                ->find()->where(['student_id' => $securityUserId])->count();
+
+            // count all user activities
+            $userActivities = TableRegistry::get('user_activities')
+                ->find()->where(['security_user_id' => $securityUserId])->count();
+
+            // count all student_custom_field_values
+            $studentCustomFieldValues = TableRegistry::get('student_custom_field_values')
+                ->find()->where(['student_id' => $securityUserId])->count();
+
+            // count all institution_competency_results
+            $institutionCompetencyResults = TableRegistry::get('institution_competency_results')
+                ->find()->where(['student_id' => $securityUserId])->count();
+
+            // count all institution_student_absences
+            $institutionStudentAbsences = TableRegistry::get('institution_student_absences')
+                ->find()->where(['student_id' => $securityUserId])->count();
+
+            // count all institution_student_absence_days
+            $institutionStudentAbsenceDays = TableRegistry::get('institution_student_absence_days')
+                ->find()->where(['student_id' => $securityUserId])->count();
+
+            // count all institution_student_absence_details
+            $institutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details')
+                ->find()->where(['student_id' => $securityUserId])->count();
+
+            // count all institution_students
+            $institutionStudents = TableRegistry::get('institution_students')
+                ->find()->where(['student_id' => $securityUserId])->count();
+
+            // student_risks_criterias
+            $students = TableRegistry::get('institution_student_risks');
+            $query = $students->find()->select(['id'])->where(['student_id =' => $securityUserId]);
+
+            $studentRiskIds = [];
+            foreach ($query as $s) {
+                $studentRiskIds[] = $s->id;
+            }
+
+            $studentRisksCriterias = 0;
+            if(count($studentRiskIds)) {
+                $studentRisksCriterias = TableRegistry::get('student_risks_criterias')
+                    ->find()->where(['institution_student_risk_id IN' => $securityUserId])->count();
+            }
+
+            // count all institution_student_risks
+            $institutionStudentRisks = TableRegistry::get('institution_student_risks')
+                ->find()->where(['student_id' => $securityUserId])->count();
+
+            // count all institution_subject_students
+            $institutionSubjectStudents = TableRegistry::get('institution_subject_students')
+                ->find()->where(['student_id' => $securityUserId])->count();
+
+            // count all user_special_needs_devices
+            $userSpecialNeedsDevices = TableRegistry::get('user_special_needs_devices')
+                ->find()->where(['security_user_id' => $securityUserId])->count();
+
+            // count all user_special_needs_referrals
+            $userSpecialNeedsReferrals = TableRegistry::get('user_special_needs_referrals')
+                ->find()->where(['security_user_id' => $securityUserId])->count();
+
+            // count all user_special_needs_services
+            $userSpecialNeedsServices = TableRegistry::get('user_special_needs_services')
+                ->find()->where(['security_user_id' => $securityUserId])->count();
+            // count all user_special_needs_services
+            $userSpecialNeedsAssessments = TableRegistry::get('user_special_needs_assessments')
+            ->find()->where(['security_user_id' => $securityUserId])->count();
+
+
+            // count all institution_cases
+            $institutionCases = TableRegistry::get('institution_cases')
+                ->find()->where(['assignee_id' => $securityUserId])->count();
+
+            // count all institution_staff_shifts
+            $institutionStaffShifts = TableRegistry::get('institution_staff_shifts')
+                ->find()->where(['staff_id' => $securityUserId])->count();
+
+            //// POCOR-7179[START]
+            $userNationalities = TableRegistry::get('user_nationalities')
+                ->find()->where(['security_user_id' => $securityUserId])->count();
+            // POCOR-7179[END]
+
+            if($institutionClassStudents ||
+                $userActivities ||
+                $studentCustomFieldValues ||
+                $institutionCompetencyResults ||
+                $institutionStudentAbsences ||
+                $institutionStudentAbsenceDays ||
+                $institutionStudentAbsenceDetails ||
+                $institutionStudents ||
+                count($studentRiskIds) ||
+                $studentRisksCriterias ||
+                $institutionStudentRisks ||
+                $institutionSubjectStudents ||
+                $userSpecialNeedsDevices ||
+                $userSpecialNeedsReferrals ||
+                $userSpecialNeedsServices ||
+                $userSpecialNeedsAssessments ||
+                $institutionCases ||
+                $institutionStaffShifts || $userNationalities) {
+                $result = true;
+            }
+        }
+
+        return $result;
+    }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
+
         $this->updateAdmissionAgeAfterDelete($entity);
 
         // Webhook Education Grade Delete -- Start
@@ -205,7 +338,7 @@ class EducationGradesTable extends ControllerActionTable
                 ])
                 ->order([$this->aliasField('order')])
                 ->toArray();
-			
+
             // Default is to get the list of grades with the next programme grades
             if ($getNextProgrammeGrades) {
                 if ($firstGradeOnly) {
@@ -320,12 +453,12 @@ class EducationGradesTable extends ControllerActionTable
                 ])
                 ->order([$this->aliasField('id')])
                 ->toArray();
-            
+
             $gradeOptions = [];
             foreach($gradeOptionsData as $key => $data) {
                 $gradeOptions[$data->id] = $data->programme . ' - ' .$data->grade_name;
-            }   
-                
+            }
+
             // Default is to get the list of grades with the next programme grades
             if ($getNextProgrammeGrades) {
 
@@ -350,9 +483,9 @@ class EducationGradesTable extends ControllerActionTable
             return [];
         }
     }//POCOR-6362 ends
-	
+
 	public function getNextAvailableEducationGradesForPromoted($gradeId, $academicPeriodId, $getNextProgrammeGrades = true, $firstGradeOnly = false) {
-        
+
 		if (!empty($gradeId)) {
             $gradeOptionsData = $this
 				->find()
@@ -441,12 +574,12 @@ class EducationGradesTable extends ControllerActionTable
                 ])
                 ->order([$this->aliasField('id')])
                 ->toArray();
-			
+
 			$gradeOptions = [];
 			foreach($gradeOptionsData as $data) {
 				$gradeOptions[$data->id] = $data->programme . ' - ' .$data->grade_name;
-			}	
-				
+			}
+
             // Default is to get the list of grades with the next programme grades
             if ($getNextProgrammeGrades) {
                 if ($firstGradeOnly) {
@@ -463,9 +596,9 @@ class EducationGradesTable extends ControllerActionTable
             return [];
         }
     }
-	
+
 	public function getNextAvailableEducationGradesForRepeated($gradeId, $academicPeriodId) {
-   
+
 		if (!empty($gradeId)) {
             $gradeOptions = $this
 				->find()
@@ -553,8 +686,8 @@ class EducationGradesTable extends ControllerActionTable
                     'ToAcademicPeriods.id' => $academicPeriodId,
                 ])
                 ->order([$this->aliasField('id')])
-                ->first();	
-           
+                ->first();
+
             return $gradeOptions;
         } else {
             return [];
