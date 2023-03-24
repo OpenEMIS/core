@@ -135,6 +135,26 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $this->fields['education_subject_id']['sort'] = ['field' => 'EducationSubjects.name'];
         $this->fields['auto_allocation']['sort'] = ['field' => 'auto_allocation'];
         $this->setFieldOrder(['code', 'education_subject_id', 'hours_required', 'auto_allocation']);
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Administration','Education Grade Subjects','Education');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
