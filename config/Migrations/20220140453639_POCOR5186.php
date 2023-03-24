@@ -36,7 +36,7 @@ class POCOR5186 extends AbstractMigration
 
         // add column 
         $table = $this->table('student_behaviours');
-        /*$table
+        $table
             ->addColumn('assignee_id', 'integer', [
                 'comment' => 'links to security_users.id',
                 'default' => null,
@@ -53,7 +53,7 @@ class POCOR5186 extends AbstractMigration
                 'after' => 'institution_id'
             ])
             ->addIndex('status_id')
-            ->update();*/
+            ->update();
 
         // add wrokflow behaviour    
         $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
