@@ -31,4 +31,9 @@ class SpecialNeedsDiagnosticsTypesTable extends ControllerActionTable
             ->toArray();
         return $data;
     }
+    // Start POCOR-7286
+    public function beforeAction() {
+        $this->field('name', ['length' => 75]);
+    }
+    // End POCOR-7286
 }

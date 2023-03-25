@@ -93,6 +93,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
     public function beforeAction(Event $event, ArrayObject $extra) {
         $this->field('class_number', ['visible' => false]);
         $this->field('staff_id', ['visible' => false]);
+        $this->field('institution_unit_id', ['visible' => false]);//POCOR-6863
+        $this->field('institution_course_id', ['visible' => false]);//POCOR-6863
         $this->field('institution_shift_id', ['visible' => false]);
         $this->field('capacity', ['visible' => false]);
     }
