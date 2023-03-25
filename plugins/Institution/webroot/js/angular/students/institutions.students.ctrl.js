@@ -48,7 +48,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.studentStatus = 'Pending Transfer';
     StudentController.StudentData = {};
     StudentController.isExternalSearchEnable = false;
-
+    StudentController.externalSearchSourceName='';
     StudentController.datepickerOptions = {
         showWeeks: false
     };
@@ -112,6 +112,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.checkConfigForExternalSearch = checkConfigForExternalSearch;
     StudentController.isIdentityUserExist = false;
     StudentController.isNextButtonShouldDisable = isNextButtonShouldDisable;
+    StudentController.getCSPDSearchData = getCSPDSearchData;
 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
@@ -835,7 +836,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 },
             };
             setTimeout(function(){
-                StudentController.getExternalSearchData();
+                if (StudentController.externalSearchSourceName === 'Jordan CSPD'){
+                    StudentController.getCSPDSearchData();
+                }else{
+                    StudentController.getExternalSearchData();
+                }
             }, 1500);
         }, function(error){
             StudentController.externalGridOptions = {
@@ -878,7 +883,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 },
             };
             setTimeout(function(){
-                StudentController.getExternalSearchData();
+                if (StudentController.externalSearchSourceName === 'Jordan CSPD'){
+                    StudentController.getCSPDSearchData();
+                }else{
+                    StudentController.getExternalSearchData();
+                }
             }, 1500);
         });
     }
@@ -1384,65 +1393,132 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function setStudentDataFromExternalSearchData(selectedData)
     {
-        StudentController.selectedStudentData.addressArea = {
-            id: selectedData.address_area_id,
-            name: selectedData.area_name,
-            code: selectedData.area_code
-        };
-        StudentController.selectedStudentData.birthplaceArea = {
-            id: selectedData.birthplace_area_id,
-            name: selectedData.birth_area_name,
-            code: selectedData.birth_area_code
-        };
-        StudentController.selectedStudentData.openemis_no = selectedData.openemis_no;
-        StudentController.selectedStudentData.first_name = selectedData.first_name;
-        StudentController.selectedStudentData.middle_name = selectedData.middle_name;
-        StudentController.selectedStudentData.third_name = selectedData.third_name;
-        StudentController.selectedStudentData.last_name = selectedData.last_name;
-        StudentController.selectedStudentData.preferred_name = selectedData.preferred_name;
-        StudentController.selectedStudentData.gender_id = selectedData.gender_id;
-        StudentController.selectedStudentData.gender = {
-            name: selectedData.gender
-        };
-        StudentController.selectedStudentData.date_of_birth = selectedData.date_of_birth;
-        StudentController.selectedStudentData.email = selectedData.email;
-        StudentController.selectedStudentData.identity_type_name = selectedData.identity_type;
-        StudentController.selectedStudentData.identity_type_id = selectedData.identity_type_id;
-        StudentController.selectedStudentData.identity_number = selectedData.identity_number;
-        StudentController.selectedStudentData.nationality_name = selectedData.nationality;
-        StudentController.selectedStudentData.address = selectedData.address;
-        StudentController.selectedStudentData.postalCode = selectedData.postal_code;
-        StudentController.selectedStudentData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
-        StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
-        var todayDate = new Date();
-        StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
+        if(StudentController.externalSearchSourceName==='Jordan CSPD'){
+            InstitutionsStudentsSvc.getUniqueOpenEmisId().then((response)=>{
+                const selectedObjectWithOpenemisNo =  Object.assign({}, selectedData, {'openemis_no':response})
+                selectedData = selectedObjectWithOpenemisNo;
+                StudentController.selectedStudentData.addressArea = {
+                    id: selectedData.address_area_id,
+                    name: selectedData.area_name,
+                    code: selectedData.area_code
+                };
+                StudentController.selectedStudentData.birthplaceArea = {
+                    id: selectedData.birthplace_area_id,
+                    name: selectedData.birth_area_name,
+                    code: selectedData.birth_area_code
+                };
+                StudentController.selectedStudentData.openemis_no = selectedData.openemis_no;
+                StudentController.selectedStudentData.first_name = selectedData.first_name;
+                StudentController.selectedStudentData.middle_name = selectedData.middle_name;
+                StudentController.selectedStudentData.third_name = selectedData.third_name;
+                StudentController.selectedStudentData.last_name = selectedData.last_name;
+                StudentController.selectedStudentData.preferred_name = selectedData.preferred_name;
+                StudentController.selectedStudentData.gender_id = selectedData.gender_id;
+                StudentController.selectedStudentData.gender = {
+                    name: selectedData.gender
+                };
+                StudentController.selectedStudentData.date_of_birth = selectedData.date_of_birth;
+                StudentController.selectedStudentData.email = selectedData.email;
+                StudentController.selectedStudentData.identity_type_name = selectedData.identity_type;
+                StudentController.selectedStudentData.identity_type_id = selectedData.identity_type_id;
+                StudentController.selectedStudentData.identity_number = selectedData.identity_number;
+                StudentController.selectedStudentData.nationality_name = selectedData.nationality;
+                StudentController.selectedStudentData.address = selectedData.address;
+                StudentController.selectedStudentData.postalCode = selectedData.postal_code;
+                StudentController.selectedStudentData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
+                StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
+                var todayDate = new Date();
+                StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
+            
+                StudentController.selectedStudentData.birthplace_area_id = selectedData.birthplace_area_id;
+                StudentController.selectedStudentData.address_area_id = selectedData.address_area_id;
+                StudentController.selectedStudentData.birth_area_code = selectedData.birth_area_code;
+                StudentController.selectedStudentData.area_code = selectedData.area_code;
+                if (selectedData.address_area_id > 0)
+                {
+                    document.getElementById('addressArea_textbox').style.visibility = 'visible';
+                    document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
+                } else
+                {
+                    document.getElementById('addressArea_textbox').style.display = 'none';
+                    document.getElementById('addressArea_dropdown').style.visibility = 'visible';
+                }
+        
+                if (selectedData.birthplace_area_id > 0)
+                {
+                    document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
+                    document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
+                } else
+                {
+                    document.getElementById('birthplaceArea_textbox').style.display = 'none';
+                    document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
+                }
+                StudentController.disableFields = {
+                    username: false,
+                    password: false,
+                }
+            })
+        }else{
+            StudentController.selectedStudentData.addressArea = {
+                id: selectedData.address_area_id,
+                name: selectedData.area_name,
+                code: selectedData.area_code
+            };
+            StudentController.selectedStudentData.birthplaceArea = {
+                id: selectedData.birthplace_area_id,
+                name: selectedData.birth_area_name,
+                code: selectedData.birth_area_code
+            };
+            StudentController.selectedStudentData.openemis_no = selectedData.openemis_no;
+            StudentController.selectedStudentData.first_name = selectedData.first_name;
+            StudentController.selectedStudentData.middle_name = selectedData.middle_name;
+            StudentController.selectedStudentData.third_name = selectedData.third_name;
+            StudentController.selectedStudentData.last_name = selectedData.last_name;
+            StudentController.selectedStudentData.preferred_name = selectedData.preferred_name;
+            StudentController.selectedStudentData.gender_id = selectedData.gender_id;
+            StudentController.selectedStudentData.gender = {
+                name: selectedData.gender
+            };
+            StudentController.selectedStudentData.date_of_birth = selectedData.date_of_birth;
+            StudentController.selectedStudentData.email = selectedData.email;
+            StudentController.selectedStudentData.identity_type_name = selectedData.identity_type;
+            StudentController.selectedStudentData.identity_type_id = selectedData.identity_type_id;
+            StudentController.selectedStudentData.identity_number = selectedData.identity_number;
+            StudentController.selectedStudentData.nationality_name = selectedData.nationality;
+            StudentController.selectedStudentData.address = selectedData.address;
+            StudentController.selectedStudentData.postalCode = selectedData.postal_code;
+            StudentController.selectedStudentData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
+            StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
+            var todayDate = new Date();
+            StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
+        
+            StudentController.selectedStudentData.birthplace_area_id = selectedData.birthplace_area_id;
+            StudentController.selectedStudentData.address_area_id = selectedData.address_area_id;
+            StudentController.selectedStudentData.birth_area_code = selectedData.birth_area_code;
+            StudentController.selectedStudentData.area_code = selectedData.area_code;
+            if (selectedData.address_area_id > 0)
+            {
+                document.getElementById('addressArea_textbox').style.visibility = 'visible';
+                document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
+            } else
+            {
+                document.getElementById('addressArea_textbox').style.display = 'none';
+                document.getElementById('addressArea_dropdown').style.visibility = 'visible';
+            }
     
-        StudentController.selectedStudentData.birthplace_area_id = selectedData.birthplace_area_id;
-        StudentController.selectedStudentData.address_area_id = selectedData.address_area_id;
-        StudentController.selectedStudentData.birth_area_code = selectedData.birth_area_code;
-        StudentController.selectedStudentData.area_code = selectedData.area_code;
-        if (selectedData.address_area_id > 0)
-        {
-            document.getElementById('addressArea_textbox').style.visibility = 'visible';
-            document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
-        } else
-        {
-            document.getElementById('addressArea_textbox').style.display = 'none';
-            document.getElementById('addressArea_dropdown').style.visibility = 'visible';
-        }
-
-        if (selectedData.birthplace_area_id > 0)
-        {
-            document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
-            document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
-        } else
-        {
-            document.getElementById('birthplaceArea_textbox').style.display = 'none';
-            document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
-        }
-        StudentController.disableFields = {
-            username: false,
-            password: false,
+            if (selectedData.birthplace_area_id > 0)
+            {
+                document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
+                document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
+            } else
+            {
+                document.getElementById('birthplaceArea_textbox').style.display = 'none';
+                document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
+            }
+            StudentController.disableFields = {
+                username: false,
+                password: false,
+            }
         }
     }
 
@@ -1691,6 +1767,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         InstitutionsStudentsSvc.checkConfigForExternalSearch().then(function (resp)
         {
             StudentController.isExternalSearchEnable = resp.showExternalSearch;
+            StudentController.externalSearchSourceName = resp.value;
             UtilsSvc.isAppendLoader(false);
         }, function (error)
         {
@@ -1711,5 +1788,41 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
           return true;
         }
         return false;
+    }
+
+    
+    function getCSPDSearchData() {
+        var param = {            
+            identity_number: StudentController.selectedStudentData.identity_number,
+        };
+        var dataSource = {
+            pageSize: StudentController.pageSize,
+            getRows: function (params) {
+                UtilsSvc.isAppendLoader(true);
+                param.limit = params.endRow - params.startRow;
+                param.page = params.endRow / (params.endRow - params.startRow);
+                InstitutionsStudentsSvc.getCspdData(param)
+                .then(function(response) {
+                    var gridData = [response.data.data];
+                    if(!gridData)gridData = [];
+                    gridData.forEach((data) => {
+                        data.name = `${data['first_name']} ${data['middle_name']} ${data['last_name']}`;
+                        data.gender = data['gender_name'];
+                        data.nationality = data['nationality_name'];
+                        data.identity_type = data['identity_type_name'];
+                        data.gender_id = data['gender_id'];
+                        data.nationality_id = data['nationality_id'];
+                        data.identity_type_id = data['identity_type_id'];
+                    });
+                    var totalRowCount = gridData.length === 0 ? 1 : gridData.length;
+                    return StudentController.processExternalGridUserRecord(gridData, params, totalRowCount);
+                }, function(error) {
+                    console.log(error);
+                    UtilsSvc.isAppendLoader(false);
+                });
+            }
+        };
+        StudentController.externalGridOptions.api.setDatasource(dataSource);
+        StudentController.externalGridOptions.api.sizeColumnsToFit(); 
     }
 }
