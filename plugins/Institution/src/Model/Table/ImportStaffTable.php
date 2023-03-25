@@ -224,7 +224,7 @@ class ImportStaffTable extends AppTable
         $typeLabel = $this->getExcelLabel($lookedUpTable, 'type');
         $nameLabel = $this->getExcelLabel($lookedUpTable, 'name');
         $statusLabel = $this->getExcelLabel($lookedUpTable, 'status');
-        $isHomeroomLabel = $this->getExcelLabel($lookedUpTable, 'is_homeroom');
+        // $isHomeroomLabel = $this->getExcelLabel($lookedUpTable, 'is_homeroom');
 
         $yesNoOptions = $this->getSelectOptions('general.yesno');
 
@@ -242,8 +242,8 @@ class ImportStaffTable extends AppTable
                     $row->position_no,
                     $row->staff_position_title->name,
                     $positionTitleType,
-                    $row->status->name,
-                    $yesNoOptions[$row->is_homeroom]
+                    $row->status->name
+                    // $yesNoOptions[$row->is_homeroom]
                 ];
             }
         }

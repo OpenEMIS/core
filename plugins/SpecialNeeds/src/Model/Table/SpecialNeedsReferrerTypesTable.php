@@ -13,4 +13,10 @@ class SpecialNeedsReferrerTypesTable extends ControllerActionTable
         
         $this->addBehavior('FieldOption.FieldOption');
     }
+
+    // Start POCOR-7286
+    public function beforeAction() {
+        $this->field('name', ['length' => 75]);
+    }
+    // End POCOR-7286
 }

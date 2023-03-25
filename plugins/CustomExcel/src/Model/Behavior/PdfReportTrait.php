@@ -347,6 +347,8 @@ trait PdfReportTrait
             if($sheetStatus == 'visible'){ //POCOR-7077
                 // $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
                 $mpdf = new \Mpdf\Mpdf(array('mode' => 'utf-8', 'format' => [370, 190])); //POCOR-7090
+                $mpdf->autoScriptToLang = true; //POCOR-7264
+                $mpdf->autoLangToFont = true; //POCOR-7264
                 $filepath = $basePath.'_'.$sheetIndex;
                 $writer->setSheetIndex($sheetIndex);
                 $writer->save($filepath);
@@ -407,6 +409,8 @@ trait PdfReportTrait
         $basePath = $filepath;
         for ($sheetIndex = 0; $sheetIndex < $objSpreadsheet->getSheetCount(); $sheetIndex++) {
             $mpdf = $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
+            $mpdf->autoScriptToLang = true; //POCOR-7264
+            $mpdf->autoLangToFont = true; //POCOR-7264
             $filepath = $basePath.'_'.$sheetIndex;
             $prefixName = 'AssessmentResults';
             $date =  date("Ymd:HHmmss");
@@ -456,7 +460,8 @@ trait PdfReportTrait
         $mpdf->SetTitle($title);
         $mpdf->SetAuthor($author);
         $mpdf->SetSubject($subject);
-
+        $mpdf->autoScriptToLang = true; //POCOR-7264
+        $mpdf->autoLangToFont = true; //POCOR-7264
         if ($filenames) {
             $filesTotal = sizeof($filenames);
             $mpdf->SetImportUse();
