@@ -961,7 +961,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 },
             };
             setTimeout(function(){
-                StaffController.getCSPDSearchData();
+                if(StaffController.externalSearchSourceName==='Jordan CSPD'){
+                    StaffController.getCSPDSearchData();
+                }else{
+                    StaffController.getExternalSearchData();
+                }
             }, 1500);
         }, function(error){
             StaffController.externalGridOptions = {
