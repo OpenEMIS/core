@@ -60,6 +60,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         getFtes: getFtes,
         getPositions: getPositions,
         getStaffTypes: getStaffTypes,
+        getStaffPosititonGrades: getStaffPosititonGrades,//POCOR-5069
         getShifts: getShifts,
         getInternalSearchData: getInternalSearchData,
         getExternalSearchData: getExternalSearchData,
@@ -80,6 +81,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         StaffRecord: 'Institution.Staff',
         StaffShifts: 'Institution.InstitutionStaffShifts',
         StaffTypes: 'Staff.StaffTypes',
+        StaffPositionGrades: 'Institution.StaffPositionGrades',//POCOR-5069
         InstitutionShifts: 'Institution.InstitutionShifts',
         InstitutionGrades: 'Institution.InstitutionGrades',
         Institutions: 'Institution.Institutions',
@@ -241,11 +243,23 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         });
         return deferred.promise;
     }
-
+    //POCOR-5069 starts
     function getPositions(params){
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institutions/getPositions';
         $http.post(url, {params: params})
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }//POCOR-5069 ends
+
+    function getStaffPosititonGrades(){
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/getStaffPosititonGrades';
+        $http.get(url)
         .then(function(response){
             deferred.resolve(response);
         }, function(error) {
