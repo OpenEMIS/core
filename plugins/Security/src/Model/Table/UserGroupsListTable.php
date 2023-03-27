@@ -87,51 +87,6 @@ class UserGroupsListTable extends ControllerActionTable
                 'title' => __('Back')
             ]
         ]; //POCOR-7175 end
-
-        //POCOR-7304 start
-        $session = $this->request->session();
-        $userId = $session->read('Auth.User.id');
-        $AccessControl = $this->AccessControl;
-        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
-        $securityGroup = TableRegistry::get('security_groups');
-        $securityRole = TableRegistry::get('security_roles');
-        $securityGroupId = $securityGroup->find()
-                            ->where([$securityGroup->aliasField('name') =>'Supergroup'])
-                            ->first()->id;
-        $securityRoleId = $securityRole->find()
-                            ->where([$securityRole->aliasField('name') =>'Superrole'])
-                            ->first()->id;
-
-        $securityGroupUsers = $securityGroupUsersTbl->find()
-                            ->where([
-                                $securityGroupUsersTbl->aliasField('security_group_id') => $securityGroupId,
-                                $securityGroupUsersTbl->aliasField('security_user_id') => $userId,
-                                $securityGroupUsersTbl->aliasField('security_role_id') => $securityRoleId,
-                            ])->first();
-        if (!$AccessControl->isAdmin())
-        {
-
-            if ($securityGroupUsers!=null) {
-            $extra['toolbarButtons']['add'] = [
-                'url' => [
-                    'plugin' => 'Security',
-                    'controller' => 'Securities',
-                    'action' => 'UserGroups',
-                    '0' => 'add',
-                ],
-                'type' => 'button',
-                'label' => '<i class="fa kd-add"></i>',
-                'attr' => [
-                    'class' => 'btn btn-xs btn-default',
-                    'data-toggle' => 'tooltip',
-                    'data-placement' => 'bottom',
-                    'escape' => false,
-                    'title' => __('Add')
-                ]
-            ];
-
-            }
-        } //POCOR-7304 end
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
