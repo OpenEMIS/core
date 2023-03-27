@@ -30,7 +30,8 @@ class CredentialsController extends PageController
     {
         $page = $this->Page;
         $page->exclude(['public_key']);
-        $page->get('client_id')->setLabel(__('Client ID'));
+        $page->exclude(['client_id']);
+        // $page->get('client_id')->setLabel(__('Client ID')); // POCOR-7312
 
         parent::index();
     }
@@ -40,12 +41,18 @@ class CredentialsController extends PageController
         $page = $this->Page;
         parent::view($id);
 
-        $page->addNew('api_scopes')
-            ->setLabel('API Scopes')
-            ->setControlType('select')
-            ->setAttributes('multiple', true);
+        //POCOR-7312[START]
+        $page->exclude(['client_id']);
+        $page->exclude(['public_key']);
+        $page->exclude(['api_scopes']);
 
-        $page->move('api_scopes')->after('public_key');
+        // $page->addNew('api_scopes')
+        //     ->setLabel('API Scopes')
+        //     ->setControlType('select')
+        //     ->setAttributes('multiple', true);
+
+        // $page->move('api_scopes')->after('public_key');
+        //POCOR-7312[END]
     }
 
     public function add()
@@ -60,18 +67,24 @@ class CredentialsController extends PageController
         while (!$cStrong) {
             $randomString = bin2hex(openssl_random_pseudo_bytes(8, $cStrong));
         }
-        $clientId = $timeStamp.'-'.$randomString.'.app';
+        // $clientId = $timeStamp.'-'.$randomString.'.app';
+        $clientId = 'null';
         if ($this->request->data('ApiCredentials.client_id')) {
             $clientId = $this->request->data('ApiCredentials.client_id');
         }
-        $page->addNew('client')
-            ->setControlType('string')
-            ->setLabel('Client ID')
-            ->setValue($clientId)
-            ->setDisabled(true);
+        $page->exclude(['client_id']);
+        // $page->exclude(['public_key']);
+        // $page->addNew('client')
+        //     ->setControlType('string')
+        //     ->setLabel('Client ID')
+        //     ->setValue($clientId)
+        //     ->setDisabled(true);
 
-        $page->move('client')->first();
+        // $page->move('client')->first();
         $page->get('client_id')
+            ->setControlType('hidden')
+            ->setValue($clientId);
+        $page->get('public_key')
             ->setControlType('hidden')
             ->setValue($clientId);
 
@@ -82,6 +95,13 @@ class CredentialsController extends PageController
     {
         $page = $this->Page;
         parent::edit($id);
+
+        //POCOR-7312[START]
+        $page->exclude(['client_id']);
+        // $page->exclude(['name']); 
+        $page->exclude(['public_key']);
+        $page->exclude(['public_key']);
+        //POCOR-7312[END]
 
         $page->get('name')->setDisabled(true);
         $page->get('client_id')->setDisabled(true);
@@ -96,10 +116,12 @@ class CredentialsController extends PageController
             ->find('optionList', ['defaultOption' => false])
             ->toArray();
 
-        $page->addNew('api_scopes')
-            ->setLabel(__('API Scopes'))
-            ->setControlType('select')
-            ->setAttributes('multiple', true)
-            ->setOptions($scopeOptions, false);
+        $page->exclude(['api_scopes']);
+
+        // $page->addNew('api_scopes')
+        //     ->setLabel(__('API Scopes'))
+        //     ->setControlType('select')
+        //     ->setAttributes('multiple', true)
+        //     ->setOptions($scopeOptions, false);
     }
 }

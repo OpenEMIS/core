@@ -2233,7 +2233,7 @@ class InstitutionsTable extends ControllerActionTable
                 ->find()->where(['id' => $entity->id])->first();
                if(TableRegistry::get('institutions')->delete($entity)){
                 $this->Alert->success('general.delete.success', ['reset'=>true]);
-                return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index', 'index']);
+                return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions']); // POCOR-7253 
                }
         }
     }
@@ -2245,26 +2245,65 @@ class InstitutionsTable extends ControllerActionTable
 
         if($institutionId) {
 
-            // count all institution_activities
-            $institutionActivities = TableRegistry::get('institution_activities')
-                ->find()->where(['institution_id' => $institutionId])->count();
+            // Start POCOR-7253
 
-            // count all institution_custom_field_values
-            $institutionCustomFieldValues = TableRegistry::get('institution_custom_field_values')
-                ->find()->where(['institution_id' => $institutionId])->count();
+            // // count all institution_activities
+            // $institutionActivities = TableRegistry::get('institution_activities')
+            //     ->find()->where(['institution_id' => $institutionId])->count();
 
-            // count all institution_surveys
-            $institutionSurveys = TableRegistry::get('institution_surveys')
-                ->find()->where(['institution_id' => $institutionId])->count();
+            // // count all institution_custom_field_values
+            // $institutionCustomFieldValues = TableRegistry::get('institution_custom_field_values')
+            //     ->find()->where(['institution_id' => $institutionId])->count();
 
-            // count all security_group_institutions
-            $securityGroupInstitutions = TableRegistry::get('security_group_institutions')
-                ->find()->where(['institution_id' => $institutionId])->count();
+            // // count all institution_surveys
+            // $institutionSurveys = TableRegistry::get('institution_surveys')
+            //     ->find()->where(['institution_id' => $institutionId])->count();
+
+            // // count all security_group_institutions
+            // $securityGroupInstitutions = TableRegistry::get('security_group_institutions')
+            //     ->find()->where(['institution_id' => $institutionId])->count();
 
 
-            if($institutionActivities || $institutionCustomFieldValues || $institutionSurveys || $securityGroupInstitutions) {
+            // if($institutionActivities || $institutionCustomFieldValues || $institutionSurveys || $securityGroupInstitutions) {
+            //     $result = true;
+            // }
+          
+
+            $institution_attachments = TableRegistry::get('institution_attachments')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_positions = TableRegistry::get('institution_positions')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_shifts = TableRegistry::get('institution_shifts')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_classes = TableRegistry::get('institution_classes')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_custom_field_values = TableRegistry::get('institution_custom_field_values')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_subject_students = TableRegistry::get('institution_subject_students')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_subjects = TableRegistry::get('institution_subjects')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_staff = TableRegistry::get('institution_staff')->find()->where(['institution_id' => $institutionId])->count();
+            $staff_behaviours = TableRegistry::get('staff_behaviours')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_students = TableRegistry::get('institution_students')->find()->where(['institution_id' => $institutionId])->count();
+            $student_behaviours = TableRegistry::get('student_behaviours')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_student_absences = TableRegistry::get('institution_student_absences')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_bank_accounts = TableRegistry::get('institution_bank_accounts')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_fees = TableRegistry::get('institution_fees')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_lands = TableRegistry::get('institution_lands')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_buildings = TableRegistry::get('institution_buildings')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_floors = TableRegistry::get('institution_floors')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_rooms = TableRegistry::get('institution_rooms')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_grades = TableRegistry::get('institution_grades')->find()->where(['institution_id' => $institutionId])->count();
+            $assessment_item_results = TableRegistry::get('assessment_item_results')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_quality_rubrics = TableRegistry::get('institution_quality_rubrics')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_quality_visits = TableRegistry::get('institution_quality_visits')->find()->where(['institution_id' => $institutionId])->count();
+            $examination_centres = TableRegistry::get('examination_centres')->find()->where(['institution_id' => $institutionId])->count();
+            $examination_item_results = TableRegistry::get('examination_item_results')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_committees = TableRegistry::get('institution_committees')->find()->where(['institution_id' => $institutionId])->count();
+            $examination_centres_examinations_institutions = TableRegistry::get('examination_centres_examinations_institutions')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_staff_transfers = TableRegistry::get('institution_staff_transfers')->find()->where(['new_institution_id' => $institutionId])->count();
+            $institution_staff_transfers_1 = TableRegistry::get('institution_staff_transfers')->find()->where(['previous_institution_id' => $institutionId])->count();
+
+
+            if($institution_attachments || $institution_positions || $institution_shifts || $institution_classes || $institution_custom_field_values || $institution_subject_students || $institution_subjects || $institution_staff || $staff_behaviours || $institution_students || $student_behaviours || $institution_student_absences || $institution_bank_accounts || $institution_fees || $institution_lands || $institution_buildings || $institution_floors || $institution_rooms || $institution_grades || $assessment_item_results || $institution_quality_rubrics || $institution_quality_visits || $examination_centres || $examination_item_results || $institution_committees || $examination_centres_examinations_institutions || $institution_staff_transfers || $institution_staff_transfers_1) {
                 $result = true;
             }
+            // End POCOR-7253
+        
 
         }
         return $result;    
