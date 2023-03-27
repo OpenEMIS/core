@@ -117,6 +117,7 @@ class FieldOptionComponent extends Component
         'ExtracurricularTypes' => ['className' => 'FieldOption.ExtracurricularTypes', 'parent' => 'Others'],
         'IdentityTypes' => ['className' => 'FieldOption.IdentityTypes', 'parent' => 'Others'],
         'Languages' => ['className' => 'Languages', 'parent' => 'Others'],
+        'LanguageProficiencies' => ['className' => 'FieldOption.LanguageProficiencies', 'parent' => 'Others'], // POCOR-4824
         'LicenseTypes' => ['className' => 'FieldOption.LicenseTypes', 'parent' => 'Others'],
         'LicenseClassifications' => ['className' => 'FieldOption.LicenseClassifications', 'parent' => 'Others'],
         'Countries' => ['className' => 'FieldOption.Countries', 'parent' => 'Others'],
