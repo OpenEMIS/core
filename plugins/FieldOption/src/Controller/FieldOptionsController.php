@@ -195,4 +195,9 @@ class FieldOptionsController extends AppController
     // public function DiagnosticsLevels()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
 
     //END:POCOR-6873
+
+    // Start POCOR-4824
+    public function LanguageProficiencies()                     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
+
+    // End POCOR-4824
 }
