@@ -68,6 +68,12 @@ paths:
           required: true
           schema:
             type: string
+        - name: api_key
+          in: query
+          description: The api_key that is configured 
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: Successful operation
