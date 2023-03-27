@@ -130,6 +130,7 @@ class UsersController extends AppController
 
     public function postForgotPassword()
     {
+
         $this->autoRender = false;
         if ($this->request->is('post')) {
             $userIdentifier = $this->request->data('username');
@@ -184,7 +185,7 @@ class UsersController extends AppController
                     $this->Alert->info($message, ['type' => 'string', 'reset' => true]);
                     return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
                 }
-                
+
                 try {
                     $checksum = Security::hash($userId . $expiryFormat, 'sha256');
                     $storedChecksum = Security::hash($checksum, 'sha256');
@@ -197,7 +198,7 @@ class UsersController extends AppController
 
                     $saveEntity = $SecurityUserPasswordRequests->newEntity($passwordRequestData);
                     $SecurityUserPasswordRequests->save($saveEntity);
-                    
+
                     $userEmail = $userEntity->email;
                     $name = $userEntity->name;
                     $url = Router::url([
@@ -218,11 +219,11 @@ class UsersController extends AppController
                         $emailSubject = $getData->default_value;
                     }
 
-                   /*POCOR-5284 Ends*/
-                    $email = new Email('openemis');
-                    $emailSubject = $emailSubject. '- Password Reset Request';
+
+                    $email = new Email('bemis');
+                    $emailSubject =  'BEMIS - Password Reset Request';
                     //$emailSubject = __('OpenEMIS - Password Reset Request');
-                    $emailMessage = "Dear " . $name . ",\n\nWe received a password reset request for your account.\nIf you didn’t request a password reset, kindly ignore this email and your password will not be changed.\n\nTo reset your password, please click the link below:\n" . $url . "\n\nThank you.";
+                    $emailMessage = "Dear " . $name . ",\n\nWe received a password reset request for your account.\n\nIf you didn’t request a password reset, kindly ignore this email and your password will not be changed.\n\nTo reset your password, please click the link below:\n" . $url . "\n\nThank you.";
                     $email
                         ->to($userEmail)
                         ->subject($emailSubject)
@@ -272,13 +273,13 @@ class UsersController extends AppController
                     $userEmail = $userEntity->email;
                     $username = $userEntity->username;
                     $name = $userEntity->name;
-                    
+
 
                     try {
                         $updateUserName = $this->updateUserName($username ,$userId); //POCOR-7159
                         /*
                         Subject: OpenEMIS - Username Recovery Request
-                        Message Body: 
+                        Message Body:
                             Dear <name>,
 
                             We received a username recovery request for your account.
@@ -288,7 +289,7 @@ class UsersController extends AppController
                          */
                         $email = new Email('openemis');
                         $emailSubject = __('OpenEMIS - Username Recovery Request');
-                        
+
                         $emailMessage = "Dear " . $name . ",\n\nWe received a username recovery request for your account.\nYour username is: " . $username . "\n\nThank you.";
                         $email
                             ->to($userEmail)
@@ -334,13 +335,13 @@ class UsersController extends AppController
                         ->find()
                         ->where([$Passwords->aliasField('id') => $userId])
                         ->first();
-                    
+
                     $requestData = $this->request->data;
                     $Passwords->patchEntity($userEntity, $requestData);
                     $errors = $userEntity->errors();
                     if (empty($errors)) {
                         if ($Passwords->save($userEntity)) {
-                            $setdata =  $this->updateUserPassword($userId); //POCOR-7159 
+                            $setdata =  $this->updateUserPassword($userId); //POCOR-7159
                             $SecurityUserPasswordRequests->delete($passwordRequestEntity);
                             $message = __('Your password has been reset successfully.');
                             $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
@@ -418,7 +419,7 @@ class UsersController extends AppController
     {
         $this->viewBuilder()->layout(false);
         $userEmail = $this->request->query('email');
-        
+
         if (isset($userEmail)) {
             $this->set('username', $userEmail);
         } else {
@@ -484,7 +485,7 @@ class UsersController extends AppController
             $create_date = $now->format('Y-m-d H:i:s');
             if(!empty($SystemUserOtpEntity)){
                 $SystemUserOtpTbl->updateAll(
-                    ['verification_otp' => $encrypt_otp, 'created' => $create_date], 
+                    ['verification_otp' => $encrypt_otp, 'created' => $create_date],
                     ['id' => $SystemUserOtpEntity->id]
                 );
             }else{
@@ -561,7 +562,7 @@ class UsersController extends AppController
                         $this->Users->aliasField('username') => $userData['username'],
                         $this->Users->aliasField('email') => $userData['email']
                     ])
-                    ->first(); 
+                    ->first();
             if(empty($userEntity)){
                 $message = __('An email address is not registered for this account. Please contact your system administrator.');
                 $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
@@ -588,7 +589,7 @@ class UsersController extends AppController
                         }
                     }
                 }
-            }  
+            }
         }else{
             $message = __('There was an error in sending the OTP. Please enter a valid email id or username.');
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
@@ -602,7 +603,7 @@ class UsersController extends AppController
         //if ($this->request->is('get')) {
             $username = empty($username) ? $this->Auth->user()['username'] : $username;
             //POCOR-6953 start
-            $body = array(); 
+            $body = array();
             $body = [
                 "username" => $username,
             ];
@@ -744,7 +745,7 @@ class UsersController extends AppController
      * POCOR-7159
      * add data in user_activities table while updating password
     */
-    public function updateUserPassword($userId) 
+    public function updateUserPassword($userId)
     {
         $userActivities = TableRegistry::get('user_activities');
         $currentTimeZone = date("Y-m-d H:i:s");
@@ -769,7 +770,7 @@ class UsersController extends AppController
      * POCOR-7159
      * add data in user_activities table while updating password
     */
-    public function updateUserName($username ,$userId) 
+    public function updateUserName($username ,$userId)
     {
         $userActivities = TableRegistry::get('user_activities');
         $currentTimeZone = date("Y-m-d H:i:s");
