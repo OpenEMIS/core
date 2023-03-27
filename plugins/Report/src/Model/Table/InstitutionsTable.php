@@ -526,6 +526,13 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'attendance_type';
                     $fieldsOrder[] = 'format';
                 break;
+                case 'Report.Curriculars': //POCOR-6673
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'area_level_id';
+                    $fieldsOrder[] = 'area_education_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'format';
+                break;
                 default:
                     break;
             }

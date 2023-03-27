@@ -25,7 +25,7 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('search', true);
         $this->toggle('edit', false);
-        $this->toggle('view', false);
+        $this->toggle('view', true);
         $this->toggle('remove', false);
     }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -87,10 +87,10 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->field('hours', ['visible' => false]);
         $this->field('points', ['visible' => false]);
         $this->field('location', ['visible' => false]);
-        $this->field('comment', ['visible' => false]);
+        $this->field('comments', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => true]);
         $this->field('type', ['visible' => true]);
-        $this->field('category', ['visible' => true]);
+        $this->field('category',  ['visible' => ['index'=>true,'view' => true,'edit' => false,'add'=>false]]);
         $this->setFieldOrder([
         'academic_period_id', 'institution_curricular_id','category','type', 'curricular_position_id']);
         if ($this->controller->name == 'Profiles') {
@@ -115,6 +115,14 @@ class StudentCurricularsTable extends ControllerActionTable
     {       
         $this->setupTabElements();
     }
+
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        
+        $this->field('category', ['visible' => true]);
+        $this->field('curricular_position_id', ['visible' => true]);
+    }
+
 
     
 }

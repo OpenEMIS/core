@@ -18,7 +18,7 @@ class StaffCurricularsTable extends ControllerActionTable {
 		$this->table('institution_curricular_staff');
 		$this->belongsTo('InstitutionCurriculars', ['className' => 'Institution.InstitutionCurriculars']);
 		parent::initialize($config);
-		$this->toggle('view', false);
+		$this->toggle('view', true);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->toggle('add', false);
@@ -113,7 +113,7 @@ class StaffCurricularsTable extends ControllerActionTable {
         $this->field('total_female_students', ['visible' => ['index'=>true,'view' => false,'edit' => false,'add'=>false]]);
         $this->field('total_students', ['visible' => ['index'=>true,'view' => false,'edit' =>false,'add'=>false]]);
         $this->setFieldOrder([
-        'academic_period_id', 'institution_curricular_id','category','type', 'curricular_position_id']);
+        'academic_period_id', 'institution_curricular_id','category','type']);
 
         if ($this->controller->name == 'Profiles') {
             unset($settings['indexButtons']['view']);
@@ -124,6 +124,16 @@ class StaffCurricularsTable extends ControllerActionTable {
     public function onGetCategory(Event $event, Entity $entity)
     {
         return $entity->category ? __('Curricular') : __('Extracurricular');
+    }
+
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        
+        $this->field('academic_period_id', ['visible' => true]);
+        $this->field('category', ['visible' => true]);
+        $this->field('total_male_students', ['visible' => true]);
+        $this->field('total_female_students', ['visible' => true]);
+        $this->field('total_students', ['visible' => true]);
     }
 	
 }
