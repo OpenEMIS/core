@@ -62,6 +62,11 @@ class StaffClassesTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
     }
+    public function beforeAction(Event $event)
+    {
+        $this->field('institution_unit_id', ['visible' => false]);//POCOR-6863
+        $this->field('institution_course_id', ['visible' => false]);//POCOR-6863
+    }
 
     // Academic Period	Institution	Grade	Class	Male Students	Female Students
     public function indexBeforeAction(Event $event, ArrayObject $extra)
