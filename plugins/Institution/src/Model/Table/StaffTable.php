@@ -970,7 +970,19 @@ class StaffTable extends ControllerActionTable
             $securityGroupId = $positionEntity->institution->security_group_id;
 
            // $isHomeroomRole = !empty($positionEntity) && $positionEntity->is_homeroom; //POCOR-7257
-            if (!empty($homeroomSecurityRoleId)) {
+            //POCOR-7309 starts
+            $InstitutionStaffTbl = TableRegistry::get('institution_staff');
+            $InstitutionStaffEntity = $InstitutionStaffTbl->find()
+                ->where([
+                    $InstitutionStaffTbl->aliasField('institution_id') => $staffEntity->staff_id,
+                    $InstitutionStaffTbl->aliasField('staff_id') => $staffEntity->staff_id,
+                    $InstitutionStaffTbl->aliasField('staff_status_id') => 1
+                ])->first();
+            $isHomeroomRole = '';
+            if(!empty($InstitutionStaffEntity)){
+               $isHomeroomRole = $InstitutionStaffEntity->is_homeroom;
+            }    
+            if (!empty($homeroomSecurityRoleId) && ($isHomeroomRole == 1)) { //POCOR-7309 ends
                 $securityGroupUsersRecord = [
                     'security_role_id' => $homeroomSecurityRoleId,
                     'security_group_id' => $securityGroupId,
