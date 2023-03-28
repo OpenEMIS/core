@@ -45,5 +45,8 @@ class SpecialNeedsTypesTable extends ControllerActionTable
 
     public function beforeAction(){
          $this->field('type', ['type' => 'hidden', 'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true], 'value' => 1]);
+        // Start POCOR-7286
+        $this->field('name', ['length' => 75]);
+        // End POCOR-7286
     }
 }

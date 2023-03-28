@@ -94,60 +94,55 @@ class CounsellingsTable extends AppTable
         return $counselorOptions;
     }
 
+    //POCOR-7054 change dropdown query
     public function getRequesterOptions($institutionId)
     {        
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $InstitutionStaff = TableRegistry::get('institution_staff');
+        $InstitutionStudents = TableRegistry::get('institution_students');
         $Institutions = TableRegistry::get('Institution.Institutions');
-        $UserData = TableRegistry::get('User.Users');//POCOR-7044 add
+        $UserData = TableRegistry::get('User.Users');
+        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodId = $this->AcademicPeriods->getCurrent();
+        $join = [];
+        $join[''] = [
+        'type' => 'inner',
+        'table' => "(SELECT institution_students.student_id user_id
+                        FROM institution_students
+                        INNER JOIN academic_periods
+                        ON academic_periods.id = institution_students.academic_period_id
+                        WHERE academic_periods.id = $academicPeriodId
+                        AND institution_students.institution_id = $institutionId
+                        AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_students.student_status_id = 1, institution_students.student_status_id IN (1, 7, 6, 8))
+                        GROUP BY institution_students.student_id
 
+                        UNION ALL
+
+                        SELECT institution_staff.staff_id user_id
+                        FROM institution_staff
+                        INNER JOIN academic_periods
+                        ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
+                        WHERE academic_periods.id = $academicPeriodId
+                        AND institution_staff.institution_id = $institutionId
+                        AND institution_staff.staff_status_id = 1
+                        GROUP BY institution_staff.staff_id
+                            ) subq",
+                            'conditions' => ['subq.user_id = Users.id'],
+                ];
         $requestorOptions = $UserData
             ->find('list', [
                 'keyField' => 'id',
                 'valueField' => 'name_with_id'
             ])
             ->select([
-                    $UserData->aliasField('id'),
+                    'id'=> $UserData->aliasField('id'),
                     $UserData->aliasField('openemis_no'),
                     $UserData->aliasField('first_name'),
                     $UserData->aliasField('middle_name'),
                     $UserData->aliasField('third_name'),
                     $UserData->aliasField('last_name')
-                    //POCOR-7044 add select condition
-            ])
-            ->leftJoin(
-                    [$InstitutionStaff->alias() => $InstitutionStaff->table()],
-                    [
-                        $InstitutionStaff->aliasField('staff_id = ') . $UserData->aliasField('id'),
-                        $InstitutionStaff->aliasField('institution_id') => $institutionId,
-                        $InstitutionStaff->aliasField('staff_status_id') => self::ASSIGNED
-                    ]
-                )
-            ->leftJoin(
-                    [$InstitutionStudents->alias() => $InstitutionStudents->table()],
-                    [
-                        $InstitutionStudents->aliasField('student_id = ') . $UserData->aliasField('id'),
-                        $InstitutionStudents->aliasField('institution_id') => $institutionId
-                    ]
-                )
-            ->join([
-                        'type' => 'LEFT',
-                        'table' => 'institutions',
-                        'alias' => 'Institutions',
-                        'conditions' => [
-                            'OR' => [
-                            'Institutions.id = '.$InstitutionStaff->aliasField('institution_id'),
-                                'Institutions.id = '.$InstitutionStudents->aliasField('institution_id')
-                            ]
-                    ]
-                ])
-            ->where(['Institutions.id is not NULL']) 
-            ->group([$UserData->aliasField('id')])   
-            ->order([
-                $UserData->aliasField('first_name'),
-                $UserData->aliasField('last_name')
-            ])
-            ->toArray();
-            return $requestorOptions;
+            ]);
+
+          $data =   $requestorOptions->join($join)->toArray();
+            return $data;
     }
 }

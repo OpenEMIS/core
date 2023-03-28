@@ -84,6 +84,8 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->field('modified', ['type' => 'hidden']);
         $this->field('created_user_id', ['type' => 'hidden']);
         $this->field('created', ['type' => 'hidden']);
+        $this->field('institution_unit_id', ['visible' => false]);//POCOR-6863
+        $this->field('institution_course_id', ['visible' => false]);//POCOR-6863
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
