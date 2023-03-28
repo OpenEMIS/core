@@ -72,8 +72,10 @@ class StaffCurricularsTable extends ControllerActionTable {
                 ->select([
                             $this->aliasField('id'),
                             'academic_period_id'=>$academicPeriods->aliasField('name'),
-                            'type'=>$curricular_types->aliasField('name'),
+                            'curricular_type'=>$curricular_types->aliasField('name'),
                             'category'=>$InstitutionCurriculars->aliasField('category'),
+                            'total_male_students'=>$InstitutionCurriculars->aliasField('total_male_students'),
+                            'total_female_students'=>$InstitutionCurriculars->aliasField('total_female_students'),
                     ])
                 ->LeftJoin([$InstitutionCurriculars->alias() => $InstitutionCurriculars->table()],
                         [$InstitutionCurriculars->aliasField('id').' = ' . $this->aliasField('institution_curricular_id')
@@ -89,9 +91,11 @@ class StaffCurricularsTable extends ControllerActionTable {
             $query
                 ->select([
                             $this->aliasField('id'),
-                            'academic_period_id'=>$academicPeriods->aliasField('name'),
-                            'type'=>$curricular_types->aliasField('name'),
-                            'category'=>$InstitutionCurriculars->aliasField('category'),
+                            'academic_period_id' => $academicPeriods->aliasField('name'),
+                            'curricular_type' => $curricular_types->aliasField('name'),
+                            'category'=> $InstitutionCurriculars->aliasField('category'),
+                            'total_male_students' => $InstitutionCurriculars->aliasField('total_male_students'),
+                            'total_female_students' => $InstitutionCurriculars->aliasField('total_female_students'),
                     ])
                 ->LeftJoin([$InstitutionCurriculars->alias() => $InstitutionCurriculars->table()],
                         [$InstitutionCurriculars->aliasField('id').' = ' . $this->aliasField('institution_curricular_id')
@@ -104,17 +108,17 @@ class StaffCurricularsTable extends ControllerActionTable {
                 ])->where([$this->aliasField('staff_id')=>$staffId,
                 $InstitutionCurriculars->aliasField('institution_id')=>$institutionId]);
         }
-            
+        
         $this->field('institution_curricular_id', ['visible' => true]);
-        $this->field('academic_period_id', ['visible' => true]);
-        $this->field('type', ['visible' => true]);
-        $this->field('category', ['visible' => true]);
-       $this->field('total_male_students', ['visible' => ['index'=>true,'view' => false, 'edit' => false,'add'=>false]]);
-        $this->field('total_female_students', ['visible' => ['index'=>true,'view' => false,'edit' => false,'add'=>false]]);
-        $this->field('total_students', ['visible' => ['index'=>true,'view' => false,'edit' =>false,'add'=>false]]);
+        $this->field('academic_period_id', ['visible' => ['index'=>true,'view' => false, 'edit' => false,'add'=>false]]);
+        $this->field('curricular_type', ['visible' => ['index'=>true,'view' => false, 'edit' => false,'add'=>false]]);
+        $this->field('category',['visible' => ['index'=>true,'view' => true, 'edit' => false,'add'=>false]]);
+       $this->field('total_male_students', ['visible' => ['index'=>true,'view' => true, 'edit' => false,'add'=>false]]);
+        $this->field('total_female_students', ['visible' => ['index'=>true,'view' => true,'edit' => false,'add'=>false]]);
+        $this->field('total_students', ['visible' => ['index'=>true,'view' => true,'edit' =>false,'add'=>false]]);
         $this->setFieldOrder([
-        'academic_period_id', 'institution_curricular_id','category','type']);
-
+        'academic_period_id', 'institution_curricular_id','category','curricular_type','total_male_students','total_female_students','total_students'
+        ]);
         if ($this->controller->name == 'Profiles') {
             unset($settings['indexButtons']['view']);
         }
@@ -126,14 +130,30 @@ class StaffCurricularsTable extends ControllerActionTable {
         return $entity->category ? __('Curricular') : __('Extracurricular');
     }
 
+    public function onGetTotalMaleStudents(Event $event, Entity $entity)
+    {
+        return $entity['institution_curricular']['total_male_students'];
+    }
+
+    public function onGetTotalFemaleStudents(Event $event, Entity $entity)
+    {
+        return $entity['institution_curricular']['total_female_students'];
+    }
+
+    public function onGetTotalStudents(Event $event, Entity $entity)
+    {
+        $total = $entity->total_male_students + $entity->total_female_students ;
+        return $total;
+    }
+
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        
-        $this->field('academic_period_id', ['visible' => true]);
+        $this->field('academic_period_id', ['visible' => false]);
         $this->field('category', ['visible' => true]);
         $this->field('total_male_students', ['visible' => true]);
         $this->field('total_female_students', ['visible' => true]);
         $this->field('total_students', ['visible' => true]);
     }
+
 	
 }
