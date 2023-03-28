@@ -27,7 +27,7 @@ class POCOR6673 extends AbstractMigration
         //insert data in security function
         $record = [
             [
-                'name' => 'Curriculars', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Academic', 'parent_id' => 8,'_view' => 'Curriculars.index|Curriculars.view', '_edit' => 'Curriculars.edit', '_add' => 'Curriculars.add', '_delete' => 'Curriculars.remove', '_execute' => NULL, 'order' => 140, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+                'name' => 'Curriculars', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Academic', 'parent_id' => 8,'_view' => 'InstitutionCurriculars.index|InstitutionCurriculars.view', '_edit' => 'InstitutionCurriculars.edit', '_add' => 'InstitutionCurriculars.add', '_delete' => 'InstitutionCurriculars.remove', '_execute' => NULL, 'order' => 140, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ]
         ];
         $this->insert('security_functions', $record);
@@ -37,7 +37,7 @@ class POCOR6673 extends AbstractMigration
         //insert 
         $record = [
             [
-                'name' => 'Curriculars', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Students - Academic', 'parent_id' => 2000,'_view' => 'Curriculars.index|Curriculars.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 436, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+                'name' => 'Curriculars Students', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Students - Academic', 'parent_id' => 2000,'_view' => 'StudentCurriculars.index|StudentCurriculars.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 436, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ]
         ];
         $this->insert('security_functions', $record);
@@ -47,7 +47,7 @@ class POCOR6673 extends AbstractMigration
         //insert 
         $record = [
             [
-                'name' => 'Curriculars', 'controller' => 'Staff', 'module' => 'Institutions', 'category' => 'Staff - Career', 'parent_id' => 3000,'_view' => 'Curriculars.index|Curriculars.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' =>238, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+                'name' => 'Curriculars Staff', 'controller' => 'Staff', 'module' => 'Institutions', 'category' => 'Staff - Career', 'parent_id' => 3000,'_view' => 'StaffCurriculars.index|StaffCurriculars.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' =>238, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ]
         ];
         $this->insert('security_functions', $record);

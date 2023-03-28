@@ -65,16 +65,6 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $institutionId = $session->read('Institution.Institutions.id');
         $curricularStudent = TableRegistry::get('institution_curricular_students');
         $users = TableRegistry::get('security_users');
-        $data = $curricularStudent->find()
-                     ->select(['male_students' => "(
-                                 COUNT(DISTINCT(CASE WHEN security_users.gender_id = 1 THEN institution_curricular_students.student_id END)) )",
-                                'female_students' => "(
-                                 COUNT(DISTINCT(CASE WHEN security_users.gender_id = 2 THEN institution_curricular_students.student_id END)) )",
-                                'institution_curricular_id'
-                            ])
-                    ->innerJoin([$users->alias() => $users->table()],
-                    [$users->aliasField('id').' = ' . $curricularStudent->aliasField('student_id')])
-                    ->group([$curricularStudent->aliasField('student_id')]);
 
         $query->select([
                 'id',
