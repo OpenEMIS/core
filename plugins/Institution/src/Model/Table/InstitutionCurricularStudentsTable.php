@@ -462,7 +462,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
                     ->InnerJoin([$users->alias() => $users->table()],
                     [$users->aliasField('id').' = ' . $curricularStudent->aliasField('student_id')])
                     ->where([$curricularStudent->aliasField('institution_curricular_id') => $entity->institution_curricular_id])
-                    ->group([$curricularStudent->aliasField('student_id')])->toArray();
+                    ->group([$curricularStudent->aliasField('institution_curricular_id')])->toArray();
         foreach($countMaleFemale as $value){
             $maleStudents  = $value->male_students;
             $femaleStudents  = $value->female_students;
