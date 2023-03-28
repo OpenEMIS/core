@@ -1879,11 +1879,13 @@ class NavigationComponent extends Component
                 'parent' => 'SystemSetup',
                 'link' => false
             ],
-            'ApiSecurities.index' => [
-                'title' => 'Securities',
-                'parent' => 'API',
-                'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
-            ],
+            //POCOR-7312[START]
+            // 'ApiSecurities.index' => [
+            //     'title' => 'Securities',
+            //     'parent' => 'API',
+            //     'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
+            // ],
+            //POCOR-7312[END]
             'Credentials.index' => [
                 'title' => 'Credentials',
                 'parent' => 'API',
