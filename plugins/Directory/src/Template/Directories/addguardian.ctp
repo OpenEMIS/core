@@ -9,6 +9,66 @@
 <script data-require="bootstrap@3.3.2" data-semver="3.3.2" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
 <script data-require="angularjs@1.4.9" data-semver="1.4.9" src="https://code.angularjs.org/1.4.9/angular.min.js"></script>
 <script data-require="ui-bootstrap@*" data-semver="1.3.2" src="https://cdn.rawgit.com/angular-ui/bootstrap/gh-pages/ui-bootstrap-tpls-1.3.2.js"></script>
+<!-- POCOR-7231 :: Start -->
+<style>
+    h2 {
+    font-size: 20px;
+    font-weight: 400;
+}
+
+h2, h3, h4, h5, h6 {
+    font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
+    color: #333;
+    margin: 10px 0;
+}
+    .page-header {
+    display: block;
+    width: 100%;
+    padding: 0;
+    clear: both;
+    margin: 0;
+    border-bottom: 1px solid #DDD;
+    background-color: #FFF;
+    z-index: 10;
+    height: 39px;
+    position: relative;
+}
+    .page-header h2 {
+    display: inline-block;
+    position: relative;
+    padding: 8px 24px 8px 0;
+    margin: 0;
+    max-width: 350px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-left: 15px;
+    }
+
+    .bdcm{
+        margin-bottom: 0px;
+    }
+
+    
+</style>
+<body><ul class="bdcm breadcrumb panel-breadcrumb">
+	<li><a href="/Dashboard"><i class="fa fa-home"></i></a></li>
+	
+		<li>
+		<a href="/Directory/Directories">Directory</a>	</li>
+		<li>
+		<a href="/Directory/Directories/Directories/view/<?php echo $queryStng ?>"><?php echo $UserData->first_name.' '.$UserData->last_name ?></a>	</li>
+		<li>
+		Student Guardians	</li>
+	</ul>
+
+    <div class="page-header">
+		<h2 id="main-header"><?php echo $UserData->first_name.' '.$UserData->last_name ?> - Student Guardians</h2>
+					
+			</div>
+
+            </body>
+<!-- POCOR-7231 :: END -->
 
 <div class="pd-10" ng-controller = 'DirectoryaddguardianCtrl'>
     <div class="alert {{messageClass}}" ng-if="message">
