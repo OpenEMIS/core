@@ -29,6 +29,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     scope.error = {};
     scope.studentOpenEmisId;
     scope.isInternalSearchSelected = false;
+    scope.isExternalSearchSelected = false;
     scope.isIdentityUserExist = false;
     scope.isExternalSearchEnable = false;
     scope.externalSearchSourceName = '';
@@ -107,7 +108,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.getUniqueOpenEmisId = function() {
-        if(scope.selectedUserData.openemis_no && !isNaN(Number(scope.selectedUserData.openemis_no.toString()))){
+        if((scope.isExternalSearchSelected || scope.isInternalSearchSelected) && scope.selectedUserData.openemis_no && !isNaN(Number(scope.selectedUserData.openemis_no.toString()))){
             scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
             scope.generatePassword();
             return;
@@ -463,6 +464,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=true;
+                    scope.isExternalSearchSelected=false;
                     scope.selectGuardianFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -515,6 +518,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=true;
+                    scope.isExternalSearchSelected=false;
                     scope.selectGuardianFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -571,6 +576,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=false;
+                    scope.isExternalSearchSelected=true;
                     scope.selectGuardianFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -626,6 +633,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=false;
+                    scope.isExternalSearchSelected=true;
                     scope.selectGuardianFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -812,6 +821,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=true;
+                    scope.isExternalSearchSelected=false;
                     scope.selectGuardianFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -859,6 +870,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=false;
+                    scope.isExternalSearchSelected=true;
                     scope.selectGuardianFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -908,6 +921,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=true;
+                    scope.isExternalSearchSelected=false;
                     scope.selectGuardianFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -955,6 +970,8 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=false;
+                    scope.isExternalSearchSelected=true;
                     scope.selectGuardianFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },

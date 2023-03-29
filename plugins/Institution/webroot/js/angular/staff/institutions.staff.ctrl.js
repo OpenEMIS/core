@@ -2341,7 +2341,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             .then(function(response) {
                 var username = StaffController.selectedStaffData.username;
                 //POCOR-5878 starts
-                if(username != StaffController.selectedStaffData.openemis_no && (username == '' || typeof username == 'undefined')){
+                if((StaffController.isInternalSearchSelected || StaffController.isExternalSearchSelected) && username != StaffController.selectedStaffData.openemis_no && (username == '' || typeof username == 'undefined')){
                     StaffController.selectedStaffData.username = StaffController.selectedStaffData.openemis_no;
                     StaffController.selectedStaffData.openemis_no = StaffController.selectedStaffData.openemis_no;
                 }else{

@@ -148,7 +148,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     });
 
     function getUniqueOpenEmisId() {
-        if(StudentController.selectedStudentData.openemis_no && !isNaN(Number(StudentController.selectedStudentData.openemis_no.toString()))) {
+        if((StudentController.isInternalSearchSelected || StudentController.isExternalSearchSelected)  &&
+            StudentController.selectedStudentData.openemis_no && !isNaN(Number(StudentController.selectedStudentData.openemis_no.toString()))) {
             StudentController.selectedStudentData.username = angular.copy(StudentController.selectedStudentData.openemis_no);
             return;
         }
@@ -984,22 +985,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     } else
                     {
                         StudentController.step = 'confirmation';
-                        if (!StudentController.selectedStudentData.openemis_no)
-                        {
-                            StudentController.getUniqueOpenEmisId();
-                        }
+                        StudentController.getUniqueOpenEmisId();
                     }
                     return;
                 }
                 case 'external_search': 
                     StudentController.step = 'confirmation';
-                    if(!StudentController.selectedStudentData.openemis_no) {
-                        StudentController.getUniqueOpenEmisId();
-                    }
+                    StudentController.getUniqueOpenEmisId();
                     break;
                 case 'confirmation': 
                     StudentController.step = 'add_student';
                     StudentController.selectedStudentData.endDate = '31-12-' + StudentController.currentYear;
+                    StudentController.getUniqueOpenEmisId();
                     StudentController.generatePassword();
                     break;
             }
