@@ -29,6 +29,16 @@
 					'data-named-group' => 'academic_period_id'
 				));
 			}
+
+			if (!empty($categories)) {
+				echo $this->Form->input('class', array(
+					'class' => 'form-control',
+					'label' => false,
+					'options' => $categories,
+					'url' => $baseUrl,
+					'data-named-key' => 'category_id',
+				));
+			}
 		?>
 	</div>
 </div>
