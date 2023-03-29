@@ -220,8 +220,8 @@ class UsersController extends AppController
                     }
 
 
-                    $email = new Email('bemis');
-                    $emailSubject =  'BEMIS - Password Reset Request';
+                    $email = new Email('openemis');
+                    $emailSubject =  $emailSubject.' - Password Reset Request';
                     //$emailSubject = __('OpenEMIS - Password Reset Request');
                     $emailMessage = "Dear " . $name . ",\n\nWe received a password reset request for your account.\n\nIf you didn’t request a password reset, kindly ignore this email and your password will not be changed.\n\nTo reset your password, please click the link below:\n" . $url . "\n\nThank you.";
                     $email
