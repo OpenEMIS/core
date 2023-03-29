@@ -49,18 +49,20 @@ class EnrollmentOutliersTable extends AppTable  {
 	
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
 	{
-		 $query->limit(1);
-		//print_r($query->toArray());die;
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
+		  $query
+		  ->contain(['Institutions'])
+		  ->group([$this->aliasField('institution_id'), $this->aliasField('Institutions.name')])->first();
+		  $query
+        ->where([
+            $this->aliasField('academic_period_id') => 32
+        ]);
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($i) {
+            return $results->map(function ($row) use($i){
                 $academicPeriodId = 32;
-				$conditions = [];
-				$conditionQuery = [];
-				$join = [];
+				
 				$institutionStudents = TableRegistry::get('institution_students');
 				$academicPeriod = TableRegistry::get('academic_periods');
 				$institutions = TableRegistry::get('institutions');
-				$conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
 				$connection = ConnectionManager::get('default');
 				$statement = $connection->prepare("SELECT main_query.academic_period_name 
 			,main_query.institution_code 
@@ -79,7 +81,7 @@ class EnrollmentOutliersTable extends AppTable  {
 									ON institutions.id = institution_students.institution_id
 									WHERE academic_periods.id = $academicPeriodId
 									AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_students.student_status_id = 1, institution_students.student_status_id IN (1, 7, 6, 8))
-									GROUP BY institutions.id
+									GROUP BY institutions.id ,institution_students.academic_period_id
 								) main_query
 								CROSS JOIN
 								(
@@ -95,15 +97,15 @@ class EnrollmentOutliersTable extends AppTable  {
 			$statement->execute();
 
 			$list =  $statement->fetchAll(\PDO::FETCH_ASSOC);
-			$row['academic_period_name'] = $list[0]['academic_period_name'];
-			$row['institution_code'] = $list[0]['institution_code'];
-			$row['institution_name'] = $list[0]['institution_name'];
-			$row['count_students'] = $list[0]['count_students'];
+			foreach ($list as  $value) {
+				$row['academic_period_name'] = $value['academic_period_name'];
+				$row['institution_code'] = $value['institution_code'];
+				$row['institution_name'] = $value['institution_name'];
+				$row['count_students'] = $value['count_students'];
+			}
 			return $row;
-			 exit();
             });
-            exit();
-            //break;
+            
         }); 
         
 	}
@@ -115,7 +117,6 @@ class EnrollmentOutliersTable extends AppTable  {
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-    	//print_r($settings);die;
 
     	$extraFields = [];
         $extraFields[] = [
@@ -135,6 +136,12 @@ class EnrollmentOutliersTable extends AppTable  {
             'field' => 'institution_name',
             'type' => 'string',
             'label' => __('Institution Name')
+        ];
+        $extraFields[] = [
+            'key' => 'count_students',
+            'field' => 'count_students',
+            'type' => 'string',
+            'label' => __('count students')
         ];
         
 
