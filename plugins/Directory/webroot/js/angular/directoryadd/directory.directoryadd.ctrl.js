@@ -49,6 +49,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     scope.birthplaceAreaId = null;
     scope.isIdentityUserExist = false;
     scope.isExternalSearchEnable = false;
+    scope.externalSearchSourceName = '';
     scope.disableFields = {
         username: false,
         password: false
@@ -599,7 +600,12 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 },
             };
             setTimeout(function(){
-                scope.getExternalSearchData();
+                // scope.getExternalSearchData();
+                if (scope.externalSearchSourceName === 'Jordan CSPD'){
+                    scope.getCSPDSearchData();
+                }else{
+                    scope.getExternalSearchData();
+                }
             }, 1500);
         }, function(error){
             scope.externalGridOptions = {
@@ -649,7 +655,11 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 },
             };
             setTimeout(function(){
-                scope.getExternalSearchData();
+                if (scope.externalSearchSourceName === 'Jordan CSPD'){
+                    scope.getCSPDSearchData();
+                }else{
+                    scope.getExternalSearchData();
+                }
             }, 1500);
         });
     }
@@ -1115,55 +1125,115 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
     scope.setExternalUserData = function (selectedData)
     {
-        scope.selectedUserData.addressArea = {
-            id: selectedData.address_area_id,
-            name: selectedData.area_name,
-            code: selectedData.area_code
-        };
-        scope.selectedUserData.birthplaceArea = {
-            id: selectedData.birthplace_area_id,
-            name: selectedData.birth_area_name,
-            code: selectedData.birth_area_code
-        };
-        scope.selectedUserData.openemis_no = selectedData.openemis_no;
-        scope.selectedUserData.first_name = selectedData.first_name;
-        scope.selectedUserData.middle_name = selectedData.middle_name;
-        scope.selectedUserData.third_name = selectedData.third_name;
-        scope.selectedUserData.last_name = selectedData.last_name;
-        scope.selectedUserData.preferred_name = selectedData.preferred_name;
-        scope.selectedUserData.date_of_birth = selectedData.date_of_birth;
-        scope.selectedUserData.email = selectedData.email;
-        scope.selectedUserData.gender_id = selectedData.gender_id;
-        scope.selectedUserData.gender = {name: selectedData.gender};
-        scope.selectedUserData.nationality_id = selectedData.nationality_id;
-        scope.selectedUserData.nationality_name = selectedData.nationality;
-        scope.selectedUserData.identity_type_id = selectedData.identity_type_id;
-        scope.selectedUserData.identity_type_name = selectedData.identity_type;
-        scope.selectedUserData.identity_number = selectedData.identity_number;
-        scope.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
-        scope.selectedUserData.password = selectedData.password;
-        scope.selectedUserData.address = selectedData.address;
-        scope.selectedUserData.postalCode = selectedData.postal_code;
+        if (scope.externalSearchSourceName = 'Jordan CSPD')
+        {
+            DirectoryaddSvc.getUniqueOpenEmisId().then((response) =>
+            {
+                const selectedObjectWithOpenemisNo =  Object.assign({}, selectedData, {'openemis_no':response})
+                selectedData = selectedObjectWithOpenemisNo;
+                scope.selectedUserData.addressArea = {
+                    id: selectedData.address_area_id,
+                    name: selectedData.area_name,
+                    code: selectedData.area_code
+                };
+                scope.selectedUserData.birthplaceArea = {
+                    id: selectedData.birthplace_area_id,
+                    name: selectedData.birth_area_name,
+                    code: selectedData.birth_area_code
+                };
+                scope.selectedUserData.openemis_no = selectedData.openemis_no;
+                scope.selectedUserData.first_name = selectedData.first_name;
+                scope.selectedUserData.middle_name = selectedData.middle_name;
+                scope.selectedUserData.third_name = selectedData.third_name;
+                scope.selectedUserData.last_name = selectedData.last_name;
+                scope.selectedUserData.preferred_name = selectedData.preferred_name;
+                scope.selectedUserData.date_of_birth = selectedData.date_of_birth;
+                scope.selectedUserData.email = selectedData.email;
+                scope.selectedUserData.gender_id = selectedData.gender_id;
+                scope.selectedUserData.gender = { name: selectedData.gender };
+                scope.selectedUserData.nationality_id = selectedData.nationality_id;
+                scope.selectedUserData.nationality_name = selectedData.nationality;
+                scope.selectedUserData.identity_type_id = selectedData.identity_type_id;
+                scope.selectedUserData.identity_type_name = selectedData.identity_type;
+                scope.selectedUserData.identity_number = selectedData.identity_number;
+                scope.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
+                scope.selectedUserData.password = selectedData.password;
+                scope.selectedUserData.address = selectedData.address;
+                scope.selectedUserData.postalCode = selectedData.postal_code;
 
-        if (selectedData.address_area_id > 0)
-        {
-            document.getElementById('addressArea_textbox').style.visibility = 'visible';
-            document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
-        } else
-        {
-            document.getElementById('addressArea_textbox').style.display = 'none';
-            document.getElementById('addressArea_dropdown').style.visibility = 'visible';
-        }
+                if (selectedData.address_area_id > 0)
+                {
+                    document.getElementById('addressArea_textbox').style.visibility = 'visible';
+                    document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
+                } else
+                {
+                    document.getElementById('addressArea_textbox').style.display = 'none';
+                    document.getElementById('addressArea_dropdown').style.visibility = 'visible';
+                }
 
-        if (selectedData.birthplace_area_id > 0)
-        {
-            document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
-            document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
-        } else
-        {
-            document.getElementById('birthplaceArea_textbox').style.display = 'none';
-            document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
+                if (selectedData.birthplace_area_id > 0)
+                {
+                    document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
+                    document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
+                } else
+                {
+                    document.getElementById('birthplaceArea_textbox').style.display = 'none';
+                    document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
+                }
+            })
+
+        }else{
+            scope.selectedUserData.addressArea = {
+                id: selectedData.address_area_id,
+                name: selectedData.area_name,
+                code: selectedData.area_code
+            };
+            scope.selectedUserData.birthplaceArea = {
+                id: selectedData.birthplace_area_id,
+                name: selectedData.birth_area_name,
+                code: selectedData.birth_area_code
+            };
+            scope.selectedUserData.openemis_no = selectedData.openemis_no;
+            scope.selectedUserData.first_name = selectedData.first_name;
+            scope.selectedUserData.middle_name = selectedData.middle_name;
+            scope.selectedUserData.third_name = selectedData.third_name;
+            scope.selectedUserData.last_name = selectedData.last_name;
+            scope.selectedUserData.preferred_name = selectedData.preferred_name;
+            scope.selectedUserData.date_of_birth = selectedData.date_of_birth;
+            scope.selectedUserData.email = selectedData.email;
+            scope.selectedUserData.gender_id = selectedData.gender_id;
+            scope.selectedUserData.gender = {name: selectedData.gender};
+            scope.selectedUserData.nationality_id = selectedData.nationality_id;
+            scope.selectedUserData.nationality_name = selectedData.nationality;
+            scope.selectedUserData.identity_type_id = selectedData.identity_type_id;
+            scope.selectedUserData.identity_type_name = selectedData.identity_type;
+            scope.selectedUserData.identity_number = selectedData.identity_number;
+            scope.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
+            scope.selectedUserData.password = selectedData.password;
+            scope.selectedUserData.address = selectedData.address;
+            scope.selectedUserData.postalCode = selectedData.postal_code;
+    
+            if (selectedData.address_area_id > 0)
+            {
+                document.getElementById('addressArea_textbox').style.visibility = 'visible';
+                document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
+            } else
+            {
+                document.getElementById('addressArea_textbox').style.display = 'none';
+                document.getElementById('addressArea_dropdown').style.visibility = 'visible';
+            }
+    
+            if (selectedData.birthplace_area_id > 0)
+            {
+                document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
+                document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
+            } else
+            {
+                document.getElementById('birthplaceArea_textbox').style.display = 'none';
+                document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
+            }
         }
+       
     }
 
     scope.getUserData = function() {
@@ -1547,6 +1617,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         DirectoryaddSvc.checkConfigForExternalSearch().then(function (resp)
         {
             scope.isExternalSearchEnable = resp.showExternalSearch;
+            scope.externalSearchSourceName = resp.value;
             UtilsSvc.isAppendLoader(false);
         }, function (error)
         {
@@ -1568,5 +1639,40 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
           return true;
         }
         return false;
+    }
+
+    scope.getCSPDSearchData = function getCSPDSearchData() {
+        var param = {            
+            identity_number: scope.selectedUserData.identity_number,
+        };
+        var dataSource = {
+            pageSize: scope.pageSize,
+            getRows: function (params) {
+                UtilsSvc.isAppendLoader(true);
+                param.limit = params.endRow - params.startRow;
+                param.page = params.endRow / (params.endRow - params.startRow);
+                DirectoryaddSvc.getCspdData(param)
+                .then(function(response) {
+                    var gridData = [response.data.data];
+                    if(!gridData)gridData = [];
+                    gridData.forEach((data) => {
+                        data.name = `${data['first_name']} ${data['middle_name']} ${data['last_name']}`;
+                        data.gender = data['gender_name'];
+                        data.nationality = data['nationality_name'];
+                        data.identity_type = data['identity_type_name'];
+                        data.gender_id = data['gender_id'];
+                        data.nationality_id = data['nationality_id'];
+                        data.identity_type_id = data['identity_type_id'];
+                    });
+                    var totalRowCount = gridData.length === 0 ? 1 : gridData.length;
+                    return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
+                }, function(error) {
+                    console.log(error);
+                    UtilsSvc.isAppendLoader(false);
+                });
+            }
+        };
+        scope.externalGridOptions.api.setDatasource(dataSource);
+        scope.externalGridOptions.api.sizeColumnsToFit(); 
     }
 }
