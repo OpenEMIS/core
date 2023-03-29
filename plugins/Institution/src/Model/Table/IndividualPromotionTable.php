@@ -589,6 +589,15 @@ class IndividualPromotionTable extends ControllerActionTable
                 } else {
                     // write data to session
                     $this->Session->write($this->registryAlias().'.confirm', $entity);
+                    //POCOR-7330 start
+                    $studentStatusesValidate = $this->studentIfExist($entity,$requestData);
+                    if($studentStatusesValidate == 'yes'){
+                        $message = __('This student has completed the education grade before. Please assign to a different grade');
+                        $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                        $event->stopPropagation();
+                        return false;
+                    }
+                    //POCOR-7330 end
                     $event->stopPropagation();
                     return $this->controller->redirect($this->url('reconfirm'));
                 }
@@ -758,6 +767,7 @@ class IndividualPromotionTable extends ControllerActionTable
         $this->log($newInstitutionStudent, 'debug');
         
         if ($this->save($existingInstitutionStudent)) {
+            die('ss');
             if ($this->save($newInstitutionStudent)) {
                 // update old class if exists
                 if (!empty($existingClassStudent)) {
@@ -892,5 +902,26 @@ class IndividualPromotionTable extends ControllerActionTable
                     }
         }
 
+    }
+
+    /**
+     * POCOR-7330
+     * show validation message in education grade if promotion is done on same grade
+     * */
+    public function studentIfExist($entity,$requestData)
+    {
+       $educationGradeId = $this->request->data['IndividualPromotion']['education_grade_id'];
+        $studentId = $entity->student_id;
+        $statusId = $entity->student_status_id;
+        $statusId = $entity->academic_period_id;
+        $academicPeriodId = $this->request->data['IndividualPromotion']['academic_period_id'];
+        $institutionStudents = TableRegistry::get('institution_students');
+        $studentStatuses = TableRegistry::get('student_statuses');
+        $statusStudentId = $studentStatuses->find()->where([$studentStatuses->aliasField('name') => 'Promoted'])
+                            ->first()->id;
+        $students =  $institutionStudents->find()->where([$institutionStudents->aliasField('student_id') => $studentId, $institutionStudents->aliasField('student_status_id') => $statusStudentId , $institutionStudents->aliasField('academic_period_id') => $academicPeriodId,$institutionStudents->aliasField('education_grade_id') => $educationGradeId])->first();
+        if(!empty($students)){
+            return 'yes';
+        }
     }
 }
