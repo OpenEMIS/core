@@ -49,6 +49,8 @@ class EnrollmentOutliersTable extends AppTable  {
 	
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
 	{
+		 $query->limit(1);
+		//print_r($query->toArray());die;
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 $academicPeriodId = 32;
@@ -90,23 +92,20 @@ class EnrollmentOutliersTable extends AppTable  {
 										'report_outlier_min_student', 'report_outlier_max_student')
 								) subq
 								WHERE main_query.count_students NOT BETWEEN subq.min_enrolment AND subq.max_enrolment");
-				$statement->execute();
+			$statement->execute();
 
-			$list = $statement->fetchAll(\PDO::FETCH_ASSOC);
-			/*$academic_period = $list[0]['Academic Period'];
-			$institution_code = $list[0]['Institution Code'];
-			$institution_name = $list[0]['Institution'];
-			$count_students = $list[0]['Number of Students'];*/
-			$row = [];
-			foreach($list as $key => $value){
-				$row['academic_period'] = $value['academic_period_name'];
-				$row['institution_code'] = $value['institution_code'];
-				$row['institution_name'] = $value['institution_name'];
-				$row['total_students'] = $value['count_students'];
-			}
-                return $row;
+			$list =  $statement->fetchAll(\PDO::FETCH_ASSOC);
+			$row['academic_period_name'] = $list[0]['academic_period_name'];
+			$row['institution_code'] = $list[0]['institution_code'];
+			$row['institution_name'] = $list[0]['institution_name'];
+			$row['count_students'] = $list[0]['count_students'];
+			return $row;
+			 exit();
             });
+            exit();
+            //break;
         }); 
+        
 	}
 
 	/*public function onExcelGetStatus(Event $event, Entity $entity)
@@ -116,27 +115,27 @@ class EnrollmentOutliersTable extends AppTable  {
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-    	//print_r($fields);die;
+    	//print_r($settings);die;
 
     	$extraFields = [];
         $extraFields[] = [
-            'key' => '',
-            'field' => 'academic_period',
+            'key' => 'academic_period_name',
+            'field' => 'academic_period_name',
             'type' => 'integer',
             'label' => __('Academic Period')
         ];
-        /*$extraFields[] = [
-            'key' => '',
+        $extraFields[] = [
+            'key' => 'institution_code',
             'field' => 'institution_code',
             'type' => 'string',
             'label' => __('Institution code')
         ];
         $extraFields[] = [
-            'key' => '',
+            'key' => 'institution_name',
             'field' => 'institution_name',
             'type' => 'string',
             'label' => __('Institution Name')
-        ];*/
+        ];
         
 
         $fields->exchangeArray($extraFields);
