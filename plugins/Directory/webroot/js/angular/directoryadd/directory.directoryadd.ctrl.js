@@ -40,6 +40,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     scope.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
     scope.redirectToGuardian = false;
     scope.isInternalSearchSelected = false;
+    scope.isExternalSearchSelected = false;
     scope.datepickerOptions = {
         minDate: new Date('01/01/1900'),
         maxDate: new Date(),
@@ -102,7 +103,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
     scope.getUniqueOpenEmisId = function() {
         UtilsSvc.isAppendLoader(true);
-        if(scope.selectedUserData.openemis_no && !isNaN(Number(scope.selectedUserData.openemis_no.toString()))){
+        if((scope.isExternalSearchSelected || scope.isInternalSearchSelected) && scope.selectedUserData.openemis_no && !isNaN(Number(scope.selectedUserData.openemis_no.toString()))){
             scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
             scope.generatePassword();
             return;
@@ -479,6 +480,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=true;
+                    scope.isExternalSearchSelected=false;
                     scope.selectUserFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -529,6 +532,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=true;
+                    scope.isExternalSearchSelected=false;
                     scope.selectUserFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -585,6 +590,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=false;
+                    scope.isExternalSearchSelected=true;
                     scope.selectUserFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -640,6 +647,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=false;
+                    scope.isExternalSearchSelected=true;
                     scope.selectUserFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -861,6 +870,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=true;
+                    scope.isExternalSearchSelected=false;
                     scope.selectUserFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -908,6 +919,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isExternalSearchSelected=true;
+                    scope.isInternalSearchSelected=false;
                     scope.selectUserFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -955,6 +968,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isExternalSearchSelected=false;
+                    scope.isInternalSearchSelected=true;
                     scope.selectUserFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -1002,6 +1017,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=false;
+                    scope.isExternalSearchSelected=true;
                     scope.selectUserFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
