@@ -62,8 +62,8 @@ class ReportCardProcessesTable extends ControllerActionTable
         $entitydata = $ReportCardProcessesTable->find('all',['conditions'=>[
                 'status !=' =>'-1'
         ]])->where([$ReportCardProcessesTable->aliasField('modified IS NOT NULL')])->toArray();
-    
-        foreach($entitydata as $keyy =>$entity ){ 
+
+        foreach($entitydata as $keyy =>$entity ){
             //POCOR-7067 Starts
             $now = new DateTime();
             $currentDateTime = $now->format('Y-m-d H:i:s');
@@ -117,17 +117,18 @@ class ReportCardProcessesTable extends ControllerActionTable
         $this->fields['status']['visible']               = true;
 
         $this->fields['report_card_id']['visible']       = false;
-        $this->fields['education_grade_id']['visible']   = false;
+        $this->fields['education_grade_id']['visible']   = true;//POCOR 7319
         $this->fields['academic_period_id']['visible']   = false;
         $this->fields['created']['visible']              = false;
 
         $this->setFieldOrder([
             'institution_id',
+            'education_grade_id',//POCOR 7319
             'class_name',
             'openemis_no',
             'status'
         ]);
-        
+
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -135,6 +136,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('class_name', ['sort' => ['field' => 'InstitutionClasses.name']]);
         $this->field('institution_id', ['sort' => ['field' => 'Institutions.name']]);
+        $this->field('education_grade_id', ['sort' => ['field' => 'EducationGrades.name']]);//POCOR 7319
         $this->field('status', ['sort' => ['field' => 'status']]);
         $this->setupNewTabElements();
     }
