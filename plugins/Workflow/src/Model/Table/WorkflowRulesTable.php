@@ -32,7 +32,7 @@ class WorkflowRulesTable extends ControllerActionTable
         $this->addBehavior('Workflow.RuleStaffBehaviours');
         $this->addBehavior('Workflow.RuleStudentAttendances');
         $this->addBehavior('Workflow.RuleStudentUnmarkedAttendances');
-        // $this->addBehavior('Workflow.RuleStudentBehaviours');
+        //$this->addBehavior('Workflow.RuleStudentBehaviours');
     }
 
     public function implementedEvents()
