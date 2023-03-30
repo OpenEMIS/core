@@ -410,17 +410,47 @@
                     </div>
                     <!-- Birthplace area end -->
                     <div class="row section-header header-space-lg">Identities / Nationalities</div>
-                    <div class="input string">
+                    <div class="input string" ng-show="!isSearchResultEmpty" >
                         <label><?= __('Nationalities') ?></label>
                         <input ng-model="selectedUserData.nationality_name" type="string" ng-disabled="true" />
                     </div>
-                    <div class="input string">
+                    <div class="input string" ng-show="!isSearchResultEmpty">
                         <label><?= __('Identity Type') ?></label>
                         <input ng-model="selectedUserData.identity_type_name" type="string" ng-disabled="true">
                     </div>
+                    <div ng-class="nationality_class" class="input select" ng-show="isSearchResultEmpty">
+                        <label><?= __('Nationality') ?></label>
+                        <div class="input-select-wrapper">
+                            <select name="User[nationality_id]" id="user-nationality_id"
+                                ng-options="option.id as option.name for option in nationalitiesOptions"
+                                ng-model="selectedUserData.nationality_id"
+                                ng-change="changeNationality()"
+                                >
+                                <option value="" >-- <?= __('Select') ?> --</option>
+                            </select>
+                        </div>
+                        <div ng-if="postResponse.error.nationalities[0].nationality_id" class="error-message">
+                            <p ng-repeat="error in postResponse.error.nationalities[0].nationality_id">{{ error }}</p>
+                        </div>
+                    </div>
+                    <div ng-class="identity_type_class" class="input select" ng-show="isSearchResultEmpty">
+                        <label><?= __('Identity Type') ?></label>
+                        <div class="input-select-wrapper">
+                            <select name="User[identities_type_id]" id="user-identities_type_id"
+                                ng-options="option.id as option.name for option in identityTypeOptions"
+                                ng-model="selectedUserData.identity_type_id"
+                                ng-change="changeIdentityType()"
+                                >
+                                <option value="" >-- <?= __('Select') ?> --</option>
+                            </select>
+                        </div>
+                        <div ng-if="postResponse.error.identities[0].identity_type_id" class="error-message">
+                            <p ng-repeat="error in postResponse.error.identities[0].identity_type_id">{{ error }}</p>
+                        </div>
+                    </div>
                     <div class="input string">
                         <label><?= __('Identity Number') ?></label>
-                        <input ng-model="selectedUserData.identity_number" type="string" ng-disabled="true">
+                        <input ng-model="selectedUserData.identity_number" type="string" ng-disabled="!isSearchResultEmpty">
                     </div>
                     <div class="row section-header header-space-lg">Other Information</div>
                     <div class="input select">
