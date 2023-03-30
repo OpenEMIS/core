@@ -63,6 +63,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         pasword: false
     }
     StaffController.user_identity_type_id = 0;
+    StaffController.isSearchResultEmpty = false;
     //controller function
     StaffController.getUniqueOpenEmisId = getUniqueOpenEmisId;
     StaffController.generatePassword = generatePassword;
@@ -358,6 +359,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     var gridData = response.data.data;
                     if(!gridData)
                         gridData=[];
+                    
+                    StaffController.isSearchResultEmpty = gridData.length === 0;
                     var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return StaffController.processInternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
@@ -413,6 +416,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                         data.nationality_id = data['main_nationality.id'];
                         data.identity_type_id = data['main_identity_type.id'];
                     });
+                    StaffController.isSearchResultEmpty = gridData.length === 0;
                     var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return StaffController.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
@@ -1047,19 +1051,23 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         if (StaffController.isInternalSearchSelected)
         {
             StaffController.isInternalSearchSelected=false
-            StaffController.step = 'internal_search';
+            StaffController.step = 'user_details';
             StaffController.internalGridOptions = null;
-            StaffController.goToInternalSearch();
+            // StaffController.goToInternalSearch();
         } else if(StaffController.isExternalSearchSelected) {
             StaffController.step = 'external_search';
             StaffController.externalGridOptions = null;
             StaffController.goToExternalSearch();
         } else {
             switch(StaffController.step){
-                case 'internal_search': 
+                case 'internal_search': {
                     StaffController.selectedStaffData.date_of_birth = InstitutionsStaffSvc.formatDate(StaffController.selectedStaffData.date_of_birth);
                     StaffController.step = 'user_details';
+                    if (StaffController.isSearchResultEmpty) {
+                        StaffController.selectedStaffData.openemis_no = "";
+                    }
                     break;
+                }
                 case 'external_search': 
                     StaffController.step = 'internal_search';
                     StaffController.internalGridOptions = null;
@@ -2529,6 +2537,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                         data.nationality_id = data['nationality_id'];
                         data.identity_type_id = data['identity_type_id'];
                     });
+                    StaffController.isSearchResultEmpty = gridData.length === 0;
                     var totalRowCount = gridData.length === 0 ? 1 : gridData.length;
                     return StaffController.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
