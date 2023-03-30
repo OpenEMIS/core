@@ -15,6 +15,8 @@ use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
+use Cake\Datasource\ConnectionManager; // POCOR-7158
+
 class ScholarshipsTable extends ControllerActionTable
 {
     use OptionsTrait;
@@ -451,6 +453,11 @@ class ScholarshipsTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        /** Start POCOR-7158 */
+        $connection = ConnectionManager::get('default');
+        $connection->execute('SET foreign_key_checks = 0');
+        /** End POCOR-7158 */
+
         if ($entity->has('field_of_study_selection') && $entity->field_of_study_selection == self::SELECT_ALL_FIELD_OF_STUDIES) {
             $ScholarshipsFieldOfStudies = TableRegistry::get('Scholarship.ScholarshipsFieldOfStudies');
 
@@ -463,7 +470,11 @@ class ScholarshipsTable extends ControllerActionTable
             if (!$ScholarshipsFieldOfStudies->save($ScholarshipsFieldOfStudiesEntity)) {
                 Log::write('debug', $ScholarshipsFieldOfStudiesEntity->errors());
             }
-        }
+        }   
+
+        /** Start POCOR-7158 */
+        $connection->execute('SET foreign_key_checks = 1');
+        /** End POCOR-7158 */
     }
 
     public function onGetFieldOfStudies(Event $event, Entity $entity)

@@ -1,3 +1,16 @@
+### [3.80.1] - 2023-03-30
+- Implemented: 2.11 Add workflow for student behavior
+- Implemented: Improvement of CSPD integration with OpenEMIS
+- Implemented: Update Swagger for Administration > System Setup > APIs > Credentials page
+- Bug Fixed: Administration>Training>Courses: Unable to add
+- Bug Fixed: Institutions > Attendance > Staff page: Not Updating the correct information
+- Bug Fixed: Institutions > Academic > Classes: The system should retrieve the list of ALL Staff that is assigned to a Teaching position. Places to check if the staff is assigned to a Teaching position
+- Bug Fixed: Reports > Staff > Staff Subjects: Report is stuck in progress
+- Bug Fixed: Institutions>Students: OpenEMIS ID did not auto generate but it captures the wrong OpenEMIS ID
+- Bug Fixed: Institutions>Staff>Transfer: 404 error when transferring staff
+- Bug Fixed: Administration > Performance > Assessment: Subjects added in assessment templates are not showing in assessment periods subjects
+- Bug Fixed: Institutions > Delete page: Not able to delete even when associated records is 0
+
 ### [3.80.0] - 2023-03-23
 - Implemented: Develop school profile placeholders
 - Implemented: Move grade from add position page to add staff page
