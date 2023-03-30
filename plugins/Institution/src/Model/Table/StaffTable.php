@@ -2111,7 +2111,7 @@ class StaffTable extends ControllerActionTable
     public function findByInstitution(Query $query, array $options)
     {
         if (array_key_exists('Institutions.id', $options)) {
-            return $query->where([$this->aliasField('institution_id') => $options['Institutions.id'],$this->aliasField('is_homeroom') =>1]); //POCOR-5070
+            return $query->where([$this->aliasField('institution_id') => $options['Institutions.id']/*,$this->aliasField('is_homeroom') =>1 POCOR-7292*/]); //POCOR-5070
         } else {
             return $query;
         }
