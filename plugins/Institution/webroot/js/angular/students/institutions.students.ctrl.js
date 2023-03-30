@@ -61,7 +61,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         username: false,
         password:false
     }
-
+    StudentController.isSearchResultEmpty = false;
     //controller function
     StudentController.getUniqueOpenEmisId = getUniqueOpenEmisId;
     StudentController.generatePassword = generatePassword;
@@ -148,7 +148,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     });
 
     function getUniqueOpenEmisId() {
-        if(StudentController.selectedStudentData.openemis_no && !isNaN(Number(StudentController.selectedStudentData.openemis_no.toString()))) {
+        if((StudentController.isInternalSearchSelected || StudentController.isExternalSearchSelected)  &&
+            StudentController.selectedStudentData.openemis_no && !isNaN(Number(StudentController.selectedStudentData.openemis_no.toString()))) {
             StudentController.selectedStudentData.username = angular.copy(StudentController.selectedStudentData.openemis_no);
             return;
         }
@@ -209,6 +210,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     var gridData = response.data.data;
                     if(!gridData)
                         gridData=[];
+
+                    StudentController.isSearchResultEmpty = gridData.length === 0;    
                     var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return StudentController.processInternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
@@ -265,6 +268,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         data.nationality_id = data['main_nationality.id'];
                         data.identity_type_id = data['main_identity_type.id'];
                     });
+                    StudentController.isSearchResultEmpty = gridData.length === 0;  
                     var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return StudentController.processExternalGridUserRecord(gridData, params, totalRowCount);
             }, function(error) {
@@ -894,19 +898,24 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function goToPrevStep(){
         if(StudentController.isInternalSearchSelected) {
-            StudentController.step = 'internal_search';
+            StudentController.isInternalSearchSelected=false;
+            StudentController.step = 'user_details';
             StudentController.internalGridOptions = null;
-            StudentController.goToInternalSearch();
+            // StudentController.goToInternalSearch();
         } else if(StudentController.isExternalSearchSelected) {
             StudentController.step = 'external_search';
             StudentController.externalGridOptions = null;
             StudentController.goToExternalSearch();
         } else {
             switch(StudentController.step){
-                case 'internal_search': 
+                case 'internal_search': {
                     StudentController.selectedStudentData.date_of_birth = InstitutionsStudentsSvc.formatDate(StudentController.selectedStudentData.date_of_birth);
                     StudentController.step = 'user_details';
+                    if (StudentController.isSearchResultEmpty) {
+                        StudentController.selectedStudentData.openemis_no = "";
+                    }
                     break;
+                }
                 case 'external_search': 
                     StudentController.step = 'internal_search';
                     StudentController.internalGridOptions = null;
@@ -984,22 +993,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     } else
                     {
                         StudentController.step = 'confirmation';
-                        if (!StudentController.selectedStudentData.openemis_no)
-                        {
-                            StudentController.getUniqueOpenEmisId();
-                        }
+                        StudentController.getUniqueOpenEmisId();
                     }
                     return;
                 }
                 case 'external_search': 
                     StudentController.step = 'confirmation';
-                    if(!StudentController.selectedStudentData.openemis_no) {
-                        StudentController.getUniqueOpenEmisId();
-                    }
+                    StudentController.getUniqueOpenEmisId();
                     break;
                 case 'confirmation': 
                     StudentController.step = 'add_student';
                     StudentController.selectedStudentData.endDate = '31-12-' + StudentController.currentYear;
+                    StudentController.getUniqueOpenEmisId();
                     StudentController.generatePassword();
                     break;
             }
@@ -1814,6 +1819,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         data.nationality_id = data['nationality_id'];
                         data.identity_type_id = data['identity_type_id'];
                     });
+                    StudentController.isSearchResultEmpty = gridData.length === 0;  
                     var totalRowCount = gridData.length === 0 ? 1 : gridData.length;
                     return StudentController.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {

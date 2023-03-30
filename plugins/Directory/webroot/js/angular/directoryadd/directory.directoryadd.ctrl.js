@@ -40,6 +40,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     scope.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
     scope.redirectToGuardian = false;
     scope.isInternalSearchSelected = false;
+    scope.isExternalSearchSelected = false;
     scope.datepickerOptions = {
         minDate: new Date('01/01/1900'),
         maxDate: new Date(),
@@ -50,6 +51,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     scope.isIdentityUserExist = false;
     scope.isExternalSearchEnable = false;
     scope.externalSearchSourceName = '';
+    scope.isSearchResultEmpty = false;
+
     scope.disableFields = {
         username: false,
         password: false
@@ -102,7 +105,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
     scope.getUniqueOpenEmisId = function() {
         UtilsSvc.isAppendLoader(true);
-        if(scope.selectedUserData.openemis_no && !isNaN(Number(scope.selectedUserData.openemis_no.toString()))){
+        if((scope.isExternalSearchSelected || scope.isInternalSearchSelected) && scope.selectedUserData.openemis_no && !isNaN(Number(scope.selectedUserData.openemis_no.toString()))){
             scope.selectedUserData.username = angular.copy(scope.selectedUserData.openemis_no);
             scope.generatePassword();
             return;
@@ -164,6 +167,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     if(!gridData)
                         gridData = [];
                     var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
+                    scope.isSearchResultEmpty = gridData.length === 0;  
                     return scope.processInternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
@@ -219,6 +223,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                         data.identity_type_id = data['main_identity_type.id'];
                     });
                     var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
+                    scope.isSearchResultEmpty = gridData.length === 0;  
                     return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
@@ -479,6 +484,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=true;
+                    scope.isExternalSearchSelected=false;
                     scope.selectUserFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -529,6 +536,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=true;
+                    scope.isExternalSearchSelected=false;
                     scope.selectUserFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -585,6 +594,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=false;
+                    scope.isExternalSearchSelected=true;
                     scope.selectUserFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -640,6 +651,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=false;
+                    scope.isExternalSearchSelected=true;
                     scope.selectUserFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -741,14 +754,18 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     scope.goToPrevStep = function(){
         if(scope.isInternalSearchSelected) {
             scope.isInternalSearchSelected=false;
-            scope.step = 'internal_search';
+            scope.step = 'user_details';
             scope.internalGridOptions = null;
-            scope.goToInternalSearch();
+            // scope.goToInternalSearch();
         } else {
             switch(scope.step){
-                case 'internal_search': 
+                case 'internal_search': {
                     scope.step = 'user_details';
+                    if (scope.isSearchResultEmpty) {
+                        scope.selectedUserData.openemis_no = "";
+                    }
                     break;
+                }
                 case 'external_search': 
                     scope.step = 'internal_search';
                     scope.internalGridOptions = null;
@@ -861,6 +878,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=true;
+                    scope.isExternalSearchSelected=false;
                     scope.selectUserFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -908,6 +927,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isExternalSearchSelected=true;
+                    scope.isInternalSearchSelected=false;
                     scope.selectUserFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -955,6 +976,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isExternalSearchSelected=false;
+                    scope.isInternalSearchSelected=true;
                     scope.selectUserFromInternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -1002,6 +1025,8 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 cacheBlockSize: 10,
                 // angularCompileRows: true,
                 onRowSelected: function (_e) {
+                    scope.isInternalSearchSelected=false;
+                    scope.isExternalSearchSelected=true;
                     scope.selectUserFromExternalSearch(_e.node.data.id);
                     $scope.$apply();
                 },
@@ -1665,6 +1690,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                         data.identity_type_id = data['identity_type_id'];
                     });
                     var totalRowCount = gridData.length === 0 ? 1 : gridData.length;
+                    scope.isSearchResultEmpty = gridData.length === 0;  
                     return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
