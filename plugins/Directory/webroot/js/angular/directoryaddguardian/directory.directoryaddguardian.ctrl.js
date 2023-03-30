@@ -37,7 +37,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         username: true,
         password: true
     }
-
+    scope.isSearchResultEmpty = false;
     scope.datepickerOptions = {
         minDate: new Date('01/01/1900'),
         maxDate: new Date(),
@@ -170,6 +170,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                     if(!gridData)
                         gridData = [];
                     var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
+                    scope.isSearchResultEmpty = gridData.length === 0;  
                     return scope.processInternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
@@ -228,6 +229,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                         data.identity_type_id = data['main_identity_type.id'];
                     });
                     var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
+                    scope.isSearchResultEmpty = gridData.length === 0;  
                     return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
@@ -718,14 +720,18 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     scope.goToPrevStep = function(){
         if(scope.isInternalSearchSelected) {
             scope.isInternalSearchSelected=false;
-            scope.step = 'internal_search';
+            scope.step = 'user_details';
             scope.internalGridOptions = null;
-            scope.goToInternalSearch();
+            // scope.goToInternalSearch();
         } else {
             switch(scope.step){
-                case 'internal_search': 
+                case 'internal_search': {
                     scope.step = 'user_details';
+                    if (scope.isSearchResultEmpty) {
+                        scope.selectedUserData.openemis_no = "";
+                    }
                     break;
+                }
                 case 'external_search': 
                     scope.step = 'internal_search';
                     scope.internalGridOptions = null;
@@ -1363,6 +1369,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                         data.identity_type_id = data['identity_type_id'];
                     });
                     var totalRowCount = gridData.length === 0 ? 1 : gridData.length;
+                    scope.isSearchResultEmpty = gridData.length === 0;  
                     return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.log(error);
