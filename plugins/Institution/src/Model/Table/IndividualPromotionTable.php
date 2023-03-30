@@ -416,10 +416,10 @@ class IndividualPromotionTable extends ControllerActionTable
                                     ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
                                     ->where([
                                         'EducationSystems.academic_period_id' => $selectedPeriodId,
-                                        $this->EducationGrades->aliasField('order <') => $gradeOrder,
+                                        $this->EducationGrades->aliasField('order <=') => $gradeOrder,
                                         $this->EducationGrades->aliasField('education_programme_id') => $programeId,
                                         $InstitutionGrades->aliasField('institution_id') => $institutionId
-                                    ]);
+                                    ]); //POCOR-7330 same grade if status is repeat
                             $listOfGrades = $query->toArray();
                             if (empty($listOfGrades)) {
                                 $query = $this->EducationGrades
