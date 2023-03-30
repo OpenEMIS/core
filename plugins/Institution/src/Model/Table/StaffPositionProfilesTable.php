@@ -405,7 +405,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
         else if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE'){
             $entity->end_date = $entity->end_date;
-        }else{
+        }
+        else if($StaffChangeTypesDataForShift['code'] == 'HOMEROOM_TEACHER'){
+            $entity->end_date = $entity->end_date;
+        }
+        else{
             $entity->end_date = $entity->start_date;
         }
 
@@ -516,6 +520,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         //POCOR 7289 tables updation start for homeroom
 
+        if($entity->staff_change_type_id == 6){
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
         $SecurityGroupUsers=TableRegistry::get('security_group_users');
         //No homeroom teacher
@@ -531,22 +536,27 @@ class StaffPositionProfilesTable extends ControllerActionTable
                                 ])->count();
 
         if($count==0){
-        $SecurityGroupUsers->deleteAll([
+
+        $securityGroupEntry=$SecurityGroupUsers->find()
+                           ->where([
                              'security_user_id' => $entity->staff_id,
                              'security_group_id' => $entity->institution_id,
                              'security_role_id' => 5
-                             ]);}
+                             ])->first();
+        if(isset($securityGroupEntity)){
+        $SecurityGroupUsers->delete($securityGroupEntry);
+                            }}
+
          }
         // Homeroom Teacher
          if($entity->homeroom_teacher==1)
         {
          $id=$SecurityGroupUsers->find()
-                                ->select($this->aliasField('id'))
-                                ->where([
-                             'security_user_id' => $entity->staff_id,
-                             'security_group_id' => $entity->institution_id,
-                             'security_role_id' => 5
-                                ])->first();
+                             ->where([
+                         'security_user_id' => $entity->staff_id,
+                         'security_group_id' => $entity->institution_id,
+                         'security_role_id' => 5
+                           ])->first();
         if(!isset($id)){
 
             $user=$SecurityGroupUsers->newEntity();
@@ -554,6 +564,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $user->security_user_id = $entity->staff_id;
             $user->security_group_id =$entity->institution_id;
             $user->created_user_id= $entity->created_user_id;
+            $user->security_role_id=5;
             $user->created= $entity->created;
             $SecurityGroupUsers->save($user);
          }
@@ -561,13 +572,17 @@ class StaffPositionProfilesTable extends ControllerActionTable
         //Both case
         $query=$InstitutionStaff->query();
         $query ->update()
-               ->set(['is_homeroom' => $requestData->homeroom_teacher])
+               ->set(['is_homeroom' => $entity->homeroom_teacher])
                ->where(['id' => $entity->institution_staff_id])
                ->execute();
 
-
+                $event->stopPropagation();
+                $url = $this->url('view');
+                $url['action'] = 'Staff';
+                $url[1] = $this->paramsEncode(['id' => $entity['institution_staff_id']]);
+                return $this->controller->redirect($url);
         //POCOR 7289 tables updation end  for homeroom
-
+    }
         if (!$entity->errors()) {
             $StaffTable = TableRegistry::get('Institution.Staff');
             $url = $this->url('view');
