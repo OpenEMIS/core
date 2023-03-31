@@ -213,6 +213,8 @@ class InstitutionsController extends AppController
         $this->loadComponent('Training.Training');
         $this->loadComponent('Institution.CreateUsers');
         $this->attachAngularModules();
+
+        $this->attachAngularModulesForDirectory();
         $this->loadModel('Institution.StaffBodyMasses');
         //POCOR-5672 it is used for removing csrf token mismatch condition in save student Api 
         if ($this->request->action == 'saveStudentData' || $this->request->action == 'saveStaffData' || $this->request->action == 'saveGuardianData' || $this->request->action == 'saveDirectoryData') {
@@ -6344,6 +6346,7 @@ class InstitutionsController extends AppController
     {
         $this->autoRender = false;
         $requestData = $this->request->input('json_decode', true);
+        echo "<pre>";print_r($requestData);die;
         /*$requestData = json_decode('{"guardian_relation_id":"1","student_id":"1161","login_user_id":"1","openemis_no":"152227434344","first_name":"GuardianPita","middle_name":"","third_name":"","last_name":"GuardianPita","preferred_name":"","gender_id":"1","date_of_birth":"1989-01-01","identity_number":"555555","nationality_id":"2","username":"pita123","password":"pita123","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160",}', true);*/
         if(!empty($requestData)){
             $studentOpenemisNo = (array_key_exists('student_openemis_no', $requestData))? $requestData['student_openemis_no']: null;
@@ -6574,6 +6577,7 @@ class InstitutionsController extends AppController
                                     ->where([
                                         $SecurityUsers->aliasField('openemis_no') => $studentOpenemisNo
                                     ])->first();
+                                    echo "<pre>";print_r($StudentData);die;
                     //get id from `security_group_users` table
                     $StudentGuardians = TableRegistry::get('student_guardians');
                     $entityGuardiansData = [
@@ -7337,6 +7341,48 @@ class InstitutionsController extends AppController
                      }
                  }
              }
+        }
+    }
+
+
+    public function Addguardian()
+    {
+        //POCOR-7231 :: Start
+        $requestDataa = $this->paramsDecode($this->request->query('queryString1'));
+        $StudentID = $this->paramsEncode(['security_user_id' => $requestDataa['student_id']]);
+        
+        $UsersTable = TableRegistry::get('User.Users');
+        $InstitutionTable = TableRegistry::get('Institution.Institutions');
+        $UserData = $UsersTable->find('all',['conditions'=>['id'=>$requestDataa['student_id']]])->first();
+        $InstitutionData = $InstitutionTable->find('all',['conditions'=>['id'=>$requestDataa['institution_id']]])->first();
+        $queryStng = $this->paramsEncode(['id' => $UserData->id]);
+        $this->set('InstitutionData', $InstitutionData);
+        $this->set('UserData', $UserData);
+        $this->set('StudentID', $StudentID);
+        $this->set('queryStng', $queryStng);//POCOR-7231 :: END
+        //$this->attachAngularModulesForDirectory();
+        $this->set('ngController', 'DirectoryaddguardianCtrl as $ctrl');
+    }
+
+    private function attachAngularModulesForDirectory()
+    {
+        $action = $this->request->pass[0];
+        if($action == '' || $this->request->params['action'] != 'Directories'){
+            $action = $this->request->params['action'];
+        }
+        switch ($action) {
+            case 'add':
+                $this->Angular->addModules([
+                    'directory.directoryadd.ctrl',
+                    'directory.directoryadd.svc'
+                ]);
+                break;
+            case 'Addguardian':
+                $this->Angular->addModules([
+                    'directory.directoryaddguardian.ctrl',
+                    'directory.directoryaddguardian.svc'
+                ]);
+                break;
         }
     }
 }
