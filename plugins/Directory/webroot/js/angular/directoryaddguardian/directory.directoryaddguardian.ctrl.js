@@ -1127,6 +1127,9 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.saveGuardianDetails = function() {
+        console.log("Start");
+        console.log(scope);
+        console.log("End");
         const addressAreaRef = DirectoryaddguardianSvc.getAddressArea()
         addressAreaRef && (scope.selectedUserData.addressArea = addressAreaRef);
         const birthplaceAreaRef = DirectoryaddguardianSvc.getBirthplaceArea();
@@ -1196,7 +1199,18 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
     scope.addGuardian=function addGuardian()
     {
-        $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian';
+       // alert(document.URL);
+        let str1 = document.URL;        ;
+        const Arr = str1.split("/");
+        //alert(Arr);
+        //console.log();
+        //console.log();
+        if(Arr[3] == "Institution"){
+            $window.location.href = angular.baseUrl + '/Institution/Institutions/'+Arr[5];
+        }else{
+            $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian';
+        }
+        
     }
 
     /**
