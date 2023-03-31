@@ -18,6 +18,8 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
         SecurityGroupUsersTable: 'Security.SecurityGroupUsers',
         StudentStatusesTable: 'Student.StudentStatuses',
         InstitutionClassesTable: 'Institution.InstitutionClasses',
+
+        AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         // add subject staff table to link over there
         InstitutionSubjectStaffTable: 'Institution.InstitutionSubjectStaff'
     };
@@ -379,6 +381,23 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
                 .ajax({success: success, defer: true});
         },
 
+        getAcademicPeriod: function()
+        {
+            var success = function(response, deferred) {
+                var terms = response.data.data;
+
+                if (angular.isObject(terms) && terms.length > 0) {
+                    deferred.resolve(terms);
+                } else {
+                    deferred.resolve([]);
+                }
+            };
+            return AcademicPeriods
+                .select()
+                .find('AcademicPeriodArchive')
+                .ajax({success: success, defer: true});
+        },
+
         getPeriods: function(assessmentId, academicTerm = undefined)
         {
             var success = function(response, deferred) {
@@ -510,6 +529,8 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
             });
 
             var ResultsSvc = this;
+            console.log("periodField")
+            console.log(periods)
             angular.forEach(periods, function(period, key) {
                 var isMarksType = true; // default is MARKS type
                 var isGradesType = false;
@@ -525,7 +546,7 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
 
                     var resultType = subject.grading_type.result_type;
                     var maxMark = subject.grading_type.max;
-                    var isMarksType = (resultType == resultTypes.MARKS);
+                    var isMarksType = true;
                     var isGradesType = (resultType == resultTypes.GRADES);
                     var isDurationType = (resultType == resultTypes.DURATION);
 
@@ -649,7 +670,7 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
             cols = angular.merge(cols, {
                 filter: 'number',
                 cellStyle: function(params) {
-                    if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) < passMark) {
+                    if (params.value && params.value < passMark) {
                         return {color: '#CC5C5C'};
                     } else {
                         return {color: '#333'};
@@ -658,7 +679,7 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
                 valueGetter: function(params) {
                     var value = params.data[params.colDef.field];
 
-                    if (!isNaN(parseFloat(value))) {
+                    if (value) {
                         return $filter('number')(value, 2);
                     } else {
                         return '';
@@ -1121,13 +1142,13 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
         },
 
         getNewRowData: function(gradingTypes, periods, institutionId, classId, assessmentId, academicPeriodId, educationSubjectId, educationGradeId) {
+            console.log("getNewRowData");
+            console.log(periods)
             var success = function(response, deferred) {
                 if (angular.isDefined(response.data.error)) {
                     deferred.reject(response.data.error);
                 } else {
                     var subjectStudents = response.data.data;
-                    console.log("subjectStudents");
-                    console.log(subjectStudents);
 
                     var periodObj = {};
                     angular.forEach(periods, function(period, key) {
@@ -1147,8 +1168,6 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
                         var resultType = null;
 
                         angular.forEach(subjectStudents, function(subjectStudent, key) {
-                            console.log("subjectStudent");
-                            console.log(subjectStudent);
                             currentStudentId = parseInt(subjectStudent.student_id);
                             totalMarks = parseInt(subjectStudent.InstitutionSubjectStudents.total_mark);
                             assessmentPeriodId = subjectStudent.assessment_period_id;
@@ -1156,7 +1175,7 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
                                 resultType = gradingTypes[assessmentPeriodId].assessment_grading_type.result_type;
                             }
 
-                            isMarksType = (resultType == resultTypes.MARKS);
+                            isMarksType = true;
                             isGradesType = (resultType == resultTypes.GRADES);
                             isDurationType = (resultType == resultTypes.DURATION);
 
@@ -1171,7 +1190,7 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
                                     student_id: currentStudentId,
                                     student_status_id: subjectStudent.StudentStatuses.student_status_id,
                                     student_status_name: subjectStudent.StudentStatuses.name,
-                                    total_mark: '',
+                                    total_mark: subjectStudent.InstitutionSubjectStudents.total_mark,
                                     is_dirty: false,
                                     save_error: {}
                                 };
@@ -1196,27 +1215,25 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
                             }
 
                             if (isMarksType) {
-                                console.log("1");
                                 var marks = parseFloat(subjectStudent.marks);
-                                if (!isNaN(marks)) {
+                                // if (!isNaN(marks)) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = marks;
-                                }
+                                // }
                             } else if (isGradesType) {
-                                console.log("2");
-                                if (subjectStudent.assessment_grading_option_id != null && subjectStudent.marks == null) {
+                                // if (subjectStudent.assessment_grading_option_id != null && subjectStudent.marks == null) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.assessment_grading_option_id;
-                                }
+                                // }
                             } else if (isDurationType) {
-                                console.log("3");
                                 var duration = parseFloat(subjectStudent.marks);
-                                if (!isNaN(duration)) {
+                                // if (!isNaN(duration)) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.marks;
-                                }
+                                // }
                             }
                         }, rowData);
-                        //console.log(studentResults);
                         if (studentResults.hasOwnProperty('student_id')) {
                             rowData.push(studentResults);
+                            console.log("subjectStudent");
+                            console.log(rowData);
                         }
 
                         deferred.resolve(rowData);
@@ -1270,13 +1287,13 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
             angular.forEach(data, function(value, key) {
                 if (key.indexOf('period_') >= 0) {
                     var periodId = parseInt(key.replace('period_', ''));
-                    if (!isNaN(parseFloat(value))) {
+                    // if (!isNaN(parseFloat(value))) {
                         var weightVar = 'weight_' + periodId;
-                        if (typeof data[weightVar] == 'number') {
-                            returnValue = returnValue + (value * data[weightVar]);
+                        // if (typeof data[weightVar] == 'number') {
+                            returnValue = value;
                             valueEnabled = true;
-                        }
-                    }
+                        // }
+                    // }
                 }
             });
             if (!isNaN(parseFloat(returnValue)) && valueEnabled) {
