@@ -13,12 +13,12 @@ class POCOR7242 extends AbstractMigration
     public function up()
     {
         // Backup table
-        // $this->execute('CREATE TABLE `zz_7242_institution_staff_leave` LIKE `institution_staff_leave`');
-        // $this->execute('INSERT INTO `zz_7242_institution_staff_leave` SELECT * FROM `institution_staff_leave`');
+        $this->execute('CREATE TABLE `zz_7242_institution_staff_leave` LIKE `institution_staff_leave`');
+        $this->execute('INSERT INTO `zz_7242_institution_staff_leave` SELECT * FROM `institution_staff_leave`');
 
 
         // DROP foreign key relationship
-        // $this->execute("ALTER TABLE institution_staff_leave DROP FOREIGN KEY `insti_staff_leave_fk_ass_id`;");
+        $this->execute("ALTER TABLE institution_staff_leave DROP FOREIGN KEY `insti_staff_leave_fk_ass_id`;");
 
     }
 
