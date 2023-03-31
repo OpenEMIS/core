@@ -3529,6 +3529,124 @@ class StaffTable extends ControllerActionTable
         
     }
 
+    public function findAllStaffAttendancesArchived(Query $query, array $options)
+    {
+        $InstitutionStaffAttendances = TableRegistry::get('Institution.InstitutionStaffAttendancesArchive');
+        $InstitutionStaffShiftsTable = TableRegistry::get('Institution.InstitutionStaffShifts');
+        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $StaffLeaveTable = TableRegistry::get('Institution.StaffLeaveArchived');
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+        $ownAttendanceView = $options['own_attendance_view'];
+        $otherAttendanceView = $options['other_attendance_view'];
+        $shiftId = $options['shift_id'];
+        $weekStartDate = $options['week_start_day'];
+        $weekEndDate = $options['week_end_day'];
+
+        $dayId = $options['day_id'];
+        $dayDate = $options['day_date'];
+        //POCOR-6971[START]
+        $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
+        $InstitutionShiftsTable = TableRegistry::get('Institution.InstitutionShifts');
+        $InstitutionStaffAttendancesData = TableRegistry::get('Institution.InstitutionStaffAttendancesArchive');
+        $positions = TableRegistry::get('Institution.InstitutionPositions');
+        $staff = TableRegistry::get('institution_staff');
+        $InstitutionShiftsData = $InstitutionShiftsTable->find()
+            ->select([$InstitutionShiftsTable->aliasField('start_time'), $InstitutionShiftsTable->aliasField('end_time'),$InstitutionShiftsTable->aliasField('id')])
+            ->where([
+                $InstitutionShiftsTable->aliasField('shift_option_id') => $shiftId, //add
+                $InstitutionShiftsTable->aliasField('academic_period_id') => $academicPeriodId, //add
+                $InstitutionShiftsTable->aliasField('institution_id') => $institutionId //add
+            ])->first();
+        //POCOR-6971[END]
+        $staffShiftStartTime = date("H:i:s", strtotime($InstitutionShiftsData['start_time']));
+        $staffShiftEndTime = date("H:i:s", strtotime($InstitutionShiftsData['end_time']));
+        // one day
+        if ($dayId != -1) {
+            $weekStartDate = $dayDate;
+            $weekEndDate = $dayDate;
+            $where = [
+                $InstitutionStaffAttendances->aliasField("date >= '") . $weekEndDate . "'",
+                $InstitutionStaffAttendances->aliasField("date <= '") . $weekStartDate . "'"
+            ];
+        } else {
+            $where = [
+                'OR' => [
+                    [
+                        $StaffLeaveTable->aliasField("date <= '") . $weekEndDate . "'",
+                        $StaffLeaveTable->aliasField("date >= '") . $weekStartDate . "'"
+                    ],
+                    [
+                        $StaffLeaveTable->aliasField("date <= '") . $weekEndDate . "'",
+                        $StaffLeaveTable->aliasField("date >= '") . $weekStartDate . "'"
+                    ],
+                    [
+                        $StaffLeaveTable->aliasField("date <= '") . $weekEndDate . "'",
+                        $StaffLeaveTable->aliasField("date >= '") . $weekStartDate . "'"
+                    ],
+                    [
+                        $StaffLeaveTable->aliasField("date <= '") . $weekStartDate . "'",
+                        $StaffLeaveTable->aliasField("date >= '") . $weekEndDate . "'"
+                    ]
+                ]
+            ];
+        }
+        
+        //Gets all the days in the selected week based on its start date end date
+        $startDate = new DateTime($weekStartDate);
+        $endDate = new DateTime($weekEndDate);
+        $interval = new DateInterval('P1D');
+        $daterange = new DatePeriod($startDate, $interval, $endDate->modify('+1 day'));
+        // To get all the dates of the working days only
+        $workingDaysArr = [];
+        $workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
+        foreach ($daterange as $date) {
+            // $dayText = $date->format('l');
+            $dayText = 'Friday';
+            if (in_array($dayText, $workingDays)) {
+                $workingDaysArr[] = $date;
+            }
+        }
+        
+        // if($shiftId == -1){
+        //     $allStaffAttendances = $InstitutionStaffAttendances
+        //     ->find('all')
+        //     ->leftJoin([$staff->alias() => $staff->table()],
+        //                 [$staff->aliasField('staff_id = ') . $InstitutionStaffAttendances->aliasField('staff_id')])
+        //     /*->leftJoin([$positions->alias() => $positions->table()],
+        //                 [$positions->aliasField('id = ') . $staff->aliasField('institution_position_id')])*/
+        //     ->where([
+        //         $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
+        //         $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
+        //         $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'"
+        //     ])
+        //     ->hydrate(false)
+        //     ->toArray();
+        // }
+        // echo "<pre>";print_r($where);die;
+        if($shiftId == -1){
+            $query = $query
+            ->matching('Users')
+            ->leftJoin([$InstitutionStaffAttendances->alias() => $InstitutionStaffAttendances->table()],
+            [$this->aliasField('staff_id = ') . $InstitutionStaffAttendances->aliasField('staff_id')])
+            ->where(
+                [   
+                    $InstitutionStaffAttendances->aliasField('institution_id ') => $institutionId,
+                    $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
+                    $where
+                ]
+            )
+            ->order([
+                $this->Users->aliasField('first_name')
+            ])
+            ->group([
+                $this->aliasField('staff_id')
+            ]);
+        return $query;
+        }
+        
+    }
+
     public function beforeFind(Event $event, Query $query, ArrayObject $options)
     {
 
