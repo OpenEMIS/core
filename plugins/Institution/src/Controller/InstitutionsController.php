@@ -921,7 +921,105 @@ class InstitutionsController extends AppController
 
     public function InstitutionStudentAbsencesArchived()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentAbsencesArchived']);
+        if($pass=='excel'){
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAttendances']);
+        }else{
+        
+        $_edit = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'edit']);
+        
+        $_excel = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'excel']);
+        $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
+        
+        $_excel = true;
+        
+        if (!empty($this->request->param('institutionId'))) {
+            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        } else {
+            $session = $this->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+        
+        $securityFunctions = TableRegistry::get('SecurityFunctions');
+        $securityFunctionsData = $securityFunctions
+        ->find()
+        ->select([
+            'SecurityFunctions.id'
+        ])
+        ->where([
+            'SecurityFunctions.name' => 'Student Attendance Archive'
+        ])
+        ->first();
+        $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
+        
+        $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
+        $TransferLogs = TableRegistry::get('TransferLogs');
+        $TransferLogsData = $TransferLogs
+        ->find()
+        ->select([
+            'TransferLogs.academic_period_id'
+        ])
+        ->first();
+        
+        $securityRoleFunctionsData = $securityRoleFunctions
+        ->find()
+        ->select([
+            'SecurityRoleFunctions._view'
+        ])
+        ->where([
+            'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+            'SecurityRoleFunctions.security_role_id' => $permission_id,
+        ])
+        ->first();
+        $is_button_accesible = 0;
+        if( (!empty($securityRoleFunctionsData) && $securityRoleFunctionsData->_view == 1) ){
+            $is_button_accesible = 1;
+        }
+        if($this->Auth->user('super_admin') == 1){
+            $is_button_accesible = 1;
+        }
+        if(empty($TransferLogsData)){
+            $is_button_accesible = 0;
+        }else{
+            $is_button_accesible = 1;
+        }
+        
+        // issue
+        $excelUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'StudentAttendances',
+            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+            'excel'
+        ];
+        
+        $importUrl = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'ImportStudentAttendances',
+            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+            'add'
+        ];
+        
+        $archiveUrl = $this->ControllerAction->url('index');
+        $archiveUrl['plugin'] = 'Institution';
+        $archiveUrl['controller'] = 'Institutions';
+        $archiveUrl['action'] = 'InstitutionStudentAbsencesArchived';
+        
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $this->Navigation->addCrumb($crumbTitle);
+        
+        $this->set('_edit', $_edit);
+        $this->set('_excel', $_excel);
+        $this->set('_import', $_import);
+        $this->set('_archive', $_archive);
+        $this->set('excelUrl', Router::url($excelUrl));
+        $this->set('importUrl', Router::url($importUrl));
+        $this->set('archiveUrl', Router::url($archiveUrl));
+        $this->set('is_button_accesible', $is_button_accesible);
+        $this->set('institution_id', $institutionId);
+        $this->set('ngController', 'InstitutionStudentAttendancesArchiveCtrl as $ctrl');
+        }
+        // $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentAbsencesArchived']);
     }
 
     public function StudentAttendances($pass='')
@@ -1637,7 +1735,111 @@ class InstitutionsController extends AppController
 
     public function InstitutionStaffAttendancesArchive()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffAttendancesArchive']);
+
+        if ($pass == 'excel') {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']);
+        } else {
+            $_edit = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'edit']);
+            $_history = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
+            $_excel = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'excel']);
+			$_ownView = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'ownview']);
+            $_ownEdit = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'ownedit']);
+            $_otherView = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'otherview']);
+            $_otherEdit = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'otheredit']);
+            $_permissionStaffId = $this->Auth->user('id');
+
+            if (!empty($this->request->param('institutionId'))) {
+                $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+            } else {
+                $session = $this->request->session();
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+
+            $TransferLogs = TableRegistry::get('TransferLogs');
+            $TransferLogsData = $TransferLogs
+            ->find()
+            ->select([
+                'TransferLogs.academic_period_id'
+            ])
+            ->first();
+
+            $securityFunctions = TableRegistry::get('SecurityFunctions');
+            $securityFunctionsData = $securityFunctions
+            ->find()
+            ->select([
+                'SecurityFunctions.id'
+            ])
+            ->where([
+                'SecurityFunctions.name' => 'Student Attendance Archive'
+            ])
+            ->first();
+            $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
+
+            $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
+            $securityRoleFunctionsData = $securityRoleFunctions
+            ->find()
+            ->select([
+                'SecurityRoleFunctions._view'
+            ])
+            ->where([
+                'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+                'SecurityRoleFunctions.security_role_id' => $permission_id,
+            ])
+            ->first();
+            $is_button_accesible = 0;
+            if( (!empty($securityRoleFunctionsData) && $securityRoleFunctionsData->_view == 1) ){
+                $is_button_accesible = 1;
+            }
+            if($this->Auth->user('super_admin') == 1){
+                $is_button_accesible = 1;
+            }
+            if(empty($TransferLogsData)){
+                $is_button_accesible = 0;
+            }else{
+                $is_button_accesible = 1;
+            }
+
+            $excelUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'InstitutionStaffAttendances',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+                'excel'
+            ];
+            $_import = $this->AccessControl->check(['Institutions', 'ImportStaffAttendances', 'add']);
+
+            $importUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'ImportStaffAttendances',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+                'add'
+            ];
+
+            $archiveUrl = $this->ControllerAction->url('index');
+            $archiveUrl['plugin'] = 'Institution';
+            $archiveUrl['controller'] = 'Institutions';
+            $archiveUrl['action'] = 'InstitutionStaffAttendancesArchive';
+
+
+            $this->set('importUrl', Router::url($importUrl));
+            $this->set('_import', $_import);
+            $this->set('_edit', $_edit);
+			$this->set('_ownEdit', $_ownEdit);
+            $this->set('_ownView', $_ownView);
+            $this->set('_otherEdit', $_otherEdit);
+            $this->set('_otherView', $_otherView);
+            $this->set('_permissionStaffId', $_permissionStaffId);
+            $this->set('_excel', $_excel);
+            $this->set('_history', $_history);
+            $this->set('_archive', $_archive);
+            $this->set('archiveUrl', Router::url($archiveUrl));
+            $this->set('is_button_accesible', $is_button_accesible);
+            $this->set('institution_id', $institutionId);
+            $this->set('excelUrl', Router::url($excelUrl));
+            $this->set('ngController', 'InstitutionStaffAttendancesArchiveCtrl as $ctrl');
+        }
+        // $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffAttendancesArchive']);
     }
 
     public function InstitutionStaffAttendances($pass = 'index')
@@ -2028,6 +2230,12 @@ class InstitutionsController extends AppController
                     'institution.student.attendances.svc'
                 ]);
                 break;
+            case 'InstitutionStudentAbsencesArchived':
+                $this->Angular->addModules([
+                    'institution.student.attendances.archive.ctrl',
+                    'institution.student.attendances.archive.svc'
+                ]);
+                break;
             case 'StudentMeals':
                 $this->Angular->addModules([
                     'institution.student.meals.ctrl',
@@ -2145,6 +2353,13 @@ class InstitutionsController extends AppController
                 $this->Angular->addModules([
                     'institution.staff.attendances.ctrl',
                     'institution.staff.attendances.svc'
+                ]);
+                break;
+
+            case 'InstitutionStaffAttendancesArchive':
+                $this->Angular->addModules([
+                    'institution.staff.attendances.archive.ctrl',
+                    'institution.staff.attendances.archive.svc'
                 ]);
                 break;
 

@@ -14,7 +14,9 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
     $scope.roles = [];
     $scope.enrolledStatus = null;
     $scope.academicTermOptions = [];
+    $scope.academicPeriodOptions = [];
     $scope.selectedAcademicTerm = undefined;
+    $scope.selectedAcademicPeriod = undefined;
     $scope.editPermissionForSelectedSubject = false;
     $scope.editPermission=0;
 
@@ -36,6 +38,7 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
             //promises[0] = InstitutionsAssessmentArchiveSvc.getSubjects($scope.roles, $scope.assessment_id, $scope.class_id);
             promises[0] = InstitutionsAssessmentArchiveSvc.getDataSubjects($scope.roles, $scope.assessment_id, $scope.class_id,$scope.academic_period_id,$scope.institution_id);
             promises[1] = InstitutionsAssessmentArchiveSvc.getAssessmentTerms($scope.assessment_id);
+            promises[2] = InstitutionsAssessmentArchiveSvc.getAcademicPeriod();
             
             return $q.all(promises);
         }, function(error) {
@@ -48,6 +51,11 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
             $scope.academicTermOptions = promises[1];
             if ($scope.academicTermOptions.length > 0) {
                 $scope.selectedAcademicTerm = $scope.academicTermOptions[0]['name'];
+            }
+
+            $scope.academicPeriodOptions = promises[2];
+            if ($scope.academicPeriodOptions.length > 0) {
+                $scope.selectedAcademicPeriod = $scope.academicPeriodOptions[0]['name'];
             }
             
             $scope.editPermission=promises[0][0].is_editable;

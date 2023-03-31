@@ -35,25 +35,25 @@ $this->start('toolbar');
             <i class="fa kd-edit"></i>
         </button> -->
 
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view' && (editPermission == 1 || editPermission == undefined)" ng-click="onEditClick()">
+        <!-- <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view' && (editPermission == 1 || editPermission == undefined)" ng-click="onEditClick()">
             <i class="fa kd-edit"></i>
-        </button>
+        </button> -->
         <!-- End -->
 
         <!-- Show buttons when action is edit: -->
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="action == 'edit' && editPermissionForSelectedSubject" ng-click="onBackClick()">
+        <!-- <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="action == 'edit' && editPermissionForSelectedSubject" ng-click="onBackClick()">
             <i class="fa kd-back"></i>
-        </button>
+        </button> -->
         <!-- End -->
     <?php endif; ?>
-    <?php if ($_excel) : ?>
+    <!-- <?php if ($_excel) : ?>
         <?php if (isset($reportCardGenerate)) : ?>
             <a href="<?=$reportCardGenerate ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Report') ?>" ><i class="fa kd-header-row"></i></button></a>
             <a href="<?=$exportPDF ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('PDF') ?>" ><i class="fa fa-file-pdf-o"></i></button></a>
         <?php endif;?>
 
         <a href="<?=$excelUrl ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" ><i class="fa kd-export"></i></button></a>
-    <?php endif; ?>
+    <?php endif; ?> -->
 <?php
 $this->end();
 
@@ -72,6 +72,19 @@ $roles = '[' . implode(",", $_roles) . ']';
 
     <div class="toolbar-responsive panel-toolbar" ng-show="academicTermOptions.length > 0">
         <div class="toolbar-wrapper">
+            <!-- <div class="input select">
+                <div class="input-select-wrapper">
+                    <select
+                        class="form-control"
+                        ng-options="option.id as option.name for option in academicPeriodOptions"
+                        ng-model="selectedAcademicPeriod"
+                        ng-change="changeAcademicTerm();"
+                        >
+                            <option value=""><?= '-- '. __('Select Academic Period').' --' ?></option>
+                    </select>
+                </div>
+            </div> -->
+
             <div class="input select">
                 <div class="input-select-wrapper">
                     <select
@@ -84,6 +97,34 @@ $roles = '[' . implode(",", $_roles) . ']';
                     </select>
                 </div>
             </div>
+
+
+            <!-- <div class="input select">
+                <div class="input-select-wrapper">
+                    <select
+                        class="form-control"
+                        ng-options="option.id as option.name for option in academicTermOptions"
+                        ng-model="selectedAcademicTerm"
+                        ng-change="changeAcademicTerm();"
+                        >
+                            <option value=""><?= '-- '. __('Select Academic Term').' --' ?></option>
+                    </select>
+                </div>
+            </div> -->
+
+            <!-- <div class="input select">
+                <div class="input-select-wrapper">
+                    <select
+                        class="form-control"
+                        ng-options="option.id as option.name for option in academicTermOptions"
+                        ng-model="selectedAcademicTerm"
+                        ng-change="changeAcademicTerm();"
+                        >
+                            <option value=""><?= '-- '. __('Select Academic Term').' --' ?></option>
+                    </select>
+                </div>
+            </div> -->
+
         </div>
     </div>
     
