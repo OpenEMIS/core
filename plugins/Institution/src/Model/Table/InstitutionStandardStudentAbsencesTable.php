@@ -11,6 +11,7 @@ use App\Model\Table\AppTable;
 use Cake\Log\Log;
 use Cake\ORM\Entity;
 use DateTime;
+use Cake\Datasource\ConnectionManager;
 /**
  * Get the Student Absences details in excel file 
  * @ticket POCOR-6631
@@ -123,6 +124,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         $where[$this->aliasField('institution_id')] = $institutionId;
         
         $date =  '"'.$year.'-'.$month.'%"';
+        $datelike =  '"'.$year.'-'.$month.'"';
         $dateSecond =  '"'.$yearSecond.'-'.$month.'%"';  //POCOR-6854
         $query
             ->select([
@@ -136,6 +138,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                 'middle_name' => 'Users.middle_name',
                 'third_name' => 'Users.third_name',
                 'last_name' => 'Users.last_name',
+                'academic_period' => 'AcademicPeriods.name',
                 ])
             ->contain([
                 'Users' => [
@@ -187,12 +190,13 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             ->group([$this->aliasField('student_id'),
                 $absentDays->aliasField('student_id')]);
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
-                use($date,$dateSecond)
+                use($date,$dateSecond,$datelike)
             {
-                return $results->map(function ($row) use($date,$dateSecond)
+                return $results->map(function ($row) use($date,$dateSecond,$datelike)
                 { 
                     $row['referrer_full_name'] = $row['first_name'] .' '.$row['middle_name'].' '.$row['third_name'].' '. $row['last_name'];
                     $row['Absent_Date'] = $date;
+                    $row['absent_Date_like'] = $datelike;
                     $row['Absent_Date_Second'] = $dateSecond;  //POCOR-6854
                     $alldate = $row['absent_start'];
                     $split = explode(',', $alldate);
@@ -326,6 +330,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
 
     /**
     * Get staff absences days
+    * login change in POCOR-7334 
     */
     public function onExcelGetTotalAbsenceDay(Event $event, Entity $entity)
     {
@@ -333,24 +338,81 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         $institutionId =  $entity->institution_id;
         $Absent_Date =  $entity->Absent_Date;
         $Absent_Date_Second =  $entity->Absent_Date_Second; //POCOR-6854
+        $requestDate = $entity->absent_Date_like; //POCOR-7334
+        $academic_period =  $entity->academic_period; 
         $Institutionstudent = TableRegistry::get('Institution.InstitutionStudentAbsences');
         $studentleave = TableRegistry::get('Institution.InstitutionStudentAbsenceDays');
-        $absenceDays = $studentleave->find()
-            ->select([
-                'days' => "SUM(".$studentleave->aliasField('absent_days').")"
-            ])
-            ->andWhere([$studentleave->aliasField('start_date LIKE '.$Absent_Date)])
-            ->orWhere([$studentleave->aliasField('start_date LIKE '.$Absent_Date_Second)])  //POCOR-6854
-            ->where([$studentleave->aliasField('student_id') => $userid]);
+        $recordlist = $studentleave->find()->select(['start_date','end_date'])
+                        ->where([$studentleave->aliasField('student_id') => $userid, 
+                            $studentleave->aliasField('institution_id') => $institutionId,
+                            ])->toArray();
+        $recordlist = $studentleave->find()->select(['start_date','end_date'])
+                        ->where([$studentleave->aliasField('student_id') => $userid, 
+                            $studentleave->aliasField('institution_id') => $institutionId,
+                            ])->toArray();
+
+        $datelistOne= [];
+        $datelistTwo = [];
+        foreach($recordlist as $val){
+            $dateS = $val->start_date;
+            $dateE = $val->end_date;
+            $dateOne = strtotime($dateS->toDateString());
+            $dateTwo = strtotime($dateE->toDateString());
+            $yearfrom = date("Y",$dateOne);
+            $monthfrom = date("m",$dateOne);
+            $yearTo = date("Y",$dateTwo);
+            $monthTo = date("m",$dateTwo);
+            $dateFrom = $yearfrom.'-'.$monthfrom;
+            $dateTo = $yearTo.'-'.$monthTo;
+            $datelistOne[] = $dateFrom;
+            $datelistTwo[] = $dateTo;
+        }
+        $dateval1  = implode(',', $datelistOne);
+        $dateva2  = implode(',', $datelistTwo); 
+
+        if(strcmp($dateval1, $dateva2) !== 0){
+            $list = $studentleave->find()->select(['start_date','end_date','absent_days'])
+                        ->where([$studentleave->aliasField('student_id') => $userid, 
+                            $studentleave->aliasField('institution_id') => $institutionId
+                        ])->toArray();
+            foreach($list as $val){
+                $startDateOne = strtotime($val->start_date);
+                $endDateOne = strtotime($val->end_date);
+                $monthstart = date("m",$startDateOne);
+                $monthStartDay = date("d",$startDateOne);
+                $monthend = date("m",$endDateOne);
+                $absent_days = $val->absent_days;
+                if($monthstart != $monthend){
+                    $totalDays = cal_days_in_month(CAL_GREGORIAN, $monthstart, $academic_period);
+                    $differenceDays = $totalDays - $monthStartDay+1;
+                    $connection = ConnectionManager::get('default');
+                    $statement = $connection->prepare("SELECT SUM(`InstitutionStudentAbsenceDays`.`absent_days`) `days` FROM `institution_student_absence_days` `InstitutionStudentAbsenceDays` WHERE (`InstitutionStudentAbsenceDays`.`student_id` = $userid AND (`InstitutionStudentAbsenceDays`.`start_date` LIKE $Absent_Date OR `InstitutionStudentAbsenceDays`.`start_date` LIKE 
+                        $Absent_Date_Second) AND DATE_FORMAT(`InstitutionStudentAbsenceDays`.`start_date`, '%Y-%m') = $requestDate AND DATE_FORMAT(`InstitutionStudentAbsenceDays`.`end_Date`, '%Y-%m') = $requestDate)");
+                    $statement->execute();
+                    $list =  $statement->fetchAll(\PDO::FETCH_ASSOC);
+                    $restofDays = $list[0]['days'];
+                    $entity->total_absence_days = $differenceDays + $restofDays ;
+                    return $entity->total_absence_days;
+                }
+            }
+        }else{
+            $absenceDays = $studentleave->find()
+                                    ->select([
+                                        'days' => "SUM(".$studentleave->aliasField('absent_days').")"
+                                    ])
+                                    ->andWhere([$studentleave->aliasField('start_date LIKE '.$Absent_Date)])
+                                    ->orWhere([$studentleave->aliasField('start_date LIKE '.$Absent_Date_Second)])  //POCOR-6854
+                                    ->where([$studentleave->aliasField('student_id') => $userid]);
             if($absenceDays!=null){
                 $data = $absenceDays->toArray();
                 $entity->total_absence_days = '';
                 foreach($data as $key=>$val){
                     $entity->total_absence_days = $val['days'];
                 }
-                 return $entity->total_absence_days;
+                return $entity->total_absence_days;
             }
-            return '';
+        }
+        
     }
     /**
     * on excel get identity type 
