@@ -132,6 +132,14 @@ class EducationGradesTable extends ControllerActionTable
     //POCOR 7308 starts
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
+           //deleting institution subjects entry start
+         $institutionSubjects = TableRegistry::get('institution_subjects')
+                ->find()->where(['education_grade_id' => $entity->id])->first();
+
+         if($institutionSubjects){
+                TableRegistry::get('institution_subjects')->delete($institutionSubjects);
+         }
+            //deleting institution subjects entry end
         //$institutionStudents = $this->institutionstudents;
         //print_r($institutionStudents->exists([$institutionStudents->aliasField($institutionStudents->foreignKey()) => $entity->id]));
         //POCOR-7179[START] delete custom field becouse when user is created from directory it insert value in custom field
@@ -207,7 +215,7 @@ class EducationGradesTable extends ControllerActionTable
         return $result;
     }
    //POCOR 7308 ends
-   
+
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
 
