@@ -1212,7 +1212,8 @@ class NavigationComponent extends Component
                     'GuardianComments.view',
                     'GuardianComments.add',
                     'GuardianComments.edit',
-                    'GuardianComments.delete'
+                    'GuardianComments.delete',
+                    'Institutions.Addguardian',
                 ]
             ],
             'Institutions.StudentProgrammes.index' => [

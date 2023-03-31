@@ -198,11 +198,20 @@ class GuardiansTable extends ControllerActionTable
                         $SecurityUsers->aliasField('id') => $security_user_id])
                     ->hydrate(false)
                     ->first();
-                $dataArray = ['institution_id' => $this->Session->read('Institution.Institutions.id'), 'student_id'=> $security_user_id ,    'openemis_no'=> $securityUserData['openemis_no']];
+                $dataArray = ['institutionId'=>$this->Session->read('Institution.Institutions.id'),'institution_id' => $this->Session->read('Institution.Institutions.id'),'institution_student_id'=> $security_user_id ,'student_id'=> $security_user_id , 'openemis_no'=> $securityUserData['openemis_no']];
             }
-            $queryString = base64_encode(json_encode($dataArray));
-            $event->stopPropagation();
-            return $this->controller->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Addguardian', 'queryString'=> trim($queryString)]);
+            
+             //echo "<pre>";print_r();die;
+            if($request->params['plugin'] == 'Student'){
+                $queryString = $this->paramsEncode($dataArray);
+                $event->stopPropagation();
+                return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Addguardian', 'queryString' => $request->query('queryString'),'queryString1'=> trim($queryString)]);
+            }else{
+                $queryString = base64_encode(json_encode($dataArray));
+                $event->stopPropagation();
+                return $this->controller->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Addguardian', 'queryString'=> trim($queryString)]);
+            }
+            
             /*
             Note:- Don't uncomment this, becuase client's wants to redirect the page on directory add gaurdian page. Kindly connect with Anubhav/Ehteram.  
             $attr['type'] = 'autocomplete';
