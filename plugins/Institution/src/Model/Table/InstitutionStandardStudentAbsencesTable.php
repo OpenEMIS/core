@@ -186,17 +186,19 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             )
             ->andWhere([$absentDays->aliasField('start_date LIKE '.$date)])
             ->orWhere([$absentDays->aliasField('start_date LIKE '.$dateSecond)])  //POCOR-6854
+            ->orWhere([$absentDays->aliasField('end_date LIKE '.$date)])  //POCOR-6854
             ->Where($where)
             ->group([$this->aliasField('student_id'),
                 $absentDays->aliasField('student_id')]);
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
-                use($date,$dateSecond,$datelike)
+                use($date,$dateSecond,$datelike,$month)
             {
-                return $results->map(function ($row) use($date,$dateSecond,$datelike)
+                return $results->map(function ($row) use($date,$dateSecond,$datelike,$month)
                 { 
                     $row['referrer_full_name'] = $row['first_name'] .' '.$row['middle_name'].' '.$row['third_name'].' '. $row['last_name'];
                     $row['Absent_Date'] = $date;
-                    $row['absent_Date_like'] = $datelike;
+                    $row['absent_Date_like'] = $datelike;//POCOR-7334
+                    $row['month'] = $month;//POCOR-7334
                     $row['Absent_Date_Second'] = $dateSecond;  //POCOR-6854
                     $alldate = $row['absent_start'];
                     $split = explode(',', $alldate);
@@ -339,6 +341,8 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         $Absent_Date =  $entity->Absent_Date;
         $Absent_Date_Second =  $entity->Absent_Date_Second; //POCOR-6854
         $requestDate = $entity->absent_Date_like; //POCOR-7334
+       // $reqesytDateGet = str_replace('"', '', $requestDate);
+        $requestmonth = $entity->month; //POCOR-7334
         $academic_period =  $entity->academic_period; 
         $Institutionstudent = TableRegistry::get('Institution.InstitutionStudentAbsences');
         $studentleave = TableRegistry::get('Institution.InstitutionStudentAbsenceDays');
@@ -346,10 +350,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                         ->where([$studentleave->aliasField('student_id') => $userid, 
                             $studentleave->aliasField('institution_id') => $institutionId,
                             ])->toArray();
-        $recordlist = $studentleave->find()->select(['start_date','end_date'])
-                        ->where([$studentleave->aliasField('student_id') => $userid, 
-                            $studentleave->aliasField('institution_id') => $institutionId,
-                            ])->toArray();
+        
 
         $datelistOne= [];
         $datelistTwo = [];
@@ -366,12 +367,14 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             $dateTo = $yearTo.'-'.$monthTo;
             $datelistOne[] = $dateFrom;
             $datelistTwo[] = $dateTo;
+            $datelistarray[] = '"'.$dateTo.'"';
         }
+        
         $dateval1  = implode(',', $datelistOne);
-        $dateva2  = implode(',', $datelistTwo); 
-
-        if(strcmp($dateval1, $dateva2) !== 0){
-            $list = $studentleave->find()->select(['start_date','end_date','absent_days'])
+        $dateval2  = implode(',', $datelistTwo); 
+        $endDateSearch =  in_array($requestDate,$datelistarray);
+        if(strcmp($dateval1, $dateval2) !== 0){
+            $list = $studentleave->find()->select(['start_date','end_date'])
                         ->where([$studentleave->aliasField('student_id') => $userid, 
                             $studentleave->aliasField('institution_id') => $institutionId
                         ])->toArray();
@@ -381,6 +384,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                 $monthstart = date("m",$startDateOne);
                 $monthStartDay = date("d",$startDateOne);
                 $monthend = date("m",$endDateOne);
+                $monthendDay = date("d",$endDateOne);
                 $absent_days = $val->absent_days;
                 if($monthstart != $monthend){
                     $totalDays = cal_days_in_month(CAL_GREGORIAN, $monthstart, $academic_period);
@@ -393,6 +397,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                     $restofDays = $list[0]['days'];
                     $entity->total_absence_days = $differenceDays + $restofDays ;
                     return $entity->total_absence_days;
+                    
                 }
             }
         }else{
