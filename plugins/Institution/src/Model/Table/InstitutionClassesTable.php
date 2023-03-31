@@ -334,8 +334,8 @@ class InstitutionClassesTable extends ControllerActionTable
                                 'Staff',
                                 'AcademicPeriods',
                                 'InstitutionShifts',
-                                'InstitutionUnits.UnitOptions',
-                                'InstitutionCourses.CourseOptions',
+                                'InstitutionUnits',
+                                'InstitutionCourses',
                                 'InstitutionShifts.ShiftOptions',
                                 'ClassesSecondaryStaff.SecondaryStaff',
                                 'Students'
@@ -1312,7 +1312,7 @@ class InstitutionClassesTable extends ControllerActionTable
         // $courseOptions[0] = "-----------select--------";
         //$unitOptions = $InsUnit->find('list',['keyField' => 'id', 'valueField' => 'name']);
         //$courseOptions = $InsCourse->find('list',['keyField' => 'id', 'valueField' => 'name']);
-       // echo "<pre>";print_r($unitOptions->toArray());die;
+        //echo "<pre>";print_r($unitOptions1->toArray());die;
         //$courseOptions =[];
         $this->fields['institution_shift_id']['options'] = $shiftOptions;
         $this->fields['institution_shift_id']['onChangeReload'] = true;
@@ -1323,12 +1323,7 @@ class InstitutionClassesTable extends ControllerActionTable
         if (empty($shiftOptions)) {
             $this->Alert->warning($this->aliasField('noShift'));
         }
-        if (empty($unitOptions)) {
-            $this->Alert->warning($this->aliasField('noShift'));
-        }
-        if (empty($courseOptions)) {
-            $this->Alert->warning($this->aliasField('noShift'));
-        }
+        
 
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable'=>true]);
         $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
@@ -1356,13 +1351,13 @@ class InstitutionClassesTable extends ControllerActionTable
     public function getUnitId()
     {
         $InsUnit = TableRegistry::get('institution_units');
-        $unitOptions = $InsUnit->find('list',['keyField' => 'id', 'valueField' => 'name']);
+        $unitOptions = $InsUnit->find('list',['keyField' => 'id', 'valueField' => 'name'])->toArray();
         return $unitOptions;
     }
     public function getCourseId()
     {
         $InsCourse =  TableRegistry::get('institution_courses');
-        $courseOptions = $InsCourse->find('list',['keyField' => 'id', 'valueField' => 'name']);
+        $courseOptions = $InsCourse->find('list',['keyField' => 'id', 'valueField' => 'name'])->toArray();
         return $courseOptions;
     }
 
