@@ -132,13 +132,6 @@ class EducationGradesTable extends ControllerActionTable
     //POCOR 7308 starts
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-           //deleting institution subjects entry start
-         $institutionSubjects = TableRegistry::get('institution_subjects')
-                ->find()->where(['education_grade_id' => $entity->id])->first();
-
-         if($institutionSubjects){
-                TableRegistry::get('institution_subjects')->delete($institutionSubjects);
-         }
             //deleting institution subjects entry end
         //$institutionStudents = $this->institutionstudents;
         //print_r($institutionStudents->exists([$institutionStudents->aliasField($institutionStudents->foreignKey()) => $entity->id]));
@@ -150,6 +143,22 @@ class EducationGradesTable extends ControllerActionTable
             $event->stopPropagation();
             return $this->controller->redirect($this->url('remove'));
         }
+         else{
+            //deleting issue of isnstitution_subject
+            $institutionSubjects = TableRegistry::get('institution_subjects')
+                ->find()->where(['education_grade_id' => $entity->id])->first();
+            if($institutionSubjects){
+                TableRegistry::get('institution_subjects')->delete($institutionSubjects);
+            }
+
+            $educationGradeTable = TableRegistry::get('education_grades')
+                ->find()->where(['id' => $entity->id])->first();
+               if(TableRegistry::get('education_grades')->delete($entity)){
+                $this->Alert->success('general.delete.success', ['reset'=>true]);
+                return $this->controller->redirect(['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Grades']);
+               }
+         }
+
     }
 
     private function checkUsersChildRecords($entity)
