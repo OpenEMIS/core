@@ -212,8 +212,8 @@ class InstitutionStandardMarksEnteredTable extends AppTable
                 [$Users->aliasField('id = ') . $this->aliasField('created_user_id')]
             )
         ->Where($where)
-        ->group([$this->aliasField('created_user_id'),
-            $this->aliasField('institution_classes_id')
+        ->group([$this->aliasField('education_subject_id'),//POCOR-7333
+            $this->aliasField('institution_classes_id')  
         ]);
 
 
