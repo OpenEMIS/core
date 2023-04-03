@@ -38,7 +38,11 @@ class ReportCardProcessesTable extends ControllerActionTable
             return __('Class');
         } else if($field == 'student_id') {
             return __('OpenEMIS ID');
-        }else {
+          }else if($field=='education_grade_id'){
+             return __('Education Grades');
+
+          }
+        else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
@@ -53,6 +57,100 @@ class ReportCardProcessesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+
+       //POCOR_7319 starts
+
+        //Status Filter
+        $ReportStatus=$this->getStatusList();
+        $reportCardStatusOptions=['-1' => __(' All Status ')] + $ReportStatus;
+        $selectedReportStatus = !is_null($this->request->query('status')) ? $this->request->query('status') :-1 ;
+        $this->controller->set(compact( 'reportCardStatusOptions','selectedReportStatus'));
+        // End
+        foreach($reportCardStatusOptions AS $key =>$reportCardSatusOptionsData ){
+            $reportStatusKey[$key] = $key;
+        }
+
+
+        //Area Filter
+        $Areas = TableRegistry::get('Area.Areas');
+        $areaOptions = [];
+        $areaOptions = $Areas->find('list')
+             ->toArray();
+        $areaOptions = ['-1' => __(' All Areas ')] + $areaOptions;
+        $selectedArea = !is_null($this->request->query('area_id')) ? $this->request->query('area_id') : -1;
+        $this->controller->set(compact('areaOptions', 'selectedArea'));
+        //End
+
+        foreach($areaOptions AS $key => $areaOptionsData){
+            $areaKey[$key] = $key;
+        }
+
+        //Institution Filter
+        $Institutions = TableRegistry::get('Institutions');
+        $institutionOptions = [];
+        if($selectedArea == -1){
+            $institutionOptions = $Institutions->find('list')
+                                ->where([
+                                    $Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
+                                ])->toArray();
+        }else{
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }
+
+            $institutionOptions = $Institutions->find('list')
+                                ->where([ $Institutions->aliasField('area_id IN') => $allselectedAreas,
+                                    $Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
+                                ])->toArray();
+        }
+
+        if(!empty($institutionOptions)){
+            foreach($institutionOptions AS $institutionOptionsDataKey => $institutionOptionsData){
+                $institutionOptionsKey[$institutionOptionsDataKey] = $institutionOptionsDataKey;
+            }
+        }
+
+        $institutionOptions = ['-1' => __('All Institution')] + $institutionOptions;
+        $selectedInstitution = !is_null($this->request->query('institution_id')) ? $this->request->query('institution_id') : -1;
+        $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
+
+
+        if($selectedInstitution != -1){
+            $where[$this->aliasField('id')] = $selectedInstitution;
+        }
+        if(!empty($institutionOptionsKey)){
+            $where[$this->aliasField('id IN ')] = $institutionOptionsKey;
+        }
+        //End
+
+        //Education grade Filter
+         $InstitutionClasses = TableRegistry::get('institution_classes');
+         $institutionClassOptions = [];
+         if($selectedInstitution == -1){
+            $institutionClassOptions = $InstitutionClasses->find('list')
+                                   ->where([$InstitutionClasses->aliasField('institution_id IN ') => $institutionOptionsKey])
+                                   
+                                   ->toArray();
+         }
+         else{
+           $institutionClassOptions = $Institutions->find('list')
+                                ->where([ $InstitutionClasses->aliasField('institution_id IN') => $selectedInstitution])
+                                ->toArray();
+         }
+         if(!empty($institutionClassOptions)){
+            foreach($institutionClassOptions AS $institutionClassOptionsDataKey => $institutionClassOptionsData){
+                $institutionClassOptionsKey[$institutionClassOptionsDataKey] = $institutionClassOptionsDataKey;
+            }
+        }
+        $selectedInstitutionClass = !is_null($this->request->query('institution_id'));
+
+        $this->controller->set(compact('institutionClassOptions', 'selectedInstitutionClass'));
+        //End
         //POCOR-7067 Starts
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $timeZone= $ConfigItems->value("time_zone");
@@ -87,14 +185,27 @@ class ReportCardProcessesTable extends ControllerActionTable
                 //POCOR-7067 Ends
             }//POCOR-6841 ends
         }
-         //END:POCOR-6785
-        $sortList = ['status', 'Users.openemis_no', 'InstitutionClasses.name', 'Institutions.name'];
-        if (array_key_exists('sortWhitelist', $extra['options'])) {
-            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
-        }
-        $extra['options']['sortWhitelist'] = $sortList;
+         $extra['elements']['controls'] = ['name' => 'ReportCard.controls', 'data' => [], 'options' => [], 'order' => 1];
+        //  //END:POCOR-6785
+        //  $sortList = ['status', 'Users.openemis_no', 'InstitutionClasses.name', 'Institutions.name'];
+        // if (array_key_exists('sortWhitelist', $extra['options'])) {
+        //     $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        // }
+        // $extra['options']['sortWhitelist'] = $sortList;
     }
-
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                            ->where([
+                                $Areas->aliasField('parent_id') => $id
+                            ])
+                             ->toArray();
+        foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
+    }
     public function onGetStatus(Event $event, Entity $entity)
     {
         $status = [
@@ -107,6 +218,16 @@ class ReportCardProcessesTable extends ControllerActionTable
             return $status[$entity->status];
         }
         return 'Error';
+    }
+    public function getStatusList(){
+
+        $status = [
+            '1'  => "New Process",
+            '2'  => 'Running',
+            '3'  => 'Completed',
+            '-1' => 'Error'
+        ];
+        return $status;
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
