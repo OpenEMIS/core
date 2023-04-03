@@ -67,6 +67,47 @@ class LicensesTable extends ControllerActionTable
     {
         $this->field('comments', ['visible' => false]);
         $this->field('license_type_id', ['after' => 'assignee_id']);
+
+		// Start POCOR-5188
+		if($this->request->params['controller'] == 'Staff'){
+			$is_manual_exist = $this->getManualUrl('Institutions','Licenses','Staff - Professional');       
+			if(!empty($is_manual_exist)){
+				$btnAttr = [
+					'class' => 'btn btn-xs btn-default icon-big',
+					'data-toggle' => 'tooltip',
+					'data-placement' => 'bottom',
+					'escape' => false,
+					'target'=>'_blank'
+				];
+		
+				$helpBtn['url'] = $is_manual_exist['url'];
+				$helpBtn['type'] = 'button';
+				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+				$helpBtn['attr'] = $btnAttr;
+				$helpBtn['attr']['title'] = __('Help');
+				$extra['toolbarButtons']['help'] = $helpBtn;
+			}
+		}elseif($this->request->params['controller'] == 'Directories'){ 
+			$is_manual_exist = $this->getManualUrl('Directory','Licenses','Staff - Professional');       
+			if(!empty($is_manual_exist)){
+				$btnAttr = [
+					'class' => 'btn btn-xs btn-default icon-big',
+					'data-toggle' => 'tooltip',
+					'data-placement' => 'bottom',
+					'escape' => false,
+					'target'=>'_blank'
+				];
+
+				$helpBtn['url'] = $is_manual_exist['url'];
+				$helpBtn['type'] = 'button';
+				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+				$helpBtn['attr'] = $btnAttr;
+				$helpBtn['attr']['title'] = __('Help');
+				$extra['toolbarButtons']['help'] = $helpBtn;
+			}
+
+		}
+		// End POCOR-5188
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query)
