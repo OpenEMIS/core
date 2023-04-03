@@ -297,7 +297,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function getUniqueOpenEmisId() {
-        if(StaffController.selectedStaffData.openemis_no && !isNaN(Number(StaffController.selectedStaffData.openemis_no.toString()))) {
+        if((StaffController.isInternalSearchSelected || StaffController.isExternalSearchSelected) && StaffController.selectedStaffData.openemis_no && !isNaN(Number(StaffController.selectedStaffData.openemis_no.toString()))) {
             StaffController.selectedStaffData.username = angular.copy(StaffController.selectedStaffData.openemis_no);
             return;
         }
@@ -2343,7 +2343,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         return remain;
     }
 
-    function getUniqueOpenEmisId() {
+   /*  DUPLICATE--function getUniqueOpenEmisId--() {
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.getUniqueOpenEmisId()
             .then(function(response) {
@@ -2364,7 +2364,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             console.log(error);
             UtilsSvc.isAppendLoader(false);
         });
-    }
+    } */
 
     function generatePassword() {
         UtilsSvc.isAppendLoader(true);
