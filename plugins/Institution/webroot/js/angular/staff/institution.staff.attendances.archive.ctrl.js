@@ -241,10 +241,10 @@ function InstitutionStaffAttendancesArchiveController($scope, $q, $window, $http
         vm.academicPeriodOptions = academicPeriods;
         if (academicPeriods.length > 0) {
             angular.forEach(academicPeriods, function(academicPeriod) {
-                if (academicPeriod.current == 1) {
+                // if (academicPeriod.current == 1) {
                    vm.selectedAcademicPeriod = academicPeriod.id;
                    vm.gridOptions.context.period = vm.selectedAcademicPeriod;
-                }
+                // }
             });
         }
     }
