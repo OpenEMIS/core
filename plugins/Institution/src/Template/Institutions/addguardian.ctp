@@ -63,7 +63,7 @@ h2, h3, h4, h5, h6 {
 		<li>
 		<a href="/Institution/Institutions/Students/<?php echo $StudentID ?>">Students</a>	</li>
 		<li>
-		<a href="/Institution/Institutions/StudentUser/view/<?php echo $StudentID ?>">Aaron Butler</a>	</li>
+		<a href="/Institution/Institutions/StudentUser/view/<?php echo $StudentID ?>"><?php echo $UserData->first_name.' '.$UserData->last_name ?></a>	</li>
 		<li>
 		Guardians	</li>
 	</ul>

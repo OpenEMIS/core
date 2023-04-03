@@ -7344,10 +7344,9 @@ class InstitutionsController extends AppController
         }
     }
 
-
+    //POCOR-7231 :: Start
     public function Addguardian()
     {
-        //POCOR-7231 :: Start
         $requestDataa = $this->paramsDecode($this->request->query('queryString1'));
         $StudentID = $this->paramsEncode(['security_user_id' => $requestDataa['student_id']]);
         
@@ -7359,8 +7358,7 @@ class InstitutionsController extends AppController
         $this->set('InstitutionData', $InstitutionData);
         $this->set('UserData', $UserData);
         $this->set('StudentID', $StudentID);
-        $this->set('queryStng', $queryStng);//POCOR-7231 :: END
-        //$this->attachAngularModulesForDirectory();
+        $this->set('queryStng', $queryStng);
         $this->set('ngController', 'DirectoryaddguardianCtrl as $ctrl');
     }
 
@@ -7385,4 +7383,5 @@ class InstitutionsController extends AppController
                 break;
         }
     }
+    //POCOR-7231 :: END
 }
