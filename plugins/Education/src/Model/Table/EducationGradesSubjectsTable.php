@@ -113,7 +113,9 @@ class EducationGradesSubjectsTable extends ControllerActionTable
             'grade_subject_id' => $entity->id
         ];
         $Webhooks = TableRegistry::get('Webhook.Webhooks');
-        if($this->Auth->user()){
+
+
+        if(isset($_SESSION['Auth']['User'])){ //POCOR-7308
             $Webhooks->triggerShell('education_grade_subject_delete', ['username' => $username], $body);
         }
         // Webhook Education Grade Subject Delete -- End
