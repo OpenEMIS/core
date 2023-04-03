@@ -82,6 +82,27 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         $this->field('examination_date', ['type' => 'date', 'sort' => ['field' => 'ExaminationItems.examination_date']]);
         $this->field('examination_id', ['type' => 'select']);
         $this->setFieldOrder(['code', 'name', 'education_subject_id', 'examination_date', 'examination_id']);
+
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Administration','Exam Centre Subjects','Examinations');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
