@@ -31,6 +31,7 @@ Route::group(
 
 
         Route::get('institutions/grades', 'InstitutionController@getGradesList');
+        Route::get('institutions/grades/{grade_id}/list', 'RegistrationController@getInstitutionGradesList');
         Route::get('institutions/classes', 'InstitutionController@getClassesList');
         Route::get('institutions/subjects', 'InstitutionController@getSubjectsList');
         Route::get('institutions/shifts', 'InstitutionController@getInstitutionShifts');

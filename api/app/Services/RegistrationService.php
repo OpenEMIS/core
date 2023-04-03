@@ -327,4 +327,29 @@ class RegistrationService extends Controller
         }
     }
 
+
+    public function getInstitutionGradesList($gradeId)
+    {
+        try {
+            $data = $this->registrationRepository->getInstitutionGradesList($gradeId)->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->code.' - '.$item->name,
+                    ];
+                }
+            );
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institutions List Not Found');
+        }
+    }
+
 }
