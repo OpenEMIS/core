@@ -814,5 +814,26 @@ class RegistrationRepository extends Controller
         }
     }
 
+
+
+    public function getInstitutionGradesList($gradeId)
+    {
+        try {
+            $institutions = Institutions::whereHas('educationGrades',
+                    function ($query) use ($gradeId) {
+                        $query->where('education_grade_id', $gradeId);
+                    })->select('id', 'name', 'code')->get();
+            
+            return $institutions;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institutions List Not Found');
+        }
+    }
+
 }
 
