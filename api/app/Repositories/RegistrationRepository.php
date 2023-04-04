@@ -783,8 +783,8 @@ class RegistrationRepository extends Controller
     public function getStudentCustomFields()
     {
         try {
-            $customFields = StudentCustomFormField::with('studentCustomField')->whereHas('studentCustomField')->where('student_custom_form_id', 1)->get();
-
+            $customFields = StudentCustomFormField::with('studentCustomField', 'studentCustomField.studentCustomFieldOption')->whereHas('studentCustomField')->where('student_custom_form_id', 1)->get();
+            
             return $customFields;
 
         } catch (\Exception $e) {
