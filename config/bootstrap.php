@@ -330,6 +330,9 @@ Plugin::load('ProfileTemplate', ['routes' => true, 'autoload' => true]);
 Plugin::load('Meal', ['routes' => true, 'autoload' => true]);
 Plugin::load('GuardianNav', ['routes' => true, 'autoload' => true]);
 
+// POCOR-5188
+Plugin::load('Manual', ['routes' => true, 'autoload' => true]);
+
 $pluginPath = Configure::read('plugins');
 foreach ($pluginPath as $key => $path) {
     if (!file_exists($path)) {

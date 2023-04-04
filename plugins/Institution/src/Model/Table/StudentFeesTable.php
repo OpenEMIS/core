@@ -127,6 +127,26 @@ class StudentFeesTable extends ControllerActionTable
         $this->StudentFeesAbstract->fields['created'] = false;
 
         $this->StudentFeesAbstract->setFieldOrder(['payment_date', 'amount', 'comments']);
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Institutions','Fees','Finance');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
     }
 
     public function onUpdateIncludes(Event $event, ArrayObject $includes, $action)

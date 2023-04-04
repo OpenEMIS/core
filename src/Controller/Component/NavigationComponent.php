@@ -1874,6 +1874,13 @@ class NavigationComponent extends Component
                 'parent' => 'SystemSetup',
                 'selected' => ['Configurations.index', 'Configurations.add', 'Configurations.view', 'Configurations.edit', 'Themes.index', 'Themes.view', 'Themes.edit']
             ],
+            // Start POCOR-5188
+            'Manuals.Institutions' => [
+                'title' => 'Manuals',
+                'parent' => 'SystemSetup',
+                'selected' => ['Manuals.Institutions','Manuals.view', 'Manuals.edit', 'Manuals.Directory', 'Manuals.Reports', 'Manuals.Personal', 'Manuals.Administration', 'Manuals.Guardian']
+            ],
+            // End POCOR-5188
             'API' => [
                 'title' => 'APIs',
                 'parent' => 'SystemSetup',
