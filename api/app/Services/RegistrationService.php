@@ -287,6 +287,7 @@ class RegistrationService extends Controller
                         "order" => $item->order,
                         "params" => $item->studentCustomField->params??Null,
                         "field_type" => $item->studentCustomField->field_type??Null,
+                        "options" => $item->studentCustomField->studentCustomFieldOption??Null,
                         "description" => $item->studentCustomField->description??Null
                     ];
                 }
