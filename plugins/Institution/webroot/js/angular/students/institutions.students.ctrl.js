@@ -1226,6 +1226,17 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if(!StudentController.selectedStudentData.education_grade_id){
             StudentController.error.education_grade_id = 'This field cannot be left empty';
         }
+        console.log(StudentController.selectedStudentData);
+        var res = InstitutionsStudentsSvc.getEducationGrade(StudentController.selectedStudentData.education_grade_id, StudentController.selectedStudentData.openemis_no);
+        // $validation = JSON.parse(res.data);
+        
+        timer = setTimeout(()=>{
+            var res1 = $window.localStorage.getItem('repeater_validation');
+            if(res1 == '"yes"'){
+            StudentController.error.education_grade_id = 'This student has completed the education grade before. Please assign to a different grade.';
+        }
+        }, 3000);
+        
         if(!StudentController.selectedStudentData.transferStartDate) {
             StudentController.error.transferStartDate = 'This field cannot be left empty';
         } else {

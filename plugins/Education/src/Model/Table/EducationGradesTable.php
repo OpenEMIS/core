@@ -992,6 +992,54 @@ class EducationGradesTable extends ControllerActionTable
         return $query;
     }
 
+    public function findRepeaterEducationGrade(Query $query, array $options)
+    {
+        $educationGradeId = $options['education_grade_id'];
+        $openemis_no = $options['openemis_no'];
+        $educationGradeName = $this->get($educationGradeId)->code;
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $UsersData = TableRegistry::get('User.Users');
+        $studentStatuses = TableRegistry::get('student_statuses');
+        $institutionStudents = TableRegistry::get('institution_students');
+        $EducationGradesData = $EducationGrades->find()
+        ->where([
+            $EducationGrades->aliasField('code') => $educationGradeName
+        ])
+        ->extract('id')
+        ->toArray();
+        $result = $UsersData
+            ->find()
+            ->select(['id'])
+            ->where(['openemis_no' => $openemis_no])
+            ->first();
+        $studentId = $result->id;
+        $studentStatusesValidateRepeater = '';
+        $students =  $institutionStudents->find()->where(
+            [
+                $institutionStudents->aliasField('student_id') => $studentId
+            ])
+            ->all();
+        $validation = 'no';
+        foreach($students AS $studentsData){
+            $educationGradeName1 = $this->get($studentsData->education_grade_id)->code;
+            if($educationGradeName == $educationGradeName1){
+                $studentStatusesValidateRepeater = $studentsData->education_grade_id;
+            }
+        }
+        $students =  $institutionStudents->find()->where(
+            [
+                $institutionStudents->aliasField('education_grade_id') => $studentStatusesValidateRepeater,
+            ])
+            ->first();
+        if(empty($students)){
+            $validation = 'no';
+        }else{
+            $validation = 'yes';
+        }
+        echo json_encode($validation);die;
+    }
+
+
     public function getAdmissionAge($educationGradeId)
     {
         $entity = $this->get($educationGradeId, ['contain' => ['EducationProgrammes.EducationCycles']]);
