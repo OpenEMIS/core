@@ -275,6 +275,26 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->setFieldOrder([
             'name','institution_unit_id','institution_course_id','staff_id', 'classes_secondary_staff', 'multigrade', 'capacity', 'total_male_students', 'total_female_students', 'total_students', 'subjects'
         ]);
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Institutions','All Classes','Academic');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -334,8 +354,8 @@ class InstitutionClassesTable extends ControllerActionTable
                                 'Staff',
                                 'AcademicPeriods',
                                 'InstitutionShifts',
-                                'InstitutionUnits.UnitOptions',
-                                'InstitutionCourses.CourseOptions',
+                                'InstitutionUnits',
+                                'InstitutionCourses',
                                 'InstitutionShifts.ShiftOptions',
                                 'ClassesSecondaryStaff.SecondaryStaff',
                                 'Students'
@@ -1312,7 +1332,7 @@ class InstitutionClassesTable extends ControllerActionTable
         // $courseOptions[0] = "-----------select--------";
         //$unitOptions = $InsUnit->find('list',['keyField' => 'id', 'valueField' => 'name']);
         //$courseOptions = $InsCourse->find('list',['keyField' => 'id', 'valueField' => 'name']);
-       // echo "<pre>";print_r($unitOptions->toArray());die;
+        //echo "<pre>";print_r($unitOptions1->toArray());die;
         //$courseOptions =[];
         $this->fields['institution_shift_id']['options'] = $shiftOptions;
         $this->fields['institution_shift_id']['onChangeReload'] = true;
@@ -1323,12 +1343,7 @@ class InstitutionClassesTable extends ControllerActionTable
         if (empty($shiftOptions)) {
             $this->Alert->warning($this->aliasField('noShift'));
         }
-        if (empty($unitOptions)) {
-            $this->Alert->warning($this->aliasField('noShift'));
-        }
-        if (empty($courseOptions)) {
-            $this->Alert->warning($this->aliasField('noShift'));
-        }
+        
 
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable'=>true]);
         $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
@@ -1356,13 +1371,13 @@ class InstitutionClassesTable extends ControllerActionTable
     public function getUnitId()
     {
         $InsUnit = TableRegistry::get('institution_units');
-        $unitOptions = $InsUnit->find('list',['keyField' => 'id', 'valueField' => 'name']);
+        $unitOptions = $InsUnit->find('list',['keyField' => 'id', 'valueField' => 'name'])->toArray();
         return $unitOptions;
     }
     public function getCourseId()
     {
         $InsCourse =  TableRegistry::get('institution_courses');
-        $courseOptions = $InsCourse->find('list',['keyField' => 'id', 'valueField' => 'name']);
+        $courseOptions = $InsCourse->find('list',['keyField' => 'id', 'valueField' => 'name'])->toArray();
         return $courseOptions;
     }
 

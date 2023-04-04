@@ -387,6 +387,22 @@ class StudentsController extends AppController
             $this->set('selectedAction', 'ExaminationResults');
             // End
 
+
+            // Start POCOR-5188
+            $manualTable = TableRegistry::get('Manuals');
+            $ManualContent =   $manualTable->find()->select(['url'])->where([
+                    $manualTable->aliasField('function') => 'Examinations',
+                    $manualTable->aliasField('module') => 'Institutions',
+                    $manualTable->aliasField('category') => 'Students - Academic',
+                    ])->first();
+            
+            if (!empty($ManualContent['url'])) {
+                $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
+            }else{
+                $this->set('is_manual_exist', []);
+            }
+            // End POCOR-5188
+
             $this->set('ngController', 'StudentExaminationResultsCtrl as StudentExaminationResultsController');
         }
     }
@@ -866,6 +882,21 @@ class StudentsController extends AppController
         $this->set('academicPeriodId', $academicPeriodId);
         $this->set('institutionDefaultId', $institutionId);
         $this->set('ngController', 'StudentTimetableCtrl as $ctrl');
+
+        // Start POCOR-5188
+        $manualTable = TableRegistry::get('Manuals');
+        $ManualContent =   $manualTable->find()->select(['url'])->where([
+                $manualTable->aliasField('function') => 'Students',
+                $manualTable->aliasField('module') => 'Institutions',
+                $manualTable->aliasField('category') => 'Timetable',
+                ])->first();
+        
+        if (!empty($ManualContent['url'])) {
+            $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
+        }else{
+            $this->set('is_manual_exist', []);
+        }
+        // End POCOR-5188
 
     }
 

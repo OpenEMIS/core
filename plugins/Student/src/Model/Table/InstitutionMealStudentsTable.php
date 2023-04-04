@@ -80,6 +80,26 @@ class InstitutionMealStudentsTable extends ControllerActionTable
         $this->field('comment',['visible' => false]);
         $this->field('paid',['visible' => false]);
         $this->setFieldOrder(['date','meal_programmes_id','meal_benefit_id','institution_id']);
+
+        // Start POCOR-5188
+        $toolbarButtons = $extra['toolbarButtons'];
+        $is_manual_exist = $this->getManualUrl('Institutions','Meal','Students - Meal');       
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
+
+            $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+            $toolbarButtons['help']['type'] = 'button';
+            $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+            $toolbarButtons['help']['attr'] = $btnAttr;
+            $toolbarButtons['help']['attr']['title'] = __('Help: Report Cards (PDF)');
+        }
+        // End POCOR-5188
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)

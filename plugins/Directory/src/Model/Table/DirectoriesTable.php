@@ -293,9 +293,9 @@ class DirectoriesTable extends ControllerActionTable
                                 ->first();
             if(!empty($ConfigItem)){
                 //value_selection
-                //get data from Identity Type table 
+                //get data from Identity Type table
                 $typesIdentity = $this->getIdentityTypeData($ConfigItem->value_selection);
-                if(!empty($typesIdentity)){                
+                if(!empty($typesIdentity)){
                     $query
                         ->select([
                             'identity_type' => $IdentityTypes->aliasField('name'),
@@ -317,7 +317,7 @@ class DirectoriesTable extends ControllerActionTable
                             ]
                         );
                 }
-            }   
+            }
         }//POCOR-6248 ends
         $this->dashboardQuery = clone $query;
     }
@@ -476,12 +476,33 @@ class DirectoriesTable extends ControllerActionTable
                 $this->addCustomUserBehavior($userType);
             }
         }
-    }
+
+        // Start POCOR-5188
+        $is_manual_exist = $this->getManualUrl('Directory','Overview','General');       
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
     
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
+        
+    }
+
     // POCOR-5684
     public function onGetIdentityNumber(Event $event, Entity $entity){
 
-        // Case 1: if user has only one identity, show the same, 
+        // Case 1: if user has only one identity, show the same,
         // Case 2: if user has more than one identity and also has more than one nationality, and no one is linked to any nationality, then, check, if any nationality has default identity, then show that identity else show the first identity.
         // Case 3: if user has more than one identity (no one is linked to nationality), show the first
 
@@ -492,11 +513,11 @@ class DirectoriesTable extends ControllerActionTable
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->all();
-        
+
         $users_ids = TableRegistry::get('user_identities');
         $user_id_data = $users_ids->find()
         ->select(['number'])
-        ->where([                
+        ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->first();
@@ -525,14 +546,14 @@ class DirectoriesTable extends ControllerActionTable
             $nat_ids = [];
             foreach ($nationalities_ids as $item) {
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
-            }     
+            }
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number'])
-                ->where([                
+                ->where([
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
@@ -541,7 +562,7 @@ class DirectoriesTable extends ControllerActionTable
                     array_push($nationality_based_ids, $user_id_data_nat);
                 }
             }
-            
+
             if(count($nationality_based_ids) > 0){
                 // Case 2 - returning value
                 return $entity->identity_number = $nationality_based_ids[0]['number'];
@@ -562,11 +583,11 @@ class DirectoriesTable extends ControllerActionTable
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->all();
-        
+
         $users_ids = TableRegistry::get('user_identities');
         $user_id_data = $users_ids->find()
         ->select(['number', 'identity_type_id'])
-        ->where([                
+        ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->first();
@@ -602,14 +623,14 @@ class DirectoriesTable extends ControllerActionTable
             $nat_ids = [];
             foreach ($nationalities_ids as $item) {
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
-            }     
+            }
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number','identity_type_id'])
-                ->where([                
+                ->where([
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
@@ -667,7 +688,7 @@ class DirectoriesTable extends ControllerActionTable
     //         $users_ids->aliasField('security_user_id') => $entity->id,
     //     ])
     //     ->first();
-        
+
     //     // Get Identity Type Name
     //     $users_id_type = TableRegistry::get('identity_types');
     //     $user_id_name = $users_id_type->find()
@@ -724,7 +745,7 @@ class DirectoriesTable extends ControllerActionTable
                     $this->addBehavior('User.Mandatory', ['userRole' => 'Other', 'roleFields' =>['Identities', 'Nationalities']]);
                     break;
             }
-            
+
             return ;
     }
 
@@ -957,7 +978,7 @@ class DirectoriesTable extends ControllerActionTable
     {
         if ($this->action == 'index') {
             $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
-            //POCOR-6248 starts    
+            //POCOR-6248 starts
             if ($userType == self::STAFF || $userType == self::STUDENT) {
                $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
                 $ConfigItem =   $ConfigItemTable
@@ -987,26 +1008,26 @@ class DirectoriesTable extends ControllerActionTable
                             $this->field('name', ['visible' => true, 'before' => 'institution']);
                         }else{
                             $this->field('name', ['visible' => false, 'before' => 'institution']);
-                        } 
+                        }
                     }
                     if($item->code == 'directory_institution'){
                         if($item->value == 1){
                             $this->field('institution', ['visible' => true, 'before' => 'date_of_birth']);
                         }else{
                             $this->field('institution', ['visible' => false, 'before' => 'date_of_birth']);
-                        } 
+                        }
                     }
                     if($item->code == 'directory_date_of_birth'){
                         if($item->value == 1){
                             $this->field('date_of_birth', ['visible' => true, 'before' => 'student_status']);
                         }else{
                             $this->field('date_of_birth', ['visible' => false, 'before' => 'student_status']);
-                        } 
+                        }
                     }
                     if($item->code == 'directory_identity_number'){
                         if($item->value == 1){
                             if(!empty($item->value_selection)){
-                                //get data from Identity Type table 
+                                //get data from Identity Type table
                                 $typesIdentity = $this->getIdentityTypeData($item->value_selection);
                                 if(isset($typesIdentity)){ //POCOR-6679
                                     $this->field($typesIdentity->identity_type, ['visible' => true, 'after' => 'date_of_birth']);
@@ -1020,7 +1041,7 @@ class DirectoriesTable extends ControllerActionTable
                 }
             }
             $this->field('student_status', ['visible' => false]);
-            //POCOR-6248 ends    
+            //POCOR-6248 ends
 
             switch ($userType) {
                 case self::ALL:
@@ -1242,7 +1263,7 @@ class DirectoriesTable extends ControllerActionTable
         $studentInstitutions = [];
         if ($isStudent) {
             $InstitutionStudentTable = TableRegistry::get('Institution.Students');
-            /**POCOR-6902 starts - modified query to fetch correct institution name*/ 
+            /**POCOR-6902 starts - modified query to fetch correct institution name*/
             $studentInstitutions = $InstitutionStudentTable->find()
                 ->matching('StudentStatuses', function ($q) {
                     return $q->where(['StudentStatuses.code' => 'CURRENT']);
@@ -1295,6 +1316,7 @@ class DirectoriesTable extends ControllerActionTable
 //POCOR-7083 :: Start
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
+       
         //$institutionStudents = $this->institutionstudents;
         //print_r($institutionStudents->exists([$institutionStudents->aliasField($institutionStudents->foreignKey()) => $entity->id]));
         //POCOR-7179[START] delete custom field becouse when user is created from directory it insert value in custom field
@@ -1305,7 +1327,7 @@ class DirectoriesTable extends ControllerActionTable
             $event->stopPropagation();
             return $this->controller->redirect($this->url('remove'));
         }else{
-            
+
             $user = TableRegistry::get('security_users')
                 ->find()->where(['id' => $$entity->id])->first();
                // echo "<pre>";print_r($entity);die;
@@ -1313,7 +1335,7 @@ class DirectoriesTable extends ControllerActionTable
                 $this->Alert->success('general.delete.success', ['reset'=>true]);
                 return $this->controller->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'index']);
                }
-                
+
         }
     }
 
@@ -1405,10 +1427,10 @@ class DirectoriesTable extends ControllerActionTable
             $userSpecialNeedsReferrals = TableRegistry::get('user_special_needs_referrals')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
-            // count all user_special_needs_services 
+            // count all user_special_needs_services
             $userSpecialNeedsServices = TableRegistry::get('user_special_needs_services')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
-            // count all user_special_needs_services 
+            // count all user_special_needs_services
             $userSpecialNeedsAssessments = TableRegistry::get('user_special_needs_assessments')
             ->find()->where(['security_user_id' => $securityUserId])->count();
 

@@ -15,6 +15,8 @@ use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
+use Cake\Datasource\ConnectionManager; // POCOR-7158
+
 class ScholarshipsTable extends ControllerActionTable
 {
     use OptionsTrait;
@@ -371,6 +373,27 @@ class ScholarshipsTable extends ControllerActionTable
         $this->field('requirements', ['visible' => false]);
         $this->field('instructions', ['visible' => false]);
         $this->field('scholarship_financial_assistance_id', ['visible' => false]);//POCOR-6839
+
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Administration','Scholarships','Scholarships - Details');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
     }
 
     public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
@@ -451,6 +474,11 @@ class ScholarshipsTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        /** Start POCOR-7158 */
+        $connection = ConnectionManager::get('default');
+        $connection->execute('SET foreign_key_checks = 0');
+        /** End POCOR-7158 */
+
         if ($entity->has('field_of_study_selection') && $entity->field_of_study_selection == self::SELECT_ALL_FIELD_OF_STUDIES) {
             $ScholarshipsFieldOfStudies = TableRegistry::get('Scholarship.ScholarshipsFieldOfStudies');
 
@@ -463,7 +491,11 @@ class ScholarshipsTable extends ControllerActionTable
             if (!$ScholarshipsFieldOfStudies->save($ScholarshipsFieldOfStudiesEntity)) {
                 Log::write('debug', $ScholarshipsFieldOfStudiesEntity->errors());
             }
-        }
+        }   
+
+        /** Start POCOR-7158 */
+        $connection->execute('SET foreign_key_checks = 1');
+        /** End POCOR-7158 */
     }
 
     public function onGetFieldOfStudies(Event $event, Entity $entity)
