@@ -63,6 +63,48 @@ class StudentOutcomesTable extends ControllerActionTable
         $this->field('outcome_criteria_id', ['type' => 'integer']);
 
         $this->setFieldOrder(['outcome_period_id', 'education_subject_id', 'outcome_criteria_id', 'outcome_grading_option_id']);
+
+        // Start POCOR-5188
+        if($this->request->params['controller'] == 'Institutions'){
+            $is_manual_exist = $this->getManualUrl('Institutions','Programmes','Students - Academic');       
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+
+                $helpBtn['url'] = $is_manual_exist['url'];
+                $helpBtn['type'] = 'button';
+                $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+                $helpBtn['attr'] = $btnAttr;
+                $helpBtn['attr']['title'] = __('Help');
+                $extra['toolbarButtons']['help'] = $helpBtn;
+            }
+        }elseif($this->request->params['controller'] == 'Directories'){ 
+            $is_manual_exist = $this->getManualUrl('Directory','Outcomes','Students - Academic');       
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+
+                $helpBtn['url'] = $is_manual_exist['url'];
+                $helpBtn['type'] = 'button';
+                $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+                $helpBtn['attr'] = $btnAttr;
+                $helpBtn['attr']['title'] = __('Help');
+                $extra['toolbarButtons']['help'] = $helpBtn;
+            }
+
+        }
+        // End POCOR-5188
+
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -203,6 +245,27 @@ class StudentOutcomesTable extends ControllerActionTable
         }
 		
         $query->where($conditions);
+
+
+        // Start POCOR-5188
+        $toolbarButtons = $extra['toolbarButtons'];
+        $is_manual_exist = $this->getManualUrl('Institutions','Outcomes','Students - Academic');       
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
+
+            $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+            $toolbarButtons['help']['type'] = 'button';
+            $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+            $toolbarButtons['help']['attr'] = $btnAttr;
+            $toolbarButtons['help']['attr']['title'] = __('Help');
+        }
+        // End POCOR-5188
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
