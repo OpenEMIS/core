@@ -590,6 +590,72 @@ class IndividualPromotionTable extends ControllerActionTable
                     // write data to session
                     $this->Session->write($this->registryAlias().'.confirm', $entity);
                     //POCOR-7330 start
+
+
+                    $educationGradeId = $entity->education_grade_id;
+                    $educationGradeName = $this->EducationGrades->get($educationGradeId)->code;
+                    $EducationGrades = TableRegistry::get('Education.EducationGrades');
+                    $studentStatuses = TableRegistry::get('student_statuses');
+                    $institutionStudents = TableRegistry::get('institution_students');
+                    $EducationGradesData = $EducationGrades->find()
+                    ->where([
+                        $EducationGrades->aliasField('code') => $educationGradeName
+                    ])
+                    ->extract('id')
+                    ->toArray();
+                    $studentId = $entity->student_id;
+                    $studentStatusesValidateRepeater = 'no';
+                    $studentStatuses = TableRegistry::get('student_statuses');
+                    $statusStudentId = $studentStatuses->find()->where([$studentStatuses->aliasField('id') => $entity->student_status_id])
+                            ->first();
+                    $students =  $institutionStudents->find()->where(
+                        [
+                            $institutionStudents->aliasField('student_id') => $studentId
+                        ])
+                        ->all();
+                    foreach($students AS $studentsData){
+                        $educationGradeName1 = $this->EducationGrades->get($studentsData->education_grade_id)->code;
+                        if($educationGradeName == $educationGradeName1){
+                            $studentStatusesValidateRepeater = $studentsData->education_grade_id;
+                        }
+                    }
+                    $students =  $institutionStudents->find()->where(
+                        [
+                            $institutionStudents->aliasField('education_grade_id') => $studentStatusesValidateRepeater,
+                        ])
+                        ->first();
+                    if(empty($students)){
+                        $validation = 'no';
+                    }else{
+                        $validation = 'yes';
+                    }
+                    // if($statusStudentId->name == 'Repeated'){
+                    //     foreach($EducationGradesData AS $EducationGradesDataVal){
+                    //         $educationGradeName1 = $this->EducationGrades->get($EducationGradesDataVal)->code;
+                    //         // echo "<pre>";print_r($EducationGradesDataVal);die;
+                            
+                            
+                    //         // if($educationGradeName == $educationGradeName1){
+                    //             $students =  $institutionStudents->find()->where(
+                    //             [
+                    //                 $institutionStudents->aliasField('student_id') => $studentId,
+                    //                 $institutionStudents->aliasField('education_grade_id') => $EducationGradesDataVal
+                    //             ])
+                    //             ->first();
+                    //             if($students->student_status_id == 6 || $students->student_status_id == 7)
+                    //             {
+                    //                 $studentStatusesValidateRepeater = 'yes';
+                    //             }
+                    //         // }
+                    //     }
+                    // }
+                    if($validation == 'yes'){
+                        $message = __('This student has completed the education grade before. Please assign to a different grade.');
+                        $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                        $event->stopPropagation();
+                        return false;
+                    }
+
                     $studentStatusesValidate = $this->studentIfExist($entity,$requestData);
                     if($studentStatusesValidate == 'yes'){
                         $message = __('This student has completed the education grade before. Please assign to a different grade');
