@@ -53,6 +53,28 @@ class InstitutionStudentAbsencesArchivedTable extends ControllerActionTable
 
         $this->setFieldOrder(['academic_period_id', 'institution_id', 'date', 'institution_class_id', 'openemis_no','student_id','absence_type_id']);
         $toolbarButtons = $extra['toolbarButtons'];
+
+        // Start POCOR-5188
+        $is_manual_exist = $this->getManualUrl('Institutions','Student Attendance Archive');       
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
+    
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
+
+
         // $extra['toolbarButtons']['back'] = [
         //     'url' => [
         //         'plugin' => 'Student',

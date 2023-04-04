@@ -130,7 +130,8 @@ class SingleGradeBehavior extends Behavior
         $unitOptions = $model->getUnitId($institutionId =null,  $selectedAcademicPeriodId=null);
         $courseOptions = $model->getCourseId($institutionId =null,  $selectedAcademicPeriodId=null);
        
-
+        $unitOptions = [0 => '-- '.__('Select').' --'] + $unitOptions;//POCOR-7336
+        $courseOptions = [0 => '-- '.__('Select').' --'] + $courseOptions;//POCOR-7336
         $model->field('single_grade_field', [
             'type'      => 'element',
             'element'   => 'Institution.Classes/single_grade',

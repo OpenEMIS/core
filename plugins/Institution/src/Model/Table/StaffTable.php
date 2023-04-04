@@ -924,6 +924,27 @@ class StaffTable extends ControllerActionTable
         }  //POCOR-6248 ends                  
         $this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
       // echo "<pre>"; print_r($query->toArray());die;
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Institutions','Staff','Staff');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
+
     }
 
     //POCOR-6248 starts
@@ -2111,7 +2132,7 @@ class StaffTable extends ControllerActionTable
     public function findByInstitution(Query $query, array $options)
     {
         if (array_key_exists('Institutions.id', $options)) {
-            return $query->where([$this->aliasField('institution_id') => $options['Institutions.id'],$this->aliasField('is_homeroom') =>1]); //POCOR-5070
+            return $query->where([$this->aliasField('institution_id') => $options['Institutions.id']/*,$this->aliasField('is_homeroom') =>1 POCOR-7292*/]); //POCOR-5070
         } else {
             return $query;
         }
