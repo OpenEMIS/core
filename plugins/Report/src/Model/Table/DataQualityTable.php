@@ -37,6 +37,7 @@ class DataQualityTable extends AppTable {
 		$this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
 		$this->fields = [];
 		$this->ControllerAction->field('feature', ['select' => false]);
+		$this->ControllerAction->field('academic_period_id', ['select' => false]);
 		$this->ControllerAction->field('format');
 	}
 
@@ -59,7 +60,7 @@ class DataQualityTable extends AppTable {
         }
     }
 
-    public function addAfterAction(Event $event, Entity $entity)
+    /*public function addAfterAction(Event $event, Entity $entity)
     {
     	if ($entity->has('feature')) { 
             $feature = $entity->feature;
@@ -72,6 +73,38 @@ class DataQualityTable extends AppTable {
                 }
              $this->ControllerAction->setFieldOrder($fieldsOrder);
        	}
+    }*/
+
+    //POCOR-7211
+    public function addBeforeAction(Event $event)
+    {
+        $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+    }
+
+
+    /**
+     * add academic period id
+     * POCOR-7211
+     */
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+    	if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature,['Report.EnrollmentOutliers','Report.AgeOutliers'])){
+            
+            	$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $academicPeriodOptions = $AcademicPeriodTable->getYearList();
+                $currentPeriod = $AcademicPeriodTable->getCurrent();
+                $attr['options'] = $academicPeriodOptions;
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['onChangeReload'] = true;
+                if (empty($request->data[$this->alias()]['academic_period_id'])) {
+                    $request->data[$this->alias()]['academic_period_id'] = $currentPeriod;
+                }
+                return $attr;
+            }
+        }	
     }
 
 	    

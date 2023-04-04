@@ -49,16 +49,18 @@ class EnrollmentOutliersTable extends AppTable  {
 	
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
 	{
-		  $query
+		$requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;
+		$query
 		  ->contain(['Institutions'])
 		  ->group([$this->aliasField('institution_id'), $this->aliasField('Institutions.name')])->first();
 		  $query
         ->where([
-            $this->aliasField('academic_period_id') => 32
+            $this->aliasField('academic_period_id') => $academicPeriodId
         ]);
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($i) {
-            return $results->map(function ($row) use($i){
-                $academicPeriodId = 32;
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($academicPeriodId) {
+            return $results->map(function ($row) use($academicPeriodId){
+                $academicPeriodId = $academicPeriodId;
 				
 				$institutionStudents = TableRegistry::get('institution_students');
 				$academicPeriod = TableRegistry::get('academic_periods');
@@ -109,11 +111,6 @@ class EnrollmentOutliersTable extends AppTable  {
         }); 
         
 	}
-
-	/*public function onExcelGetStatus(Event $event, Entity $entity)
-    {
-    }*/
-
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
