@@ -47,6 +47,18 @@ $this->start('toolbar');
     </a>
 <?php endif; ?>
 
+<?php /*************** Start POCOR-5188 */ ?>
+    <?php 
+        if(!empty($is_manual_exist)):
+    ?>
+
+    <a href="<?php echo $is_manual_exist['url']; ?>" target="_blank">
+        <button  class="btn btn-xs btn-default icon-big"  data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Help') ?>" >
+        <i class="fa fa-question-circle"></i>
+        </button>
+    </a>
+    <?php endif ?>
+    <?php /*************** End POCOR-5188 */ ?>
 <?php
 $this->end();
 ?>
