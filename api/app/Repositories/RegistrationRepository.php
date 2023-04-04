@@ -783,7 +783,13 @@ class RegistrationRepository extends Controller
     public function getStudentCustomFields()
     {
         try {
-            $customFields = StudentCustomFormField::with('studentCustomField', 'studentCustomField.studentCustomFieldOption')->whereHas('studentCustomField')->where('student_custom_form_id', 1)->get();
+            $customFields = StudentCustomFormField::with(
+                'studentCustomField', 
+                'studentCustomField.studentCustomFieldOption:id as option_id,name as option_name,is_default,visible,order as option_order,student_custom_field_id'
+            )
+            ->whereHas('studentCustomField')
+            ->where('student_custom_form_id', 1)
+            ->get();
             
             return $customFields;
 
