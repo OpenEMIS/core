@@ -59,13 +59,13 @@
                         'data-named-group' => 'academic_period_id,staff_profile_template_id,area_id'
                     ));
                 }
-                 if (!empty($institutionClassOptions)) {
+                 if (!empty($institutionGradeOptions)) {
                     echo $this->Form->input('institution_grade', array(
                         'type' => 'select',
                         'class' => 'form-control',
                         'label' => false,
-                        'options' => $institutionClassOptions,
-                        'default' => $selectedInstitutionClass,
+                        'options' => $institutionGradeOptions,
+                        'default' => $selectedInstitutionGrade,
                         'url' => $baseUrl,
                         'data-named-key' => 'institution_grade',
                         'data-named-group' => 'academic_period_id,staff_profile_template_id,area_id'
