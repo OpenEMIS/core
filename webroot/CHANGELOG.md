@@ -1,3 +1,10 @@
+### [3.80.2] - 2023-04-04
+- Implemented: 2.13 Add on screen help for modules tabs and fields
+- Bug Fixed: Administration > System Setup > Education Structure page: Unable to delete records even though the interface is showing no associated records
+- Bug Fixed: Administration>Profile>Institution: Corrections to placeholders
+- Bug Fixed: Institutions > Academic > Classes > Add: The system shows a message indicating that there are no shifts configured
+- Bug Fixed: Institutions>Staff: Username is empty
+
 ### [3.80.1] - 2023-03-30
 - Implemented: 2.11 Add workflow for student behavior
 - Implemented: Improvement of CSPD integration with OpenEMIS

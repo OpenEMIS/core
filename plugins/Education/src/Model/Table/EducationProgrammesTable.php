@@ -73,6 +73,26 @@ class EducationProgrammesTable extends ControllerActionTable {
         $this->fields['education_field_of_study_id']['sort'] = ['field' => 'EducationFieldOfStudies.name'];
         $this->fields['education_cycle_id']['sort'] = ['field' => 'EducationCycles.name'];
         $this->fields['education_certification_id']['sort'] = ['field' => 'EducationCertifications.name'];
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Administration','Education Programmes','Education');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options){

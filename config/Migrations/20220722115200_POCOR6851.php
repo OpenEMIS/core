@@ -960,7 +960,6 @@ class POCOR6851 extends AbstractMigration
         $this->execute("ALTER TABLE institution_students ADD CONSTRAINT `insti_stude_fk_stude_id` FOREIGN KEY (`student_id`) REFERENCES security_users(`id`)");
         $this->execute("ALTER TABLE institution_students_report_cards ADD CONSTRAINT `insti_stude_repor_cards_fk_stude_id` FOREIGN KEY (`student_id`) REFERENCES security_users(`id`)");
         $this->execute("ALTER TABLE institution_students_report_cards_comments ADD CONSTRAINT `insti_stude_repor_cards_comme_fk_stude_id` FOREIGN KEY (`student_id`) REFERENCES security_users(`id`)");
-        $this->execute("ALTER TABLE institution_students_tmp ADD CONSTRAINT `insti_stude_tmp_fk_stude_id` FOREIGN KEY (`student_id`) REFERENCES security_users(`id`)");
         $this->execute("ALTER TABLE institution_subject_students ADD CONSTRAINT `insti_subje_stude_fk_stude_id` FOREIGN KEY (`student_id`) REFERENCES security_users(`id`)");
         $this->execute("ALTER TABLE institution_textbooks ADD CONSTRAINT `insti_textb_fk_stude_id` FOREIGN KEY (`student_id`) REFERENCES security_users(`id`)");
         $this->execute("ALTER TABLE institution_trip_passengers ADD CONSTRAINT `insti_trip_passe_fk_stude_id` FOREIGN KEY (`student_id`) REFERENCES security_users(`id`)");
@@ -2031,7 +2030,6 @@ class POCOR6851 extends AbstractMigration
         $this->execute("ALTER TABLE institution_students DROP FOREIGN KEY `insti_stude_fk_stude_id`");
         $this->execute("ALTER TABLE institution_students_report_cards DROP FOREIGN KEY `insti_stude_repor_cards_fk_stude_id`");
         $this->execute("ALTER TABLE institution_students_report_cards_comments DROP FOREIGN KEY `insti_stude_repor_cards_comme_fk_stude_id`");
-        $this->execute("ALTER TABLE institution_students_tmp DROP FOREIGN KEY `insti_stude_tmp_fk_stude_id`");
         $this->execute("ALTER TABLE institution_subject_students DROP FOREIGN KEY `insti_subje_stude_fk_stude_id`");
         $this->execute("ALTER TABLE institution_textbooks DROP FOREIGN KEY `insti_textb_fk_stude_id`");
         $this->execute("ALTER TABLE institution_trip_passengers DROP FOREIGN KEY `insti_trip_passe_fk_stude_id`");
