@@ -97,6 +97,7 @@ class InstitutionPositionsTable extends AppTable
                 'area_administratives_name' => 'AreaAdministratives.name',
                 'assignee_id' => 'Assignees.id',
                 // 'is_homeroom' => 'InstitutionStaffs.is_homeroom', // POCOR-7203   //POCOR-7229
+                // 'is_homeroom' => $this->aliasField('is_homeroom'),   // POCOR-7203
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
                 'assignee_openemis_no' => 'SecurityUsersStaff.openemis_no',
