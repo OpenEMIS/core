@@ -115,6 +115,45 @@ class SalariesTable extends ControllerActionTable
 
         $this->fields['gross_salary']['attr'] = array('data-compute-variable' => 'true', 'data-compute-operand' => 'plus', 'maxlength' => 9);
         $this->fields['net_salary']['attr'] = array('data-compute-target' => 'true', 'readonly' => true);
+
+        if($this->request->params['controller'] == 'Staff'){
+            $is_manual_exist = $this->getManualUrl('Personal','Salaries','Staff - Finance');       
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+        
+                $helpBtn['url'] = $is_manual_exist['url'];
+                $helpBtn['type'] = 'button';
+                $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+                $helpBtn['attr'] = $btnAttr;
+                $helpBtn['attr']['title'] = __('Help');
+                $extra['toolbarButtons']['help'] = $helpBtn;
+            }
+        }elseif($this->request->params['controller'] == 'Directories'){ 
+            $is_manual_exist = $this->getManualUrl('Directory','Salary List','Staff - Finance');       
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+        
+                $helpBtn['url'] = $is_manual_exist['url'];
+                $helpBtn['type'] = 'button';
+                $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+                $helpBtn['attr'] = $btnAttr;
+                $helpBtn['attr']['title'] = __('Help');
+                $extra['toolbarButtons']['help'] = $helpBtn;
+            }
+
+        }
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)

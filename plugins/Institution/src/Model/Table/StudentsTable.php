@@ -961,6 +961,27 @@ class StudentsTable extends ControllerActionTable
         $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
         $assignedStudentToInstitution = $this->find()->where(['institution_id'=>$institutionId])->count();
         $session->write('is_any_student', $assignedStudentToInstitution);
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Personal','Students','Students - Overview');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
+
     }
 
     public function beforeDelete(Event $event, Entity $entity)
