@@ -50,7 +50,7 @@ class UserGroupsTable extends ControllerActionTable
             'through' => 'Security.SecurityGroupInstitutions',
             'dependent' => true
         ]);
-        
+
 
         $this->belongsToMany('Roles', [
             'className' => 'Security.SecurityRoles',
@@ -94,7 +94,7 @@ class UserGroupsTable extends ControllerActionTable
         $this->field('area_id', ['title' => __('Area Education'), 'source_model' => 'Area.Areas', 'displayCountry' => false,'attr' => ['label' => __('Area Education')]]);
 
         $this->field('institution_id', [
-            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);      
+            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
 
         $this->setFieldOrder([
             'name','institution_id','area_id'
@@ -120,14 +120,14 @@ class UserGroupsTable extends ControllerActionTable
         return $buttons;
     }
     /** End POCOR 7213 */
-    
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('no_of_users', ['visible' => ['index' => true]]);
         $this->setFieldOrder(['name', 'no_of_users','institution_id']);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Groups','Security');       
+		$is_manual_exist = $this->getManualUrl('Administration','Groups','Security');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -248,7 +248,7 @@ class UserGroupsTable extends ControllerActionTable
             $flag = 0;
         }
         $Areas = TableRegistry::get('Area.Areas');
-        
+
         $entity = $attr['entity'];
 
         if ($action == 'add' || $action == 'edit') {
@@ -273,7 +273,7 @@ class UserGroupsTable extends ControllerActionTable
         } else {
             $attr['type'] = 'hidden';
         }
-           
+
         return $attr;
 
     }
@@ -285,7 +285,7 @@ class UserGroupsTable extends ControllerActionTable
             ->select([$SecurityGroupAreas->aliasField('area_id')])
             ->where(['security_group_id' => $entity->id])
             ->all();
-        
+
         foreach($result AS $AreaData){
             $areaArr[] = $AreaData->area_id;
         }
@@ -314,15 +314,23 @@ class UserGroupsTable extends ControllerActionTable
     {
         $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
         $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        //POCOR-7331 start
         $SecurityGroupInstitutionsData = $SecurityGroupInstitutions
                             ->find()
                             ->where(['security_group_id' => $entity->id])
-                            ->first();
-        $InstitutionsTableData = $InstitutionsTable
+                            ->toArray();
+        $InstitutionsTableData=[];
+        foreach( $SecurityGroupInstitutionsData as $value){
+        $record = $InstitutionsTable
                             ->find()
-                            ->where(['id' => $SecurityGroupInstitutionsData->institution_id])
+                            ->select($InstitutionsTable->aliasField('name'))
+                            ->where(['id' => $value['institution_id']])
                             ->first();
-        return isset($InstitutionsTableData->name) ? $InstitutionsTableData->name : '';
+         $InstitutionsTableData[]=$record;
+        }
+
+         return isset($InstitutionsTableData) ? $InstitutionsTableData : '';
+         //POCOR-7331 ends
     }
 
 
@@ -331,7 +339,7 @@ class UserGroupsTable extends ControllerActionTable
         if($action == 'add'){
             $areaId = isset($request->data) ? $request->data['UserGroups']['area_id']['_ids'] : 0;
             $string_version = implode(',', $areaId);
-            $AreaT = TableRegistry::get('areas');                    
+            $AreaT = TableRegistry::get('areas');
             //Level-1
             $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $string_version])->toArray();
             $childArea =[];
@@ -342,7 +350,7 @@ class UserGroupsTable extends ControllerActionTable
                 $childArea[$kkk] = $AreaData11->id;
             }
             //level-2
-            foreach($childArea as $kyy =>$AreaDatal2 ){ 
+            foreach($childArea as $kyy =>$AreaDatal2 ){
                 $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
                 foreach($AreaDatas as $ky =>$AreaDatal22 ){
                     $childAreaMain[$kyy.$ky] = $AreaDatal22->id;
@@ -350,7 +358,7 @@ class UserGroupsTable extends ControllerActionTable
             }
             //level-3
             if(!empty($childAreaMain)){
-                foreach($childAreaMain as $kyy =>$AreaDatal3 ){ 
+                foreach($childAreaMain as $kyy =>$AreaDatal3 ){
                     $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
                     foreach($AreaDatass as $ky =>$AreaDatal222 ){
                         $childArea3[$kyy.$ky] = $AreaDatal222->id;
@@ -366,13 +374,13 @@ class UserGroupsTable extends ControllerActionTable
                     }
                 }
             }
-            
+
             $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
             array_push($mergeArr,$string_version);
             $mergeArr = array_unique($mergeArr);
             $finalIds = implode(',',$mergeArr);
             $areaId = explode(',',$finalIds);
-        }else  { 
+        }else  {
             $areaId = isset($request->data) ? $request->data['UserGroups']['area_id']['_ids'] : 0;
             //POCOR-6903: Start
             $AreaLevelsTable = TableRegistry::get('Area.AreaLevels');
@@ -380,7 +388,7 @@ class UserGroupsTable extends ControllerActionTable
                             ->find('list')
                             ->toArray();
             $string_version = implode(',', $areaId);
-            $AreaT = TableRegistry::get('areas');                    
+            $AreaT = TableRegistry::get('areas');
             //Level-1
             $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $string_version])->toArray();
             $childArea =[];
@@ -391,7 +399,7 @@ class UserGroupsTable extends ControllerActionTable
                 $childArea[$kkk] = $AreaData11->id;
             }
             //level-2
-            foreach($childArea as $kyy =>$AreaDatal2 ){ 
+            foreach($childArea as $kyy =>$AreaDatal2 ){
                 $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
                 foreach($AreaDatas as $ky =>$AreaDatal22 ){
                     $childAreaMain[$kyy.$ky] = $AreaDatal22->id;
@@ -399,14 +407,14 @@ class UserGroupsTable extends ControllerActionTable
             }
             //level-3
             if(!empty($childAreaMain)){
-                foreach($childAreaMain as $kyy =>$AreaDatal3 ){ 
+                foreach($childAreaMain as $kyy =>$AreaDatal3 ){
                     $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
                     foreach($AreaDatass as $ky =>$AreaDatal222 ){
                         $childArea3[$kyy.$ky] = $AreaDatal222->id;
                     }
                 }
             }
-            
+
             //level-4
             if(!empty($childAreaMain)){
                 foreach($childArea3 as $kyy =>$AreaDatal4 ){
@@ -416,7 +424,7 @@ class UserGroupsTable extends ControllerActionTable
                     }
                 }
             }
-            
+
             $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
             array_push($mergeArr,$string_version);
             $mergeArr = array_unique($mergeArr);
@@ -439,7 +447,7 @@ class UserGroupsTable extends ControllerActionTable
         }else{
             $flag = 1;
         }
-       
+
         if($areaId[0] != -1 || count($areaId) > 1){
             $AreaArray = [];
             $i=0;
@@ -453,7 +461,7 @@ class UserGroupsTable extends ControllerActionTable
                 //$InstitutionsTable->aliasField('area_id IN') => $AreaArray,//POCOR-7254
                 $InstitutionsTable->aliasField('institution_status_id') => $activeStatus
             ];
-        }else{ 
+        }else{
             $conditions = [$InstitutionsTable->aliasField('institution_status_id') => $activeStatus];
         }
         if ($areaId > 0) {
@@ -484,13 +492,13 @@ class UserGroupsTable extends ControllerActionTable
             ]);
         }
         $institutionList = $institutionQuery->toArray();
-            
+
         $attr['type'] = 'chosenSelect';
         $attr['onChangeReload'] = true;
         $attr['attr']['multiple'] = true;
         $attr['options'] = $institutionList;
         $attr['attr']['required'] = false;//POCOR-7254
-        
+
         return $attr;
     }
 
@@ -511,7 +519,7 @@ class UserGroupsTable extends ControllerActionTable
             'userGroupId' => $entity->id,
             'index'
         ];
-                        
+
         $listButton['url'] = $listUrl;
         $listButton['type'] = 'button';
         $listButton['attr'] = $toolbarAttr;
@@ -525,7 +533,7 @@ class UserGroupsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
         $dispatchTable = [];
@@ -540,12 +548,12 @@ class UserGroupsTable extends ControllerActionTable
         if (!is_null($entity)) {
             $attr['attr'] = ['entity' => $entity];
         }
-      
-        $this->field('area_administrative_id', [    
-            'attr' => [ 
-                'label' => __('Area Education') 
-            ],  
-            'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true] 
+
+        $this->field('area_administrative_id', [
+            'attr' => [
+                'label' => __('Area Education')
+            ],
+            'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]
         ]);
         $this->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false]);
         $this->field('institution_id', [
@@ -594,7 +602,7 @@ class UserGroupsTable extends ControllerActionTable
                             $InstitutionsData[] =  $InstitutionsResultData;
                         }
                         $row['institution_id'] = $InstitutionsData;
-                        
+
                         $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
                         $areas = TableRegistry::get('areas');
 
@@ -625,8 +633,8 @@ class UserGroupsTable extends ControllerActionTable
                         return $row ;
                     }
                 });
-            });  
-        }  
+            });
+        }
     }
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $extra)
@@ -636,7 +644,7 @@ class UserGroupsTable extends ControllerActionTable
 
         $conditions1 = [
             $SecurityInstitutions->aliasField('security_group_id') => $entity->id
-        ];    
+        ];
 
         $SecurityInstitutions->deleteAll($conditions1);
 
