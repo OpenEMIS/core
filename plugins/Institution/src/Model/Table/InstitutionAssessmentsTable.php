@@ -39,7 +39,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
     public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {
         set_time_limit(0);//POCOR-7268 starts
         ini_set('memory_limit', -1);
-        ini_set('max_execution_time', 3000); //POCOR-7268 ends
+        ini_set('max_execution_time', 9600); //POCOR-7268 ends
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $institutionCode = $this->Institutions->get($institutionId)->code;
         $settings['file'] = str_replace($this->alias(), str_replace(' ', '_', $institutionCode).'_Results', $settings['file']);
@@ -48,7 +48,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
         set_time_limit(0);//POCOR-7268 starts
         ini_set('memory_limit', -1);
-        ini_set('max_execution_time', 3000); //POCOR-7268 ends
+        ini_set('max_execution_time', 9600); //POCOR-7268 ends
         $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
         //POCOR-7268 starts
         //$query = $InstitutionClassStudentsTable->find();
