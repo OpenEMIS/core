@@ -201,11 +201,11 @@ class GuardiansTable extends ControllerActionTable
                 $dataArray = ['institutionId'=>$this->Session->read('Institution.Institutions.id'),'institution_id' => $this->Session->read('Institution.Institutions.id'),'institution_student_id'=> $security_user_id ,'student_id'=> $security_user_id , 'openemis_no'=> $securityUserData['openemis_no']];
             }
             
-             //echo "<pre>";print_r();die;
             if($request->params['plugin'] == 'Student'){
+                $queryString1 = base64_encode(json_encode($dataArray));
                 $queryString = $this->paramsEncode($dataArray);
                 $event->stopPropagation();
-                return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Addguardian', 'queryString' => $request->query('queryString'),'queryString1'=> trim($queryString)]);
+                return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Addguardian', 'queryString' => $request->query('queryString'),'queryString1'=> trim($queryString),'queryString2'=>trim($queryString1)]);
             }else{
                 $queryString = base64_encode(json_encode($dataArray));
                 $event->stopPropagation();

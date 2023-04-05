@@ -6346,7 +6346,6 @@ class InstitutionsController extends AppController
     {
         $this->autoRender = false;
         $requestData = $this->request->input('json_decode', true);
-        echo "<pre>";print_r($requestData);die;
         /*$requestData = json_decode('{"guardian_relation_id":"1","student_id":"1161","login_user_id":"1","openemis_no":"152227434344","first_name":"GuardianPita","middle_name":"","third_name":"","last_name":"GuardianPita","preferred_name":"","gender_id":"1","date_of_birth":"1989-01-01","identity_number":"555555","nationality_id":"2","username":"pita123","password":"pita123","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160",}', true);*/
         if(!empty($requestData)){
             $studentOpenemisNo = (array_key_exists('student_openemis_no', $requestData))? $requestData['student_openemis_no']: null;
@@ -6577,7 +6576,6 @@ class InstitutionsController extends AppController
                                     ->where([
                                         $SecurityUsers->aliasField('openemis_no') => $studentOpenemisNo
                                     ])->first();
-                                    echo "<pre>";print_r($StudentData);die;
                     //get id from `security_group_users` table
                     $StudentGuardians = TableRegistry::get('student_guardians');
                     $entityGuardiansData = [
@@ -7348,8 +7346,8 @@ class InstitutionsController extends AppController
     public function Addguardian()
     {
         $requestDataa = $this->paramsDecode($this->request->query('queryString1'));
-        $StudentID = $this->paramsEncode(['security_user_id' => $requestDataa['student_id']]);
-        
+        $StudentID = $this->paramsEncode(['id' => $requestDataa['institution_id']]);
+        $StudentID1 = $this->paramsEncode(['id' => $requestDataa['student_id']]);
         $UsersTable = TableRegistry::get('User.Users');
         $InstitutionTable = TableRegistry::get('Institution.Institutions');
         $UserData = $UsersTable->find('all',['conditions'=>['id'=>$requestDataa['student_id']]])->first();
@@ -7358,6 +7356,7 @@ class InstitutionsController extends AppController
         $this->set('InstitutionData', $InstitutionData);
         $this->set('UserData', $UserData);
         $this->set('StudentID', $StudentID);
+        $this->set('StudentID1', $StudentID1);
         $this->set('queryStng', $queryStng);
         $this->set('ngController', 'DirectoryaddguardianCtrl as $ctrl');
     }
