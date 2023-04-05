@@ -49,7 +49,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         $controllerName = $this->controller->name;
         $institutions_crumb = __('Institutions');
         $parent_crumb       = __('Statistics');
-		$reportName         = __('Standard');
+        $reportName         = __('Standard');
         
         //# START: Crumb
         $this->Navigation->removeCrumb($this->getHeader($this->alias));
@@ -126,6 +126,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         $date =  '"'.$year.'-'.$month.'%"';
         $datelike =  '"'.$year.'-'.$month.'"';
         $dateSecond =  '"'.$yearSecond.'-'.$month.'%"';  //POCOR-6854
+        $yearSecond =  $yearSecond;  //POCOR-7334
         $query
             ->select([
                 $this->aliasField('student_id'),
@@ -191,9 +192,9 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                 $absentDays->aliasField('student_id')]);
 
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) 
-                use($date,$dateSecond,$datelike,$month)
+                use($date,$dateSecond,$datelike,$month,$yearSecond)
             {
-                return $results->map(function ($row) use($date,$dateSecond,$datelike,$month)
+                return $results->map(function ($row) use($date,$dateSecond,$datelike,$month,$yearSecond)
                 { 
                     $row['referrer_full_name'] = $row['first_name'] .' '.$row['middle_name'].' '.$row['third_name'].' '. $row['last_name'];
                     $row['Absent_Date'] = $date;
@@ -202,7 +203,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                     $row['Absent_Date_Second'] = $dateSecond;  //POCOR-6854
                     $alldate = $row['absent_start'];
                     $academicPeriodGet = $row['academic_period'];
-                    $split = explode(',', $alldate);
+                    $row['end_year'] = $yearSecond;
                     return $row;
                 });
             });
@@ -491,6 +492,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         $requestDateGet = str_replace('"', '', $requestDate);
         $requestmonth = $entity->month; 
         $academic_period =  $entity->academic_period; 
+        $yearSecond =  $entity->end_year; 
         $connection = ConnectionManager::get('default');
         $entity->total_absence_days = '';
         $statement = $connection->prepare("SELECT subq.institution_id
@@ -567,17 +569,17 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                           ,IF(DAY(LAST_DAY(CONCAT(year_id, '-', LPAD(month_id, 2, '0'), '-01'))) >= 29 AND CONCAT(year_id, '-', LPAD(month_id, 2, '0'), '-29') BETWEEN institution_student_absence_days.start_date AND institution_student_absence_days.end_date, 1, '') AS day_29
                           ,IF(DAY(LAST_DAY(CONCAT(year_id, '-', LPAD(month_id, 2, '0'), '-01'))) >= 30 AND CONCAT(year_id, '-', LPAD(month_id, 2, '0'), '-30') BETWEEN institution_student_absence_days.start_date AND institution_student_absence_days.end_date, 1, '') AS day_30
                           ,IF(DAY(LAST_DAY(CONCAT(year_id, '-', LPAD(month_id, 2, '0'), '-01'))) = 31 AND CONCAT(year_id, '-', LPAD(month_id, 2, '0'), '-31') BETWEEN institution_student_absence_days.start_date AND institution_student_absence_days.end_date, 1, '') AS day_31
-                        FROM institution_student_absence_days, (SELECT @month_id := $requestmonth as month_id, @year_id := $academic_period AS year_id) AS variables
+                        FROM institution_student_absence_days, (SELECT @month_id := $requestmonth as month_id, @year_id := $yearSecond AS year_id) AS variables
                         WHERE institution_student_absence_days.student_id = $userid
                         AND institution_student_absence_days.institution_id = $institutionId
                         AND MONTH(institution_student_absence_days.start_date) <= $requestmonth
-                        AND YEAR(institution_student_absence_days.start_date) <= $academic_period
+                        AND YEAR(institution_student_absence_days.start_date) <= $yearSecond
                         AND MONTH(institution_student_absence_days.end_date) >= $requestmonth
-                        AND YEAR(institution_student_absence_days.end_date) >= $academic_period
+                        AND YEAR(institution_student_absence_days.end_date) >= $yearSecond
                     ) subq
                     GROUP BY subq.student_id");
         $statement->execute();
-        $list =  $statement->fetchAll(\PDO::FETCH_ASSOC);
+       $list =  $statement->fetchAll(\PDO::FETCH_ASSOC);
         $days = [];
         if(!empty($list)){
             foreach($list as $val){
