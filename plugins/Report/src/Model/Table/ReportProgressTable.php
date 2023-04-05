@@ -10,6 +10,8 @@ use Cake\Log\Log;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use App\Model\Table\AppTable;
 
+use Cake\Datasource\ConnectionManager; // POCOR-6309
+
 class ReportProgressTable extends AppTable  {
 	const ERROR = -1;
 	const COMPLETED = 0;
@@ -65,27 +67,65 @@ class ReportProgressTable extends AppTable  {
 
 	public function generate($id, $fileFormat) {
 
-		if($fileFormat == 'zip'){
-			//$cmd = ROOT . DS . 'bin' . DS . 'cake StudentsPhotoDownload ' . $id;
-		    $logs = ROOT . DS . 'logs' . DS . 'student-photo-reports.log & echo $!';
-		} 
+		// Start POCOR-6309
+		$module ='';
+		if ($id != '') {
+			$connection = ConnectionManager::get('default');
+			$report_progress_res = $connection->execute('SELECT module FROM report_progress WHERE id="'.$id.'"');
+			$report_progress_data = $report_progress_res->fetch('assoc');
+			$module = $report_progress_data['module'];
 
-		else {
-			$cmd = ROOT . DS . 'bin' . DS . 'cake Report ' . $id;
-			$logs = ROOT . DS . 'logs' . DS . 'reports.log & echo $!';
+			if($fileFormat == 'zip'){
+				if($module == 'Students'){
+					$cmd = ROOT . DS . 'bin' . DS . 'cake StudentsPhotoDownload ' . $id; // POCOR-6309					
+					$logs = ROOT . DS . 'logs' . DS . 'student-photo-reports.log & echo $!';
+				}else{
+					$cmd = ROOT . DS . 'bin' . DS . 'cake StaffPhotoDownload ' . $id; // POCOR-6309
+					$logs = ROOT . DS . 'logs' . DS . 'staff-photo-reports.log & echo $!';
+				}
+			} 
+	
+			else {
+				$cmd = ROOT . DS . 'bin' . DS . 'cake Report ' . $id;
+				$logs = ROOT . DS . 'logs' . DS . 'reports.log & echo $!';
+			}
+			
+			$shellCmd = $cmd . ' >> ' . $logs;
+			//print_r($shellCmd); die;
+			try {
+				$entity = $this->get($id);
+				$pid = exec($shellCmd);
+				Log::write('debug', $shellCmd);
+				$entity->pid = $pid;
+				$this->save($entity);
+			} catch(RecordNotFoundException $ex) {
+				Log::write('error', __METHOD__ . ' Record Id (' . $id. ' ) not found');
+			}
 		}
+
+		// End POCOR-6309
+
+		// if($fileFormat == 'zip'){
+		// 	$cmd = ROOT . DS . 'bin' . DS . 'cake StudentsPhotoDownload ' . $id; // POCOR-6309
+		//     $logs = ROOT . DS . 'logs' . DS . 'student-photo-reports.log & echo $!';
+		// } 
+
+		// else {
+		// 	$cmd = ROOT . DS . 'bin' . DS . 'cake Report ' . $id;
+		// 	$logs = ROOT . DS . 'logs' . DS . 'reports.log & echo $!';
+		// }
 		
-		$shellCmd = $cmd . ' >> ' . $logs;
-		//print_r($shellCmd); die;
-		try {
-			$entity = $this->get($id);
-			$pid = exec($shellCmd);
-			Log::write('debug', $shellCmd);
-			$entity->pid = $pid;
-			$this->save($entity);
-		} catch(RecordNotFoundException $ex) {
-			Log::write('error', __METHOD__ . ' Record Id (' . $id. ' ) not found');
-		}
+		// $shellCmd = $cmd . ' >> ' . $logs;
+		// //print_r($shellCmd); die;
+		// try {
+		// 	$entity = $this->get($id);
+		// 	$pid = exec($shellCmd);
+		// 	Log::write('debug', $shellCmd);
+		// 	$entity->pid = $pid;
+		// 	$this->save($entity);
+		// } catch(RecordNotFoundException $ex) {
+		// 	Log::write('error', __METHOD__ . ' Record Id (' . $id. ' ) not found');
+		// }
 	}
 
 	public function purge($userId=null, $now=false) {
