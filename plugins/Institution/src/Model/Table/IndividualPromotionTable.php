@@ -616,7 +616,9 @@ class IndividualPromotionTable extends ControllerActionTable
                     foreach($students AS $studentsData){
                         $educationGradeName1 = $this->EducationGrades->get($studentsData->education_grade_id)->code;
                         if($educationGradeName == $educationGradeName1){
-                            $studentStatusesValidateRepeater = $studentsData->education_grade_id;
+                            if($studentsData->student_status_id == 6 || $studentsData->student_status_id == 7){
+                                $studentStatusesValidateRepeater = $studentsData->education_grade_id;
+                            }
                         }
                     }
                     $students =  $institutionStudents->find()->where(
@@ -833,7 +835,6 @@ class IndividualPromotionTable extends ControllerActionTable
         $this->log($newInstitutionStudent, 'debug');
         
         if ($this->save($existingInstitutionStudent)) {
-            die('ss');
             if ($this->save($newInstitutionStudent)) {
                 // update old class if exists
                 if (!empty($existingClassStudent)) {
