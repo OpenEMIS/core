@@ -59,11 +59,11 @@ h2, h3, h4, h5, h6 {
 		<li>
 		<a href="/Institutions/Institutions/index">Institutions</a>	</li>
 		<li>
-		<a href="/Institution/Institutions/dashboard/<?php echo $StudentID ?>">Avory Primary School</a>	</li>
+		<a href="/Institution/Institutions/dashboard/<?php echo $StudentID ?>"><?php echo $InstitutionData->name ?></a>	</li>
 		<li>
-		<a href="/Institution/Institutions/Students/<?php echo $StudentID ?>">Students</a>	</li>
+		<a href="/Institution/Institutions/Students">Students</a>	</li>
 		<li>
-		<a href="/Institution/Institutions/StudentUser/view/<?php echo $StudentID ?>"><?php echo $UserData->first_name.' '.$UserData->last_name ?></a>	</li>
+		<a href="/Institution/Institutions/StudentUser/view/<?php echo $StudentID1 ?>"><?php echo $UserData->first_name.' '.$UserData->last_name ?></a>	</li>
 		<li>
 		Guardians	</li>
 	</ul>
