@@ -105,6 +105,26 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
 	{
 		$this->setFieldOrder(['visible', 'code', 'name', 'result_type', 'max', 'pass_mark']);
+
+		// Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Administration','Grading Types','Assessments');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
 	}
 
 
