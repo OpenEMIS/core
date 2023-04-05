@@ -129,9 +129,105 @@ class EducationGradesTable extends ControllerActionTable
         }
         //webhook Education Grade update -- start
     }
+    //POCOR 7308 starts
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+            //deleting institution subjects entry end
+        //$institutionStudents = $this->institutionstudents;
+        //print_r($institutionStudents->exists([$institutionStudents->aliasField($institutionStudents->foreignKey()) => $entity->id]));
+        //POCOR-7179[START] delete custom field becouse when user is created from directory it insert value in custom field
+        // TableRegistry::get('student_custom_field_values')->deleteAll(['student_id' => $entity->id]);
+        //POCOR-7179[END]
+        if($this->checkUsersChildRecords($entity)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset'=>true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        }
+         else{
+            //deleting issue of isnstitution_subject
+            $institutionSubjects = TableRegistry::get('institution_subjects')
+                ->find()->where(['education_grade_id' => $entity->id])->first();
+            if($institutionSubjects){
+                TableRegistry::get('institution_subjects')->delete($institutionSubjects);
+            }
+
+            $educationGradeTable = TableRegistry::get('education_grades')
+                ->find()->where(['id' => $entity->id])->first();
+               if(TableRegistry::get('education_grades')->delete($entity)){
+                $this->Alert->success('general.delete.success', ['reset'=>true]);
+                return $this->controller->redirect(['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Grades']);
+               }
+         }
+
+    }
+
+    private function checkUsersChildRecords($entity)
+    {
+        $result = false;
+        $educationGradeId = $entity->id ?? 0;
+
+        if($educationGradeId) {
+            // count all institution_grades
+            $institutionGrades = TableRegistry::get('institution_grades')
+                ->find()->where(['education_grade_id' => $educationGradeId])->count();
+
+            // count all assessments
+            $assessments = TableRegistry::get('assessments')
+                ->find()->where(['education_grade_id' => $educationGradeId])->count();
+
+            // count all institution_fees
+            $institutionFees = TableRegistry::get('institution_fees')
+                ->find()->where(['education_grade_id' => $educationGradeId])->count();
+
+            // count all institution_quality_rubrics
+            $institutionQualityRubrics = TableRegistry::get('institution_quality_rubrics')
+                ->find()->where(['education_grade_id' => $educationGradeId])->count();
+
+            // count all institution_class_grades
+            $institutionClassGrades = TableRegistry::get('institution_class_grades')
+                ->find()->where(['education_grade_id' => $educationGradeId])->count();
+
+            // count all institution_class_students
+            $institutionClassStudents = TableRegistry::get('institution_class_students')
+                ->find()->where(['education_grade_id' => $educationGradeId])->count();
+
+            // count all institution_students
+            $institutionStudents = TableRegistry::get('institution_students')
+                ->find()->where(['education_grade_id' => $educationGradeId])->count();
+
+            // count all institution_student_admission
+            $institutionStudentAdmission = TableRegistry::get('institution_student_admission')
+                ->find()->where(['education_grade_id' => $educationGradeId])->count();
+
+            // count all institution_student_withdraw
+            $institutionStudentWithdraw = TableRegistry::get('institution_student_withdraw')
+                ->find()->where(['education_grade_id' => $educationGradeId])->count();
+
+            // count all education_grades_subjects
+            $educationGradesSubjects = TableRegistry::get('education_grades_subjects')
+                ->find()->where(['education_grade_id' => $educationGradeId])->count();
+
+            if( $institutionGrades||
+                $assessments ||
+                $institutionFees ||
+                $institutionQualityRubrics ||
+                $institutionClassGrades ||
+                $institutionClassStudents ||
+                $institutionStudents ||
+                $institutionStudentAdmission||
+                $institutionStudentWithdraw ||
+                 $educationGradesSubjects ) {
+                $result = true;
+            }
+        }
+
+        return $result;
+    }
+   //POCOR 7308 ends
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
+
         $this->updateAdmissionAgeAfterDelete($entity);
 
         // Webhook Education Grade Delete -- Start
@@ -205,7 +301,7 @@ class EducationGradesTable extends ControllerActionTable
                 ])
                 ->order([$this->aliasField('order')])
                 ->toArray();
-			
+
             // Default is to get the list of grades with the next programme grades
             if ($getNextProgrammeGrades) {
                 if ($firstGradeOnly) {
@@ -320,12 +416,12 @@ class EducationGradesTable extends ControllerActionTable
                 ])
                 ->order([$this->aliasField('id')])
                 ->toArray();
-            
+
             $gradeOptions = [];
             foreach($gradeOptionsData as $key => $data) {
                 $gradeOptions[$data->id] = $data->programme . ' - ' .$data->grade_name;
-            }   
-                
+            }
+
             // Default is to get the list of grades with the next programme grades
             if ($getNextProgrammeGrades) {
 
@@ -350,9 +446,9 @@ class EducationGradesTable extends ControllerActionTable
             return [];
         }
     }//POCOR-6362 ends
-	
+
 	public function getNextAvailableEducationGradesForPromoted($gradeId, $academicPeriodId, $getNextProgrammeGrades = true, $firstGradeOnly = false) {
-        
+
 		if (!empty($gradeId)) {
             $gradeOptionsData = $this
 				->find()
@@ -441,12 +537,12 @@ class EducationGradesTable extends ControllerActionTable
                 ])
                 ->order([$this->aliasField('id')])
                 ->toArray();
-			
+
 			$gradeOptions = [];
 			foreach($gradeOptionsData as $data) {
 				$gradeOptions[$data->id] = $data->programme . ' - ' .$data->grade_name;
-			}	
-				
+			}
+
             // Default is to get the list of grades with the next programme grades
             if ($getNextProgrammeGrades) {
                 if ($firstGradeOnly) {
@@ -463,9 +559,9 @@ class EducationGradesTable extends ControllerActionTable
             return [];
         }
     }
-	
+
 	public function getNextAvailableEducationGradesForRepeated($gradeId, $academicPeriodId) {
-   
+
 		if (!empty($gradeId)) {
             $gradeOptions = $this
 				->find()
@@ -553,8 +649,8 @@ class EducationGradesTable extends ControllerActionTable
                     'ToAcademicPeriods.id' => $academicPeriodId,
                 ])
                 ->order([$this->aliasField('id')])
-                ->first();	
-           
+                ->first();
+
             return $gradeOptions;
         } else {
             return [];
@@ -1102,4 +1198,27 @@ class EducationGradesTable extends ControllerActionTable
         return $gradeOptions;
     }
     /*POCOR-6498 ends*/
+
+    // Start POCOR-5188
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+		$is_manual_exist = $this->getManualUrl('Administration','Education Grades','Education');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+    }
+    // End POCOR-5188
 }
