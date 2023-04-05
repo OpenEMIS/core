@@ -241,12 +241,12 @@ $institutionId = $paramsQuery['institution_id'];
                         </select>
                     </div>
 
-                    <h5><?= __('Shift') ?>: </h5>
+                    <!-- <h5><?= __('Shift') ?>: </h5>
                     <div class="input-select-wrapper">
                         <select ng-disabled="$ctrl.action=='edit'" name="shift" ng-options="shift.id as shift.name for shift in $ctrl.shiftListOptions" ng-model="$ctrl.selectedShift" ng-change="$ctrl.changeShift();">
                             <option value="" ng-if="$ctrl.shiftListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
-                    </div>
+                    </div> -->
 
                 </div>
             </bg-pane>
