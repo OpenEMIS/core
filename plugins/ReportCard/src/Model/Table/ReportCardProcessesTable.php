@@ -65,7 +65,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         $reportCardStatusOptions=['-1' => __(' All Status ')] + $ReportStatus;
         $selectedReportStatus = !is_null($this->request->query('status')) ? $this->request->query('status') :-1 ;
         $this->controller->set(compact( 'reportCardStatusOptions','selectedReportStatus'));
-        // End
+
         foreach($reportCardStatusOptions AS $key =>$reportCardSatusOptionsData ){
             $reportStatusKey[$key] = $key;
         }
@@ -75,6 +75,8 @@ class ReportCardProcessesTable extends ControllerActionTable
         if(!empty($reportStatusKey)){
         $where[$this->aliasField('status In')] =$reportStatusKey ;
         }
+        // End
+
         //Area Filter
         $Areas = TableRegistry::get('Area.Areas');
         $areaOptions = [];
@@ -83,11 +85,11 @@ class ReportCardProcessesTable extends ControllerActionTable
         $areaOptions = ['-1' => __(' All Areas ')] + $areaOptions;
         $selectedArea = !is_null($this->request->query('area_id')) ? $this->request->query('area_id') : -1;
         $this->controller->set(compact('areaOptions', 'selectedArea'));
-        //End
 
         foreach($areaOptions AS $key => $areaOptionsData){
             $areaKey[$key] = $key;
         }
+        //End
 
         //Institution Filter
         $Institutions = TableRegistry::get('Institutions');
@@ -131,83 +133,79 @@ class ReportCardProcessesTable extends ControllerActionTable
              $where[$this->aliasField('institution_id IN ')] = $institutionOptionsKey;
         }
 
+        //End
+
         //Education grade Filter
          $InstitutionGrades = TableRegistry::get('institution_grades');
          $EducationGrades=TableRegistry::get('education_grades');
-         $institutionGradeData = [];
+         $EducationGradeOptions = [];
+          $educationGradeList=[];
          if($selectedInstitution == -1){
-            $institutionGradeData = $InstitutionGrades->find()
-                                    ->where([$InstitutionGrades->aliasField('institution_id IN ') => $institutionOptionsKey])->toArray();
+            $EducationGradeOptions  = $EducationGrades->find('list')
+                                    //  ->distinct([$EducationGrades->aliasField('name')])
+                                    ->toArray();
 
          }
          else{
-           $institutionGradeData = $InstitutionGrades->find()
-                                ->where([ $InstitutionGrades->aliasField('institution_id IN') => $selectedInstitution])
+             $EducationGradeOptions=$EducationGrades
+                                ->find('list')
+                                ->select([
+                                    'education_grade_id' => $EducationGrades->aliasField('id'),
+                                    'education_grade' => $EducationGrades->aliasField('name')])
+                                ->InnerJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()], [
+                                   $EducationGrades->aliasField('id = ') . $InstitutionGrades->aliasField('education_grade_id')
+                                ])
+                                ->where([$InstitutionGrades->aliasField('institution_id') => $selectedInstitution])
+                                // ->distinct([$EducationGrades->aliasField('name')])
+                                ->hydrate(false)
                                 ->toArray();
+
+
+            }
+           $EducationGradeOptionsKey=[];
+           $list=[];
+        if(!empty($EducationGradeOptions)){
+            foreach($EducationGradeOptions AS $key => $value){
+                $EducationGradeOptionsKey[$key] = $key ;
+                $list[]=$key;
+            }
          }
-         $institutionGradeOptions=[];
-         foreach($institutionGradeData as $record){
-               $result= $EducationGrades->find('list')
-                                ->where(['id'=>$record['education_grade_id']])
+        $EducationGradeOptions=
+        $EducationGradeOptions = ['-1' => __('All Education Grades')] + $EducationGradeOptions;
+        $selectedEducationGrade = !is_null($this->request->query('education_grade_id')) ? $this->request->query('education_grade_id') : -1;
+        $EducationGradeOptions=array_unique($EducationGradeOptions);
+        $this->controller->set(compact('EducationGradeOptions', 'selectedEducationGrade'));
+        $SelecectedEducationGradeName=$EducationGrades
+                                ->find()
+                                ->select(['name'=>$EducationGrades->aliasField('name')])
+                                ->where([$EducationGrades->aliasField('id')=> $selectedEducationGrade])
                                 ->first();
 
-
-               $institutionGradeOptions[]=$result;
-
+        $finalSelectedEducationGrade=$EducationGrades
+                                ->find('list')
+                                ->select([$EducationGrades->aliasField('id')])
+                                ->where([$EducationGrades->aliasField('name')=> $SelecectedEducationGradeName->name,
+                                 $EducationGrades->aliasField('id In')=> $list
+                                ])->toArray();
+        $list1=[];
+        if(!empty( $finalSelectedEducationGrade)){
+            foreach($EducationGradeOptions AS $key=>$value){
+                  if($key==-1){
+                    continue;
+                  }
+                $list1[]=$key;
+            }
          }
 
+        if($selectedEducationGrade != -1){
 
-        $institutionGradeOptions= array_unique($institutionGradeOptions);
-        $selectedInstitutionGrade = !is_null($this->request->query('institution_grade')) ? $this->request->query('institution_grade') : $institutionGradeOptions[0] ;
-
-        $selectedInstitutionGrade = !is_null($this->request->query('institution_id'));
-
-
-        $this->controller->set(compact('institutionGradeOptions', 'selectedInstitutionGrade'));
-
-        if($selectedInstitution != -1){
-             $where[$this->aliasField('institution_id')] = $selectedInstitution;
+             $where[$this->aliasField('education_grade_id In')] = $list1;
         }
-        if(!empty($institutionOptionsKey)){
-             $where[$this->aliasField('institution_id IN ')] = $institutionOptionsKey;
+         if(!empty($institutionGradeOptions)){
+             $where[$this->aliasField('education_grade_id IN ')] = $list1;
         }
-        // //End
-           $InstitutionClasses = TableRegistry::get('institution_classes');
-           $ReportCardProcessesTable = TableRegistry::get('report_card_processes');
-           $UsersTable=TableRegistry::get('User.Users');
-
-
-        //  $query
-        //     ->select([
-
-        //         'institution_name' => $Institutions->aliasField('name'),
-        //         'education_grade' => $EducationGrades->aliasField('name'),
-        //         'class_name'=>$InstitutionClasses->aliasField('name'),
-        //         'openemis_id' =>$UsersTable->aliasField('name'),
-        //         'status' => $this->ReportCardProcesses->aliasField('status'),
-        //         // 'report_card_completed_on' => $this->ClassProfiles->aliasField('completed_on'),
-        //     ])
-        //     ->innerJoin([$Institutions->alias() => $Institutions->table()],
-        //         [
-        //             $InstitutionClasses->aliasField('institution_id = ') . $this->aliasField('id'),
-        //             $InstitutionClasses->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
-        //         ]
-        //     )
-        //     ->leftJoin([$this->ClassProfiles->alias() => $this->ClassProfiles->table()],
-        //         [
-        //             $this->ClassProfiles->aliasField('institution_id = ') . $this->aliasField('id'),
-                    // $this->ClassProfiles->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
-            //         $this->ClassProfiles->aliasField('institution_class_id = ') . $InstitutionClasses->aliasField('id'),
-            //         $this->ClassProfiles->aliasField('class_profile_template_id = ') . $selectedReportCard
-            //     ]
-            // )
-            // ->where($where)
-            // ->autoFields(true)
-            // ->order([
-            //     $this->aliasField('name'),
-            // ])
-            // ->all();
-
+        //End
+               $query->where($where);
         //POCOR-7319 ends
 
         // POCOR-7067 Starts
@@ -272,8 +270,23 @@ class ReportCardProcessesTable extends ControllerActionTable
 		}
 		// End POCOR-5188
     }
+    //POCOR-7319
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                            ->where([
+                                $Areas->aliasField('parent_id') => $id
+                            ])
+                             ->toArray();
+        foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
+    }
     public function onGetStatus(Event $event, Entity $entity)
     {
+
         $status = [
             '1'  => "New Process",
             '2'  => 'Running',
@@ -352,6 +365,10 @@ class ReportCardProcessesTable extends ControllerActionTable
             return $entity->institution_class->name;
         }
         return ' - ';
+    }
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra){
+        echo "hey";
+        exit;
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
