@@ -61,7 +61,7 @@ class SurveyFormsTable extends CustomFormsTable
         $validator = parent::validationDefault($validator);
 
         $validator
-            ->add('custom_filters', 'ruleNotEmpty', [
+            /*->add('custom_filters', 'ruleNotEmpty', [
                 'rule' => function ($value, $context) {
                     if ($value != self::ALL_CUSTOM_FILER && isset($value['_ids']) && empty($value['_ids'])) {
                         return false;
@@ -69,7 +69,7 @@ class SurveyFormsTable extends CustomFormsTable
 
                     return true;
                 }
-            ])
+            ])*/
             ->add('name', [
                 'unique' => [
                     'rule' => ['validateUnique', ['scope' => 'custom_module_id']],
@@ -198,7 +198,7 @@ class SurveyFormsTable extends CustomFormsTable
             
         }
         //POCOR-7263::End
-        $this->setAllCustomFilter($entity);
+      //  $this->setAllCustomFilter($entity);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -239,13 +239,13 @@ class SurveyFormsTable extends CustomFormsTable
     {
         unset($this->fields['apply_to_all']);
 
-        $fieldsOrder = ['custom_module_id', 'code', 'name', 'description'];
-        $moreFields = ['custom_filter_selection', 'custom_filters', 'custom_fields'];
+        $fieldsOrder = ['code', 'name', 'description'];
+       /* $moreFields = ['custom_filter_selection', 'custom_filters', 'custom_fields'];
         foreach ($moreFields as $fieldKey) {
             if (array_key_exists($fieldKey, $this->fields)) {
                 $fieldsOrder[] = $fieldKey;
             }
-        }
+        }*/
 
         $this->setFieldOrder($fieldsOrder);
     }
@@ -330,7 +330,7 @@ class SurveyFormsTable extends CustomFormsTable
         }
     }
 
-    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request)
+    /*public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $moduleQuery = $this->getModuleQuery();
@@ -343,7 +343,7 @@ class SurveyFormsTable extends CustomFormsTable
         }
 
         return parent::onUpdateFieldCustomModuleId($event, $attr, $action, $request);
-    }
+    }*/
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
@@ -369,7 +369,7 @@ class SurveyFormsTable extends CustomFormsTable
 
         return $buttons;
     }
-    public function onUpdateFieldCustomFilterSelection(Event $event, array $attr, $action, Request $request)
+    /*public function onUpdateFieldCustomFilterSelection(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'view') {
             $attr['visible'] = false;
@@ -400,8 +400,8 @@ class SurveyFormsTable extends CustomFormsTable
 
         return $attr;
     }
-
-    public function onUpdateFieldCustomFilters(Event $event, array $attr, $action, Request $request)
+*/
+    /*public function onUpdateFieldCustomFilters(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'view') {
             parent::onUpdateFieldCustomFilters($event, $attr, $action, $request);
@@ -429,7 +429,7 @@ class SurveyFormsTable extends CustomFormsTable
 
         return $attr;
     }
-
+*/
     public function getModuleQuery()
     {
         return $this->CustomModules
@@ -451,7 +451,7 @@ class SurveyFormsTable extends CustomFormsTable
 
         $this->field('custom_module_id');
 
-        if (!is_null($filter)) {
+        /*if (!is_null($filter)) {
             $this->field('custom_filter_selection', [
                 'attr' => [
                     'entity' => $entity
@@ -465,7 +465,7 @@ class SurveyFormsTable extends CustomFormsTable
                     'required' => true
                 ]
             ]);
-        }
+        }*/
 
         $this->field('custom_fields', [
             'type' => 'custom_order_field',
@@ -474,7 +474,7 @@ class SurveyFormsTable extends CustomFormsTable
         ]);
     }
 
-    private function setAllCustomFilter($entity)
+    /*private function setAllCustomFilter($entity)
     {
         if ($entity->has('custom_filter_selection') && $entity->custom_filter_selection == self::ALL_CUSTOM_FILER) {
             $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
@@ -491,7 +491,7 @@ class SurveyFormsTable extends CustomFormsTable
                 Log::write('debug', $surveyFormFilterEntity->errors());
             }
         }
-    }
+    }*/
 
     public function findSurveyListing(Query $query, array $options)
     {
@@ -592,4 +592,15 @@ class SurveyFormsTable extends CustomFormsTable
 		}
     }
     // End POCOR-5188
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('name');
+        $this->field('code');
+        $this->field('custom_module_id');
+        $this->field('description');
+        $this->field('custom_filters', ['type' => 'hidden']);
+        $this->setFieldOrder(['custom_module_id','code', 'name', 'description']);
+
+    }
 }
