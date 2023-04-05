@@ -1,4 +1,4 @@
-<?php if (!empty($academicPeriodOptions)||!empty($reportCardStatusOptions)||!empty($areaOptions)||!empty($institutionOptions)) : ?>
+<?php if (!empty($academicPeriodOptions)||!empty($reportCardStatusOptions)||!empty($areaOptions)||!empty($institutionOptions)||!empty($EducationGradeOptions)): ?>
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
@@ -32,7 +32,7 @@
                         'default' => $selectedReportStatus,
                         'url' => $baseUrl,
                         'data-named-key' => 'status',
-                        'data-named-group' => 'academic_period_id,staff_profile_template_id'
+
                     ));
                 }
                  if (!empty($areaOptions)) {
@@ -44,7 +44,7 @@
                         'default' => $selectedArea,
                         'url' => $baseUrl,
                         'data-named-key' => 'area_id',
-                        'data-named-group' => 'academic_period_id,staff_profile_template_id'
+                        'data-named-group' => 'status,area_id'
                     ));
                 }
 				 if (!empty($institutionOptions)) {
@@ -56,19 +56,19 @@
                         'default' => $selectedInstitution,
                         'url' => $baseUrl,
                         'data-named-key' => 'institution_id',
-                        'data-named-group' => 'academic_period_id,staff_profile_template_id,area_id'
-                    ));
+                        'data-named-group' => 'status,area_id,institution_id'
+                                       ));
                 }
-                 if (!empty($institutionGradeOptions)) {
-                    echo $this->Form->input('institution_grade', array(
+                 if (!empty($EducationGradeOptions)) {
+                    echo $this->Form->input('education_grade_id', array(
                         'type' => 'select',
                         'class' => 'form-control',
                         'label' => false,
-                        'options' => $institutionGradeOptions,
-                        'default' => $selectedInstitutionGrade,
+                        'options' => $EducationGradeOptions,
+                        'default' =>$selectedEducationGrade,
                         'url' => $baseUrl,
-                        'data-named-key' => 'institution_grade',
-                        'data-named-group' => 'academic_period_id,staff_profile_template_id,area_id'
+                        'data-named-key' => 'education_grade_id',
+                        'data-named-group' => 'status,area_id,institution_id,education_grade_id'
                     ));
                 }
             ?>
