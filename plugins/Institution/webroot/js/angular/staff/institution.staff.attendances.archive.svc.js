@@ -203,15 +203,24 @@ function InstitutionStaffAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, Al
             menuTabs: menuTabs
         });
 
+        // columnDefs.push({
+        //     headerName: translateText.translated.Name,
+        //     field: "InstitutionStaffAttendancesArchive.time_in" ,
+        //     filter: "text",
+        //     filterParams: filterParams,
+        //     pinned: direction,
+        //     menuTabs: menuTabs
+        // });
+
         columnDefs.push({
             headerName: translateText.translated.TimeIn + " - " + translateText.translated.TimeOut,
-            field: "attendance." + selectedDayDate,
+            field: "InstitutionStaffAttendancesArchive",
             menuTabs: [],
             suppressSorting: true,
-            cellRenderer: function(params) {
-                if (angular.isDefined(params.value) && params.value !== null && angular.isDefined(params.context.action)) {
-                    return getSingleDayTimeInTimeOutElement(params);
-                }
+            cellRenderer: function(InstitutionStaffAttendancesArchive) {
+                // if (angular.isDefined(params.value) && params.value !== null && angular.isDefined(params.context.action)) {
+                    return getSingleDayTimeInTimeOutElement(InstitutionStaffAttendancesArchive);
+                // }
             }
         });
 
@@ -229,12 +238,12 @@ function InstitutionStaffAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, Al
 
         columnDefs.push({
             headerName: translateText.translated.Comments,
-            field: "attendance." + selectedDayDate + ".comment",
+            field: "InstitutionStaffAttendancesArchive",
             menuTabs: [],
             suppressSorting: true,
             cellClass: 'comment-flex',
-            cellRenderer: function(params) {
-                return getCommentElement(params);
+            cellRenderer: function(InstitutionStaffAttendancesArchive) {
+                return getCommentElement(InstitutionStaffAttendancesArchive);
             }
         });
         return columnDefs;
@@ -318,6 +327,8 @@ function InstitutionStaffAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, Al
     }
 
     function getSingleDayTimeInTimeOutElement(params) {
+        console.log("getSingleDayTimeInTimeOutElement")
+        console.log(params)
         var action = params.context.action;
         var academicPeriodId = params.context.period;
         var scope = params.context.scope;
@@ -417,25 +428,26 @@ function InstitutionStaffAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, Al
     }
 
     function getCommentElement(params) {
-        var action = params.context.action;
-        var divElement = '';
-		var ownEdit = params.context.ownEdit;
-        var otherEdit = params.context.otherEdit;
-        var permissionStaffId = params.context.permissionStaffId;
-        var staffId = params.data.staff_id;
-        var conditionStatus = 0
-        if(ownEdit == 0 && otherEdit == 1 && permissionStaffId != staffId){
-            conditionStatus = 1;
-        }else if(ownEdit == 1 && otherEdit == 0 && permissionStaffId == staffId){
-            conditionStatus = 1;
-        }else if(ownEdit == 1 && otherEdit == 1){
-            conditionStatus = 1;
-        }
-        if (action == 'edit' && conditionStatus == 1) {
-            divElement = getEditCommentElement(params);
-        } else {
-            divElement = getViewCommentElement(params.value);
-        }
+        // var action = params.context.action;
+        // var divElement = '';
+		// var ownEdit = params.context.ownEdit;
+        // var otherEdit = params.context.otherEdit;
+        // var permissionStaffId = params.context.permissionStaffId;
+        // var staffId = params.data.staff_id;
+        // var conditionStatus = 0
+        // if(ownEdit == 0 && otherEdit == 1 && permissionStaffId != staffId){
+        //     conditionStatus = 1;
+        // }else if(ownEdit == 1 && otherEdit == 0 && permissionStaffId == staffId){
+        //     conditionStatus = 1;
+        // }else if(ownEdit == 1 && otherEdit == 1){
+        //     conditionStatus = 1;
+        // }
+        // if (action == 'edit' && conditionStatus == 1) {
+        //     divElement = getEditCommentElement(params);
+        // } else {
+        //     divElement = getViewCommentElement(params.value);
+        // }
+        divElement = getViewCommentElement(params.value.comment);
         return divElement;
     }
 

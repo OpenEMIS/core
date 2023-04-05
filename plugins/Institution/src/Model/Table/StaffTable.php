@@ -3625,7 +3625,19 @@ class StaffTable extends ControllerActionTable
         // }
         // echo "<pre>";print_r($where);die;
         if($shiftId == -1){
+            $Users = $this->Users;
             $query = $query
+            ->select([
+                $InstitutionStaffAttendances->aliasField('time_in'),
+                $InstitutionStaffAttendances->aliasField('time_out'),
+                $InstitutionStaffAttendances->aliasField('comment'),
+                $Users->aliasField('openemis_no'),
+                $Users->aliasField('first_name'),
+                $Users->aliasField('middle_name'),
+                $Users->aliasField('third_name'),
+                $Users->aliasField('last_name'),
+                $Users->aliasField('preferred_name')
+            ])
             ->matching('Users')
             ->leftJoin([$InstitutionStaffAttendances->alias() => $InstitutionStaffAttendances->table()],
             [$this->aliasField('staff_id = ') . $InstitutionStaffAttendances->aliasField('staff_id')])
