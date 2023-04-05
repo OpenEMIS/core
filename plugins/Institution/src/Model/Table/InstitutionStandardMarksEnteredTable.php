@@ -133,108 +133,193 @@ class InstitutionStandardMarksEnteredTable extends AppTable
         $assessmentPeriodId   = $requestData->assessment_period_id;
         $Users = TableRegistry::get('User.Users');
         $where = [];
-        if ($assessmentId != 0) {
-               $where[$this->aliasField('assessment_id')] = $assessmentId;
+        if (empty($assessmentId) && $assessmentId == 0) { 
+               $assessmentIdd = NULL;
+               $wheres = "'assessment_item_results.academic_period_id = '.$academicPeriodId
+               'AND assessment_item_results.institution_id = '.$institutionId
+               'AND assessment_item_results.assessment_period_id = '.$academicPeriodId";
+        }else{
+            $wheres = "AND assessment_item_results.assessment_id = ".$assessmentId;
+            $assessmentIdd = "AND assessments.id = ".$assessmentId;
+            $where[$this->aliasField('assessment_id')] = $assessmentId;
+            $wheres = "assessment_item_results.academic_period_id = $academicPeriodId
+               AND assessment_item_results.institution_id = $institutionId
+               AND assessment_item_results.assessment_id = $assessmentId
+               AND assessment_item_results.assessment_period_id = $academicPeriodId";
         }
+
         $where[$this->aliasField('assessment_period_id')] = $assessmentPeriodId;
         $where[$this->aliasField('academic_period_id')] = $academicPeriodId;
         $where[$this->aliasField('institution_id')] = $institutionId;
-            $query
-            ->select([
-                $this->aliasField('student_id'),
-                $this->aliasField('institution_id'),
-                $this->aliasField('education_grade_id'),
-                $this->aliasField('institution_classes_id'),
-                $this->aliasField('assessment_id'),
-                $this->aliasField('assessment_period_id'),
-                $this->aliasField('academic_period_id'),
-                $this->aliasField('created_user_id'),
-            ])
-            ->contain([
-            'CreatedUser' => [
-               'fields' => [
-                    'CreatedUser.id',
-                    'fname'=> 'CreatedUser.first_name',
-                    'mname'=>'CreatedUser.middle_name',
-                    'tname'=>'CreatedUser.third_name',
-                    'lname'=>'CreatedUser.last_name',
-                    'openemis_no'=>'CreatedUser.openemis_no',
-                ]
-            ],
-            'CreatedUser.Identities.IdentityTypes' => [
-                    'fields' => [
-                        'Identities.number',
-                        'IdentityTypes.name',
-                        'IdentityTypes.default'
-                    ]
-                ],
-             'AcademicPeriods' => [
-                    'fields' => [
-                        'academic_period_id'=>'AcademicPeriods.id',
-                        'academic_period_name'=>'AcademicPeriods.name'
-                    ]
-                ],
-                'Institutions' => [
-                    'fields' => [
-                       'institution_name'=> 'Institutions.name',
-                        'institution_code'=>'Institutions.code'
-                    ]
-                ],
-                'Assessments' => [
-                    'fields' => [
-                       'assessments_name'=> 'Assessments.name',
-                    ]
-                ],
-                'AssessmentPeriods' => [
-                    'fields' => [
-                       'assessment_periods_name'=> 'AssessmentPeriods.name',
-                       'academic_term'=> 'AssessmentPeriods.academic_term',
-                    ]
-                ],
-                'EducationGrades' => [
-                    'fields' => [
-                       'education_grade'=> 'EducationGrades.name',
-                    ]
-                ],
-                'InstitutionClasses' => [
-                    'fields' => [
-                       'class'=> 'InstitutionClasses.name',
-                    ]
-                ],
-                'EducationSubjects' => [
-                    'fields' => [
-                       'subject'=> 'EducationSubjects.name',
-                    ]
-                ],
-            ])
-            ->leftJoin(
-                [$Users->alias() => $Users->table()],
-                [$Users->aliasField('id = ') . $this->aliasField('created_user_id')]
-            )
-        ->Where($where)
-        ->group([$this->aliasField('education_subject_id'),//POCOR-7333
-            $this->aliasField('institution_classes_id')  
-        ]);
+        $query
+        ->where($where)
+          ->group([$this->aliasField('assessment_id'), 
+            $this->aliasField('academic_period_id'),
+            $this->aliasField('institution_id'),
+            $this->aliasField('student_id'),
+            $this->aliasField('education_subject_id'),
+            $this->aliasField('assessment_period_id')])->first();
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($academicPeriodId,$institutionId ,$assessmentIdd,$wheres) {
+            return $results->map(function ($row) use($academicPeriodId, $institutionId, $assessmentIdd,$wheres){
+                $academicPeriodId = $academicPeriodId;
+                $connection = ConnectionManager::get('default');
+                $statement = $connection->prepare("SELECT academic_periods.name academic_periods_name 
+                                        ,education_grades.name education_grades_name 
+                                        ,institution_classes.name institution_class_name 
+                                        ,education_subjects.name education_subjects_name 
+                                        ,IFNULL(staff_info.openemis_no, '') openemis_no
+                                        ,IFNULL(staff_info.identity_number, '') identity_number
+                                        ,IFNULL(staff_info.staff_name, '') staff_name   
+                                        ,assessment_periods.name assessment_period_name
+                                        ,IFNULL(assessment_periods.academic_term, '') academic_term
+                                        ,IFNULL(CONCAT(ROUND(COUNT(DISTINCT(assessment_item_results.student_id)) / MAX(student_counts.total_students) * 100, 2), '%'), '') marks_entry_percentage  
+                                        ,COUNT(DISTINCT(assessment_item_results.student_id)) marks_entered  
+                                        ,ABS(MAX(student_counts.total_students) - COUNT(DISTINCT(assessment_item_results.student_id))) marks_not_entered                                                                 
+                                    FROM assessment_item_results
+                                    INNER JOIN 
+                                    (
+                                        SELECT assessment_item_results.student_id
+                                            ,assessment_item_results.assessment_id
+                                            ,assessment_item_results.education_subject_id
+                                            ,assessment_item_results.assessment_period_id
+                                            ,MAX(assessment_item_results.created) latest_created
+                                        FROM assessment_item_results
+                                        WHERE $wheres
+                                        GROUP BY assessment_item_results.academic_period_id
+                                            ,assessment_item_results.institution_id
+                                            ,assessment_item_results.student_id
+                                            ,assessment_item_results.assessment_id
+                                            ,assessment_item_results.education_subject_id
+                                            ,assessment_item_results.assessment_period_id
+                                    ) latest_grades
+                                    ON latest_grades.student_id = assessment_item_results.student_id
+                                    AND latest_grades.assessment_id = assessment_item_results.assessment_id
+                                    AND latest_grades.education_subject_id = assessment_item_results.education_subject_id
+                                    AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id
+                                    AND latest_grades.latest_created = assessment_item_results.created
+                                    LEFT JOIN
+                                    (
+                                        SELECT institution_subjects.academic_period_id
+                                            ,institution_subjects.institution_id
+                                            ,institution_subjects.education_grade_id
+                                            ,institution_subjects.education_subject_id
+                                            ,IFNULL(GROUP_CONCAT(DISTINCT(staff_identities.identity_number)), '') identity_number
+                                            ,GROUP_CONCAT(DISTINCT(security_users.openemis_no)) openemis_no
+                                            ,GROUP_CONCAT(DISTINCT(CONCAT_WS(' ',security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name))) staff_name
+                                        FROM institution_subject_staff
+                                        INNER JOIN institution_class_subjects
+                                        ON institution_class_subjects.institution_subject_id = institution_subject_staff.institution_subject_id
+                                        INNER JOIN institution_subjects
+                                        ON institution_subjects.id = institution_subject_staff.institution_subject_id
+                                        AND institution_subjects.institution_id = institution_subject_staff.institution_id
+                                        INNER JOIN assessments
+                                        ON assessments.academic_period_id = institution_subjects.academic_period_id
+                                        AND assessments.education_grade_id = institution_subjects.education_grade_id
+                                        INNER JOIN security_users
+                                        ON security_users.id = institution_subject_staff.staff_id
+                                        LEFT JOIN
+                                        (
+                                            SELECT  user_identities.security_user_id
+                                                ,GROUP_CONCAT(identity_types.name) identity_type
+                                                ,GROUP_CONCAT(user_identities.number) identity_number
+                                            FROM user_identities
+                                            INNER JOIN identity_types
+                                            ON identity_types.id = user_identities.identity_type_id
+                                            WHERE identity_types.default = 1
+                                            GROUP BY  user_identities.security_user_id
+                                        ) AS staff_identities
+                                        ON staff_identities.security_user_id = institution_subject_staff.staff_id
+                                        WHERE institution_subjects.academic_period_id = $academicPeriodId
+                                        AND institution_subjects.institution_id = $institutionId
+                                        $assessmentIdd
+                                        GROUP BY institution_subjects.academic_period_id
+                                            ,institution_subjects.institution_id
+                                            ,assessments.id
+                                            ,institution_class_subjects.institution_class_id
+                                            ,institution_subjects.education_subject_id
+                                    ) staff_info
+                                    ON staff_info.academic_period_id = assessment_item_results.academic_period_id
+                                    AND staff_info.institution_id = assessment_item_results.institution_id
+                                    AND staff_info.education_grade_id = assessment_item_results.education_grade_id
+                                    AND staff_info.education_subject_id = assessment_item_results.education_subject_id
+                                    INNER JOIN
+                                    (
+                                        SELECT institution_subject_students.academic_period_id
+                                            ,institution_subject_students.institution_id
+                                            ,institution_subject_students.education_grade_id
+                                            ,institution_subject_students.institution_class_id
+                                            ,institution_subject_students.education_subject_id
+                                            ,COUNT(DISTINCT(institution_subject_students.student_id)) total_students
+                                        FROM institution_subject_students
+                                        INNER JOIN assessments
+                                        ON assessments.academic_period_id = institution_subject_students.academic_period_id
+                                        AND assessments.education_grade_id = institution_subject_students.education_grade_id
+                                        INNER JOIN academic_periods
+                                        ON academic_periods.id = institution_subject_students.academic_period_id
+                                        WHERE institution_subject_students.academic_period_id = $academicPeriodId
+                                        AND institution_subject_students.institution_id = $institutionId
+                                        $assessmentIdd
+                                        AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_subject_students.student_status_id = 1, institution_subject_students.student_status_id IN (1, 7, 6, 8))
+                                        GROUP BY institution_subject_students.academic_period_id
+                                            ,institution_subject_students.institution_id
+                                            ,assessments.id
+                                            ,institution_subject_students.institution_class_id
+                                            ,institution_subject_students.education_subject_id
+                                    ) student_counts
+                                    ON student_counts.academic_period_id = assessment_item_results.academic_period_id
+                                    AND student_counts.institution_id = assessment_item_results.institution_id
+                                    AND student_counts.education_grade_id = assessment_item_results.education_grade_id
+                                    AND student_counts.institution_class_id = assessment_item_results.institution_classes_id
+                                    AND student_counts.education_subject_id = assessment_item_results.education_subject_id
+                                    INNER JOIN assessment_periods
+                                    ON assessment_periods.id = assessment_item_results.assessment_period_id
+                                    AND assessment_periods.assessment_id = assessment_item_results.assessment_id
+                                    INNER JOIN institution_classes
+                                    ON institution_classes.id = assessment_item_results.institution_classes_id
+                                    INNER JOIN academic_periods
+                                    ON academic_periods.id = assessment_item_results.academic_period_id
+                                    INNER JOIN education_grades
+                                    ON education_grades.id = assessment_item_results.education_grade_id
+                                    INNER JOIN education_subjects
+                                    ON education_subjects.id = assessment_item_results.education_subject_id
+                                    WHERE $wheres
+                                    GROUP BY assessment_item_results.academic_period_id
+                                        ,assessment_item_results.institution_id
+                                        ,assessment_item_results.assessment_id
+                                        ,assessment_item_results.institution_classes_id
+                                        ,education_subjects.id 
+                                        ,assessment_periods.id
+                                        ,assessment_periods.academic_term"); 
+            $statement->execute();
+            $list =  $statement->fetchAll(\PDO::FETCH_ASSOC);
 
-
-            $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
-            {
-                return $results->map(function ($row)
-                {
-                    $row['referrer_teacher_name'] = $row['fname'] .' '.$row['mname'].' '.$row['tname'].' '. $row['lname'];
-                    return $row;
-                });
+            foreach ($list as  $value) {
+                $row['academic_periods_name'] = $value['academic_periods_name'];
+                $row['education_grades'] = $value['education_grades_name'];
+                $row['institution_class'] = $value['institution_class_name'];
+                $row['education_subjects_name'] = $value['education_subjects_name'];
+                $row['openemis_no'] = $value['openemis_no'];
+                $row['identity_number'] = $value['identity_number'];
+                $row['staff_name'] = $value['staff_name'];
+                $row['assessment_period_name'] = $value['assessment_period_name'];
+                $row['academic_term'] = $value['academic_term'];
+                $row['marks_entry_percentage'] = $value['marks_entry_percentage'];
+                $row['marks_entered'] = $value['marks_entered'];
+                $row['marks_not_entered'] = $value['marks_not_entered'];
+            }
+            return $row;
             });
-        
+            
+        }); 
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
         $newFields[] = [
-            'key'   => 'academic_period_name',
-            'field' => 'academic_period_name',
-            'type'  => 'string',
+            'key'   => 'academic_periods_name',
+            'field' => 'academic_periods_name',
+            'type'  => 'integer',
             'label' => __('Academic Period'),
         ];
         $newFields[] = [
@@ -244,14 +329,14 @@ class InstitutionStandardMarksEnteredTable extends AppTable
             'label' => __('Education Grade'),
         ];
         $newFields[] = [
-            'key'   => 'class',
-            'field' => 'class',
+            'key'   => 'institution_class',
+            'field' => 'institution_class',
             'type'  => 'string',
             'label' => __('Class'),
         ];
         $newFields[] = [
-            'key'   => 'subject',
-            'field' => 'subject',
+            'key'   => 'education_subjects_name',
+            'field' => 'education_subjects_name',
             'type'  => 'string',
             'label' => __('Subject'),
         ];
@@ -262,22 +347,22 @@ class InstitutionStandardMarksEnteredTable extends AppTable
             'label' => __('OpenEMIS ID'),
         ];
         $newFields[] = [
-            'key' => 'Users.identity_number',
-            'field' => 'user_identities_default',
+            'key' => 'identity_number',
+            'field' => 'identity_number',
             'type' => 'string',
             'label' => __('Identity Number')
         ];
         $newFields[] = [
-            'key'   => 'referrer_teacher_name',
-            'field' => 'referrer_teacher_name',
+            'key'   => 'staff_name',
+            'field' => 'staff_name',
             'type'  => 'string',
             'label' => __('Teacher Full Name'),
         ];
         
         $newFields[] = [
-            'key'   => 'assessment_periods_name',
-            'field' => 'assessment_periods_name',
-            'type'  => 'integer',
+            'key'   => 'assessment_period_name',
+            'field' => 'assessment_period_name',
+            'type'  => 'string',
             'label' => __('Assessment Period'),
         ];
         $newFields[] = [
@@ -288,8 +373,8 @@ class InstitutionStandardMarksEnteredTable extends AppTable
         ];
         
         $newFields[] = [
-            'key'   => 'entry_percentage',
-            'field' => 'entry_percentage',
+            'key'   => 'marks_entry_percentage',
+            'field' => 'marks_entry_percentage',
             'type'  => 'integer',
             'label' => __('School marks entry percentage'),
         ];
@@ -342,130 +427,7 @@ class InstitutionStandardMarksEnteredTable extends AppTable
     */
     public function onExcelGetEntryPercentage(Event $event, Entity $entity)
     {
-        $assessmentType = TableRegistry::get('Assessment.AssessmentItemResults');
-        $studentSubject = TableRegistry::get('Institution.InstitutionSubjectStudents');
-        $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $Assessments = TableRegistry::get('Assessment.Assessments');
-        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $institutions = TableRegistry::get('Institution.Institutions');
-        $institutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-
-        // get subject id
-        $subject = $studentSubject->find()
-            ->innerJoin(
-                [$academicPeriod->alias() => $academicPeriod->table()],
-                [$academicPeriod->aliasField('id = ') . $studentSubject->aliasField('academic_period_id')])
-            ->innerJoin(
-                [$Assessments->alias() => $Assessments->table()],
-                [$Assessments->aliasField('education_grade_id = ') . $studentSubject->aliasField('education_grade_id'),
-                    $Assessments->aliasField('academic_period_id = ') . $academicPeriod->aliasField('id')
-                ])
-            ->innerJoin(
-                [$AssessmentPeriods->alias() => $AssessmentPeriods->table()],
-                [$AssessmentPeriods->aliasField('assessment_id = ') . $Assessments->aliasField('id')])
-            ->innerJoin(
-                [$institutions->alias() => $institutions->table()],
-                [$institutions->aliasField('id = ') . $studentSubject->aliasField('institution_id')])
-            ->select([
-                'subject_id' => $studentSubject->aliasField('education_subject_id')
-            ])
-            ->where([
-                $studentSubject->aliasField('academic_period_id') => $entity->academic_period_id,
-                $studentSubject->aliasField('institution_id') => $entity->institution_id,
-                $AssessmentPeriods->aliasField('id') => $entity->assessment_period_id,
-                $studentSubject->aliasField('student_status_id') => 1,
-                $studentSubject->aliasField('institution_class_id') => $entity->institution_classes_id,
-            ])->group([$studentSubject->aliasField('institution_class_id')]);
-
-        $subject_id = null;
-        if ($subject) {
-            foreach ($subject as $value) {
-                $subject_id = $value['subject_id'];
-            }
-        }
-
-        $total = $studentSubject->find()
-                ->innerJoin(
-                    [$academicPeriod->alias() => $academicPeriod->table()],
-                    [$academicPeriod->aliasField('id = ') . $studentSubject->aliasField('academic_period_id')])
-                ->innerJoin(
-                    [$Assessments->alias() => $Assessments->table()],
-                    [$Assessments->aliasField('education_grade_id = ') . $studentSubject->aliasField('education_grade_id'),
-                    $Assessments->aliasField('academic_period_id = ') . $academicPeriod->aliasField('id')
-                ])
-                ->innerJoin(
-                    [$AssessmentPeriods->alias() => $AssessmentPeriods->table()],
-                    [$AssessmentPeriods->aliasField('assessment_id = ') . $Assessments->aliasField('id')])
-                ->innerJoin(
-                    [$institutions->alias() => $institutions->table()],
-                    [$institutions->aliasField('id = ') . $studentSubject->aliasField('institution_id')])
-                    ->select([
-                            'total_students' => "COUNT(".$studentSubject->aliasField('id').")"
-                        ])
-                        ->where([
-                            $studentSubject->aliasField('academic_period_id')=>$entity->academic_period_id,
-                            $studentSubject->aliasField('institution_id')=>$entity->institution_id,
-                            $studentSubject->aliasField('student_status_id')=>1,
-                            $AssessmentPeriods->aliasField('id')=>$entity->assessment_period_id,
-                            $studentSubject->aliasField('institution_class_id')=>$entity->institution_classes_id,
-                            $studentSubject->aliasField('education_subject_id')=>$subject_id,
-                            ])
-                        ->group([$studentSubject->aliasField('institution_id'),
-                        $AssessmentPeriods->aliasField('id'),$AssessmentPeriods->aliasField('academic_term')])
-                        ->order([$Assessments->aliasField('id'),
-                                $AssessmentPeriods->aliasField('id'),
-                                $institutions->aliasField('id')]);
-
-                if(!empty($total)){
-                    $studentData = $total->toArray();
-                    foreach($studentData as $value){
-                        $total_student = $value['total_students'];
-                    }
-                }
-                $entity->marks_not_entered ='';
-                $entity->marks_entered ='';
-                $entity->marks_entery_per = '';
-
-        $totalMarksVal = $assessmentType->find()
-            ->select([
-                'total_marks' => "COUNT(".$assessmentType->aliasField('id').")"
-            ])
-            ->where([
-                $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
-                $assessmentType->aliasField('institution_id')=>$entity->institution_id,
-                $assessmentType->aliasField('assessment_period_id')=>$entity->assessment_period_id,
-                $assessmentType->aliasField('created_user_id')=>$entity->created_user_id,
-                $assessmentType->aliasField('institution_classes_id')=>$entity->institution_classes_id,
-                $assessmentType->aliasField('education_subject_id')=>$subject_id,
-            ]);
-        $totalMarksAdd = $assessmentType->find()
-            ->select([
-                'total_marks_sum' => "COUNT(".$assessmentType->aliasField('id').")"
-            ])
-            ->where([
-                $assessmentType->aliasField('academic_period_id')=>$entity->academic_period_id,
-                $assessmentType->aliasField('institution_id')=>$entity->institution_id,
-                $assessmentType->aliasField('assessment_period_id')=>$entity->assessment_period_id,
-                $assessmentType->aliasField('institution_classes_id')=>$entity->institution_classes_id,
-            ]);
-        if(!empty($totalMarksAdd)){
-            $totalMarks_val = $totalMarksAdd->toArray();
-            foreach($totalMarks_val as $value){
-                $sum = $value['total_marks_sum'];
-            }
-        }
-        if(!empty($totalMarksVal) && $total_student>0 && $sum>0){ // POCOR-6745
-            $totalMarks = $totalMarksVal->toArray();
-            foreach($totalMarks as $value){
-                $total_student_mark_entry = $value['total_marks'];
-            }
-            $entity->marks_entered = $total_student_mark_entry;
-            //$entity->marks_not_entered = abs($total_student-$sum);
-            $entity->marks_not_entered = abs($total_student - $total_student_mark_entry);
-            $entity->marks_entery_per = round((($total_student_mark_entry/$total_student)*100), 2);
-        }
-        return $entity->marks_entery_per;
+        
 
     }
 
