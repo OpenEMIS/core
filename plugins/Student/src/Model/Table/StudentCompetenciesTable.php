@@ -103,6 +103,26 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->field('education_grade');
 
         $this->setFieldOrder(['name', 'academic_period_id', 'education_grade', 'competency_template','competency_periods']);//POCOR-6781
+
+        // Start POCOR-5188
+        $toolbarButtons = $extra['toolbarButtons'];
+        $is_manual_exist = $this->getManualUrl('Institutions','Competencies','Students - Academic');       
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
+
+            $toolbarButtons['help']['url'] = $is_manual_exist['url'];
+            $toolbarButtons['help']['type'] = 'button';
+            $toolbarButtons['help']['label'] = '<i class="fa fa-question-circle"></i>';
+            $toolbarButtons['help']['attr'] = $btnAttr;
+            $toolbarButtons['help']['attr']['title'] = __('Help');
+        }
+        // End POCOR-5188
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)

@@ -65,6 +65,26 @@ class InstitutionFeesTable extends ControllerActionTable
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $this->currency = $ConfigItems->value('currency');
         $this->field('fee_types', ['type' => 'element', 'element' => 'Institution.Fees/fee_types', 'currency' => $this->currency, 'visible' => ['view'=>true, 'edit'=>true]]);
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Institutions','Students','Finance');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
     }
 
     public function onUpdateIncludes(Event $event, ArrayObject $includes, $action)

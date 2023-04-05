@@ -977,6 +977,22 @@ class InstitutionsController extends AppController
         $this->set('is_button_accesible', $is_button_accesible);
         $this->set('institution_id', $institutionId);
         $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
+
+        // Start POCOR-5188
+        $manualTable = TableRegistry::get('Manuals');
+        $ManualContent =   $manualTable->find()->select(['url'])->where([
+                $manualTable->aliasField('function') => 'Import Student Admission',
+                $manualTable->aliasField('module') => 'Institutions',
+                $manualTable->aliasField('category') => 'Students',
+                ])->first();
+        
+        if (!empty($ManualContent['url'])) {
+            $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
+        }else{
+            $this->set('is_manual_exist', []);
+        }
+        // End POCOR-5188
+
         }
     }
 
@@ -1690,6 +1706,21 @@ class InstitutionsController extends AppController
             $this->set('institution_id', $institutionId);
             $this->set('excelUrl', Router::url($excelUrl));
             $this->set('ngController', 'InstitutionStaffAttendancesCtrl as $ctrl');
+
+            // Start POCOR-5188
+            $manualTable = TableRegistry::get('Manuals');
+            $ManualContent =   $manualTable->find()->select(['url'])->where([
+                    $manualTable->aliasField('function') => 'Import Staff Attendances',
+                    $manualTable->aliasField('module') => 'Institutions',
+                    $manualTable->aliasField('category') => 'Staff',
+                    ])->first();
+            
+            if (!empty($ManualContent['url'])) {
+                $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
+            }else{
+                $this->set('is_manual_exist', []);
+            }
+            // End POCOR-5188
         }
     }
 
