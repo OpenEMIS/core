@@ -1,3 +1,14 @@
+### [3.80.3] - 2023-04-06
+- Bug Fixed: Reports> Students/Staff: Students/Staff Photo unable to download when report is created
+- Bug Fixed: Institutions>Performance>Assessments>Archive: Change the page design
+- Bug Fixed: Institutions > Students: The system allows user to chose any grades
+- Bug Fixed: Administration > Security > Groups > User Groups > View Page: The page is not showing the list of institutions added
+- Bug Fixed: Education Grade API: Filter education grade by institution
+- Bug Fixed: Reports > Staff > Staff Subjects: Report is stuck in progress
+- Bug Fixed: Registration: Creates dropdown and checkbox in Registration
+- Bug Fixed: Security > Groups > Users Group > Delete Users: Page is not showing any information
+- Bug Fixed: Institutions > Survey > Forms: The page is not showing edit button for OPEN status survey.
+
 ### [3.80.2] - 2023-04-04
 - Implemented: 2.13 Add on screen help for modules tabs and fields
 - Bug Fixed: Administration > System Setup > Education Structure page: Unable to delete records even though the interface is showing no associated records
