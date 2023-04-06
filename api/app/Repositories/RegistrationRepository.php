@@ -783,8 +783,14 @@ class RegistrationRepository extends Controller
     public function getStudentCustomFields()
     {
         try {
-            $customFields = StudentCustomFormField::with('studentCustomField')->whereHas('studentCustomField')->where('student_custom_form_id', 1)->get();
-
+            $customFields = StudentCustomFormField::with(
+                'studentCustomField', 
+                'studentCustomField.studentCustomFieldOption:id as option_id,name as option_name,is_default,visible,order as option_order,student_custom_field_id'
+            )
+            ->whereHas('studentCustomField')
+            ->where('student_custom_form_id', 1)
+            ->get();
+            
             return $customFields;
 
         } catch (\Exception $e) {
@@ -811,6 +817,27 @@ class RegistrationRepository extends Controller
             );
 
             return $this->sendErrorResponse('Failed to find identity type list.');
+        }
+    }
+
+
+
+    public function getInstitutionGradesList($gradeId)
+    {
+        try {
+            $institutions = Institutions::whereHas('educationGrades',
+                    function ($query) use ($gradeId) {
+                        $query->where('education_grade_id', $gradeId);
+                    })->select('id', 'name', 'code')->get();
+            
+            return $institutions;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institutions List Not Found');
         }
     }
 

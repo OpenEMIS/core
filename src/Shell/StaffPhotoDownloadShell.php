@@ -10,7 +10,7 @@ use Cake\I18n\Time;
 use Cake\Console\Shell;
 use Cake\Datasource\ConnectionManager;
 
-class StudentsPhotoDownloadShell extends Shell
+class StaffPhotoDownloadShell extends Shell
 {
     CONST SLEEP_TIME = 10;
     CONST ACADEMIC_PERIOD_ID = 18;
@@ -31,11 +31,11 @@ class StudentsPhotoDownloadShell extends Shell
             
             $studentData = $userTable->find()
                         ->select(['id','openemis_no','photo_name','photo_content'])
-                        ->where(['is_student' => 1, 'photo_content !=' =>''])
+                        ->where(['is_staff' => 1, 'photo_content !=' =>''])
                         ->toList();
 
 
-            $target_dir = ROOT . DS ."webroot/downloads/Students-photo/";   // POCOR-6309
+            $target_dir = ROOT . DS ."webroot/downloads/Staff-photo/";   // POCOR-6309
             // Start POCOR-6309
             if (!file_exists($target_dir)) {
                 mkdir($target_dir, 0777, true);
@@ -62,7 +62,7 @@ class StudentsPhotoDownloadShell extends Shell
                     $connection->execute('UPDATE report_progress SET file_path= "'.$fullpath.'" WHERE id="'.$this->args[0].'"');
                     // End POCOR-6309
                     
-                    file_put_contents(ROOT . DS ."webroot/downloads/Students-photo/".$studentDatas->openemis_no.'.'.$imageFileType, $studentDatas->photo_content); // POCOR-6309
+                    file_put_contents(ROOT . DS ."webroot/downloads/Staff-photo/".$studentDatas->openemis_no.'.'.$imageFileType, $studentDatas->photo_content); // POCOR-6309
                 }   
              }
             
