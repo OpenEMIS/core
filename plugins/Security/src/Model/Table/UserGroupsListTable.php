@@ -295,5 +295,26 @@ class UserGroupsListTable extends ControllerActionTable
 
         return $query;
     }
+
+    // Start POCOR-7342
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $securityGroup = TableRegistry::get('security_groups');
+        $securityGroupData = $securityGroup->find()
+        ->where([$securityGroup->aliasField('id') =>$entity->security_group_id])
+        ->first();
+        
+        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $securityGroupUsers = $securityGroupUsersTbl->find()
+        ->where([
+            $securityGroupUsersTbl->aliasField('security_group_id') => $entity->security_group_id,
+        ])->count();
+
+        $extra['associatedRecords'][] = ['model' => 'Security User', 'count' => $securityGroupUsers, 'title'=>$securityGroupData->name];
+        $entity->showDeletedValueAs = $securityGroupData->name;
+    }
+
+    // End POCOR-7342
     
 }
