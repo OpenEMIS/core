@@ -121,6 +121,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
         $session = $this->Session;
+        $archive_query_string = $session->read('archive_query_string.queryString');
         $extra['elements']['controls'] = ['name' => 'Institution.Assessment/controls', 'data' => [], 'options' => [], 'order' => 1];
 
         $this->field('assessment');
@@ -142,10 +143,19 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         if( ($is_connection_is_online == 1) ){
             $extraButtons = [
                 'archive' => [
-                    'AssessmentItemResultsArchived' => ['Institutions', 'AssessmentItemResultsArchived', 'index'],
+                    // 'AssessmentItemResultsArchived' => ['Institutions', 'AssessmentItemResultsArchived', 'index', 'queryString' => $archive_query_string],
+                    // 'action' => 'AssessmentItemResultsArchived',
+                    // 'icon' => '<i class="fa fa-folder"></i>',
+                    // 'title' => __('Archive'),
+                    // 'queryString' => $archive_query_string
+
+
+                    'plugin' => 'Institutions',
+                    'controller' => 'Institution',
                     'action' => 'AssessmentItemResultsArchived',
                     'icon' => '<i class="fa fa-folder"></i>',
-                    'title' => __('Archive')
+                    'title' => __('Archive'),
+                    'queryString' => $archive_query_string
                 ]
             ];
     
@@ -154,8 +164,9 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                     $button = [
                         'type' => 'button',
                         'attr' => $btnAttr,
-                        'url' => [0 => 'index']
+                        'url' => ['queryString' => $archive_query_string]
                     ];
+                    // echo "<pre>";print_r($attr);die;
                     $button['url']['action'] = $attr['action'];
                     $button['attr']['title'] = $attr['title'];
                     $button['label'] = $attr['icon'];
@@ -412,6 +423,21 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
      * @return int 
      */
     public function onGetTotalMaleStudents(Event $event, Entity $entity) {
+        $url = [
+            'plugin' => $this->controller->plugin,
+            'controller' => $this->controller->name,
+            'action' => 'AssessmentItemResultsArchived'
+        ];
+
+        $archive_query_string = $buttons['view']['url'] = $this->setQueryString($url, [
+            'class_id' => $entity->institution_class_id,
+            'assessment_id' => $entity->assessment_id,
+            'institution_id' => $entity->institution_id,
+            'academic_period_id' => $entity->academic_period_id
+        ]);
+        $session = $this->Session;
+        $session->write('archive_query_string', $archive_query_string);
+
         $grade = $entity->education_grade_id;
         $class = $entity->institution_class_id;
         $institutionId = $entity->institution->id;
