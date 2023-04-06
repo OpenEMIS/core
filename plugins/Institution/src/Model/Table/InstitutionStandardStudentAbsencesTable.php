@@ -122,12 +122,6 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         }
         $where[$this->aliasField('academic_period_id')] = $academicPeriodId;
         $where[$this->aliasField('institution_id')] = $institutionId;
-        
-        $where["MONTH(institution_student_absence_days.start_date) <= 06"];
-        $where["YEAR(InstitutionStudentAbsenceDays.start_date) <= 2022"];
-        $where["MONTH(InstitutionStudentAbsenceDays.end_date) >= 06"];
-        $where["YEAR(InstitutionStudentAbsenceDays.end_date) >= 2022"];
-
         $date =  '"'.$year.'-'.$month.'%"';
         $datelike =  '"'.$year.'-'.$month.'"';
         $dateSecond =  '"'.$yearSecond.'-'.$month.'%"';  //POCOR-6854
@@ -190,8 +184,9 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             ->InnerJoin([$absentDays->alias() => $absentDays->table()],
                 [$absentDays->aliasField('student_id = ') . $this->aliasField('student_id')]
             )
-            ->andWhere([$absentDays->aliasField('start_date LIKE '.$date)])
+            ->andWhere([$absentDays->aliasField('start_date LIKE '.$dateSecond)])
             ->orWhere([$absentDays->aliasField('start_date LIKE '.$dateSecond)])  //POCOR-6854
+            ->orWhere([$absentDays->aliasField('end_date LIKE '.$dateSecond)])  //POCOR-6854
             ->Where($where)
             ->group([$this->aliasField('student_id'),
                 $absentDays->aliasField('student_id')]);
