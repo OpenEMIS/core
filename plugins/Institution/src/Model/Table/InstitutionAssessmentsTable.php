@@ -97,6 +97,26 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $this->field('institution_course_id', ['visible' => false]);//POCOR-6863
         $this->field('institution_shift_id', ['visible' => false]);
         $this->field('capacity', ['visible' => false]);
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Institutions','Student Assessment Archive','Students');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {

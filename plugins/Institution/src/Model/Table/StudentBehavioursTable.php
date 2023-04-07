@@ -23,12 +23,20 @@ class StudentBehavioursTable extends ControllerActionTable
     use OptionsTrait;
     use EncodingTrait;
     use MessagesTrait;
+    // Workflow Steps - category
+    const TO_DO = 1;
+    const IN_PROGRESS = 2;
+    const DONE = 3;
+
     public function initialize(array $config)
     {
         parent::initialize($config);
-
+        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']); //POCOR-5186
         $this->belongsTo('Students', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories']);
+        $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);//POCOR-5186
+        
+        
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
         $this->belongsTo('InstitutionStudents', ['className' => 'InstitutionStudent.InstitutionStudents', 'foreignKey' => 'student_id']);
@@ -37,12 +45,15 @@ class StudentBehavioursTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
-
+        $this->addBehavior('Workflow.Workflow'); //POCOR-5186
+        $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'OpenEMIS_Classroom' => ['index', 'view', 'add', 'edit', 'delete']
         ]);
+        $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+        $this->features = $WorkflowRules->getFeatureOptionsWithClassName();
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
@@ -84,6 +95,7 @@ class StudentBehavioursTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         return $validator
+        ->notEmpty('assignee_id')
             ->add('date_of_behaviour', [
                 'ruleInAcademicPeriod' => [
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []],
@@ -97,18 +109,18 @@ class StudentBehavioursTable extends ControllerActionTable
         // get start and end date of selected academic period
         // $selectedPeriod = $this->request->query('period');
         // if($selectedPeriod) {
-        // 	$selectedPeriodEntity = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($selectedPeriod);
-        // 	$startDateFormatted = date_format($selectedPeriodEntity->start_date,'d-m-Y');
-        // 	$endDateFormatted = date_format($selectedPeriodEntity->end_date,'d-m-Y');
+        //  $selectedPeriodEntity = TableRegistry::get('AcademicPeriod.AcademicPeriods')->get($selectedPeriod);
+        //  $startDateFormatted = date_format($selectedPeriodEntity->start_date,'d-m-Y');
+        //  $endDateFormatted = date_format($selectedPeriodEntity->end_date,'d-m-Y');
 
-        // 	$validator
-        // 	->add('date_of_behaviour',
-        // 			'ruleCheckInputWithinRange',
-        // 				['rule' => ['checkInputWithinRange', 'date_of_behaviour', $startDateFormatted, $endDateFormatted]]
+        //  $validator
+        //  ->add('date_of_behaviour',
+        //          'ruleCheckInputWithinRange',
+        //              ['rule' => ['checkInputWithinRange', 'date_of_behaviour', $startDateFormatted, $endDateFormatted]]
 
-        // 		)
-        // 	;
-        // 	return $validator;
+        //      )
+        //  ;
+        //  return $validator;
         // }
     // }
 
@@ -127,7 +139,7 @@ class StudentBehavioursTable extends ControllerActionTable
         }
     }
 
-    /* public function beforeAction($event)
+    /*public function beforeAction($event)
     {
         $this->field('openemis_no');
         $this->field('student_id');
@@ -142,14 +154,41 @@ class StudentBehavioursTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['visible' => true]);
+        $this->field('student_id', ['visible' => true]);
+        $this->field('student_behaviour_category_id', ['visible' => true]);
         $this->field('description', ['visible' => false]);
         $this->field('action', ['visible' => false]);
         $this->field('time_of_behaviour', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => false]);
+        $this->field('category_id', ['visible' => false]);//POCOR-5186
+        $this->field('assignee_id', ['visible' => false]);//POCOR-5186
+        $this->field('status_id', ['visible' => true]);//POCOR-5186
 
         $this->fields['student_id']['sort'] = ['field' => 'Students.first_name']; // POCOR-2547 adding sort
 
         $this->setFieldOrder(['openemis_no', 'student_id', 'date_of_behaviour', 'title', 'student_behaviour_category_id']);
+
+        // Start POCOR-5188 
+		$is_manual_exist = $this->getManualUrl('Institutions','Behaviour','Students - Academic');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
+        $this->setFieldOrder(['status','openemis_no', 'student_id', 'date_of_behaviour', 'title', 'student_behaviour_category_id']);
+        $this->fields['assignee_id']['sort'] = ['field' => 'Assignees.first_name'];//POCOR-5186
     }
     // setting up index page with required fields
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -202,7 +241,18 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->advancedSelectOptions($classOptions, $selectedClass);
         // End setup class
 
-        $this->controller->set(compact('periodOptions', 'classOptions'));
+        // POCOR-5186 Setup Categories options
+        
+        if (!empty($selectedPeriod)) {
+            $categories = ['0' => __('All Categories'),'1' => 'To Do','2'=>'In Progress','3'=>'Done'];
+            $query->find('inPeriod', ['field' => 'date_of_behaviour', 'academic_period_id' => $selectedPeriod]);
+        }
+
+        $selectedCategories = $this->queryString('category_id', $categories);
+        $this->advancedSelectOptions($categories, $selectedCategories);
+        // End setup class
+
+        $this->controller->set(compact('periodOptions', 'classOptions','categories'));
 
         if ($selectedClass > 0) {
             $query->innerJoin(
@@ -228,6 +278,15 @@ class StudentBehavioursTable extends ControllerActionTable
             $query->order([$this->Students->aliasField('first_name'), $this->Students->aliasField('last_name')]);
         }
         // end POCOR-2547
+
+        $queryParams = $this->request->query;
+        $search = $this->getSearchKey();
+
+        // CUSTOM SEACH - 
+        $extra['auto_search'] = false; // it will append an AND
+        if (!empty($search)) {
+            $query->find('ByUserData', ['search' => $search]);
+        }
     }
     // POCOR 6154 end
 
@@ -314,19 +373,21 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->field('academic_period_id', ['entity' => $entity]);
         $this->field('class', ['entity' => $entity]);
         $this->field('date_of_behaviour', ['entity' => $entity]);
-        $this->setFieldOrder(['academic_period_id', 'class', 'student_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
+        $this->field('assignee_id', ['entity' => $entity]);//POCOR-5186
+        $this->setFieldOrder(['academic_period_id', 'class', 'student_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour','assignee_id']);
         // POCOR 6154 
+
     }
 
     // PHPOE-1916
     // public function viewAfterAction(Event $event, Entity $entity) {
-    // 	$this->request->data[$this->alias()]['student_id'] = $entity->student_id;
-    // 	$this->request->data[$this->alias()]['date_of_behaviour'] = $entity->date_of_behaviour;
+    //  $this->request->data[$this->alias()]['student_id'] = $entity->student_id;
+    //  $this->request->data[$this->alias()]['date_of_behaviour'] = $entity->date_of_behaviour;
     // }
 
     public function editBeforeQuery(Event $event, Query $query)
     {
-        $query->contain(['AcademicPeriods','Students','StudentBehaviourCategories']);// POCOR 6154 
+        $query->contain(['AcademicPeriods','Students','StudentBehaviourCategories','Assignees']);// POCOR 6154 
     }
 
     public function editAfterAction(Event $event, Entity $entity)
@@ -339,56 +400,56 @@ class StudentBehavioursTable extends ControllerActionTable
         // Not yet implemented due to possible performance issue
         // $InstitutionClassStudentTable = TableRegistry::get('Institution.InstitutionClassStudents');
         // $AcademicPeriodId = $InstitutionClassStudentTable->find()
-        // 				->where([$InstitutionClassStudentTable->aliasField('student_id') => $entity->student_id])
-        // 				->innerJoin(['InstitutionClasses' => 'institution_classes'],[
-        // 						'InstitutionClasses.id = '.$InstitutionClassStudentTable->aliasField('institution_class_id'),
-        // 						'InstitutionClasses.institution_id' => $entity->institution_id
-        // 					])
-        // 				->innerJoin(['AcademicPeriods' => 'academic_periods'], [
-        // 						'AcademicPeriods.id = InstitutionClasses.academic_period_id',
-        // 						'AcademicPeriods.start_date <= ' => $entity->date_of_behaviour->format('Y-m-d'),
-        // 						'AcademicPeriods.end_date >= ' => $entity->date_of_behaviour->format('Y-m-d')
-        // 					])
-        // 				->select(['id' => 'AcademicPeriods.id', 'editable' => 'AcademicPeriods.editable'])
-        // 				->first()
-        // 				->toArray();
+        //              ->where([$InstitutionClassStudentTable->aliasField('student_id') => $entity->student_id])
+        //              ->innerJoin(['InstitutionClasses' => 'institution_classes'],[
+        //                      'InstitutionClasses.id = '.$InstitutionClassStudentTable->aliasField('institution_class_id'),
+        //                      'InstitutionClasses.institution_id' => $entity->institution_id
+        //                  ])
+        //              ->innerJoin(['AcademicPeriods' => 'academic_periods'], [
+        //                      'AcademicPeriods.id = InstitutionClasses.academic_period_id',
+        //                      'AcademicPeriods.start_date <= ' => $entity->date_of_behaviour->format('Y-m-d'),
+        //                      'AcademicPeriods.end_date >= ' => $entity->date_of_behaviour->format('Y-m-d')
+        //                  ])
+        //              ->select(['id' => 'AcademicPeriods.id', 'editable' => 'AcademicPeriods.editable'])
+        //              ->first()
+        //              ->toArray();
 
         // if (! $AcademicPeriodId['editable']) {
-        // 	$urlParams = $this->url('view');
-        // 	$event->stopPropagation();
-        // 	return $this->controller->redirect($urlParams);
+        //  $urlParams = $this->url('view');
+        //  $event->stopPropagation();
+        //  return $this->controller->redirect($urlParams);
         // }
     }
 
     // PHPOE-1916
     // Not yet implemented due to possible performance issue
     // public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-    // 	if ($action == 'view') {
-    // 		$institutionId = $this->Session->read('Institution.Institutions.id');
-    // 		$studentId = $this->request->data[$this->alias()]['student_id'];
-    // 		$dateOfBehaviour = $this->request->data[$this->alias()]['date_of_behaviour'];
-    // 		$InstitutionClassStudentTable = TableRegistry::get('Institution.InstitutionClassStudents');
-    // 		$AcademicPeriodId = $InstitutionClassStudentTable->find()
-    // 				->where([$InstitutionClassStudentTable->aliasField('student_id') => $studentId])
-    // 				->innerJoin(['InstitutionClasses' => 'institution_classes'],[
-    // 						'InstitutionClasses.id = '.$InstitutionClassStudentTable->aliasField('institution_class_id'),
-    // 						'InstitutionClasses.institution_id' => $institutionId
-    // 					])
-    // 				->innerJoin(['AcademicPeriods' => 'academic_periods'], [
-    // 						'AcademicPeriods.id = InstitutionClasses.academic_period_id',
-    // 						'AcademicPeriods.start_date <= ' => $dateOfBehaviour->format('Y-m-d'),
-    // 						'AcademicPeriods.end_date >= ' => $dateOfBehaviour->format('Y-m-d')
-    // 					])
-    // 				->select(['id' => 'AcademicPeriods.id', 'editable' => 'AcademicPeriods.editable'])
-    // 				->first()
-    // 				->toArray();
+    //  if ($action == 'view') {
+    //      $institutionId = $this->Session->read('Institution.Institutions.id');
+    //      $studentId = $this->request->data[$this->alias()]['student_id'];
+    //      $dateOfBehaviour = $this->request->data[$this->alias()]['date_of_behaviour'];
+    //      $InstitutionClassStudentTable = TableRegistry::get('Institution.InstitutionClassStudents');
+    //      $AcademicPeriodId = $InstitutionClassStudentTable->find()
+    //              ->where([$InstitutionClassStudentTable->aliasField('student_id') => $studentId])
+    //              ->innerJoin(['InstitutionClasses' => 'institution_classes'],[
+    //                      'InstitutionClasses.id = '.$InstitutionClassStudentTable->aliasField('institution_class_id'),
+    //                      'InstitutionClasses.institution_id' => $institutionId
+    //                  ])
+    //              ->innerJoin(['AcademicPeriods' => 'academic_periods'], [
+    //                      'AcademicPeriods.id = InstitutionClasses.academic_period_id',
+    //                      'AcademicPeriods.start_date <= ' => $dateOfBehaviour->format('Y-m-d'),
+    //                      'AcademicPeriods.end_date >= ' => $dateOfBehaviour->format('Y-m-d')
+    //                  ])
+    //              ->select(['id' => 'AcademicPeriods.id', 'editable' => 'AcademicPeriods.editable'])
+    //              ->first()
+    //              ->toArray();
 
-    // 		if (! $AcademicPeriodId['editable']) {
-    // 			if(isset($toolbarButtons['edit'])) {
-    // 				unset($toolbarButtons['edit']);
-    // 			}
-    // 		}
-    // 	}
+    //      if (! $AcademicPeriodId['editable']) {
+    //          if(isset($toolbarButtons['edit'])) {
+    //              unset($toolbarButtons['edit']);
+    //          }
+    //      }
+    //  }
     // }
     /* pocor-6154 start set fields order on edit page */
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -401,6 +462,8 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->field('openemis_no', ['visible' => ['view' => true,'edit' => false]]);
         $this->field('student_id',['after' => 'openemis_no','visible' => ['view' => true,'edit' => true]]);
         $this->field('student_behaviour_category_id',['after' => 'student_id','visible' => ['view' => true,'edit' => true]]);
+         $this->field('assignee_id',['after' => 'action','visible' => ['view' => true,'edit' => true]]);//POCOR-5186
+         $this->field('status_id',['after' => 'action','visible' => ['view' => false,'edit' => false]]);//POCOR-5186
 
         // $this->setFieldOrder(['student_id','time_of_behaviour','date_of_behaviour','title', 'student_behaviour_category_id', 'description', 'action']);
     }
@@ -414,6 +477,7 @@ class StudentBehavioursTable extends ControllerActionTable
 
         $this->fields['student_behaviour_category_id']['type'] = 'select';
         $this->field('student_behaviour_category_id', ['attr' => ['label' => __('Student Behaviour Category')]]);
+        $this->fields['assignee_id']['type'] = 'select';//POCOR-5186
     }
     /* pocor-6154 */
 
@@ -623,7 +687,7 @@ class StudentBehavioursTable extends ControllerActionTable
             if ($request->is(['post', 'put'])) {
                 $selectedClass = $request->data($this->aliasField('class'));
             }
-            if (! $selectedClass==0	&& ! empty($selectedClass)) {
+            if (! $selectedClass==0 && ! empty($selectedClass)) {
                 $Students = TableRegistry::get('Institution.InstitutionClassStudents');
                 $studentOptions = $studentOptions + $Students
                 ->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])
@@ -847,6 +911,155 @@ class StudentBehavioursTable extends ControllerActionTable
         }
     }
     /*POCOR-5177 ends*/
+
+    /**
+     * POCOR-5186 Assignee id
+    */
+    public function onGetAssigneeId(Event $event, Entity $entity)
+    {
+        if ($this->action == 'view') {
+            return $entity->assignee->name;
+        } 
+    }
+
+    /**
+     * POCOR-5186 Assignee id
+     *add assignee dropdown in edit and view page
+    */
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $workflowModel = 'Institutions > Behaviour > Students';
+            $workflowModelsTable = TableRegistry::get('workflow_models');
+            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workModelId = $Workflows
+                            ->find()
+                            ->select(['id'=>$workflowModelsTable->aliasField('id'),
+                            'workflow_id'=>$Workflows->aliasField('id'),
+                            'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
+                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                                [
+                                    $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
+                                ])
+                            ->where([$workflowModelsTable->aliasField('name')=>$workflowModel])->first();
+            $workflowId = $workModelId->workflow_id;
+            $isSchoolBased = $workModelId->is_school_based;
+            $workflowStepsOptions = $workflowStepsTable
+                            ->find()
+                            ->select([
+                                'stepId'=>$workflowStepsTable->aliasField('id'),
+                            ])
+                            ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
+                            ->first();
+            $stepId = $workflowStepsOptions->stepId;
+            $session = $request->session();
+            if ($session->check('Institution.Institutions.id')) {
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+            $institutionId = $institutionId;
+            $assigneeOptions = [];
+            if (!is_null($stepId)) {
+                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
+                if (!empty($stepRoles)) {
+                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                    $Areas = TableRegistry::get('Area.Areas');
+                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    if ($isSchoolBased) {
+                        if (is_null($institutionId)) {                        
+                            Log::write('debug', 'Institution Id not found.');
+                        } else {
+                            $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
+                            $securityGroupId = $institutionObj->security_group_id;
+                            $areaObj = $institutionObj->area;
+                            // School based assignee
+                            $where = [
+                                'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
+                                        ['Institutions.id' => $institutionId]],
+                                $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
+                            ];
+                            $schoolBasedAssigneeQuery = $SecurityGroupUsers
+                                    ->find('userList', ['where' => $where])
+                                    ->leftJoinWith('SecurityGroups.Institutions');
+                            $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
+                            
+                            // Region based assignee
+                            $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                            $regionBasedAssigneeQuery = $SecurityGroupUsers
+                                        ->find('UserList', ['where' => $where, 'area' => $areaObj]);
+                            
+                            $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
+                            // End
+                            $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
+                        }
+                    } else {
+                        $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                        $assigneeQuery = $SecurityGroupUsers
+                                ->find('userList', ['where' => $where])
+                                ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
+                        $assigneeOptions = $assigneeQuery->toArray();
+                    }
+                }
+            }
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = false;
+            $attr['options'] = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
+            $attr['onChangeReload'] = 'changeStatus';
+            return $attr;
+        }
+    }
+
+    public function getWorkflowActionEntity(Entity $entity){
+        if ($entity->has('action')) {
+            $selectedAction = $entity->action;
+            $workflowActions = $entity->workflow_actions;
+
+            foreach($workflowActions as $key => $actionEntity){
+                if ($actionEntity->id == $selectedAction) {
+                    return $actionEntity;
+                }
+            }
+        }
+        return null;
+    }
+    
+    public function findByUserData(Query $query, array $options)
+    {
+        if (array_key_exists('search', $options)) {
+            $search = $options['search'];
+            $query
+            ->join([
+                [
+                    'table' => 'security_users', 'alias' => 'Students', 'type' => 'LEFT',
+                    'conditions' => ['security_users.id = ' . $this->aliasField('student_id')]
+                ],
+                [
+                    'table' => 'student_behaviour_category', 'alias' => 'StudentBehaviourCategories', 'type' => 'LEFT',
+                    'conditions' => ['student_behaviour_category.id = ' . $this->aliasField('student_behaviour_category_id')]
+                ],
+                
+                
+            ])
+            ->where([
+                    'OR' => [
+                        ['Students.openemis_no LIKE' => '%' . $search . '%'],
+                        ['Students.first_name LIKE' => '%' . $search . '%'],
+                        ['Students.last_name LIKE' => '%' . $search . '%'],
+                        ['Students.middle_name LIKE' => '%' . $search . '%'],
+                        ['StudentBehaviourCategories.name LIKE' => '%' . $search . '%'],
+                        [$this->aliasField('title').' LIKE' => '%' . $search . '%'],
+                        [$this->aliasField('date_of_behaviour').' LIKE' => '%' . $search . '%'],
+                        
+                    ]
+                ]
+            );
+        }
+
+        return $query;
+    }
+   
 
 }
 
