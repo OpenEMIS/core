@@ -11,4 +11,10 @@ class StudentCustomField extends Model
 
     public $timestamps = false;
     protected $table = "student_custom_fields";
+
+
+    public function studentCustomFieldOption()
+    {
+        return $this->hasMany(StudentCustomFieldOption::class, 'student_custom_field_id', 'id');
+    }
 }
