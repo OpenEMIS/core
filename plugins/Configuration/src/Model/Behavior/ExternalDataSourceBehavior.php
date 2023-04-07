@@ -28,14 +28,12 @@ class ExternalDataSourceBehavior extends Behavior
         $newEvent = [
             'ControllerAction.Model.beforeAction' => 'beforeAction',
             'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
-            'ControllerAction.Model.edit.afterSave'     => 'editAfterSave',
+            'ControllerAction.Model.edit.afterSave' => 'editAfterSave',
             'ControllerAction.Model.afterAction'    => 'afterAction',
             'ControllerAction.Model.edit.beforeAction'  => 'editBeforeAction',
             'ControllerAction.Model.view.beforeAction'  => 'viewBeforeAction',
-            'ControllerAction.Model.index.beforeAction'     => ['callable' => 'indexBeforeAction', 'priority' => 100],
+            'ControllerAction.Model.index.beforeAction' => ['callable' => 'indexBeforeAction', 'priority' => 100],
             'ControllerAction.Model.edit.beforePatch'   => 'editBeforePatch'
-
-
         ];
         $events = array_merge($events, $newEvent);
         return $events;

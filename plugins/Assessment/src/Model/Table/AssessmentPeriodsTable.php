@@ -12,7 +12,6 @@ use Cake\Validation\Validator;
 use Cake\I18n\Time;
 use Cake\Utility\Text;
 use Cake\Log\Log;
-
 use App\Model\Table\ControllerActionTable;
 
 class AssessmentPeriodsTable extends ControllerActionTable
@@ -308,6 +307,26 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $this->setFieldOrder([
             'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled'
         ]);
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Administration','Assessment Periods','Assessments');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -361,7 +380,8 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-       $this->field('education_subjects', [
+        $checNewSubjecAdded = $this->gradingSubjectAdd($entity);//POCOR-7322
+        $this->field('education_subjects', [
             'type' => 'element',
             'element' => 'Assessment.assessment_periods',
             'attr' => [
@@ -421,8 +441,9 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $patchOptions->exchangeArray($arrayOptions);
     }
     
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $options){
-        
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $options)
+    { 
+        $checNewSubjecAdded = $this->gradingSubjectAdd($entity); //POCOR-7322
         if (!$entity->isNew()) { //for edit
             $id = $entity->id;
             $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
@@ -727,5 +748,41 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $assessmentGradingType = TableRegistry::get('Assessment.AssessmentGradingTypes');
         $assessmentGradingTypeOptions = $assessmentGradingType->find('list')->toArray();
         return $assessmentGradingTypeOptions;
+    }
+
+
+    //POCOR=7322
+    public function gradingSubjectAdd($entity)
+    {
+        $assesmentPeriod = $entity->id;
+        $assessmentId = $entity->assessment_id;
+        $currentTimeZone = date("Y-m-d H:i:s");
+        $AssessmentItemsGradingTypes = TableRegistry::get('assessment_items_grading_types');
+        $assessmentItems = TableRegistry::get('assessment_items');
+        $checkAssessment = $assessmentItems->find()->where([$assessmentItems->aliasField('assessment_id')=>$assessmentId])->count();
+        $checkGrading = $AssessmentItemsGradingTypes->find()->where([$AssessmentItemsGradingTypes->aliasField('assessment_id') => $assessmentId, $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $assesmentPeriod])->count();
+        
+        if($checkAssessment != $checkGrading && $checkAssessment > $checkGrading){
+            $getRecord = $checkAssessment - $checkGrading ;
+            $assessment = $assessmentItems->find()->select(['assessment_id','education_subject_id'])->where([$assessmentItems->aliasField('assessment_id')=>$assessmentId])->order([$assessmentItems->aliasField('created') => 'DESC'])->limit($getRecord)->toArray();
+            $assessment_grading_type_id = $AssessmentItemsGradingTypes->find()->where([$AssessmentItemsGradingTypes->aliasField('assessment_id') => $assessmentId, $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $assesmentPeriod])->first()->assessment_grading_type_id;
+            foreach($assessment as $val){
+                $id = Text::uuid();
+                $assessment_id = $val->assessment_id;
+                $education_subject_id = $val->education_subject_id;
+                $data = [
+                            'id' => $id ,
+                            'education_subject_id' => $education_subject_id,
+                            'assessment_grading_type_id' => $assessment_grading_type_id,
+                            'assessment_id' => $assessment_id,
+                            'assessment_period_id' => $assesmentPeriod,
+                            'created_user_id' => 1,
+                            'created' => $currentTimeZone,
+                        ];
+                $entity = $AssessmentItemsGradingTypes->newEntity($data);
+
+               $save =  $AssessmentItemsGradingTypes->save($entity);
+            }
+        }
     }
 }

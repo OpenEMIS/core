@@ -50,6 +50,28 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 		$this->setFieldOrder([
 			'active', 'account_name', 'account_number', 'bank', 'bank_branch_id',
 		]);
+
+
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Institutions','Bank Accounts','Finance');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
 	}
 
 
