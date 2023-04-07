@@ -37,15 +37,25 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-
-        return $validator
-            ->requirePresence('client_id')
-            ->requirePresence('url')
-            ->requirePresence('token_uri')
-            ->requirePresence('record_uri')
-            ->requirePresence('first_name_mapping')
-            ->requirePresence('last_name_mapping')
-            ->requirePresence('gender_mapping');
+        //POCOR-6930 Starts
+        if($this->request['data']['ConfigExternalDataSource']['value'] == 'Jordan CSPD'){
+            return $validator
+                ->requirePresence('url')
+                ->requirePresence('username')
+                ->requirePresence('password')
+                ->requirePresence('first_name_mapping')
+                ->requirePresence('last_name_mapping')
+                ->requirePresence('gender_mapping');
+        }else{//POCOR-6930 Ends
+            return $validator
+                ->requirePresence('client_id')
+                ->requirePresence('url')
+                ->requirePresence('token_uri')
+                ->requirePresence('record_uri')
+                ->requirePresence('first_name_mapping')
+                ->requirePresence('last_name_mapping')
+                ->requirePresence('gender_mapping');
+        }
     }
 
     public function validationCustom(Validator $validator)
@@ -59,6 +69,13 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         $validator = $this->validationDefault($validator);
         return $validator->requirePresence('url');
     }
+    //POCOR-6930 Starts
+    public function validationJordanCSPD(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        return $validator;
+                
+    }//POCOR-6930 Ends
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
@@ -80,6 +97,26 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             $extra['elements']['controls'] = $this->buildSystemConfigFilters();
             $this->checkController();
         }
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Administration','External Data Source','System Configurations');       
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -210,54 +247,66 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             $patchOption['validate'] = false;
         } elseif ($requestData[$this->alias()]['value'] == 'Custom') {
             $patchOption['validate'] = 'Custom';
-        }
-        if (empty($requestData[$this->alias()]['private_key'])) {
-            $newKey = openssl_pkey_new([
-                "digest_alg" => "sha256",
-                "private_key_bits" => 1024,
-                "private_key_type" => OPENSSL_KEYTYPE_RSA
-            ]);
+        } elseif ($requestData[$this->alias()]['value'] == 'Jordan CSPD') {//POCOR-6930
+            $patchOption['validate'] = 'JordanCSPD';
+        } 
 
-            $res = openssl_pkey_new();
+        if($requestData[$this->alias()]['value'] != 'Jordan CSPD'){//POCOR-6930 add if condition
+            if (empty($requestData[$this->alias()]['private_key'])) {
+                $newKey = openssl_pkey_new([
+                    "digest_alg" => "sha256",
+                    "private_key_bits" => 1024,
+                    "private_key_type" => OPENSSL_KEYTYPE_RSA
+                ]);
 
-            openssl_pkey_export($res, $privKey);
+                $res = openssl_pkey_new();
 
-            $pubKey = openssl_pkey_get_details($res);
-            $pubKey = $pubKey["key"];
-            $protectedKey = Security::hash(microtime(true), 'sha256', true);
-            $privateKey = $this->urlsafeB64Encode(Security::encrypt($privKey, $protectedKey));
-            $status = openssl_public_encrypt($protectedKey, $key, Configure::read('Application.public.key'));
-            $protectedKey = $this->urlsafeB64Encode($key);
-            $requestData[$this->alias()]['private_key'] = $privateKey. '.' .$protectedKey;
-            $requestData[$this->alias()]['public_key'] = $pubKey;
-        } else {
-            $privKey = $requestData[$this->alias()]['private_key'];
-            $protectedKey = Security::hash(microtime(true), 'sha256', true);
-            $privateKey = $this->urlsafeB64Encode(Security::encrypt($privKey, $protectedKey));
-            $status = openssl_public_encrypt($protectedKey, $key, Configure::read('Application.public.key'));
-            $protectedKey = $this->urlsafeB64Encode($key);
-            $requestData[$this->alias()]['private_key'] = $privateKey. '.' .$protectedKey;
+                openssl_pkey_export($res, $privKey);
+
+                $pubKey = openssl_pkey_get_details($res);
+                $pubKey = $pubKey["key"];
+                $protectedKey = Security::hash(microtime(true), 'sha256', true);
+                $privateKey = $this->urlsafeB64Encode(Security::encrypt($privKey, $protectedKey));
+                $status = openssl_public_encrypt($protectedKey, $key, Configure::read('Application.public.key'));
+                $protectedKey = $this->urlsafeB64Encode($key);
+                $requestData[$this->alias()]['private_key'] = $privateKey. '.' .$protectedKey;
+                $requestData[$this->alias()]['public_key'] = $pubKey;
+            } else {
+                $privKey = $requestData[$this->alias()]['private_key'];
+                $protectedKey = Security::hash(microtime(true), 'sha256', true);
+                $privateKey = $this->urlsafeB64Encode(Security::encrypt($privKey, $protectedKey));
+                $status = openssl_public_encrypt($protectedKey, $key, Configure::read('Application.public.key'));
+                $protectedKey = $this->urlsafeB64Encode($key);
+                $requestData[$this->alias()]['private_key'] = $privateKey. '.' .$protectedKey;
+            }
         }
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
     {
-        $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
-        $ExternalDataSourceAttributes->deleteAll(['external_data_source_type' => $entity->value]);
-        $fields = [
-            'url', 'token_uri', 'record_uri', 'user_endpoint_uri', 'client_id', 'scope', 'first_name_mapping', 'middle_name_mapping', 'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping',
-            'external_reference_mapping', 'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping', 'address_mapping', 'postal_mapping', 'private_key', 'public_key'
-        ];
-        foreach ($fields as $field) {
-            if ($entity->has($field)) {
-                $data = [
-                    'external_data_source_type' => $entity->value,
-                    'attribute_field' => $field,
-                    'attribute_name' => $field,
-                    'value' => $entity->{$field}
-                ];
-                $newEntity = $ExternalDataSourceAttributes->newEntity($data);
-                $ExternalDataSourceAttributes->save($newEntity);
+        //POCOR-6930 Starts
+        $errors = $entity->errors();
+        if (!empty($errors)) {
+            $errorMessage = 'Please enter the required details.';
+            $this->Alert->error('general.externalSourceDataErr', ['reset'=>true]);
+        }else{//POCOR-6930 Ends
+            $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+            $ExternalDataSourceAttributes->deleteAll(['external_data_source_type' => $entity->value]);
+            $fields = [
+                'url', 'token_uri', 'record_uri', 'user_endpoint_uri', 'client_id', 'scope', 'first_name_mapping', 'middle_name_mapping', 'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping',
+                'external_reference_mapping', 'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping', 'address_mapping', 'postal_mapping', 'private_key', 'public_key', 'username', 'password'
+            ];
+            foreach ($fields as $field) {
+                if ($entity->has($field)) {
+                    $data = [
+                        'external_data_source_type' => $entity->value,
+                        'attribute_field' => $field,
+                        'attribute_name' => $field,
+                        'value' => $entity->{$field}
+                    ];
+                    $newEntity = $ExternalDataSourceAttributes->newEntity($data);
+                    $ExternalDataSourceAttributes->save($newEntity);
+                }
             }
         }
     }
@@ -266,7 +315,6 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     {
         $value = $entity->value;
         $this->field('value', ['visible' => true]);
-
         switch ($value) {
             case 'OpenEMIS Identity':
                 $this->field('url');
@@ -312,6 +360,23 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $this->field('private_key', ['type' => 'text']);
                 $this->field('public_key', ['type' => 'text']);
                 break;
+            //POCOR-6930 Starts    
+            case 'Jordan CSPD':
+                $this->field('url');
+                $this->field('username', ['type' => 'string', 'required' => 'required']);
+                $this->field('password', ['type' => 'string', 'required' => 'required']);
+                $this->field('first_name_mapping');
+                $this->field('middle_name_mapping');
+                $this->field('third_name_mapping');
+                $this->field('last_name_mapping');
+                $this->field('date_of_birth_mapping');
+                $this->field('gender_mapping');
+                $this->field('identity_type_mapping');
+                $this->field('identity_number_mapping');
+                $this->field('nationality_mapping');
+                $this->field('address_mapping');
+                $this->field('postal_mapping');
+                break;//POCOR-6930 Ends
 
             default:
                 break;

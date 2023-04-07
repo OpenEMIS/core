@@ -1,3 +1,23 @@
+### [3.80.2] - 2023-04-04
+- Implemented: 2.13 Add on screen help for modules tabs and fields
+- Bug Fixed: Administration > System Setup > Education Structure page: Unable to delete records even though the interface is showing no associated records
+- Bug Fixed: Administration>Profile>Institution: Corrections to placeholders
+- Bug Fixed: Institutions > Academic > Classes > Add: The system shows a message indicating that there are no shifts configured
+- Bug Fixed: Institutions>Staff: Username is empty
+
+### [3.80.1] - 2023-03-30
+- Implemented: 2.11 Add workflow for student behavior
+- Implemented: Improvement of CSPD integration with OpenEMIS
+- Implemented: Update Swagger for Administration > System Setup > APIs > Credentials page
+- Bug Fixed: Administration>Training>Courses: Unable to add
+- Bug Fixed: Institutions > Attendance > Staff page: Not Updating the correct information
+- Bug Fixed: Institutions > Academic > Classes: The system should retrieve the list of ALL Staff that is assigned to a Teaching position. Places to check if the staff is assigned to a Teaching position
+- Bug Fixed: Reports > Staff > Staff Subjects: Report is stuck in progress
+- Bug Fixed: Institutions>Students: OpenEMIS ID did not auto generate but it captures the wrong OpenEMIS ID
+- Bug Fixed: Institutions>Staff>Transfer: 404 error when transferring staff
+- Bug Fixed: Administration > Performance > Assessment: Subjects added in assessment templates are not showing in assessment periods subjects
+- Bug Fixed: Institutions > Delete page: Not able to delete even when associated records is 0
+
 ### [3.80.0] - 2023-03-23
 - Implemented: Develop school profile placeholders
 - Implemented: Move grade from add position page to add staff page

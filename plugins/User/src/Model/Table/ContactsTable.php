@@ -39,6 +39,87 @@ class ContactsTable extends ControllerActionTable
         $this->field('contact_type_id', ['visible' => false]);
 
         $this->setFieldOrder(['description', 'value', 'preferred']);
+		
+ 		// Start POCOR-5188
+         if($this->request->params['controller'] == 'Staff'){
+            $is_manual_exist = $this->getManualUrl('Institutions','Contacts','Staff - General');       
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+        
+                $helpBtn['url'] = $is_manual_exist['url'];
+                $helpBtn['type'] = 'button';
+                $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+                $helpBtn['attr'] = $btnAttr;
+                $helpBtn['attr']['title'] = __('Help');
+                $extra['toolbarButtons']['help'] = $helpBtn;
+            }
+        }elseif($this->request->params['controller'] == 'Students'){
+            $is_manual_exist = $this->getManualUrl('Institutions','Contacts','Students - General');       
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+        
+                $helpBtn['url'] = $is_manual_exist['url'];
+                $helpBtn['type'] = 'button';
+                $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+                $helpBtn['attr'] = $btnAttr;
+                $helpBtn['attr']['title'] = __('Help');
+                $extra['toolbarButtons']['help'] = $helpBtn;
+            }
+
+        }elseif($this->request->params['controller'] == 'Directories'){ 
+            $is_manual_exist = $this->getManualUrl('Directory','Contacts','General');       
+            if(!empty($is_manual_exist)){
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+        
+                $helpBtn['url'] = $is_manual_exist['url'];
+                $helpBtn['type'] = 'button';
+                $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+                $helpBtn['attr'] = $btnAttr;
+                $helpBtn['attr']['title'] = __('Help');
+                $extra['toolbarButtons']['help'] = $helpBtn;
+            }
+
+        }elseif($this->request->params['controller'] == 'Profiles'){ 
+            $is_manual_exist = $this->getManualUrl('Personal','Contacts','General');       
+            if(!empty($is_manual_exist)){ 
+                $btnAttr = [
+                    'class' => 'btn btn-xs btn-default icon-big',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'target'=>'_blank'
+                ];
+        
+                $helpBtn['url'] = $is_manual_exist['url'];
+                $helpBtn['type'] = 'button';
+                $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+                $helpBtn['attr'] = $btnAttr;
+                $helpBtn['attr']['title'] = __('Help');
+                $extra['toolbarButtons']['help'] = $helpBtn;
+            }
+
+        }
+        // End POCOR-5188
+
+
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
