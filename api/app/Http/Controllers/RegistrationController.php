@@ -282,4 +282,23 @@ class RegistrationController extends Controller
             return $this->sendErrorResponse('Failed to find identity type list.');
         }
     }
+
+
+
+    public function getInstitutionGradesList($gradeId)
+    {
+        try {
+            $data = $this->registrationService->getInstitutionGradesList($gradeId);
+            
+            return $this->sendSuccessResponse("Institutions List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institutions List Not Found');
+        }
+    }
 }
