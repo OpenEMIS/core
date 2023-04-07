@@ -49,16 +49,34 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         set_time_limit(0);//POCOR-7268 starts
         ini_set('memory_limit', -1);
         ini_set('max_execution_time', 9600); //POCOR-7268 ends
+
         $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
         //POCOR-7268 starts
         //$query = $InstitutionClassStudentsTable->find();
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        if(!empty($this->request->query('assessment_id'))){
+            $academic_period_id = $this->request->query('academic_period_id');
+            $assessmentId = $this->request->query('assessment_id');
+        }else{
+            // Assessments
+            $academic_period_id = $this->AcademicPeriods->getCurrent();
+            $Assessments = TableRegistry::get('Assessment.Assessments');
+            $assessmentOptions = $Assessments
+                ->find('list')
+                ->where([$Assessments->aliasField('academic_period_id') => $academic_period_id])
+                ->toArray();
+            if(!empty($assessmentOptions)){
+                $assessmentId = $assessmentOptions;
+                $assessmentId = array_keys($assessmentOptions)[0];
+            }
+        }
+            
         $limit = 10;
         $loop_no = 0;
         do {
-            $session = $this->request->session();
-            $academic_period_id = $session->read('academic_period_id');
             $query = $InstitutionClassStudentsTable->find('all', array(
-                'conditions' => array($InstitutionClassStudentsTable->aliasField('academic_period_id') => $academic_period_id),
+                'conditions' => array($InstitutionClassStudentsTable->aliasField('academic_period_id') => $academic_period_id, $InstitutionClassStudentsTable->aliasField('institution_id') => $institutionId),
                 'limit'  => $limit,
                 'offset' => $limit * $loop_no,
                 //'order'  => 'id asc',
@@ -91,7 +109,6 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             }
         }
 
-        $assessmentId = $this->request->query('assessment_id');
         if($assessmentId) {
             $sheets[] = [
                 'name' => $this->alias(),
