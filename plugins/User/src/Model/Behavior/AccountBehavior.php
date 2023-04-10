@@ -195,16 +195,44 @@ class AccountBehavior extends Behavior
         $key = 'roles';
         if ($action == 'view') {
             $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-            $groupUserRecords = $GroupUsers->find()
-                ->matching('SecurityGroups')
-                ->matching('SecurityRoles')
-                ->where([$GroupUsers->aliasField('security_user_id') => $entity->id])
-                ->group([
-                    $GroupUsers->aliasField('security_group_id'),
-                    $GroupUsers->aliasField('security_role_id')
-                ])
-                ->select(['group_name' => 'SecurityGroups.name', 'role_name' => 'SecurityRoles.name'])
-                ->all();
+            if($this->_table->alias() == 'StaffAccount'){
+                $InstitutionStaff = TableRegistry::get('Institution.Staff');
+                $SecurityGroups = TableRegistry::get('Security.SecurityGroups');
+                $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+                $groupUserRecords = $InstitutionStaff->find()
+                    ->select(['group_name' => 'SecurityGroups.name', 'role_name' => 'SecurityRoles.name'])
+                    ->LeftJoin([$GroupUsers->alias() => $GroupUsers->table()],
+                        [
+                            $GroupUsers->aliasField('security_user_id = ') . $InstitutionStaff->aliasField('staff_id'),
+                            $GroupUsers->aliasField('security_group_id = ') . $InstitutionStaff->aliasField('institution_id')
+                        ]
+                    )
+                    ->LeftJoin([$SecurityGroups->alias() => $SecurityGroups->table()],
+                        [
+                            $SecurityGroups->aliasField('id = ') . $GroupUsers->aliasField('security_group_id')
+                        ]
+                    )
+                    ->LeftJoin([$SecurityRoles->alias() => $SecurityRoles->table()],
+                        [
+                            $SecurityRoles->aliasField('id = ') . $GroupUsers->aliasField('security_role_id')
+                        ]
+                    )
+                    ->where([$InstitutionStaff->aliasField('staff_id') => $entity->id, $InstitutionStaff->aliasField('staff_status_id') => 1])
+                    ->group([$GroupUsers->aliasField('security_role_id')])
+                    ->all();
+            }else{
+                $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                $groupUserRecords = $GroupUsers->find()
+                    ->matching('SecurityGroups')
+                    ->matching('SecurityRoles')
+                    ->where([$GroupUsers->aliasField('security_user_id') => $entity->id])
+                    ->group([
+                        $GroupUsers->aliasField('security_group_id'),
+                        $GroupUsers->aliasField('security_role_id')
+                    ])
+                    ->select(['group_name' => 'SecurityGroups.name', 'role_name' => 'SecurityRoles.name'])
+                    ->all();
+            }
             foreach ($groupUserRecords as $obj) {
                 $rowData = [];
                 $rowData[] = $obj->group_name;
