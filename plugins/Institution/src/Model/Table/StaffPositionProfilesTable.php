@@ -379,7 +379,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                              'security_group_id' => $entity->institution_id,
                              'security_role_id' => 5
                              ])->first();
-        if(isset($securityGroupEntity)){
+        if(isset($securityGroupEntry)){
         $SecurityGroupUsers->delete($securityGroupEntry);
                             }}
 
