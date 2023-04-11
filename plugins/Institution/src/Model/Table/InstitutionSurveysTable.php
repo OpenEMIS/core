@@ -681,6 +681,8 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
+        $SurveyStatusTable = TableRegistry::get('survey_statuses');
+        $SurveyStatusPeriodTable = TableRegistry::get('survey_status_periods');
         $this->field('description');
         $this->setFieldOrder(['academic_period_id', 'survey_form_id', 'description']);
         //POCOR-7290:: Start
@@ -688,14 +690,25 @@ class InstitutionSurveysTable extends ControllerActionTable
         $prams = $this->paramsDecode($pass);
         $institutionSurveyId = $prams['id'];
         $institutionSurvey = $this->get($institutionSurveyId);
+        $SurveyStatusData = $SurveyStatusTable->find('all',['conditions'=>['survey_form_id'=>$institutionSurvey->survey_form_id,'date_disabled >' => date('Y-m-d')]])->order(['date_disabled'=>'DESC'])->first();//POCOR-7343
+        $SurveyStatusPeriodData = $SurveyStatusPeriodTable->find('all',['conditions'=>['survey_status_id'=>$SurveyStatusData->id]])->toArray();
+        $SurveyStatusPeriodDataIds=[];
+        foreach($SurveyStatusPeriodData as $SurveyStatusPeriodData1){
+            $SurveyStatusPeriodDataIds[] .= $SurveyStatusPeriodData1->academic_period_id.",";
+        }
+        //$SurveyStatusPeriodDataIds = rtrim($SurveyStatusPeriodDataIds,',');
+        if(in_array($institutionSurvey->academic_period_id, $SurveyStatusPeriodDataIds)){
 
-        $academicPeriod = $this->AcademicPeriods->get($institutionSurvey->academic_period_id);
-        $startDate = date('Y-m-d', strtotime($academicPeriod->start_date));
-        $endDate = date('Y-m-d', strtotime($academicPeriod->end_date));
-        $currentDate = date('Y-m-d');
-        if(($currentDate >= $startDate) && ($currentDate >= $endDate)){
+        }else{
             unset($extra['toolbarButtons']['edit']);
         }
+
+        // $startDate = date('Y-m-d', strtotime($SurveyStatusData->date_enabled));
+        // $endDate = date('Y-m-d', strtotime($SurveyStatusData->date_disabled));
+        // $currentDate = date('Y-m-d');
+        // if(($currentDate >= $startDate) && ($currentDate >= $endDate)){
+        //     unset($extra['toolbarButtons']['edit']);
+        // }
         //POCOR-7290::End
     }
 
@@ -719,12 +732,17 @@ class InstitutionSurveysTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $SurveyStatusTable = TableRegistry::get('survey_statuses');
+        $SurveyStatusPeriodTable = TableRegistry::get('survey_status_periods');
+        $SurveyStatusData = $SurveyStatusTable->find('all',['conditions'=>['survey_form_id'=>$entity->survey_form_id,'date_disabled >' => date('Y-m-d')]])->order(['date_disabled'=>'DESC'])->first();
+        $SurveyStatusPeriodData = $SurveyStatusPeriodTable->find('all',['conditions'=>['survey_status_id'=>$SurveyStatusData->id]])->toArray();
+        $SurveyStatusPeriodDataIds=[];
+        foreach($SurveyStatusPeriodData as $SurveyStatusPeriodData1){
+            $SurveyStatusPeriodDataIds[] .= $SurveyStatusPeriodData1->academic_period_id.",";
+        }
+        if(in_array($entity->academic_period_id, $SurveyStatusPeriodDataIds)){
 
-        $academicPeriod = $this->AcademicPeriods->get($entity->academic_period_id);
-        $startDate = date('Y-m-d', strtotime($academicPeriod->start_date));
-        $endDate = date('Y-m-d', strtotime($academicPeriod->end_date));
-        $currentDate = date('Y-m-d');
-        if(($currentDate >= $startDate) && ($currentDate >= $endDate)){
+        }else{
             unset($buttons['edit']);
         }
         return $buttons;

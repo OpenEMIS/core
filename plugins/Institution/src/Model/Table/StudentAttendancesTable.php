@@ -604,6 +604,35 @@ class StudentAttendancesTable extends ControllerActionTable
         return $query;
     }
 
+
+
+    public function findClassStudentsWithAbsenceArchive(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $institutionClassId = $options['institution_class_id'];
+        $educationGradeId = $options['education_grade_id'];
+        $academicPeriodId = $options['academic_period_id'];
+        $attendancePeriodId = $options['attendance_period_id'];
+        $weekId = $options['week_id'];
+        $weekStartDay = $options['week_start_day'];
+        $weekEndDay = $options['week_end_day'];
+        $day = $options['day_id'];
+        $subjectId = $options['subject_id'];
+             
+        $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $InstitutionStudentAbsencesArchived = TableRegistry::get('Institution.InstitutionStudentAbsencesArchived');
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $StudentAbsencesPeriodDetailsData = TableRegistry::get('Institution.StudentAbsencesPeriodDetailsArchive');
+        
+        return $StudentAbsencesPeriodDetailsData
+            ->where(
+                [   
+                    $StudentAbsencesPeriodDetailsData->aliasField('institution_id') => $institutionId,
+                    $StudentAbsencesPeriodDetailsData->aliasField('academic_period_id') => $academicPeriodId
+                ]
+            );
+    }
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $Users = TableRegistry::get('Security.Users');

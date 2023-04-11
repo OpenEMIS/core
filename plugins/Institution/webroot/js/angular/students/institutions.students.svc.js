@@ -76,6 +76,8 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         checkUserAlreadyExistByIdentity: checkUserAlreadyExistByIdentity,
         checkConfigForExternalSearch: checkConfigForExternalSearch,
         getCspdData: getCspdData,
+        getEducationGrade: getEducationGrade,
+        getEducationGradeAddStudent: getEducationGradeAddStudent,
     };
 
     var models = {
@@ -95,7 +97,8 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         ContactTypes: 'User.ContactTypes',
         SpecialNeedTypes: 'SpecialNeeds.SpecialNeedsTypes',
         StudentTransferIn: 'Institution.StudentTransferIn',
-        StudentTransferReasons: 'Student.StudentTransferReasons'
+        StudentTransferReasons: 'Student.StudentTransferReasons',
+        EducationGrades: 'Education.EducationGrades'
     };
 
     return service;
@@ -393,6 +396,52 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
             })
             .ajax(settings);
     };
+
+    function getEducationGrade(params, openemis_no) {
+        var extra = {
+            education_grade_id: params,
+            openemis_no: openemis_no
+        };
+
+        var success = function(response, deferred) {
+            var classStudents = response;
+            console.log("RepeaterEducationGrade");
+            console.log(response);
+            $window.localStorage.setItem('repeater_validation', response.data);
+            if (angular.isObject(classStudents)) {
+                deferred.resolve(classStudents);
+            } else {
+                deferred.reject('There was an error when retrieving the class student list');
+            }
+        };
+        return EducationGrades
+            .find('RepeaterEducationGrade', extra)
+            .ajax({success: success, defer: true});
+    }
+
+
+    function getEducationGradeAddStudent(params, first_name, last_name) {
+        var extra = {
+            education_grade_id: params,
+            first_name: first_name,
+            last_name: last_name
+        };
+
+        var success = function(response, deferred) {
+            var classStudents = response;
+            console.log("RepeaterEducationGrade");
+            console.log(response);
+            $window.localStorage.setItem('repeater_validation', response.data);
+            if (angular.isObject(classStudents)) {
+                deferred.resolve(classStudents);
+            } else {
+                deferred.reject('There was an error when retrieving the class student list');
+            }
+        };
+        return EducationGrades
+            .find('RepeaterEducationGradeAddStudent', extra)
+            .ajax({success: success, defer: true});
+    }
 
     function addIdentityType(identityType)
     {
