@@ -145,6 +145,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
         StudentController.initGrid();
         StudentController.getGenders();
+        $window.localStorage.removeItem('repeater_validation');
     });
 
     function getUniqueOpenEmisId() {
@@ -1072,6 +1073,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if(!StudentController.selectedStudentData.education_grade_id){
             StudentController.error.education_grade_id = 'This field cannot be left empty';
         }
+        console.log("StudentController.selectedStudentData here");
+        console.log(StudentController.selectedStudentData);
+        var res = InstitutionsStudentsSvc.getEducationGradeAddStudent(StudentController.selectedStudentData.education_grade_id, StudentController.selectedStudentData.first_name, StudentController.selectedStudentData.last_name);
+        var res1 = $window.localStorage.getItem('repeater_validation');
+          timer = setTimeout(()=>{
+            var res1 = $window.localStorage.getItem('repeater_validation');
+            if (res1 == '"yes"') {
+                StudentController.error.education_grade_id = 'This student has completed the education grade before. Please assign to a different grade.';
+                $window.localStorage.removeItem('repeater_validation');
+                return;
+              }
+          }, 3000);
         if(!StudentController.selectedStudentData.startDate){
             StudentController.error.startDate = 'This field cannot be left empty';
         }
@@ -1096,7 +1109,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if(!StudentController.selectedStudentData.username || !StudentController.selectedStudentData.password || !StudentController.selectedStudentData.academic_period_id || !StudentController.selectedStudentData.startDate || isCustomFieldNotValidated){
             return;
         }
-        StudentController.saveStudentDetails();
+        timer = setTimeout(()=>{
+            var res1 = $window.localStorage.getItem('repeater_validation');
+            if (res1 == '"no"') {
+                StudentController.saveStudentDetails();
+                $window.localStorage.removeItem('repeater_validation')
+              }
+          }, 3000);
     }
 
     function saveStudentDetails() {
@@ -1223,22 +1242,54 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function transferStudent() {
-        if(!StudentController.selectedStudentData.education_grade_id){
-            StudentController.error.education_grade_id = 'This field cannot be left empty';
+        if (!StudentController.selectedStudentData.education_grade_id) {
+          StudentController.error.education_grade_id = 'This field cannot be left empty';
         }
-        if(!StudentController.selectedStudentData.transferStartDate) {
-            StudentController.error.transferStartDate = 'This field cannot be left empty';
+        console.log(StudentController.selectedStudentData);
+        var res = InstitutionsStudentsSvc.getEducationGrade(StudentController.selectedStudentData.education_grade_id, StudentController.selectedStudentData.openemis_no);
+        // $validation = JSON.parse(res.data);
+      
+        let shouldSaveData = false;
+      
+        // timer = setTimeout(() => {
+          var res1 = $window.localStorage.getItem('repeater_validation');
+          timer = setTimeout(()=>{
+            var res1 = $window.localStorage.getItem('repeater_validation');
+            if (res1 == '"yes"') {
+                shouldSaveData = true;
+                StudentController.error.education_grade_id = 'This student has completed the education grade before. Please assign to a different grade.';
+                $window.localStorage.removeItem('repeater_validation');
+                return;
+              }
+          }, 3000);
+          
+        //   if (res1 == '"yes"') {
+        //     StudentController.error.education_grade_id = 'This student has completed the education grade before. Please assign to a different grade.';
+        //     shouldSaveData = false;
+        //   }
+        // }, 3000);
+      
+        if (!StudentController.selectedStudentData.transferStartDate) {
+          StudentController.error.transferStartDate = 'This field cannot be left empty';
         } else {
-            StudentController.selectedStudentData.transferStartDate = $filter('date')(StudentController.selectedStudentData.transferStartDate, 'yyyy-MM-dd');
+          StudentController.selectedStudentData.transferStartDate = $filter('date')(StudentController.selectedStudentData.transferStartDate, 'yyyy-MM-dd');
         }
-        if(!StudentController.selectedStudentData.transfer_reason_id){
-            StudentController.error.transfer_reason_id = 'This field cannot be left empty';
+        if (!StudentController.selectedStudentData.transfer_reason_id) {
+          StudentController.error.transfer_reason_id = 'This field cannot be left empty';
         }
-        if(!StudentController.selectedStudentData.education_grade_id || !StudentController.selectedStudentData.transferStartDate || !StudentController.selectedStudentData.transfer_reason_id) {
-            return;
+      
+        if (!StudentController.selectedStudentData.education_grade_id || !StudentController.selectedStudentData.transferStartDate || !StudentController.selectedStudentData.transfer_reason_id) {
+          return;
         }
-        StudentController.saveStudentDetails();
-    }
+        
+        timer = setTimeout(()=>{
+            var res1 = $window.localStorage.getItem('repeater_validation');
+            if (res1 == '"no"') {
+                StudentController.saveStudentDetails();
+                $window.localStorage.removeItem('repeater_validation')
+              }
+          }, 3000);
+      }
 
     function goToFirstStep() {
         if(!StudentController.isGuardianAdding){
