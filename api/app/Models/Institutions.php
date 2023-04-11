@@ -22,4 +22,10 @@ class Institutions extends Model
     {
         return $this->belongsTo(Areas::class, 'area_id', 'id');
     }
+
+
+    public function educationGrades()
+    {
+        return $this->belongsToMany(EducationGrades::class, 'institution_grades', 'institution_id', 'education_grade_id');
+    }
 }
