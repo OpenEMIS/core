@@ -95,6 +95,7 @@ class SurveyStatusesTable extends ControllerActionTable
 
         $this->fields['survey_form_id']['type'] = 'select';
         $this->fields['survey_form_id']['options'] = $formOptions;
+        $this->field('survey_filter_id', ['visible' => true,]);//POCOR-7271
     }
     /**
        / POCOR-7021 readonly in edit page
@@ -225,4 +226,9 @@ class SurveyStatusesTable extends ControllerActionTable
         }
     }
     /**POCOR-6676 ends*/ 
+
+    public function onUpdateFieldSurveyFilterId(Event $event, array $attr, $action, Request $request)
+    {
+        
+    }
 }
