@@ -229,6 +229,19 @@ class SurveyStatusesTable extends ControllerActionTable
 
     public function onUpdateFieldSurveyFilterId(Event $event, array $attr, $action, Request $request)
     {
-        
+         if ($action == 'edit'){
+            $attr['visible'] = true;
+            $attr['type'] = 'readonly';
+        }else{
+            $formTable = TableRegistry::get('survey_forms_filters');
+            $formOptions = $formTable
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name']) 
+                ->toArray();
+            $attr['type'] = 'select';
+            $attr['options'] = $formOptions;
+            $attr['select'] = false;
+            $attr['onChangeReload'] = 'changeModule';
+            return $attr;
+        }   
     }
 }
