@@ -14,8 +14,15 @@ use Cake\Filesystem\Folder;
 use Cake\Mailer\Email;
 
 use Cake\Log\Log;
+use App\Model\Table\ControllerActionTable;
 
-class StudentAbsencesPeriodDetailsArchiveTable extends AppTable
+use Cake\ORM\ResultSet;
+use Cake\Utility\Text;
+use Cake\Datasource\ResultSetInterface;
+use Cake\Core\Configure;
+use Cake\Datasource\ConnectionManager;//POCOR-6658
+
+class StudentAbsencesPeriodDetailsArchiveTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
@@ -31,6 +38,21 @@ class StudentAbsencesPeriodDetailsArchiveTable extends AppTable
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
         // $this->addBehavior('Institution.Calendar');
+        $this->addBehavior('ContactExcel', [ //POCOR-6898 change Excel to ContactExcel Behaviour
+            'excludes' => [
+                'start_date',
+                'end_date',
+                'start_year',
+                'end_year',
+                'FTE',
+                'staff_type_id',
+                'staff_status_id',
+                'institution_id',
+                'institution_position_id',
+                'security_group_user_id'
+            ],
+            'pages' => ['index']
+        ]);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StudentAttendances' => ['index', 'view', 'add']
         ]);
