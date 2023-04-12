@@ -76,7 +76,9 @@ class ReportCardsTable extends AppTable
                 'NextClassSubjects',
                 'StudentNextYearClass',
                 'StudentIdentities',
-                'SubjectTeacher'
+                'SubjectTeacher',
+                'AttendanceAge',
+                'CompetencyPeriodsByTemplate'
             ]
         ]);
     }
@@ -103,6 +105,10 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentAbsences'] = 'onExcelTemplateInitialiseInstitutionStudentAbsences';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyTemplates'] = 'onExcelTemplateInitialiseCompetencyTemplates';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyPeriods'] = 'onExcelTemplateInitialiseCompetencyPeriods';
+
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAttendanceAge'] = 'onExcelTemplateInitialiseAttendanceAge';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyPeriodsByTemplate'] = 'onExcelTemplateInitialiseCompetencyPeriodsByTemplate';
+
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyItems'] = 'onExcelTemplateInitialiseCompetencyItems';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyCriterias'] = 'onExcelTemplateInitialiseCompetencyCriterias';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentCompetencyPeriodComments'] = 'onExcelTemplateInitialiseStudentCompetencyPeriodComments';
@@ -301,6 +307,11 @@ class ReportCardsTable extends AppTable
                         ]
                     ],
                     'Students.MainNationalities' => [
+                        'fields' => [
+                            'name'
+                        ]
+                    ],
+                    'Students.Genders' => [
                         'fields' => [
                             'name'
                         ]
@@ -1056,6 +1067,104 @@ class ReportCardsTable extends AppTable
             return $entity->toArray();
         }
     }
+    //POCOR-7315::Start
+    public function onExcelTemplateInitialiseAttendanceAge(Event $event, array $params, ArrayObject $extra)
+    {
+        $EducationGradesTable = TableRegistry::get('education_grades');
+        $ConfigItemsTable = TableRegistry::get('config_items');
+        $results=[];
+        $EducationGrades = $EducationGradesTable->get($params['education_grade_id']);
+        $AgePlus = $ConfigItemsTable->find()->where(['code' => 'admission_age_plus'])->first();
+        $AgeMinus = $ConfigItemsTable->find()->where(['code' => 'admission_age_minus'])->first();
+
+        $finalAgePlus = $EducationGrades->admission_age + $AgePlus->value;
+        $finalAgeMinus = $EducationGrades->admission_age - $AgeMinus->value;
+        if($finalAgeMinus < 0){
+            $finalAgeMinus =0;
+        }
+        $results['age_plus'] = $finalAgePlus;
+        $results['age_minus'] = $finalAgeMinus;
+        return $results;
+
+    }
+    //POCOR-7315::END
+    //POCOR-7315::Start
+    public function onExcelTemplateInitialiseCompetencyPeriodsByTemplate(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('academic_period_id', $params) && array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+            $CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
+            $AbsenceTypesTable = TableRegistry::get('absence_types');
+            $InstitutionStudentAbsenceDays = TableRegistry::get('institution_student_absence_days');
+            $entity = $CompetencyPeriods->find()
+                ->select([
+                    'id' => $CompetencyPeriods->aliasField('id'),
+                    'name' => $CompetencyPeriods->aliasField('name'),
+                    'start_date' => $CompetencyPeriods->aliasField('start_date'),
+                    'end_date' => $CompetencyPeriods->aliasField('end_date'),
+                ])
+                ->where([
+                    $CompetencyPeriods->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $CompetencyPeriods->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
+                    $CompetencyPeriods->aliasField('start_date >= ') => $extra['report_card_start_date'],
+                    $CompetencyPeriods->aliasField('end_date <= ') => $extra['report_card_end_date']
+                ]);
+
+            if ($entity->count() > 0) {
+                $extra['competency_periods_ids'] = $entity->extract('id')->toArray();
+            }
+            $AbsenceTypeExcused = $AbsenceTypesTable->find()->where(['code' => 'EXCUSED'])->first();
+            $AbsenceTypeUnexcused = $AbsenceTypesTable->find()->where(['code' => 'EXCUSED'])->first();
+            $AbsenceTypeLate = $AbsenceTypesTable->find()->where(['code' => 'EXCUSED'])->first();
+
+            $entity = $entity->toArray();
+            foreach($entity as $k => $row){
+                $start_date = date("Y-m-d",strtotime($row['start_date']));
+                $end_date = date("Y-m-d",strtotime($row['end_date']));
+
+
+                $noOFExcusedDays = $InstitutionStudentAbsenceDays->find('all',[
+                    'conditions'=>[
+                        'student_id' => $params['student_id'],
+                        'institution_id' => $params['institution_id'],
+                        'absence_type_id' => $AbsenceTypeExcused->id,
+                        'start_date >=' => $start_date,
+                        'end_date <=' => $end_date,
+                    ]
+                ])->count();
+    
+                $noOFUnexcusedDays = $InstitutionStudentAbsenceDays->find('all',[
+                    'conditions'=>[
+                        'student_id' => $params['student_id'],
+                        'institution_id' => $params['institution_id'],
+                        'absence_type_id' => $AbsenceTypeUnexcused->id,
+                        'start_date >=' => $start_date,
+                        'end_date <=' => $end_date
+                    ]
+                ])->count();
+    
+                $noOFLateDays = $InstitutionStudentAbsenceDays->find('all',[
+                    'conditions'=>[
+                        'student_id' => $params['student_id'],
+                        'institution_id' => $params['institution_id'],
+                        'absence_type_id' => $AbsenceTypeLate->id,
+                        'start_date >=' => $start_date,
+                        'end_date <=' => $end_date
+                    ]
+                ])->count();
+
+                $entity[$k]['start_date'] = $start_date;
+                $entity[$k]['end_date']   = $end_date;
+                $entity[$k]['excused']    = $noOFExcusedDays;
+                $entity[$k]['unexcused']  = $noOFUnexcusedDays;
+                $entity[$k]['late']       = $noOFLateDays;
+                $entity[$k]['total']      = $noOFExcusedDays+$noOFUnexcusedDays+$noOFLateDays;
+
+            }
+
+            return $entity;
+        }
+    }
+    //POCOR-7315::END
 
     public function onExcelTemplateInitialiseCompetencyPeriods(Event $event, array $params, ArrayObject $extra)
     {
