@@ -6,9 +6,9 @@
 $this->start('toolbar');
 ?>
 
-<!-- <?php if ($_excel) : ?>
+<?php if ($_excel) : ?>
     <a ng-href="{{$ctrl.excelExportAUrl}}" ng-show="$ctrl.action == 'view'" class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Export"><i class="fa kd-export"></i></a>
-<?php endif; ?> -->
+<?php endif; ?>
 <?php 
 $session = $this->Session;
 $superAdmin = $session->read('Auth.User.super_admin');
