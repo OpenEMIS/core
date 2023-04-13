@@ -32,14 +32,14 @@ class SurveyFormsTable extends CustomFormsTable
                 'through' => 'Survey.SurveyFormsQuestions',
                 'dependent' => true
             ],
-            'filterClass' => [
+            /*'filterClass' => [
                 'className' => 'Institution.Types',
                 'joinTable' => 'survey_forms_filters',
                 'foreignKey' => 'survey_form_id',
                 'targetForeignKey' => 'survey_filter_id',
                 'through' => 'Survey.SurveyFormsFilters',
                 'dependent' => true
-            ],
+            ],*/
             'label' => [
                 'custom_fields' => 'Survey Questions',
                 'add_field' => 'Add Question',
@@ -119,7 +119,7 @@ class SurveyFormsTable extends CustomFormsTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+   /* public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //POCOR-7263::Start
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -199,7 +199,7 @@ class SurveyFormsTable extends CustomFormsTable
         }
         //POCOR-7263::End
       //  $this->setAllCustomFilter($entity);
-    }
+    }*/
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
@@ -556,13 +556,13 @@ class SurveyFormsTable extends CustomFormsTable
                             [
                                 $SurveyFormsFilters->aliasField('survey_form_id = ') . $this->aliasField('id')
                             ]
-                        )
-                        ->where([
+                        );
+                        /*->where([
                             'OR' => [
                                 [$SurveyFormsFilters->aliasField('survey_filter_id IN ') => $institutionTypesAccess],
                                 [$SurveyFormsFilters->aliasField('survey_filter_id') => 0]
                             ]
-                        ]);
+                        ]);*/
                 } 
             }
 

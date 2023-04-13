@@ -21,7 +21,7 @@ class SurveyFiltersTable extends ControllerActionTable
     {
         $this->table('survey_forms_filters');
         parent::initialize($config);
-        $this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
+        //$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Rules' => ['index']
         ]);
@@ -29,20 +29,74 @@ class SurveyFiltersTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('custom_module_id',['visible' => false,]);
+        
+      $this->field('custom_module_id',['visible' => false]);
         $this->field('survey_form_id', ['visible' => true]);
         $this->field('name', ['visible' => true]);
-        $this->field('survey_filter_id', ['visible' => false]);
         $this->field('institution_type_id', ['visible' => true]);
         $this->field('institution_provider_id', ['visible' => true]);
-        $this->field('area_education_id', ['visible' => true]);
+       $this->field('area_education_id', ['visible' => true]);
+
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey');
+        $CustomModules = TableRegistry::get('custom_modules');
+        $moduleOptions =  $CustomModules
+            ->find('list', ['keyField' => 'id', 'valueField' => 'code']) 
+           ->where(['custom_modules.name IN' => $name]);
+
+        $surveyForm = TableRegistry::get('survey_forms');
+        $surveyFormOption = $surveyForm->find('list', ['keyField' => 'id', 'valueField' => 'name']);
+        if (!empty($moduleOptions)) {
+            $selectedModule = $this->queryString('module', $moduleOptions);
+            $selectedModuleSecond = $this->queryString('form', $surveyFormOption);
+            $extra['toolbarButtons']['add']['url']['module'] = $selectedModule;
+            $extra['toolbarButtons']['add']['url']['form'] = $selectedModuleSecond;
+           // $this->advancedSelectOptions($moduleOptions, $selectedModule);
+
+            //$query->where([$this->aliasField('custom_module_id') => $selectedModule]);
+
+            //Add controls filter to index page
+          //  $toolbarElements = ['name' => 'CustomField.controls', 'data' => [], 'options' => [], 'order' => 1];
+            $extra['elements']['controls'] = [
+            'name' => 'CustomField.controls',
+            'data' => [
+                'module' => $selectedModule,
+                'form' => $selectedModuleSecond,
+            ],
+            'options' => [],
+            'order' => 1
+        ];
+
+
+           // $extra['elements']['controls'] = $toolbarElements;
+            $this->controller->set(compact('moduleOptions','surveyFormOption'));
+        }
+
+        $SurveyFiltersTable = TableRegistry::get('survey_filters');
+
+        /*$query
+        ->find()->select(['institution_type_id' => $SurveyFiltersTable->aliasField('institution_type_id'),
+            'institution_provider_id' => $SurveyFiltersTable->aliasField('institution_provider_id'),'area_education_id' => $SurveyFiltersTable->aliasField('area_education_id')])
+        ->leftJoin([$SurveyFiltersTable->alias() => $SurveyFiltersTable->table()],
+                    [ $SurveyFiltersTable->aliasField('survey_filter_id').'='.$this->aliasField('id') ]);
+
+        $this->field('custom_module_id',['visible' => false]);
+        $this->field('survey_form_id', ['visible' => true]);
+        $this->field('name', ['visible' => true]);
+        $this->field('institution_type_id', ['visible' => true]);
+        $this->field('institution_provider_id', ['visible' => true]);
+       $this->field('area_education_id', ['visible' => true]);
+*/
+        
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('custom_module_id', ['type' => 'select']);
         $this->field('survey_form_id', ['type' => 'select']);
-        $this->field('survey_filter_id', ['visible' => false,]);
         $this->field('name', ['visible' => true,]);
 
         $typeOptions = $this->getInstitutionType();
@@ -157,10 +211,11 @@ class SurveyFiltersTable extends ControllerActionTable
 
     public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request)
     {
-        $moduleQuery = $this->getModuleQuery();
-        $moduleOptions = $moduleQuery->toArray();
-        $selectedModule = $this->queryString('module', $moduleOptions);
-        $this->advancedSelectOptions($moduleOptions, $selectedModule);
+        $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey');
+        $CustomModules = TableRegistry::get('custom_modules');
+        $moduleOptions =  $CustomModules
+            ->find('list', ['keyField' => 'id', 'valueField' => 'code']) 
+           ->where(['custom_modules.name IN' => $name]);
         if ($action == 'edit'){
             $attr['visible'] = true;
             $attr['type'] = 'readonly';
@@ -171,13 +226,6 @@ class SurveyFiltersTable extends ControllerActionTable
             $attr['onChangeReload'] = 'changeModule';
             return $attr;
         }
-    }
-
-    public function getModuleQuery()
-    {
-        return $this->CustomModules
-            ->find('list')
-            ->find('visible');
     }
 
     public function onUpdateFieldSurveyFormId(Event $event, array $attr, $action, Request $request)
@@ -230,38 +278,36 @@ class SurveyFiltersTable extends ControllerActionTable
     }
 
     
-    /*public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        echo "<pre>";print_r($entity);die;
+       echo "<pre>"; print_r($entity);die;
+       $SurveyFiltersTable = TableRegistry::get('survey_filters');
+        if ($entity->isNew()) {
+            $countType = count($entity->institution_type_id);
+            $countProvider = count($entity->institution_provider_id);
+            $countArea = count($entity->area_education_id);
+            
+            if(($countType >= 2) || ($countProvider >= 2) || ($countArea >= 2)){
+                /*foreach(){
 
-        if (!$entity->isNew()) {
-            // allow additional custom filters to be added but not removed
-            if ($entity->has('custom_filter_selection') && $entity->custom_filter_selection == self::CUSTOM_FILTER) {
-                $originalEntity = $entity->extractOriginal(['custom_filters']);
-                $postedEntity = $entity->extract(['custom_filters']);
-
-                $originalFilters = [];
-                foreach ($originalEntity['custom_filters'] as $key => $obj) {
-                    $originalFilters[$obj->id] = $obj->name;
-                }
-
-                $postedFilters = [];
-                foreach ($postedEntity['custom_filters'] as $key => $obj) {
-                    $postedFilters[$obj->id] = $obj->name;
-                }
-                
-                $compareFilters = array_intersect_key($originalFilters, $postedFilters);
-                if (sizeof($originalFilters) != sizeof($compareFilters)) {
-                    $differentFilters = array_diff_key($originalFilters, $postedFilters);
-
-                    $errorMsg = $this->getMessage($this->aliasField('restrictEditFilters'), ['sprintf' => [implode(", ", $differentFilters)]]);
-                    $entity->errors('custom_filters', [$errorMsg]);
-                    return false;
-                }
+                }*/
+            }else{
+                $entity = $SurveyFiltersTable->newEntity([
+                        'survey_filter_id' =>$entity->id,
+                        'institution_type_id'=>$entity->institution_type_id,
+                        'institution_provider_id'=>$entity->institution_provider_id,
+                        'area_education_id'=> $entity->area_education_id,
+                        'modified'=>$this->Auth->user('id'),
+                        'modified_user_id'=>date('Y-m-d h:i:s'),
+                        'created_user_id'=>$this->Auth->user('id'),
+                        'created'=> date('Y-m-d h:i:s')
+                    ]);
+               $saveData =  $SurveyFiltersTable->save($entity);
             }
-            // end
+
+            
         }
-    }*/
+    }
 
    /* public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {

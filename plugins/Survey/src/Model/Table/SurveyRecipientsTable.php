@@ -16,19 +16,65 @@ class SurveyRecipientsTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
-        $this->table('survey_filters');
+        $this->table('institution_surveys');
         parent::initialize($config);
-        $this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Rules' => ['index']
         ]);
         $this->toggle('add', false);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $this->field('custom_module_id', ['type' => 'select']);
-        $this->setFieldOrder(['name', 'custom_module_id']);
+        $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey');
+        $CustomModules = TableRegistry::get('custom_modules');
+        $moduleOptions =  $CustomModules
+            ->find('list', ['keyField' => 'id', 'valueField' => 'code']) 
+           ->where(['custom_modules.name IN' => $name]);
+
+        $surveyForm = TableRegistry::get('survey_forms');
+        $surveyFormOption = $surveyForm->find('list', ['keyField' => 'id', 'valueField' => 'name']);
+        if (!empty($moduleOptions)) {
+            $selectedModule = $this->queryString('module', $moduleOptions);
+            $selectedModuleSecond = $this->queryString('form', $surveyFormOption);
+            $extra['toolbarButtons']['add']['url']['module'] = $selectedModule;
+            $extra['toolbarButtons']['add']['url']['form'] = $selectedModuleSecond;
+            $extra['elements']['controls'] = [
+            'name' => 'CustomField.controls',
+            'data' => [
+                    'module' => $selectedModule,
+                    'form' => $selectedModuleSecond,
+                ],
+                'options' => [],
+                'order' => 1
+            ];
+            $this->controller->set(compact('moduleOptions','surveyFormOption'));
+        }
+        $institutions = TableRegistry::get('institutions');
+        $surveyForm = TableRegistry::get('survey_forms');
+        $SurveyFormFilters = TableRegistry::get('survey_forms_filters');
+        $query
+            ->select(['institution_name'=> $institutions->aliasField('name'),
+                        'institution_code'=> $institutions->aliasField('code')])
+            ->leftJoin([$institutions->alias() => $institutions->table()],
+                [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
+            ->leftJoin([$surveyForm->alias() => $surveyForm->table()],
+                [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
+            ->leftJoin([$SurveyFormFilters->alias() => $SurveyFormFilters->table()],
+                [$SurveyFormFilters->aliasField('survey_form_id').'='.$surveyForm->aliasField('id')])
+            ->group([$this->aliasField('institution_id')]);
+
+        $this->field('institution_code',['visible' => true]);
+        $this->field('institution_name', ['visible' => true]);
+        $this->field('status_id', ['visible' => false]);
+        $this->field('academic_period_id', ['visible' => false]);
+        $this->field('survey_form_id', ['visible' => false]);
+        $this->field('institution_id', ['visible' => false]);
+        $this->field('assignee_id', ['visible' => false]);
+        $this->setFieldOrder([
+        'institution_code', 'institution_name']);
+
+        
     }
 
 }
