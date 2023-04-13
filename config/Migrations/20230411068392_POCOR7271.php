@@ -20,11 +20,29 @@ class POCOR7271 extends AbstractMigration
         $this->execute('CREATE TABLE `zz_7271_survey_statuses` LIKE `survey_statuses`');
         $this->execute('INSERT INTO `zz_7271_survey_statuses` SELECT * FROM `survey_statuses`');
 
-        $this->execute('ALTER TABLE `survey_statuses` ADD `survey_filter_id` INT NOT NULL AFTER `survey_form_id`;');
+        $this->execute('ALTER TABLE `survey_statuses` ADD `survey_filter_id` INT NOT NULL AFTER `survey_form_id`');
+        $this->execute('ALTER TABLE `survey_forms_filters` ADD `name` INT NOT NULL AFTER `survey_form_id`');
+        $this->execute('ALTER TABLE `survey_forms_filters` ADD `custom_module_id` INT NOT NULL AFTER `name`');
+        $this->execute('ALTER TABLE `survey_forms_filters` ADD `modified_user_id` INT DEFAULT NULL AFTER `name`');
+        $this->execute('ALTER TABLE `survey_forms_filters` ADD `modified` datetime DEFAULT NULL AFTER `modified_user_id`');
+        $this->execute('ALTER TABLE `survey_forms_filters` ADD `created_user_id` INT DEFAULT NULL AFTER `modified`');
+        $this->execute('ALTER TABLE `survey_forms_filters` ADD `created` datetime DEFAULT NULL AFTER `created_user_id`');
 
-        $this->execute('ALTER TABLE `survey_forms_filters` ADD `institution_type_id` INT NOT NULL AFTER `custom_module_id`;');
-        $this->execute('ALTER TABLE `survey_forms_filters` ADD `institution_provider_id` INT NOT NULL AFTER `institution_type_id`;');
-        $this->execute('ALTER TABLE `survey_forms_filters` ADD `area_education_id` INT NOT NULL AFTER `institution_provider_id`;');
+        // create survey_filters table
+       $this->execute('CREATE TABLE `survey_filters` (
+                      `id` int(11) NOT NULL,
+                      `survey_filter_id` int(11) NOT NULL,
+                      `institution_type_id` int(11) NOT NULL,
+                      `institution_provider_id` int(11) NOT NULL,
+                      `area_education_id` int(11) NOT NULL,
+                      `modified_user_id` int(11) DEFAULT NULL,
+                      `modified` datetime DEFAULT NULL,
+                      `created_user_id` int(11) DEFAULT NULL,
+                      `created` datetime DEFAULT NULL
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1');
+        $this->execute('INSERT INTO `survey_filters` SELECT * FROM `survey_filters`');
+
+        // drop survey_filter_id id
         $this->execute('ALTER TABLE `survey_forms_filters` DROP `survey_filter_id`');
         
     }

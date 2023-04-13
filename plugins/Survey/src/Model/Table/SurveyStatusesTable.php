@@ -75,6 +75,38 @@ class SurveyStatusesTable extends ControllerActionTable
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
         // End POCOR-5188
+
+        $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey');
+        $CustomModules = TableRegistry::get('custom_modules');
+        $moduleOptions =  $CustomModules
+            ->find('list', ['keyField' => 'id', 'valueField' => 'code']) 
+           ->where(['custom_modules.name IN' => $name]);
+        $surveyForm = TableRegistry::get('survey_forms');
+        $surveyFormOption = $surveyForm->find('list', ['keyField' => 'id', 'valueField' => 'name']);
+        if (!empty($moduleOptions)) {
+            $selectedModule = $this->queryString('module', $moduleOptions);
+            $selectedModuleSecond = $this->queryString('formm', $surveyFormOption);
+            //$extra['toolbarButtons']['add']['url']['module'] = $selectedModule;
+            //$extra['toolbarButtons']['add']['url']['form'] = $selectedModuleSecond;
+           // $this->advancedSelectOptions($moduleOptions, $selectedModule);
+
+            //$query->where([$this->aliasField('custom_module_id') => $selectedModule]);
+
+            //Add controls filter to index page
+          //  $toolbarElements = ['name' => 'CustomField.controls', 'data' => [], 'options' => [], 'order' => 1];
+            $extra['elements']['controls'] = [
+            'name' => 'CustomField.controls',
+            'data' => [
+                'module' => $selectedModule,
+                'formm' => $selectedModuleSecond,
+            ],
+            'options' => [],
+            'order' => 1
+            ];
+
+            $this->controller->set(compact('moduleOptions','surveyFormOption'));
+        }
+
     }
 
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
