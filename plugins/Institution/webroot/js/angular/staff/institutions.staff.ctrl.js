@@ -2342,30 +2342,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
         return remain;
     }
-
-   /*  DUPLICATE--function getUniqueOpenEmisId--() {
-        UtilsSvc.isAppendLoader(true);
-        InstitutionsStaffSvc.getUniqueOpenEmisId()
-            .then(function(response) {
-                var username = StaffController.selectedStaffData.username;
-                //POCOR-5878 starts
-                if((StaffController.isInternalSearchSelected || StaffController.isExternalSearchSelected) && username != StaffController.selectedStaffData.openemis_no && (username == '' || typeof username == 'undefined')){
-                    StaffController.selectedStaffData.username = StaffController.selectedStaffData.openemis_no;
-                    StaffController.selectedStaffData.openemis_no = StaffController.selectedStaffData.openemis_no;
-                }else{
-                    if(username == StaffController.selectedStaffData.openemis_no){
-                        StaffController.selectedStaffData.username = response;
-                    }
-                    StaffController.selectedStaffData.openemis_no = response;
-                }
-                //POCOR-5878 ends
-                UtilsSvc.isAppendLoader(false);
-        }, function(error) {
-            console.log(error);
-            UtilsSvc.isAppendLoader(false);
-        });
-    } */
-
     function generatePassword() {
         UtilsSvc.isAppendLoader(true);
         InstitutionsStaffSvc.generatePassword()
