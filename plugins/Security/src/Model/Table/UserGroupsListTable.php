@@ -41,7 +41,7 @@ class UserGroupsListTable extends ControllerActionTable
         $this->addBehavior('OpenEmis.Autocomplete');  
         $this->addBehavior('User.AdvancedNameSearch');
         $this->toggle('view', false);
-        $this->toggle('edit', false);
+        $this->toggle('edit', true); //POCOR-7323
         $this->toggle('search', true);
         $this->toggle('add', true);
 
@@ -88,6 +88,35 @@ class UserGroupsListTable extends ControllerActionTable
             ]
         ]; //POCOR-7175 end
     }
+
+    /** Start POCOR 7323 */
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $buttons['remove'] = [
+            'url' => [
+                'plugin' => 'Security',
+                'controller' => 'Securities',
+                'action' => 'UserGroupsList',
+                '0' => 'remove',
+                '_ext'=>'',
+                'userGroupId'=> $buttons['edit']['url']['userGroupId'],
+                '1' =>$buttons['edit']['url']['1']
+            ],
+            'type' => 'button',
+            'label' => '<i class="fa kd-trash"></i> Delete',
+            'attr' => [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Delete')
+            ]
+        ];
+        unset($buttons['edit']);
+        return $buttons;
+    }
+    /** End POCOR 7323 */
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
