@@ -208,7 +208,6 @@ class AccountBehavior extends Behavior
                     ->LeftJoin([$GroupUsers->alias() => $GroupUsers->table()],
                         [
                             $GroupUsers->aliasField('security_user_id = ') . $InstitutionStaff->aliasField('staff_id'),
-                            $GroupUsers->aliasField('id = '). $InstitutionStaff->aliasField('security_group_user_id')
                         ]
                     )
                     ->LeftJoin([$SecurityGroups->alias() => $SecurityGroups->table()],
