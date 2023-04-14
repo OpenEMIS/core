@@ -109,6 +109,9 @@ class ExcelBehavior extends Behavior
 
     public function generateXLXS($settings = [])
     {
+        set_time_limit(0); //POCOR-7268 starts
+        ini_set('memory_limit', '-1'); 
+        ini_set('max_execution_time', '9600'); //POCOR-7268 ends
         $_settings = [
             'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
             'path' => WWW_ROOT . $this->config('folder') . DS,
@@ -155,9 +158,11 @@ class ExcelBehavior extends Behavior
 
     public function generate($settings = [])
     {
+        set_time_limit(0); //POCOR-7268 starts
+        ini_set('memory_limit', '-1'); 
+        ini_set('max_execution_time', '9600'); //POCOR-7268 ends
         $writer = $settings['writer'];
         $sheets = new ArrayObject();
-
         // Event to get the sheets. If no sheet is specified, it will be by default one sheet
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeStart'), 'onExcelBeforeStart', [$settings, $sheets], true);
 

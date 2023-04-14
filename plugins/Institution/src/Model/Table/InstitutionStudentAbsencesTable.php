@@ -341,7 +341,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             ])
             ->where([
                 $InstitutionStudentAbsenceDays->aliasField('student_id') => $entity->student_id,
-                $InstitutionStudentAbsenceDays->aliasField('absence_type_id') => $entity->absence_type_id, // POCOR-7035
+                // $InstitutionStudentAbsenceDays->aliasField('absence_type_id') => $entity->absence_type_id, // POCOR-7357
                 $InstitutionStudentAbsenceDays->aliasField('institution_id') => $entity->institution_id,
                 $InstitutionStudentAbsenceDays->aliasField('start_date') => $startDate,
                 $InstitutionStudentAbsenceDays->aliasField('end_date') => $endDate
