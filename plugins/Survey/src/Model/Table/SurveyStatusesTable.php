@@ -213,7 +213,7 @@ class SurveyStatusesTable extends ControllerActionTable
                     //POCOR-7005 start conditon change for update record
                     if(!empty($surveyDataVal)){
                         $update =   $InstitutionSurveys->updateAll(
-                                ['status_id' => 1,'academic_period_id'=>$periodObj->id,'survey_form_id' => $surveyFormId,'institution_id' => $instId,'assignee_id' => 0,'modified_user_id' => 1,'modified' => new Time('NOW')],    //field
+                                ['status_id' => 1,'academic_period_id'=>$periodObj->id,'survey_form_id' => $surveyFormId,'institution_id' => $instId,'assignee_id' => $surveyDataVal->assignee_id,'modified_user_id' => 1,'modified' => new Time('NOW')],   //POCOR-7359 //field
                                 [
                                  'id' => $surveyDataVal['id'], //condition
                                 ] 
