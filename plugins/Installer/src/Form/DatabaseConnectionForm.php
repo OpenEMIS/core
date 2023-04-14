@@ -165,7 +165,10 @@ return [
      * @return bool
      */
     protected function _execute(array $data)
-    {
+    {   
+        $current_time_limit = ini_get('max_execution_time');
+        set_time_limit(300);
+       
         $host = $data['database_server_host'];
         $port = $data['database_server_port'];
         $root = $data['database_admin_user'];
@@ -242,18 +245,27 @@ return [
 
             $query = '';
             $sqlScript = file(WWW_ROOT.'sql_dump' . DS .$fileName.'.sql');
+            
+            
+           
+            
             foreach ($sqlScript as $line)   {
-                
+               
                 $startWith = substr(trim($line), 0 ,2);
                 $endWith = substr(trim($line), -1 ,1);
-                
-                if (empty($line) || $startWith == '--' || $startWith == '/*' || $startWith == '//') {
+                $endWith3 = substr(trim($line), -3 ,3);
+               
+                if (empty($line) || $startWith == '--' || $startWith == '/*' || $startWith == '//'||$endWith3=='*/;') {
                     continue;
                 }
                     
                 $query = $query . $line;
                 if ($endWith == ';') {
-                    mysqli_query($conn,$query) or die('<div class="error-response sql-import-response">Problem in executing the SQL query <b>' . $query. '</b></div>');
+                    // $max_allowed_packet=20777216;
+                    // mysqli_options($conn,MYSQLI_OPT_CONNECT_TIMEOUT,600);
+                    // mysqli_options($conn, MYSQLI_INIT_COMMAND, "SET GLOBAL max_allowed_packet=$max_allowed_packet");
+                    // mysqli_set_charset($conn, 'utf8');
+                    mysqli_query($conn,$query) or die(mysqli_error($conn).'<div class="error-response sql-import-response">Problem in executing the SQL query <b>' . $query. '</b></div>');
                     $query= '';     
                 }
             }
@@ -266,6 +278,7 @@ return [
             mysqli_multi_query($sql,$sqlSource);*/
             Cache::clear(false, '_cake_model_');
             Cache::clear(false, 'themes');
+            
             // $migrations = new Migrations();
             // $source = 'Snapshot' . DS . VERSION;
             // $status = $migrations->status(['source' => $source]);
@@ -285,10 +298,15 @@ return [
             //         }
             //     }
             // }
+            set_time_limit($current_time_limit);
             return false;
+           
         } else {
+            set_time_limit($current_time_limit);
             return false;
         }
+       
+        
     }
 
     private function createUser($password)
@@ -416,7 +434,7 @@ return [
         $user = $newUser;
         $createUserSQL = sprintf("CREATE USER '%s'@'%s' IDENTIFIED BY '%s'", $user, $host, $password);
         $flushPriviledges = "FLUSH PRIVILEGES";
-        $grantSQL = sprintf("GRANT ALL ON %s.* TO '%s'@'%s'", $db, $user, $host);
+        $grantSQL = sprintf("GRANT ALL PRIVELEGES ON %s.* TO '%s'@'%s'", $db, $user, $host);
         $pdo->exec($createUserSQL);
         $pdo->exec($grantSQL);
         $pdo->exec($flushPriviledges);
