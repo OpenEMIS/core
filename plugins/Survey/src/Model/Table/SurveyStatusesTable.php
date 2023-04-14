@@ -18,6 +18,7 @@ class SurveyStatusesTable extends ControllerActionTable
     {
         parent::initialize($config);
         $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
+        $this->belongsTo('SurveyFormsFilters', ['className' => 'Survey.SurveyFormsFilters','foreignKey' => 'survey_filter_id']);
         $this->hasMany('SurveyStatusPeriods', ['className' => 'Survey.SurveyStatusPeriods', 'foreignKey' => 'survey_status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('AcademicPeriods', [
             'className' => 'AcademicPeriod.AcademicPeriods',
@@ -40,7 +41,7 @@ class SurveyStatusesTable extends ControllerActionTable
         $this->field('academic_periods');
 
         $this->setFieldOrder([
-            'survey_form_id', 'date_enabled', 'date_disabled', 'academic_period_level', 'academic_periods'
+            'survey_form_id', 'survey_filter_id', 'date_enabled', 'date_disabled', 'academic_period_level', 'academic_periods'
         ]);
     }
 
@@ -51,9 +52,7 @@ class SurveyStatusesTable extends ControllerActionTable
         // search
         $search = $this->getSearchKey();
         if (!empty($search)) {
-            $query
-                ->matching('SurveyForms')
-                ->where(['SurveyForms.name LIKE' => '%' . $search . '%']);
+            $query->find('bySurveyFilter', ['search' => $search]);
         }
 
         // Start POCOR-5188
@@ -76,36 +75,69 @@ class SurveyStatusesTable extends ControllerActionTable
         }
         // End POCOR-5188
 
+        //custom module option in toolbar
         $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey');
         $CustomModules = TableRegistry::get('custom_modules');
         $moduleOptions =  $CustomModules
             ->find('list', ['keyField' => 'id', 'valueField' => 'code']) 
-           ->where(['custom_modules.name IN' => $name]);
-        $surveyForm = TableRegistry::get('survey_forms');
-        $surveyFormOption = $surveyForm->find('list', ['keyField' => 'id', 'valueField' => 'name']);
+           ->where(['custom_modules.name IN' => $name])->toArray();
+
         if (!empty($moduleOptions)) {
-            $selectedModule = $this->queryString('module', $moduleOptions);
-            $selectedModuleSecond = $this->queryString('formm', $surveyFormOption);
-            //$extra['toolbarButtons']['add']['url']['module'] = $selectedModule;
-            //$extra['toolbarButtons']['add']['url']['form'] = $selectedModuleSecond;
-           // $this->advancedSelectOptions($moduleOptions, $selectedModule);
-
-            //$query->where([$this->aliasField('custom_module_id') => $selectedModule]);
-
-            //Add controls filter to index page
-          //  $toolbarElements = ['name' => 'CustomField.controls', 'data' => [], 'options' => [], 'order' => 1];
-            $extra['elements']['controls'] = [
-            'name' => 'CustomField.controls',
-            'data' => [
-                'module' => $selectedModule,
-                'formm' => $selectedModuleSecond,
-            ],
-            'options' => [],
-            'order' => 1
-            ];
-
-            $this->controller->set(compact('moduleOptions','surveyFormOption'));
+            $moduleOptions = $moduleOptions;
+            $moduleId = $this->request->query('survey_module_id');
+            $this->advancedSelectOptions($moduleOptions, $moduleId);
+            $this->controller->set(compact('moduleOptions'));
         }
+
+        // Survey form options
+        $SurveyForms = TableRegistry::get('survey_forms');
+        $surveyFormOptions = $SurveyForms
+            ->find('list')
+            ->where([$SurveyForms->aliasField('custom_module_id') => $moduleId])
+            ->order([
+                $SurveyForms->aliasField('name')
+            ])
+            ->toArray();
+        $surveyFormOptions = ['-1' => '-- '.__('All Survey Form').' --'] + $surveyFormOptions;
+        $surveyFormId = $this->request->query('survey_form_id');
+        $this->advancedSelectOptions($surveyFormOptions, $surveyFormId);
+        $this->controller->set(compact('surveyFormOptions'));
+
+        // survey filter options toolbar
+        $this->SurveyFilters = TableRegistry::get('survey_forms_filters');
+        $surveyFilterOptions = $this->SurveyFilters
+            ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+            ->order([
+                $this->SurveyFilters->aliasField('name')
+            ])
+            ->toArray();
+        $surveyFilterOptions = ['-1' => '-- '.__('All Survey Filter').' --'] + $surveyFilterOptions;
+        $surveyFilterId = $this->request->query('survey_filter_id');
+        $this->advancedSelectOptions($surveyFilterOptions, $surveyFilterId);
+     
+        $extra['elements']['controls'] = ['name' => 'Survey.survey_status', 'data' => [], 'options' => [], 'order' => 3];
+        $this->controller->set(compact('surveyFilterOptions'));
+        $form  = TableRegistry::get('survey_forms');
+        $filter  = TableRegistry::get('survey_forms_filters');
+        if($moduleId == 1 && $surveyFormId == -1 && $surveyFilterId == -1){
+             $query;
+        }else{
+            $query
+                ->select([
+                            $this->aliasField('id'),
+                            $this->aliasField('date_disabled'),
+                            $this->aliasField('date_enabled'),
+                        ])
+                ->innerJoin([$form->alias() => $form->table()],
+                        [$form->aliasField('id').'='.$this->aliasField('survey_form_id') ])
+                ->innerJoin([$filter->alias() => $filter->table()],
+                        [$filter->aliasField('id').'='.$this->aliasField('survey_filter_id') ])
+                ->where([$this->aliasField('survey_form_id') =>$surveyFormId,
+                    $this->aliasField('survey_filter_id') =>$surveyFilterId,
+                    $form->aliasField('custom_module_id') =>$moduleId
+
+                ]);
+        }        
 
     }
 
@@ -123,11 +155,15 @@ class SurveyStatusesTable extends ControllerActionTable
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         //Setup fields
-        list(, , $formOptions) = array_values($this->getSelectOptions());
+      //  list(, , $formOptions) = array_values($this->getSelectOptions());
 
-        $this->fields['survey_form_id']['type'] = 'select';
-        $this->fields['survey_form_id']['options'] = $formOptions;
+        //$this->fields['survey_form_id']['type'] = 'select';
+        //$this->fields['survey_form_id']['options'] = $formOptions;
         $this->field('survey_filter_id', ['visible' => true,]);//POCOR-7271
+        $this->field('survey_form_id', ['visible' => true,]);//POCOR-7271
+        $this->setFieldOrder([
+            'survey_form_id', 'survey_filter_id','date_enabled','date_disabled', 'academic_period_level', 'academic_periods'
+        ]);
     }
     /**
        / POCOR-7021 readonly in edit page
@@ -175,14 +211,14 @@ class SurveyStatusesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addOnInitialize(Event $event, Entity $entity)
+    /*public function addOnInitialize(Event $event, Entity $entity)
     {
         //Initialize field values
         list(, , , $selectedForm) = array_values($this->getSelectOptions());
         $entity->survey_form_id = $selectedForm;
 
         return $entity;
-    }
+    }*/
 
     public function getSelectOptions()
     {
@@ -261,19 +297,65 @@ class SurveyStatusesTable extends ControllerActionTable
 
     public function onUpdateFieldSurveyFilterId(Event $event, array $attr, $action, Request $request)
     {
-         if ($action == 'edit'){
-            $attr['visible'] = true;
-            $attr['type'] = 'readonly';
+        $surveyFormId = $request->data['SurveyStatuses']['survey_form_id'];
+        if($surveyFormId==null){
+            $form  = TableRegistry::get('survey_forms');
+            $surveyFormId = $form->find()->first()->id;
         }else{
-            $formTable = TableRegistry::get('survey_forms_filters');
-            $formOptions = $formTable
-                ->find('list', ['keyField' => 'id', 'valueField' => 'name']) 
-                ->toArray();
-            $attr['type'] = 'select';
-            $attr['options'] = $formOptions;
-            $attr['select'] = false;
-            $attr['onChangeReload'] = 'changeModule';
-            return $attr;
-        }   
+          $surveyFormId = $surveyFormId;  
+        }
+        $formTable = TableRegistry::get('survey_forms_filters');
+        $formOptions = $formTable
+            ->find('list', ['keyField' => 'id', 'valueField' => 'name']) 
+            ->where([$formTable->aliasField('survey_form_id') => $surveyFormId])
+            ->toArray();
+        $attr['type'] = 'select';
+        $attr['options'] = $formOptions;
+        $attr['select'] = false;
+        $attr['onChangeReload'] = 'changeModule';
+        return $attr;
+         
     }
+
+    public function findBySurveyFilter(Query $query, array $options)
+    {
+        if (array_key_exists('search', $options)) {
+            $search = $options['search'];
+            $query
+            ->join([
+                [
+                    'table' => 'survey_forms_filters', 'alias' => 'SurveyFormsFilters', 'type' => 'INNER',
+                    'conditions' => ['SurveyFormsFilters.id = ' . $this->aliasField('survey_filter_id')]
+                ],
+                [
+                    'table' => 'survey_forms', 'alias' => 'SurveyForms', 'type' => 'INNER',
+                    'conditions' => ['SurveyForms.id = ' . $this->aliasField('survey_form_id')]
+                ],
+            ])
+            ->where([
+                    'OR' => [
+                        ['SurveyFormsFilters.name LIKE' => '%' . $search . '%'],
+                        ['SurveyForms.name LIKE' => '%' . $search . '%'],
+                    ]
+                ]
+            );
+        }
+
+        return $query;
+    }
+
+    public function onUpdateFieldSurveyFormId(Event $event, array $attr, $action, Request $request)
+    {
+        $formTable = TableRegistry::get('survey_forms');
+        $formOptions = $formTable
+            ->find('list', ['keyField' => 'id', 'valueField' => 'name']) 
+            ->toArray();
+        $attr['type'] = 'select';
+        $attr['options'] = $formOptions;
+        $attr['select'] = false;
+        $attr['onChangeReload'] = 'changeModule';
+        return $attr;
+         
+    }
+
 }
