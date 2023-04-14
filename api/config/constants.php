@@ -16,4 +16,13 @@ return [
         'isStaff' => 1
     ],
 
+    'emailConfig' => [
+        'generateOtpEmail' => [
+            'subject' => 'OpenEMIS - One-time Password (OTP)' 
+        ],
+        'registrationSuccessEmail' => [
+            'subject' => 'OpenEMIS - Successful Registration'
+        ]
+    ],
+
 ];
