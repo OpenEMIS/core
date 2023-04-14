@@ -194,7 +194,10 @@ class AccountBehavior extends Behavior
         $tableCells = [];
         $key = 'roles';
         if ($action == 'view') {
+            $session = $this->_table->request->session();
+            $institutionId = $session->read('Institution.Institutions.id');
             $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+            $SecurityGroupInstitutions = TableRegistry::get('security_group_institutions');//POCOR-7309
             //POCOR-7309 starts
             if($this->_table->alias() == 'StaffAccount'){
                 $InstitutionStaff = TableRegistry::get('Institution.Staff');
@@ -205,11 +208,18 @@ class AccountBehavior extends Behavior
                     ->LeftJoin([$GroupUsers->alias() => $GroupUsers->table()],
                         [
                             $GroupUsers->aliasField('security_user_id = ') . $InstitutionStaff->aliasField('staff_id'),
+                            $GroupUsers->aliasField('id = '). $InstitutionStaff->aliasField('security_group_user_id')
                         ]
                     )
                     ->LeftJoin([$SecurityGroups->alias() => $SecurityGroups->table()],
                         [
                             $SecurityGroups->aliasField('id = ') . $GroupUsers->aliasField('security_group_id')
+                        ]
+                    )
+                    ->LeftJoin([$SecurityGroupInstitutions->alias() => $SecurityGroupInstitutions->table()],
+                        [
+                            $SecurityGroupInstitutions->aliasField('security_group_id = ') . $GroupUsers->aliasField('security_group_id'),
+                            $SecurityGroupInstitutions->aliasField('institution_id = ') . $institutionId,
                         ]
                     )
                     ->LeftJoin([$SecurityRoles->alias() => $SecurityRoles->table()],
