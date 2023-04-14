@@ -195,6 +195,7 @@ class AccountBehavior extends Behavior
         $key = 'roles';
         if ($action == 'view') {
             $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+            //POCOR-7309 starts
             if($this->_table->alias() == 'StaffAccount'){
                 $InstitutionStaff = TableRegistry::get('Institution.Staff');
                 $SecurityGroups = TableRegistry::get('Security.SecurityGroups');
@@ -204,7 +205,6 @@ class AccountBehavior extends Behavior
                     ->LeftJoin([$GroupUsers->alias() => $GroupUsers->table()],
                         [
                             $GroupUsers->aliasField('security_user_id = ') . $InstitutionStaff->aliasField('staff_id'),
-                            $GroupUsers->aliasField('security_group_id = ') . $InstitutionStaff->aliasField('institution_id')
                         ]
                     )
                     ->LeftJoin([$SecurityGroups->alias() => $SecurityGroups->table()],
@@ -220,7 +220,7 @@ class AccountBehavior extends Behavior
                     ->where([$InstitutionStaff->aliasField('staff_id') => $entity->id, $InstitutionStaff->aliasField('staff_status_id') => 1])
                     ->group([$GroupUsers->aliasField('security_role_id')])
                     ->all();
-            }else{
+            }else{//POCOR-7309 ends
                 $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
                 $groupUserRecords = $GroupUsers->find()
                     ->matching('SecurityGroups')
