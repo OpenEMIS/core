@@ -77,8 +77,17 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // Setup period options
+        $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+
         $institutionId = $this->Session->read('Institution.Institutions.id');
+        if ($this->request->query('user_id') !== null) {
+            $staffId = $this->request->query('user_id');
+            $this->Session->write('Staff.Staff.id', $staffId);
+        } else {
+            $staffId = $this->Session->read('Staff.Staff.id');
+        }
+
         $academic_period_result = $this->find('all', array(
             'fields'=>'academic_period_id',
             'group' => 'academic_period_id'
@@ -88,26 +97,25 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
                 $archived_academic_period_arr[] = $academic_period_data['academic_period_id'];
             }
         }
-        //POCOR-6799[START]
-        if(!empty($archived_academic_period_arr)){
-            $periodOptions = $AcademicPeriod->getArchivedYearList($archived_academic_period_arr);
-        }//POCOR-6799[END]
+
+        $periodOptions = $AcademicPeriod->getArchivedYearList($archived_academic_period_arr);
         if (empty($this->request->query['academic_period_id'])) {
             $this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
         }
         $selectedPeriod = $this->request->query['academic_period_id'];
-        $selectedClassId = $this->request->query['class_id'];
         // To add the academic_period_id to export
         // if (isset($extra['toolbarButtons']['export']['url'])) {
         //     $extra['toolbarButtons']['export']['url']['academic_period_id'] = $selectedPeriod;
         // }
+
         $this->request->query['academic_period_id'] = $selectedPeriod;
-        $this->request->query['class_id'] = $selectedClassId;
         $this->advancedSelectOptions($periodOptions, $selectedPeriod);
         // End setup periods
+
         if ($selectedPeriod != 0) {
             $todayDate = date("Y-m-d");
             $this->controller->set(compact('periodOptions', 'selectedPeriod'));
+
             // Setup week options
             $weeks = $AcademicPeriod->getAttendanceWeeks($selectedPeriod);
             $weekOptions = [];
@@ -127,146 +135,7 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
                 $this->aliasField('institution_id') => $institutionId,
                 ];
             if(!empty($this->request->query('week')) && $this->request->query('week') != '-1'){
-                if(!empty($this->request->query('class_id')) && $this->request->query('class_id') != '-1'){
-                    $academicPeriodObj = $AcademicPeriod->get($selectedPeriod);
-                    $startYear = $academicPeriodObj->start_year;
-                    $endYear = $academicPeriodObj->end_year;
-                    if (date("Y") >= $startYear && date("Y") <= $endYear && !is_null($currentWeek)) {
-                        $selectedWeek = !is_null($this->request->query('week')) ? $this->request->query('week') : $currentWeek;
-                    } else {
-                        $selectedWeek = $this->queryString('week', $weekOptions);
-                    }
-                    $weekStartDate = $weeks[$selectedWeek][0];
-                    $weekEndDate = $weeks[$selectedWeek][1];
-                    $startDate = $weekStartDate;
-                    $endDate = $weekEndDate;
-                    $selectedFormatStartDate = date_format($startDate, 'Y-m-d');
-                    $selectedFormatEndDate = date_format($endDate, 'Y-m-d');
-                    $dateConditions = [
-                        $this->aliasField('date >=') => $selectedFormatStartDate,
-                        $this->aliasField('date <=') => $selectedFormatEndDate,
-                        $this->aliasField('institution_class_id') => $selectedClassId,
-                    ];
-                    $conditions = array_merge($conditions, $dateConditions);
-                }else{
-                    $academicPeriodObj = $AcademicPeriod->get($selectedPeriod);
-                    $startYear = $academicPeriodObj->start_year;
-                    $endYear = $academicPeriodObj->end_year;
-                    if (date("Y") >= $startYear && date("Y") <= $endYear && !is_null($currentWeek)) {
-                        $selectedWeek = !is_null($this->request->query('week')) ? $this->request->query('week') : $currentWeek;
-                    } else {
-                        $selectedWeek = $this->queryString('week', $weekOptions);
-                    }
-                    $weekStartDate = $weeks[$selectedWeek][0];
-                    $weekEndDate = $weeks[$selectedWeek][1];
-                    $startDate = $weekStartDate;
-                    $endDate = $weekEndDate;
-                    $selectedFormatStartDate = date_format($startDate, 'Y-m-d');
-                    $selectedFormatEndDate = date_format($endDate, 'Y-m-d');
-                    $dateConditions = [
-                        $this->aliasField('date >=') => $selectedFormatStartDate,
-                        $this->aliasField('date <=') => $selectedFormatEndDate
-                    ];
-                    $conditions = array_merge($conditions, $dateConditions);
-                }
-            }else if(!empty($this->request->query('class_id')) && $this->request->query('class_id') != '-1'){
-                $conditions = [
-                    $this->aliasField('academic_period_id') => $selectedPeriod,
-                    $this->aliasField('institution_id') => $institutionId,
-                    $this->aliasField('institution_class_id') => $selectedClassId,
-                    ];
-            }else{
-                $conditions = [
-                    $this->aliasField('academic_period_id') => $selectedPeriod,
-                    $this->aliasField('institution_id') => $institutionId,
-                    ];
-            }
-            // if(!empty($this->request->query('class_id')) && $this->request->query('class_id') != '-1'){
-            //     $conditions = [
-            //         $this->aliasField('academic_period_id') => $selectedPeriod,
-            //         $this->aliasField('institution_id') => $institutionId,
-            //         $this->aliasField('institution_class_id') => $selectedClassId,
-            //         ];
-            // }else{
-            //     $conditions = [
-            //         $this->aliasField('academic_period_id') => $selectedPeriod,
-            //         $this->aliasField('institution_id') => $institutionId,
-            //         ];
-            // }
-
-            $this->advancedSelectOptions($weekOptions, $selectedWeek);
-            $this->controller->set(compact('weekOptions', 'selectedWeek'));
-            // end setup weeks
-            // element control
-            $Classes = TableRegistry::get('Institution.InstitutionClasses');
-            $selectedAcademicPeriodId = $params['academic_period_id'];
-
-            $classOptions = $Classes->getClassOptions($selectedPeriod, $institutionId);
-            if (!empty($classOptions)) {
-                $classOptions = [0 => 'All Classes'] + $classOptions;
-            }
-            $selectedClassId = $this->queryString('class_id', $classOptions);
-            $this->advancedSelectOptions($classOptions, $selectedClassId);
-            $this->controller->set(compact('classOptions', 'selectedClassId'));
-
-            $query
-                ->find('all')
-                ->where($conditions);
-
-            $extra['elements']['controls'] = ['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => [], 'order' => 1];
-        }
-    }
-
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
-    {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $SecurityUsers = TableRegistry::get('security_users');
-        $academic_period_result = $this->find('all', array(
-            'fields'=>'academic_period_id',
-            'group' => 'academic_period_id'
-        ));
-        if(!empty($academic_period_result)){
-            foreach($academic_period_result AS $academic_period_data){
-                $archived_academic_period_arr[] = $academic_period_data['academic_period_id'];
-            }
-        }
-        if(empty($this->request->query)){
-            $academic_period_id = $archived_academic_period_arr[0];
-            $query->contain(['Users'])->where([
-                $this->aliasField('academic_period_id') => $academic_period_id,
-                $this->aliasField('institution_id') => $institutionId
-            ]);
-        }else{
-            $academic_period_id = $this->request->query['academic_period_id'];
-            $conditions = [
-                $this->aliasField('academic_period_id') => $academic_period_id,
-                $this->aliasField('institution_id') => $institutionId,
-            ];
-            $classConditions = [];
-            if(!empty($this->request->query('class_id')) && $this->request->query('class_id') != '-1'){
-                $class_id = $this->request->query['class_id'];
-                $classConditions = [
-                    $this->aliasField('institution_class_id') => $class_id,
-                ];
-            }
-            $dateConditions = [];
-            $todayDate = date("Y-m-d");
-            if(!empty($this->request->query('week')) && $this->request->query('week') != '-1'){
-                $weeks = $AcademicPeriod->getAttendanceWeeks($academic_period_id);
-                $weekOptions = [];
-                $currentWeek = null;
-                foreach ($weeks as $index => $dates) {
-                    if ($todayDate >= $dates[0]->format('Y-m-d') && $todayDate <= $dates[1]->format('Y-m-d')) {
-                        $weekStr = __('Current Week') . ' %d (%s - %s)';
-                        $currentWeek = $index;
-                    } else {
-                        $weekStr = __('Week').' %d (%s - %s)';
-                    }
-                    $weekOptions[$index] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
-                }
-                
-                $academicPeriodObj = $AcademicPeriod->get($academic_period_id);
+                $academicPeriodObj = $AcademicPeriod->get($selectedPeriod);
                 $startYear = $academicPeriodObj->start_year;
                 $endYear = $academicPeriodObj->end_year;
                 if (date("Y") >= $startYear && date("Y") <= $endYear && !is_null($currentWeek)) {
@@ -274,8 +143,10 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
                 } else {
                     $selectedWeek = $this->queryString('week', $weekOptions);
                 }
+
                 $weekStartDate = $weeks[$selectedWeek][0];
                 $weekEndDate = $weeks[$selectedWeek][1];
+                // end setup weeks
                 $startDate = $weekStartDate;
                 $endDate = $weekEndDate;
                 $selectedFormatStartDate = date_format($startDate, 'Y-m-d');
@@ -284,11 +155,88 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
                     $this->aliasField('date >=') => $selectedFormatStartDate,
                     $this->aliasField('date <=') => $selectedFormatEndDate
                 ];
+                $conditions = array_merge($conditions, $dateConditions);
+            }else{
+                $conditions = [
+                    $this->aliasField('academic_period_id') => $selectedPeriod,
+                    $this->aliasField('institution_id') => $institutionId,
+                    ];
             }
-            
-            $conditions = array_merge($conditions, $classConditions, $dateConditions);
-            $query->contain(['Users'])->where([$conditions]);
+            $this->advancedSelectOptions($weekOptions, $selectedWeek);
+                $this->controller->set(compact('weekOptions', 'selectedWeek'));
+            $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+            $StaffLeaveTypesTable = TableRegistry::get('Staff.StaffLeaveTypes');
+            $StaffUser = TableRegistry::get('User.Users');
+            $query
+            ->select([
+                'institution_id' => $this->aliasField('institution_id'),
+                'date' => $this->aliasField('date'),
+                'time_in' => $this->aliasField('time_in'),
+                'time_out' => $this->aliasField('time_out'),
+                'comment' => $this->aliasField('comment'),
+                'staff_id' => $this->aliasField('staff_id'),
+                'leave' => $StaffLeaveTypesTable->aliasField('name'),
+                'name' => $StaffUser->find()->func()->concat([
+                    'Users.first_name' => 'literal',
+                    " ",
+                    'Users.last_name' => 'literal'
+                ]),
+                'openemis_no' => $StaffUser->aliasField('openemis_no')
+
+            ])
+            ->leftJoin(
+                [$StaffUser->alias() => $StaffUser->table()], [
+                    $this->aliasField('staff_id = ') . $StaffUser->aliasField('id')
+                ]
+            )
+            ->leftJoin(
+                [$StaffLeaveTable->alias() => $StaffLeaveTable->table()], [
+                    $this->aliasField('staff_id = ') . $StaffLeaveTable->aliasField('staff_id')
+                ]
+            )
+            ->leftJoin(
+                [$StaffLeaveTypesTable->alias() => $StaffLeaveTypesTable->table()], [
+                    $StaffLeaveTable->aliasField('staff_leave_type_id = ') . $StaffLeaveTypesTable->aliasField('id')
+                ]
+            )
+            ->where($conditions);
+            // echo "<pre>";print_r($query->toArray());die;
+
+            $extra['elements']['controls'] = ['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => [], 'order' => 1];
         }
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                
+                $UserData = TableRegistry::get('User.Users');
+                $UserDataRow = $UserData
+                            ->find()
+                            ->where([$UserData->alias('id')=>$row->staff_id])
+                            ->first();
+
+                $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+                $StaffLeaveTypes = $StaffLeaveTable
+                    ->find()
+                    ->matching('StaffLeaveTypes')
+                    ->where([
+                        $StaffLeaveTable->aliasField('staff_id') => $row->staff_id,
+                    ])
+                    ->first();
+
+                $firstName = $this->Auth->user('first_name');
+                $lastName = $this->Auth->user('last_name');
+                $name = $UserDataRow->first_name . " " . $UserDataRow->last_name;
+                $row['name'] = $name;
+                $row['openemis_no'] = $UserDataRow->openemis_no;
+                $row['time_in'] = isset($row->time_in) ? $row->time_in->format('h:i:s') : '';
+                $row['time_out'] = isset($row->time_out) ? $row->time_out->format('h:i:s') : '';
+                $row['leave_types'] = $StaffLeaveTypes->_matchingData['StaffLeaveTypes']->name;
+                return $row;
+            });
+        });
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -296,10 +244,10 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
         $newFields = [];
 
         $newFields[] = [
-            'key' => 'InstitutionStaffAttendancesArchive.institution_id',
-            'field' => 'institution_id',
-            'type' => 'integer',
-            'label' => 'Institution',
+            'key' => '',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => 'OpenEMIS ID',
         ];
 
         $newFields[] = [
@@ -307,13 +255,6 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
             'field' => 'date',
             'type' => 'date',
             'label' => 'Date',
-        ];
-
-        $newFields[] = [
-            'key' => '',
-            'field' => 'openemis_no',
-            'type' => 'string',
-            'label' => 'OpenEMIS ID',
         ];
 
         $newFields[] = [
