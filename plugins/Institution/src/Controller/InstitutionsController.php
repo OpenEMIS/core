@@ -5909,11 +5909,19 @@ class InstitutionsController extends AppController
                         //POCOR-7182                         
                         if(!empty($SecurityRolesTbl)){
                             $SecurityGroupUsersTbl = TableRegistry::get('security_group_users');
+                            $SecurityGroupInstitutions = TableRegistry::get('security_group_institutions');//POCOR-7309
                             foreach ($SecurityRolesTbl as $rolekey => $roleval) {
                                 //POCOR-7238 starts
                                 $countSecurityGroupUsers = $SecurityGroupUsersTbl->find()
+                                                            ->LeftJoin(//POCOR-7309
+                                                            [$SecurityGroupInstitutions->alias() => $SecurityGroupInstitutions->table()],
+                                                            [
+                                                                $SecurityGroupInstitutions->aliasField('security_group_id = ') . $SecurityGroupUsers->aliasField('security_group_id'),
+                                                                $SecurityGroupInstitutions->aliasField('institution_id = ') . $institutionsSecurityGroupId->security_group_id,
+
+                                                            ])//POCOR-7309
                                                             ->where([
-                                                                $SecurityGroupUsersTbl->aliasField('security_group_id') => $institutionsSecurityGroupId->security_group_id,
+                                                                $SecurityGroupInstitutions->aliasField('security_group_id') => $institutionsSecurityGroupId->security_group_id,
                                                                 $SecurityGroupUsersTbl->aliasField('security_user_id') => $staffId,
                                                                 $SecurityGroupUsersTbl->aliasField('security_role_id') => $roleval->id
                                                             ])->count();
@@ -5935,21 +5943,28 @@ class InstitutionsController extends AppController
                             }
                         }
                     }                        
-
                     //get id from `security_group_users` table
                     $SecurityRoles = TableRegistry::get('security_roles');//POCOR-7238
+                    $SecurityGroupInstitutions = TableRegistry::get('security_group_institutions');//POCOR-7309
                     $SecurityGroupUsersTbl = $SecurityGroupUsers->find()
-                                            ->InnerJoin(//POCOR-7238
-                                            [$SecurityRoles->alias() => $SecurityRoles->table()],
-                                            [
-                                                $SecurityRoles->aliasField('id = ') . $SecurityGroupUsers->aliasField('security_role_id')
-                                            ])//POCOR-7238
-                                            ->where([
-                                                $SecurityGroupUsers->aliasField('security_group_id') => $institutionId,
-                                                $SecurityGroupUsers->aliasField('security_user_id') => $staffId,
-                                                $SecurityGroupUsers->aliasField('security_role_id') => $staffPositionTitlesTbl->security_role_id,//POCOR-7238 
-                                                $SecurityRoles->aliasField('code !=') => 'HOMEROOM_TEACHER'//POCOR-7238
-                                            ])->first();
+                                        ->InnerJoin(//POCOR-7238
+                                        [$SecurityRoles->alias() => $SecurityRoles->table()],
+                                        [
+                                            $SecurityRoles->aliasField('id = ') . $SecurityGroupUsers->aliasField('security_role_id')
+                                        ])//POCOR-7238
+                                        ->LeftJoin(//POCOR-7309
+                                        [$SecurityGroupInstitutions->alias() => $SecurityGroupInstitutions->table()],
+                                        [
+                                            $SecurityGroupInstitutions->aliasField('security_group_id = ') . $SecurityGroupUsers->aliasField('security_group_id'),
+                                            $SecurityGroupInstitutions->aliasField('institution_id = ') . $institutionId,
+
+                                        ])//POCOR-7309
+                                        ->where([
+                                            $SecurityGroupInstitutions->aliasField('institution_id') => $institutionId,
+                                            $SecurityGroupUsers->aliasField('security_user_id') => $staffId,
+                                            $SecurityGroupUsers->aliasField('security_role_id') => $staffPositionTitlesTbl->security_role_id,//POCOR-7238 
+                                            $SecurityRoles->aliasField('code !=') => 'HOMEROOM_TEACHER'//POCOR-7238
+                                        ])->first();
                     $InstitutionStaffs = TableRegistry::get('institution_staff');
                     $entityStaffsData = [
                         'FTE' => $fte,
@@ -6252,11 +6267,19 @@ class InstitutionsController extends AppController
                             //POCOR-7182                         
                             if(!empty($SecurityRolesTbl)){
                                 $SecurityGroupUsersTbl = TableRegistry::get('security_group_users');
+                                $SecurityGroupInstitutions = TableRegistry::get('security_group_institutions');//POCOR-7309
                                 foreach ($SecurityRolesTbl as $rolekey => $roleval) {
                                     //POCOR-7238 starts
                                     $countSecurityGroupUsers = $SecurityGroupUsersTbl->find()
+                                                                ->LeftJoin(//POCOR-7309
+                                                                [$SecurityGroupInstitutions->alias() => $SecurityGroupInstitutions->table()],
+                                                                [
+                                                                    $SecurityGroupInstitutions->aliasField('security_group_id = ') . $SecurityGroupUsers->aliasField('security_group_id'),
+                                                                    $SecurityGroupInstitutions->aliasField('institution_id = ') . $institutionsSecurityGroupId->security_group_id,
+
+                                                                ])//POCOR-7309
                                                                 ->where([
-                                                                    $SecurityGroupUsersTbl->aliasField('security_group_id') => $institutionsSecurityGroupId->security_group_id,
+                                                                    $SecurityGroupInstitutions->aliasField('security_group_id') => $institutionsSecurityGroupId->security_group_id,
                                                                     $SecurityGroupUsersTbl->aliasField('security_user_id') => $staffId,
                                                                     $SecurityGroupUsersTbl->aliasField('security_role_id') => $roleval->id
                                                                 ])->count();
@@ -6280,18 +6303,26 @@ class InstitutionsController extends AppController
                         }                        
                         //get id from `security_group_users` table
                         $SecurityRoles = TableRegistry::get('security_roles');//POCOR-7238
+                        $SecurityGroupInstitutions = TableRegistry::get('security_group_institutions');//POCOR-7309
                         $SecurityGroupUsersTbl = $SecurityGroupUsers->find()
-                                                ->InnerJoin(//POCOR-7238
-                                                [$SecurityRoles->alias() => $SecurityRoles->table()],
-                                                [
-                                                    $SecurityRoles->aliasField('id = ') . $SecurityGroupUsers->aliasField('security_role_id')
-                                                ])//POCOR-7238
-                                                ->where([
-                                                    $SecurityGroupUsers->aliasField('security_group_id') => $institutionId,
-                                                    $SecurityGroupUsers->aliasField('security_user_id') => $staffId,
-                                                    $SecurityGroupUsers->aliasField('security_role_id') => $staffPositionTitlesTbl->security_role_id,//POCOR-7238 
-                                                    $SecurityRoles->aliasField('code !=') => 'HOMEROOM_TEACHER'//POCOR-7238
-                                                ])->first();
+                                            ->InnerJoin(//POCOR-7238
+                                            [$SecurityRoles->alias() => $SecurityRoles->table()],
+                                            [
+                                                $SecurityRoles->aliasField('id = ') . $SecurityGroupUsers->aliasField('security_role_id')
+                                            ])//POCOR-7238
+                                            ->LeftJoin(//POCOR-7309
+                                            [$SecurityGroupInstitutions->alias() => $SecurityGroupInstitutions->table()],
+                                            [
+                                                $SecurityGroupInstitutions->aliasField('security_group_id = ') . $SecurityGroupUsers->aliasField('security_group_id'),
+                                                $SecurityGroupInstitutions->aliasField('institution_id = ') . $institutionId,
+
+                                            ])//POCOR-7309
+                                            ->where([
+                                                $SecurityGroupInstitutions->aliasField('institution_id') => $institutionId,
+                                                $SecurityGroupUsers->aliasField('security_user_id') => $staffId,
+                                                $SecurityGroupUsers->aliasField('security_role_id') => $staffPositionTitlesTbl->security_role_id,//POCOR-7238 
+                                                $SecurityRoles->aliasField('code !=') => 'HOMEROOM_TEACHER'//POCOR-7238
+                                            ])->first();
                                                 
                         $InstitutionStaffs = TableRegistry::get('institution_staff');
                         $entityStaffsData = [
