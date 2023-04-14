@@ -79,21 +79,45 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         scope.getRelationType();
         try
         {
-            const queryString = window.location.href.split('?')[1].split('=')[1].replace(/%3D/g, '')
-            const queryData = JSON.parse(window.atob(queryString))
-            if (Object.keys(queryData))
-            {
-                const { institution_id, openemis_no } = queryData;
-                scope.selectedUserData.institution_id = institution_id;
-                scope.studentOpenEmisId = openemis_no;
-                $window.localStorage.setItem('studentOpenEmisId', openemis_no)
+            //POCOR-7231::Start
+            if (window.location.href.indexOf("Institution") > -1) {   
+                const queryString2 = getParameterByName('queryString2');
+                const queryData1 = JSON.parse(window.atob(queryString2))
+                if (Object.keys(queryData1))
+                {
+                    const { institution_id, openemis_no } = queryData1;
+                    scope.selectedUserData.institution_id = institution_id;
+                    scope.studentOpenEmisId = openemis_no;
+                    $window.localStorage.setItem('studentOpenEmisId', openemis_no)
+                }
+            }else{
+                const queryString = window.location.href.split('?')[1].split('=')[1].replace(/%3D/g, '')    
+                const queryData = JSON.parse(window.atob(queryString))
+                if (Object.keys(queryData))
+                {
+                    const { institution_id, openemis_no } = queryData;
+                    scope.selectedUserData.institution_id = institution_id;
+                    scope.studentOpenEmisId = openemis_no;
+                    $window.localStorage.setItem('studentOpenEmisId', openemis_no)
+                }
             }
+            //POCOR-7231::End
+            
         } catch (err)
         {
             console.warn(err)
         }
         
     });
+
+    function getParameterByName(name, url = window.location.href) {
+        name = name.replace(/[\[\]]/g, '\\$&');
+        var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    }
 
     $window.savePhoto = function(event) {
         let photo = event.files[0];
@@ -1217,6 +1241,9 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
 
     scope.saveGuardianDetails = function() {
+        console.log("Start");
+        console.log(scope);
+        console.log("End");
         const addressAreaRef = DirectoryaddguardianSvc.getAddressArea()
         addressAreaRef && (scope.selectedUserData.addressArea = addressAreaRef);
         const birthplaceAreaRef = DirectoryaddguardianSvc.getBirthplaceArea();
@@ -1286,7 +1313,17 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
     scope.addGuardian=function addGuardian()
     {
-        $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian';
+        //POCOR-7231::Start
+       let str1 = document.URL;       ;
+       const Arr = str1.split("/");
+       var len = Arr.length -1;
+        if (window.location.href.indexOf("Institution") > -1) {
+                $window.location.href = angular.baseUrl + '/Institution/Institutions/'+Arr[len];
+            }else{
+                const queryString = getParameterByName('queryString'); 
+                $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian?queryString='+queryString;
+            }
+        //POCOR-7231::End
     }
 
     /**
