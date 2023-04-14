@@ -32,7 +32,6 @@ class InstitutionPositionsTable extends AppTable
         
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
-        $this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
         $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff']);
@@ -75,6 +74,7 @@ class InstitutionPositionsTable extends AppTable
 
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
+        $selectedArea = $requestData->area_education_id;
         $where = [];
         if ($institution_id != 0) {
             $where[$this->aliasField('institution_id')] = $institution_id;
@@ -83,9 +83,18 @@ class InstitutionPositionsTable extends AppTable
             $where[$StaffPositionTitles->aliasField('type')] = $teachingFilter;
         }
         $where[$this->aliasField('status_id')] = $statusFilter; //POCOR-6869
-        if ($areaId != -1) {
-            $where['Institutions.area_id'] = $areaId;
-        }
+        //POCOR-7354 start
+        if ($areaId != -1 && $areaId != '') {
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }
+                $conditions['Institutions.area_id IN'] = $allselectedAreas;
+        } //POCOR-7354 end
         $query
             ->select([
                 'workflow_steps_name' => 'Statuses.name',
@@ -96,8 +105,6 @@ class InstitutionPositionsTable extends AppTable
                 'area_administratives_code' => 'AreaAdministratives.code',
                 'area_administratives_name' => 'AreaAdministratives.name',
                 'assignee_id' => 'Assignees.id',
-                // 'is_homeroom' => 'InstitutionStaffs.is_homeroom', // POCOR-7203   //POCOR-7229
-                // 'is_homeroom' => $this->aliasField('is_homeroom'),   // POCOR-7203
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
                 'assignee_openemis_no' => 'SecurityUsersStaff.openemis_no',
@@ -110,6 +117,7 @@ class InstitutionPositionsTable extends AppTable
                 'InstitutionStaffs_end_date' => 'InstitutionStaffs.end_date', //POCOR-6887
                 'InstitutionStaffs_FTE' => 'InstitutionStaffs.FTE', //POCOR-6887
                 'staff_gender_name' => 'SecurityUsersGender.name', //POCOR-6951
+                'is_homeroom' => 'InstitutionStaffs.is_homeroom', //POCOR-7354
             ])
             ->contain([
                 'Statuses' => [
@@ -123,11 +131,6 @@ class InstitutionPositionsTable extends AppTable
                         'StaffPositionTitles.name',
                         'StaffPositionTitles.type',
                         'StaffPositionTitles.staff_position_categories_id'
-                    ]
-                ],
-                'StaffPositionGrades' => [
-                    'fields' => [
-                        'StaffPositionGrades.name'
                     ]
                 ],
                 'Institutions' => [
@@ -174,6 +177,15 @@ class InstitutionPositionsTable extends AppTable
                     ]
                 ],
             ];// End POCOR-6887
+
+            $join['StaffPositionGrades'] = [
+                'type' => 'left',
+                'table' => 'staff_position_grades',
+                'conditions' => [
+                    'StaffPositionGrades.id = InstitutionStaffs.staff_position_grade_id',
+                ],
+            ]; //POCOR-7354
+
             $join['StaffStatuses'] = [
                 'type' => 'left',
                 'table' => 'staff_statuses',
@@ -212,7 +224,6 @@ class InstitutionPositionsTable extends AppTable
             
             ->where([$where])
             ->order(['institution_name', 'position_no']);
-            // echo "<pre>"; print_r($query->sql()); die();
        
         // if ($positionFilter == self::POSITION_WITH_STAFF) {
         //     $query = $this->onExcelBeforePositionWithStaffQuery($query);
@@ -262,7 +273,7 @@ class InstitutionPositionsTable extends AppTable
             'label' => __('Title')
         ];
 
-        $newFields[] = [
+       $newFields[] = [
             'key' => 'StaffPositionGrades.name',
             'field' => 'staff_position_grade_name',
             'type' => 'string',
@@ -412,8 +423,7 @@ class InstitutionPositionsTable extends AppTable
 
     public function onExcelGetIsHomeroom(Event $event, Entity $entity)
     {
-        $options = $this->getSelectOptions('general.yesno');
-        return $options[$entity->is_homeroom];
+        return ($entity->is_homeroom) ? __('Yes') : __('No');
     }
 
     public function onExcelGetStaffName(Event $event, Entity $entity)
@@ -571,8 +581,22 @@ class InstitutionPositionsTable extends AppTable
             ->where($conditions)
             ->first();
         }
-        // echo "<pre>"; print_r($categories); die(); 
 
         return $categories->name;
     }
+
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                           ->where([
+                               $Areas->aliasField('parent_id') => $id
+                            ]) 
+                             ->toArray();
+       foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
+    }
+
 }

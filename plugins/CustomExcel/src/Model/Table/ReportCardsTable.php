@@ -8,7 +8,7 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Inflector;
 use Cake\Utility\Security;
 use App\Model\Table\AppTable;
-
+use Cake\I18n\Time;//POCOR-7319
 class ReportCardsTable extends AppTable
 {
     private $fileType = 'xlsx';
@@ -201,7 +201,7 @@ class ReportCardsTable extends AppTable
         $filepath = $extra['file_path'];
         $fileContent = file_get_contents($filepath);
         $status = $StudentsReportCards::GENERATED;
-        
+
         //POCOR-6716[START]
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 		$timeZone= $ConfigItems->value("time_zone");
@@ -217,13 +217,37 @@ class ReportCardsTable extends AppTable
             'file_content' => $fileContent
         ], $params);
 
-        // delete report card process
+        //POCOR-7319 starts
+        //saving generated report card entries in reprt_card_processes_table
         $ReportCardProcesses = TableRegistry::Get('ReportCard.ReportCardProcesses');
-        $ReportCardProcesses->deleteAll([
+        $ReportCardProcessesData =$ReportCardProcesses->find()
+                ->where([
             'report_card_id' => $params['report_card_id'],
             'institution_class_id' => $params['institution_class_id'],
-            'student_id' => $params['student_id']
-        ]);
+            'student_id' => $params['student_id']])->toArray();
+
+            if(!empty( $ReportCardProcessesData)){
+
+                foreach ($ReportCardProcessesData as $key => $val) {
+                    $todayDate = Time::parse('now');
+                    $_now = $todayDate->i18nFormat('yyyy-MM-dd HH:mm:ss');
+                    $status=$ReportCardProcesses::COMPLETED;
+                    $modified= $_now;
+                    $ReportCardProcessesEntity = $this->patchEntity($val, ['status' => $status, 'modified' =>$modified], ['validate' =>false]);
+
+                    $ReportCardProcesses->save($ReportCardProcessesEntity);
+                }
+            }
+          //POCOR-7319 ends
+
+
+
+        // $ReportCardProcesses = TableRegistry::Get('ReportCard.ReportCardProcesses');
+        // $ReportCardProcesses->deleteAll([
+        //     'report_card_id' => $params['report_card_id'],
+        //     'institution_class_id' => $params['institution_class_id'],
+        //     'student_id' => $params['student_id']
+        // ]);
     }
 
     public function afterRenderExcelTemplate(Event $event, ArrayObject $extra, $controller)
@@ -527,7 +551,7 @@ class ReportCardsTable extends AppTable
         if (array_key_exists('report_card_id', $params) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
             $StudentsReportCardsComments = TableRegistry::get('Institution.InstitutionStudentsReportCardsComments');
             $ReportCardSubjects = TableRegistry::get('ReportCard.ReportCardSubjects');
-            /**POCOR-6810 starts- modified query to get only assigned subjects of student*/ 
+            /**POCOR-6810 starts- modified query to get only assigned subjects of student*/
             $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
             $SecurityUsers = TableRegistry::get('security_users');//POCOR-5227
             $AssessmentItemData = $SubjectStudents->find()
@@ -540,19 +564,19 @@ class ReportCardsTable extends AppTable
                 ])
                 ->contain([
                     'EducationSubjects','InstitutionSubjects'
-                ]) 
+                ])
                 ->hydrate(false)
                 ->toArray();
             if(empty($AssessmentItemData)){
                 $entity = [];
                 return $entity;
             }
-            
+
             $ModifiedSecurityUsers = TableRegistry::get('security_users');//POCOR-5054
             foreach ($AssessmentItemData as $value) {
                 $reprotCardComment = $StudentsReportCardsComments->find()
                 ->select([
-                    'comment_code_name' => 'CommentCodes.name', 
+                    'comment_code_name' => 'CommentCodes.name',
                     'comment' => $StudentsReportCardsComments->aliasField('comments'),
                     //POCOR-5054 Starts
                     'created_security_user_openemis_no' => $SecurityUsers->aliasField('openemis_no'),
@@ -618,7 +642,7 @@ class ReportCardsTable extends AppTable
                         'security_user_name' => $reprotCardComment['security_user_name']//POCOR-5227
                     ];
                 }
-                /**POCOR-6810 ends*/ 
+                /**POCOR-6810 ends*/
             }
             return $entity;
         }
@@ -861,12 +885,12 @@ class ReportCardsTable extends AppTable
             //POCOR-7040
             $startDate = $extra['report_card_start_date']->format('Y-m-d');
             $endDate = $extra['report_card_end_date']->format('Y-m-d');
-            /**POCOR-6685 starts - modified main table as suggested by client*/ 
+            /**POCOR-6685 starts - modified main table as suggested by client*/
             $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
             //POCOR-7050 start
             $configVal = TableRegistry::get('config_items');
             $configData = $configVal->find()->select(['val'=>$configVal->aliasField('value')])->where([$configVal->aliasField('code')=>'calculate_daily_attendance'])->first();
-            $configOption = $configData['val'];  
+            $configOption = $configData['val'];
             $InstitutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details');
             $studentAbsenceResults = $InstitutionStudentAbsences
                     ->find()
@@ -932,7 +956,7 @@ class ReportCardsTable extends AppTable
 
             $results[$absenceType]['number_of_days'] += 1;
         }
-        
+
         return $results;
         }
     }
@@ -944,12 +968,12 @@ class ReportCardsTable extends AppTable
             //POCOR-7040
             $startDate = $extra['report_card_start_date']->format('Y-m-d');
             $endDate = $extra['report_card_end_date']->format('Y-m-d');
-            /**POCOR-6685 starts - modified main table as suggested by client*/ 
+            /**POCOR-6685 starts - modified main table as suggested by client*/
             $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
             //POCOR-7050 start
             $configVal = TableRegistry::get('config_items');
             $configData = $configVal->find()->select(['val'=>$configVal->aliasField('value')])->where([$configVal->aliasField('code')=>'calculate_daily_attendance'])->first();
-            $configOption = $configData['val'];  
+            $configOption = $configData['val'];
 
             $InstitutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details');
             $studentAbsenceResults = $InstitutionStudentAbsenceDetails
@@ -999,9 +1023,9 @@ class ReportCardsTable extends AppTable
                             ->where([
                                 $InstitutionStudentAbsenceDetails->aliasField('institution_id') => $s_value['institution_id'],
                                 $InstitutionStudentAbsenceDetails->aliasField('student_id') => $s_value['student_id'],
-                                $InstitutionStudentAbsenceDetails->aliasField('academic_period_id') => $s_value['academic_period_id'], 
-                                $InstitutionStudentAbsenceDetails->aliasField('date') => $s_value['date'], 
-                                $InstitutionStudentAbsenceDetails->aliasField('absence_type_id !=') => 3, 
+                                $InstitutionStudentAbsenceDetails->aliasField('academic_period_id') => $s_value['academic_period_id'],
+                                $InstitutionStudentAbsenceDetails->aliasField('date') => $s_value['date'],
+                                $InstitutionStudentAbsenceDetails->aliasField('absence_type_id !=') => 3,
                                 $InstitutionStudentAbsenceDetails->aliasField('period') => $p_val
                             ])
                             ->hydrate(false)
@@ -1025,7 +1049,7 @@ class ReportCardsTable extends AppTable
                     }
                 }
             }
-            
+
             $results['EXCUSED']['number_of_days'] = 0;
             $results['UNEXCUSED']['number_of_days'] = 0;
             $results['LATE']['number_of_days'] = 0;
@@ -1295,7 +1319,7 @@ class ReportCardsTable extends AppTable
             return $entity;
         }
     }
-    
+
     public function onExcelTemplateInitialiseSubjectTeacher(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('assessment_id', $extra) && array_key_exists('institution_class_id', $params)) {
@@ -1332,7 +1356,7 @@ class ReportCardsTable extends AppTable
                 ])
                 ->contain([
                     'EducationSubjects','InstitutionSubjects'
-                ]) 
+                ])
                 ->hydrate(false)
                 ->toArray();
             //End: POCOR-6769
@@ -1382,8 +1406,8 @@ class ReportCardsTable extends AppTable
                 $entity[] = [
                     'education_subject_id' => $value['education_subject_id'],
                     'name' => implode(",",$name)
-                ];  
-            }               
+                ];
+            }
             return $entity;
         }
     }
@@ -1558,7 +1582,7 @@ class ReportCardsTable extends AppTable
                 //POCOR-6846: START
                 ->order([
                     $AssessmentItemResults->aliasField('created') => 'DESC'
-                    
+
                 ])
                 //POCOR-6846: END
                 ->where($conditions)
@@ -1591,7 +1615,7 @@ class ReportCardsTable extends AppTable
                 })
                 ->toArray();
 
-             //After transferring from School A to School B all data copy but report card is blank now this issue fixed Start POCOR-6752,   
+             //After transferring from School A to School B all data copy but report card is blank now this issue fixed Start POCOR-6752,
             if (empty($entity)) {
                 $condition = [];
                 if (!empty($subjectList)) {
@@ -1620,7 +1644,7 @@ class ReportCardsTable extends AppTable
                 ->contain(['AssessmentGradingOptions.AssessmentGradingTypes'])
                 ->order([
                     $AssessmentItemResults->aliasField('created') => 'DESC'
-                    
+
                 ])
                 ->where($condition)
                 ->formatResults(function (ResultSetInterface $results) {
@@ -2101,7 +2125,7 @@ class ReportCardsTable extends AppTable
             return $result;
         }
     }
-    
+
     public function onExcelTemplateInitialiseStudentIdentities(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('student_id', $params)) {
