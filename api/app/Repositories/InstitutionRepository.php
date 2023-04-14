@@ -1056,7 +1056,7 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
-            $positions = InstitutionPositions::with('staffPositionTitle:id,name as staff_position_title_name', 'staffPositionGrades:id,name as staff_position_grade_name', 'status:id,name as status_name');
+            $positions = InstitutionPositions::with('staffPositionTitle:id,name as staff_position_title_name', 'status:id,name as status_name');
             
 
             if(isset($params['order'])){
@@ -1090,7 +1090,7 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
-            $positions = InstitutionPositions::with('staffPositionTitle:id,name as staff_position_title_name', 'staffPositionGrades:id,name as staff_position_grade_name', 'status:id,name as status_name');
+            $positions = InstitutionPositions::with('staffPositionTitle:id,name as staff_position_title_name', 'status:id,name as status_name');
             
 
             if(isset($params['order'])){
@@ -1126,7 +1126,6 @@ class InstitutionRepository extends Controller
         try {
             $positions = InstitutionPositions::with(
                     'staffPositionTitle:id,name as staff_position_title_name', 
-                    'staffPositionGrades:id,name as staff_position_grade_name', 
                     'status:id,name as status_name'
                 )
                 ->where('institution_id', $institutionId)
