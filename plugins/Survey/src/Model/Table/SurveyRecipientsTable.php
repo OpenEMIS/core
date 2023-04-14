@@ -26,30 +26,48 @@ class SurveyRecipientsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        //custom module option in toolbar
         $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey');
         $CustomModules = TableRegistry::get('custom_modules');
         $moduleOptions =  $CustomModules
             ->find('list', ['keyField' => 'id', 'valueField' => 'code']) 
-           ->where(['custom_modules.name IN' => $name]);
+           ->where(['custom_modules.name IN' => $name])->toArray();
 
-        $surveyForm = TableRegistry::get('survey_forms');
-        $surveyFormOption = $surveyForm->find('list', ['keyField' => 'id', 'valueField' => 'name']);
         if (!empty($moduleOptions)) {
-            $selectedModule = $this->queryString('module', $moduleOptions);
-            $selectedModuleSecond = $this->queryString('form', $surveyFormOption);
-            $extra['toolbarButtons']['add']['url']['module'] = $selectedModule;
-            $extra['toolbarButtons']['add']['url']['form'] = $selectedModuleSecond;
-            $extra['elements']['controls'] = [
-            'name' => 'CustomField.controls',
-            'data' => [
-                    'module' => $selectedModule,
-                    'form' => $selectedModuleSecond,
-                ],
-                'options' => [],
-                'order' => 1
-            ];
-            $this->controller->set(compact('moduleOptions','surveyFormOption'));
+            $moduleOptions = $moduleOptions;
+            $moduleId = $this->request->query('survey_module_id');
+            $this->advancedSelectOptions($moduleOptions, $moduleId);
+            $this->controller->set(compact('moduleOptions'));
         }
+
+        // Survey form options
+        $this->SurveyForms = TableRegistry::get('survey_forms');
+        $surveyFormOptions = $this->SurveyForms
+            ->find('list')
+            ->order([
+                $this->SurveyForms->aliasField('name')
+            ])
+            ->toArray();
+        $surveyFormOptions = $surveyFormOptions;
+        $surveyFormId = $this->request->query('survey_form_id');
+        $this->advancedSelectOptions($surveyFormOptions, $surveyFormId);
+        $this->controller->set(compact('surveyFormOptions'));
+
+        // survey filter options toolbar
+        $this->SurveyFilters = TableRegistry::get('survey_forms_filters');
+        $surveyFilterOptions = $this->SurveyFilters
+            ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+            ->order([
+                $this->SurveyFilters->aliasField('name')
+            ])
+            ->toArray();
+        $surveyFilterOptions = ['-1' => '-- '.__('All Survey Filter').' --'] + $surveyFilterOptions;
+        $surveyFilterId = $this->request->query('survey_filter_id');
+        $this->advancedSelectOptions($surveyFilterOptions, $surveyFilterId);
+     
+        $extra['elements']['controls'] = ['name' => 'Survey.survey_status', 'data' => [], 'options' => [], 'order' => 3];
+        $this->controller->set(compact('surveyFilterOptions'));
+
         $institutions = TableRegistry::get('institutions');
         $surveyForm = TableRegistry::get('survey_forms');
         $SurveyFormFilters = TableRegistry::get('survey_forms_filters');
