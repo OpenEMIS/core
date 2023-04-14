@@ -21,7 +21,8 @@ class SurveyFiltersTable extends ControllerActionTable
     {
         $this->table('survey_forms_filters');
         parent::initialize($config);
-        //$this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
+        $this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
+        $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id']);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Rules' => ['index']
         ]);
@@ -30,67 +31,46 @@ class SurveyFiltersTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         
-      $this->field('custom_module_id',['visible' => false]);
-        $this->field('survey_form_id', ['visible' => true]);
-        $this->field('name', ['visible' => true]);
-        $this->field('institution_type_id', ['visible' => true]);
-        $this->field('institution_provider_id', ['visible' => true]);
-       $this->field('area_education_id', ['visible' => true]);
-
-    }
-
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey');
-        $CustomModules = TableRegistry::get('custom_modules');
-        $moduleOptions =  $CustomModules
-            ->find('list', ['keyField' => 'id', 'valueField' => 'code']) 
-           ->where(['custom_modules.name IN' => $name]);
-
-        $surveyForm = TableRegistry::get('survey_forms');
-        $surveyFormOption = $surveyForm->find('list', ['keyField' => 'id', 'valueField' => 'name']);
-        if (!empty($moduleOptions)) {
-            $selectedModule = $this->queryString('module', $moduleOptions);
-            $selectedModuleSecond = $this->queryString('form', $surveyFormOption);
-            $extra['toolbarButtons']['add']['url']['module'] = $selectedModule;
-            $extra['toolbarButtons']['add']['url']['form'] = $selectedModuleSecond;
-           // $this->advancedSelectOptions($moduleOptions, $selectedModule);
-
-            //$query->where([$this->aliasField('custom_module_id') => $selectedModule]);
-
-            //Add controls filter to index page
-          //  $toolbarElements = ['name' => 'CustomField.controls', 'data' => [], 'options' => [], 'order' => 1];
-            $extra['elements']['controls'] = [
-            'name' => 'CustomField.controls',
-            'data' => [
-                'module' => $selectedModule,
-                'form' => $selectedModuleSecond,
-            ],
-            'options' => [],
-            'order' => 1
-        ];
-
-
-           // $extra['elements']['controls'] = $toolbarElements;
-            $this->controller->set(compact('moduleOptions','surveyFormOption'));
-        }
-
-        $SurveyFiltersTable = TableRegistry::get('survey_filters');
-
-        /*$query
-        ->find()->select(['institution_type_id' => $SurveyFiltersTable->aliasField('institution_type_id'),
-            'institution_provider_id' => $SurveyFiltersTable->aliasField('institution_provider_id'),'area_education_id' => $SurveyFiltersTable->aliasField('area_education_id')])
-        ->leftJoin([$SurveyFiltersTable->alias() => $SurveyFiltersTable->table()],
-                    [ $SurveyFiltersTable->aliasField('survey_filter_id').'='.$this->aliasField('id') ]);
-
         $this->field('custom_module_id',['visible' => false]);
         $this->field('survey_form_id', ['visible' => true]);
         $this->field('name', ['visible' => true]);
         $this->field('institution_type_id', ['visible' => true]);
         $this->field('institution_provider_id', ['visible' => true]);
-       $this->field('area_education_id', ['visible' => true]);
-*/
-        
+        $this->field('area_education_id', ['visible' => true]);
+
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        //custom module option in toolbar
+        $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey');
+        $CustomModules = TableRegistry::get('custom_modules');
+        $moduleOptions =  $CustomModules
+            ->find('list', ['keyField' => 'id', 'valueField' => 'code']) 
+           ->where(['custom_modules.name IN' => $name])->toArray();
+
+        if (!empty($moduleOptions)) {
+            $moduleOptions = $moduleOptions;
+            $selectedModule = $this->queryString('module', $moduleOptions);
+            $moduleId = $this->request->query('survey_module_id');
+            $extra['toolbarButtons']['add']['url']['module'] = $selectedModule;
+            $this->advancedSelectOptions($moduleOptions, $moduleId);
+            $this->controller->set(compact('moduleOptions'));
+        }
+        // Survey form options toolbar
+        $this->SurveyForms = TableRegistry::get('survey_forms');
+        $surveyFormOptions = $this->SurveyForms
+            ->find('list')
+            ->order([
+                $this->SurveyForms->aliasField('name')
+            ])
+            ->toArray();
+        $surveyFormOptions = ['-1' => '-- '.__('All Survey Forms').' --'] + $surveyFormOptions;
+        $surveyFormId = $this->request->query('survey_form_id');
+        $this->advancedSelectOptions($surveyFormOptions, $surveyFormId);
+     
+        $extra['elements']['controls'] = ['name' => 'Survey.filter_rules_controls', 'data' => [], 'options' => [], 'order' => 2];
+        $this->controller->set(compact('surveyFormOptions'));
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
@@ -138,9 +118,12 @@ class SurveyFiltersTable extends ControllerActionTable
             ])
             ->add('institution_type_id', 'ruleNotEmpty', [
                 'rule' => function ($value, $context) {
+                  // echo "<pre>";print_r($value);die;
                     if (empty($value)) {
+                      //  die('dd');
                         return false;
-                    } elseif (isset($value['_ids']) && empty($value['_ids'])) {
+                    } elseif (isset($value[0]['institution_type_id']) && empty($value[0]['institution_type_id'])) {
+                        //die('sds');
                         return false;
                     }
 
@@ -178,8 +161,8 @@ class SurveyFiltersTable extends ControllerActionTable
         $institution_type_id = [];
         $institution_provider_id = [];
         $area_education_id = [];
-        if (array_key_exists('institution_type_id', $data) && array_key_exists('_ids', $data['institution_type_id']) && !empty($data['institution_type_id']['_ids'])) {
-            foreach ($data['institution_type_id']['_ids'] as $institution_type) {
+        if (array_key_exists('institution_type_id', $data) && !empty($data['institution_type_id'])) {
+            foreach ($data['institution_type_id'] as $institution_type) {
                 $institution_type_id[] = [
                     'institution_type_id' => $institution_type
                 ];
@@ -187,8 +170,8 @@ class SurveyFiltersTable extends ControllerActionTable
         }
         $data['institution_type_id'] = $institution_type_id;
 
-        if (array_key_exists('institution_provider_id', $data) && array_key_exists('_ids', $data['institution_provider_id']) && !empty($data['institution_provider_id']['_ids'])) {
-            foreach ($data['institution_provider_id']['_ids'] as $institution_provider) {
+        if (array_key_exists('institution_provider_id', $data) && !empty($data['institution_provider_id'])) {
+            foreach ($data['institution_provider_id'] as $institution_provider) {
                 $institution_provider_id[] = [
                     'institution_provider_id' => $institution_provider
                 ];
@@ -197,8 +180,8 @@ class SurveyFiltersTable extends ControllerActionTable
 
         $data['institution_provider_id'] = $institution_provider_id;
 
-        if (array_key_exists('area_education_id', $data) && array_key_exists('_ids', $data['area_education_id']) && !empty($data['area_education_id']['_ids'])) {
-            foreach ($data['area_education_id']['_ids'] as $area_education) {
+        if (array_key_exists('area_education_id', $data) && !empty($data['area_education_id'])) {
+            foreach ($data['area_education_id'] as $area_education) {
                 $area_education_id[] = [
                     'institution_type_id' => $area_education
                 ];
@@ -230,6 +213,12 @@ class SurveyFiltersTable extends ControllerActionTable
 
     public function onUpdateFieldSurveyFormId(Event $event, array $attr, $action, Request $request)
     {
+        $CustomModules = $request->data['SurveyFilters']['custom_module_id'];
+        if($CustomModules==null){
+            $CustomModules = 1;
+        }else{
+          $CustomModules = $CustomModules;  
+        }
         if ($action == 'edit'){
             $attr['visible'] = true;
             $attr['type'] = 'readonly';
@@ -237,6 +226,7 @@ class SurveyFiltersTable extends ControllerActionTable
             $formTable = TableRegistry::get('survey_forms');
             $formOptions = $formTable
                 ->find('list', ['keyField' => 'id', 'valueField' => 'name']) 
+                ->where([$formTable->aliasField('custom_module_id') => $CustomModules])
                 ->toArray();
             $attr['type'] = 'select';
             $attr['options'] = $formOptions;
@@ -278,35 +268,30 @@ class SurveyFiltersTable extends ControllerActionTable
     }
 
     
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-       echo "<pre>"; print_r($entity);die;
-       $SurveyFiltersTable = TableRegistry::get('survey_filters');
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {  
+        $institution_type_id = array('institution_type_id'=>$entity->institution_type_id);
+        $institution_type = json_encode($entity->institution_type_id,true);
+
+        echo "<pre>";print_r($entity);die;
+
         if ($entity->isNew()) {
-            $countType = count($entity->institution_type_id);
-            $countProvider = count($entity->institution_provider_id);
-            $countArea = count($entity->area_education_id);
-            
-            if(($countType >= 2) || ($countProvider >= 2) || ($countArea >= 2)){
-                /*foreach(){
-
-                }*/
-            }else{
-                $entity = $SurveyFiltersTable->newEntity([
-                        'survey_filter_id' =>$entity->id,
-                        'institution_type_id'=>$entity->institution_type_id,
-                        'institution_provider_id'=>$entity->institution_provider_id,
-                        'area_education_id'=> $entity->area_education_id,
-                        'modified'=>$this->Auth->user('id'),
-                        'modified_user_id'=>date('Y-m-d h:i:s'),
-                        'created_user_id'=>$this->Auth->user('id'),
-                        'created'=> date('Y-m-d h:i:s')
-                    ]);
-               $saveData =  $SurveyFiltersTable->save($entity);
-            }
-
-            
+                $entity = $this->newEntity([
+                    'id' => Text::uuid(),
+                    'name' =>$entity->name,
+                    'survey_form_id' =>$entity->survey_form_id,
+                    'custom_module_id' =>$entity->custom_module_id,
+                    'institution_type_id'=>$entity->institution_type_id,
+                    'institution_provider_id'=>$entity->institution_provider_id,
+                    'area_education_id'=> $entity->area_education_id,
+                    'modified'=>$this->Auth->user('id'),
+                    'modified_user_id'=>date('Y-m-d h:i:s'),
+                    'created_user_id'=>$this->Auth->user('id'),
+                    'created'=> date('Y-m-d h:i:s')
+                ]);
+               $saveData =  $this->save($entity);
         }
+
     }
 
    /* public function afterSave(Event $event, Entity $entity, ArrayObject $options)
