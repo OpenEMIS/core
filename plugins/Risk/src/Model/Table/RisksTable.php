@@ -13,7 +13,7 @@ use Cake\Network\Request;
 use Cake\Log\Log;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
-
+use Cake\Datasource\ConnectionManager;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\HtmlTrait;
 
@@ -519,11 +519,11 @@ class RisksTable extends ControllerActionTable
         $userId = $this->request->session()->read('Auth.User.id');
         $undeletedList = [];
         $originalEntityList = [];
-        
+
         // Get original data from table
         $originalEntity = $this->RiskCriterias->find()->where(['risk_id'=>$entity->id])
                 ->toArray();
-        
+
         // get list of original entity
         if (isset($originalEntity)) {
             foreach ($originalEntity as $key => $obj) {
@@ -539,7 +539,7 @@ class RisksTable extends ControllerActionTable
                 }
             }
         }
-        
+
         // compare the original list and undeleted list, if not in undeleted list will be deleted.
         if (!empty($originalEntityList)) {
             foreach ($originalEntityList as $key => $obj) {
@@ -657,7 +657,6 @@ class RisksTable extends ControllerActionTable
         $args .= !is_null($userId) ? ' '.$userId : '';
         $args .= !is_null($riskId) ? ' '.$riskId : '';
         $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
-
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$args;
         $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
@@ -667,6 +666,7 @@ class RisksTable extends ControllerActionTable
 
     public function generate(Event $event, ArrayObject $extra)
     {
+        //  set_time_limit(300);
         $Risks = TableRegistry::get('Risk.Risks');
         $requestQuery = $this->request->query;
         $params = $this->paramsDecode($requestQuery['queryString']);
@@ -678,13 +678,13 @@ class RisksTable extends ControllerActionTable
 
         // update indexes pid and status
         $pid = getmypid();
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $InstitutionsData = $Institutions
-       									->find()
-		        					    ->toArray();
-        foreach($InstitutionsData AS $key => $Institutionsids){
-        $institutionId = $Institutionsids->id;
-        $record = $this->getInstitutionIndexesRecords($riskId, $institutionId)->first();
+        $connection = ConnectionManager::get('default');
+        $statement = $connection->prepare("SELECT `institutions`.id as institution_id,`institution_risks`.* FROM `institutions` inner join `institution_risks` on
+           `institutions`.id=`institution_risks`.institution_id where `institution_risks`.risk_id=".$riskId." ");
+        $statement->execute();
+        $result = $statement->fetchAll('obj');
+        $InstitutionRisks = TableRegistry::get('Institution.InstitutionRisks');
+        foreach($result AS $record){
 
         // if processing id not null (process still running or process stuck)
         if (!empty($record->pid)) {
@@ -692,7 +692,7 @@ class RisksTable extends ControllerActionTable
         }
 
         if (!empty($record)) {
-            // update the status to processing
+       // update the status to processing
             $this->InstitutionRisks->updateAll([
                 'pid' => $pid,
                 'status' => 2 // processing
@@ -711,9 +711,10 @@ class RisksTable extends ControllerActionTable
         }
 
         // trigger shell
-        // trigger shell
         $Risks->triggerUpdateRisksShell('UpdateRisks', $institutionId, $userId, $riskId, $academicPeriodId);
-        }
+
+
+    }
         $this->Alert->info(__('Risk.generate'));
 
         // redirect to index page
@@ -730,7 +731,9 @@ class RisksTable extends ControllerActionTable
     }
     public function getInstitutionIndexesRecords($riskId)
     {
-        return $this->InstitutionRisks->find('Record', ['risk_id' => $riskId]);
+        $q= $this->InstitutionRisks->find('Record', ['risk_id' => $riskId]);
+        echo $q->sql();
+        exit;
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
