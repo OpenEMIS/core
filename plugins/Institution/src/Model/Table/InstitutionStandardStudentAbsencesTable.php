@@ -164,7 +164,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                         AND MONTH(institution_student_absence_days.end_date) >= $month
                         AND YEAR(institution_student_absence_days.end_date) >= $yearSecond
                         AND institution_student_absence_days.absence_type_id != 3
-                        AND institution_student_absence_days.institution_id = 6)";
+                        AND institution_student_absence_days.institution_id = $institutionId)";
     
 
     $query
