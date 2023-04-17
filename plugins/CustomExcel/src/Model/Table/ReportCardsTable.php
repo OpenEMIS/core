@@ -1113,8 +1113,8 @@ class ReportCardsTable extends AppTable
                 $extra['competency_periods_ids'] = $entity->extract('id')->toArray();
             }
             $AbsenceTypeExcused = $AbsenceTypesTable->find()->where(['code' => 'EXCUSED'])->first();
-            $AbsenceTypeUnexcused = $AbsenceTypesTable->find()->where(['code' => 'EXCUSED'])->first();
-            $AbsenceTypeLate = $AbsenceTypesTable->find()->where(['code' => 'EXCUSED'])->first();
+            $AbsenceTypeUnexcused = $AbsenceTypesTable->find()->where(['code' => 'UNEXCUSED'])->first();
+            $AbsenceTypeLate = $AbsenceTypesTable->find()->where(['code' => 'LATE'])->first();
 
             $entity = $entity->toArray();
             foreach($entity as $k => $row){
