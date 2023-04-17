@@ -434,7 +434,7 @@ return [
         $user = $newUser;
         $createUserSQL = sprintf("CREATE USER '%s'@'%s' IDENTIFIED BY '%s'", $user, $host, $password);
         $flushPriviledges = "FLUSH PRIVILEGES";
-        $grantSQL = sprintf("GRANT ALL PRIVELEGES ON %s.* TO '%s'@'%s'", $db, $user, $host);
+        $grantSQL = sprintf("GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%s'", $db, $user, $host);
         $pdo->exec($createUserSQL);
         $pdo->exec($grantSQL);
         $pdo->exec($flushPriviledges);
