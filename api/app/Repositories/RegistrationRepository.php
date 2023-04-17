@@ -166,7 +166,7 @@ class RegistrationRepository extends Controller
 
             Mail::send('generateOtp', $data, function($message) use($email) {
                 $message->to($email, 'OpenEMIS User')
-                    ->subject('OpenEMIS - One-time Password (OTP)');
+                    ->subject(config('constants.emailConfig.generateOtpEmail.subject'));
             });
             DB::commit();
             return 1;
@@ -695,7 +695,7 @@ class RegistrationRepository extends Controller
 
                 Mail::send('registrationSuccess', $data, function($message) use ($email) {
                     $message->to($email, 'OpenEMIS User')
-                        ->subject('OpenEMIS - Successful Registration');
+                        ->subject(config('constants.emailConfig.registrationSuccessEmail.subject'));
                 });
             }
 

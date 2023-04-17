@@ -1,3 +1,19 @@
+### [3.80.4] - 2023-04-14
+- Implemented: The ability to assign or remove Homeroom Teacher to staff after assignment
+- Implemented: Develop a page to track all processed student report cards
+- Bug Fixed: Reset Password Email : Include a space between the first two paragraphs
+- Bug Fixed: Administration > Risks: Error encountered when generating risks for all Institutions
+- Bug Fixed: Institutions > Students > Guardians tab > Add Guardians : Left menu collapses and header components went missing
+- Bug Fixed: Institutions > Delete > Institution Association Records : Academic Periods and Institution Custom fields should not show in the list of Institution Association Records
+- Bug Fixed: Institution > Performance > Assessments > Export page: Report generation is taking too long
+- Bug Fixed: Report>Custom: Custom reports cannot be generated
+- Bug Fixed: Administration>Security>Groups: Unable to add users
+- Bug Fixed: Institutions > Statistics > Standard Report : Marks Entered by Staff: Report is not showing all subjects
+- Bug Fixed: API: Institutions/positions returns no data
+- Bug Fixed: Reports > Institutions > Positions: Report is stuck in progress
+- Bug Fixed: Registration:Develop a function to read the otp and confirmation email content from config file
+- Bug Fixed: Institutions > Attendance > Students : System keeps adding records into table instead of inserting
+
 ### [3.80.3] - 2023-04-06
 - Bug Fixed: Reports> Students/Staff: Students/Staff Photo unable to download when report is created
 - Bug Fixed: Institutions>Performance>Assessments>Archive: Change the page design
