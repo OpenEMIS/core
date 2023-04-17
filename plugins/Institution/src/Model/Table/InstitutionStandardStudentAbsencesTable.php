@@ -214,7 +214,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
 
         $query->innerJoin(
                 ['academic_periods' => 'academic_periods'],
-                ['academic_periods.name' .'='. $yearSecond]
+                ['academic_periods.end_year' .'='. $yearSecond]
             )
         ->innerJoin(
                 ['institutions' => 'institutions'],
