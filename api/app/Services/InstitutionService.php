@@ -840,4 +840,60 @@ class InstitutionService extends Controller
         }
     }
 
+
+    public function reportCardCommentAdd($request, int $institutionId, int $classId)
+    {
+        try {
+            $data = $this->institutionRepository->reportCardCommentAdd($request, $institutionId, $classId);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add report card comment.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add report card comment.');
+        }
+    }
+
+
+
+    public function reportCardCommentHomeroomAdd($request, int $institutionId, int $classId)
+    {
+        try {
+            $data = $this->institutionRepository->reportCardCommentHomeroomAdd($request, $institutionId, $classId);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add report card comment.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add report card comment.');
+        }
+    }
+
+
+
+    public function reportCardCommentPrincipalAdd($request, int $institutionId, int $classId)
+    {
+        try {
+            $data = $this->institutionRepository->reportCardCommentPrincipalAdd($request, $institutionId, $classId);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add report card comment.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add report card comment.');
+        }
+    }
+
 }
