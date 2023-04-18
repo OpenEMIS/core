@@ -1292,9 +1292,9 @@ class InstitutionRepository extends Controller
     {
         try {
             $data = $request->all();
-            //dd($data);
+            dd($data);
 
-            $check = $this->checkIfStudentEnrolled($institutionId, $classId, $data['academic_period_id'], $data['student_id']);
+            $check = $this->checkIfStudentEnrolled($institutionId, $classId, $data['academic_period_id'], $data['student_id'], $data['education_grade_id']);
             
             if($check == 0){
                 return 0;
@@ -1337,7 +1337,7 @@ class InstitutionRepository extends Controller
             $data = $request->all();
             //dd($data);
 
-            $check = $this->checkIfStudentEnrolled($institutionId, $classId, $data['academic_period_id'], $data['student_id']);
+            $check = $this->checkIfStudentEnrolled($institutionId, $classId, $data['academic_period_id'], $data['student_id'], $data['education_grade_id']);
             
             if($check == 0){
                 return 0;
@@ -1405,13 +1405,14 @@ class InstitutionRepository extends Controller
     }
 
 
-    public function checkIfStudentEnrolled($institutionId, $classId, $academicPeriodId, $studentId)
+    public function checkIfStudentEnrolled($institutionId, $classId, $academicPeriodId, $studentId, $educationGradeId)
     {
         try {
             $check = InstitutionClassStudents::where('student_id', $studentId)
                     ->where('institution_class_id', $classId)
                     ->where('academic_period_id', $academicPeriodId)
                     ->where('institution_id', $institutionId)
+                    ->where('education_grade_id', $educationGradeId)
                     ->first();
             
             if($check){
@@ -1437,7 +1438,7 @@ class InstitutionRepository extends Controller
             $data = $request->all();
             
 
-            $check = $this->checkIfStudentEnrolled($institutionId, $classId, $data['academic_period_id'], $data['student_id']);
+            $check = $this->checkIfStudentEnrolled($institutionId, $classId, $data['academic_period_id'], $data['student_id'], $data['education_grade_id']);
             
             if($check == 0){
                 return 0;
