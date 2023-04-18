@@ -199,7 +199,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             'institution_name' =>'institutions.name',
             'education_grade_name' => 'MAX(education_grades.name)',
             'class_name' => 'IFNULL(MAX(institution_classes.name), \'\')',
-            'security_users.openemis_no',
+            'openemis_no' => 'security_users.openemis_no',
             'identity_number' => 'IFNULL(StudentIdentities.identity_number, \'\')',
             'student_name' => "CONCAT_WS(' ', security_users.first_name, security_users.middle_name, security_users.third_name, security_users.last_name)",
             'total_absent_days' => "MAX(subq.day_1) + MAX(subq.day_2) + MAX(subq.day_3) + MAX(subq.day_4) + MAX(subq.day_5) + MAX(subq.day_6) + MAX(subq.day_7) + MAX(subq.day_8) + MAX(subq.day_9) + MAX(subq.day_10) + MAX(subq.day_11) + MAX(subq.day_12) + MAX(subq.day_13) + MAX(subq.day_14) + MAX(subq.day_15) + MAX(subq.day_16) + MAX(subq.day_17) + MAX(subq.day_18) + MAX(subq.day_19) + MAX(subq.day_20) + MAX(subq.day_21) + MAX(subq.day_22) + MAX(subq.day_23) + MAX(subq.day_24) + MAX(subq.day_25) + MAX(subq.day_26) + MAX(subq.day_27) + MAX(subq.day_28) + MAX(subq.day_29) + MAX(subq.day_30) + MAX(subq.day_31)",
