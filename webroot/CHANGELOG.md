@@ -1,3 +1,9 @@
+### [3.80.5] - 2023-04-18
+- Implemented: Develop additional placeholders for preschool competences report card
+- Bug Fixed: Institutions > Students > Add page: The system regenerate an existing OpenEMIS ID for existing student
+- Bug Fixed: Reports > Institutions > Institutions: The report generated does not show all institutions
+- Bug Fixed: Institutions>Survey>Forms: Unable to add more questions and the assignee changes to unassigned
+
 ### [3.80.4] - 2023-04-14
 - Implemented: The ability to assign or remove Homeroom Teacher to staff after assignment
 - Implemented: Develop a page to track all processed student report cards
