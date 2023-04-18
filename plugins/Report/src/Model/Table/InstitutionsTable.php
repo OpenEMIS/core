@@ -2186,4 +2186,16 @@ class InstitutionsTable extends AppTable
             ->notEmpty('institution_id');
         return $validator;
     }
+
+
+    // Start POCOR-7358
+    public function onExcelGetContactPerson(Event $event, Entity $entity)
+    {
+        $institution_contact_persons = TableRegistry::get('institution_contact_persons')->find()->where(['institution_id' => $entity['id']])->where(['preferred' => 1])->order(['id'=>'DESC'])->first();
+        if(!empty($institution_contact_persons)){
+            return $institution_contact_persons['contact_person'];
+        }
+        return '';
+    }
+    // End POCOR-7358
 }
