@@ -93,19 +93,46 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
-        $academic_period = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $getyear = $academic_period->find('all')
-                   ->select(['end_year','name'=>$academic_period->aliasField('start_year')]) //POCOR-6854
-                   ->where(['id'=>$academicPeriodId])
-                   ->limit(1);
-        foreach($getyear->toArray() as $val) {
-            $year  = $val['name'];
-            $yearSecond  = $val['end_year']; //POCOR-6854
-        }
         $institutionId = $requestData->institution_id;
         $gradeId = $requestData->education_grade_id;
         $classId = $requestData->institution_class_id;
         $month = $requestData->month;
+        $academic_period = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $getyear = $academic_period->find('all')
+                   ->select(['start_year','end_year','start_date','end_date','name']) //POCOR-6854
+                   ->where(['id'=>$academicPeriodId])
+                   ->first();
+        $yearOne  = $getyear['start_year'];
+        $yearSecond  = $getyear['end_year']; 
+        if($yearOne == $yearSecond){
+            $yearOne  = $getyear['start_year'];
+            $yearSecond  = $getyear['end_year']; 
+            $startDate  = $getyear['start_date']; 
+            $endDate  = $getyear['end_date']; 
+            $name  = $getyear['name']; 
+            $wholeYear = $yearSecond;
+        }else{
+            $yearOne  = $getyear['start_year'];
+            $yearSecond  = $getyear['end_year']; 
+            $startDate  = $getyear['start_date']; 
+            $endDate  = $getyear['end_date']; 
+            $startDate1 = $startDate->format('Y-m-d');
+            $endDate1 = $endDate->format('Y-m-d');
+            $startDate = strtotime($startDate1);
+            $endDate = strtotime($endDate1);
+            $startDatemonthGet = date("m",$startDate);
+            $startDateYear = date("Y",$startDate);
+            $EndDatemonthGet = date("m",$endDate);
+            $EndDateYear = date("Y",$endDate);
+            $name  = $getyear['name'];
+            if($month < $startDatemonthGet){
+                $name  = '"'.$getyear['name'].'"';
+                $wholeYear = $EndDateYear;
+            }else{
+                $name  = '"'.$getyear['name'].'"';
+                $wholeYear = $startDateYear;
+            }
+        }
         $where = [];
         if ($gradeId != -1) {
             $where['education_grades.id'] = $gradeId;
@@ -113,12 +140,11 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
         if ($classId != 0) {
             $where['institution_classes.id'] = $classId;
         }
-       // $where[$this->aliasField('academic_period_id')] = $academicPeriodId;
-        //$where[$this->aliasField('institution_id')] = $institutionId;
+        
         $date =  '"'.$year.'-'.$month.'%"';
         $datelike =  '"'.$year.'-'.$month.'"';
-        $dateSecond =  '"'.$yearSecond.'-'.$month.'%"';  //POCOR-6854
-        $yearSecond =  $yearSecond;  //POCOR-6854
+        $dateSecond =  '"'.$yearSecond.'-'.$month.'%"';  
+        $yearSecond =  $yearSecond; 
         $join = [];
         $subQuery = "(SELECT institution_student_absence_days.institution_id
                           ,institution_student_absence_days.student_id
@@ -158,11 +184,11 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
                           ,IF(DAY(LAST_DAY(CONCAT(year_id, '-', LPAD(month_id, 2, '0'), '-01'))) >= 29 AND CONCAT(year_id, '-', LPAD(month_id, 2, '0'), '-29') BETWEEN institution_student_absence_days.start_date AND institution_student_absence_days.end_date, 1, '') AS day_29
                           ,IF(DAY(LAST_DAY(CONCAT(year_id, '-', LPAD(month_id, 2, '0'), '-01'))) >= 30 AND CONCAT(year_id, '-', LPAD(month_id, 2, '0'), '-30') BETWEEN institution_student_absence_days.start_date AND institution_student_absence_days.end_date, 1, '') AS day_30
                           ,IF(DAY(LAST_DAY(CONCAT(year_id, '-', LPAD(month_id, 2, '0'), '-01'))) = 31 AND CONCAT(year_id, '-', LPAD(month_id, 2, '0'), '-31') BETWEEN institution_student_absence_days.start_date AND institution_student_absence_days.end_date, 1, '') AS day_31
-                        FROM institution_student_absence_days, (SELECT @month_id := $month as month_id, @year_id := $yearSecond AS year_id) AS variables
+                        FROM institution_student_absence_days, (SELECT @month_id := $month as month_id, @year_id := $wholeYear AS year_id) AS variables
                         WHERE MONTH(institution_student_absence_days.start_date) <= $month
-                        AND YEAR(institution_student_absence_days.start_date) <= $yearSecond
+                        AND YEAR(institution_student_absence_days.start_date) <= $wholeYear
                         AND MONTH(institution_student_absence_days.end_date) >= $month
-                        AND YEAR(institution_student_absence_days.end_date) >= $yearSecond
+                        AND YEAR(institution_student_absence_days.end_date) >= $wholeYear
                         AND institution_student_absence_days.absence_type_id != 3
                         AND institution_student_absence_days.institution_id = $institutionId)";
     
@@ -214,7 +240,7 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
 
         $query->innerJoin(
                 ['academic_periods' => 'academic_periods'],
-                ['academic_periods.end_year' .'='. $yearSecond]
+                ['academic_periods.name' .'='. $name]
             )
         ->innerJoin(
                 ['institutions' => 'institutions'],
