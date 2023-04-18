@@ -207,7 +207,18 @@ class StudentReportCardsTable extends AppTable
         if (array_key_exists('institution_id', $params)) {
             $Institutions = TableRegistry::get('Institution.Institutions');
             $entity = $Institutions->get($params['institution_id'], ['contain' => ['AreaAdministratives', 'Types']]);
-            return $entity;
+            //POCOR-7316 start
+            $result = [];
+				$result = [
+					'name' => $entity->name,
+                    'address'=>$entity->address,
+                    'contact'=>$entity->telephone,
+                    'area'=>$entity['area_administrative']->name,
+            
+				];
+             return $result;
+           //POCOR-7316 end
+            
         }
     }
 	
@@ -221,6 +232,8 @@ class StudentReportCardsTable extends AppTable
                 ->select([
 					'first_name' => 'Users.first_name',
 					'last_name' => 'Users.last_name',
+                    'middle_name'=>'Users.middle_name',//POCOR-7316
+                    'third_name'=>'Users.third_name',//POCOR-7316
 					'email' => 'Users.email',
 					'photo_content' => 'Users.photo_content',
 					'address' => 'Users.address',
@@ -235,6 +248,8 @@ class StudentReportCardsTable extends AppTable
                             'identity_number',
                             'first_name',
                             'last_name',
+                            'middle_name',//POCOR_7316
+                            'third_name',//POCOR-7316
                             'photo_content',
                             'email',
                             'address',
@@ -255,6 +270,10 @@ class StudentReportCardsTable extends AppTable
 				$result = [];
 				$result = [
 					'name' => $entity->first_name.' '.$entity->last_name,
+                    'first_name'=>$entity->first_name,//POCOR_7316
+                    'last_name'=>$entity->last_name,//POCOR_7316
+                    'middle_name'=>$entity->middle_name,//POCOR_7316
+                    'third_name'=>$entity->third_name,//POCOR_7316
 					'identity_number' => $entity->identity_number,
 					'photo_content' => $entity->photo_content,
 					'email' => $entity->email,
