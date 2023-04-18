@@ -11,6 +11,7 @@ use App\Models\AcademicPeriod;
 use App\Models\EducationGrades;
 use App\Models\Institutions;
 use App\Models\AreaAdministratives;
+use App\Models\Areas;
 use App\Models\SecurityUsers;
 use App\Models\SecurityUserCode;
 use App\Models\Nationalities;
@@ -102,7 +103,7 @@ class RegistrationRepository extends Controller
         try {
             /*$areaAdministratives = AreaAdministratives::select('id', 'name', 'parent_id')->with('areaAdministrativesChild:id,name,parent_id')->get();*/
 
-            $areaAdministratives = AreaAdministratives::select('id', 'name', 'parent_id')->get()->toArray();
+            $areaAdministratives = Areas::select('id', 'name', 'parent_id')->get()->toArray();
             
             return $areaAdministratives;
         } catch (\Exception $e) {
@@ -111,7 +112,7 @@ class RegistrationRepository extends Controller
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('Area Administratives List Not Found');
+            return $this->sendErrorResponse('Areas List Not Found');
         }
     }
 
