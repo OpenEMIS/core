@@ -79,7 +79,7 @@ class RegistrationController extends Controller
         try {
             $data = $this->registrationService->administrativeAreasList();
             
-            return $this->sendSuccessResponse("Administrative Areas List Found", $data);
+            return $this->sendSuccessResponse("Areas List Found", $data);
             
         } catch (\Exception $e) {
             Log::error(
@@ -87,7 +87,7 @@ class RegistrationController extends Controller
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('Administrative Areas List Not Found');
+            return $this->sendErrorResponse('Areas List Not Found');
         }
     }
 
