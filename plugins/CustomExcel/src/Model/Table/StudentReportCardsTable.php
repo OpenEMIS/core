@@ -47,6 +47,8 @@ class StudentReportCardsTable extends AppTable
 				'StudentHealthConsultations',
 				'StudentGuardians',
 				'StudentHouses',
+                'UserSpecialNeedsAssessments',//6680
+                'UserContacts',//6680
             ]
         ]);
     }
@@ -77,6 +79,8 @@ class StudentReportCardsTable extends AppTable
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentHealthConsultations'] = 'onExcelTemplateInitialiseStudentHealthConsultations';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentGuardians'] = 'onExcelTemplateInitialiseStudentGuardians';
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentHouses'] = 'onExcelTemplateInitialiseStudentHouses';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseUserSpecialNeedsAssessments'] = 'onExcelTemplateInitialiseUserSpecialNeedsAssessments';//6680
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseUserContacts'] = 'onExcelTemplateInitialiseUserContacts';//6680
 		return $events;
     }
 
@@ -215,18 +219,20 @@ class StudentReportCardsTable extends AppTable
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
             $Student = TableRegistry::get('Institution.InstitutionClassStudents');
-
+            
             $entity = $Student
                 ->find()
                 ->select([
-					'first_name' => 'Users.first_name',
-					'last_name' => 'Users.last_name',
-					'email' => 'Users.email',
-					'photo_content' => 'Users.photo_content',
-					'address' => 'Users.address',
-					'date_of_birth' => 'Users.date_of_birth',
-					'identity_number' => 'Users.identity_number',
-					'gender' => 'Genders.name',
+                    'id' => 'Users.id',//6680
+                    'address_area_id' => 'Users.address_area_id',//6680
+                    'first_name' => 'Users.first_name',
+                    'last_name' => 'Users.last_name',
+                    'email' => 'Users.email',
+                    'photo_content' => 'Users.photo_content',
+                    'address' => 'Users.address',
+                    'date_of_birth' => 'Users.date_of_birth',
+                    'identity_number' => 'Users.identity_number',
+                    'gender' => 'Genders.name',
                     'openemis_no' => 'Users.openemis_no',//add openemis_no in report POCOR-6321
                 ])
                 ->contain([
@@ -243,7 +249,7 @@ class StudentReportCardsTable extends AppTable
                         ]
                     ]
                 ])
-				->matching('Users.Genders')
+                ->matching('Users.Genders')
                 ->where([
                     $Student->aliasField('institution_id') => $params['institution_id'],
                     $Student->aliasField('academic_period_id') => $params['academic_period_id'],
@@ -251,21 +257,85 @@ class StudentReportCardsTable extends AppTable
                     $Student->aliasField('student_id') => $params['student_id'],
                 ])
                 ->first();
-				
-				$result = [];
-				$result = [
-					'name' => $entity->first_name.' '.$entity->last_name,
-					'identity_number' => $entity->identity_number,
-					'photo_content' => $entity->photo_content,
-					'email' => $entity->email,
-					'address' => $entity->address,
-					'date_of_birth' => $entity->date_of_birth,
-					'gender' => $entity->gender,
+                //6680 starts
+                $identity_number_value = '';
+                if(!empty($entity)){
+                    $UserIdentities = TableRegistry::get('user_identities');
+                    $UserIdentitiesEntity = $UserIdentities
+                        ->find()
+                        ->select([
+                            'id' => $UserIdentities->aliasField('id'),
+                            'number' => $UserIdentities->aliasField('number'),
+                            'name' => 'IdentityTypes.name',
+                        ])
+                        ->innerJoin(
+                        [' IdentityTypes' => ' identity_types'],
+                        [
+                            'IdentityTypes.id ='. $UserIdentities->aliasField('identity_type_id')
+                        ]
+                        )
+                        ->where([
+                            $UserIdentities->aliasField('security_user_id') => $entity->id,
+                        ])
+                        ->first();
+                    
+                    if(!empty($UserIdentitiesEntity)){
+                        $identity_number_value = $UserIdentitiesEntity->name .' { '. $UserIdentitiesEntity->number .' } ';
+                    }
+
+                    $area_name = '';
+                    if(!empty($entity->address_area_id)){
+                        $selectedArea = $entity->address_area_id;
+                        $areaIds = [];
+                        $allgetArea = $this->getParent($selectedArea, $areaIds);
+
+                        $selectedArea1[]= $selectedArea;
+                        if(!empty($allgetArea)){
+                            $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+                        }else{
+                            $allselectedAreas = $selectedArea1;
+                        }
+
+                        $Areas = TableRegistry::get('Area.AreaAdministratives');
+                        $AreasRecords = $Areas
+                                        ->find()->select([$Areas->aliasField('name')])
+                                        ->where([ $Areas->aliasField('id IN') => $allselectedAreas])
+                                        ->hydrate(false)->order([$Areas->aliasField('id DESC')])->toArray();
+                        if(!empty($AreasRecords)){
+                            $area_name_array = [];
+                            foreach ($AreasRecords as $key => $value) {
+                                $area_name_array[$key] = $value['name'];
+                            }
+                            $area_name = implode(' / ',$area_name_array);
+                        }
+                    }
+                }
+                $result = [];
+                $result = [
+                    'name' => $entity->first_name.' '.$entity->last_name,
+                    'identity_number' => $identity_number_value,
+                    'photo_content' => $entity->photo_content,
+                    'email' => $entity->email,
+                    'address' => $entity->address,
+                    'date_of_birth' => $entity->date_of_birth,
+                    'gender' => $entity->gender,
                     'openemis_no' => $entity->openemis_no,//add openemis_no in report POCOR-6321
-				];
+                    'age' => date_diff(date_create($entity->date_of_birth), date_create('today'))->y .' Year',
+                    'permanent_address' => $area_name,
+                ];//6680 ends
             return $result;
         }
     }
+    //6680 starts
+    public function getParent($id, $idArray) {
+        $Areas = TableRegistry::get('Area.AreaAdministratives');
+        $result = $Areas->find()->where([$Areas->aliasField('id') => $id])->toArray();
+        foreach ($result as $key => $value) {
+            $idArray[] = $value['parent_id'];
+            $idArray = $this->getParent($value['parent_id'], $idArray);
+        }
+        return $idArray;
+    }//6680 ends
 	
 	public function onExcelTemplateInitialiseStudentDemographics(Event $event, array $params, ArrayObject $extra)
     {
@@ -817,6 +887,62 @@ class StudentReportCardsTable extends AppTable
                     $institutionAssociationStudent->aliasField('education_grade_id') => $params['education_grade_id'],
                 ])
                 ->first();
+            return $entity;
+        }
+    }
+    //6680 starts
+    public function onExcelTemplateInitialiseUserSpecialNeedsAssessments(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
+            $UserSpecialNeedsAssessmentsTbl = TableRegistry::get('user_special_needs_assessments');
+            $SpecialNeedTypesTbl = TableRegistry::get('special_need_types');
+            $Student = TableRegistry::get('Institution.InstitutionClassStudents');
+
+            $entity = $Student
+                ->find()
+                ->select([
+                    'id' => $SpecialNeedTypesTbl->aliasField('id'),
+                    'special_need_type' => $SpecialNeedTypesTbl->aliasField('name')
+                ])
+                ->innerJoin(
+                [$UserSpecialNeedsAssessmentsTbl->alias() => $UserSpecialNeedsAssessmentsTbl->table()],
+                [
+                    $UserSpecialNeedsAssessmentsTbl->aliasField('security_user_id ='). $Student->aliasField('student_id')
+                ]
+                )
+                ->leftJoin([$SpecialNeedTypesTbl->alias() => $SpecialNeedTypesTbl->table()],
+                [
+                    $SpecialNeedTypesTbl->aliasField('id =') . $UserSpecialNeedsAssessmentsTbl->aliasField('special_need_type_id')
+                    
+                ])
+                ->where([
+                    $Student->aliasField('institution_id') => $params['institution_id'],
+                    $Student->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $Student->aliasField('education_grade_id') => $params['education_grade_id'],
+                    $Student->aliasField('student_id') => $params['student_id'],
+                ])
+                ->toArray();
+            return $entity;
+        }
+    }//6680 ends
+
+    public function onExcelTemplateInitialiseUserContacts(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
+            $UserContacts = TableRegistry::get('user_contacts');
+
+            $entity = $UserContacts
+                ->find()
+                ->select([
+                    'id' => $UserContacts->aliasField('id'),
+                    'contact' => $UserContacts->aliasField('value'),
+                ])
+                ->where([
+                    $UserContacts->aliasField('security_user_id') => $params['student_id'],
+                    $UserContacts->aliasField('preferred') => 1,
+                ])
+                ->toArray();
+            //echo "<pre>"; print_r($entity); die;
             return $entity;
         }
     }
