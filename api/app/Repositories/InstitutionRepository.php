@@ -1292,7 +1292,6 @@ class InstitutionRepository extends Controller
     {
         try {
             $data = $request->all();
-            dd($data);
 
             $check = $this->checkIfStudentEnrolled($institutionId, $classId, $data['academic_period_id'], $data['student_id'], $data['education_grade_id']);
             
