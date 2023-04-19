@@ -24,6 +24,7 @@ use Cake\Utility\Security; //POCOR-5672
 use Cake\Utility\Text;//POCOR-5672
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\Time;
+use Cake\Network\Session;
 
 class InstitutionsController extends AppController
 {
@@ -42,6 +43,8 @@ class InstitutionsController extends AppController
         'InstitutionClasses',
         'InstitutionSubjects',
         'InstitutionTextbooks',
+        'InstitutionCurricular',//POCOR-6673
+        'InstitutionCurricularStudents', //POCOR-6673
 
         // students
         'Programmes',
@@ -207,6 +210,7 @@ class InstitutionsController extends AppController
             'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
             'InstitutionStatistics'              => ['className' => 'Institution.InstitutionStatistics', 'actions' => ['index', 'add']],
             'InstitutionStandards'              => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
+            'ImportStudentCurriculars'  => ['className' => 'Institution.ImportStudentCurriculars', 'actions' => ['add']],//POCOR-6673
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -465,6 +469,17 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTrips']);
     }
 
+    //POCOR-6673
+    public function InstitutionCurriculars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurriculars']);
+    }
+    //POCOR-6673
+    public function InstitutionCurricularStudents()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurricularStudents']);
+    }
+
     public function changePageHeaderTrips($model, $modelAlias, $userType)
     {
         $session = $this->request->session();
@@ -480,7 +495,13 @@ class InstitutionsController extends AppController
                 $this->Navigation->addCrumb(__('Trips'));
                 $this->set('contentHeader', $header);
 
-            } 
+            }elseif($this->request->param('action') == 'InstitutionCurriculars') { //POCOR-6673
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Curriculars');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Curriculars'));
+                $this->set('contentHeader', $header);
+            }
         }
     }
 
@@ -2459,7 +2480,8 @@ class InstitutionsController extends AppController
                 'StudentProgrammes' => __('Programmes'),
                 'StudentRisks' => __('Risks'),
                 'StudentTextbooks' => __('Textbox'),
-                'StudentAssociations' => __('Associations')
+                'StudentAssociations' => __('Associations'),
+                'StudentCurriculars' => __('Curriculars') //POCOR-6673 in student tab breadcrumb
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -2535,7 +2557,9 @@ class InstitutionsController extends AppController
                 $header .= ' - '. __('Associations');
             } elseif($model->alias() == 'InstitutionStatistics'){
                 $header .= ' - '. __('Statistics');
-            } else {
+            }/*elseif ($model->alias() == 'StudentCurriculars') { //POCOR-6673
+                $header .= ' - '. __('Student Curriculars');
+            }*/ else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
            
@@ -3652,14 +3676,15 @@ class InstitutionsController extends AppController
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Associations')]
+            'Associations' => ['text' => __('Associations')],
+            'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673 for student tab section
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         // Programme will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
-            if (in_array($key, ['Programmes', 'Textbooks', 'Risks','Associations'])) {
+            if (in_array($key, ['Programmes', 'Textbooks', 'Risks','Associations','Curriculars'])) {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
             } else {
@@ -3667,7 +3692,6 @@ class InstitutionsController extends AppController
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
             }
         }
-        //echo '<pre>';print_r($tabElements);die;
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
@@ -7874,5 +7898,28 @@ class InstitutionsController extends AppController
         }
     }
     //POCOR-7231 :: END
+
+    //POCOR-6673
+    public function getCurricularsTabElements($options = [])
+    {
+        $queryString = $this->request->query('queryString');
+        $tabElements = [
+            'InstitutionCurriculars' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'InstitutionCurriculars', 'view', 'queryString' => $queryString],
+                'text' => __('Curriculars')
+            ],
+            'InstitutionCurricularStudents' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'InstitutionCurricularStudents', 'index', 'queryString' => $queryString],
+                'text' => __('Students')
+            ]
+        ];
+        return $tabElements;
+    }
+
+    //POCOR-6673
+    public function StudentCurriculars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurriculars']);
+    }
 
 }
