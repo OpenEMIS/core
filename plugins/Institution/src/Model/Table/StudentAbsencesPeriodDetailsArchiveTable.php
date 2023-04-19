@@ -134,7 +134,7 @@ class StudentAbsencesPeriodDetailsArchiveTable extends ControllerActionTable
                 $this->aliasField('institution_id') => $institution_id,
                 $this->aliasField('academic_period_id') =>$academic_period_id,
                 $this->aliasField('institution_class_id') => $institution_class_id,
-                $this->aliasField('education_grade_id') => $education_grade_id,
+                // $this->aliasField('education_grade_id') => $education_grade_id,
                 $this->aliasField('date') => $day_id,
                 $this->aliasField('subject_id') => $subject_id
                 ]);
