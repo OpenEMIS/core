@@ -208,6 +208,21 @@ class InstitutionStaffAttendancesArchiveTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        $data = $this->request->query;
+        $academic_period_id = $data['academic_period_id'];
+        $selected_week = $data['selected_week'];
+        $selected_day = $data['selected_day'];
+        if ($selected_day instanceof Time || $selected_day instanceof Date) {
+            $selected_day = $selected_day->format('Y-m-d');
+        } else {
+            $selected_day = date('Y-m-d', strtotime($selected_day));
+        }
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $query->where([
+            $this->aliasField('institution_id')=>$institutionId,
+            $this->aliasField('academic_period_id')=>$academic_period_id,
+            $this->aliasField('date')=>$selected_day
+        ]);
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 
