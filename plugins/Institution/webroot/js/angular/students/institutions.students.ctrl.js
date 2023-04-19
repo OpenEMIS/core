@@ -1005,7 +1005,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 case 'confirmation': 
                     StudentController.step = 'add_student';
                     StudentController.selectedStudentData.endDate = '31-12-' + StudentController.currentYear;
-                    StudentController.getUniqueOpenEmisId();
+                    // StudentController.getUniqueOpenEmisId();
                     StudentController.generatePassword();
                     break;
             }
