@@ -309,7 +309,8 @@ class StaffTable extends AppTable
             'Behaviours' => ['text' => __('Behaviours')],
             'StaffAppraisals' => ['text' => __('Appraisals')],
             'Duties' => ['text' => __('Duties')],
-            'StaffAssociations' => ['text' => __('Associations')]
+            'StaffAssociations' => ['text' => __('Associations')],
+            'StaffCurriculars' => ['text' => __('Curriculars')] //POCOR-6673 staff career tab section
         ];
 
         // unset classes and subjects if institution is non-academic
@@ -346,7 +347,7 @@ class StaffTable extends AppTable
         $staffTabElements = [
             'Employments' => ['text' => __('Employments')],
             'Qualifications' => ['text' => __('Qualifications')],
-            'Extracurriculars' => ['text' => __('Extracurriculars')],
+           // 'Extracurriculars' => ['text' => __('Extracurriculars')], //POCOR-6673
             'Memberships' => ['text' => __('Memberships')],
             'Licenses' => ['text' => __('Licenses')],
             'Awards' => ['text' => __('Awards')],
