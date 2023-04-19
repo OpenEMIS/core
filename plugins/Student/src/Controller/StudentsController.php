@@ -906,4 +906,11 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Extracurriculars']);
     }
     /*POCOR-6700 ends*/
+
+    //POCOR-6673
+    public function StudentCurriculars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurriculars']);
+    }
+
 }

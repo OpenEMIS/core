@@ -446,7 +446,7 @@ class ProfilesController extends AppController
         }
 
         if (!empty($studentId)) { 
-             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentAssessments' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards' || $action == 'StudentAssociations' || $action == 'Personal') { 
+             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentAssessments' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards' || $action == 'StudentAssociations' || $action == 'Personal' || $action == 'Curriculars') { 
                 //POCOR-6202 starts
                 if ($session->read('Auth.User.is_guardian') == 1) { 
                     //$studentId = $this->ControllerAction->paramsDecode($studentId)['id'];//POCOR-6202 uncomment $studentId
@@ -693,7 +693,8 @@ class ProfilesController extends AppController
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Associations')]
+            'Associations' => ['text' => __('Associations')],
+            'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -702,7 +703,8 @@ class ProfilesController extends AppController
             $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', $studentId, 'type' => $type]);
         }
         
-        return $this->TabPermission->checkTabPermission($tabElements);
+        return $tabElements; //POCOR-6673
+        //return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getFinanceTabElements($options = [])
@@ -746,7 +748,8 @@ class ProfilesController extends AppController
             'Behaviours' => ['text' => __('Behaviours')],
             'Appraisals' => ['text' => __('Appraisals')],
             'Duties' => ['text' => __('Duties')],
-            'Associations' => ['text' => __('Associations')]
+            'Associations' => ['text' => __('Associations')],
+            'Curriculars' => ['text' => __('Curriculars')],//POCOR-6673
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -755,7 +758,8 @@ class ProfilesController extends AppController
             $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'type' => 'staff']);
         }
 
-        return $this->TabPermission->checkTabPermission($tabElements);
+        //return $this->TabPermission->checkTabPermission($tabElements);
+        return $tabElements;
     }
 
     public function getProfessionalTabElements($options = [])
@@ -971,4 +975,18 @@ class ProfilesController extends AppController
     /*POCOR-6700 start - registering function*/
     public function StudentExtracurriculars()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Extracurriculars']); }
     /*POCOR-6700 ends*/
+
+    //POCOR-6673
+    public function StudentCurriculars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurriculars']);
+    }
+
+    //POCOR-6673
+    public function StaffCurriculars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffCurriculars']);
+    }
+
+
 }

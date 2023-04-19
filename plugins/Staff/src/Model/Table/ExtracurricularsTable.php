@@ -12,6 +12,7 @@ use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
 
 class ExtracurricularsTable extends AppTable {
+
 	public function initialize(array $config) {
 		$this->table('staff_extracurriculars');
 		parent::initialize($config);
@@ -19,6 +20,13 @@ class ExtracurricularsTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('ExtracurricularTypes', ['className' => 'FieldOption.ExtracurricularTypes']);
 		$this->addBehavior('Excel');
+		//POCOR-6673 start
+		$this->toggle('view', false);
+        $this->toggle('edit', false);
+        $this->toggle('search', true);
+        $this->toggle('add', false);
+        $this->toggle('remove', false);
+        //POCOR-6673 end
 	}
 
 	public function beforeAction() {
