@@ -116,4 +116,27 @@ class StudentAbsencesPeriodDetailsArchiveTable extends ControllerActionTable
             );
         return $query;
     }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $academic_period_id = $this->request->query['academic_period_id'];
+        $institution_class_id = $this->request->query['institution_class_id'];
+        $education_grade_id = $this->request->query['education_grade_id'];
+        $institution_id = $this->request->query['institution_id'];
+        $day_id = $this->request->query['day_id'];
+        $attendance_period_id = $this->request->query['attendance_period_id'];
+        $week_start_day = $this->request->query['week_start_day'];
+        $week_end_day = $this->request->query['week_end_day'];
+        $subject_id = $this->request->query['subject_id'];
+        $week_id = $this->request->query['week_id'];
+        $query
+        ->where([
+                $this->aliasField('institution_id') => $institution_id,
+                $this->aliasField('academic_period_id') =>$academic_period_id,
+                $this->aliasField('institution_class_id') => $institution_class_id,
+                $this->aliasField('education_grade_id') => $education_grade_id,
+                $this->aliasField('date') => $day_id,
+                $this->aliasField('subject_id') => $subject_id
+                ]);
+    }
 }
