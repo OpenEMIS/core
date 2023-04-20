@@ -49,6 +49,7 @@ class StudentReportCardsTable extends AppTable
 				'StudentHouses',
                 'UserSpecialNeedsAssessments',//6680
                 'UserContacts',//6680
+                'StudentMoterDetails',//6680
             ]
         ]);
     }
@@ -81,6 +82,7 @@ class StudentReportCardsTable extends AppTable
 		$events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentHouses'] = 'onExcelTemplateInitialiseStudentHouses';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseUserSpecialNeedsAssessments'] = 'onExcelTemplateInitialiseUserSpecialNeedsAssessments';//6680
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseUserContacts'] = 'onExcelTemplateInitialiseUserContacts';//6680
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentMoterDetails'] = 'onExcelTemplateInitialiseStudentMoterDetails';//6680
 		return $events;
     }
 
@@ -924,7 +926,7 @@ class StudentReportCardsTable extends AppTable
                 ->toArray();
             return $entity;
         }
-    }//6680 ends
+    }
 
     public function onExcelTemplateInitialiseUserContacts(Event $event, array $params, ArrayObject $extra)
     {
@@ -942,8 +944,46 @@ class StudentReportCardsTable extends AppTable
                     $UserContacts->aliasField('preferred') => 1,
                 ])
                 ->toArray();
-            //echo "<pre>"; print_r($entity); die;
             return $entity;
         }
     }
+
+    public function onExcelTemplateInitialiseStudentMoterDetails(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
+            $Guardians = TableRegistry::get('Guardian.Students');
+            $guardianData = $Guardians
+                ->find()
+                ->select([
+                    'id' => $Guardians->aliasField('id'),
+                    'relation' => 'GuardianRelations.name',
+                    'first_name' => 'StudentUser.first_name',
+                    'last_name' => 'StudentUser.last_name',
+                    'contact' => 'Contacts.value',
+                ])
+                ->contain(['StudentUser', 'GuardianRelations'])
+                ->leftJoin(
+                ['Contacts' => 'user_contacts'],
+                [
+                    'Contacts.security_user_id ='. $Guardians->aliasField('guardian_id'),
+                    'Contacts.preferred ='. 1
+                ]
+                )
+                ->where([
+                    $Guardians->aliasField('student_id') => $params['student_id'],
+                    'GuardianRelations.name' => 'Mother',
+                    'Contacts.preferred' => 1
+                ])
+                ->order($Guardians->aliasField('created'))
+                ->limit(1)
+                ->toArray();
+            $entity = [];
+            foreach($guardianData as $value) {
+                $entity['mother_relation'] = $value->relation;
+                $entity['mother_name'] = $value->first_name. ' '. $value->last_name;
+                $entity['mother_contact'] = $value->contact;
+            }   
+            return $entity;
+        }
+    }//6680 ends
 }
