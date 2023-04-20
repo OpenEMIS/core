@@ -21,8 +21,13 @@ class SurveyFiltersTable extends ControllerActionTable
     {
         $this->table('survey_forms_filters');
         parent::initialize($config);
-        $this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules']);
+        $this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules','foreignKey' => 'custom_module_id']);
         $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id']);
+
+        $this->hasOne('InstitutionProviders', ['className' => 'Institution.InstitutionProviders', 'foreignKey' => 'institution_provider_id']);
+        $this->hasOne('InstitutionTypes', ['className' => 'Institution.InstitutionTypes', 'foreignKey' => 'institution_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasOne('Areas', ['className' => 'Areas', 'foreignKey' => 'area_education_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Rules' => ['index']
         ]);
@@ -73,7 +78,7 @@ class SurveyFiltersTable extends ControllerActionTable
         $this->controller->set(compact('surveyFormOptions'));
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('custom_module_id', ['type' => 'select']);
         $this->field('survey_form_id', ['type' => 'select']);
@@ -104,6 +109,24 @@ class SurveyFiltersTable extends ControllerActionTable
         
     }
 
+    public function editBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('custom_module_id', ['type' => 'readonly']);
+        $this->field('survey_form_id', ['type' => 'select']);
+        $this->field('custom_module_id', ['visible' => true]);
+        $this->field('survey_form_id', ['visible' => true]);
+        $this->field('name', ['visible' => true]);
+        $this->field('institution_provider_id', ['type' => 'select']);
+        $this->field('institution_type_id', ['type' => 'select']);
+        $this->field('area_education_id', ['type' => 'select']);
+    }
+
+    /*public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query =  $this->find()->select(['name'=> $this->aliasField('custom_module_id')])->where([$this->aliasField('id') => $entity->id]);
+        return $query;
+    }*/
+
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
@@ -116,14 +139,14 @@ class SurveyFiltersTable extends ControllerActionTable
                     'message' => 'This name already exists in the system'
                 ]
             ])
+           // ->requirePresence('institution_type_id', 'create')->notEmpty('institution_type_id')
             ->add('institution_type_id', 'ruleNotEmpty', [
                 'rule' => function ($value, $context) {
-                  // echo "<pre>";print_r($value);die;
+                    ///echo "<pre>";print_r($value[0]);die;
                     if (empty($value)) {
-                      //  die('dd');
                         return false;
-                    } elseif (isset($value[0]['institution_type_id']) && empty($value[0]['institution_type_id'])) {
-                        //die('sds');
+                    } elseif (isset($value[0]) && empty($value[0])) {
+                        die('fof');
                         return false;
                     }
 
@@ -199,10 +222,23 @@ class SurveyFiltersTable extends ControllerActionTable
         $moduleOptions =  $CustomModules
             ->find('list', ['keyField' => 'id', 'valueField' => 'code']) 
            ->where(['custom_modules.name IN' => $name]);
+
+        if(!empty($this->request->pass[1])){
+            $dataid = $this->paramsDecode($this->request->pass[1])['id'];
+            $filerID  = $dataid ;
+            $CustomModules = TableRegistry::get('survey_forms_filters');
+            $CustomModulesdata = $CustomModules->find()->select(['custom_module_id'])
+                                ->where([$CustomModules->aliasField('id') =>  $filerID])->first();
+         }
+
         if ($action == 'edit'){
-            $attr['visible'] = true;
+            $CustomModules = TableRegistry::get('custom_modules');
+            $data = $CustomModules->find()->select(['code' =>$CustomModules->aliasField('code')])->where([$CustomModules->aliasField('id') => $CustomModulesdata->custom_module_id])->first();
             $attr['type'] = 'readonly';
-        }else{
+            $attr['value'] = $CustomModulesdata->custom_module_id;
+            $attr['attr']['value'] = $data->code;
+            return $attr;
+        }elseif($action == 'add'){
             $attr['type'] = 'select';
             $attr['options'] = $moduleOptions;
             $attr['select'] = true;
@@ -219,9 +255,20 @@ class SurveyFiltersTable extends ControllerActionTable
         }else{
           $CustomModules = $CustomModules;  
         }
+        if(!empty($this->request->pass[1])){
+            $dataid = $this->paramsDecode($this->request->pass[1])['id'];
+            $filerID  = $dataid ;
+            $formTable = TableRegistry::get('survey_forms_filters');
+            $formTabledata = $formTable->find()->select(['survey_form_id'])
+                                ->where([$formTable->aliasField('id') =>  $filerID])->first();
+         }
         if ($action == 'edit'){
-            $attr['visible'] = true;
+            $forms = TableRegistry::get('survey_forms');
+            $data = $forms->find()->select(['name' =>$forms->aliasField('name')])->where([$forms->aliasField('id') => $formTabledata->survey_form_id])->first();
             $attr['type'] = 'readonly';
+            $attr['value'] = $formTabledata->survey_form_id;
+            $attr['attr']['value'] = $data->name;
+            return $attr;
         }else{
             $formTable = TableRegistry::get('survey_forms');
             $formOptions = $formTable
@@ -270,111 +317,89 @@ class SurveyFiltersTable extends ControllerActionTable
     
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {  
-        $institution_type_id = array('institution_type_id'=>$entity->institution_type_id);
-        $institution_type = json_encode($entity->institution_type_id,true);
-
-        echo "<pre>";print_r($entity);die;
-
         if ($entity->isNew()) {
                 $entity = $this->newEntity([
-                    'id' => Text::uuid(),
                     'name' =>$entity->name,
                     'survey_form_id' =>$entity->survey_form_id,
                     'custom_module_id' =>$entity->custom_module_id,
-                    'institution_type_id'=>$entity->institution_type_id,
-                    'institution_provider_id'=>$entity->institution_provider_id,
-                    'area_education_id'=> $entity->area_education_id,
                     'modified'=>$this->Auth->user('id'),
                     'modified_user_id'=>date('Y-m-d h:i:s'),
                     'created_user_id'=>$this->Auth->user('id'),
                     'created'=> date('Y-m-d h:i:s')
                 ]);
                $saveData =  $this->save($entity);
+
+        }else{
+            $updatedata =   $this->updateAll(
+                                ['name' => $entity->name,'survey_form_id'=>$entity->survey_form_id,'custom_module_id' => $entity->custom_module_id, 'modified'=>$this->Auth->user('id'),
+                    'modified_user_id'=>date('Y-m-d h:i:s')],  
+                                [
+                                 'id' => $entity->id, 
+                                ]
+                                );
         }
 
     }
 
-   /* public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function onGetCustomModuleId(Event $event, Entity $entity)
     {
-        //POCOR-7263::Start
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $InstitutionSurveyT = TableRegistry::get('institution_surveys');
-        $InstitutionTypesT = TableRegistry::get('institution_types');
-        $SurveyFormsFilters = TableRegistry::get('survey_forms_filters');
-        $currentAcademicPeriodId = $AcademicPeriod->AcademicPeriods->getCurrent();
-        if($entity->custom_filter_selection == 1){
-            foreach($entity['custom_filters'] as $k=>$customFilter){
-                $insTypeId = $customFilter->id;
-                $surveyFormId = $customFilter['_joinData']['survey_form_id'];
-                $insList = $Institutions->find('all',['conditions'=>['institution_type_id'=>$insTypeId]])->toArray();
-                foreach($insList as $kk=>$ins){
-                    $alreatExist = $InstitutionSurveyT->find('all',['conditions'=> [
-                        'academic_period_id'=>$currentAcademicPeriodId,
-                        'survey_form_id'=>$surveyFormId,
-                        'institution_id'=> $ins->id
-                    ]])->first();
-                    if(empty($alreatExist)){
-                        $entity = $InstitutionSurveyT->newEntity([
-                            'status_id' =>1,
-                            'academic_period_id'=>$currentAcademicPeriodId,
-                            'survey_form_id'=>$surveyFormId,
-                            'institution_id'=> $ins->id,
-                            'assignee_id'=>0,
-                            'created_user_id'=>$this->Auth->user('id'),
-                            'created'=> date('Y-m-d h:i:s')
-                        ]);
-                        $InstitutionSurveyT->save($entity);
-                    }
-                    
-                }
-            }
-        }else{
-            $surveyFormId = $entity->id;
-            $insList = $Institutions->find('all')->toArray();
-            foreach($insList as $kk=>$ins){
-                $alreatExist = $InstitutionSurveyT->find('all',['conditions'=> [
-                    'academic_period_id'=>$currentAcademicPeriodId,
-                    'survey_form_id'=>$surveyFormId,
-                    'institution_id'=> $ins->id
-                ]])->first();
-                if(empty($alreatExist)){
-                    $entity = $InstitutionSurveyT->newEntity([
-                        'status_id' =>1,
-                        'academic_period_id'=>$currentAcademicPeriodId,
-                        'survey_form_id'=>$surveyFormId,
-                        'institution_id'=> $ins->id,
-                        'assignee_id'=>0,
-                        'created_user_id'=>$this->Auth->user('id'),
-                        'created'=> date('Y-m-d h:i:s')
-                    ]);
-                    if($saveSurvey = $InstitutionSurveyT->save($entity)){ 
-                        $InstitutionTypes = $InstitutionTypesT->find('all')->toArray();
-                        foreach($InstitutionTypes as $ki => $InstitutionType){
-                            $exixtData = $SurveyFormsFilters->find('all',['conditions'=>['survey_form_id'=>$saveSurvey->survey_form_id, 'survey_filter_id' => $InstitutionType->id ]])->first();
-                            if(empty($exixtData)){
-                                $surveyFormFilterData = [
-                                    'survey_form_id' => $saveSurvey->survey_form_id,
-                                    'survey_filter_id' => $InstitutionType->id
-                                ];
-                                $surveyFormFilterEntity = $SurveyFormsFilters->newEntity($surveyFormFilterData);
-                                if ($SurveyFormsFilters->save($surveyFormFilterEntity)) {
-                                } else {
-                                    Log::write('debug', $surveyFormFilterEntity->errors());
-                                }
-                            }
-                            
-                        }
-                    }
-                }
-            }
+        $CustomModules = TableRegistry::get('custom_modules');
+        $data = $CustomModules->find()->select(['code' =>$CustomModules->aliasField('code')])->where([$CustomModules->aliasField('id') => $entity->custom_module_id])->first();
+       return $data->code;
+    }
 
-            
-            
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $type = $entity->institution_type_id[0]['institution_type_id'];
+        $provider = $entity->institution_provider_id[0]['institution_provider_id'];
+        $areaEducation = $entity->institution_provider_id[0]['institution_provider_id'];
+        $filterId = $entity->id;
+        $institutionProvider = TableRegistry::get('survey_filter_institution_providers');
+        $institutionType = TableRegistry::get('survey_filter_institution_types');
+        $surveyarea = TableRegistry::get('survey_filter_areas');
+        $checkProvider = $institutionProvider->find()->where(['survey_filter_id' => $filterId])->toArray();
+        $checkType = $institutionType->find()->where(['survey_filter_id' => $filterId])->toArray();
+        $checkArea = $surveyarea->find()->where(['survey_filter_id' => $filterId])->toArray();
+        if($checkProvider !=null){
+            $institutionProvider->deleteAll(['survey_filter_id' => $filterId]);
         }
-        //POCOR-7263::End
-      //  $this->setAllCustomFilter($entity);
-    }*/
+        if($checkType !=null){
+            $institutionType->deleteAll(['survey_filter_id' => $filterId]);
+        }
+        if($checkArea !=null){
+            $surveyarea->deleteAll(['survey_filter_id' => $filterId]);
+        }
+        foreach($type as $value){
+            $entity = $institutionType->newEntity([
+                    'survey_filter_id' =>$filterId,
+                    'institution_type_id' =>$value,
+                    'created_user_id'=>$this->Auth->user('id'),
+                    'created'=> date('Y-m-d h:i:s')
+                ]);
+            $saveData =  $institutionType->save($entity);
+        }
+
+        foreach($provider as $value){
+            $entity = $institutionProvider->newEntity([
+                    'survey_filter_id' =>$filterId,
+                    'institution_provider_id' =>$value,
+                    'created_user_id'=>$this->Auth->user('id'),
+                    'created'=> date('Y-m-d h:i:s')
+                ]);
+            $saveData =  $institutionProvider->save($entity);
+        }
+
+        foreach($areaEducation as $value){
+            $entity = $surveyarea->newEntity([
+                    'survey_filter_id' =>$filterId,
+                    'area_education_id' =>$value,
+                    'created_user_id'=>$this->Auth->user('id'),
+                    'created'=> date('Y-m-d h:i:s')
+                ]);
+            $saveData =  $surveyarea->save($entity);
+        }
+        
+    }
 
 
 

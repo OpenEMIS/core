@@ -22,6 +22,8 @@ class SurveyRecipientsTable extends ControllerActionTable
             'Rules' => ['index']
         ]);
         $this->toggle('add', false);
+        $this->toggle('view', false);
+        $this->toggle('edit', false);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -48,7 +50,7 @@ class SurveyRecipientsTable extends ControllerActionTable
                 $this->SurveyForms->aliasField('name')
             ])
             ->toArray();
-        $surveyFormOptions = $surveyFormOptions;
+        $surveyFormOptions = ['-1' => '-- '.__('All Survey Form').' --'] + $surveyFormOptions;
         $surveyFormId = $this->request->query('survey_form_id');
         $this->advancedSelectOptions($surveyFormOptions, $surveyFormId);
         $this->controller->set(compact('surveyFormOptions'));
@@ -71,16 +73,6 @@ class SurveyRecipientsTable extends ControllerActionTable
         $institutions = TableRegistry::get('institutions');
         $surveyForm = TableRegistry::get('survey_forms');
         $SurveyFormFilters = TableRegistry::get('survey_forms_filters');
-        $query
-            ->select(['institution_name'=> $institutions->aliasField('name'),
-                        'institution_code'=> $institutions->aliasField('code')])
-            ->leftJoin([$institutions->alias() => $institutions->table()],
-                [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
-            ->leftJoin([$surveyForm->alias() => $surveyForm->table()],
-                [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
-            ->leftJoin([$SurveyFormFilters->alias() => $SurveyFormFilters->table()],
-                [$SurveyFormFilters->aliasField('survey_form_id').'='.$surveyForm->aliasField('id')])
-            ->group([$this->aliasField('institution_id')]);
 
         $this->field('institution_code',['visible' => true]);
         $this->field('institution_name', ['visible' => true]);
@@ -91,8 +83,79 @@ class SurveyRecipientsTable extends ControllerActionTable
         $this->field('assignee_id', ['visible' => false]);
         $this->setFieldOrder([
         'institution_code', 'institution_name']);
+        $search = $this->getSearchKey(); //POCOR-7271
+        if (!empty($search)) {
+            $query->find('bySurveyRecipient', ['search' => $search]);
+        }
 
-        
+        $moduleId = $this->request->query('survey_module_id');
+        $surveyFormId = $this->request->query('survey_form_id');
+        $surveyFilterId = $this->request->query('survey_filter_id');
+        $where = [];
+        /*if($moduleId !=1 &&  $moduleId!= null){
+            $where
+        }*/
+        if($moduleId == null && $surveyFormId == null && $surveyFilterId == null){
+             $query
+            ->select(['institution_name'=> $institutions->aliasField('name'),
+                        'institution_code'=> $institutions->aliasField('code')])
+            ->leftJoin([$institutions->alias() => $institutions->table()],
+                [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
+            ->leftJoin([$surveyForm->alias() => $surveyForm->table()],
+                [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
+            ->leftJoin([$SurveyFormFilters->alias() => $SurveyFormFilters->table()],
+                [$SurveyFormFilters->aliasField('survey_form_id').'='.$this->aliasField('survey_form_id')])
+            ->group([$this->aliasField('institution_id')]);
+        }elseif($moduleId == 1 && $surveyFormId == -1 && $surveyFilterId == -1){
+             $query
+            ->select(['institution_name'=> $institutions->aliasField('name'),
+                        'institution_code'=> $institutions->aliasField('code')])
+            ->leftJoin([$institutions->alias() => $institutions->table()],
+                [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
+            ->leftJoin([$surveyForm->alias() => $surveyForm->table()],
+                [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
+            ->leftJoin([$SurveyFormFilters->alias() => $SurveyFormFilters->table()],
+                [$SurveyFormFilters->aliasField('survey_form_id').'='.$this->aliasField('survey_form_id')])
+            ->group([$this->aliasField('institution_id')]);
+        }
+        else{
+            $query
+            ->select(['institution_name'=> $institutions->aliasField('name'),
+                        'institution_code'=> $institutions->aliasField('code')])
+            ->leftJoin([$institutions->alias() => $institutions->table()],
+                [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
+            ->leftJoin([$surveyForm->alias() => $surveyForm->table()],
+                [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
+            ->leftJoin([$SurveyFormFilters->alias() => $SurveyFormFilters->table()],
+                [$SurveyFormFilters->aliasField('survey_form_id').'='.$this->aliasField('survey_form_id')])
+            ->where([$this->aliasField('survey_form_id') => $surveyFormId,
+                $SurveyFormFilters->aliasField('id') => $surveyFilterId, $surveyForm->aliasField('custom_module_id') => $moduleId])
+            ->group([$this->aliasField('institution_id')]);
+        }        
+    }
+
+    //POCOR-7271
+    public function findBySurveyRecipient(Query $query, array $options)
+    {
+        if (array_key_exists('search', $options)) {
+            $search = $options['search'];
+            $query
+            ->join([
+                [
+                    'table' => 'institutions', 'alias' => 'InstitutionsTable', 'type' => 'INNER',
+                    'conditions' => ['InstitutionsTable.id = ' . $this->aliasField('institution_id')]
+                ],
+            ])
+            ->where([
+                    'OR' => [
+                        ['InstitutionsTable.name LIKE' => '%' . $search . '%'],
+                        ['InstitutionsTable.code LIKE' => '%' . $search . '%'],
+                    ]
+                ]
+            );
+        }
+
+        return $query;
     }
 
 }

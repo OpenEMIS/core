@@ -170,11 +170,15 @@ class SurveyStatusesTable extends ControllerActionTable
     */
     public function editBeforeAction(Event $event, ArrayObject $extra)
     {
-        //Setup fields
         list(, , $formOptions) = array_values($this->getSelectOptions());
 
         $this->fields['survey_form_id']['type'] = 'readonly';
         $this->fields['survey_form_id']['options'] = $formOptions;
+
+        $this->field('survey_filter_id', ['type' => 'select']); //POCOR-7271
+
+        $this->setFieldOrder([
+            'survey_form_id','survey_filter_id','date_enabled', 'date_disabled','academic_period_id']);
     }
 
     public function onUpdateFieldAcademicPeriodLevel(Event $event, array $attr, $action, Request $request)
@@ -205,7 +209,6 @@ class SurveyStatusesTable extends ControllerActionTable
             ->find('order')
             ->where([$AcademicPeriods->aliasField('academic_period_level_id') => $selectedLevel])
             ->toArray();
-       // print_r($periodOptions);die;
         $attr['type'] = 'chosenSelect';
         $attr['options'] = $periodOptions;
         return $attr;
@@ -224,7 +227,6 @@ class SurveyStatusesTable extends ControllerActionTable
     {
         //Return all required options and their key
         $query = $this->request->query;
-
         $CustomModules = $this->SurveyForms->CustomModules;
         $moduleOptions = $CustomModules
             ->find('list')
@@ -238,36 +240,76 @@ class SurveyStatusesTable extends ControllerActionTable
             ->toArray();
         $selectedForm = isset($query['form']) ? $query['form'] : key($formOptions);
 
+         
+
         return compact('moduleOptions', 'selectedModule', 'formOptions', 'selectedForm');
     }
 
-    /**POCOR-6676 starts - modified conditions to save record before add*/ 
+    /**POCOR-6676 starts - modified conditions to save record before add
+     * POCOR-7271 change condition based on new filters
+    **/ 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
         $Institutions = TableRegistry::get('Institution.Institutions');
         $InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
+        $surveyfilterAreas = TableRegistry::get('survey_filter_areas');
+        $filterInstitutionProviders = TableRegistry::get('survey_filter_institution_providers');
+        $filterInstitutionTypes = TableRegistry::get('survey_filter_institution_types');
         $surveyFormId = $entity->survey_form_id;
-        $SurveyFormsFilterObj = $SurveyFormsFilters->find()
-                            ->where([$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId])
-                            ->toArray();
-        $institutionTypeIds = [];
-        if (!empty($SurveyFormsFilterObj)) {
-            foreach ($SurveyFormsFilterObj as $value) {
-                $institutionTypeIds[] = $value->survey_filter_id;
+        $surveyFilterId = $entity->survey_filter_id;
+        $where = [];
+        $provider = $filterInstitutionProviders->find()->select(['institution_provider_id'])
+                    ->where([$filterInstitutionProviders->aliasField('survey_filter_id') => $surveyFilterId])->toArray();
+
+        $providerId = [];
+        if(!empty($provider)){
+            foreach($provider as $value){
+                $institutionProviderId = $value['institution_provider_id'];
+                if($institutionProviderId != 0){
+                    $providerId[]  = $value['institution_provider_id'];
+                    
+                }
+            }
+            if($provider[0]['institution_provider_id'] != 0){
+                $where[$Institutions->aliasField('institution_provider_id IN')] = $providerId;
             }
         }
-        if($institutionTypeIds[0]!=0) //POCOR-6976
-        {
-            $getInstitutionObj = $Institutions->find()
-                            ->select([$Institutions->aliasField('id')])
-                            ->where([$Institutions->aliasField('institution_type_id IN') => $institutionTypeIds])
-                            ->toArray();
-        }else{ // if institution type is 0 means its for all custom filter.//POCOR-6976
-            $getInstitutionObj = $Institutions->find()
-                            ->select([$Institutions->aliasField('id')])
-                            ->toArray();
+        $type = $filterInstitutionTypes->find()->select(['institution_type_id'])
+                ->where([$filterInstitutionTypes->aliasField('survey_filter_id') => $surveyFilterId])->toArray();
+        $typsids = [];
+        if(!empty($type)){
+            foreach($type as $value){
+                $institutionTypeId = $value['institution_type_id'];
+                if($institutionTypeId != 0){
+                   $typsids[]  = $value['institution_type_id'];
+                }
+            }
+            if($type[0]['institution_type_id'] != 0){
+                $where[$Institutions->aliasField('institution_type_id IN')] = $typsids;
+            }
         }
+
+        $area = $surveyfilterAreas->find()->select(['area_education_id'])
+                ->where([$surveyfilterAreas->aliasField('survey_filter_id') => $surveyFilterId])->toArray();
+        $areaId = [];
+        if(!empty($area)){
+            foreach($area as $value){
+                $institutionAreaId = $value['area_education_id'];
+                if($institutionAreaId != 0){
+                    $areaId[] = $value['area_education_id'];
+                }
+            }
+
+            if($area[0]['area_education_id'] != 0){
+                $where[$Institutions->aliasField('area_id IN')] = $areaId;
+            }
+        }
+
+        $getInstitutionObj = $Institutions->find()
+                        ->select([$Institutions->aliasField('id')])
+                        ->where($where)
+                        ->toArray();
         $institutionIds = [];
         if (!empty($getInstitutionObj)) {
             foreach ($getInstitutionObj as $val) {
@@ -295,28 +337,44 @@ class SurveyStatusesTable extends ControllerActionTable
     }
     /**POCOR-6676 ends*/ 
 
+    //POCOR-7271
     public function onUpdateFieldSurveyFilterId(Event $event, array $attr, $action, Request $request)
     {
         $surveyFormId = $request->data['SurveyStatuses']['survey_form_id'];
+        $formTable = TableRegistry::get('survey_forms_filters');
         if($surveyFormId==null){
             $form  = TableRegistry::get('survey_forms');
             $surveyFormId = $form->find()->first()->id;
         }else{
           $surveyFormId = $surveyFormId;  
         }
-        $formTable = TableRegistry::get('survey_forms_filters');
-        $formOptions = $formTable
-            ->find('list', ['keyField' => 'id', 'valueField' => 'name']) 
-            ->where([$formTable->aliasField('survey_form_id') => $surveyFormId])
-            ->toArray();
-        $attr['type'] = 'select';
-        $attr['options'] = $formOptions;
-        $attr['select'] = false;
-        $attr['onChangeReload'] = 'changeModule';
-        return $attr;
-         
+        if(!empty($this->request->pass[1])){
+            $dataid = $this->paramsDecode($this->request->pass[1])['id'];
+            $filerId = $this->find()->select(['survey_filter_id'])->where([$this->aliasField('id') => $dataid])
+                        ->first();
+        }
+        if($action == 'edit'){
+            $surveyFormsFilters = TableRegistry::get('survey_forms_filters');
+            $dataVal = $surveyFormsFilters->find()->select(['name' =>$surveyFormsFilters->aliasField('name')])->where([$surveyFormsFilters->aliasField('id') => $filerId->survey_filter_id])->first();
+            $attr['type'] = 'readonly';
+            $attr['value'] = $filerId->survey_filter_id;
+            $attr['attr']['value'] = $dataVal->name;
+            return $attr;
+        }elseif($action == 'add'){
+            $filterOptions = $formTable
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name']) 
+                ->where([$formTable->aliasField('survey_form_id') => $surveyFormId])
+                ->toArray();
+            $attr['type'] = 'select';
+            $attr['options'] = $filterOptions;
+            $attr['select'] = false;
+            $attr['onChangeReload'] = 'changeModule';
+            return $attr;
+        }
+        
     }
 
+    //POCOR-7271
     public function findBySurveyFilter(Query $query, array $options)
     {
         if (array_key_exists('search', $options)) {
@@ -344,6 +402,7 @@ class SurveyStatusesTable extends ControllerActionTable
         return $query;
     }
 
+    //POCOR-7271
     public function onUpdateFieldSurveyFormId(Event $event, array $attr, $action, Request $request)
     {
         $formTable = TableRegistry::get('survey_forms');
