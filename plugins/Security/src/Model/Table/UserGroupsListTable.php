@@ -41,7 +41,7 @@ class UserGroupsListTable extends ControllerActionTable
         $this->addBehavior('OpenEmis.Autocomplete');  
         $this->addBehavior('User.AdvancedNameSearch');
         $this->toggle('view', false);
-        $this->toggle('edit', false);
+        $this->toggle('edit', true); //POCOR-7323
         $this->toggle('search', true);
         $this->toggle('add', true);
 
@@ -87,52 +87,36 @@ class UserGroupsListTable extends ControllerActionTable
                 'title' => __('Back')
             ]
         ]; //POCOR-7175 end
-
-        //POCOR-7304 start
-        $session = $this->request->session();
-        $userId = $session->read('Auth.User.id');
-        $AccessControl = $this->AccessControl;
-        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
-        $securityGroup = TableRegistry::get('security_groups');
-        $securityRole = TableRegistry::get('security_roles');
-        $securityGroupId = $securityGroup->find()
-                            ->where([$securityGroup->aliasField('name') =>'Supergroup'])
-                            ->first()->id;
-        $securityRoleId = $securityRole->find()
-                            ->where([$securityRole->aliasField('name') =>'Superrole'])
-                            ->first()->id;
-
-        $securityGroupUsers = $securityGroupUsersTbl->find()
-                            ->where([
-                                $securityGroupUsersTbl->aliasField('security_group_id') => $securityGroupId,
-                                $securityGroupUsersTbl->aliasField('security_user_id') => $userId,
-                                $securityGroupUsersTbl->aliasField('security_role_id') => $securityRoleId,
-                            ])->first();
-        if (!$AccessControl->isAdmin())
-        {
-
-            if ($securityGroupUsers!=null) {
-            $extra['toolbarButtons']['add'] = [
-                'url' => [
-                    'plugin' => 'Security',
-                    'controller' => 'Securities',
-                    'action' => 'UserGroups',
-                    '0' => 'add',
-                ],
-                'type' => 'button',
-                'label' => '<i class="fa kd-add"></i>',
-                'attr' => [
-                    'class' => 'btn btn-xs btn-default',
-                    'data-toggle' => 'tooltip',
-                    'data-placement' => 'bottom',
-                    'escape' => false,
-                    'title' => __('Add')
-                ]
-            ];
-
-            }
-        } //POCOR-7304 end
     }
+
+    /** Start POCOR 7323 */
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $buttons['remove'] = [
+            'url' => [
+                'plugin' => 'Security',
+                'controller' => 'Securities',
+                'action' => 'UserGroupsList',
+                '0' => 'remove',
+                '_ext'=>'',
+                'userGroupId'=> $buttons['edit']['url']['userGroupId'],
+                '1' =>$buttons['edit']['url']['1']
+            ],
+            'type' => 'button',
+            'label' => '<i class="fa kd-trash"></i> Delete',
+            'attr' => [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Delete')
+            ]
+        ];
+        unset($buttons['edit']);
+        return $buttons;
+    }
+    /** End POCOR 7323 */
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
