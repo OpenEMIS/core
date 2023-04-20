@@ -51,16 +51,23 @@ h2, h3, h4, h5, h6 {
 
     
 </style>
-<body><ul class="bdcm breadcrumb panel-breadcrumb">
+<body>
+    
+<ul class="bdcm breadcrumb panel-breadcrumb">
 	<li><a href="/Dashboard"><i class="fa fa-home"></i></a></li>
 	
 		<li>
-		<a href="/Directory/Directories">Directory</a>	</li>
+		<a href="/Institutions/Institutions/index">Institutions</a>	</li>
 		<li>
-		<a href="/Directory/Directories/Directories/view/<?php echo $queryStng ?>"><?php echo $UserData->first_name.' '.$UserData->last_name ?></a>	</li>
+		<a href="/Institution/Institutions/dashboard/<?php echo $StudentID ?>"><?php echo $InstitutionData->name ?></a>	</li>
 		<li>
-		Student Guardians	</li>
+		<a href="/Institution/Institutions/Students">Students</a>	</li>
+		<li>
+		<a href="/Institution/Institutions/StudentUser/view/<?php echo $StudentID1 ?>"><?php echo $UserData->first_name.' '.$UserData->last_name ?></a>	</li>
+		<li>
+		Guardians	</li>
 	</ul>
+
 
     <div class="page-header">
 		<h2 id="main-header"><?php echo $UserData->first_name.' '.$UserData->last_name ?> - Student Guardians</h2>
@@ -362,41 +369,17 @@ h2, h3, h4, h5, h6 {
                         </div>
                     </div>
                     <div class="row section-header header-space-lg">Identities / Nationalities</div>
-                    <div class="input string" ng-show="!isSearchResultEmpty" >
+                    <div class="input string">
                         <label><?= __('Nationalities') ?></label>
                         <input ng-model="selectedUserData.nationality_name" type="string" ng-disabled="true" />
                     </div>
-                    <div class="input string" ng-show="!isSearchResultEmpty" >
+                    <div class="input string">
                         <label><?= __('Identity Type') ?></label>
                         <input ng-model="selectedUserData.identity_type_name" type="string" ng-disabled="true">
                     </div>
-                    <div ng-class="nationality_class" class="input select"  ng-show="isSearchResultEmpty">
-                        <label><?= __('Nationality') ?></label>
-                        <div class="input-select-wrapper">
-                            <select name="User[nationality_id]" id="user-nationality_id"
-                                ng-options="option.id as option.name for option in nationalitiesOptions"
-                                ng-model="selectedUserData.nationality_id"
-                                ng-change="changeNationality()"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div ng-class="identity_type_class" class="input select"  ng-show="isSearchResultEmpty">
-                        <label><?= __('Identity Type') ?></label>
-                        <div class="input-select-wrapper">
-                            <select name="User[identities_type_id]" id="user-identities_type_id"
-                                ng-options="option.id as option.name for option in identityTypeOptions"
-                                ng-model="selectedUserData.identity_type_id"
-                                ng-change="changeIdentityType()"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
-                        </div>
-                    </div>
                     <div class="input string">
                         <label><?= __('Identity Number') ?></label>
-                        <input ng-model="selectedUserData.identity_number" type="string" ng-disabled="!isSearchResultEmpty">
+                        <input ng-model="selectedUserData.identity_number" type="string" ng-disabled="true">
                     </div>
                     <div class="row section-header header-space-lg">Other Information</div>
                     <div class="input select">
