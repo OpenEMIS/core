@@ -1084,12 +1084,9 @@ class InstitutionsTable extends ControllerActionTable
                 }
                 //POCOR-7189[END]
                 if (empty($institutionSurveysDelete)) {
-
                     foreach ($SurveyStatusesIds as $key => $periodObj) {
                         $InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
-
                         $value = explode(",",$periodObj);
-
                         $surveyData = [
                             'status_id' => 1,
                             'academic_period_id' => $value[0],
@@ -1099,8 +1096,6 @@ class InstitutionsTable extends ControllerActionTable
                             'created_user_id' => $key,
                             'created' => new Time('NOW')
                         ];
-
-
                         $surveyEntity = $InstitutionSurveys->newEntity($surveyData);
                         $InstitutionSurveys->save($surveyEntity);
 
