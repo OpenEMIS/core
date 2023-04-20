@@ -24,9 +24,9 @@ class SurveyFiltersTable extends ControllerActionTable
         $this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules','foreignKey' => 'custom_module_id']);
         $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id']);
 
-        $this->hasOne('InstitutionProviders', ['className' => 'Institution.InstitutionProviders', 'foreignKey' => 'institution_provider_id']);
-        $this->hasOne('InstitutionTypes', ['className' => 'Institution.InstitutionTypes', 'foreignKey' => 'institution_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasOne('Areas', ['className' => 'Areas', 'foreignKey' => 'area_education_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionProviders', ['className' => 'Institution.InstitutionProviders', 'foreignKey' => 'institution_provider_id']);
+        $this->hasMany('InstitutionTypes', ['className' => 'Institution.InstitutionTypes', 'foreignKey' => 'institution_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Areas', ['className' => 'Areas', 'foreignKey' => 'area_education_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Rules' => ['index']
@@ -35,7 +35,6 @@ class SurveyFiltersTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        
         $this->field('custom_module_id',['visible' => false]);
         $this->field('survey_form_id', ['visible' => true]);
         $this->field('name', ['visible' => true]);
@@ -76,9 +75,29 @@ class SurveyFiltersTable extends ControllerActionTable
      
         $extra['elements']['controls'] = ['name' => 'Survey.filter_rules_controls', 'data' => [], 'options' => [], 'order' => 2];
         $this->controller->set(compact('surveyFormOptions'));
+        $tableProvider = TableRegistry::get('survey_filter_institution_providers');
+        $institutionType = TableRegistry::get('survey_filter_institution_types');
+        $areaEducation = TableRegistry::get('survey_filter_areas');
+        $provider = TableRegistry::get('institution_providers');
+        $type = TableRegistry::get('institution_types');
+        $areas = TableRegistry::get('areas');
+        /*$query->find()->select(['id','name'])
+                ->leftJoin([$tableProvider->alias() => $tableProvider->table()],
+                    [ $tableProvider->aliasField('survey_filter_id').'='.$this->aliasField('id') ])
+                ->leftJoin([$institutionType->alias() => $institutionType->table()],
+                    [ $institutionType->aliasField('survey_filter_id').'='.$this->aliasField('id') ])
+                ->leftJoin([$areaEducation->alias() => $areaEducation->table()],
+                    [ $areaEducation->aliasField('survey_filter_id').'='.$this->aliasField('id') ])
+                ->leftJoin([$provider->alias() => $provider->table()],
+                    [ $provider->aliasField('id').'='.$tableProvider->aliasField('institution_provider_id') ])
+                ->leftJoin([$type->alias() => $type->table()],
+                    [ $type->aliasField('id').'='.$institutionType->aliasField('institution_type_id') ])
+                ->leftJoin([$areas->alias() => $areas->table()],
+                    [ $areas->aliasField('id').'='.$areaEducation->aliasField('area_education_id') ]);*/
+
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('custom_module_id', ['type' => 'select']);
         $this->field('survey_form_id', ['type' => 'select']);
@@ -116,16 +135,57 @@ class SurveyFiltersTable extends ControllerActionTable
         $this->field('custom_module_id', ['visible' => true]);
         $this->field('survey_form_id', ['visible' => true]);
         $this->field('name', ['visible' => true]);
-        $this->field('institution_provider_id', ['type' => 'select']);
-        $this->field('institution_type_id', ['type' => 'select']);
-        $this->field('area_education_id', ['type' => 'select']);
+        $this->setFieldOrder([
+            'custom_module_id', 'survey_form_id', 'name', 'date_disabled', 'institution_provider_id', 'institution_type_id','area_education_id'
+        ]);
     }
 
-    /*public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query =  $this->find()->select(['name'=> $this->aliasField('custom_module_id')])->where([$this->aliasField('id') => $entity->id]);
-        return $query;
-    }*/
+        $data = $query->toArray();
+        $filterId = $data[0]['id'];
+        $tableProvider = TableRegistry::get('survey_filter_institution_providers');
+        $institutionType = TableRegistry::get('survey_filter_institution_types');
+        $areaEducation = TableRegistry::get('survey_filter_areas');
+
+        $providerResult = $tableProvider->find()->select(['institution_provider_id'])
+                        ->where([$tableProvider->aliasField('survey_filter_id') => $filterId])
+                        ->toArray();
+        $institutionTypeResult = $institutionType->find()->select(['institution_type_id'])
+                                ->where([$institutionType->aliasField('survey_filter_id') => $filterId])
+                                ->toArray();
+        $areaEducationResult = $areaEducation->find()->select(['area_education_id'])
+                                ->where([$areaEducation->aliasField('survey_filter_id') => $filterId])
+                                ->toArray();
+        
+        $provider = [];
+        if(!empty($providerResult)){
+            foreach($providerResult as $key => $value){
+                $provider[$key] = ['id' => $value->institution_provider_id]; 
+            }
+        }
+        $type = [];
+        if(!empty($institutionTypeResult)){
+            foreach($institutionTypeResult as $key => $value){
+                $type[$key] = ['id' => $value->institution_type_id]; 
+            }
+        }
+        $areaEducation = [];
+        if(!empty($areaEducationResult)){
+            foreach($areaEducationResult as $key => $value){
+                $areaEducation[$key] = ['id' => $value->area_education_id]; 
+            }
+        }
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($provider,$type,$areaEducation) {
+            return $results->map(function ($row) use($provider,$type,$areaEducation) {
+                $row['institution_provider_id'] = $provider;
+                $row['institution_type_id'] = $type;
+                $row['area_education_id'] = $areaEducation;
+                return $row;
+            });
+        });
+    }
 
     public function validationDefault(Validator $validator)
     {
@@ -139,14 +199,12 @@ class SurveyFiltersTable extends ControllerActionTable
                     'message' => 'This name already exists in the system'
                 ]
             ])
-           // ->requirePresence('institution_type_id', 'create')->notEmpty('institution_type_id')
             ->add('institution_type_id', 'ruleNotEmpty', [
                 'rule' => function ($value, $context) {
-                    ///echo "<pre>";print_r($value[0]);die;
-                    if (empty($value)) {
+                    if (empty($value[0]['institution_type_id'])) {
                         return false;
-                    } elseif (isset($value[0]) && empty($value[0])) {
-                        die('fof');
+                    } elseif (isset($value[0]['institution_type_id']) && empty($value[0]['institution_type_id'])) {
+                        
                         return false;
                     }
 
@@ -155,9 +213,9 @@ class SurveyFiltersTable extends ControllerActionTable
             ])
             ->add('institution_provider_id', 'ruleNotEmpty', [
                 'rule' => function ($value, $context) {
-                    if (empty($value)) {
+                    if (empty($value[0]['institution_provider_id'])) {
                         return false;
-                    } elseif (isset($value['_ids']) && empty($value['_ids'])) {
+                    } elseif (isset($value[0]['institution_provider_id']) && empty($value[0]['institution_provider_id'])) {
                         return false;
                     }
 
@@ -166,9 +224,9 @@ class SurveyFiltersTable extends ControllerActionTable
             ])
             ->add('area_education_id', 'ruleNotEmpty', [
                 'rule' => function ($value, $context) {
-                    if (empty($value)) {
+                    if (empty($value[0]['area_education_id'])) {
                         return false;
-                    } elseif (isset($value['_ids']) && empty($value['_ids'])) {
+                    } elseif (isset($value[0]['area_education_id']) && empty($value[0]['area_education_id'])) {
                         return false;
                     }
 
@@ -206,7 +264,7 @@ class SurveyFiltersTable extends ControllerActionTable
         if (array_key_exists('area_education_id', $data) && !empty($data['area_education_id'])) {
             foreach ($data['area_education_id'] as $area_education) {
                 $area_education_id[] = [
-                    'institution_type_id' => $area_education
+                    'area_education_id' => $area_education
                 ];
             }
         }
