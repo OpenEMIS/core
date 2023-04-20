@@ -2460,6 +2460,22 @@ trait MessagesTrait
                 ]
             ]
         ],
+
+        //POCOR-7271 start
+        'Survey' => [
+            'SurveyFilters' => [
+                'institution_type_id' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ],
+                'institution_provider_id' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ],
+                'area_education_id' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ]
+            ]
+        ], //POCOR-7271 end
+        
         'SpecialNeeds' => [
             'SpecialNeedsReferrals' => [
                 'date' => [
