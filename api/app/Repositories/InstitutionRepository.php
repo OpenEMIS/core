@@ -1412,6 +1412,7 @@ class InstitutionRepository extends Controller
                     ->where('academic_period_id', $academicPeriodId)
                     ->where('institution_id', $institutionId)
                     ->where('education_grade_id', $educationGradeId)
+                    ->where('student_status_id', 1) //For enrolled only...
                     ->first();
             
             if($check){
