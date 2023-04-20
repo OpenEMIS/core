@@ -10,7 +10,6 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 
-
 //POCOR-7271
 class SurveyRecipientsTable extends ControllerActionTable
 {
@@ -92,12 +91,9 @@ class SurveyRecipientsTable extends ControllerActionTable
         $surveyFormId = $this->request->query('survey_form_id');
         $surveyFilterId = $this->request->query('survey_filter_id');
         $where = [];
-        /*if($moduleId !=1 &&  $moduleId!= null){
-            $where
-        }*/
         if($moduleId == null && $surveyFormId == null && $surveyFilterId == null){
              $query
-            ->select(['institution_name'=> $institutions->aliasField('name'),
+            ->select(['id' => $this->aliasField('id'),'institution_name'=> $institutions->aliasField('name'),
                         'institution_code'=> $institutions->aliasField('code')])
             ->leftJoin([$institutions->alias() => $institutions->table()],
                 [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
@@ -108,7 +104,7 @@ class SurveyRecipientsTable extends ControllerActionTable
             ->group([$this->aliasField('institution_id')]);
         }elseif($moduleId == 1 && $surveyFormId == -1 && $surveyFilterId == -1){
              $query
-            ->select(['institution_name'=> $institutions->aliasField('name'),
+            ->select(['id' => $this->aliasField('id'),'institution_name'=> $institutions->aliasField('name'),
                         'institution_code'=> $institutions->aliasField('code')])
             ->leftJoin([$institutions->alias() => $institutions->table()],
                 [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
@@ -120,7 +116,7 @@ class SurveyRecipientsTable extends ControllerActionTable
         }
         else{
             $query
-            ->select(['institution_name'=> $institutions->aliasField('name'),
+            ->select(['id' => $this->aliasField('id'),'institution_name'=> $institutions->aliasField('name'),
                         'institution_code'=> $institutions->aliasField('code')])
             ->leftJoin([$institutions->alias() => $institutions->table()],
                 [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
