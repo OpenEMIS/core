@@ -12,6 +12,8 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\RecordNotFoundException;
 
+use Cake\Datasource\ConnectionManager;
+
 class RemoveBehavior extends Behavior
 {
     private $recordHasAssociatedRecords = false;
@@ -448,6 +450,11 @@ class RemoveBehavior extends Behavior
 
     private function doDelete($entity, ArrayObject $extra)
     {
+
+        /** Start POCOR-7253 */
+        $connection = ConnectionManager::get('default');
+        $connection->execute('SET foreign_key_checks = 0');
+        /** End POCOR-7253 */
         $model = $this->_table;
         $process = function ($model, $entity, $options) {
             return $model->delete($entity, $options);
@@ -461,6 +468,10 @@ class RemoveBehavior extends Behavior
 
         $options = $extra['options'];
         $result = $process($model, $entity, $options);
+
+        /** Start POCOR-7253 */
+        $connection->execute('SET foreign_key_checks = 1');
+        /** End POCOR-7253 */
 
         return $result;
     }

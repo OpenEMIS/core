@@ -164,6 +164,7 @@ function DirectoryaddguardianSvc($http, $q, $window, KdOrmSvc, AlertSvc, UtilsSv
     }
 
     function saveGuardianDetails(params){
+        console.log(params);
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institution/Institutions/saveGuardianData/';
         $http.post(url, params)
