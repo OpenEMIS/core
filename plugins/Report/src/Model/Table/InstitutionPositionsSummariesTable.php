@@ -25,7 +25,7 @@ class InstitutionPositionsSummariesTable extends AppTable
         
         $this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
         $this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
-        $this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
+        $this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades','foreignKey' => 'staff_position_grade_id']); //POCOR-7377
         $this->belongsTo('Staffs', ['className' => 'User.Users']);
         $this->belongsTo('Areas', ['className' => 'Institution.Areas']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -82,7 +82,7 @@ class InstitutionPositionsSummariesTable extends AppTable
            'total_female' => "( SUM(CASE WHEN Staffs.gender_id = 2 THEN 1 ELSE 0 END) )",
            'total' => "( SUM(CASE WHEN Staffs.gender_id in (1,2 ) THEN 1 ELSE 0 END) )",
         ])
-        ->contain(['InstitutionPositions','InstitutionPositions.StaffPositionTitles','InstitutionPositions.StaffPositionGrades','Institutions.Areas','Staffs' ])
+        ->contain(['InstitutionPositions','InstitutionPositions.StaffPositionTitles','StaffPositionGrades','Institutions.Areas','Staffs' ]) //POCOR-7377
 
         ->innerJoin(
             [$AcademicPeriodsTable->alias() => $AcademicPeriodsTable->table()],
