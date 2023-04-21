@@ -378,7 +378,7 @@ function InstitutionStaffAttendancesArchiveController($scope, $q, $window, $http
     };
 
     vm.onExcelClick = function() {
-        vm.excelSelectedAcademicPeriodUrl = vm.excelUrl + '?academic_period_id=' + vm.selectedAcademicPeriod;
+        vm.excelSelectedAcademicPeriodUrl = vm.excelUrl + '?academic_period_id=' + vm.selectedAcademicPeriod + '&selected_week=' + vm.selectedWeek + '&selected_day=' + vm.selectedDayDate;
         $window.location.href = vm.excelSelectedAcademicPeriodUrl;
     };
 }
