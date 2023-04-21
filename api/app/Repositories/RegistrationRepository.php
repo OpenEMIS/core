@@ -154,7 +154,7 @@ class RegistrationRepository extends Controller
             
             $data['otp'] = $otp;
             $data['first_name'] = $securityUser->first_name;
-            $data['last_name'] = $securityUser->last_name;
+            //$data['last_name'] = $securityUser->last_name;
             if($blankLastName == 1){
                 $data['last_name'] = "";
             }
@@ -686,13 +686,10 @@ class RegistrationRepository extends Controller
 
             if($otpData){
                 $data['first_name'] = $otpData->first_name;
-                $data['last_name'] = $otpData->last_name;
+                //$data['last_name'] = $otpData->last_name;
 
                 $email = $otpData->email;
-                /*Mail::send(['text'=>'registrationSuccess'], $data, function($message) use ($email) {
-                    $message->to($email, 'OpenEMIS User')
-                        ->subject('OpenEMIS - Successful Registration');
-                });*/
+                
 
                 Mail::send('registrationSuccess', $data, function($message) use ($email) {
                     $message->to($email, 'OpenEMIS User')
