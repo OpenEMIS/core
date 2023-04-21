@@ -46,14 +46,14 @@ $this->start('toolbar');
         </button> -->
         <!-- End -->
     <?php endif; ?>
-    <!-- <?php if ($_excel) : ?>
-        <?php if (isset($reportCardGenerate)) : ?>
+    <?php if ($_excel) : ?>
+        <!-- <?php if (isset($reportCardGenerate)) : ?>
             <a href="<?=$reportCardGenerate ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Report') ?>" ><i class="fa kd-header-row"></i></button></a>
             <a href="<?=$exportPDF ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('PDF') ?>" ><i class="fa fa-file-pdf-o"></i></button></a>
-        <?php endif;?>
+        <?php endif;?> -->
 
         <a href="<?=$excelUrl ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" ><i class="fa kd-export"></i></button></a>
-    <?php endif; ?> -->
+    <?php endif; ?>
 <?php
 $this->end();
 
