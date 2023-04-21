@@ -316,6 +316,17 @@ class DirectoriesController extends AppController
     }
     public function Addguardian()
     {
+        //POCOR-7231 :: Start
+        $requestDataa = base64_decode($this->request->query('queryString'));
+        $requestDataa = json_decode($requestDataa, true);
+        $UsersTable = TableRegistry::get('User.Users');
+        $InstitutionTable = TableRegistry::get('Institution.Institutions');
+        $UserData = $UsersTable->find('all',['conditions'=>['id'=>$requestDataa['student_id']]])->first();
+        $InstitutionData = $InstitutionTable->find('all',['conditions'=>['id'=>$requestDataa['institution_id']]])->first();
+        $queryStng = $this->paramsEncode(['id' => $UserData->id]);
+        $this->set('InstitutionData', $InstitutionData);
+        $this->set('UserData', $UserData);
+        $this->set('queryStng', $queryStng);//POCOR-7231 :: END
         $this->attachAngularModulesForDirectory();
         $this->set('ngController', 'DirectoryaddguardianCtrl as $ctrl');
     }
