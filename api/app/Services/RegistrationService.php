@@ -106,7 +106,7 @@ class RegistrationService extends Controller
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('Administrative Areas List Not Found');
+            return $this->sendErrorResponse('Areas List Not Found');
         }
     }
 
