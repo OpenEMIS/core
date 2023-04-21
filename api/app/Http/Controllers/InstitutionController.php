@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\InstitutionService;
 use Illuminate\Support\Facades\Log;
+use App\Http\Requests\ReportCardCommentAdd;
+use App\Http\Requests\ReportCardCommentHomeroomAdd;
 
 class InstitutionController extends Controller
 {
@@ -659,4 +661,70 @@ class InstitutionController extends Controller
         }
     }
 
+
+    public function reportCardCommentAdd(ReportCardCommentAdd $request, int $institutionId, int $classId)
+    {
+        try {
+            $data = $this->institutionService->reportCardCommentAdd($request, $institutionId, $classId);
+            
+            if($data == 0){
+                return $this->sendErrorResponse("Student is not enrolled in the class.");
+            } else {
+                return $this->sendSuccessResponse("Report card comment added successfully.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add report card comment.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add report card comment.');
+        }
+    }
+
+
+    public function reportCardCommentHomeroomAdd(ReportCardCommentHomeroomAdd $request, int $institutionId, int $classId)
+    {
+        try {
+            $data = $this->institutionService->reportCardCommentHomeroomAdd($request, $institutionId, $classId);
+            
+            if($data == 0){
+                return $this->sendErrorResponse("Student is not enrolled in the class.");
+            } else {
+                return $this->sendSuccessResponse("Report card comment added successfully.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add report card comment.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add report card comment.');
+        }
+    }
+
+
+
+    public function reportCardCommentPrincipalAdd(ReportCardCommentHomeroomAdd $request, int $institutionId, int $classId)
+    {
+        try {
+            $data = $this->institutionService->reportCardCommentPrincipalAdd($request, $institutionId, $classId);
+            
+            if($data == 0){
+                return $this->sendErrorResponse("Student is not enrolled in the class.");
+            } else {
+                return $this->sendSuccessResponse("Report card comment added successfully.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add report card comment.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add report card comment.');
+        }
+    }
 }
