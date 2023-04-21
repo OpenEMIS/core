@@ -74,6 +74,7 @@ class InstitutionsController extends AppController
         'InstitutionStaffAttendances',
         'InstitutionStudentAbsences',
         'StudentAttendances',
+        'InstitutionStudentAbsencesArchived',
 
         'StudentArchive',
         'AssessmentsArchive',
@@ -484,9 +485,12 @@ class InstitutionsController extends AppController
         }
     }
 
-    public function AssessmentItemResultsArchived()
+    public function AssessmentItemResultsArchived($pass = '')
     {
-        $classId = $this->ControllerAction->getQueryString('class_id');
+        if($pass=='excel'){
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
+        }else{
+            $classId = $this->ControllerAction->getQueryString('class_id');
         $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
         $institutionId = $this->ControllerAction->getQueryString('institution_id');
         $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
@@ -510,11 +514,19 @@ class InstitutionsController extends AppController
         // end POCOR-3983
 
         $this->set('_edit', $_edit);
-        $this->set('_excel', $this->AccessControl->check(['Institutions', 'Assessments', 'excel'], $roles));
-        $url = $this->ControllerAction->url('index');
-        $url['plugin'] = 'Institution';
-        $url['controller'] = 'Institutions';
-        $url['action'] = 'resultsExport';
+        $this->set('_excel', $this->AccessControl->check(['Institutions', 'AssessmentItemResultsArchived', 'excel'], $roles));
+        // $url = $this->ControllerAction->url('index');
+        // $url['plugin'] = 'Institution';
+        // $url['controller'] = 'Institutions';
+        // $url['action'] = 'AssessmentItemResultsArchived';
+
+        $url = Router::url([
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'AssessmentItemResultsArchived',
+            'excel',
+            'queryString' => $queryString
+        ]);
 
         $Assessments = TableRegistry::get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
@@ -538,8 +550,9 @@ class InstitutionsController extends AppController
             $this->set('exportPDF', Router::url($exportPDF_Url));
         }
 
-        $this->set('excelUrl', Router::url($url));
+        $this->set('excelUrl', $url);
         $this->set('ngController', 'InstitutionsAssessmentArchiveCtrl');
+        }
         // $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
     }
 
@@ -921,10 +934,10 @@ class InstitutionsController extends AppController
         $this->render('timetable');
     }
 
-    public function InstitutionStudentAbsencesArchived()
+    public function InstitutionStudentAbsencesArchived($pass='')
     {
         if($pass=='excel'){
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAttendances']);
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAbsencesPeriodDetailsArchive']);
         }else{
         
         $_edit = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'edit']);
@@ -989,7 +1002,7 @@ class InstitutionsController extends AppController
         $excelUrl = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
-            'action' => 'StudentAttendances',
+            'action' => 'InstitutionStudentAbsencesArchived',
             'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
             'excel'
         ];
@@ -1751,11 +1764,11 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionAssociationStudent']);
     }
 
-    public function InstitutionStaffAttendancesArchive()
+    public function InstitutionStaffAttendancesArchive($pass = '')
     {
 
         if ($pass == 'excel') {
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']);
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffAttendancesArchive']);
         } else {
             $_edit = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'edit']);
             $_history = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
@@ -1820,7 +1833,7 @@ class InstitutionsController extends AppController
             $excelUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
-                'action' => 'InstitutionStaffAttendances',
+                'action' => 'InstitutionStaffAttendancesArchive',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
                 'excel'
             ];
