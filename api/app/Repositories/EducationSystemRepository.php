@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use JWTAuth;
 use App\Models\EducationSystem;
 use App\Models\EducationLevel;
+use App\Models\ReportCard;
 
 class EducationSystemRepository extends Controller
 {
@@ -426,6 +427,24 @@ class EducationSystemRepository extends Controller
             );
 
             return $this->sendErrorResponse('Education System List Not Found');
+        }
+    }
+
+
+
+    public function reportCardLists($systemId, $levelId, $cycleId, $programmeId, $gradeId)
+    {
+        try {
+            $list = ReportCard::where('education_grade_id', $gradeId)->get();
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Room Type Summaries List Not Found');
         }
     }
 }
