@@ -129,9 +129,10 @@ class SurveyFormsTable extends CustomFormsTable
         $SurveyFormsFilters = TableRegistry::get('survey_forms_filters');
         $currentAcademicPeriodId = $AcademicPeriod->AcademicPeriods->getCurrent();
         if($entity->custom_filter_selection == 1){
+            $surveyFormId = $entity->id;//POCOR-7359
             foreach($entity['custom_filters'] as $k=>$customFilter){
                 $insTypeId = $customFilter->id;
-                $surveyFormId = $customFilter['_joinData']['survey_form_id'];
+                //$surveyFormId = $customFilter['_joinData']['survey_form_id'];
                 $insList = $Institutions->find('all',['conditions'=>['institution_type_id'=>$insTypeId]])->toArray();
                 foreach($insList as $kk=>$ins){
                     $alreatExist = $InstitutionSurveyT->find('all',['conditions'=> [

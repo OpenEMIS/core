@@ -213,6 +213,8 @@ class InstitutionsController extends AppController
         $this->loadComponent('Training.Training');
         $this->loadComponent('Institution.CreateUsers');
         $this->attachAngularModules();
+
+        $this->attachAngularModulesForDirectory();
         $this->loadModel('Institution.StaffBodyMasses');
         //POCOR-5672 it is used for removing csrf token mismatch condition in save student Api 
         if ($this->request->action == 'saveStudentData' || $this->request->action == 'saveStaffData' || $this->request->action == 'saveGuardianData' || $this->request->action == 'saveDirectoryData') {
@@ -7652,6 +7654,7 @@ class InstitutionsController extends AppController
              }
         }
     }
+
     /**
      * Get User Data from CSPD api
      * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
@@ -7828,4 +7831,48 @@ class InstitutionsController extends AppController
         }
         echo json_encode($result_array);die;
     }
+
+
+    //POCOR-7231 :: Start
+    public function Addguardian()
+    {
+        $requestDataa = $this->paramsDecode($this->request->query('queryString1'));
+        $StudentID = $this->paramsEncode(['id' => $requestDataa['institution_id']]);
+        $StudentID1 = $this->paramsEncode(['id' => $requestDataa['student_id']]);
+        $UsersTable = TableRegistry::get('User.Users');
+        $InstitutionTable = TableRegistry::get('Institution.Institutions');
+        $UserData = $UsersTable->find('all',['conditions'=>['id'=>$requestDataa['student_id']]])->first();
+        $InstitutionData = $InstitutionTable->find('all',['conditions'=>['id'=>$requestDataa['institution_id']]])->first();
+        $queryStng = $this->paramsEncode(['id' => $UserData->id]);
+        $this->set('InstitutionData', $InstitutionData);
+        $this->set('UserData', $UserData);
+        $this->set('StudentID', $StudentID);
+        $this->set('StudentID1', $StudentID1);
+        $this->set('queryStng', $queryStng);
+        $this->set('ngController', 'DirectoryaddguardianCtrl as $ctrl');
+    }
+
+    private function attachAngularModulesForDirectory()
+    {
+        $action = $this->request->pass[0];
+        if($action == '' || $this->request->params['action'] != 'Directories'){
+            $action = $this->request->params['action'];
+        }
+        switch ($action) {
+            case 'add':
+                $this->Angular->addModules([
+                    'directory.directoryadd.ctrl',
+                    'directory.directoryadd.svc'
+                ]);
+                break;
+            case 'Addguardian':
+                $this->Angular->addModules([
+                    'directory.directoryaddguardian.ctrl',
+                    'directory.directoryaddguardian.svc'
+                ]);
+                break;
+        }
+    }
+    //POCOR-7231 :: END
+
 }
