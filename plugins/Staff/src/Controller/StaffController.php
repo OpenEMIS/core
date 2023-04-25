@@ -33,7 +33,7 @@ class StaffController extends AppController
         // qualification
         'Employments',
         'Qualifications',
-        'Extracurriculars',
+        'Extracurriculars', 
 
         // finance
         'BankAccounts',
@@ -80,7 +80,7 @@ class StaffController extends AppController
             'Sections'          => ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
             'Classes'           => ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
             'Qualifications'    => ['className' => 'Staff.Qualifications'],
-            'Extracurriculars'  => ['className' => 'Staff.Extracurriculars'],
+            'Extracurriculars'  => ['className' => 'Staff.Extracurriculars', 'actions' => ['index', 'view', 'search']],
             'History'           => ['className' => 'User.UserActivities', 'actions' => ['index']],
             'ImportStaff'       => ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
             'TrainingResults'   => ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
