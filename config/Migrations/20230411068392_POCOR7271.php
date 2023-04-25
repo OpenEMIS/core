@@ -21,6 +21,9 @@ class POCOR7271 extends AbstractMigration
         $this->execute('INSERT INTO `zz_7271_survey_statuses` SELECT * FROM `survey_statuses`');
 
         $this->execute('ALTER TABLE `survey_statuses` ADD `survey_filter_id` INT(11) NOT NULL AFTER `survey_form_id`');
+        //Change uuid to autoIncreamented id
+        $this->execute('ALTER TABLE `survey_forms_filters` CHANGE `id` `id` INT(11) NOT NULL AUTO_INCREMENT');
+    
         $this->execute('ALTER TABLE `survey_forms_filters` ADD `name` varchar(255) NOT NULL AFTER `id`');
         $this->execute('ALTER TABLE `survey_forms_filters` ADD `custom_module_id` INT(11) NOT NULL AFTER `survey_form_id`');
         $this->execute('ALTER TABLE `survey_forms_filters` ADD `modified_user_id` INT(11) DEFAULT NULL AFTER `custom_module_id`');
@@ -30,8 +33,9 @@ class POCOR7271 extends AbstractMigration
         // drop survey_filter_id id
         $this->execute('ALTER TABLE `survey_forms_filters` DROP `survey_filter_id`');
 
+
         $this->execute('CREATE TABLE `survey_filter_institution_types` (
-                      `id` int(11) NOT NULL,
+                      `id` int(11) NOT NULL AUTO_INCREMENT,
                       `survey_filter_id` int(11) NOT NULL,
                       `institution_type_id` int(11) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
@@ -43,7 +47,7 @@ class POCOR7271 extends AbstractMigration
         $this->execute('INSERT INTO `survey_filter_institution_types` SELECT * FROM `survey_filter_institution_types`');
 
         $this->execute('CREATE TABLE `survey_filter_institution_providers` (
-                      `id` int(11) NOT NULL,
+                      `id` int(11) NOT NULL AUTO_INCREMENT,
                       `survey_filter_id` int(11) NOT NULL,
                       `institution_provider_id` int(11) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
@@ -55,7 +59,7 @@ class POCOR7271 extends AbstractMigration
         $this->execute('INSERT INTO `survey_filter_institution_providers` SELECT * FROM `survey_filter_institution_providers`');
 
         $this->execute('CREATE TABLE `survey_filter_areas` (
-                      `id` int(11) NOT NULL,
+                      `id` int(11) NOT NULL AUTO_INCREMENT,
                       `survey_filter_id` int(11) NOT NULL,
                       `area_education_id` int(11) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
