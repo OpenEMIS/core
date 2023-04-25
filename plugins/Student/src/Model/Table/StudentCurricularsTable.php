@@ -123,6 +123,5 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->field('curricular_position_id', ['visible' => true]);
     }
 
-
     
 }

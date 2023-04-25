@@ -2557,9 +2557,9 @@ class InstitutionsController extends AppController
                 $header .= ' - '. __('Associations');
             } elseif($model->alias() == 'InstitutionStatistics'){
                 $header .= ' - '. __('Statistics');
-            }/*elseif ($model->alias() == 'StudentCurriculars') { //POCOR-6673
-                $header .= ' - '. __('Student Curriculars');
-            }*/ else {
+            }elseif ($model->alias() == 'StudentCurriculars') { //POCOR-6673
+                $header .= ' - '. __('Curriculars');
+            } else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
            
@@ -3673,7 +3673,7 @@ class InstitutionsController extends AppController
             'ExaminationResults' => ['text' => __('Examinations')],
             'ReportCards' => ['text' => __('Report Cards')],
             'Awards' => ['text' => __('Awards')],
-            'Extracurriculars' => ['text' => __('Extracurriculars')],
+            'Extracurriculars' => ['text' => __('Extracurriculars')], 
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
             'Associations' => ['text' => __('Associations')],

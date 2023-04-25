@@ -347,10 +347,11 @@ class StaffTable extends AppTable
         $staffTabElements = [
             'Employments' => ['text' => __('Employments')],
             'Qualifications' => ['text' => __('Qualifications')],
-           // 'Extracurriculars' => ['text' => __('Extracurriculars')], //POCOR-6673
+            'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Memberships' => ['text' => __('Memberships')],
             'Licenses' => ['text' => __('Licenses')],
             'Awards' => ['text' => __('Awards')],
+            //'Curriculars' => ['text' => __('Curriculars')], //POCOR-6673
         ];
 
         $tabElements = array_merge($tabElements, $staffTabElements);
