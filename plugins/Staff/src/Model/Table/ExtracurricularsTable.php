@@ -20,13 +20,6 @@ class ExtracurricularsTable extends AppTable {
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('ExtracurricularTypes', ['className' => 'FieldOption.ExtracurricularTypes']);
 		$this->addBehavior('Excel');
-		//POCOR-6673 start
-		$this->toggle('view', false);
-        $this->toggle('edit', false);
-        $this->toggle('search', true);
-        $this->toggle('add', false);
-        $this->toggle('remove', false);
-        //POCOR-6673 end
 	}
 
 	public function beforeAction() {
@@ -46,6 +39,13 @@ class ExtracurricularsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('start_date', $order++);
 		$this->ControllerAction->setFieldOrder('extracurricular_type_id', $order++);
 		$this->ControllerAction->setFieldOrder('name', $order++);
+	}
+
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
+		//if ($this->controller->name == 'Profiles') {
+            unset($settings['indexButtons']['add']);
+        //}
 	}
 
 	public function addEditBeforeAction(Event $event) {

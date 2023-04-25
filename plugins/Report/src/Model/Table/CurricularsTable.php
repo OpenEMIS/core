@@ -84,7 +84,7 @@ class CurricularsTable extends AppTable
                 'points' => $InstitutionCurricularStudent->aliasField('points'),
                 'hours' => $InstitutionCurricularStudent->aliasField('hours'),
                 'location' => $InstitutionCurricularStudent->aliasField('location'),
-                'comment' => $InstitutionCurricularStudent->aliasField('comment'),
+                'comment' => $InstitutionCurricularStudent->aliasField('comments'),
                 'Student_name' => $query->func()->concat([
                     'Users.first_name' => 'literal',
                     " ",

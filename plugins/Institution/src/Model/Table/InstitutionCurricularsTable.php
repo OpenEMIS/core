@@ -135,7 +135,6 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $curricularStaff = TableRegistry::get('institution_curricular_staff');
         $getStaff = $curricularStaff->find()->select(['staff_id'])
                     ->where([$curricularStaff->aliasField('institution_curricular_id') => $entity->institution_curricular_id]);
-                    //print_r($getStaff->Sql());die;
         $staff = [];
         if(!empty($getStaff)){
             foreach($getStaff as $value){
@@ -401,6 +400,89 @@ class InstitutionCurricularsTable extends ControllerActionTable
                 return $row;
             });
         });
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $selectedAcademicPeriodId = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $query
+            ->select([
+                'name' => $this->aliasField('name'),
+                'category' => $this->aliasField('category'),
+                'CurricularType' => 'CurricularTypes.name',
+                'Institution_name' => 'Institutions.name',
+                'Institution_code' => 'Institutions.code',
+                'academic_period_name' => 'AcademicPeriods.name',
+                'female_students' => $this->aliasField('total_female_students'),
+                'male_students' => $this->aliasField('total_male_students'),
+            ])
+            ->contain(['Institutions','CurricularTypes','AcademicPeriods'])
+            ->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriodId, $this->aliasField('institution_id') => $institutionId]);
+
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+
+        $newArray = [];
+        $newArray[] = [
+            'key' => 'name',
+            'field' => 'name',
+            'type' => 'string',
+            'label' => __('Name')
+        ];
+        $newArray[] = [
+            'key' => 'category_name',
+            'field' => 'category_name',
+            'type' => 'string',
+            'label' => __('Category')
+        ];
+        $newArray[] = [
+            'key' => 'CurricularType',
+            'field' => 'CurricularType',
+            'type' => 'string',
+            'label' => __('Curricular Type')
+        ];
+        $newArray[] = [
+            'key' => 'Institution_name',
+            'field' => 'Institution_name',
+            'type' => 'string',
+            'label' => __('Institution name')
+        ];
+        $newArray[] = [
+            'key' => 'Institution_code',
+            'field' => 'Institution_code',
+            'type' => 'string',
+            'label' => __('Institution code')
+        ];
+        $newArray[] = [
+            'key' => 'academic_period_name',
+            'field' => 'academic_period_name',
+            'type' => 'string',
+            'label' => __('Academic Period')
+        ];
+        $newArray[] = [
+            'key' => 'total_female_students',
+            'field' => 'total_female_students',
+            'type' => 'string',
+            'label' => __('Female Students')
+        ];
+        $newArray[] = [
+            'key' => 'total_male_students',
+            'field' => 'total_male_students',
+            'type' => 'string',
+            'label' => __('Male Students')
+        ];
+        $fields->exchangeArray($newArray);
+    }
+
+    public function onExcelGetCategoryName(Event $event, Entity $entity)
+    {
+        if($entity->category == 1){
+            return 'Curricular';
+        }else{
+             return 'Extracurricular';
+        }
     }
     
 }
