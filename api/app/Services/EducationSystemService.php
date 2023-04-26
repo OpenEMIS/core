@@ -449,4 +449,30 @@ class EducationSystemService extends Controller
         }
     }
 
+
+
+    public function reportCardLists($systemId, $levelId, $cycleId, $programmeId, $gradeId)
+    {
+        try {
+            $data = $this->educationSystemRepository->reportCardLists($systemId, $levelId, $cycleId, $programmeId, $gradeId)->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->code.' - '.$item->name,
+                    ];
+                }
+            );
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Report Cards List Not Found');
+        }
+    }
+
 }
