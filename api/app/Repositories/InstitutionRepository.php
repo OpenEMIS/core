@@ -24,6 +24,11 @@ use App\Models\StaffStatuses;
 use App\Models\InstitutionPositions;
 use App\Models\LocaleContentTranslations;
 use App\Models\SummaryInstitutionRoomTypes;
+use App\Models\ReportCard;
+use App\Models\InstitutionStudentReportCardComment;
+use App\Models\InstitutionStudentReportCard;
+use App\Models\InstitutionClassStudents;
+use Illuminate\Support\Str;
 
 class InstitutionRepository extends Controller
 {
@@ -1277,6 +1282,225 @@ class InstitutionRepository extends Controller
             );
 
             return $this->sendErrorResponse('Room Type Summaries List Not Found');
+        }
+    }
+
+
+
+    public function reportCardCommentAdd($request, int $institutionId, int $classId)
+    {
+        try {
+            $data = $request->all();
+
+            $check = $this->checkIfStudentEnrolled($institutionId, $classId, $data['academic_period_id'], $data['student_id'], $data['education_grade_id']);
+            
+            if($check == 0){
+                return 0;
+            }
+
+            $store['id'] = Str::uuid();
+            $store['comments'] = $data['comment'];
+            $store['academic_period_id'] = $data['academic_period_id'];
+            $store['report_card_id'] = $data['report_card_id'];
+            $store['student_id'] = $data['student_id'];
+            $store['institution_id'] = $institutionId;
+            $store['education_grade_id'] = $data['education_grade_id'];
+            $store['education_subject_id'] = $data['education_subject_id'];
+            if($data['report_card_comment_code_id']){
+                $store['report_card_comment_code_id'] = (int)$data['report_card_comment_code_id'];
+            }
+            $store['staff_id'] = $data['staff_id'];
+            $store['created_user_id'] = JWTAuth::user()->id;
+            $store['created'] = Carbon::now()->toDateTimeString();
+            
+            $insert = InstitutionStudentReportCardComment::insert($store);
+
+            return true;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add report card comment.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add report card comment.');
+        }
+    }
+
+
+
+    public function reportCardCommentHomeroomAdd($request, int $institutionId, int $classId)
+    {
+        try {
+            $data = $request->all();
+            //dd($data);
+
+            $check = $this->checkIfStudentEnrolled($institutionId, $classId, $data['academic_period_id'], $data['student_id'], $data['education_grade_id']);
+            
+            if($check == 0){
+                return 0;
+            }
+
+
+            $reportCardId = $data['report_card_id'];
+            $studentId = $data['student_id'];
+            $academicPeriodId = $data['academic_period_id'];
+            $educationGradeId = $data['education_grade_id'];
+
+            $checkIfExists = InstitutionStudentReportCard::where(
+                [
+                    'report_card_id' => $reportCardId,
+                    'student_id' => $studentId,
+                    'academic_period_id' => $academicPeriodId,
+                    'education_grade_id' => $educationGradeId,
+                    'institution_id' => $institutionId,
+                ]
+            )->first();
+            
+            if($checkIfExists){
+                $updateArr['homeroom_teacher_comments'] = $data['comment'];
+                $updateArr['institution_class_id'] = $classId;
+                $updateArr['modified'] = Carbon::now()->toDateTimeString();
+                $updateArr['modified_user_id'] = JWTAuth::user()->id;
+
+                $update = InstitutionStudentReportCard::where(
+                    [
+                        'report_card_id' => $reportCardId,
+                        'student_id' => $studentId,
+                        'academic_period_id' => $academicPeriodId,
+                        'education_grade_id' => $educationGradeId,
+                        'institution_id' => $institutionId,
+                    ]
+                )
+                ->update($updateArr);
+            } else {
+                $store['id'] = Str::uuid();
+                $store['homeroom_teacher_comments'] = $data['comment'];
+                $store['status'] = 1;
+                $store['academic_period_id'] = $data['academic_period_id'];
+                $store['student_id'] = $data['student_id'];
+                $store['institution_id'] = $institutionId;
+                $store['institution_class_id'] = $classId;
+                $store['education_grade_id'] = $data['education_grade_id'];
+                $store['report_card_id'] = $data['report_card_id'];
+                $store['created_user_id'] = JWTAuth::user()->id;
+                $store['created'] = Carbon::now()->toDateTimeString();
+                
+                $insert = InstitutionStudentReportCard::insert($store);
+            }
+
+
+            return true;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add report card comment.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add report card comment.');
+        }
+    }
+
+
+    public function checkIfStudentEnrolled($institutionId, $classId, $academicPeriodId, $studentId, $educationGradeId)
+    {
+        try {
+            $check = InstitutionClassStudents::where('student_id', $studentId)
+                    ->where('institution_class_id', $classId)
+                    ->where('academic_period_id', $academicPeriodId)
+                    ->where('institution_id', $institutionId)
+                    ->where('education_grade_id', $educationGradeId)
+                    ->where('student_status_id', 1) //For enrolled only...
+                    ->first();
+            
+            if($check){
+                return 1;
+            } else {
+                return 0;
+            }
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add report card comment.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add report card comment.');
+        }
+    }
+
+
+
+    public function reportCardCommentPrincipalAdd($request, int $institutionId, int $classId)
+    {
+        try {
+            $data = $request->all();
+            
+
+            $check = $this->checkIfStudentEnrolled($institutionId, $classId, $data['academic_period_id'], $data['student_id'], $data['education_grade_id']);
+            
+            if($check == 0){
+                return 0;
+            }
+
+
+            $reportCardId = $data['report_card_id'];
+            $studentId = $data['student_id'];
+            $academicPeriodId = $data['academic_period_id'];
+            $educationGradeId = $data['education_grade_id'];
+
+            $checkIfExists = InstitutionStudentReportCard::where(
+                [
+                    'report_card_id' => $reportCardId,
+                    'student_id' => $studentId,
+                    'academic_period_id' => $academicPeriodId,
+                    'education_grade_id' => $educationGradeId,
+                    'institution_id' => $institutionId,
+                ]
+            )->first();
+            
+            if($checkIfExists){
+                $updateArr['principal_comments'] = $data['comment'];
+                $updateArr['institution_class_id'] = $classId;
+                $updateArr['modified'] = Carbon::now()->toDateTimeString();
+                $updateArr['modified_user_id'] = JWTAuth::user()->id;
+
+                $update = InstitutionStudentReportCard::where(
+                    [
+                        'report_card_id' => $reportCardId,
+                        'student_id' => $studentId,
+                        'academic_period_id' => $academicPeriodId,
+                        'education_grade_id' => $educationGradeId,
+                        'institution_id' => $institutionId,
+                    ]
+                )
+                ->update($updateArr);
+            } else {
+                $store['id'] = Str::uuid();
+                $store['principal_comments'] = $data['comment'];
+                $store['status'] = 1;
+                $store['academic_period_id'] = $data['academic_period_id'];
+                $store['student_id'] = $data['student_id'];
+                $store['institution_id'] = $institutionId;
+                $store['institution_class_id'] = $classId;
+                $store['education_grade_id'] = $data['education_grade_id'];
+                $store['report_card_id'] = $data['report_card_id'];
+                $store['created_user_id'] = JWTAuth::user()->id;
+                $store['created'] = Carbon::now()->toDateTimeString();
+                
+                $insert = InstitutionStudentReportCard::insert($store);
+            }
+
+
+            return true;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add report card comment.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add report card comment.');
         }
     }
 

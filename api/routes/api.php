@@ -131,6 +131,14 @@ Route::group(
         Route::get('details-by-emis/{id}', 'RegistrationController@detailsByEmis');
         Route::post('institutions/{institution_id}/student-admission', 'RegistrationController@institutionStudents');
 
+
+        Route::get('systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/reportcards', 'EducationSystemController@reportCardLists');
+
+        Route::post('institutions/{institutionId}/classes/{classId}/reportcardcomment', 'InstitutionController@reportCardCommentAdd');
+
+        Route::post('institutions/{institutionId}/classes/{classId}/reportcardcomment/homeroom', 'InstitutionController@reportCardCommentHomeroomAdd');
+
+        Route::post('institutions/{institutionId}/classes/{classId}/reportcardcomment/principal', 'InstitutionController@reportCardCommentPrincipalAdd');
     }
 );
 
