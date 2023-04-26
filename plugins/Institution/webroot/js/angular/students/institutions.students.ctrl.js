@@ -1019,8 +1019,24 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.error.last_name = '';
         StudentController.error.gender_id = '';
         StudentController.error.date_of_birth = '';
+        StudentController.error.nationality_id = '';
+        StudentController.error.identity_type_id = '';
+        StudentController.error.identity_number = '';
         
-        if (blockName === "General_Info" && hasError)
+        if(blockName==='Identity' && hasError){
+            if (!StudentController.selectedStudentData.nationality_id)
+            {
+                StudentController.error.nationality_id = 'This field cannot be left empty';
+            }
+            if (!StudentController.selectedStudentData.identity_type_id)
+            {
+                StudentController.error.identity_type_id = 'This field cannot be left empty';
+            }
+            if (!StudentController.selectedStudentData.identity_number)
+            {
+                StudentController.error.identity_number = 'This field cannot be left empty';
+            }
+        } else if (blockName === "General_Info" && hasError)
         {
             if (!StudentController.selectedStudentData.first_name)
             {
@@ -1797,19 +1813,33 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
      */
     function checkUserDetailValidationBlocksHasError()
     {
-        const { first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number, openemis_no } = StudentController.selectedStudentData;
+        const { first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number, openemis_no,nationality_id } = StudentController.selectedStudentData;
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
-        const isIdentityHasError = (identity_number !== "" && identity_number !== undefined && !identity_type_id !== "" && identity_type_id!==undefined)        
+        const isIdentityHasError = identity_number?.length>1  && (nationality_id === undefined || nationality_id==="" || nationality_id === null || identity_type_id===undefined || identity_type_id=== null || identity_type_id==="")
         const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
+        const isSkipableForIdentity = identity_number?.length>1 && nationality_id > 0 && identity_type_id >0;
 
+        /**
+         * New For POCOR-7351
+         */
+        if (isIdentityHasError)
+        {
+            return ['Identity', true]
+        }
+        if(isSkipableForIdentity){
+            return ['Identity', false]
+        }
         if (isOpenEmisNoHasError)
         {
             return ["OpenEMIS_ID", false];
         }
-        if (isIdentityHasError)
-        {
-            return ['Identity', false]
-        }
+        /**
+         * Prev
+         */
+        // if (isIdentityHasError)
+        // {
+        //     return ['Identity', false]
+        // }
         if (isGeneralInfodHasError)
         {
             return ["General_Info", true];

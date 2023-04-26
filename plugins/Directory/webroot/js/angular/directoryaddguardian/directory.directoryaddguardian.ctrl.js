@@ -697,7 +697,28 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
         if(scope.step === 'user_details') {
             const [blockName, hasError] = checkUserDetailValidationBlocksHasError();
-            if (blockName === 'General_Info' && hasError)
+            scope.error.first_name = '';
+            scope.error.last_name = '';
+            scope.error.gender_id = '';
+            scope.error.date_of_birth = '';
+            scope.error.nationality_id = '';
+            scope.error.identity_type_id = '';
+            scope.error.identity_number = '';
+
+            if(blockName==='Identity' && hasError){
+                if (!scope.selectedUserData.nationality_id)
+                {
+                    scope.error.nationality_id = 'This field cannot be left empty';
+                }
+                if (!scope.selectedUserData.identity_type_id)
+                {
+                    scope.error.identity_type_id = 'This field cannot be left empty';
+                }
+                if (!scope.selectedUserData.identity_number)
+                {
+                    scope.error.identity_number = 'This field cannot be left empty';
+                }
+            }else if (blockName === 'General_Info' && hasError)
             {
                 if (!scope.selectedUserData.first_name)
                 {
@@ -1334,19 +1355,26 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
   */
     function checkUserDetailValidationBlocksHasError()
     {
-        const { first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number, openemis_no } = scope.selectedUserData;
+        const { first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number,nationality_id, openemis_no } = scope.selectedUserData;
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
-        const isIdentityHasError = (identity_number !== "" && identity_number !== undefined && !identity_type_id !== "" && identity_type_id !== undefined)
         const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
+        const isIdentityHasError = identity_number?.length>1  && (nationality_id === undefined || nationality_id==="" || nationality_id === null  || identity_type_id===""|| identity_type_id===undefined || identity_type_id=== null)
+        const isSkipableForIdentity = identity_number?.length>1 && nationality_id > 0 && identity_type_id >0;
+
+        if (isIdentityHasError)
+        {
+            return ['Identity', true]
+        }
+        if (isSkipableForIdentity)
+        {
+            return ['Identity', false]
+        }
 
         if (isOpenEmisNoHasError)
         {
             return ["OpenEMIS_ID", false];
         }
-        if (isIdentityHasError)
-        {
-            return ['Identity', false]
-        }
+       
         if (isGeneralInfodHasError)
         {
             return ["General_Info", true];
