@@ -1,3 +1,14 @@
+### [3.81.0] - 2023-04-21
+- Implemented: Develop student profile placeholders
+- Implemented: Develop API for report card comments
+- Bug Fixed: Administration>Security>Users>Account>Roles: Homeroom teacher role gets assigned to position which do not have homeroom teacher permissions
+- Bug Fixed: Institutions > Statistics > Standard Report : Student Absences: Data in report is incorrect
+- Bug Fixed: Institutions>Students>Overview: The system will show 404 error to students that were once added by OpenEMIS Identity.
+- Bug Fixed: Institutions>Attendance/Assessments> Archive : System should allow user to export archived data
+- Bug Fixed: API: Data retrieved in API and in the database do not match
+- Bug Fixed: Registrations: Email should show only the firstname
+- Bug Fixed: Reports > Institutions > Institutions Position Summaries: Report is stuck in progress
+
 ### [3.80.5] - 2023-04-18
 - Implemented: Develop additional placeholders for preschool competences report card
 - Bug Fixed: Institutions > Students > Add page: The system regenerate an existing OpenEMIS ID for existing student
