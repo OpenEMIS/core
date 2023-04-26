@@ -321,7 +321,7 @@ class PullBehavior extends Behavior
         $externalReference = $entity->getOriginal('external_reference');
 
         if (!empty($externalReference)) {
-            if ($this->type != 'None') {
+            if ($this->type != 'None' && $this->type != 'Jordan CSPD') {//POCOR-7347 add condition for Jordan CSPD
                 $http = new Client();
                 $clientId = $this->attributes['client_id'];
                 $scope = $this->attributes['scope'];
