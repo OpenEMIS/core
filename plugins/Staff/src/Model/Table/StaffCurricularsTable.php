@@ -112,7 +112,7 @@ class StaffCurricularsTable extends ControllerActionTable {
         $this->field('institution_curricular_id', ['visible' => true]);
         $this->field('academic_period_id', ['visible' => ['index'=>true,'view' => false, 'edit' => false,'add'=>false]]);
         $this->field('curricular_type', ['visible' => ['index'=>true,'view' => false, 'edit' => false,'add'=>false]]);
-        $this->field('category',['visible' => ['index'=>true,'view' => true, 'edit' => false,'add'=>false]]);
+        $this->field('category',['visible' => ['index'=>false,'view' => true, 'edit' => false,'add'=>false]]);
        $this->field('total_male_students', ['visible' => ['index'=>true,'view' => true, 'edit' => false,'add'=>false]]);
         $this->field('total_female_students', ['visible' => ['index'=>true,'view' => true,'edit' => false,'add'=>false]]);
         $this->field('total_students', ['visible' => ['index'=>true,'view' => true,'edit' =>false,'add'=>false]]);
@@ -127,7 +127,8 @@ class StaffCurricularsTable extends ControllerActionTable {
 
     public function onGetCategory(Event $event, Entity $entity)
     {
-        return $entity->category ? __('Curricular') : __('Extracurricular');
+        
+        return $entity['institution_curricular']['category'] ? __('Curricular') : __('Extracurricular');
     }
 
     public function onGetTotalMaleStudents(Event $event, Entity $entity)

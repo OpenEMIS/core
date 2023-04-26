@@ -52,22 +52,32 @@ class POCOR6673 extends AbstractMigration
         ];
         $this->insert('security_functions', $record);
 
+        // Remove permission in ExtraCurricular in student
+
+        $this->execute("UPDATE `security_functions` SET `_add` = NULL, `_delete` = NULL  WHERE `name` = 'Extracurricular' AND `controller` = 'Students'");
+
         // Remove permission in ExtraCurricular in staff
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 238');
-        //insert 
+
+        $this->execute("UPDATE `security_functions` SET `_add` = NULL, `_delete` = NULL  WHERE `name` = 'Extracurricular' AND `controller` = 'Staff'");
+
+        // Remove permission in ExtraCurricular for staff in Personal Tab
+        $this->execute("UPDATE `security_functions` SET `_add` = NULL, `_delete` = NULL  WHERE `name` = 'StaffExtracurriculars' AND `controller` = 'Profiles'");
+
+        //insert  in personal data student academic
+
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 436');
         $record = [
             [
-                'name' => 'Extracurriculars', 'controller' => 'Staff', 'module' => 'Institutions', 'category' => 'Staff - Career', 'parent_id' => 3000,'_view' => 'Extracurriculars.index|Extracurriculars.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 239, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+                'name' => 'Curriculars Students', 'controller' => 'Profiles', 'module' => 'Personal', 'category' => 'Students - Academic', 'parent_id' => 2000,'_view' => 'StudentCurriculars.index|StudentCurriculars.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 437, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ]
         ];
         $this->insert('security_functions', $record);
 
-        // Remove permission in ExtraCurricular in student
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 436');
-        //insert 
+        //insert  in personal data staff career 
+        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 238');
         $record = [
             [
-                'name' => 'Extracurriculars', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'Students - Academic', 'parent_id' => 2000,'_view' => 'Extracurriculars.index|Extracurriculars.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 436, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+                'name' => 'Curriculars Staff', 'controller' => 'Profiles', 'module' => 'Personal', 'category' => 'Staff - Career', 'parent_id' => 3000,'_view' => 'StaffCurriculars.index|StaffCurriculars.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' =>239, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ]
         ];
         $this->insert('security_functions', $record);
