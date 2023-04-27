@@ -101,7 +101,7 @@ class POCOR6673 extends AbstractMigration
 
         // create curricular table
        $this->execute('CREATE TABLE `curricular_positions` (
-                      `id` int(11) NOT NULL,
+                      `id` int(11) NOT NULL AUTO_INCREMENT,
                       `name` varchar(100) NOT NULL,
                       `order` int(3) DEFAULT NULL,
                       `visible` int(1) DEFAULT NULL,
@@ -112,7 +112,7 @@ class POCOR6673 extends AbstractMigration
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) DEFAULT NULL,
                       `created` datetime DEFAULT NULL
-                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1');
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8');
 
         $this->execute('INSERT INTO `curricular_positions` SELECT * FROM `curricular_positions`');
         $curricular_positions = [
@@ -145,11 +145,10 @@ class POCOR6673 extends AbstractMigration
         ];
         $this->insert('curricular_positions', $curricular_positions);
         $this->execute("ALTER TABLE `curricular_positions` ADD PRIMARY KEY (`id`)");
-        $this->execute("ALTER TABLE `curricular_positions` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;");
 
         // create curricular types
        $this->execute('CREATE TABLE `curricular_types` (
-                      `id` int(11) NOT NULL,
+                      `id` int(11) NOT NULL AUTO_INCREMENT,
                       `name` varchar(100) NOT NULL,
                       `order` int(3) DEFAULT NULL,
                       `visible` int(1) DEFAULT NULL,
@@ -161,7 +160,7 @@ class POCOR6673 extends AbstractMigration
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) DEFAULT NULL,
                       `created` datetime DEFAULT NULL
-                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1');
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8');
 
         $curricular_types = [
             [
@@ -180,7 +179,6 @@ class POCOR6673 extends AbstractMigration
         ];
         $this->insert('curricular_types', $curricular_types);
         $this->execute("ALTER TABLE `curricular_types` ADD PRIMARY KEY (`id`)");
-        $this->execute("ALTER TABLE `curricular_types` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4");
 
         $this->execute('CREATE TABLE IF NOT EXISTS `institution_curriculars` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -240,6 +238,18 @@ class POCOR6673 extends AbstractMigration
         $this->execute('DROP TABLE IF EXISTS `locale_contents`');
         $this->execute('RENAME TABLE `z_6673_locale_contents` TO `locale_contents`');
         $this->execute('RENAME TABLE `z_6673_security_functions` TO `security_functions`');
-        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 456');  
+        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 456'); 
+
+        // DROP command for all these new Tables that got created because if a rollback is required.If those table already exist.
+        $this->execute('DROP TABLE IF EXISTS `curricular_positions`');
+        $this->execute('RENAME TABLE `z_6673_curricular_positions` TO `curricular_positions`');
+        $this->execute('DROP TABLE IF EXISTS `curricular_types`');
+        $this->execute('RENAME TABLE `z_6673_curricular_types` TO `curricular_types`');
+        $this->execute('DROP TABLE IF EXISTS `institution_curriculars`');
+        $this->execute('RENAME TABLE `z_6673_institution_curriculars` TO `institution_curriculars`');
+        $this->execute('DROP TABLE IF EXISTS `institution_curricular_students`');
+        $this->execute('RENAME TABLE `z_6673_institution_curricular_students` TO `institution_curricular_students`');
+        $this->execute('DROP TABLE IF EXISTS `institution_curricular_staff`');
+        $this->execute('RENAME TABLE `z_6673_institution_curricular_staff` TO `institution_curricular_staff`');
     }
 }
