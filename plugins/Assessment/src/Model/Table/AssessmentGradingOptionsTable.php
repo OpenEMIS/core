@@ -20,6 +20,8 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 		$this->fields['min']['attr']['min'] = 0;
 		$this->fields['min']['required'] = true;
 		$this->fields['min']['length'] = 7;
+		$this->fields['gpa']['required'] = true; //POCOR-7318
+		$this->fields['gpa']['length'] = 5; //POCOR-7318
 
 		$this->addBehavior('Restful.RestfulAccessControl', [
             'OpenEMIS_Classroom' => ['index']
@@ -28,9 +30,9 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 
 	public function getFormFields($action = 'edit') {
 		if ($action=='edit') {
-			return ['code'=>'', 'name'=>'', 'description'=>'', 'min'=>'', 'max'=>'', 'assessment_grading_type_id'=>'', 'id'=>''];
+			return ['code'=>'', 'name'=>'', 'description'=>'', 'min'=>'', 'max'=>'', 'assessment_grading_type_id'=>'', 'id'=>'','gpa' => ''];
 		} else {
-			return ['code'=>'', 'name'=>'', 'description'=>'', 'min'=>'', 'max'=>''];
+			return ['code'=>'', 'name'=>'', 'description'=>'', 'min'=>'', 'max'=>'','gpa'=>'']; //POCOR-7318 add GPA field
 		}
 	}
 
