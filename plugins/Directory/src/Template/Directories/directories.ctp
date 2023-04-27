@@ -201,6 +201,9 @@
                         <div ng-if="postResponse.error.nationalities[0].nationality_id" class="error-message">
                             <p ng-repeat="error in postResponse.error.nationalities[0].nationality_id">{{ error }}</p>
                         </div>
+                        <div ng-if="error.nationality_id" class="error-message">
+                            <p>{{ error.nationality_id }}</p>
+                        </div>
                     </div>
                     <div ng-class="identity_type_class" class="input select">
                         <label><?= __('Identity Type') ?></label>
@@ -215,6 +218,9 @@
                         </div>
                         <div ng-if="postResponse.error.identities[0].identity_type_id" class="error-message">
                             <p ng-repeat="error in postResponse.error.identities[0].identity_type_id">{{ error }}</p>
+                        </div>
+                        <div ng-if="error.identity_type_id" class="error-message">
+                            <p>{{ error.identity_type_id }}</p>
                         </div>
                     </div>
                     <!-- Always show Identity Number POCOR-7245 -->
@@ -341,11 +347,11 @@
                     </div>
                     <div class="input string">
                         <label><?= __('Middle Name') ?></label>
-                        <input ng-model="selectedUserData.middle_name" ng-change="setStudentName()" type="string" ng-disabled="true">
+                        <input ng-model="selectedUserData.middle_name" ng-change="setStudentName()" type="string" ng-disabled="false">
                     </div>
                     <div class="input string">
                         <label><?= __('Third Name') ?></label>
-                        <input ng-model="selectedUserData.third_name" ng-change="setStudentName()" type="string" ng-disabled="true">
+                        <input ng-model="selectedUserData.third_name" ng-change="setStudentName()" type="string" ng-disabled="false">
                     </div>
                     <div class="input string required">
                         <label><?= __('Last Name') ?></label>
