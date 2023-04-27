@@ -13,10 +13,13 @@ use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use Cake\Utility\Text;
 use Cake\Log\Log;
+use Cake\Datasource\ResultSetInterface;
+use Cake\Collection\Collection;
 
 //POCOR-7271
 class SurveyFiltersTable extends ControllerActionTable
 {
+    
     public function initialize(array $config)
     {
         $this->table('survey_forms_filters');
@@ -137,6 +140,13 @@ class SurveyFiltersTable extends ControllerActionTable
         
     }
 
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $filterId = $entity->id;
+        session_start();
+        $_SESSION["surveyFilterId"] = $filterId;
+    }
+
     public function editBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('custom_module_id', ['type' => 'readonly']);
@@ -151,15 +161,15 @@ class SurveyFiltersTable extends ControllerActionTable
 
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $data = $query->toArray();
-        $filterId = $data[0]['id'];
+        $entity->survey_filter_id = $_SESSION['surveyFilterId'];
+        $filterId = $entity->survey_filter_id;
         $tableProvider = TableRegistry::get('survey_filter_institution_providers');
         $institutionType = TableRegistry::get('survey_filter_institution_types');
         $areaEducation = TableRegistry::get('survey_filter_areas');
 
         $providerResult = $tableProvider->find()->select(['institution_provider_id'])
                         ->where([$tableProvider->aliasField('survey_filter_id') => $filterId])
-                        ->toArray();
+                        ;
         $institutionTypeResult = $institutionType->find()->select(['institution_type_id'])
                                 ->where([$institutionType->aliasField('survey_filter_id') => $filterId])
                                 ->toArray();
@@ -173,6 +183,7 @@ class SurveyFiltersTable extends ControllerActionTable
                 $provider[$key] = ['id' => $value['institution_provider_id']]; 
             }
         }
+
         $type = [];
         if(!empty($institutionTypeResult)){
             foreach($institutionTypeResult as $key => $value){
