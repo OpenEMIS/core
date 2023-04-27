@@ -1060,7 +1060,8 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $this->field('institution_class_id', ['type' => 'integer']);
         $this->field('academic_period_id', ['visible' => true]);
-        $this->setFieldOrder(['academic_period_id', 'institution_class_id', 'openemis_no', 'student_id', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+        $this->field('gpa', ['visible' => true]);
+        $this->setFieldOrder(['academic_period_id', 'institution_class_id', 'openemis_no', 'student_id', 'gpa','report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
