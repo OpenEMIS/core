@@ -21,8 +21,17 @@ class POCOR7271 extends AbstractMigration
         $this->execute('INSERT INTO `zz_7271_survey_statuses` SELECT * FROM `survey_statuses`');
 
         $this->execute('ALTER TABLE `survey_statuses` ADD `survey_filter_id` INT(11) NOT NULL AFTER `survey_form_id`');
-        //Change uuid to autoIncreamented id
-        $this->execute('ALTER TABLE `survey_forms_filters` CHANGE `id` `id` INT(11) NOT NULL AUTO_INCREMENT');
+        //Change uuid to autoIncreamented id Start
+
+        $this->execute('ALTER TABLE `survey_forms_filters` ADD `temp_id` INT(11) NOT NULL FIRST');
+        $this->execute('SET @new_id := 0');
+        $this->execute("UPDATE `survey_forms_filters` SET `temp_id` = (@new_id := @new_id + 1) ORDER BY `id`");
+        $this->execute('ALTER TABLE `survey_forms_filters` DROP COLUMN `id`');
+        $this->execute('ALTER TABLE `survey_forms_filters` CHANGE `temp_id` `id` INT(11) NOT NULL');
+        $this->execute('ALTER TABLE `survey_forms_filters` ADD PRIMARY KEY (`id`)');
+        $this->execute('ALTER TABLE `survey_forms_filters` MODIFY `id` INT(11) NOT NULL AUTO_INCREMENT');
+        
+        // Change uuid to autoIncreamented id End
     
         $this->execute('ALTER TABLE `survey_forms_filters` ADD `name` varchar(255) NOT NULL AFTER `id`');
         $this->execute('ALTER TABLE `survey_forms_filters` ADD `custom_module_id` INT(11) NOT NULL AFTER `survey_form_id`');
@@ -41,11 +50,9 @@ class POCOR7271 extends AbstractMigration
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) DEFAULT NULL,
-                      `created` datetime DEFAULT NULL
-                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1');
-
-        $this->execute('INSERT INTO `survey_filter_institution_types` SELECT * FROM `survey_filter_institution_types`');
-
+                      `created` datetime DEFAULT NULL,
+                      PRIMARY KEY (`id`)
+                  )');
         $this->execute('CREATE TABLE `survey_filter_institution_providers` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
                       `survey_filter_id` int(11) NOT NULL,
@@ -53,10 +60,9 @@ class POCOR7271 extends AbstractMigration
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) DEFAULT NULL,
-                      `created` datetime DEFAULT NULL
-                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1');
-
-        $this->execute('INSERT INTO `survey_filter_institution_providers` SELECT * FROM `survey_filter_institution_providers`');
+                      `created` datetime DEFAULT NULL,
+                      PRIMARY KEY (`id`)
+                  )');
 
         $this->execute('CREATE TABLE `survey_filter_areas` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -65,11 +71,9 @@ class POCOR7271 extends AbstractMigration
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) DEFAULT NULL,
-                      `created` datetime DEFAULT NULL
-                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1');
-
-        $this->execute('INSERT INTO `survey_filter_areas` SELECT * FROM `survey_filter_areas`');
-        
+                      `created` datetime DEFAULT NULL,
+                   PRIMARY KEY (`id`)
+                  )');
     }
 
     public function down()
