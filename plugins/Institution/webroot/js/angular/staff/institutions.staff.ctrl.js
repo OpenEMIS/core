@@ -1099,7 +1099,29 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         if (StaffController.step === 'user_details')
         {
             const [blockName, hasError] = checkUserDetailValidationBlocksHasError();
-            if (blockName === "General_Info" && hasError)
+
+            StaffController.error.first_name = '';
+            StaffController.error.last_name = '';
+            StaffController.error.gender_id = '';
+            StaffController.error.date_of_birth = '';
+            StaffController.error.nationality_id = '';
+            StaffController.error.identity_type_id = '';
+            StaffController.error.identity_number = '';
+
+            if(blockName==='Identity' && hasError){
+                if (!StaffController.selectedStaffData.nationality_id)
+                {
+                    StaffController.error.nationality_id = 'This field cannot be left empty';
+                }
+                if (!StaffController.selectedStaffData.identity_type_id)
+                {
+                    StaffController.error.identity_type_id = 'This field cannot be left empty';
+                }
+                if (!StaffController.selectedStaffData.identity_number)
+                {
+                    StaffController.error.identity_number = 'This field cannot be left empty';
+                }
+            }else if (blockName === "General_Info" && hasError)
             { 
                 if (!StaffController.selectedStaffData.first_name)
                 {
@@ -2445,19 +2467,27 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
  */
     function checkUserDetailValidationBlocksHasError()
     {
-        const { first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number, openemis_no } = StaffController.selectedStaffData;
+        const { first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number, openemis_no, nationality_id } = StaffController.selectedStaffData;
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
-        const isIdentityHasError = (identity_number !== "" && identity_number !== undefined && !identity_type_id !== "" && identity_type_id !== undefined)
+        const isIdentityHasError = identity_number?.length>1  && (nationality_id === undefined || nationality_id==="" || nationality_id === null || identity_type_id===undefined || identity_type_id=== null || identity_type_id==="")
         const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
+        const isSkipableForIdentity = identity_number?.length>1 && nationality_id > 0 && identity_type_id >0;
 
+        if (isIdentityHasError)
+        {
+            return ['Identity', true]
+        }
+        if(isSkipableForIdentity){
+            return ['Identity', false]
+        }
         if (isOpenEmisNoHasError)
         {
             return ["OpenEMIS_ID", false];
         }
-        if (isIdentityHasError)
+        /* if (isIdentityHasError)
         {
             return ['Identity', false]
-        }
+        } */
         if (isGeneralInfodHasError)
         {
             return ["General_Info", true];
