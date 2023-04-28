@@ -533,4 +533,23 @@ class SurveyFiltersTable extends ControllerActionTable
         return implode(', ', $result);
     }
 
+    public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $filterId = $entity->id;
+        $status = TableRegistry::get('survey_statuses');
+        $surveyFilterAreas = TableRegistry::get('survey_filter_areas');
+        $surveyFilterInstitutionProviders = TableRegistry::get('survey_filter_institution_providers');
+        $surveyFilterInstitutionTypes = TableRegistry::get('survey_filter_institution_types');
+        $checkstatus = $status->find()->where([$status->aliasField('survey_filter_id') => $filterId])->toArray();
+        $checkFilterAreas = $surveyFilterAreas->find()->where([$surveyFilterAreas->aliasField('survey_filter_id') => $filterId])->toArray();
+        $checksurveyProviders = $surveyFilterInstitutionProviders->find()->where([$surveyFilterInstitutionProviders->aliasField('survey_filter_id') => $filterId])->toArray();
+        $checkInstitutionTypes = $surveyFilterInstitutionTypes->find()->where([$surveyFilterInstitutionTypes->aliasField('survey_filter_id') => $filterId])->toArray();
+        if(!empty($checkstatus) || !empty($checkFilterAreas) || !empty($checksurveyProviders) || !empty($checkInstitutionTypes)){
+            $message = __('Survey Filter is  associated with Other Data');
+            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+            $event->stopPropagation();
+        }
+
+    }
+
 }
