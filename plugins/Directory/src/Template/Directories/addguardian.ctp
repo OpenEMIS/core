@@ -158,6 +158,9 @@ h2, h3, h4, h5, h6 {
                                 <option value="" >-- <?= __('Select') ?> --</option>
                             </select>
                         </div>
+                        <div ng-if="error.nationality_id" class="error-message">
+                            <p>{{ error.nationality_id }}</p>
+                        </div>
                     </div>
                     <div ng-class="identity_type_class" class="input select">
                         <label><?= __('Identity Type') ?></label>
@@ -169,6 +172,9 @@ h2, h3, h4, h5, h6 {
                                 >
                                 <option value="" >-- <?= __('Select') ?> --</option>
                             </select>
+                        </div>
+                        <div ng-if="error.identity_type_id" class="error-message">
+                            <p>{{ error.identity_type_id }}</p>
                         </div>
                     </div>
                     <!-- Always show Identity Number POCOR-7245 -->
@@ -295,11 +301,11 @@ h2, h3, h4, h5, h6 {
                     </div>
                     <div class="input string">
                         <label><?= __('Middle Name') ?></label>
-                        <input ng-model="selectedUserData.middle_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-disabled="true">
+                        <input ng-model="selectedUserData.middle_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-disabled="false">
                     </div>
                     <div class="input string">
                         <label><?= __('Third Name') ?></label>
-                        <input ng-model="selectedUserData.third_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-disabled="true">
+                        <input ng-model="selectedUserData.third_name" ng-change="InstitutionStudentController.setStudentName()" type="string" ng-disabled="false">
                     </div>
                     <div class="input string required">
                         <label><?= __('Last Name') ?></label>
