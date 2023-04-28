@@ -2519,6 +2519,7 @@ trait MessagesTrait
             'noDataToArchive' => 'There is no data to archive.'
         ],
         'CopyData' => [
+            'updatedRecord' => 'This record has been updated successfully.',
             'genralerror' => 'To and from academic period can not be same.',
             'alreadyexist' => 'There are existing data in the selected To Academic Period.',
             'nodataexist' => 'Data does not exist for seleceted from academic period.',
