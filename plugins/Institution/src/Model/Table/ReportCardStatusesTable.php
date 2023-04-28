@@ -267,15 +267,16 @@ class ReportCardStatusesTable extends ControllerActionTable
                         ];
                     }
                 }
-            }
-            //POCOR-7321 start
+                 //POCOR-7321 start
               $viewPdfUrl = $this->setQueryString($this->url('viewPDF'),$params);
               $buttons['viewPdf'] = [
                   'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
-                  'attr' => $indexAttr,
+                  'attr' =>[ 'role' => 'menuitem', 'tabindex' => '-1', 'escape' => false,'target'=>'_blank'],
                   'url' => $viewPdfUrl
               ];
             //POCOR-7321 end
+            }
+           
             //POCOR:6838 END
             $params['institution_class_id'] = $entity->institution_class_id;
 
@@ -480,7 +481,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 }//POCOR-7067 Ends
             }//POCOR-6841 ends
         }
-        $stmtNew = $conn->query("UPDATE institution_students_report_cards INNER JOIN report_card_processes ON institution_students_report_cards.report_card_id = report_card_processes.report_card_id AND institution_students_report_cards.student_id = report_card_processes.student_id AND institution_students_report_cards.institution_id = report_card_processes.institution_id AND institution_students_report_cards.academic_period_id = report_card_processes.academic_period_id AND institution_students_report_cards.education_grade_id = report_card_processes.education_grade_id AND institution_students_report_cards.institution_class_id = report_card_processes.institution_class_id SET institution_students_report_cards.status = report_card_processes.status");
+        $stmtNew = $conn->query("UPDATE institution_students_report_cards INNER JOIN report_card_processes ON institution_students_report_cards.report_card_id = report_card_processes.report_card_id AND institution_students_report_cards.student_id = report_card_processes.student_id AND institution_students_report_cards.institution_id = report_card_processes.institution_id AND institution_students_report_cards.academic_period_id = report_card_processes.academic_period_id AND institution_students_report_cards.education_grade_id = report_card_processes.education_grade_id AND institution_students_report_cards.institution_class_id = report_card_processes.institution_class_id SET institution_students_report_cards.status = report_card_processes.status where institution_students_report_cards.status in (1,2,3) ");
         $successQQ =$stmtNew->execute();
         //END:POCOR-6785
         $this->field('report_queue');
