@@ -1,3 +1,11 @@
+### [3.82.0] - 2023-04-27
+- Bug Fixed: Unable to install OpenEMIS
+- Bug Fixed: Summary Tables not populating
+- Bug Fixed: Administration > Data Management > Copy > Features: Infrastructure: Change the system logic to only copy institutions that has Infrastructure last year but none this year
+- Bug Fixed: Institutions > Performances > Assessments > Export file: if user logs in in English, report generated is supposed to be in English
+- Bug Fixed: Institutions>Students>Add: The validation messages for Search by Identity Number is appearing in the wrong location.
+- Bug Fixed: Institutions > Statistics > Standard Report : Student Absences Types: Data in report is incorrect
+
 ### [3.81.0] - 2023-04-21
 - Implemented: Develop student profile placeholders
 - Implemented: Develop API for report card comments
