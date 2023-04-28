@@ -29,7 +29,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     CONST ERROR = -1; //POCOR-6788
 
     CONST MAX_PROCESSES = 2;
-
+    // POCOR-7321 start
     public $fileTypes = [
         'jpeg'  => 'image/jpeg',
         'jpg'   => 'image/jpeg',
@@ -49,6 +49,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         'xlsx'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'zip'   => 'application/zip'
     ];
+     // POCOR-7321 end
     public function initialize(array $config)
     {
         $this->table('institution_class_students');
@@ -86,12 +87,10 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.generate'] = 'generate';
-         //START:POCOR-6667
-         //END:POCOR-6667
         $events['ControllerAction.Model.generateAll'] = 'generateAll';
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
         $events['ControllerAction.Model.downloadAllPdf'] = 'downloadAllPdf';
-        $events['ControllerAction.Model.viewPDF'] = 'viewPDF';
+        $events['ControllerAction.Model.viewPDF'] = 'viewPDF';//POCOR-7321
         $events['ControllerAction.Model.publish'] = 'publish';
         $events['ControllerAction.Model.publishAll'] = 'publishAll';
         $events['ControllerAction.Model.unpublish'] = 'unpublish';
@@ -103,9 +102,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $events['ControllerAction.Model.emailExcel'] = 'emailExcel';
         $events['ControllerAction.Model.emailAllExcel'] = 'emailAllExcel';
         /**POCOR-6836 ends*/ 
-        
         return $events;
-
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -124,16 +121,9 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'academic_period_id' => $entity->academic_period_id,
                 'education_grade_id' => $entity->education_grade_id,
             ];
-            
             // Download button, status must be generated or published
             if ($this->AccessControl->check(['Institutions', 'InstitutionStudentsReportCards', 'download']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
-                 //START:POCOR-6667
-                 $viewPdfUrl = $this->setQueryString($this->url('viewPDF'),$params);
-                 $buttons['viewPdf'] = [
-                     'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
-                     'attr' => $indexAttr,
-                     'url' => $viewPdfUrl
-                 ];
+              
                 $downloadUrl = [
                     'plugin' => 'Institution',
                     'controller' => 'Institutions',
@@ -278,6 +268,14 @@ class ReportCardStatusesTable extends ControllerActionTable
                     }
                 }
             }
+            //POCOR-7321 start
+              $viewPdfUrl = $this->setQueryString($this->url('viewPDF'),$params);
+              $buttons['viewPdf'] = [
+                  'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
+                  'attr' => $indexAttr,
+                  'url' => $viewPdfUrl
+              ];
+            //POCOR-7321 end
             //POCOR:6838 END
             $params['institution_class_id'] = $entity->institution_class_id;
 
@@ -1381,15 +1379,9 @@ class ReportCardStatusesTable extends ControllerActionTable
         header("Content-Type: " . $fileType);
         header('Content-Disposition: inline; filename="' . $fileName . '"');
         echo $file;
+        }
+        exit();
     }
-      exit();
-
-
-
-
-    
-     
- }
      //POCOR-7321 ends
     public function downloadAll(Event $event, ArrayObject $extra)
     {
