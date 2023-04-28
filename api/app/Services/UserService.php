@@ -21,7 +21,50 @@ class UserService extends Controller
     {
         try {
             $data = $this->userRepository->getUsersList($request);
-            return $data;
+            $resp = [];
+            foreach($data as $k => $d){
+                $resp[$k]['id'] = $d['id'];
+                $resp[$k]['username'] = $d['username'];
+                $resp[$k]['password'] = $d['password'];
+                $resp[$k]['openemis_no'] = $d['openemis_no'];
+                $resp[$k]['first_name'] = $d['first_name'];
+                $resp[$k]['middle_name'] = $d['middle_name'];
+                $resp[$k]['third_name'] = $d['third_name'];
+                $resp[$k]['last_name'] = $d['last_name'];
+                $resp[$k]['preferred_name'] = $d['preferred_name'];
+                $resp[$k]['email'] = $d['email'];
+                $resp[$k]['address'] = $d['address'];
+                $resp[$k]['postal_code'] = $d['postal_code'];
+                $resp[$k]['address_area_id'] = $d['address_area_id'];
+                $resp[$k]['birthplace_area_id'] = $d['birthplace_area_id'];
+                $resp[$k]['gender_id'] = $d['gender_id'];
+                $resp[$k]['date_of_birth'] = $d['date_of_birth'];
+                $resp[$k]['date_of_death'] = $d['date_of_death'];
+                $resp[$k]['nationality_id'] = $d['nationality_id'];
+                $resp[$k]['identity_type_id'] = $d['identity_type_id'];
+                $resp[$k]['identity_number'] = $d['identity_number'];
+                $resp[$k]['external_reference'] = $d['external_reference'];
+                $resp[$k]['status'] = $d['status'];
+                $resp[$k]['last_login'] = $d['last_login'];
+                $resp[$k]['photo_name'] = $d['photo_name'];
+                if($d['photo_content']){
+                    $resp[$k]['photo_content'] = base64_encode($d['photo_content']);
+                } else {
+                    $resp[$k]['photo_content'] = Null;
+                }
+                
+                $resp[$k]['preferred_language'] = $d['preferred_language'];
+                $resp[$k]['is_student'] = $d['is_student'];
+                $resp[$k]['is_staff'] = $d['is_staff'];
+                $resp[$k]['is_guardian'] = $d['is_guardian'];
+                $resp[$k]['modified_user_id'] = $d['modified_user_id'];
+                $resp[$k]['modified'] = $d['modified'];
+                $resp[$k]['created_user_id'] = $d['created_user_id'];
+                $resp[$k]['created'] = $d['created'];
+                $resp[$k]['nationalities'] = $d['nationalities'];
+                $resp[$k]['identities'] = $d['identities'];
+            }
+            return $resp;
             
         } catch (\Exception $e) {
             Log::error(
@@ -39,6 +82,14 @@ class UserService extends Controller
         try {
             $data = $this->userRepository->getUsersData($userId)
                 ->map(function ($item, $key) {
+
+                    if($item['photo_content']){
+                        $photo_content = base64_encode($item['photo_content']);
+                    } else {
+                        $photo_content = Null;
+                    }
+
+
                     return [
                         "id" => $item['id'],
                         "username" => $item['username'],
@@ -66,7 +117,7 @@ class UserService extends Controller
                         "status" => $item['status'],
                         "last_login" => $item['last_login'],
                         "photo_name" => $item['photo_name'],
-                        "photo_content" => $item['photo_content'],
+                        "photo_content" => $photo_content,
                         "photo_name" => $item['photo_name'],
                         "preferred_language" => $item['preferred_language'],
                         "is_student" => $item['is_student'],
@@ -101,11 +152,10 @@ class UserService extends Controller
                     ];
                     
                 });
-            //dd($data);
+            
             return $data;
             
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
