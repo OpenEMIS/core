@@ -111,10 +111,9 @@ class POCOR6673 extends AbstractMigration
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) DEFAULT NULL,
-                      `created` datetime DEFAULT NULL
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8');
-
-        $this->execute('INSERT INTO `curricular_positions` SELECT * FROM `curricular_positions`');
+                      `created` datetime DEFAULT NULL,
+                        PRIMARY KEY (`id`)
+                      )ENGINE=InnoDB DEFAULT CHARSET=utf8');
         $curricular_positions = [
             [
                 'id' => 1,
@@ -144,7 +143,6 @@ class POCOR6673 extends AbstractMigration
             ],
         ];
         $this->insert('curricular_positions', $curricular_positions);
-        $this->execute("ALTER TABLE `curricular_positions` ADD PRIMARY KEY (`id`)");
 
         // create curricular types
        $this->execute('CREATE TABLE `curricular_types` (
@@ -159,8 +157,9 @@ class POCOR6673 extends AbstractMigration
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) DEFAULT NULL,
-                      `created` datetime DEFAULT NULL
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8');
+                      `created` datetime DEFAULT NULL,
+                        PRIMARY KEY (`id`)
+                      )ENGINE=InnoDB DEFAULT CHARSET=utf8');
 
         $curricular_types = [
             [
@@ -178,7 +177,6 @@ class POCOR6673 extends AbstractMigration
             ],
         ];
         $this->insert('curricular_types', $curricular_types);
-        $this->execute("ALTER TABLE `curricular_types` ADD PRIMARY KEY (`id`)");
 
         $this->execute('CREATE TABLE IF NOT EXISTS `institution_curriculars` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
