@@ -1033,7 +1033,7 @@ class StudentReportCardsTable extends AppTable
             $Assessments=TableRegistry::get('assessments');
             $subjectObj = $SubjectStudents->find()
                            ->select([
-                               "assessment_id"=> 'Assessments.id', 
+                               "assessment_id"=> $Assessments->aliasField('id'),
                                "academic_period_name"=> 'AcademicPeriods.name',
                                "academic_period_id"=> 'AcademicPeriods.id',
                                "education_programme_name"=> 'EducationProgrammes.name',
@@ -1133,7 +1133,8 @@ class StudentReportCardsTable extends AppTable
             $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
             $entity=[];
             $institution_subject_student =$extra['institution_subject_student'];
-            $i=0;
+            $entity=[];
+           
             foreach($institution_subject_student as $row){
                
                 $AssessmentResultObj= $AssessmentItemResults->find()
@@ -1144,21 +1145,17 @@ class StudentReportCardsTable extends AppTable
                                         $AssessmentItemResults->aliasField('education_subject_id')=>$row['education_subject_id'],
                                         $AssessmentItemResults->aliasField('academic_period_id')=>$row['academic_period_id'],
                                         ])
-                                        ->toArray();
-                                 
-                             
-                if($AssessmentResultObj!=[]){
-                $entity[]=[
-                 "id"=>$row['id'],
-                 "assessment_period_id"=>$AssessmentResultObj[0]['assessment_period_id'],
-                 "marks_formatted"=>number_format($AssessmentResultObj[0]['marks'], 2)
-                ];
-            }
-            $i++;
-        
-      
+                                        ->toArray();                       
+          
+               if($AssessmentResultObj!=[]){
+                 foreach($AssessmentResultObj as $res){
+                   
+                    $entity[]=["id"=>$row['id'],
+                    "assessment_period_id"=>$res['assessment_period_id'],
+                    "marks_formatted"=>number_format($res['marks'], 2)
+                 ];
+                 }}
         }
-     
          return $entity;
     }
 
