@@ -21,8 +21,9 @@ class UserService extends Controller
     {
         try {
             $data = $this->userRepository->getUsersList($request);
+            //dd('data', $data);
             $resp = [];
-            foreach($data as $k => $d){
+            foreach($data['data'] as $k => $d){
                 $resp[$k]['id'] = $d['id'];
                 $resp[$k]['username'] = $d['username'];
                 $resp[$k]['password'] = $d['password'];
@@ -64,7 +65,9 @@ class UserService extends Controller
                 $resp[$k]['nationalities'] = $d['nationalities'];
                 $resp[$k]['identities'] = $d['identities'];
             }
-            return $resp;
+
+            $data['data'] = $resp;
+            return $data;
             
         } catch (\Exception $e) {
             Log::error(
