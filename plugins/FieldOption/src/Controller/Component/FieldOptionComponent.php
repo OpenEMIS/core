@@ -124,7 +124,8 @@ class FieldOptionComponent extends Component
         'CommentTypes' => ['className' => 'User.CommentTypes', 'parent' => 'Others'],
         'BehaviourClassifications' => ['className' => 'Student.BehaviourClassifications', 'parent' => 'Others'],
         'DemographicWealthQuantileTypes' => ['className' => 'FieldOption.DemographicTypes', 'parent' => 'Others'],
-
+        'Industries' => ['className' => 'FieldOption.Industries', 'parent' => 'Others'],//POCOR-7376
+        
     // Infrastructure
         'InfrastructureOwnerships' => ['className' => 'FieldOption.InfrastructureOwnerships', 'parent' => 'Infrastructure'],
         'InfrastructureConditions' => ['className' => 'FieldOption.InfrastructureConditions', 'parent' => 'Infrastructure'],
