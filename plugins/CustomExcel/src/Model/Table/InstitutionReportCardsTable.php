@@ -927,15 +927,20 @@ class InstitutionReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseTotalStaffs(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params)) {
-            $InstitutionStaffs = TableRegistry::get('Institution.Staff');
-            $entity = $InstitutionStaffs
-                ->find()
-                ->contain('Users')
-                ->where([$InstitutionStaffs->aliasField('institution_id') => $params['institution_id']])
-                ->group($InstitutionStaffs->aliasField('staff_id'))
-                ->count()
-            ;
-            return $entity;
+            $connection = ConnectionManager::get('default');
+            $entity = $connection->execute("SELECT institution_staff.staff_id
+                        ,COUNT(DISTINCT(institution_staff.staff_id)) total_staff
+                    FROM institution_staff
+                    INNER JOIN academic_periods
+                    ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
+                    WHERE institution_staff.institution_id = ". $params['institution_id'] ."
+                    AND academic_periods.id = ". $params['academic_period_id'] ."
+                    AND institution_staff.staff_status_id = 1")->fetch();
+            $totalStaff = 0;
+            if(!empty($entity)){
+                $totalStaff = $entity[1];
+            }
+            return $totalStaff;
         }
     }
 
@@ -5191,149 +5196,46 @@ class InstitutionReportCardsTable extends AppTable
                 ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC")->fetchAll(\PDO::FETCH_ASSOC);
             $entity = $result = [];
             if (!empty($EducationProgrameData)) {
-               foreach ($EducationProgrameData as $data) {
-                    $EducationGrades = TableRegistry::get('education_grades');
-                    $InstitutionSubjectStaff = TableRegistry::get('institution_subject_staff');
-                    $SecurityUsers = TableRegistry::get('security_users');
-                    $EducationGradesData = $EducationGrades->find()
-                                            ->where([
-                                                $EducationGrades->aliasField('education_programme_id') => $data['programme_id']
-                                            ])->hydrate(false)->toArray();
-                    $EducationGradesArray = [];
-                    if(!empty($EducationGradesData)){
-                        foreach ($EducationGradesData as $key => $value) {
-                            $EducationGradesArray[] = $value['id'];
-                        }
-                    }
-                    $institutionStaffData = $InstitutionSubjects->find()
-                        ->select([
-                            $InstitutionSubjects->aliasField('id'),
-                            $InstitutionSubjects->aliasField('institution_id'),
-                            $InstitutionSubjects->aliasField('education_grade_id'),
-                            $InstitutionSubjects->aliasField('academic_period_id'),
-                            $InstitutionSubjectStaff->aliasField('staff_id')
-                        ])
-                        ->innerJoin(
-                            [$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()],
-                            [
-                                $InstitutionSubjectStaff->aliasField('institution_subject_id ='). $InstitutionSubjects->aliasField('id')
-                            ]
-                        )
-                        ->where([$InstitutionSubjects->aliasField('education_grade_id IN') => $EducationGradesArray])
-                        ->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
-                        ->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
-                        ->distinct([$InstitutionSubjectStaff->aliasField('staff_id')])
-                        ->hydrate(false)
-                        ->count()
-                        ;
-                    // for male staff    
-                    $institutionMaleStaffData = $InstitutionSubjects->find()
-                        ->select([
-                            $InstitutionSubjects->aliasField('id'),
-                            $InstitutionSubjects->aliasField('institution_id'),
-                            $InstitutionSubjects->aliasField('education_grade_id'),
-                            $InstitutionSubjects->aliasField('academic_period_id'),
-                            $InstitutionSubjectStaff->aliasField('staff_id')
-                        ])
-                        ->innerJoin(
-                            [$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()],
-                            [
-                                $InstitutionSubjectStaff->aliasField('institution_subject_id ='). $InstitutionSubjects->aliasField('id')
-                            ]
-                        )
-                        ->innerJoin(
-                            [$SecurityUsers->alias() => $SecurityUsers->table()],
-                            [
-                                $SecurityUsers->aliasField('id ='). $InstitutionSubjectStaff->aliasField('staff_id')
-                            ]
-                        )
-                        ->where([$InstitutionSubjects->aliasField('education_grade_id IN') => $EducationGradesArray])
-                        ->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
-                        ->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
-                        ->where([$SecurityUsers->aliasField('gender_id') => 1])
-                        ->distinct([$InstitutionSubjectStaff->aliasField('staff_id')])
-                        ->hydrate(false)
-                        ->count()
-                        ;
-
-                    // for female staff    
-                    $institutionFemaleStaffData = $InstitutionSubjects->find()
-                        ->select([
-                            $InstitutionSubjects->aliasField('id'),
-                            $InstitutionSubjects->aliasField('institution_id'),
-                            $InstitutionSubjects->aliasField('education_grade_id'),
-                            $InstitutionSubjects->aliasField('academic_period_id'),
-                            $InstitutionSubjectStaff->aliasField('staff_id')
-                        ])
-                        ->innerJoin(
-                            [$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()],
-                            [
-                                $InstitutionSubjectStaff->aliasField('institution_subject_id ='). $InstitutionSubjects->aliasField('id')
-                            ]
-                        )
-                        ->innerJoin(
-                            [$SecurityUsers->alias() => $SecurityUsers->table()],
-                            [
-                                $SecurityUsers->aliasField('id ='). $InstitutionSubjectStaff->aliasField('staff_id')
-                            ]
-                        )
-                        ->where([$InstitutionSubjects->aliasField('education_grade_id IN') => $EducationGradesArray])
-                        ->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
-                        ->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
-                        ->where([$SecurityUsers->aliasField('gender_id') => 2])
-                        ->distinct([$InstitutionSubjectStaff->aliasField('staff_id')])
-                        ->hydrate(false)
-                        ->count()
-                        ;
-                /*Subject Staff Temporary*/
-                $InstitutionSubjectStaff = TableRegistry::get('institution_subject_staff');
-                $InstitutionStaff = TableRegistry::get('institution_staff');
-                $StaffTypes = TableRegistry::get('staff_types');
-                $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-                $EducationGrades = TableRegistry::get('education_grades');
-
-                $subjectTempStaffData = $InstitutionSubjectStaff->find()
-                    ->innerJoin(
-                    ['InstitutionStaff' => 'institution_staff'],
-                    [
-                        'InstitutionStaff.staff_id = '. $InstitutionSubjectStaff->aliasField('staff_id')
-                    ]
-                    )
-                    ->innerJoin(
-                    ['StaffTypes' => 'staff_types'],
-                    [
-                        'StaffTypes.id = InstitutionStaff.staff_type_id',
-                    ]
-                    )
-                    ->innerJoin(
-                    ['InstitutionSubjects' => 'institution_subjects'],
-                    [
-                        'InstitutionSubjects.id = '. $InstitutionSubjectStaff->aliasField('institution_subject_id')
-                    ]
-                    )
-                    ->innerJoin(
-                    ['EducationGrades' => 'education_grades'],
-                    [
-                        'EducationGrades.id = '. $InstitutionSubjects->aliasField('education_grade_id')
-                    ]
-                    )
-                    ->where(['StaffTypes.international_code' => 'temporary'])
-                    ->where([$InstitutionSubjects->aliasField('education_grade_id IN') => $EducationGradesArray])
-                    ->where([$InstitutionSubjectStaff->aliasField('institution_id') => $params['institution_id']])
-                    ->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
-                    ->distinct([$InstitutionSubjectStaff->aliasField('staff_id')])
-                    ->hydrate(false)
-                    ->count()
-                    ;
+                foreach ($EducationProgrameData as $data) {
+                    $connectionInner = ConnectionManager::get('default');
+                    $EducationProgrameData = $connectionInner->execute("SELECT education_grades.education_programme_id
+                    ,COUNT(DISTINCT(CASE WHEN security_users.gender_id = 1 THEN institution_subject_staff.staff_id END)) male_teaching_staff
+                    ,COUNT(DISTINCT(CASE WHEN security_users.gender_id = 2 THEN institution_subject_staff.staff_id END)) female_teaching_staff
+                    ,COUNT(DISTINCT(CASE WHEN security_users.gender_id IN (1, 2) THEN institution_subject_staff.staff_id END)) total_teaching_staff
+                    ,COUNT(DISTINCT(CASE WHEN fulltime_staff.staff_id IS NOT NULL AND fulltime_staff.position_type_checker < 1 THEN institution_subject_staff.staff_id END)) temp_teaching_staff
+                    FROM institution_subject_staff
+                    INNER JOIN institution_subjects
+                    ON institution_subjects.id = institution_subject_staff.institution_subject_id
+                    INNER JOIN education_grades
+                    ON education_grades.id = institution_subjects.education_grade_id
+                    INNER JOIN security_users
+                    ON security_users.id = institution_subject_staff.staff_id
+                    LEFT JOIN 
+                    (
+                        SELECT institution_staff.staff_id
+                            ,MAX(institution_staff.FTE) position_type_checker
+                        FROM institution_staff
+                        INNER JOIN academic_periods
+                        ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
+                        WHERE institution_staff.institution_id = ". $params['institution_id'] ."
+                        AND academic_periods.id = ". $params['academic_period_id'] ."
+                        AND institution_staff.staff_status_id = 1
+                        GROUP BY institution_staff.staff_id
+                    ) fulltime_staff
+                    ON fulltime_staff.staff_id = institution_subject_staff.staff_id
+                    WHERE institution_subject_staff.institution_id = ". $params['institution_id'] ."
+                    AND institution_subjects.academic_period_id = ". $params['academic_period_id'] ."
+                    AND education_grades.education_programme_id = ". $data['programme_id'] ."
+                    GROUP BY education_grades.education_programme_id")->fetch('assoc');
                     $result = [
                         'programme_id' => !empty($data['programme_id']) ? $data['programme_id'] : '',
-                        'subject_staff' => !empty($institutionStaffData) ? $institutionStaffData : 0,
-                        'male_subject_staff' => !empty($institutionMaleStaffData) ? $institutionMaleStaffData : 0,
-                        'female_subject_staff' => !empty($institutionFemaleStaffData) ? $institutionFemaleStaffData : 0,
-                        'subject_staff_type_temporary' => !empty($subjectTempStaffData) ? $subjectTempStaffData : 0,
+                        'subject_staff' => !empty($EducationProgrameData) ? $EducationProgrameData['total_teaching_staff'] : 0,
+                        'male_subject_staff' => !empty($EducationProgrameData) ? $EducationProgrameData['male_teaching_staff'] : 0,
+                        'female_subject_staff' => !empty($EducationProgrameData) ? $EducationProgrameData['female_teaching_staff'] : 0,
+                        'subject_staff_type_temporary' => !empty($EducationProgrameData) ? $EducationProgrameData['temp_teaching_staff'] : 0,
                     ];
                     $entity[] = $result;
-               }
+                }
             }
             return $entity;
         }
