@@ -27,10 +27,6 @@ class SurveyFiltersTable extends ControllerActionTable
         $this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules','foreignKey' => 'custom_module_id']);
         $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id']);
 
-        $this->hasMany('InstitutionProviders', ['className' => 'Institution.InstitutionProviders', 'foreignKey' => 'institution_provider_id']);
-        $this->hasMany('InstitutionTypes', ['className' => 'Institution.InstitutionTypes', 'foreignKey' => 'institution_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('Areas', ['className' => 'Areas', 'foreignKey' => 'area_education_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Rules' => ['index']
         ]);
@@ -116,14 +112,14 @@ class SurveyFiltersTable extends ControllerActionTable
         $this->field('name', ['visible' => true,]);
 
         $typeOptions = $this->getInstitutionType();
-        $this->fields['institution_type_id']['options'] = [0 => __('All Institution Type')] + $typeOptions;
+        $this->fields['institution_type_id']['options'] = [-1 => __('All Institution Type')] + $typeOptions;
         $this->field('institution_type_id', [
             'type' => 'chosenSelect',
             'attr' => ['label' => __('Institution Type')],
             'visible' => ['index' => true, 'view' => true, 'edit' => true, 'add' => true]
         ]);
         $institutionProvider = $this->getInstitutionProvider();
-        $this->fields['institution_provider_id']['options'] =  [0 => __('All Institution Provider')] + $institutionProvider;
+        $this->fields['institution_provider_id']['options'] =  [-1 => __('All Institution Provider')] + $institutionProvider;
         $this->field('institution_provider_id', [
             'type' => 'chosenSelect',
             'attr' => ['label' => __('Institution Provider')],
@@ -131,7 +127,7 @@ class SurveyFiltersTable extends ControllerActionTable
         ]);
 
         $areaEducationId = $this->getAreaEducation();
-        $this->fields['area_education_id']['options'] = [0 => __('All Areas Education')] + $areaEducationId;
+        $this->fields['area_education_id']['options'] = [-1 => __('All Areas Education')] + $areaEducationId;
         $this->field('area_education_id', [
             'type' => 'chosenSelect',
             'attr' => ['label' => __('Area Education')],
@@ -485,16 +481,26 @@ class SurveyFiltersTable extends ControllerActionTable
         $filterId = $entity->id;
         $type = TableRegistry::get('institution_types');
         $surveyInstitutionTypes = TableRegistry::get('survey_filter_institution_types');
-        $data = $surveyInstitutionTypes->find()->select(['id'=> $type->aliasField('id'),
-                        'name' => $type->aliasField('name')])
-                        ->leftJoin([$type->alias() => $type->table()],
-                        [$type->aliasField('id').'='.$surveyInstitutionTypes->aliasField('institution_type_id') ])
-                        ->where([$surveyInstitutionTypes->aliasField('survey_filter_id') => $filterId]);         
-        foreach($data as $key => $value){
+        $InstitutionTypesData = $surveyInstitutionTypes->find()
+                                ->where([$surveyInstitutionTypes->aliasField('survey_filter_id') => $filterId])->first()->institution_type_id;
+        if($InstitutionTypesData != -1){  
+            $data = $surveyInstitutionTypes->find()->select(['id'=> $type->aliasField('id'),
+                            'name' => $type->aliasField('name')])
+                            ->leftJoin([$type->alias() => $type->table()],
+                            [$type->aliasField('id').'='.$surveyInstitutionTypes->aliasField('institution_type_id') ])
+                            ->where([$surveyInstitutionTypes->aliasField('survey_filter_id') => $filterId]);         
+            foreach($data as $key => $value){
 
-            $typedata[] = $value->name;
-        }               
-        return implode(', ', $typedata);
+                $typedata[] = $value->name;
+            }               
+            return implode(', ', $typedata);
+        }elseif($InstitutionTypesData == -1){
+            $institutionType = 'All Institution Type';
+            return $institutionType;
+        }elseif($InstitutionTypesData == NULL){
+            $institutionType = '';
+            return $institutionType;
+        }
     }
 
     public function onGetInstitutionProviderId(Event $event, Entity $entity)
@@ -503,16 +509,27 @@ class SurveyFiltersTable extends ControllerActionTable
         $filterId = $entity->id;
         $institutionProviders = TableRegistry::get('institution_providers');
         $surveyinstitutionProviders = TableRegistry::get('survey_filter_institution_providers');
-        $data = $surveyinstitutionProviders->find()->select(['id'=> $institutionProviders->aliasField('id'),
-                        'name' => $institutionProviders->aliasField('name')])
-                        ->leftJoin([$institutionProviders->alias() => $institutionProviders->table()],
-                        [$institutionProviders->aliasField('id').'='.$surveyinstitutionProviders->aliasField('institution_provider_id') ])
-                        ->where([$surveyinstitutionProviders->aliasField('survey_filter_id') => $filterId]);         
-        foreach($data as $key => $value){
+        $institutionProvidersData = $surveyinstitutionProviders->find()
+                                ->where([$surveyinstitutionProviders->aliasField('survey_filter_id') => $filterId])->first()->institution_provider_id;
+        
+        if($institutionProvidersData != -1){  
+            $data = $surveyinstitutionProviders->find()->select(['id'=> $institutionProviders->aliasField('id'),
+                            'name' => $institutionProviders->aliasField('name')])
+                            ->leftJoin([$institutionProviders->alias() => $institutionProviders->table()],
+                            [$institutionProviders->aliasField('id').'='.$surveyinstitutionProviders->aliasField('institution_provider_id') ])
+                            ->where([$surveyinstitutionProviders->aliasField('survey_filter_id') => $filterId]);         
+            foreach($data as $key => $value){
 
-            $result[] = $value->name;
-        }               
-        return implode(', ', $result);
+                $result[] = $value->name;
+            }               
+            return implode(', ', $result);
+        }elseif($institutionProvidersData == -1){
+            $institutionProvider = 'All Institution Provider';
+            return $institutionProvider;
+        }elseif($institutionProvidersData == NULL){
+            $institutionProvider = '';
+            return $institutionProvider;
+        }
     }
 
     public function onGetAreaEducationId(Event $event, Entity $entity)
@@ -521,16 +538,26 @@ class SurveyFiltersTable extends ControllerActionTable
         $filterId = $entity->id;
         $areaEducation = TableRegistry::get('areas');
         $surveyAreaEducation = TableRegistry::get('survey_filter_areas');
-        $data = $surveyAreaEducation->find()->select(['id'=> $areaEducation->aliasField('id'),
-                        'name' => $areaEducation->aliasField('name')])
-                        ->leftJoin([$areaEducation->alias() => $areaEducation->table()],
-                        [$areaEducation->aliasField('id').'='.$surveyAreaEducation->aliasField('area_education_id') ])
-                        ->where([$surveyAreaEducation->aliasField('survey_filter_id') => $filterId]);         
-        foreach($data as $key => $value){
+        $areaeducationData = $surveyAreaEducation->find()
+                                ->where([$surveyAreaEducation->aliasField('survey_filter_id') => $filterId])->first()->area_education_id;
+        if($areaeducationData != -1){  
+            $data = $surveyAreaEducation->find()->select(['id'=> $areaEducation->aliasField('id'),
+                            'name' => $areaEducation->aliasField('name')])
+                            ->leftJoin([$areaEducation->alias() => $areaEducation->table()],
+                            [$areaEducation->aliasField('id').'='.$surveyAreaEducation->aliasField('area_education_id') ])
+                            ->where([$surveyAreaEducation->aliasField('survey_filter_id') => $filterId]);         
+            foreach($data as $key => $value){
 
-            $result[] = $value->name;
-        }               
-        return implode(', ', $result);
+                $result[] = $value->name;
+            }               
+            return implode(', ', $result);
+        }elseif($areaeducationData == NULL){
+            $educations = '';
+            return $educations;
+        }elseif($areaeducationData == -1){
+            $educations = 'All Area Education';
+            return $educations;
+        }
     }
 
     public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
@@ -544,10 +571,15 @@ class SurveyFiltersTable extends ControllerActionTable
         $checkFilterAreas = $surveyFilterAreas->find()->where([$surveyFilterAreas->aliasField('survey_filter_id') => $filterId])->toArray();
         $checksurveyProviders = $surveyFilterInstitutionProviders->find()->where([$surveyFilterInstitutionProviders->aliasField('survey_filter_id') => $filterId])->toArray();
         $checkInstitutionTypes = $surveyFilterInstitutionTypes->find()->where([$surveyFilterInstitutionTypes->aliasField('survey_filter_id') => $filterId])->toArray();
-        if(!empty($checkstatus) || !empty($checkFilterAreas) || !empty($checksurveyProviders) || !empty($checkInstitutionTypes)){
+        if(!empty($checkstatus)){
             $message = __('Survey Filter is  associated with Other Data');
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
             $event->stopPropagation();
+        }elseif(empty($checkstatus) || (!empty($checkFilterAreas)) || (!empty($checksurveyProviders)) || (!empty($checkInstitutionTypes))){
+            $deletAreaSurvey =  $surveyFilterAreas->deleteAll(['survey_filter_id' => $filterId]);
+            $deletInstitutionProvidersSurvey =  $surveyFilterInstitutionProviders->deleteAll(['survey_filter_id' => $filterId]);
+            $deletInstitutionTypesSurvey =  $surveyFilterInstitutionTypes->deleteAll(['survey_filter_id' => $filterId]);
+                   
         }
 
     }

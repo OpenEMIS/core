@@ -121,6 +121,33 @@ class SurveyStatusesTable extends ControllerActionTable
         $filter  = TableRegistry::get('survey_forms_filters');
         if($moduleId == 1 && $surveyFormId == -1 && $surveyFilterId == -1){
              $query;
+        }elseif($moduleId == 1 && $surveyFormId != -1 && $surveyFilterId == -1){
+             $query
+                ->select([
+                            $this->aliasField('id'),
+                            $this->aliasField('date_disabled'),
+                            $this->aliasField('date_enabled'),
+                        ])
+                ->innerJoin([$form->alias() => $form->table()],
+                        [$form->aliasField('id').'='.$this->aliasField('survey_form_id') ])
+                ->innerJoin([$filter->alias() => $filter->table()],
+                        [$filter->aliasField('id').'='.$this->aliasField('survey_filter_id') ])
+                ->where([$this->aliasField('survey_form_id') =>$surveyFormId,
+                    $form->aliasField('custom_module_id') =>$moduleId
+
+                ]);
+        }elseif($moduleId == 1 && $surveyFormId == -1 && $surveyFilterId != -1){
+             $query
+                ->select([
+                            $this->aliasField('id'),
+                            $this->aliasField('date_disabled'),
+                            $this->aliasField('date_enabled'),
+                        ])
+                ->innerJoin([$form->alias() => $form->table()],
+                        [$form->aliasField('id').'='.$this->aliasField('survey_form_id') ])
+                ->innerJoin([$filter->alias() => $filter->table()],
+                        [$filter->aliasField('id').'='.$this->aliasField('survey_filter_id') ])
+                ->where([$this->aliasField('survey_filter_id') =>$surveyFilterId]);
         }else{
             $query
                 ->select([
@@ -266,12 +293,12 @@ class SurveyStatusesTable extends ControllerActionTable
         if(!empty($provider)){
             foreach($provider as $value){
                 $institutionProviderId = $value['institution_provider_id'];
-                if($institutionProviderId != 0){
+                if($institutionProviderId != -1){
                     $providerId[]  = $value['institution_provider_id'];
                     
                 }
             }
-            if($provider[0]['institution_provider_id'] != 0){
+            if($provider[0]['institution_provider_id'] != -1){
                 $where[$Institutions->aliasField('institution_provider_id IN')] = $providerId;
             }
         }
@@ -281,11 +308,11 @@ class SurveyStatusesTable extends ControllerActionTable
         if(!empty($type)){
             foreach($type as $value){
                 $institutionTypeId = $value['institution_type_id'];
-                if($institutionTypeId != 0){
+                if($institutionTypeId != -1){
                    $typsids[]  = $value['institution_type_id'];
                 }
             }
-            if($type[0]['institution_type_id'] != 0){
+            if($type[0]['institution_type_id'] != -1){
                 $where[$Institutions->aliasField('institution_type_id IN')] = $typsids;
             }
         }
@@ -296,12 +323,12 @@ class SurveyStatusesTable extends ControllerActionTable
         if(!empty($area)){
             foreach($area as $value){
                 $institutionAreaId = $value['area_education_id'];
-                if($institutionAreaId != 0){
+                if($institutionAreaId != -1){
                     $areaId[] = $value['area_education_id'];
                 }
             }
 
-            if($area[0]['area_education_id'] != 0){
+            if($area[0]['area_education_id'] != -1){
                 $where[$Institutions->aliasField('area_id IN')] = $areaId;
             }
         }
