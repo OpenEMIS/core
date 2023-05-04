@@ -56,12 +56,22 @@ class SurveyRecipientsTable extends ControllerActionTable
 
         // survey filter options toolbar
         $this->SurveyFilters = TableRegistry::get('survey_forms_filters');
-        $surveyFilterOptions = $this->SurveyFilters
-            ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-            ->order([
-                $this->SurveyFilters->aliasField('name')
-            ])
-            ->toArray();
+        if($surveyFormId != -1){
+            $surveyFilterOptions = $this->SurveyFilters
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->where([$this->SurveyFilters->aliasField('survey_form_id') => $surveyFormId])
+                ->order([
+                    $this->SurveyFilters->aliasField('name')
+                ])
+                ->toArray();
+        }else{
+            $surveyFilterOptions = $this->SurveyFilters
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->order([
+                    $this->SurveyFilters->aliasField('name')
+                ])
+                ->toArray();
+        }
         $surveyFilterOptions = ['-1' => '-- '.__('All Survey Filter').' --'] + $surveyFilterOptions;
         $surveyFilterId = $this->request->query('survey_filter_id');
         $this->advancedSelectOptions($surveyFilterOptions, $surveyFilterId);
