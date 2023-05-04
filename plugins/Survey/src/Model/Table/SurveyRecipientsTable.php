@@ -16,6 +16,8 @@ class SurveyRecipientsTable extends ControllerActionTable
     public function initialize(array $config)
     {
         $this->table('institution_surveys');
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods','foreignKey' => 'academic_period_id']);
+        $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms','foreignKey' => 'survey_form_id']);
         parent::initialize($config);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Rules' => ['index']
@@ -86,8 +88,8 @@ class SurveyRecipientsTable extends ControllerActionTable
         $this->field('institution_code',['visible' => true]);
         $this->field('institution_name', ['visible' => true]);
         $this->field('status_id', ['visible' => false]);
-        $this->field('academic_period_id', ['visible' => false]);
-        $this->field('survey_form_id', ['visible' => false]);
+        $this->field('academic_period_id', ['visible' => true]);
+        $this->field('survey_form_id', ['visible' => true]);
         $this->field('institution_id', ['visible' => false]);
         $this->field('assignee_id', ['visible' => false]);
         $this->setFieldOrder([
@@ -105,30 +107,32 @@ class SurveyRecipientsTable extends ControllerActionTable
         if($moduleId == null && $surveyFormId == null && $surveyFilterId == null){
              $query
             ->select(['id' => $this->aliasField('id'),'institution_name'=> $institutions->aliasField('name'),
-                        'institution_code'=> $institutions->aliasField('code')])
+                        'institution_code'=> $institutions->aliasField('code'),'academic_period_id','survey_form_id'])
             ->leftJoin([$institutions->alias() => $institutions->table()],
                 [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
             ->leftJoin([$surveyForm->alias() => $surveyForm->table()],
                 [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
             ->leftJoin([$SurveyFormFilters->alias() => $SurveyFormFilters->table()],
                 [$SurveyFormFilters->aliasField('survey_form_id').'='.$this->aliasField('survey_form_id')])
-            ->group([$this->aliasField('institution_id')]);
+            ->order([$this->aliasField('id') => 'DESC']);
+           // ->group([$this->aliasField('institution_id')]);
         }elseif($moduleId == 1 && $surveyFormId == -1 && $surveyFilterId == -1){
              $query
             ->select(['id' => $this->aliasField('id'),'institution_name'=> $institutions->aliasField('name'),
-                        'institution_code'=> $institutions->aliasField('code')])
+                        'institution_code'=> $institutions->aliasField('code'),'academic_period_id','survey_form_id'])
             ->leftJoin([$institutions->alias() => $institutions->table()],
                 [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
             ->leftJoin([$surveyForm->alias() => $surveyForm->table()],
                 [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
             ->leftJoin([$SurveyFormFilters->alias() => $SurveyFormFilters->table()],
                 [$SurveyFormFilters->aliasField('survey_form_id').'='.$this->aliasField('survey_form_id')])
-            ->group([$this->aliasField('institution_id')]);
+            ->order([$this->aliasField('id') => 'DESC']);
+            //->group([$this->aliasField('institution_id')]);
         }elseif($moduleId == 1 && $surveyFormId != -1 && $surveyFilterId == -1){
 
              $query
             ->select(['id' => $this->aliasField('id'),'institution_name'=> $institutions->aliasField('name'),
-                        'institution_code'=> $institutions->aliasField('code')])
+                        'institution_code'=> $institutions->aliasField('code'),'academic_period_id','survey_form_id'])
             ->leftJoin([$institutions->alias() => $institutions->table()],
                 [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
             ->leftJoin([$surveyForm->alias() => $surveyForm->table()],
@@ -136,14 +140,15 @@ class SurveyRecipientsTable extends ControllerActionTable
             ->leftJoin([$SurveyFormFilters->alias() => $SurveyFormFilters->table()],
                 [$SurveyFormFilters->aliasField('survey_form_id').'='.$this->aliasField('survey_form_id')])
             ->where([$this->aliasField('survey_form_id') => $surveyFormId])
-            ->group([$this->aliasField('institution_id')]);
+            ->order([$this->aliasField('id') => 'DESC']);
+            //->group([$this->aliasField('institution_id')]);
         
         }
         elseif($moduleId == 1 && $surveyFormId != -1 && $surveyFilterId != -1){
 
              $query
             ->select(['id' => $this->aliasField('id'),'institution_name'=> $institutions->aliasField('name'),
-                        'institution_code'=> $institutions->aliasField('code')])
+                        'institution_code'=> $institutions->aliasField('code'),'academic_period_id','survey_form_id'])
             ->leftJoin([$institutions->alias() => $institutions->table()],
                 [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
             ->leftJoin([$surveyForm->alias() => $surveyForm->table()],
@@ -151,7 +156,8 @@ class SurveyRecipientsTable extends ControllerActionTable
             ->leftJoin([$SurveyFormFilters->alias() => $SurveyFormFilters->table()],
                 [$SurveyFormFilters->aliasField('survey_form_id').'='.$this->aliasField('survey_form_id')])
             ->where([$SurveyFormFilters->aliasField('id') => $surveyFilterId])
-            ->group([$this->aliasField('institution_id')]);
+            ->order([$this->aliasField('id') => 'DESC']);
+            //->group([$this->aliasField('institution_id')]);
         
         }
         else{
@@ -165,8 +171,8 @@ class SurveyRecipientsTable extends ControllerActionTable
             ->leftJoin([$SurveyFormFilters->alias() => $SurveyFormFilters->table()],
                 [$SurveyFormFilters->aliasField('survey_form_id').'='.$this->aliasField('survey_form_id')])
             ->where([$this->aliasField('survey_form_id') => $surveyFormId,
-                $SurveyFormFilters->aliasField('id') => $surveyFilterId, $surveyForm->aliasField('custom_module_id') => $moduleId])
-            ->group([$this->aliasField('institution_id')]);
+                $SurveyFormFilters->aliasField('id') => $surveyFilterId, $surveyForm->aliasField('custom_module_id') => $moduleId]);
+            //->group([$this->aliasField('institution_id')]);
         }        
     }
 
@@ -181,11 +187,16 @@ class SurveyRecipientsTable extends ControllerActionTable
                     'table' => 'institutions', 'alias' => 'InstitutionsTable', 'type' => 'INNER',
                     'conditions' => ['InstitutionsTable.id = ' . $this->aliasField('institution_id')]
                 ],
+                [
+                    'table' => 'academic_periods', 'alias' => 'AcademicPeriods', 'type' => 'INNER',
+                    'conditions' => ['AcademicPeriods.id = ' . $this->aliasField('academic_period_id')]
+                ],
             ])
             ->where([
                     'OR' => [
                         ['InstitutionsTable.name LIKE' => '%' . $search . '%'],
                         ['InstitutionsTable.code LIKE' => '%' . $search . '%'],
+                        ['AcademicPeriods.name LIKE' => '%' . $search . '%'],
                     ]
                 ]
             );
