@@ -30,12 +30,12 @@ class POCOR7376 extends AbstractMigration
         //Backup Table
         $this->execute('CREATE TABLE `zz_7376_user_employments` LIKE `user_employments`');
         $this->execute('INSERT INTO `zz_7376_user_employments` SELECT * FROM `user_employments`');
-        $this->execute('ALTER TABLE `user_employments` ADD COLUMN Industries INT(11) NOT NULL');
+        $this->execute('ALTER TABLE `user_employments` ADD COLUMN industry_id INT(11) NOT NULL');
        
           
           
         $this->execute('ALTER TABLE `user_employments`
-        ADD FOREIGN KEY (`industries`) REFERENCES `industries` (`id`)');
+        ADD FOREIGN KEY (`industry_id`) REFERENCES `industries` (`id`)');
     
    }
 
