@@ -138,9 +138,9 @@ class SurveyStatusesTable extends ControllerActionTable
                             $this->aliasField('date_disabled'),
                             $this->aliasField('date_enabled'),
                         ])
-                ->innerJoin([$form->alias() => $form->table()],
+                ->leftJoin([$form->alias() => $form->table()],
                         [$form->aliasField('id').'='.$this->aliasField('survey_form_id') ])
-                ->innerJoin([$filter->alias() => $filter->table()],
+                ->leftJoin([$filter->alias() => $filter->table()],
                         [$filter->aliasField('id').'='.$this->aliasField('survey_filter_id') ])
                 ->where([$this->aliasField('survey_form_id') =>$surveyFormId,
                     $form->aliasField('custom_module_id') =>$moduleId
@@ -153,9 +153,9 @@ class SurveyStatusesTable extends ControllerActionTable
                             $this->aliasField('date_disabled'),
                             $this->aliasField('date_enabled'),
                         ])
-                ->innerJoin([$form->alias() => $form->table()],
+                ->leftJoin([$form->alias() => $form->table()],
                         [$form->aliasField('id').'='.$this->aliasField('survey_form_id') ])
-                ->innerJoin([$filter->alias() => $filter->table()],
+                ->leftJoin([$filter->alias() => $filter->table()],
                         [$filter->aliasField('id').'='.$this->aliasField('survey_filter_id') ])
                 ->where([$this->aliasField('survey_filter_id') =>$surveyFilterId]);
         }else{
@@ -165,9 +165,9 @@ class SurveyStatusesTable extends ControllerActionTable
                             $this->aliasField('date_disabled'),
                             $this->aliasField('date_enabled'),
                         ])
-                ->innerJoin([$form->alias() => $form->table()],
+                ->leftJoin([$form->alias() => $form->table()],
                         [$form->aliasField('id').'='.$this->aliasField('survey_form_id') ])
-                ->innerJoin([$filter->alias() => $filter->table()],
+                ->leftJoin([$filter->alias() => $filter->table()],
                         [$filter->aliasField('id').'='.$this->aliasField('survey_filter_id') ])
                 ->where([$this->aliasField('survey_form_id') =>$surveyFormId,
                     $this->aliasField('survey_filter_id') =>$surveyFilterId,
