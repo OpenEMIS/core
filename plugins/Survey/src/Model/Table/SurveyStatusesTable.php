@@ -105,12 +105,22 @@ class SurveyStatusesTable extends ControllerActionTable
 
         // survey filter options toolbar
         $this->SurveyFilters = TableRegistry::get('survey_forms_filters');
-        $surveyFilterOptions = $this->SurveyFilters
-            ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-            ->order([
-                $this->SurveyFilters->aliasField('name')
-            ])
-            ->toArray();
+        if($surveyFormId != -1){
+            $surveyFilterOptions = $this->SurveyFilters
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->where([$this->SurveyFilters->aliasField('survey_form_id') => $surveyFormId])
+                ->order([
+                    $this->SurveyFilters->aliasField('name')
+                ])
+                ->toArray();
+        }else{
+            $surveyFilterOptions = $this->SurveyFilters
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->order([
+                    $this->SurveyFilters->aliasField('name')
+                ])
+                ->toArray();
+        }
         $surveyFilterOptions = ['-1' => '-- '.__('All Survey Filter').' --'] + $surveyFilterOptions;
         $surveyFilterId = $this->request->query('survey_filter_id');
         $this->advancedSelectOptions($surveyFilterOptions, $surveyFilterId);
@@ -277,6 +287,7 @@ class SurveyStatusesTable extends ControllerActionTable
     **/ 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+       //echo "<pre>"; print_r($entity);die;
         $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
         $Institutions = TableRegistry::get('Institution.Institutions');
         $InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
@@ -302,6 +313,7 @@ class SurveyStatusesTable extends ControllerActionTable
                 $where[$Institutions->aliasField('institution_provider_id IN')] = $providerId;
             }
         }
+        
         $type = $filterInstitutionTypes->find()->select(['institution_type_id'])
                 ->where([$filterInstitutionTypes->aliasField('survey_filter_id') => $surveyFilterId])->toArray();
         $typsids = [];
@@ -332,11 +344,12 @@ class SurveyStatusesTable extends ControllerActionTable
                 $where[$Institutions->aliasField('area_id IN')] = $areaId;
             }
         }
-
+        
         $getInstitutionObj = $Institutions->find()
                         ->select([$Institutions->aliasField('id')])
                         ->where($where)
                         ->toArray();
+        //echo "<pre>"; print_r($getInstitutionObj);die;
         $institutionIds = [];
         if (!empty($getInstitutionObj)) {
             foreach ($getInstitutionObj as $val) {
@@ -346,6 +359,7 @@ class SurveyStatusesTable extends ControllerActionTable
         if (!empty($entity->academic_periods)) {
             foreach ($entity->academic_periods as $periodObj) {
                 foreach ($institutionIds as $instId) {
+                   // echo "<pre>"; print_r($periodObj);die;
                    // $InstitutionSurveys->deleteAll(['institution_id' => $instId, 'academic_period_id' => $periodObj->id, 'survey_form_id' => $surveyFormId]);
                     $surveyDataVal = $InstitutionSurveys->find()->where(['institution_id' => $instId, 'academic_period_id' => $periodObj->id, 'survey_form_id' => $surveyFormId])->first();
                     //POCOR-7005 start conditon change for update record
@@ -356,7 +370,19 @@ class SurveyStatusesTable extends ControllerActionTable
                                  'id' => $surveyDataVal['id'], //condition
                                 ] 
                             );
-                    }//POCOR-7177 remove else part because its working wrong.
+                    }else{
+                        $entity = $InstitutionSurveys->newEntity([
+                            'status_id' =>1,
+                            'academic_period_id'=>$periodObj->id,
+                            'survey_form_id'=>$surveyFormId,
+                            'institution_id'=> $instId,
+                            'assignee_id'=>0,
+                            'created_user_id'=>$this->Auth->user('id'),
+                            'created'=> date('Y-m-d h:i:s')
+                        ]);
+                        $InstitutionSurveys->save($entity);
+                    } //POCOR-7177 remove else part because its working wrong.
+                    //POCOR-7271 add again new entity
                     //POCOR-7005 end conditon change for update record
                 }
             }
