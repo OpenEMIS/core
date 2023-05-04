@@ -503,7 +503,7 @@ class SurveyFormsTable extends CustomFormsTable
 
             $SurveyStatuses = TableRegistry::get('Survey.SurveyStatuses');
             $query
-                ->innerJoin(
+                ->leftJoin(
                     [$SurveyStatuses->alias() => $SurveyStatuses->table()],
                     [
                         $SurveyStatuses->aliasField('survey_form_id = ') . $this->aliasField('id'),
@@ -551,7 +551,7 @@ class SurveyFormsTable extends CustomFormsTable
                         ->toArray();
 
                     $query
-                        ->innerJoin(
+                        ->leftJoin(
                             [$SurveyFormsFilters->alias() => $SurveyFormsFilters->table()],
                             [
                                 $SurveyFormsFilters->aliasField('survey_form_id = ') . $this->aliasField('id')
@@ -603,4 +603,6 @@ class SurveyFormsTable extends CustomFormsTable
         $this->setFieldOrder(['custom_module_id','code', 'name', 'description']);
 
     }
+
+    
 }

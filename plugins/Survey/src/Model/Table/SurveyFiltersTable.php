@@ -24,7 +24,7 @@ class SurveyFiltersTable extends ControllerActionTable
     {
         $this->table('survey_forms_filters');
         parent::initialize($config);
-        $this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules','foreignKey' => 'custom_module_id']);
+//      $this->belongsTo('CustomModules', ['className' => 'CustomField.CustomModules','foreignKey' => 'custom_module_id']);
         $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id']);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -43,8 +43,25 @@ class SurveyFiltersTable extends ControllerActionTable
 
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
+        return $events;
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'survey_form_id';
+    }
+
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $search = $this->getSearchKey(); //POCOR-7271
+        if (!empty($search)) {
+            $query->find('bySurveyFilterData', ['search' => $search]);
+        }
+
         //custom module option in toolbar
         $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey');
         $CustomModules = TableRegistry::get('custom_modules');
@@ -54,9 +71,9 @@ class SurveyFiltersTable extends ControllerActionTable
 
         if (!empty($moduleOptions)) {
             $moduleOptions = $moduleOptions;
-            $selectedModule = $this->queryString('module', $moduleOptions);
+          //  $selectedModule = $this->queryString('module', $moduleOptions);
             $moduleId = $this->request->query('survey_module_id');
-            $extra['toolbarButtons']['add']['url']['module'] = $selectedModule;
+            //$extra['toolbarButtons']['add']['url']['module'] = $selectedModule;
             $this->advancedSelectOptions($moduleOptions, $moduleId);
             $this->controller->set(compact('moduleOptions'));
         }
@@ -74,33 +91,38 @@ class SurveyFiltersTable extends ControllerActionTable
      
         $extra['elements']['controls'] = ['name' => 'Survey.filter_rules_controls', 'data' => [], 'options' => [], 'order' => 2];
         $this->controller->set(compact('surveyFormOptions'));
+
         $tableProvider = TableRegistry::get('survey_filter_institution_providers');
         $institutionType = TableRegistry::get('survey_filter_institution_types');
         $areaEducation = TableRegistry::get('survey_filter_areas');
         $provider = TableRegistry::get('institution_providers');
         $type = TableRegistry::get('institution_types');
         $areas = TableRegistry::get('areas');
+        $survey_forms = TableRegistry::get('survey_forms');
       
-        if($surveyFormId == '-1' && $moduleId == 1)
+        if($surveyFormId == -1 && $moduleId == 1)
         {
-            $query->select(['id','name'])
+            $query->select([$this->aliasField('id'), $this->aliasField('name'), $survey_forms->aliasField('name')])
                     ->leftJoin([$tableProvider->alias() => $tableProvider->table()],
                         [$tableProvider->aliasField('survey_filter_id').'='.$this->aliasField('id')])
                     ->leftJoin([$institutionType->alias() => $institutionType->table()],
                         [$institutionType->aliasField('survey_filter_id').'='.$this->aliasField('id')])
                     ->leftJoin([$areaEducation->alias() => $areaEducation->table()],
                         [$areaEducation->aliasField('survey_filter_id').'='.$this->aliasField('id')])
-                        ->group([$this->aliasField('id')]);
+                    ->leftJoin([$survey_forms->alias() => $survey_forms->table()],
+                        [$survey_forms->aliasField('id').'='.$this->aliasField('survey_form_id')]);
+
         }else{
-            $query->select(['id','name'])
+            $query->select([$this->aliasField('id'), $this->aliasField('name'), $survey_forms->aliasField('name')])
                     ->leftJoin([$tableProvider->alias() => $tableProvider->table()],
                         [$tableProvider->aliasField('survey_filter_id').'='.$this->aliasField('id')])
                     ->leftJoin([$institutionType->alias() => $institutionType->table()],
                         [$institutionType->aliasField('survey_filter_id').'='.$this->aliasField('id')])
                     ->leftJoin([$areaEducation->alias() => $areaEducation->table()],
                         [$areaEducation->aliasField('survey_filter_id').'='.$this->aliasField('id')])
-                    ->where([$this->aliasField('custom_module_id') => $moduleId, $this->aliasField('survey_form_id') => $surveyFormId])
-                    ->group([$this->aliasField('id')]);
+                    ->leftJoin([$survey_forms->alias() => $survey_forms->table()],
+                        [$survey_forms->aliasField('id').'='.$this->aliasField('survey_form_id')])
+                    ->where([$this->aliasField('survey_form_id') => $surveyFormId]);
         }
 
     }
@@ -583,5 +605,41 @@ class SurveyFiltersTable extends ControllerActionTable
         }
 
     }
+
+    //POCOR-7271
+    public function findBySurveyFilterData(Query $query, array $options)
+    {
+
+        if (array_key_exists('search', $options)) {
+            $search = $options['search'];
+            $query
+            ->join([
+                [
+                    'table' => 'survey_forms', 'alias' => 'SurveyForms', 'type' => 'INNER',
+                    'conditions' => ['SurveyForms.id = ' . $this->aliasField('survey_form_id')]
+                ],
+                [
+                    'table' => 'survey_filter_institution_providers', 'alias' => 'SurveyFilterInstitutionProviders', 'type' => 'LEFT',
+                    'conditions' => ['SurveyFilterInstitutionProviders.survey_filter_id = ' . $this->aliasField('id')]
+                ],
+                [
+                    'table' => 'institution_providers', 'alias' => 'InstitutionProviders', 'type' => 'LEFT',
+                    'conditions' => [
+                        'InstitutionProviders.id = ' . 'SurveyFilterInstitutionProviders.survey_filter_id',
+                    ]
+                ],
+            ])
+            ->where([
+                    'OR' => [
+                       [$this->aliasField('name').' LIKE' => '%' . $search . '%'],
+                        ['SurveyForms.name LIKE' => '%' . $search . '%'],
+                        ['InstitutionProviders.name LIKE' => '%' . $search . '%'],
+                    ]
+                ]
+            );
+        }
+        return $query;
+    }
+
 
 }
