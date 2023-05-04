@@ -1972,7 +1972,7 @@ class NavigationComponent extends Component
                 'title' => 'Forms',
                 'parent' => 'Administration.Survey',
                 'params' => ['plugin' => 'Survey'],
-                'selected' => ['Surveys.Questions', 'Surveys.Forms', 'Surveys.Rules', 'Surveys.Status']
+                'selected' => ['Surveys.Questions', 'Surveys.Forms', 'Surveys.Rules', 'Surveys.Status','Surveys.Filters','Surveys.Recipients'] //POCOR-7271
             ],
 
             'Rubrics.Templates' => [
