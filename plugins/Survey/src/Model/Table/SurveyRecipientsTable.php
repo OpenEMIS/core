@@ -112,10 +112,8 @@ class SurveyRecipientsTable extends ControllerActionTable
                 [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
             ->leftJoin([$surveyForm->alias() => $surveyForm->table()],
                 [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
-            ->leftJoin([$SurveyFormFilters->alias() => $SurveyFormFilters->table()],
-                [$SurveyFormFilters->aliasField('survey_form_id').'='.$this->aliasField('survey_form_id')])
+            ->where([$surveyForm->aliasField('custom_module_id') => $moduleId])
             ->order([$this->aliasField('id') => 'DESC']);
-           // ->group([$this->aliasField('institution_id')]);
         }elseif($moduleId == 1 && $surveyFormId == -1 && $surveyFilterId == -1){
              $query
             ->select(['id' => $this->aliasField('id'),'institution_name'=> $institutions->aliasField('name'),
@@ -124,10 +122,8 @@ class SurveyRecipientsTable extends ControllerActionTable
                 [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
             ->leftJoin([$surveyForm->alias() => $surveyForm->table()],
                 [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
-            ->leftJoin([$SurveyFormFilters->alias() => $SurveyFormFilters->table()],
-                [$SurveyFormFilters->aliasField('survey_form_id').'='.$this->aliasField('survey_form_id')])
+            ->where([$surveyForm->aliasField('custom_module_id') => $moduleId])
             ->order([$this->aliasField('id') => 'DESC']);
-            //->group([$this->aliasField('institution_id')]);
         }elseif($moduleId == 1 && $surveyFormId != -1 && $surveyFilterId == -1){
 
              $query
@@ -137,15 +133,10 @@ class SurveyRecipientsTable extends ControllerActionTable
                 [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
             ->leftJoin([$surveyForm->alias() => $surveyForm->table()],
                 [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
-            ->leftJoin([$SurveyFormFilters->alias() => $SurveyFormFilters->table()],
-                [$SurveyFormFilters->aliasField('survey_form_id').'='.$this->aliasField('survey_form_id')])
-            ->where([$this->aliasField('survey_form_id') => $surveyFormId])
+            ->where([$this->aliasField('survey_form_id') => $surveyFormId,$surveyForm->aliasField('custom_module_id') => $moduleId])
             ->order([$this->aliasField('id') => 'DESC']);
-            //->group([$this->aliasField('institution_id')]);
-        
         }
         elseif($moduleId == 1 && $surveyFormId != -1 && $surveyFilterId != -1){
-
              $query
             ->select(['id' => $this->aliasField('id'),'institution_name'=> $institutions->aliasField('name'),
                         'institution_code'=> $institutions->aliasField('code'),'academic_period_id','survey_form_id'])
@@ -155,11 +146,24 @@ class SurveyRecipientsTable extends ControllerActionTable
                 [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
             ->leftJoin([$SurveyFormFilters->alias() => $SurveyFormFilters->table()],
                 [$SurveyFormFilters->aliasField('survey_form_id').'='.$this->aliasField('survey_form_id')])
-            ->where([$SurveyFormFilters->aliasField('id') => $surveyFilterId])
+            ->where([$SurveyFormFilters->aliasField('id') => $surveyFilterId,$SurveyFormFilters->aliasField('custom_module_id') => $moduleId,$this->aliasField('survey_form_id') => $surveyFormId])
             ->order([$this->aliasField('id') => 'DESC']);
-            //->group([$this->aliasField('institution_id')]);
         
         }
+        elseif($moduleId == 1 && $surveyFormId == -1 && $surveyFilterId != -1){
+            $query
+            ->select(['id' => $this->aliasField('id'),'institution_name'=> $institutions->aliasField('name'),
+                        'institution_code'=> $institutions->aliasField('code')])
+            ->leftJoin([$institutions->alias() => $institutions->table()],
+                [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
+            ->leftJoin([$surveyForm->alias() => $surveyForm->table()],
+                [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
+            ->leftJoin([$SurveyFormFilters->alias() => $SurveyFormFilters->table()],
+                [$SurveyFormFilters->aliasField('survey_form_id').'='.$this->aliasField('survey_form_id')])
+            ->where([$SurveyFormFilters->aliasField('id') => $surveyFilterId])
+            ->group([$this->aliasField('institution_id')])
+            ->order([$this->aliasField('id') => 'DESC']);
+        }  
         else{
             $query
             ->select(['id' => $this->aliasField('id'),'institution_name'=> $institutions->aliasField('name'),
@@ -170,10 +174,10 @@ class SurveyRecipientsTable extends ControllerActionTable
                 [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
             ->leftJoin([$SurveyFormFilters->alias() => $SurveyFormFilters->table()],
                 [$SurveyFormFilters->aliasField('survey_form_id').'='.$this->aliasField('survey_form_id')])
-            ->where([$this->aliasField('survey_form_id') => $surveyFormId,
-                $SurveyFormFilters->aliasField('id') => $surveyFilterId, $surveyForm->aliasField('custom_module_id') => $moduleId]);
-            //->group([$this->aliasField('institution_id')]);
-        }        
+            ->where([$SurveyFormFilters->aliasField('id') => $surveyFilterId,$surveyForm->aliasField('custom_module_id') => $moduleId,$this->aliasField('survey_form_id') => $surveyFormId])
+            ->group([$this->aliasField('institution_id')])
+            ->order([$this->aliasField('id') => 'DESC']);
+        }              
     }
 
     //POCOR-7271
@@ -203,6 +207,10 @@ class SurveyRecipientsTable extends ControllerActionTable
         }
 
         return $query;
+    }
+
+    private function getFilterData(){
+
     }
 
 }
