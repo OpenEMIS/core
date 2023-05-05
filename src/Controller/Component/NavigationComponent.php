@@ -338,6 +338,12 @@ class NavigationComponent extends Component
                     $userInfo = TableRegistry::get('Security.Users')->get($userId);
                 }//End POCOR-7055
                 /*POCOR-6286 ends*/
+                // Start POCOR-7384
+                elseif ($this->request->params['plugin'] =='Directory' && $this->request->params['controller'] =='Directories' && $this->request->params['pass'][0] =='download' && $action == 'Attachments') {
+                    $userId = $this->controller->paramsDecode($this->request->params['pass'][2])['security_user_id']; 
+                    $userInfo = TableRegistry::get('Security.Users')->get($userId);
+                }
+                // End POCOR-7384
                 else{
                     $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
                 }
