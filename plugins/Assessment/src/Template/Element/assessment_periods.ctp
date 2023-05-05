@@ -65,7 +65,8 @@
                                             echo $this->Form->input("$joinDataPrefix.assessment_grading_type_id", [
                                                 'type' => 'select',
                                                 'label' => false,
-                                                'options' => $assessmentGradingTypeOptions
+                                                'options' => $assessmentGradingTypeOptions,
+                                                'disabled' => 'disabled' //POCOR-3745
                                             ]);
                                         ?>
                                     </td>
