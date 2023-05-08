@@ -228,6 +228,7 @@ class StudentWithdrawTable extends ControllerActionTable
                                     ])
                                     ->first();
             if ($existingStudentEntity) {
+                $existingStudentEntity->end_date = $entity->effective_date; //POCOR-7305
                 $existingStudentEntity->student_status_id = $statuses['WITHDRAWN'];
                 $Students->save($existingStudentEntity);
             }
