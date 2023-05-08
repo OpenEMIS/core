@@ -45,6 +45,7 @@ class ClassProfilesTable extends AppTable
                 'ReportStudentAssessmentSummary',//POCOR-6519
                 'InfrastructureRoomCustomFields',//POCOR-6519
                 'StudentDetails',//POCOR-6628 - registering function
+                'StudentDetailsNew',//POCOR-7382
             ]
         ]);
     }
@@ -64,6 +65,7 @@ class ClassProfilesTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseReportStudentAssessmentSummary'] = 'onExcelTemplateInitialiseReportStudentAssessmentSummary';//POCOR-6519
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureRoomCustomFields'] = 'onExcelTemplateInitialiseInfrastructureRoomCustomFields';//POCOR-6519
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentDetails'] = 'onExcelTemplateInitialiseStudentDetails';//POCOR-6628 - triggering event
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentDetailsNew'] = 'onExcelTemplateInitialiseStudentDetailsNew';//POCOR-7382
         return $events;
     }
 
@@ -165,6 +167,132 @@ class ClassProfilesTable extends AppTable
         $event->stopPropagation();
         return $controller->redirect($url);
     }
+    //POCOR-7382 starts
+    public function onExcelTemplateInitialiseStudentDetailsNew(Event $event, array $params, ArrayObject $extra)
+    {
+        ini_set("memory_limit", "1G"); 
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('institution_class_id', $params)) {
+            /*echo "--->>>";
+            echo "<pre>"; print_r($params); die;*/
+            
+            $connection = ConnectionManager::get('default');
+            $OwnerOccupierData[] = $connection->execute("SELECT  education_grades.name AS 'Education Grade', institution_classes.name AS 'Class Name', IFNULL(CONCAT_WS(' ', homeroom_teacher.first_name, homeroom_teacher.middle_name, homeroom_teacher.third_name, homeroom_teacher.last_name), '') AS 'Homeroom Teacher', students.openemis_no AS 'OpenEMIS No.', IFNULL(student_identities.identity_number, '') AS 'Default Identity Number', CONCAT_WS(' ', students.first_name, students.middle_name, students.third_name, students.last_name) AS 'Student Name', education_subjects.name AS 'Education Subject Name', get_avg_student_mark.average_mark AS 'Average Result', ROUND(AVG(institution_subject_students.total_mark),2) AS 'Individual Results', get_instituion_average_mark.instituion_average_mark AS 'Institution Average Mark', get_area_average_mark.area_average_mark AS 'Area Average Mark', IFNULL(absence_info.days_absent, 0) AS 'Number of Days Absence'
+                FROM institution_subject_students
+                INNER JOIN institutions
+                ON institutions.id = institution_subject_students.institution_id
+                INNER JOIN education_grades
+                ON education_grades.id = institution_subject_students.education_grade_id
+                INNER JOIN institution_classes
+                ON institution_classes.id = institution_subject_students.institution_class_id 
+                AND institution_classes.institution_id = institutions.id
+                INNER JOIN education_subjects
+                ON education_subjects.id = institution_subject_students.education_subject_id
+                INNER JOIN security_users students
+                ON students.id = institution_subject_students.student_id
+                LEFT JOIN security_users homeroom_teacher
+                ON institution_classes.staff_id = homeroom_teacher.id
+                LEFT JOIN
+                (
+                    SELECT  user_identities.security_user_id
+                            ,GROUP_CONCAT(identity_types.name) identity_type
+                            ,GROUP_CONCAT(user_identities.number) identity_number
+                    FROM user_identities
+                    INNER JOIN identity_types
+                    ON identity_types.id = user_identities.identity_type_id
+                    WHERE identity_types.default = 1
+                    GROUP BY  user_identities.security_user_id
+                ) AS student_identities
+                ON student_identities.security_user_id = students.id
+                INNER JOIN academic_periods
+                ON academic_periods.id = institution_subject_students.academic_period_id
+                INNER JOIN
+                (
+                    SELECT  institution_subject_students.academic_period_id
+                           ,institution_subject_students.institution_id
+                           ,institution_subject_students.institution_class_id
+                           ,institution_subject_students.education_grade_id
+                           ,institution_subject_students.student_id
+                           ,ROUND(AVG(institution_subject_students.total_mark),2) average_mark
+                    FROM institution_subject_students
+                    INNER JOIN academic_periods
+                    ON academic_periods.id = institution_subject_students.academic_period_id
+                    WHERE academic_periods.id = 13
+                    AND institution_subject_students.institution_id = 5603
+                    AND institution_subject_students.education_grade_id = 272
+                    AND institution_subject_students.institution_class_id = 735431
+                    AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_subject_students.student_status_id = 1, institution_subject_students.student_status_id IN (1, 7, 6, 8))
+                    GROUP BY  institution_subject_students.academic_period_id
+                             ,institution_subject_students.institution_id
+                             ,institution_subject_students.institution_class_id
+                             ,institution_subject_students.education_grade_id
+                             ,institution_subject_students.student_id
+                ) get_avg_student_mark
+                ON get_avg_student_mark.academic_period_id = institution_subject_students.academic_period_id 
+                AND get_avg_student_mark.institution_id = institution_subject_students.institution_id 
+                AND get_avg_student_mark.institution_class_id = institution_subject_students.institution_class_id 
+                AND get_avg_student_mark.education_grade_id = institution_subject_students.education_grade_id 
+                AND get_avg_student_mark.student_id = institution_subject_students.student_id
+                INNER JOIN
+                (
+                    SELECT  institution_subject_students.academic_period_id
+                           ,institution_subject_students.institution_id
+                           ,ROUND(AVG(institution_subject_students.total_mark),2) instituion_average_mark
+                    FROM institution_subject_students
+                    INNER JOIN academic_periods
+                    ON academic_periods.id = institution_subject_students.academic_period_id
+                    WHERE academic_periods.id = 13
+                    AND institution_subject_students.institution_id = 5603
+                    AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_subject_students.student_status_id = 1, institution_subject_students.student_status_id IN (1, 7, 6, 8))
+                    GROUP BY  institution_subject_students.academic_period_id
+                             ,institution_subject_students.institution_id
+                ) get_instituion_average_mark
+                ON get_instituion_average_mark.academic_period_id = institution_subject_students.academic_period_id 
+                AND get_instituion_average_mark.institution_id = institution_subject_students.institution_id
+                INNER JOIN
+                (
+                    SELECT  institution_subject_students.academic_period_id
+                           ,institutions.area_id
+                           ,ROUND(AVG(institution_subject_students.total_mark),2) area_average_mark
+                    FROM institution_subject_students
+                    INNER JOIN academic_periods
+                    ON academic_periods.id = institution_subject_students.academic_period_id
+                    INNER JOIN institutions
+                    ON institutions.id = institution_subject_students.institution_id
+                    WHERE academic_periods.id = 13
+                    AND institutions.area_id = 25
+                    AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_subject_students.student_status_id = 1, institution_subject_students.student_status_id IN (1, 7, 6, 8))
+                    GROUP BY  institution_subject_students.academic_period_id
+                             ,institutions.area_id
+                ) get_area_average_mark
+                ON get_area_average_mark.academic_period_id = institution_subject_students.academic_period_id 
+                AND get_area_average_mark.area_id = institutions.area_id
+                LEFT JOIN 
+                (
+                    SELECT academic_periods.id academic_period_id
+                        ,institution_student_absence_days.institution_id
+                        ,institution_student_absence_days.student_id
+                        ,SUM(institution_student_absence_days.absent_days) days_absent
+                    FROM institution_student_absence_days
+                    INNER JOIN academic_periods
+                    ON academic_periods.start_date <= institution_student_absence_days.start_date
+                    AND academic_periods.end_date >= institution_student_absence_days.end_date
+                    WHERE academic_periods.id = 13
+                    AND institution_student_absence_days.institution_id = 5603
+                    GROUP BY institution_student_absence_days.student_id
+                ) absence_info
+                ON absence_info.academic_period_id = institution_subject_students.academic_period_id
+                AND absence_info.institution_id = institution_subject_students.institution_id
+                AND absence_info.student_id = institution_subject_students.student_id
+                WHERE academic_periods.id = 13
+                AND institutions.id = 5603
+                AND education_grades.id = 272
+                AND institution_classes.id = 735431
+                AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_subject_students.student_status_id = 1, institution_subject_students.student_status_id IN (1, 7, 6, 8))
+                GROUP BY institution_subject_students.academic_period_id, institution_subject_students.institution_id, institution_subject_students.institution_class_id, institution_subject_students.education_grade_id, institution_subject_students.student_id, institution_subject_students.education_subject_id")->fetchAll(\PDO::FETCH_ASSOC);
+                    
+            return $entity;
+        }
+    }//POCOR-7382 ends
     
     public function onExcelTemplateInitialiseProfiles(Event $event, array $params, ArrayObject $extra)
     {
