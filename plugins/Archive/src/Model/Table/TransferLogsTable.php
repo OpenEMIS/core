@@ -200,7 +200,7 @@ use Cake\Utility\Security;
             $connected = $connection->connect();
 
         }catch (Exception $connectionError) {
-            $this->Alert->warning('Connection.archiveConfigurationFail');
+            //$this->Alert->warning('Connection.archiveConfigurationFail'); //POCOR-7399
         }
     }
 
@@ -231,7 +231,7 @@ use Cake\Utility\Security;
         $session = $this->Session;
         $superAdmin = $session->read('Auth.User.super_admin');
         $is_connection_is_online = $session->read('is_connection_stablished');
-        if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
+        if( ($superAdmin == 1 ) ){ //POCOR-7399
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $AcademicPeriodsData = $AcademicPeriods->find()
                 ->where(['current'=> 1])
@@ -251,7 +251,7 @@ use Cake\Utility\Security;
             // return true;
         }
         else{
-            $this->Alert->error('Connection.archiveConfigurationFail', ['reset' => true]);
+           // $this->Alert->error('Connection.archiveConfigurationFail', ['reset' => true]); //POCOR-7399
             return false;
         }
         
@@ -280,7 +280,7 @@ use Cake\Utility\Security;
             $session = $this->Session;
             $superAdmin = $session->read('Auth.User.super_admin');
             $is_connection_is_online = $session->read('is_connection_stablished');
-            if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
+            if( ($superAdmin == 1 ) ){//POCOR-7399
                 // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 // $AcademicPeriods->updateAll(
                 //     ['editable' => 0, 'visible' => 0],    //field
@@ -331,7 +331,7 @@ use Cake\Utility\Security;
             $session = $this->Session;
             $superAdmin = $session->read('Auth.User.super_admin');
             $is_connection_is_online = $session->read('is_connection_stablished');
-            if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
+            if( ($superAdmin == 1 ) ){ //POCOR-7399
                 // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 // $AcademicPeriods->updateAll(
                 //     ['editable' => 0, 'visible' => 0],    //field
@@ -366,7 +366,7 @@ use Cake\Utility\Security;
             $session = $this->Session;
             $superAdmin = $session->read('Auth.User.super_admin');
             $is_connection_is_online = $session->read('is_connection_stablished');
-            if( ($superAdmin == 1 && $is_connection_is_online == 1) ){
+            if( ($superAdmin == 1 ) ){ //POCOR-7399
                 // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 // $AcademicPeriods->updateAll(
                 //     ['editable' => 0, 'visible' => 0],    //field
