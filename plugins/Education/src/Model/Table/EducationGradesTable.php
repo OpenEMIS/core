@@ -1058,11 +1058,19 @@ class EducationGradesTable extends ControllerActionTable
         ])
         ->extract('id')
         ->toArray();
-        $result = $UsersData
+        if(!empty($openemis_no)){
+        	$result = $UsersData
+            ->find()
+            ->select(['id'])
+            ->where(['openemis_no' => $openemis_no])
+            ->first();
+        }else{
+        	$result = $UsersData
             ->find()
             ->select(['id'])
             ->where(['first_name' => $first_name, 'last_name'=>$last_name])
             ->first();
+        }
         $studentId = $result->id;
         $studentStatusesValidateRepeater = '';
         $students =  $institutionStudents->find()->where(
@@ -1082,6 +1090,7 @@ class EducationGradesTable extends ControllerActionTable
         $students =  $institutionStudents->find()->where(
             [
                 $institutionStudents->aliasField('education_grade_id') => $studentStatusesValidateRepeater,
+                $institutionStudents->aliasField('student_id') => $studentId, //POCOR-7386
             ])
             ->first();
         if(empty($students)){
