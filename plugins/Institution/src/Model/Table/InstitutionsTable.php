@@ -382,7 +382,7 @@ class InstitutionsTable extends ControllerActionTable
         ->where(function ($exp, $q) {
             return $exp->equalFields($this->AreaAdministratives->aliasField('id'), $this->aliasField('area_administrative_id'));
         });
-
+         
         $query = $this->find()
         ->select('id')
         ->where(function ($exp, $q) use ($subquery) {
@@ -391,7 +391,7 @@ class InstitutionsTable extends ControllerActionTable
 
         foreach ($query as $row) {
             $this->updateAll(
-                ['area_administrative_id' => null],
+                ['area_administrative_id' => -1],
                 ['id' => $row->id]
             );
         }
