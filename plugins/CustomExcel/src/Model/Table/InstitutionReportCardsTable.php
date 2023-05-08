@@ -105,6 +105,8 @@ class InstitutionReportCardsTable extends AppTable
                 'InstitutionRoomsArea', //POCOR-6691
                 'InstitutionOwnerOccupier', //POCOR-7328
                 'InstitutionStudentPromoted', //POCOR-7328
+                'InstitutionEducationProgramme', //POCOR-7378
+                'StaffFromEducationProgramme', //POCOR-7378
             ]
         ]);
     }
@@ -190,6 +192,8 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionRoomsArea'] = 'onExcelTemplateInitialiseInstitutionRoomsArea';//POCOR-6691
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionOwnerOccupier'] = 'onExcelTemplateInitialiseInstitutionOwnerOccupier';//POCOR-7328
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentPromoted'] = 'onExcelTemplateInitialiseInstitutionStudentPromoted';//POCOR-7328
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionEducationProgramme'] = 'onExcelTemplateInitialiseInstitutionEducationProgramme';//POCOR-7378
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffFromEducationProgramme'] = 'onExcelTemplateInitialiseStaffFromEducationProgramme';//POCOR-7378
         return $events;
     }
 
@@ -923,15 +927,20 @@ class InstitutionReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseTotalStaffs(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params)) {
-            $InstitutionStaffs = TableRegistry::get('Institution.Staff');
-            $entity = $InstitutionStaffs
-                ->find()
-                ->contain('Users')
-                ->where([$InstitutionStaffs->aliasField('institution_id') => $params['institution_id']])
-                ->group($InstitutionStaffs->aliasField('staff_id'))
-                ->count()
-            ;
-            return $entity;
+            $connection = ConnectionManager::get('default');
+            $entity = $connection->execute("SELECT institution_staff.staff_id
+                        ,COUNT(DISTINCT(institution_staff.staff_id)) total_staff
+                    FROM institution_staff
+                    INNER JOIN academic_periods
+                    ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
+                    WHERE institution_staff.institution_id = ". $params['institution_id'] ."
+                    AND academic_periods.id = ". $params['academic_period_id'] ."
+                    AND institution_staff.staff_status_id = 1")->fetch();
+            $totalStaff = 0;
+            if(!empty($entity)){
+                $totalStaff = $entity[1];
+            }
+            return $totalStaff;
         }
     }
 
@@ -4897,7 +4906,7 @@ class InstitutionReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutionOwnerOccupier(Event $event, array $params, ArrayObject $extra){
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $connection = ConnectionManager::get('default');
-            $OwnerOccupierData[] = $connection->execute("SELECT MAX(`OwnerInfo`.`name`) AS `owner_name`, MAX(`OccupierInfo`.`name`) AS `occupier_name` FROM `institution_shifts` `institution_shifts` LEFT JOIN `institutions` `OwnerInfo` ON `OwnerInfo`.`id` = `institution_shifts`.`institution_id` LEFT JOIN `institutions` `OccupierInfo` ON `OccupierInfo`.`id` = `institution_shifts`.`location_institution_id` WHERE (`institution_shifts`.`institution_id` = ".$params['institution_id']." AND `institution_shifts`.`academic_period_id` = ".$params['academic_period_id']." AND `institution_shifts`.`institution_id` != `institution_shifts`.`location_institution_id`) GROUP BY `institution_shifts`.`institution_id`, `institution_shifts`.`location_institution_id`")->fetch('assoc');;
+            $OwnerOccupierData[] = $connection->execute("SELECT MAX(`OwnerInfo`.`name`) AS `owner_name`, MAX(`OccupierInfo`.`name`) AS `occupier_name` FROM `institution_shifts` `institution_shifts` LEFT JOIN `institutions` `OwnerInfo` ON `OwnerInfo`.`id` = `institution_shifts`.`institution_id` LEFT JOIN `institutions` `OccupierInfo` ON `OccupierInfo`.`id` = `institution_shifts`.`location_institution_id` WHERE ((`institution_shifts`.`institution_id` = ".$params['institution_id']." OR `institution_shifts`.`location_institution_id` = ".$params['institution_id'].") AND `institution_shifts`.`academic_period_id` = ".$params['academic_period_id']." AND `institution_shifts`.`institution_id` != `institution_shifts`.`location_institution_id`) GROUP BY `institution_shifts`.`institution_id`, `institution_shifts`.`location_institution_id`")->fetch('assoc');
             
             $entity = $result = [];
             if (!empty($OwnerOccupierData)) {
@@ -5145,4 +5154,90 @@ class InstitutionReportCardsTable extends AppTable
             return $entity;
         }
     }
+    //POCOR-7378 starts
+    public function onExcelTemplateInitialiseInstitutionEducationProgramme(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $connection = ConnectionManager::get('default');
+            $EducationProgrameData = $connection->execute("SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.id programme_id, education_programmes.name programme_name FROM education_grades
+                INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+                INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+                INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
+                WHERE academic_periods.id = ".$params['academic_period_id']." GROUP BY `education_programmes`.`id`
+                ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC")->fetchAll(\PDO::FETCH_ASSOC);
+            $entity = $result = [];
+            if (!empty($EducationProgrameData)) {
+               foreach ($EducationProgrameData as $data) {
+                    $result = [
+                        'programme_id' => !empty($data['programme_id']) ? $data['programme_id'] : '',
+                        'programme_name' => !empty($data['programme_name']) ? $data['programme_name'] : '',
+                    ];
+                    $entity[] = $result;
+               }
+            }
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseStaffFromEducationProgramme(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+            $connection = ConnectionManager::get('default');
+            $EducationProgrameData = $connection->execute("SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.id programme_id, education_programmes.name programme_name FROM education_grades
+                INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+                INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+                INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
+                WHERE academic_periods.id = ".$params['academic_period_id']." GROUP BY `education_programmes`.`id`
+                ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC")->fetchAll(\PDO::FETCH_ASSOC);
+            $entity = $result = [];
+            if (!empty($EducationProgrameData)) {
+                foreach ($EducationProgrameData as $data) {
+                    $connectionInner = ConnectionManager::get('default');
+                    $EducationProgrameData = $connectionInner->execute("SELECT education_grades.education_programme_id
+                    ,COUNT(DISTINCT(CASE WHEN security_users.gender_id = 1 THEN institution_subject_staff.staff_id END)) male_teaching_staff
+                    ,COUNT(DISTINCT(CASE WHEN security_users.gender_id = 2 THEN institution_subject_staff.staff_id END)) female_teaching_staff
+                    ,COUNT(DISTINCT(CASE WHEN security_users.gender_id IN (1, 2) THEN institution_subject_staff.staff_id END)) total_teaching_staff
+                    ,COUNT(DISTINCT(CASE WHEN fulltime_staff.staff_id IS NOT NULL AND fulltime_staff.position_type_checker < 1 THEN institution_subject_staff.staff_id END)) temp_teaching_staff
+                    FROM institution_subject_staff
+                    INNER JOIN institution_subjects
+                    ON institution_subjects.id = institution_subject_staff.institution_subject_id
+                    INNER JOIN education_grades
+                    ON education_grades.id = institution_subjects.education_grade_id
+                    INNER JOIN security_users
+                    ON security_users.id = institution_subject_staff.staff_id
+                    LEFT JOIN 
+                    (
+                        SELECT institution_staff.staff_id
+                            ,MAX(institution_staff.FTE) position_type_checker
+                        FROM institution_staff
+                        INNER JOIN academic_periods
+                        ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
+                        WHERE institution_staff.institution_id = ". $params['institution_id'] ."
+                        AND academic_periods.id = ". $params['academic_period_id'] ."
+                        AND institution_staff.staff_status_id = 1
+                        GROUP BY institution_staff.staff_id
+                    ) fulltime_staff
+                    ON fulltime_staff.staff_id = institution_subject_staff.staff_id
+                    WHERE institution_subject_staff.institution_id = ". $params['institution_id'] ."
+                    AND institution_subjects.academic_period_id = ". $params['academic_period_id'] ."
+                    AND education_grades.education_programme_id = ". $data['programme_id'] ."
+                    GROUP BY education_grades.education_programme_id")->fetch('assoc');
+                    $result = [
+                        'programme_id' => !empty($data['programme_id']) ? $data['programme_id'] : '',
+                        'subject_staff' => !empty($EducationProgrameData) ? $EducationProgrameData['total_teaching_staff'] : 0,
+                        'male_subject_staff' => !empty($EducationProgrameData) ? $EducationProgrameData['male_teaching_staff'] : 0,
+                        'female_subject_staff' => !empty($EducationProgrameData) ? $EducationProgrameData['female_teaching_staff'] : 0,
+                        'subject_staff_type_temporary' => !empty($EducationProgrameData) ? $EducationProgrameData['temp_teaching_staff'] : 0,
+                    ];
+                    $entity[] = $result;
+                }
+            }
+            return $entity;
+        }
+    }//POCOR-7378 ends
 }
