@@ -790,7 +790,7 @@ class RegistrationRepository extends Controller
             ->where('student_custom_form_id', 1)
             ->orderBy('order', 'ASC')
             ->get();
-            
+            //dd($customFields);
             return $customFields;
 
         } catch (\Exception $e) {
