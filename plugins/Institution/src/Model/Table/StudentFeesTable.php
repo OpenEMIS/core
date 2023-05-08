@@ -58,6 +58,7 @@ class StudentFeesTable extends ControllerActionTable
         }
 
         $this->addBehavior('User.AdvancedNameSearch');
+        $this->addBehavior('Excel', ['pages' => ['index']]);//POCOR-6165
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -121,7 +122,7 @@ class StudentFeesTable extends ControllerActionTable
                 'data-compute-operand' => "plus"
             ]
         ]);
-
+     
         unset($this->StudentFeesAbstract->fields['modified_user_id']);
         unset($this->StudentFeesAbstract->fields['modified']);
         $this->StudentFeesAbstract->fields['created'] = false;
@@ -307,7 +308,7 @@ class StudentFeesTable extends ControllerActionTable
         $this->fields['payments']['fields'] = $this->StudentFeesAbstract->fields;
         $this->fields['payments']['data'] = $this->_getPaymentRecords($entity);
         $this->fields['payments']['total'] = $this->onGetAmountPaid($event, $entity);
-
+         
         $this->setFieldOrder([
             'academic_period_id', 'education_programme', 'education_grade_id', 'openemis_no', 'student_id', 'fee_types', 'payments', 'outstanding_fee'
         ]);
@@ -692,4 +693,121 @@ class StudentFeesTable extends ControllerActionTable
 
         return $newButtons;
     }
+    //POCOR-6165 start
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+     {  
+       
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $academicPeriod = $this->request->query['academic_period_id'];  
+        $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($institutionId,  $academicPeriod);
+        $educationGradeId = $this->queryString('education_grade_id', $gradeOptions);
+        $this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId);
+        $query->select([
+            'student_id' => $this->Users->aliasField('id'),
+            'student' =>  $this->Users->aliasField('first_name'),
+            'openemis' =>$this->Users->aliasField('openemis_no')
+           ])
+         
+        ->LeftJoin([$this->Users->alias() => $this->Users->table()],[
+            $this->Users->aliasField('id').' = ' . 'StudentFees.student_id'
+        ])
+
+        ->where(['StudentFees.academic_period_id' =>  $academicPeriod,
+             'StudentFees.institution_id' =>  $institutionId,
+             'StudentFees.education_grade_id' =>   $educationGradeId
+        ]);
+       
+           
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {
+                 
+                    $InstitutionFees= TableRegistry::get('Institution.InstitutionFees');
+                    $InstitutionFeeEntity = $InstitutionFees
+                                             ->find()
+                                             ->contain('InstitutionFeeTypes.FeeTypes')
+                                             ->where([
+                                                     'InstitutionFees.education_grade_id' => $row['education_grade_id'],
+                                                     'InstitutionFees.academic_period_id' => $row['academic_period_id'],
+                                                     'InstitutionFees.institution_id' => $row['institution_id']
+                                             ])
+                                             ->first();
+     
+                    $StudentFees= TableRegistry::get('student_fees');
+                    $StudentFeeEntity = $StudentFees
+                                            ->find()
+                                            ->select([
+                                                "amount"=> $StudentFees->find()->func()->sum('amount')
+                                            ])
+                                            ->where([
+                                                $StudentFees->aliasField('institution_fee_id') =>$InstitutionFeeEntity->id,
+                                                $StudentFees->aliasField('student_id') => $row['student_id']
+
+                                             ])
+                                             ->toArray();
+                  
+                    //total fee                         
+                    $row->total_fee='00';
+                    if(isset($InstitutionFeeEntity->total))
+                        $row->total_fee=$InstitutionFeeEntity->total;
+                    
+                    //amount paid
+                    $row->amount_paid="00";
+                    if($StudentFeeEntity[0]['amount']){
+                        $row->amount_paid=$StudentFeeEntity[0]['amount'];
+                    }
+                    
+                    //outstanding fee
+                    $row['outstanding_fee']="00";
+                    $row['outstanding_fee']= $row['total_fee']-$row['amount_paid'];
+                    
+                return $row;  
+                    
+           });
+        });
+  
+         
+   }
+
+   public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+
+        $extraField[] = [
+            'key' => 'Users.openemis',
+            'field' => 'openemis',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
+
+        $extraField[] = [
+            'key' => 'Users.name',
+            'field' => 'student',
+            'type' => 'string',
+            'label' => __('Student')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionFees.total',
+            'field' => 'total_fee',
+            'type' => 'string',
+            'label' => __('Total Fee')
+        ];
+       
+        $extraField[] = [
+            'key' => 'StudentFees.amount',
+            'field' => 'amount_paid',
+            'type' => 'string',
+            'label' => __('Amount Paid')
+        ];
+        
+        $extraField[] = [
+            'key' => 'outstanding_fee',
+            'field' => 'outstanding_fee',
+            'type' => 'integer',
+            'label' => __('Outstanding Fee')
+        ];
+        $fields->exchangeArray($extraField);
+    }
+    //POCOR-6165 end
+
+
 }
