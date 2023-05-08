@@ -479,7 +479,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                     ])
                     ->order( [$Students->aliasField('created')=>"DESC"])
                     ->first();
-                    $obj['institution_id'] = $existInInstitution->institution_id;
+                    $obj['institution_id'] = $result->institution_id;
                 }
                 //POCOR-7393 ends (4th case)
                 
