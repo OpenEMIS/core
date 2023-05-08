@@ -293,7 +293,7 @@ class InstitutionCasesTable extends ControllerActionTable
                 }
             }
         } elseif ($action == 'view') {
-            $tableHeaders = [__('Feature'), __('Summary')];
+            $tableHeaders = [__('Feature'),__('Date'),__('Absence Type'),__('Reason'), __('Comment')];//POCOR-4864
             $tableCells = [];
 
             if ($entity->has('linked_records')) {
@@ -316,27 +316,31 @@ class InstitutionCasesTable extends ControllerActionTable
                     }
                     if (!empty($event->result)) {
                         $summary = $event->result;
-                    }
-
+                        }
+        
                     if (is_array($summary) && isset($summary[1]) && $summary[1] === true) {
                         $baseUrl = $featureAttr[$feature]['url'];
                         $baseUrl[] = 'view';
                         $baseUrl[] = $this->paramsEncode(['id' => $recordId]);
 
-                        $url = $mainEvent->subject()->Html->link($summary[0], $baseUrl);
+                        $url = $mainEvent->subject()->Html->link($summary[0]['title'], $baseUrl);//POCOR-4864
                     } elseif (is_array($summary)) {
                         if (isset($summary[1]) && $summary[1] !== false) {
-                            $url = $mainEvent->subject()->Html->link($summary[0], $summary[1]);
+                        $url = $mainEvent->subject()->Html->link($summary[0]['title'], $summary[1]);//POCOR-4684
                         } else {
-                            $url = $summary[0];
+                            $url = $summary[0]['title'];//POCOR-4684
                         }
                     } else {
-                        $url = $summary;
+                        $url = $summary[0]['title'];//POCOR-48684
                     }
-
+                  
                     $rowData[] = isset($featureOptions[$recordEntity->feature]) ? $featureOptions[$recordEntity->feature] : $recordEntity->feature;
+                    //POCOR-4864 start
+                    $rowData[]=date_format($recordEntity->created, 'F d, Y');
                     $rowData[] = $url;
-
+                    $rowData[]=$summary[0]['reason'];
+                    $rowData[]=$summary[0]['comment'];
+                    //POCOR-4864 ends
                     $tableCells[] = $rowData;
                 }
             }
