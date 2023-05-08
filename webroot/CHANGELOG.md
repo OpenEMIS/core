@@ -1,3 +1,22 @@
+### [3.83.0] - 2023-05-08
+- Implemented: Change the details of the Linked Records in Institution > Cases
+- Implemented: Administrations > Profiles > Students : Develop additional placeholders for student transcript
+- Implemented: Develop a function to view student report cards on the server
+- Implemented: Hide the Administration > Data Management > Connection menu item
+- Bug Fixed: Institutions>Assessments/Competencies>Student records missing when change grading type from marks to grades
+- Bug Fixed: Administration > Textbook: Configuration was changed after saved.
+- Bug Fixed: Institutions>Students>Student1>Academic>Subject: The total marks are calculating total_marks based on new institutions even if user is filtering against an old institution
+- Bug Fixed: Institutions>Students: End date is not reflected in database
+- Bug Fixed: Institutions>Performance>Report Cards>PDF: Corrections to pdf
+- Bug Fixed: Institutions>Profiles>Institution: Correction to Institutions template
+- Bug Fixed: Users API: Limit and Page params are not working correctly
+- Bug Fixed: Institutions>Performance>Report Cards: Unable to publish report card and download pdf is not working
+- Bug Fixed: Registrations: Number custom field is not working
+- Bug Fixed: Institutions>Students>Add:Students are unable to be added to any Education Grade
+- Bug Fixed: Administration>System Setup>Themes: Unable to access page
+- Bug Fixed: Report>Institutions>Positions:Change Positions to Institution Positions
+- Bug Fixed: Administration>Administrative Boundaries:Not able to delete Area - Administrative under Administrative Boundaries
+
 ### [3.82.0] - 2023-04-27
 - Bug Fixed: Unable to install OpenEMIS
 - Bug Fixed: Summary Tables not populating
