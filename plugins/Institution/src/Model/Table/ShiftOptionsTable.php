@@ -16,7 +16,7 @@ class ShiftOptionsTable extends ControllerActionTable
         $this->hasMany('Shifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'shift_option_id']);
         $this->addBehavior('FieldOption.FieldOption');
         $this->toggle('add', true);
-        $this->toggle('remove', false);
+        $this->toggle('remove', true);//POCOR-7393 Case 3rd
     }
 
     public function beforeAction(Event $event)
