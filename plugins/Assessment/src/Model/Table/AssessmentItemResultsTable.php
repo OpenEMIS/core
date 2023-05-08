@@ -447,6 +447,7 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('education_subject_id') => $educationSubjectId,
                 $this->aliasField('education_grade_id') => $educationGradeId,
                 $this->aliasField('education_grade_id') => $educationGradeId,
+                $this->aliasField('institution_id') => $institutionId, //POCOR-6835
             ])
             ->group([
                 $this->aliasField('student_id'),
