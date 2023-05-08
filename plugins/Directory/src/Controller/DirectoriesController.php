@@ -305,6 +305,13 @@ class DirectoriesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']);
     }
 
+    // POCOR -7366 Counselling added in directory
+    public function Counsellings()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.StudentCounselling']);
+    }
+    // Counselling End
+
     // Historical Data - End
     public function HistoricalStaffPositions()
     {
