@@ -30,7 +30,7 @@ class AssessmentsTable extends ControllerActionTable {
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->hasMany('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => false]);
-
+        $this->belongsTo('AssessmentGradingTypes', ['className' => 'Assessments.AssessmentGradingTypes']); //POCOR-7318
         $this->belongsToMany('GradingTypes', [
             'className' => 'Assessment.AssessmentGradingTypes',
             'joinTable' => 'assessment_items_grading_types',
@@ -102,8 +102,8 @@ class AssessmentsTable extends ControllerActionTable {
     {
         $this->field('excel_template_name', ['visible' => false]);
         $this->field('excel_template', ['visible' => true]);
-
-        $this->setFieldOrder(['code', 'name', 'description', 'excel_template_name', 'excel_template', 'academic_period_id', 'education_grade_id']);
+        $this->field('assessment_grading_type_id', ['type' => 'select']);
+        $this->setFieldOrder(['code', 'name', 'description', 'excel_template_name', 'excel_template', 'academic_period_id', 'assessment_grading_type_id','education_grade_id']);
     } 
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -573,4 +573,35 @@ class AssessmentsTable extends ControllerActionTable {
                 $entity['assessment_items'] = array();
         }
     }  
+
+    //POCOR-7318
+    public function onUpdateFieldAssessmentGradingTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        $assessmentGradingType = TableRegistry::get('Assessment.AssessmentGradingTypes');
+        $assessmentGradingTypeOptions = $assessmentGradingType->find('list')->toArray();
+        if ($action == 'add' || $action == 'edit') {
+            if ($action == 'add') {
+                $attr['options'] = $assessmentGradingTypeOptions;
+                $attr['default'] = $assessmentGradingTypeOptions;
+                $attr['attr']['label'] = 'GPA';
+                $attr['onChangeReload'] = true;
+
+            } else {
+                if($attr['entity']->assessment_grading_type_id == null){
+                    $attr['options'] = $assessmentGradingTypeOptions;
+                    $attr['default'] = $assessmentGradingTypeOptions;
+                    $attr['attr']['label'] = 'GPA';
+                    $attr['onChangeReload'] = true;
+                }else{               
+                    $attr['type'] = 'readonly';
+                    $attr['attr']['label'] = 'GPA';
+                    $attr['value'] = $attr['entity']->assessment_grading_type_id;
+                    $attr['attr']['value'] = $assessmentGradingType->get($attr['entity']->academic_period_id)->name;
+                }
+            }
+        }elseif($action == 'view'){
+            $attr['attr']['label'] = 'GPA';
+        }
+        return $attr;
+    }
 }

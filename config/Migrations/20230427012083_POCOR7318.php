@@ -15,8 +15,11 @@ class POCOR7318 extends AbstractMigration
         // Backup table
        $this->execute('CREATE TABLE `z_7318_assessment_grading_options` LIKE `assessment_grading_options`');
        $this->execute('INSERT INTO `z_7318_assessment_grading_options` SELECT * FROM `assessment_grading_options`');
-        
-       $this->execute('ALTER TABLE `assessment_grading_options` ADD `gpa` int(11) NULL AFTER `max`');
+       $this->execute('CREATE TABLE `z_7318_assessments` LIKE `assessments`');
+       $this->execute('INSERT INTO `z_7318_assessments` SELECT * FROM `assessments`');
+
+       $this->execute('ALTER TABLE `assessment_grading_options` ADD `point` decimal(6,2) NULL AFTER `max`');
+       $this->execute('ALTER TABLE `assessments` ADD COLUMN `assessment_grading_type_id` int(11) NULL COMMENT "links to assessment_grading_types.id" AFTER `education_grade_id`');
     }
 
     // rollback
@@ -25,5 +28,7 @@ class POCOR7318 extends AbstractMigration
         // Restore table
        $this->execute('DROP TABLE IF EXISTS `assessment_grading_options`');
        $this->execute('RENAME TABLE `zz_7318_assessment_grading_options` TO `assessment_grading_options`');
+       $this->execute('DROP TABLE IF EXISTS `assessments`');
+       $this->execute('RENAME TABLE `zz_7318_assessments` TO `assessments`');
     }
 }
