@@ -2197,12 +2197,14 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Transfer'],
                 'selected' => ['Archives.Transfer'],
             ],
-            'Archive.Connection' => [
-                'title' => 'Connection',
-                'parent' => 'Administration.Archive',
-                'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Connection', 0 => 'view', $connectionId],
-                'selected' => ['Archives.Connection.view','Archives.Connection.edit'],
-            ],
+            //POCOR-7399::Start : Hide this menu
+            // 'Archive.Connection' => [
+            //     'title' => 'Connection',
+            //     'parent' => 'Administration.Archive',
+            //     'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Connection', 0 => 'view', $connectionId],
+            //     'selected' => ['Archives.Connection.view','Archives.Connection.edit'],
+            // ],
+            //POCOR-7399::End :Hide this menu
         ];
         return $navigation;
     }
