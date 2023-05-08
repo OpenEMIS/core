@@ -680,6 +680,27 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             $recordEntity = $this->get($id, [
                 'contain' => ['Users', 'AbsenceTypes', 'Institutions']
             ]);
+            //POCOR-4864 start
+            $StudentAbsenceTable=TableRegistry::get('institution_student_absence_details');
+            $StudentAbsenceReason=TableRegistry::get('student_absence_reasons');
+           
+            $StudentAbsenceTableRecord= $StudentAbsenceTable->find()
+                    ->select([$StudentAbsenceTable->aliasField('comment'),
+                         $StudentAbsenceTable->aliasField('student_absence_reason_id'),
+                       ])
+                    ->where([$StudentAbsenceTable->aliasField('student_id')=>$recordEntity->student_id ,
+                    $StudentAbsenceTable->aliasField('institution_id')=>$recordEntity->institution_id ,
+                    $StudentAbsenceTable->aliasField('academic_period_id')=>$recordEntity->academic_period_id,
+                    $StudentAbsenceTable->aliasField('institution_class_id')=>$recordEntity->institution_class_id ,
+                    $StudentAbsenceTable->aliasField('education_grade_id')=>  $recordEntity->education_grade_id ,
+                    $StudentAbsenceTable->aliasField('date')=>    $recordEntity->date,
+                    $StudentAbsenceTable->aliasField('absence_type_id')=> $recordEntity->absence_type_id ,
+                    $StudentAbsenceTable->aliasField('created')=> $recordEntity->created
+                    ])->first();
+            if(isset($StudentAbsenceTableRecord->student_absence_reason_id)){
+            $StudentAbsenceReasonRecord=$StudentAbsenceReason->get($StudentAbsenceTableRecord->student_absence_reason_id);
+            }
+            //POCOR-4864 ends
             $days = [
                 0 => 'Sunday',
                 1 => 'Monday',
@@ -718,11 +739,15 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             //     $s->addDay(1);
             // } while ($s->lte($recordEntity->end_date));
 
-
+            //POCOR-4864 start   
             $title = '';
-            $title .= $recordEntity->user->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.__($recordEntity->absence_type->name) . ' - ('. $date .') - ' . __('Days Absent') . ': ' . $daysAbsent;
-
-            return [$title, true];
+            $title .=  __($recordEntity->absence_type->name) . ' - ('. $date .')  ' ;//POCOR-4864
+            $data=[];
+            $data['title']=$title;
+            $data['comment']= $StudentAbsenceTableRecord->comment;
+            $data['reason']= $StudentAbsenceReasonRecord->name;
+            return [$data, true];
+            //POCOR-4864 start end
         } catch (RecordNotFoundException $e) {
             return [__('Absence Record Deleted'), false];
         }

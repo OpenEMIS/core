@@ -279,12 +279,12 @@ class RegistrationService extends Controller
                     
                     return [
                         "student_custom_form_id" => $item->student_custom_form_id,
-                        "student_custom_field_id" => $item->student_custom_field_id,
-                        "section" => $item->section,
-                        "name" => $item->name,
-                        "is_mandatory" => $item->is_mandatory,
-                        "is_unique" => $item->is_unique,
-                        "order" => $item->order,
+                        "student_custom_field_id" => $item->student_custom_field_id??NULL,
+                        "section" => $item->section??NULL,
+                        "name" => $item->name??NULL,
+                        "is_mandatory" => $item->is_mandatory??NULL,
+                        "is_unique" => $item->is_unique??NULL,
+                        "order" => $item->order??NULL,
                         "params" => $item->studentCustomField->params??Null,
                         "field_type" => $item->studentCustomField->field_type??Null,
                         "options" => $item->studentCustomField->studentCustomFieldOption??Null,
