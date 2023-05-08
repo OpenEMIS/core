@@ -27,8 +27,8 @@ class UserRepository extends Controller
                 $col = $params['order'];
                 $users = $users->orderBy($col);
             }
-            $list = $users->paginate($limit);
-            //dd($list);
+            $list = $users->paginate($limit)->toArray();
+            
             return $list;
             
         } catch (\Exception $e) {
