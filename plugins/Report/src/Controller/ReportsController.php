@@ -73,7 +73,7 @@ class ReportsController extends AppController
             $options = [
                 'Report.Institutions' => __('Institutions'),
                 'Report.InstitutionAssociations' => __('Associations'),
-                'Report.InstitutionPositions' => __('Positions'),
+                'Report.InstitutionPositions' => __('Institution Positions'),
                 'Report.InstitutionProgrammes' => __('Programmes'),
                 'Report.InstitutionClasses' => __('Classes'),
                 'Report.InstitutionSubjects' => __('Subjects'),
