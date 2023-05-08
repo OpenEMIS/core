@@ -475,14 +475,15 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                     ->find()
                     ->where([
                         $Students->aliasField('student_id') => $requestData[$this->alias()]['student_id'],
-                        $Students->aliasField('academic_period_id') => $requestData[$this->alias()]['academic_period_id'],
+                        // $Students->aliasField('academic_period_id') => $requestData[$this->alias()]['academic_period_id'],
                     ])
                     ->order( [$Students->aliasField('created')=>"DESC"])
                     ->first();
                     $obj['institution_id'] = $result->institution_id;
                 }
                 //POCOR-7393 ends (4th case)
-                
+                echo $result->institution_id;
+                exit;
                 // subject students logic
                 foreach ($examCentreSubjects as $examItemId => $subjectId) {
                     $obj['examination_centres_examinations_subjects'][] = [
