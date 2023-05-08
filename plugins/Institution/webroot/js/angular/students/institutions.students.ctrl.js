@@ -1091,7 +1091,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
         console.log("StudentController.selectedStudentData here");
         console.log(StudentController.selectedStudentData);
-        var res = InstitutionsStudentsSvc.getEducationGradeAddStudent(StudentController.selectedStudentData.education_grade_id, StudentController.selectedStudentData.first_name, StudentController.selectedStudentData.last_name);
+        var res = InstitutionsStudentsSvc.getEducationGradeAddStudent(StudentController.selectedStudentData.education_grade_id, StudentController.selectedStudentData.first_name, StudentController.selectedStudentData.last_name,  StudentController.selectedStudentData.openemis_no); //POCOR-7386
         var res1 = $window.localStorage.getItem('repeater_validation');
           timer = setTimeout(()=>{
             var res1 = $window.localStorage.getItem('repeater_validation');
