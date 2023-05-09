@@ -696,7 +696,10 @@ class StudentFeesTable extends ControllerActionTable
     //POCOR-6165 start
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
      {  
-       
+        //added if acacdemic_period is not received
+        if (empty($this->request->query['academic_period_id'])) {
+            $this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        }
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $academicPeriod = $this->request->query['academic_period_id'];  
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($institutionId,  $academicPeriod);
@@ -759,7 +762,7 @@ class StudentFeesTable extends ControllerActionTable
                     //outstanding fee
                     $row['outstanding_fee']="00";
                     $row['outstanding_fee']= $row['total_fee']-$row['amount_paid'];
-                    
+                  
                 return $row;  
                     
            });
@@ -788,21 +791,21 @@ class StudentFeesTable extends ControllerActionTable
         $extraField[] = [
             'key' => 'InstitutionFees.total',
             'field' => 'total_fee',
-            'type' => 'string',
+            'type' => 'integer',
             'label' => __('Total Fee')
         ];
        
         $extraField[] = [
             'key' => 'StudentFees.amount',
             'field' => 'amount_paid',
-            'type' => 'string',
+            'type' => 'integer',
             'label' => __('Amount Paid')
         ];
         
         $extraField[] = [
             'key' => 'outstanding_fee',
             'field' => 'outstanding_fee',
-            'type' => 'integer',
+            'type' => 'string',
             'label' => __('Outstanding Fee')
         ];
         $fields->exchangeArray($extraField);
