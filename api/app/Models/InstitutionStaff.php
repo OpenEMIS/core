@@ -23,6 +23,11 @@ class InstitutionStaff extends Model
         return $this->belongsTo(StaffStatuses::class, 'staff_status_id', 'id');
     }
 
+    public function staffType()
+    {
+        return $this->belongsTo(StaffTypes::class, 'staff_type_id', 'id');
+    }
+
 
     public function institutionPosition()
     {
