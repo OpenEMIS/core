@@ -61,7 +61,7 @@ class SurveyRecipientsTable extends ControllerActionTable
         if($surveyFormId != -1){
             $surveyFilterOptions = $this->SurveyFilters
                 ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                ->where([$this->SurveyFilters->aliasField('survey_form_id') => $surveyFormId])
+                ->where([$this->SurveyFilters->aliasField('survey_form_id') => $surveyFormId,$this->SurveyFilters->aliasField('name IS NOT') => ''])
                 ->order([
                     $this->SurveyFilters->aliasField('name')
                 ])
@@ -69,6 +69,7 @@ class SurveyRecipientsTable extends ControllerActionTable
         }else{
             $surveyFilterOptions = $this->SurveyFilters
                 ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->where([$this->SurveyFilters->aliasField('name IS NOT') => ''])
                 ->order([
                     $this->SurveyFilters->aliasField('name')
                 ])
@@ -112,7 +113,7 @@ class SurveyRecipientsTable extends ControllerActionTable
                 [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
             ->leftJoin([$surveyForm->alias() => $surveyForm->table()],
                 [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
-            ->where([$surveyForm->aliasField('custom_module_id') => $moduleId])
+            //->where([$surveyForm->aliasField('custom_module_id') => $moduleId])
             ->order([$this->aliasField('id') => 'DESC']);
         }elseif($moduleId == 1 && $surveyFormId == -1 && $surveyFilterId == -1){
              $query
