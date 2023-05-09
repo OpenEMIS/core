@@ -64,16 +64,16 @@ class UserLanguagesTable extends ControllerActionTable {
 
 		return $validator
 			->add('listening', 'ruleRange', [
-				'rule' => ['range', -1, 9]
+				'rule' => ['range', -1, 100]	// POCOR-4824
 			])
 			->add('speaking', 'ruleRange', [
-				'rule' => ['range', -1, 9]
+				'rule' => ['range', -1, 100]	// POCOR-4824
 			])
 			->add('reading', 'ruleRange', [
-				'rule' => ['range', -1, 9]
+				'rule' => ['range', -1, 100]	// POCOR-4824
 			])
 			->add('writing', 'ruleRange', [
-				'rule' => ['range', -1, 9]
+				'rule' => ['range', -1, 100]	// POCOR-4824
 			])
 		;
 	}
