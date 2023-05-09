@@ -910,12 +910,12 @@ class StudentsController extends AppController
     //POCOR-6673
     public function StudentCurriculars()
     {
-        // tabs
+        /*// tabs
             $options = ['type' => 'student'];
             $tabElements = $this->getAcademicTabElements($options);
             $this->set('tabElements', $tabElements);
             $this->set('selectedAction', 'Curriculars');
-            // End
+            // End*/
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurriculars']);
     }
 

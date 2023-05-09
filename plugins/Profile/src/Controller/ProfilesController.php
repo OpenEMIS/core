@@ -446,7 +446,7 @@ class ProfilesController extends AppController
         }
 
         if (!empty($studentId)) { 
-             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentAssessments' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards' || $action == 'StudentAssociations' || $action == 'Personal' || $action == 'Curriculars') { 
+             if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes'|| $action == 'StudentCompetencies' || $action == 'StudentAssessments' || $action == 'StudentExaminationResults'|| $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards' || $action == 'StudentAssociations' || $action == 'Personal' || $action == 'StudentCurriculars') { 
                 //POCOR-6202 starts
                 if ($session->read('Auth.User.is_guardian') == 1) { 
                     //$studentId = $this->ControllerAction->paramsDecode($studentId)['id'];//POCOR-6202 uncomment $studentId
@@ -703,8 +703,7 @@ class ProfilesController extends AppController
             $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', $studentId, 'type' => $type]);
         }
         
-        return $tabElements; //POCOR-6673
-        //return $this->TabPermission->checkTabPermission($tabElements);
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getFinanceTabElements($options = [])
@@ -758,8 +757,7 @@ class ProfilesController extends AppController
             $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'type' => 'staff']);
         }
 
-        //return $this->TabPermission->checkTabPermission($tabElements);
-        return $tabElements;
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function getProfessionalTabElements($options = [])
