@@ -670,8 +670,8 @@ class ClassesProfilesTable extends ControllerActionTable
     {
 		$model = $this->ClassProfiles;
         $ids = $this->getQueryString();
-		
-        if ($model->exists($ids)) {
+        unset($ids['area_id']);//POCOR-7382
+		if ($model->exists($ids)) {
             $data = $model->get($ids);
             $fileName = $data->file_name;
             $pathInfo = pathinfo($fileName);
