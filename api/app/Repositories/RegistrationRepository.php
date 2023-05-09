@@ -788,7 +788,7 @@ class RegistrationRepository extends Controller
             ->whereHas('studentCustomField')
             ->where('student_custom_form_id', 1)
             ->get();
-            
+            //dd($customFields);
             return $customFields;
 
         } catch (\Exception $e) {
