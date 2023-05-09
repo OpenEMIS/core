@@ -90,6 +90,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $events['ControllerAction.Model.generateAll'] = 'generateAll';
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
         $events['ControllerAction.Model.downloadAllPdf'] = 'downloadAllPdf';
+        $events['ControllerAction.Model.mergeAnddownloadAllPdf'] = 'mergeAnddownloadAllPdf';   // POCOR-7320
         $events['ControllerAction.Model.viewPDF'] = 'viewPDF';//POCOR-7321
         $events['ControllerAction.Model.publish'] = 'publish';
         $events['ControllerAction.Model.publishAll'] = 'publishAll';
@@ -738,6 +739,45 @@ class ReportCardStatusesTable extends ControllerActionTable
                                             //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
                                             ])
                                         ->count();
+                    // Start POCOR-7320
+                    $SecurityFunctionsMergeGenerateAllData = $SecurityFunctions
+                    ->find()
+                    ->where([
+                        $SecurityFunctions->aliasField('name') => 'Merge and Download PDF'])
+                    ->first();
+
+                    $SecurityRoleFunctionsTableMergeGenerateAllData = $SecurityRoleFunctionsTable
+                    ->find()
+                    ->where([
+                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsMergeGenerateAllData->id,
+                        //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
+                        ])
+                        ->count();            
+                        
+
+                    if ($generatedCount > 0 || $publishedCount > 0) {
+                        if ($this->AccessControl->isAdmin()) {
+                            $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
+                            $downloadButtonPdf['type'] = 'button';
+                            $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
+                            $downloadButtonPdf['attr'] = $toolbarAttr;
+                            $downloadButtonPdf['attr']['title'] = __('Merge and Download PDF');
+                            $downloadButtonPdf['attr']['target'] = '_blank';
+                            $extra['toolbarButtons']['mergeAnddownloadAllPdf'] = $downloadButtonPdf;
+                        }else{
+                            if($SecurityRoleFunctionsTableMergeGenerateAllData >= 1){
+                                $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
+                                $downloadButtonPdf['type'] = 'button';
+                                $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
+                                $downloadButtonPdf['attr'] = $toolbarAttr;
+                                $downloadButtonPdf['attr']['title'] = __('Merge and Download PDF');
+                                $downloadButtonPdf['attr']['target'] = '_blank';
+                                $extra['toolbarButtons']['mergeAnddownloadAllPdf'] = $downloadButtonPdf;
+                            }
+                        }
+                    }        
+
+                    // End POCOR-7320
                     
                     // Download all button
                      if ($generatedCount > 0 || $publishedCount > 0) {
@@ -948,6 +988,46 @@ class ReportCardStatusesTable extends ControllerActionTable
                                             $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds])//POCOR-7131
                                         ->count();//POCOR-7131
                     //POCOR-6838: End
+
+                    // Start POCOR-7320
+                    $SecurityFunctionsMergeGenerateAllData = $SecurityFunctions
+                    ->find()
+                    ->where([
+                        $SecurityFunctions->aliasField('name') => 'Merge and Download PDF'])
+                    ->first();
+
+                    $SecurityRoleFunctionsTableMergeGenerateAllData = $SecurityRoleFunctionsTable
+                    ->find()
+                    ->where([
+                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsMergeGenerateAllData->id,
+                        //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
+                        ])
+                        ->count();            
+                        
+                        
+                    if ($generatedCount > 0 || $publishedCount > 0) {
+                        if ($this->AccessControl->isAdmin()) {
+                            $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
+                            $downloadButtonPdf['type'] = 'button';
+                            $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
+                            $downloadButtonPdf['attr'] = $toolbarAttr;
+                            $downloadButtonPdf['attr']['title'] = __('Merge and Download PDF');
+                            $downloadButtonPdf['attr']['target'] = '_blank';
+                            $extra['toolbarButtons']['mergeAnddownloadAllPdf'] = $downloadButtonPdf;
+                        }else{
+                            if($SecurityRoleFunctionsTableMergeGenerateAllData >= 1){
+                                $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
+                                $downloadButtonPdf['type'] = 'button';
+                                $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
+                                $downloadButtonPdf['attr'] = $toolbarAttr;
+                                $downloadButtonPdf['attr']['title'] = __('Merge and Download PDF');
+                                $downloadButtonPdf['attr']['target'] = '_blank';
+                                $extra['toolbarButtons']['mergeAnddownloadAllPdf'] = $downloadButtonPdf;
+                            }
+                        }
+                    }        
+
+                    // End POCOR-7320
                     // Download all button
                      if ($generatedCount > 0 || $publishedCount > 0) {
                         if ($this->AccessControl->isAdmin()) {
@@ -1079,7 +1159,96 @@ class ReportCardStatusesTable extends ControllerActionTable
         
         
     }
+    // Start POCOR-7320
 
+    public function mergeAnddownloadAllPdf(Event $event, ArrayObject $extra){
+        // ini_set('max_execution_time', '1500');
+        $params = $this->getQueryString();
+        $statusArray = [self::GENERATED, self::PUBLISHED];
+        $files = $this->StudentsReportCards->find()
+            ->contain(['Students', 'ReportCards'])
+            ->where([
+                $this->StudentsReportCards->aliasField('institution_id') => $params['institution_id'],
+                $this->StudentsReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
+                $this->StudentsReportCards->aliasField('report_card_id') => $params['report_card_id'],
+                $this->StudentsReportCards->aliasField('status IN ') => $statusArray,
+                $this->StudentsReportCards->aliasField('file_name IS NOT NULL'),
+                $this->StudentsReportCards->aliasField('file_content IS NOT NULL'),
+                $this->StudentsReportCards->aliasField('file_content_pdf IS NOT NULL')
+            ])
+            ->toArray();
+
+        if (!empty($files)) {          
+            header('Content-type: application/pdf'); 
+            header('Content-Disposition: inline; filename="' .$fileName. '"'); 
+            header('Content-Transfer-Encoding: binary'); 
+            header('Accept-Ranges: bytes'); 
+            $filePaths = [];
+            
+            $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
+            $counter = 0;
+            foreach ($files as $file) {
+                $filename = 'ReportCards' . '_' . date('Ymd') . '_' .$counter . '.pdf';
+                $filepath = $path . $filename;
+                file_put_contents($filepath, $this->getFile($file->file_content_pdf));
+                $filePaths[] = $path.$filename;    
+                $counter++;     
+            }
+            if(!empty($filePaths)){
+                $this->mergePDFFiles($filePaths);
+            }
+
+        } else {
+            $event->stopPropagation();
+            $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
+            return $this->controller->redirect($this->url('index'));
+        }
+    }
+
+
+    private function mergePDFFiles(Array $filenames, $outFile='', $title = '', $author = '', $subject = '')
+    {
+        $mpdf = new \Mpdf\Mpdf();
+        $mpdf->SetTitle($title);
+        $mpdf->SetAuthor($author);
+        $mpdf->SetSubject($subject);
+
+
+        if ($filenames) {
+            $filesTotal = sizeof($filenames);
+            $mpdf->SetImportUse();
+
+            for ($i = 0; $i<count($filenames);$i++) {
+                $curFile = $filenames[$i];
+                if (file_exists($curFile)){
+                    $pageCount = $mpdf->SetSourceFile($curFile);
+                    for ($p = 1; $p <= $pageCount; $p++) {
+                        $tplId = $mpdf->ImportPage($p);
+                        $wh = $mpdf->getTemplateSize($tplId);
+                        if (($p==1)){
+                            $mpdf->state = 0;
+                            $mpdf->AddPage('L');
+
+                            $mpdf->UseTemplate ($tplId);
+                        }
+                        else {
+                            $mpdf->state = 1;
+                            $mpdf->AddPage('L');
+
+                            $mpdf->UseTemplate($tplId);
+                        }
+                    }
+                }
+            }
+            foreach ($filenames as $filepath) {
+                unlink($filepath);
+            }
+        }
+
+        $mpdf->Output('mergedPDFReport.pdf', "D");
+    }
+
+    // End POCOR-7320
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'student_id';
