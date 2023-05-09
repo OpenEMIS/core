@@ -78,7 +78,6 @@ class StudentCurricularsTable extends ControllerActionTable
                     [$curricular_types->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('curricular_type_id')
                 ])->where([$this->aliasField('student_id') => $sId_id,$InstitutionCurriculars->aliasField('institution_id')=>$institutionId]);
             }
-            //print_r($query->Sql());die;
         $this->field('student_id', ['visible' => false]);
         $this->field('institution_curricular_id', ['visible' => true]);
         $this->field('curricular_position_id', ['visible' => true]);
@@ -90,9 +89,9 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->field('comments', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => true]);
         $this->field('type', ['visible' => true]);
-        $this->field('category',  ['visible' => ['index'=>true,'view' => true,'edit' => false,'add'=>false]]);
+        $this->field('category',  ['visible' => ['index'=>false,'view' => true,'edit' => false,'add'=>false]]);
         $this->setFieldOrder([
-        'academic_period_id', 'institution_curricular_id','category','type', 'curricular_position_id']);
+        'academic_period_id', 'institution_curricular_id','type', 'curricular_position_id']);
         if ($this->controller->name == 'Profiles') {
             unset($settings['indexButtons']['view']);
         }
@@ -101,7 +100,8 @@ class StudentCurricularsTable extends ControllerActionTable
 
     public function onGetCategory(Event $event, Entity $entity)
     {
-        return $entity->category ? __('Curricular') : __('Extracurricular');
+        
+        return $entity['institution_curricular']['category'] ? __('Curricular') : __('Extracurricular');
     }
     private function setupTabElements()
     {
