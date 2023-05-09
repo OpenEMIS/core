@@ -108,7 +108,7 @@ class SurveyStatusesTable extends ControllerActionTable
         if($surveyFormId != -1){
             $surveyFilterOptions = $this->SurveyFilters
                 ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                ->where([$this->SurveyFilters->aliasField('survey_form_id') => $surveyFormId])
+                ->where([$this->SurveyFilters->aliasField('survey_form_id') => $surveyFormId,$this->SurveyFilters->aliasField('name IS NOT') => ''])
                 ->order([
                     $this->SurveyFilters->aliasField('name')
                 ])
@@ -116,6 +116,7 @@ class SurveyStatusesTable extends ControllerActionTable
         }else{
             $surveyFilterOptions = $this->SurveyFilters
                 ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->where([$this->SurveyFilters->aliasField('name IS NOT') => ''])
                 ->order([
                     $this->SurveyFilters->aliasField('name')
                 ])
@@ -416,7 +417,7 @@ class SurveyStatusesTable extends ControllerActionTable
         }elseif($action == 'add'){
             $filterOptions = $formTable
                 ->find('list', ['keyField' => 'id', 'valueField' => 'name']) 
-                ->where([$formTable->aliasField('survey_form_id') => $surveyFormId])
+                ->where([$formTable->aliasField('survey_form_id') => $surveyFormId,$formTable->aliasField('name IS NOT') => ''])
                 ->toArray();
             $attr['type'] = 'select';
             $attr['options'] = $filterOptions;
