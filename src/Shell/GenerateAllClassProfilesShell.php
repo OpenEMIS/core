@@ -63,8 +63,7 @@ class GenerateAllClassProfilesShell extends Shell
                     $recordToProcess['area_id'] = $areaId;
                 }//POCOR-7382 ends
                 $excelParams['requestQuery'] = $recordToProcess;
-				
-                try {
+				try {
                     $this->ClassProfiles->renderExcelTemplate($excelParams);
                 } catch (\Exception $e) {
                     $this->out('Error generating Report Card for Class '.$recordToProcess['institution_class_id'].' of Institution ' . $recordToProcess['institution_id']);
