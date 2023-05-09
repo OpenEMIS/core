@@ -264,6 +264,7 @@ class ThemesController extends PageController
             ->find('optionList', ['keyField' => 'id', 'valueField' => 'type', 'defaultOption' => false])
             ->group([$configItems->aliasField('type')])
             ->where([$configItems->aliasField('visible') => 1])
+            ->order([$configItems->aliasField('type')])//POCOR-7388
             ->toArray();
         $excludedPlugins = (array) Configure::read('School.excludedPlugins');
         foreach ($options as $key => &$opt) {
