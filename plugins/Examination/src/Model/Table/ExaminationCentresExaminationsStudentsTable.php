@@ -454,7 +454,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                         $Students->aliasField('student_status_id') => $enrolledStatus
                     ])
                     ->first();
-
+                
                 $obj = [];
                 $obj['examination_centre_id'] = $selectedExaminationCentre;
                 $obj['student_id'] = $requestData[$this->alias()]['student_id'];
@@ -470,7 +470,18 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                 if (!empty($existInInstitution)) {
                     $obj['institution_id'] = $existInInstitution->institution_id;
                 }
-
+                else{//POCOR-7393 starts (4th case)
+                    $result = $Students
+                    ->find()
+                    ->where([
+                        $Students->aliasField('student_id') => $requestData[$this->alias()]['student_id'],
+                        // $Students->aliasField('academic_period_id') => $requestData[$this->alias()]['academic_period_id'],
+                    ])
+                    ->order( [$Students->aliasField('created')=>"DESC"])
+                    ->first();
+                    $obj['institution_id'] = $result->institution_id;
+                }
+                //POCOR-7393 ends (4th case)
                 // subject students logic
                 foreach ($examCentreSubjects as $examItemId => $subjectId) {
                     $obj['examination_centres_examinations_subjects'][] = [
