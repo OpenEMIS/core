@@ -110,7 +110,9 @@ class SurveyFiltersTable extends ControllerActionTable
                     ->leftJoin([$areaEducation->alias() => $areaEducation->table()],
                         [$areaEducation->aliasField('survey_filter_id').'='.$this->aliasField('id')])
                     ->leftJoin([$survey_forms->alias() => $survey_forms->table()],
-                        [$survey_forms->aliasField('id').'='.$this->aliasField('survey_form_id')]);
+                        [$survey_forms->aliasField('id').'='.$this->aliasField('survey_form_id')])
+                   ->where([$this->aliasField('name IS NOT') => ''])
+                   ->group([$tableProvider->aliasField('survey_filter_id'),$institutionType->aliasField('survey_filter_id'),$areaEducation->aliasField('survey_filter_id')]);
 
         }else{
             $query->select([$this->aliasField('id'), $this->aliasField('name'), $survey_forms->aliasField('name')])
@@ -122,7 +124,9 @@ class SurveyFiltersTable extends ControllerActionTable
                         [$areaEducation->aliasField('survey_filter_id').'='.$this->aliasField('id')])
                     ->leftJoin([$survey_forms->alias() => $survey_forms->table()],
                         [$survey_forms->aliasField('id').'='.$this->aliasField('survey_form_id')])
-                    ->where([$this->aliasField('survey_form_id') => $surveyFormId]);
+                    ->where([$this->aliasField('survey_form_id') => $surveyFormId,$this->aliasField('name IS NOT') => ''])
+                    ->group([$tableProvider->aliasField('survey_filter_id'),$institutionType->aliasField('survey_filter_id'),$areaEducation->aliasField('survey_filter_id')]);
+
         }
 
     }
