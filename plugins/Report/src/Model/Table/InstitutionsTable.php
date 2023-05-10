@@ -241,7 +241,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('area_education_id', ['type' => 'hidden','attr' => ['label'=>'Area Name']]);//POCOR - 7408
         $this->ControllerAction->field('institution_filter', ['type' => 'hidden']);
         $this->ControllerAction->field('position_filter', ['type' => 'hidden']);
         $this->ControllerAction->field('teaching_filter', ['type' => 'hidden']);//POCOR-6614
