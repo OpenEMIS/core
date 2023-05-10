@@ -161,6 +161,13 @@ class POCOR7271 extends AbstractMigration
 
         $this->execute('DROP TABLE IF EXISTS `survey_statuses`');
         $this->execute('RENAME TABLE `zz_7271_survey_statuses` TO `survey_statuses`');
+        //For new created table
+        $this->execute('DROP TABLE IF EXISTS `survey_filter_institution_types`');
+        $this->execute('RENAME TABLE `zz_7271_survey_filter_institution_types` TO `survey_filter_institution_types`');
+        $this->execute('DROP TABLE IF EXISTS `survey_filter_institution_providers`');
+        $this->execute('RENAME TABLE `zz_7271_survey_filter_institution_providers` TO `survey_filter_institution_providers`');
+        $this->execute('DROP TABLE IF EXISTS `survey_filter_areas`');
+        $this->execute('RENAME TABLE `zz_7271_survey_filter_areas` TO `survey_filter_areas`');
 
     }
 }
