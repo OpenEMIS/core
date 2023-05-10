@@ -28,6 +28,7 @@ use App\Models\ReportCard;
 use App\Models\InstitutionStudentReportCardComment;
 use App\Models\InstitutionStudentReportCard;
 use App\Models\InstitutionClassStudents;
+use App\Models\StaffTypes;
 use Illuminate\Support\Str;
 
 class InstitutionRepository extends Controller
@@ -972,7 +973,7 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
-            $staffs = InstitutionStaff::with('institution:id,code as institution_code', 'staffStatus:id,name as staff_status_name', 'institutionPosition:id,staff_position_title_id', 'institutionPosition.staffPositionTitle:id,name');
+            $staffs = InstitutionStaff::with('institution:id,code as institution_code', 'staffStatus:id,name as staff_status_name', 'institutionPosition:id,staff_position_title_id', 'institutionPosition.staffPositionTitle:id,name', 'staffType:id,name as staff_type_name');
             
 
             if(isset($params['order'])){
@@ -1006,7 +1007,7 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
-            $staffs = InstitutionStaff::with('institution:id,code as institution_code', 'staffStatus:id,name as staff_status_name', 'institutionPosition:id,staff_position_title_id', 'institutionPosition.staffPositionTitle:id,name');
+            $staffs = InstitutionStaff::with('institution:id,code as institution_code', 'staffStatus:id,name as staff_status_name', 'institutionPosition:id,staff_position_title_id', 'institutionPosition.staffPositionTitle:id,name', 'staffType:id,name as staff_type_name');
             
 
             if(isset($params['order'])){
@@ -1039,7 +1040,7 @@ class InstitutionRepository extends Controller
     public function getInstitutionStaffData(int $institutionId, int $staffId)
     {
         try {
-            $staffs = InstitutionStaff::with('institution:id,code as institution_code', 'staffStatus:id,name as staff_status_name', 'institutionPosition:id,staff_position_title_id', 'institutionPosition.staffPositionTitle:id,name')
+            $staffs = InstitutionStaff::with('institution:id,code as institution_code', 'staffStatus:id,name as staff_status_name', 'institutionPosition:id,staff_position_title_id', 'institutionPosition.staffPositionTitle:id,name', 'staffType:id,name as staff_type_name')
                 ->where('institution_id', $institutionId)
                 ->where('staff_id', $staffId)
                 ->first();
