@@ -441,7 +441,7 @@ class ConfigItemsTable extends AppTable
             /**
              * options list is from ConfigItemOptions table
              */
-            }else if ($entity->type == 'Institution Completeness') {
+            }else if ($entity->type == 'Institution Data Completeness') {//POCOR 6022
                 if ($entity->{$valueField} == 0) {
                  return __('Disabled');
                 } else {
