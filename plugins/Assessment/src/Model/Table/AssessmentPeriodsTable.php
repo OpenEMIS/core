@@ -785,6 +785,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
             }
         }
     }
+    //POCOR-7400 start
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         $SecurityRoles = TableRegistry::get('security_roles');
@@ -801,4 +802,5 @@ class AssessmentPeriodsTable extends ControllerActionTable
         ]]);
         $this->fields['excluded_security_roles']['options'] =  $SecurityRoleOptions;
     }
+      //POCOR-7400 end
 }
