@@ -345,12 +345,11 @@ class AbsencesTable extends ControllerActionTable
                         $conditions,
                         $this->aliasField('student_id') => $studentId['id']
                     ])->toArray(); 
-            } else {
+            }else{
                 $query
                 ->find('all')
                 ->where($conditions)
-                ->group(['subjects','periods' ]); //POCOR-7275
-                
+                ->distinct([$this->aliasField('date')]); //POCOR-7416
             }
         }
     }
