@@ -716,7 +716,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         ]);
 
         $this->setFieldOrder([
-             'academic_period_id', 'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'weight', 'education_subjects'
+             'academic_period_id', 'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled','excluded_security_roles', 'weight', 'education_subjects'
         ]);
     }
 
@@ -784,5 +784,21 @@ class AssessmentPeriodsTable extends ControllerActionTable
                $save =  $AssessmentItemsGradingTypes->save($entity);
             }
         }
+    }
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $SecurityRoles = TableRegistry::get('security_roles');
+        $SecurityRoleOptions = $SecurityRoles->find('list',['keyField' => 'id', 'valueField' => 'name']);
+        $tooltipMessage="The security roles chosen here will not be affected by the date enabled and date disabled.";
+        $this->field('excluded_security_roles', [
+            'type' => 'chosenSelect',
+            'attr' => [
+                 'label' => [
+                    'text' => __('Excluded Security Roles') . ' <i class="fa fa-info-circle fa-lg fa-right icon-blue"  tooltip-placement="bottom" uib-tooltip="' .$tooltipMessage . '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>',
+                    'escape' => false,
+                    'class' => 'tooltip-desc'
+                ]
+        ]]);
+        $this->fields['excluded_security_roles']['options'] =  $SecurityRoleOptions;
     }
 }
