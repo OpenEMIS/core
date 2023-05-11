@@ -707,7 +707,11 @@ class StudentFeesTable extends ControllerActionTable
         $this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId);
         $query->select([
             'student_id' => $this->Users->aliasField('id'),
-            'student' =>  $this->Users->aliasField('first_name'),
+            'student' => $this->Users->find()->func()->concat([
+                'first_name' => 'literal',
+                 " ",
+                'last_name' => 'literal'
+            ]),
             'openemis' =>$this->Users->aliasField('openemis_no')
            ])
          
@@ -720,10 +724,9 @@ class StudentFeesTable extends ControllerActionTable
              'StudentFees.education_grade_id' =>   $educationGradeId
         ]);
        
-           
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
-                 
+                    
                     $InstitutionFees= TableRegistry::get('Institution.InstitutionFees');
                     $InstitutionFeeEntity = $InstitutionFees
                                              ->find()
