@@ -364,7 +364,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                                         }
 
                                         //POCOR-7266::End
-                                        if((($alertRuleData1->threshold)-1) <= $absenceCount){
+                                        if((($alertRuleData1->threshold)-1) == $absenceCount){ //POCOR-7398 just changed <= to ==
                                             $absenceCount = $absenceCount+1;
                                             if(!empty($userData->email)){
                                                 $email = new Email('openemis');
