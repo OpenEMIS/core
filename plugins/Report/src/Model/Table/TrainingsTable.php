@@ -39,6 +39,14 @@ class TrainingsTable extends AppTable
         $this->addBehavior('User.AdvancedNameSearch');
         // Ends POCOR-6592
     }
+    
+
+    //POCOR - 7415 start
+    public function addBeforeAction(Event $event)
+    {
+        $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['label'=>'Area Name']]);
+    }
+    //POCOR - 7415 end
 
     public function validationDefault(Validator $validator) {
         $validator = parent::validationDefault($validator);
