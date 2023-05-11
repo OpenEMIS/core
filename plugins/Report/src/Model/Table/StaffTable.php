@@ -75,7 +75,13 @@ class StaffTable extends AppTable  {
             $options['validate'] = 'StaffHealthReports';
         }
     }
-
+    //POCOR - 7408 start
+    public function addBeforeAction(Event $event)
+    {
+        $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['label'=>'Area Name','required' => true]]);
+       
+    }
+    //POCOR - 7408 end
 
     public function beforeAction(Event $event)
     {
