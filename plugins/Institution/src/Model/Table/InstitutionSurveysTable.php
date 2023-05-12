@@ -279,7 +279,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                 $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
                 $SurveyStatuses = $this->SurveyForms->SurveyStatuses;
                 $SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
-                $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
+                //$institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
                 $todayDate = date("Y-m-d");
                 $list = [];
 
@@ -289,15 +289,17 @@ class InstitutionSurveysTable extends ControllerActionTable
                     // check if survey form filter type matches
                     $institutionFilterCount = $SurveyFormsFilters
                         ->find()
+                        ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], 
+                            ['SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'])
                         ->where([
                             'AND' => [
                                 [$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId],
-                                [
+                                /*[
                                     'OR' => [
                                         [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
                                         [$SurveyFormsFilters->aliasField('survey_filter_id') => SurveyForms::ALL_CUSTOM_FILER]
                                     ]
-                                ]
+                                ]*/ //comment line in POCOR-7271
                             ]
                         ])
                         ->count();
@@ -458,12 +460,14 @@ class InstitutionSurveysTable extends ControllerActionTable
         $firstVal = preg_replace('/\D/', '', $filterOne);
         $getdata = ['',$firstVal];
         $SurveyFormsFilters = TableRegistry::get('survey_forms_filters');
+        $SurveyFilterType = TableRegistry::get('survey_filter_institution_types');
         $session = $this->controller->request->session();
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
         }
-        $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
-        $type  = [0,$institutionTypeId];
+       /* $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
+        $type  = [0,$institutionTypeId];*/
+        
         //POCOR-6976 end
         // change in filter condition POCOR-6976 start
         if(!empty($firstVal) && $firstVal!=1){
@@ -508,12 +512,15 @@ class InstitutionSurveysTable extends ControllerActionTable
                 ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
                         'SurveyFormsFilters.survey_form_id = SurveyForms.id'
                     ])
+                ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], [
+                        'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'
+                    ])
+                ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], [
+                        'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'
+                    ])
                 ->innerJoin(
                     ['surveyStatuses' => 'survey_statuses'],
-                    [
-                        'surveyStatuses.survey_form_id = SurveyForms.id'
-                    ]
-                )
+                    ['surveyStatuses.survey_form_id = SurveyForms.id'])
                 ->where([
                 $this->aliasField('status_id <> ') => self::EXPIRED,
                 //POCOR-5666 Condition[START]
@@ -523,9 +530,9 @@ class InstitutionSurveysTable extends ControllerActionTable
                 //POCOR-5666 Condition[END]
                 'surveyStatuses.date_enabled <=' => $todayDate,
                 'surveyStatuses.date_disabled >=' => $todayDate,
-                'OR' => [
+                /*'OR' => [
                             $this->aliasField('SurveyFormsFilters.survey_filter_id IN')=>$type,
-                        ]
+                        ]*/
             ]);
             }elseif($filterVal==1){
                 //die('ddf');
@@ -570,6 +577,9 @@ class InstitutionSurveysTable extends ControllerActionTable
                 ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
                         'SurveyFormsFilters.survey_form_id = SurveyForms.id'
                     ])
+                ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], [
+                        'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'
+                    ])
                 ->innerJoin(
                     ['surveyStatuses' => 'survey_statuses'],
                     [
@@ -584,13 +594,12 @@ class InstitutionSurveysTable extends ControllerActionTable
                 //POCOR-5666 Condition[END]
                 'surveyStatuses.date_enabled <=' => $todayDate,
                 'surveyStatuses.date_disabled >=' => $todayDate,
-                'OR' => [
+                /*'OR' => [
                             $this->aliasField('SurveyFormsFilters.survey_filter_id IN')=>$type,
-                        ]
+                        ]*/
             ]);
                 
             }else{
-                //die('ddf');
                 // Do not show expired records
             $extra['auto_contain'] = false;
             $todayDate = date("Y-m-d");
@@ -632,6 +641,9 @@ class InstitutionSurveysTable extends ControllerActionTable
                 ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
                         'SurveyFormsFilters.survey_form_id = SurveyForms.id'
                     ])
+                ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], [
+                        'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'
+                    ])
                 ->innerJoin(
                     ['surveyStatuses' => 'survey_statuses'],
                     [
@@ -646,9 +658,9 @@ class InstitutionSurveysTable extends ControllerActionTable
                 //POCOR-5666 Condition[END]
                 'surveyStatuses.date_enabled <=' => $todayDate,
                 'surveyStatuses.date_disabled >=' => $todayDate,
-                'OR' => [
+                /*'OR' => [
                             $this->aliasField('SurveyFormsFilters.survey_filter_id IN')=>$type,
-                        ]
+                        ]*/
             ]);
             }
             // change in filter condition POCOR-6976 end
