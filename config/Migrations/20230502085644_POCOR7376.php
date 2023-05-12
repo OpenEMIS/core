@@ -26,6 +26,39 @@ class POCOR7376 extends AbstractMigration
             `created` datetime NOT NULL,
              PRIMARY KEY (`id`)
           )  ENGINE=InnoDB DEFAULT CHARSET=utf8");
+        
+        $data=[
+                 [
+                    `id`=>1,
+                    `name` =>'Education',
+                    `order` =>1,
+                    `visible` => 1,
+                    `editable` => 1,
+                    `default` => 1,
+                    `international_code` => NULL,
+                    `national_code`  =>NULL,
+                    `modified_user_id` => NULL,
+                    `modified` =>NULL,
+                    `created_user_id` =>1,
+                    `created`  =>date('Y-m-d H:i:s')
+                 ],
+                 [
+                    `id`=>2,
+                    `name` =>'Information Technology',
+                    `order` =>2,
+                    `visible` => 1,
+                    `editable` => 1,
+                    `default` => 0,
+                    `international_code` => NULL,
+                    `national_code`  =>NULL,
+                    `modified_user_id` => NULL,
+                    `modified` =>NULL,
+                    `created_user_id` =>1,
+                    `created`  =>date('Y-m-d H:i:s')
+                 ]
+             ];
+        
+        $this->insert('industries',$data);
 
         //Backup Table
         $this->execute('CREATE TABLE `zz_7376_user_employments` LIKE `user_employments`');
@@ -33,9 +66,16 @@ class POCOR7376 extends AbstractMigration
         $this->execute('ALTER TABLE `user_employments` ADD COLUMN industry_id INT(11) NOT NULL');
        
           
-          
-        $this->execute('ALTER TABLE `user_employments`
-        ADD FOREIGN KEY (`industry_id`) REFERENCES `industries` (`id`)');
+        $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+        $this->execute('ALTER TABLE `user_employments` ADD FOREIGN KEY (`industry_id`) REFERENCES `industries` (`id`)');
+        $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+
+        
+        
+       
+
+        
+
     
    }
 
