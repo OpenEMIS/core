@@ -348,8 +348,8 @@ class AbsencesTable extends ControllerActionTable
             } else {
                 $query
                 ->find('all')
-                ->where($conditions)
-                ->distinct([$this->aliasField('date')]); //POCOR-7416
+                ->where($conditions);
+                // ->distinct([$this->aliasField('date')]);//7416
                 
             }
         }
