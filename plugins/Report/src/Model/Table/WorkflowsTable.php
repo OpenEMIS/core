@@ -337,7 +337,7 @@ class WorkflowsTable extends AppTable
             if ($feature == 'Report.WorkflowRecords' || 'Report.WorkflowInstitutionPosition' || 'Report.WorkflowStaffPositionProfile' || 'Report.WorkflowVisitRequest' || 'Report.WorkflowInstitutionCase' || 'Report.WorkflowStaffTransferIn' || 'Report.WorkflowStaffTransferOut' || 'Report.WorkflowStudentWithdraw' || 'Report.WorkflowStudentAdmission' || 'Report.WorkflowStudentTransferIn' || 'Report.WorkflowStudentTransferOut') {
                 $this->ControllerAction->field('area', [
                     'select' => false,
-                    'attr' => ['label'=>'Area Education'],
+                    'attr' => ['label'=>'Area Name'], //POCOR-7415
                     'type' => 'hidden'
                 ]);
             }
