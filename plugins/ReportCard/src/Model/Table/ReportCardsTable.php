@@ -229,13 +229,29 @@ class ReportCardsTable extends ControllerActionTable
         // to set template download button
         $downloadUrl = $this->url('downloadTemplate');
         $this->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
+
+        //POCOR-7400 start
+        $SecurityRoles = TableRegistry::get('security_roles');
+        $SecurityRoleOptions = $SecurityRoles->find('list',['keyField' => 'id', 'valueField' => 'name']);
+        $tooltipMessage="The security roles chosen here will not be affected by the date enabled and date disabled.";
+        $this->field('excluded_security_roles', [
+             'type' => 'chosenSelect',
+             'attr' => [
+                  'label' => [
+                     'text' => __('Excluded Security Roles') . ' <i class="fa fa-info-circle fa-lg fa-right icon-blue"  tooltip-placement="bottom" uib-tooltip="' .$tooltipMessage . '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>',
+                     'escape' => false,
+                     'class' => 'tooltip-desc'
+                 ]
+        ]]);
+        $this->fields['excluded_security_roles']['options'] =  $SecurityRoleOptions;
+        //POCOR-7400 end
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
         $this->field('education_programme_id', ['type' => 'select']);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date','excluded_security_roles', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
     }
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
