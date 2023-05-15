@@ -159,7 +159,7 @@ class POCOR7395 extends AbstractMigration
         (131, 'Special Needs Service Classification', 'Special Needs', 'special_needs_service_classification', 131, NULL, NULL, 1, '2023-05-09 12:00:00'),
         (132, 'Language Proficiencies', 'Others', 'language_proficiencies', 132, NULL, NULL, 1, '2023-05-09 12:00:00')");
         
-        //Insert security functions for User Group List
+        
         $this->execute("ALTER TABLE `field_options` ADD PRIMARY KEY (`id`)");      
         $this->execute("ALTER TABLE `field_options`
         MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=133;
