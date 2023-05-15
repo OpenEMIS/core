@@ -299,7 +299,7 @@ class FieldOptionComponent extends Component
         }elseif($key== "Languages" ){
             return "Languages";
         }elseif($key== "LanguageProficiencies" ){
-            return "LanguageProficiencies";
+            return "User.LanguageProficiencies";
         }elseif($key== "CommentTypes" ){
             return "User.CommentTypes";
         }elseif($key== "BehaviourClassifications" ){

@@ -13,6 +13,26 @@ class POCOR7395 extends AbstractMigration
     public function up()
     {
         // Backup Table
+
+        $this->execute("CREATE TABLE `language_proficiencies` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+          `order` int(3) NOT NULL,
+          `visible` int(1) NOT NULL DEFAULT '1',
+          `editable` int(1) NOT NULL DEFAULT '1',
+          `default` int(1) NOT NULL DEFAULT '0',
+          `international_code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+          `national_code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+          `modified_user_id` int(11) DEFAULT NULL,
+          `modified` datetime DEFAULT NULL,
+          `created_user_id` int(11) NOT NULL,
+          `created` datetime NOT NULL,
+          PRIMARY KEY (`id`),
+          KEY `modified_user_id` (`modified_user_id`),
+          KEY `created_user_id` (`created_user_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+
         $this->execute("CREATE TABLE `field_options` (
             `id` int NOT NULL,
             `name` varchar(200) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
@@ -164,12 +184,15 @@ class POCOR7395 extends AbstractMigration
         $this->execute("ALTER TABLE `field_options`
         MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=133;
       COMMIT");      
-    }
+    } 
 
     public function down()
     {
         // Field Options
         $this->execute('DROP TABLE IF EXISTS `field_options`');
         $this->execute('RENAME TABLE `zz_7395_field_options` TO `field_options`');
+
+        $this->execute('DROP TABLE IF EXISTS `language_proficiencies`');
+        $this->execute('RENAME TABLE `zz_7395_language_proficiencies` TO `language_proficiencies`');
     }
 }
