@@ -305,12 +305,6 @@ class DirectoriesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']);
     }
 
-    // POCOR -7366 Counselling added in directory
-    public function Counsellings()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.StudentCounselling']);
-    }
-    // Counselling End
 
     // Historical Data - End
     public function HistoricalStaffPositions()
@@ -2055,6 +2049,13 @@ class DirectoriesController extends AppController
 
     public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.StudentProfiles']); }
     /*POCOR-6286 ends*/
+
+     // POCOR-7366 Counselling added in directory
+    public function Counsellings()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.StudentCounselling']);
+    }
+     // Counselling End
 
     /*POCOR-6700 start - registering function*/
     public function StudentExtracurriculars() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Extracurriculars']); }
