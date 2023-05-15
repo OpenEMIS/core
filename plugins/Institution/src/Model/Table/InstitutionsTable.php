@@ -1009,16 +1009,18 @@ class InstitutionsTable extends ControllerActionTable
         }
     }
 
+    //POCOR-7271 changed survey condition 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //Start POCOR-7029
         $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
-        $institutionType =  $entity->institution_type_id,
-        $institutionProvider = $entity->institution_provider_id,
-        $areaEducation =  $entity->area_education_id,
         $todayDate = date("Y-m-d");
+        $institutionType =  $entity->institution_type_id;
+        $institutionProvider = $entity->institution_provider_id;
+        $areaEducation =  $entity->area_education_id;
+        //survey condition changed in POCOR-7271
         $SurveyFormsFilterObj = $SurveyFormsFilters->find()
-                            ->select(['institution_type' = 'SurveyFilterInstitutionTypes.institution_type_id','institution_provider' = 'SurveyFilterInstitutionProviders.institution_provider_id','area_education' = 'SurveyFilterAreas.area_education_id','survey_form_id'])
+                            ->select(['institution_type' => 'SurveyFilterInstitutionTypes.institution_type_id','institution_provider' => 'SurveyFilterInstitutionProviders.institution_provider_id','area_education' => 'SurveyFilterAreas.area_education_id','survey_form_id'])
                         ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], [
                                         'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'
                                     ])
@@ -1026,17 +1028,25 @@ class InstitutionsTable extends ControllerActionTable
                         'SurveyFilterInstitutionProviders.survey_filter_id = SurveyFormsFilters.id'])
                         ->leftJoin(['SurveyFilterAreas' => 'survey_filter_areas'], [
                                 'SurveyFilterAreas.survey_filter_id = SurveyFormsFilters.id'])
+                        ->where(['SurveyFilterInstitutionTypes.institution_type_id' => $institutionType, 
+                                'SurveyFilterInstitutionProviders.institution_provider_id' => $institutionProvider,
+                                'SurveyFilterAreas.area_education_id'=> $areaEducation])
+                        ->group([$SurveyFormsFilters->aliasField('survey_form_id')])
                         ->toArray();
-
 
         $institutionFormIds = [];
         if (!empty($SurveyFormsFilterObj)) {
             foreach ($SurveyFormsFilterObj as $value) {
-                //$institutionFormIds[] = $value->survey_form_id;
-                if($value->institution_type == -1 || $value->institution_provider == -1 || $value->area_education == -1
-                ){
-                    $SurveyFormsFilterObj = $SurveyFormsFilters->find()
-                            ->select(['survey_form_id'])
+                $institutionFormIds[] = $value->survey_form_id;
+            }
+        }else{
+            // -1 for all area , all provider , all institution type
+            $institutionType = -1 ;
+            $institutionProvider = -1; 
+            $areaEducation = -1;
+            $institutionFormIds = [];
+            $SurveyFormsFilterObj = $SurveyFormsFilters->find()
+                            ->select(['institution_type' => 'SurveyFilterInstitutionTypes.institution_type_id','institution_provider' => 'SurveyFilterInstitutionProviders.institution_provider_id','area_education' => 'SurveyFilterAreas.area_education_id','survey_form_id'])
                         ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], [
                                         'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'
                                     ])
@@ -1044,10 +1054,18 @@ class InstitutionsTable extends ControllerActionTable
                         'SurveyFilterInstitutionProviders.survey_filter_id = SurveyFormsFilters.id'])
                         ->leftJoin(['SurveyFilterAreas' => 'survey_filter_areas'], [
                                 'SurveyFilterAreas.survey_filter_id = SurveyFormsFilters.id'])
-                        ->toArray();
+                        ->where(['SurveyFilterInstitutionTypes.institution_type_id' => $institutionType, 
+                                'SurveyFilterInstitutionProviders.institution_provider_id' => $institutionProvider,
+                                'SurveyFilterAreas.area_education_id'=> $areaEducation])
+                        ->group([$SurveyFormsFilters->aliasField('survey_form_id')])->toArray();
+            if (!empty($SurveyFormsFilterObj)) {
+                foreach ($SurveyFormsFilterObj as $value) {
+                    $institutionFormIds[] = $value->survey_form_id;
                 }
+                        
             }
         }
+       
         if($institutionFormIds[0]!=0) //POCOR-6976
         {
             $SurveyStatusesFilters = TableRegistry::get('Survey.SurveyStatuses');
@@ -1058,12 +1076,12 @@ class InstitutionsTable extends ControllerActionTable
                 $SurveyStatusesFilters->aliasField('date_disabled >=') => $todayDate,
                 $SurveyStatusesFilters->aliasField('survey_form_id IN') => $institutionFormIds
             ])
-            ->toArray();
-
+            ->group([$SurveyStatusesFilters->aliasField('survey_form_id')])->toArray();
             $SurveyStatusesIds = [];
             $SurveyFormIds = [];
             $multipleFormIds = [];
             if (!empty($SurveyStatusesFiltersObj)) {
+               
                 // $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
                 $SurveyFormsFilters = TableRegistry::get('Survey.SurveyForms');
                 foreach ($SurveyStatusesFiltersObj as $statusID => $value) {
@@ -1086,10 +1104,13 @@ class InstitutionsTable extends ControllerActionTable
                             'SurveyStatuses.id' => $value->id
                         ])
                     ->toArray();
-                    foreach ($surveyFormCount as $mlp => $multipleForm) {
-                     $SurveyStatusesIds[] = $multipleForm->SurveyStatusPeriods['academic_period_id'] . ',' . $multipleForm->id;
-                     $SurveyFormIds[] = $multipleForm->id;
-                     $multipleFormIds[] = $multipleForm->SurveyStatusPeriods['academic_period_id'];
+                    
+                    if(!empty($surveyFormCount)){
+                        foreach ($surveyFormCount as $mlp => $multipleForm) {
+                         $SurveyStatusesIds[] = $multipleForm->SurveyStatusPeriods['academic_period_id'] . ',' . $multipleForm->id;
+                         $SurveyFormIds[] = $multipleForm->id;
+                         $multipleFormIds[] = $multipleForm->SurveyStatusPeriods['academic_period_id'];
+                        }
                     }
 
                 }
