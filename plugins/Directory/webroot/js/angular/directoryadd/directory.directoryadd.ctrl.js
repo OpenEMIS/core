@@ -51,7 +51,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     scope.isIdentityUserExist = false;
     scope.isExternalSearchEnable = false;
     scope.externalSearchSourceName = '';
-    scope.isSearchResultEmpty = false;
+    scope.isSearchResultEmpty = false; 
 
     scope.disableFields = {
         username: false,
@@ -805,6 +805,11 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     }
 
     scope.goToNextStep = async function() {
+        debugger;
+        if(scope.step === 'confirmation'){
+            const result = await scope.checkUserExistByIdentityFromConfiguaration();
+            if(result)return;
+         }
         if(scope.isInternalSearchSelected) {
             scope.step = 'confirmation';
             scope.getUniqueOpenEmisId();
@@ -836,7 +841,11 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         }
     }
 
-    scope.confirmUser = function () {
+    scope.confirmUser = async function () {
+        if(scope.step === 'confirmation'){
+            const result = await scope.checkUserExistByIdentityFromConfiguaration();
+            if(result)return;
+         }
         scope.message = (scope.selectedUserData && scope.selectedUserData.userType ? scope.selectedUserData.userType.name : 'Student') + ' successfully added.';
         scope.messageClass = 'alert-success';
         scope.step = "summary";
@@ -1720,5 +1729,58 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         };
         scope.externalGridOptions.api.setDatasource(dataSource);
         scope.externalGridOptions.api.sizeColumnsToFit(); 
+    }
+
+    scope.checkUserExistByIdentityFromConfiguaration = async function checkUserExistByIdentityFromConfiguaration()
+    {
+        const { identity_type_id, identity_number, nationality_id } = scope.selectedUserData;
+        // scope.error.nationality_id = "";
+        scope.error.identity_type_id = ""
+        scope.error.identity_number = "";
+
+        /* if (!nationality_id)
+        {
+            scope.error.nationality_id =
+                "This field cannot be left empty";
+
+                return false;
+        } */
+        if (!identity_type_id)
+        {
+            scope.error.identity_type_id =
+                "This field cannot be left empty";
+                return false;
+        }
+        if (!identity_number)
+        {
+            scope.error.identity_number =
+                "This field cannot be left empty";
+
+                return false;
+        }
+
+        const result =
+            await DirectoryaddSvc.checkUserAlreadyExistByIdentity({
+                identity_type_id: identity_type_id,
+                identity_number: identity_number,
+              /*   nationality_id: nationality_id, */
+            });
+ 
+        if (result.data.user_exist === 1)
+        { 
+            scope.messageClass = 'alert_warn';
+            scope.message = 'This identity has already existed in the system.';
+            scope.isIdentityUserExist = true;
+            scope.error.identity_number =
+            "This identity has already existed in the system.";
+            $window.scrollTo({bottom:0});
+        } else
+        { 
+            scope.messageClass = '';
+            scope.message = '';
+            scope.isIdentityUserExist = false;
+            scope.error.identity_number ==""
+        }
+        return result.data.user_exist === 1;
     }
 }
