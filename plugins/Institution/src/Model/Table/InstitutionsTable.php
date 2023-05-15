@@ -1013,17 +1013,39 @@ class InstitutionsTable extends ControllerActionTable
     {
         //Start POCOR-7029
         $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+        $institutionType =  $entity->institution_type_id,
+        $institutionProvider = $entity->institution_provider_id,
+        $areaEducation =  $entity->area_education_id,
         $todayDate = date("Y-m-d");
         $SurveyFormsFilterObj = $SurveyFormsFilters->find()
-        ->where([
-            $SurveyFormsFilters->aliasField('survey_filter_id') => $entity->institution_type_id
-        ])
-        ->toArray();
+                            ->select(['institution_type' = 'SurveyFilterInstitutionTypes.institution_type_id','institution_provider' = 'SurveyFilterInstitutionProviders.institution_provider_id','area_education' = 'SurveyFilterAreas.area_education_id','survey_form_id'])
+                        ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], [
+                                        'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'
+                                    ])
+                        ->leftJoin(['SurveyFilterInstitutionProviders' => 'survey_filter_institution_providers'], [
+                        'SurveyFilterInstitutionProviders.survey_filter_id = SurveyFormsFilters.id'])
+                        ->leftJoin(['SurveyFilterAreas' => 'survey_filter_areas'], [
+                                'SurveyFilterAreas.survey_filter_id = SurveyFormsFilters.id'])
+                        ->toArray();
+
 
         $institutionFormIds = [];
         if (!empty($SurveyFormsFilterObj)) {
             foreach ($SurveyFormsFilterObj as $value) {
-                $institutionFormIds[] = $value->survey_form_id;
+                //$institutionFormIds[] = $value->survey_form_id;
+                if($value->institution_type == -1 || $value->institution_provider == -1 || $value->area_education == -1
+                ){
+                    $SurveyFormsFilterObj = $SurveyFormsFilters->find()
+                            ->select(['survey_form_id'])
+                        ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], [
+                                        'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'
+                                    ])
+                        ->leftJoin(['SurveyFilterInstitutionProviders' => 'survey_filter_institution_providers'], [
+                        'SurveyFilterInstitutionProviders.survey_filter_id = SurveyFormsFilters.id'])
+                        ->leftJoin(['SurveyFilterAreas' => 'survey_filter_areas'], [
+                                'SurveyFilterAreas.survey_filter_id = SurveyFormsFilters.id'])
+                        ->toArray();
+                }
             }
         }
         if($institutionFormIds[0]!=0) //POCOR-6976
