@@ -16,7 +16,7 @@ class POCOR7366 extends AbstractMigration
         $this->execute('CREATE TABLE `zz_7366_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `zz_7366_security_functions` SELECT * FROM `security_functions`');
 
-        $data = $this->fetchRow("SELECT `order`,`parent_id` FROM `security_functions` WHERE `name` = 'Employment' AND `controller` = 'Directories' AND `module` = 'Directory' AND `category` = 'Professional' ");
+        $data = $this->fetchRow("SELECT `order`,`parent_id` FROM `security_functions` WHERE `name` = 'Generate Students Profile' AND `controller` = 'Directories' AND `module` = 'Directory' AND `category` = 'Profiles' ");
 
         $this->insert('security_functions', [
             'name' => 'Counselling',
