@@ -16,6 +16,7 @@ class POCOR6022 extends AbstractMigration
         $this->execute('CREATE TABLE `zz_6022_config_items` LIKE `config_items`');
         $this->execute('INSERT INTO `zz_6022_config_items` SELECT * FROM `config_items`');
         $this->execute("UPDATE `config_items` SET `type`= 'Institution Data Completeness' WHERE `type` = 'Institution Completeness'");
+        $this->execute("UPDATE `config_items` SET `type`= 'User Data Completeness' WHERE `type` = 'User Completeness'");
     }
     
     public function down()
