@@ -43,7 +43,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
-
+        $this->hasMany('AssessmentPeriodExcludedSecurityRoles', ['className' => 'Assessments.AssessmentPeriodExcludedSecurityRoles', 'foreignKey' => 'assessment_period_id']); //POCOR-7400
         $this->addBehavior('Restful.RestfulAccessControl', [
         'Results' => ['index']
         ]);
@@ -359,6 +359,21 @@ class AssessmentPeriodsTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
          $query->contain(['EducationSubjects']);
+         //POCOR-7400 start
+         $query->contain(['AssessmentPeriodExcludedSecurityRoles']);
+         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $arr =[];
+                foreach($row->assessment_period_excluded_security_roles as $key=> $dayss){
+                    $arr[$key] = ['id'=>$dayss['security_role_id']];
+                }
+                $row['excluded_security_roles'] = $arr;
+                
+                return $row;
+            });
+        });
+        //POCOR-7400 end
+ 
     }
 
     public function editAfterAction(Event $event, Entity $entity)
@@ -802,5 +817,34 @@ class AssessmentPeriodsTable extends ControllerActionTable
         ]]);
         $this->fields['excluded_security_roles']['options'] =  $SecurityRoleOptions;
     }
-      //POCOR-7400 end
+     
+    //POCOR-7400 start
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+       
+        $table=TableRegistry::get('assessment_periods');
+        $entityData=$table->find()->where([$table->aliasField('code')=>$entity->code])->first();
+       
+        $AssessmentPeriodExcludedSecurityRolesTable = TableRegistry::get('assessment_period_excluded_security_roles');
+  
+        if($this->request->params['pass'][0] == 'edit'){
+           
+        $ExcludedSecurityRoleData =  $AssessmentPeriodExcludedSecurityRolesTable->find()->where(['assessment_period_id'=>$entityData->id])->toArray();
+        if($ExcludedSecurityRoleData){
+           foreach($ExcludedSecurityRoleData as $ExcludedSecurityRoleEntity){
+               $deleteEntity =  $AssessmentPeriodExcludedSecurityRolesTable->delete($ExcludedSecurityRoleEntity);
+           }}
+        }
+   
+        foreach($entity->excluded_security_roles['_ids'] as $one){
+            
+            $ExcludedSecurityRoleEntity = [ 'assessment_period_id' => $entityData->id,
+                                            'security_role_id'=> $one
+                                          ];
+            $ExcludedSecurityRoles = $AssessmentPeriodExcludedSecurityRolesTable ->newEntity($ExcludedSecurityRoleEntity);
+            $ExcludedSecurityRoleResult = $AssessmentPeriodExcludedSecurityRolesTable->save($ExcludedSecurityRoles);
+   
+        }    
+    }
+     //POCOR-7400 end
 }
