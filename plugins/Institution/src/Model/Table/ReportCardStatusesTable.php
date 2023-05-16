@@ -1624,7 +1624,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
             // end
         }
-
+        $getGpa = $this->addGpaReportCards(($institutionId, $institutionClassId, $reportCardId, $studentId = null);
         Log::write('debug', 'End Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
     }
 
@@ -1943,5 +1943,12 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
         }
     }
-    /**POCOR-6836 ends*/  
+    /**POCOR-6836 ends*/ 
+
+    private function addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId = null)
+    {
+        $assessments = TableRegistry::get('assessment_grading_options');
+        $subjectStudent = TableRegistry::get('institution_subject_students');
+
+    } 
 }
