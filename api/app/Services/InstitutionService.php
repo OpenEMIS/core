@@ -952,4 +952,41 @@ class InstitutionService extends Controller
         }
     }
 
+
+    public function addCompetencyComments($request)
+    {
+        try {
+            $data = $this->institutionRepository->addCompetencyComments($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add competency comments.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add competency comments.');
+        }
+    }
+
+
+
+    public function addCompetencyPeriodComments($request)
+    {
+        try {
+            $data = $this->institutionRepository->addCompetencyPeriodComments($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add competency comments.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add competency comments.');
+        }
+    }
+
 }
