@@ -896,4 +896,60 @@ class InstitutionService extends Controller
         }
     }
 
+
+
+    public function getInstitutionGradeStudentdata($institutionId, $gradeId, $studentId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionGradeStudentdata($institutionId, $gradeId, $studentId);
+            
+            $resp = [];
+            if($data){
+                $resp['academic_period_id'] = $data['academic_period_id'];
+                $resp['institution_id'] = $data['institution_id'];
+                $resp['education_grade_id'] = $data['education_grade_id'];
+                $resp['student_status_id'] = $data['student_status_id'];
+                $resp['student_id'] = $data['student_id'];
+                $resp['username'] = $data['securityUser']['username'];
+                $resp['openemis_no'] = $data['securityUser']['openemis_no'];
+                $resp['first_name'] = $data['securityUser']['first_name'];
+                $resp['last_name'] = $data['securityUser']['last_name'];
+                $resp['gender_id'] = $data['securityUser']['gender_id'];
+                $resp['date_of_birth'] = $data['securityUser']['date_of_birth'];
+                $resp['start_year'] = $data['start_year'];
+                $resp['start_date'] = $data['start_date'];
+                $resp['end_year'] = $data['end_year'];
+                $resp['end_date'] = $data['end_date'];
+            }
+            return $resp;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get student data.');
+        }
+    }
+
+
+
+    public function addCompetencyResults($request)
+    {
+        try {
+            $data = $this->institutionRepository->addCompetencyResults($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add competency result.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add competency result.');
+        }
+    }
+
 }

@@ -28,7 +28,10 @@ use App\Models\ReportCard;
 use App\Models\InstitutionStudentReportCardComment;
 use App\Models\InstitutionStudentReportCard;
 use App\Models\InstitutionClassStudents;
+use App\Models\InstitutionStudent;
+use App\Models\InstitutionCompetencyResults;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class InstitutionRepository extends Controller
 {
@@ -1501,6 +1504,78 @@ class InstitutionRepository extends Controller
             );
 
             return $this->sendErrorResponse('Failed to add report card comment.');
+        }
+    }
+
+
+
+    public function getInstitutionGradeStudentdata($institutionId, $gradeId, $studentId)
+    {
+        try {
+            $students = InstitutionStudent::with(
+                        'institution', 
+                        'studentStatus', 
+                        'educationGrade', 
+                        'securityUser'
+                    )
+                    ->with([
+                        'institutionClassStudents' => function ($q) use ($institutionId, $gradeId, $studentId) {
+                            $q->where('student_id', $studentId)
+                                ->where('education_grade_id', $gradeId)
+                                ->where('institution_id', $institutionId);
+                        }
+                    ])
+                    ->where('institution_id', $institutionId)
+                    ->where('education_grade_id', $gradeId)
+                    ->where('student_id', $studentId);
+
+
+            $list = $students->first();
+            
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get student data.');
+        }
+    }
+
+
+
+    public function addCompetencyResults($request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+
+            $store['id'] = Str::uuid();
+            $store['competency_grading_option_id'] = $data['competency_grading_option_id'];
+            $store['student_id'] = $data['student_id'];
+            $store['competency_template_id'] = $data['competency_template_id'];
+            $store['competency_item_id'] = $data['competency_item_id'];
+            $store['competency_criteria_id'] = $data['competency_criteria_id'];
+            $store['competency_period_id'] = $data['competency_period_id'];
+            $store['institution_id'] = $data['institution_id'];
+            $store['academic_period_id'] = $data['academic_period_id'];
+            $store['created_user_id'] = JWTAuth::user()->id;
+            $store['created'] = Carbon::now()->toDateTimeString();
+
+            $insert = InstitutionCompetencyResults::insert($store);
+            DB::commit();
+            return 1;
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'Failed to add competency result.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add competency result.');
         }
     }
 

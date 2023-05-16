@@ -475,4 +475,44 @@ class EducationSystemService extends Controller
         }
     }
 
+
+
+    public function getCompetencies($systemId, $levelId, $cycleId, $programmeId, $gradeId, $request)
+    {
+        try {
+            $data = $this->educationSystemRepository->getCompetencies($systemId, $levelId, $cycleId, $programmeId, $gradeId, $request);
+            
+            $resp = [];
+            //dd($data);
+            foreach($data['data'] as $k => $d){
+                $resp[$k]['academic_period_id'] = $d['academic_period_id'];
+                $resp[$k]['competency_template_id'] = $d['id'];
+                $resp[$k]['competency_template_code'] = $d['code'];
+                $resp[$k]['competency_template_name'] = $d['name'];
+                $resp[$k]['competency_criteria_id'] = $d['competency_criteria']['id']??Null;
+                $resp[$k]['competency_criteria_code'] = $d['competency_criteria']['code']??Null;
+                $resp[$k]['competency_criteria_name'] = $d['competency_criteria']['name']??Null;
+                $resp[$k]['competency_item_id'] = $d['competency_criteria']['competency_item']['id']??Null;
+                $resp[$k]['competency_item_code'] = $d['competency_criteria']['competency_item']['code']??Null;
+                $resp[$k]['competency_item_name'] = $d['competency_criteria']['competency_item']['name']??Null;
+                /*$resp[$k]['competency_period_id'] = $d['competency_criteria']['competency_item']['competency_periods'][0]['name']??Null;
+                $resp[$k]['competency_period_code'] = $d['competency_criteria']['competency_item']['competency_periods'][0]['code']??Null;
+                $resp[$k]['competency_period_name'] = $d['competency_criteria']['competency_item']['competency_periods'][0]['name']??Null;*/
+                $resp[$k]['competency_criteria_grade_id'] = $d['competency_criteria']['competency_gradingtype']['id']??Null;
+                $resp[$k]['competency_criteria_grade_code'] = $d['competency_criteria']['competency_gradingtype']['code']??Null;
+                $resp[$k]['competency_criteria_grade_name'] = $d['competency_criteria']['competency_gradingtype']['name']??Null;
+            }
+            $data['data'] = $resp;
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Competencies List Not Found');
+        }
+    }
+
 }

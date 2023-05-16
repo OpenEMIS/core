@@ -30,4 +30,16 @@ class InstitutionStudent extends Model
     {
         return $this->belongsTo(EducationGrades::class, 'education_grade_id', 'id');
     }
+
+
+    public function securityUser()
+    {
+        return $this->belongsTo(SecurityUsers::class, 'student_id', 'id');
+    }
+
+
+    public function institutionClassStudents()
+    {
+        return $this->hasMany(InstitutionClassStudents::class, 'institution_id', 'id');
+    }
 }
