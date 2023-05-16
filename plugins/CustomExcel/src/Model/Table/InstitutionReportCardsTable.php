@@ -107,6 +107,8 @@ class InstitutionReportCardsTable extends AppTable
                 'InstitutionStudentPromoted', //POCOR-7328
                 'InstitutionEducationProgramme', //POCOR-7378
                 'StaffFromEducationProgramme', //POCOR-7378
+                'JordonSchoolShifts', //POCOR-7411
+                'TotalNonTeachingStaffs', //POCOR-7411
             ]
         ]);
     }
@@ -194,6 +196,8 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentPromoted'] = 'onExcelTemplateInitialiseInstitutionStudentPromoted';//POCOR-7328
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionEducationProgramme'] = 'onExcelTemplateInitialiseInstitutionEducationProgramme';//POCOR-7378
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffFromEducationProgramme'] = 'onExcelTemplateInitialiseStaffFromEducationProgramme';//POCOR-7378
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseJordonSchoolShifts'] = 'onExcelTemplateInitialiseJordonSchoolShifts';//POCOR-7411
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseTotalNonTeachingStaffs'] = 'onExcelTemplateInitialiseTotalNonTeachingStaffs';//POCOR-7411
         return $events;
     }
 
@@ -501,26 +505,32 @@ class InstitutionReportCardsTable extends AppTable
             $entity[] = $totalArray;
              return $entity;
         }
-    }
-    //POCOR-6328 ends
+    }//POCOR-6328 ends
+
     public function onExcelTemplateInitialiseInstitutionLands(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
-            $entity = $InstitutionLands
-                ->find()
-                ->select([
-                    $InstitutionLands->aliasField('area')
-                ])
-                ->where([
-                    $InstitutionLands->aliasField('institution_id') => $params['institution_id'],
-                    $InstitutionLands->aliasField('academic_period_id') => $params['academic_period_id'],
-                ])
-                ->first();
-            if($entity == ''){
-                $entity = '0 ';
+            //POCOR-7411 Starts
+            $connection = ConnectionManager::get('default');
+            $entity = $connection->execute("SELECT SUM(subq.area_size) area_size
+                                            FROM (
+                                                SELECT land_area.area_size
+                                                FROM institution_shifts
+                                                LEFT JOIN
+                                                (
+                                                    SELECT institution_lands.institution_id, SUM(institution_lands.area) area_size
+                                                    FROM institution_lands
+                                                    WHERE institution_lands.academic_period_id = ".$params['academic_period_id']." AND institution_lands.land_status_id = 1
+                                                    GROUP BY institution_lands.institution_id
+                                                ) land_area
+                                                ON land_area.institution_id = institution_shifts.institution_id
+                                                WHERE institution_shifts.academic_period_id = ".$params['academic_period_id']." AND institution_shifts.location_institution_id = ".$params['institution_id']."
+                                                GROUP BY institution_shifts.institution_id, institution_shifts.location_institution_id) subq")->fetch('assoc');
+            $entity['area'] = '';
+            if(!empty($entity)){
+                $entity['area'] = $entity['area_size'];
             }
-            return $entity;
+            return $entity;//POCOR-7411 ends            
         }
     }
 
@@ -5240,4 +5250,76 @@ class InstitutionReportCardsTable extends AppTable
             return $entity;
         }
     }//POCOR-7378 ends
+    //POCOR-7411 Starts
+    public function onExcelTemplateInitialiseJordonSchoolShifts(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $connection = ConnectionManager::get('default');
+            $JordonSchoolShiftData = $connection->execute("SELECT IF(shift_data.shift_type IS NULL, 'لا يوجد فترة', IF( shift_data.shift_type = '','Other Shifts', shift_data.shift_type)) jordan_shift FROM institutions
+                    LEFT JOIN(
+                        SELECT institutions.id institutions_id, institutions.code institutions_code, institutions.name institutions_name,
+                            IF( institution_owner.owner_type IS NULL OR institution_owner.owner_type = '', institution_occupier.occupier_type,
+                                institution_owner.owner_type ) shift_type
+                        FROM
+                            institutions
+                        LEFT JOIN(
+                            SELECT institution_shifts.location_institution_id,
+                                IF( COUNT(*) = 1 AND institution_shifts.institution_id != institution_shifts.location_institution_id AND institution_shifts.shift_option_id = 2, 'فترة مسائية', '') occupier_type
+                            FROM
+                                institution_shifts
+                            WHERE
+                                institution_shifts.academic_period_id = ".$params['academic_period_id']."
+                            GROUP BY
+                                institution_shifts.location_institution_id
+                        ) institution_occupier
+                    ON
+                        institution_occupier.location_institution_id = institutions.id
+                    LEFT JOIN(
+                        SELECT institution_shifts.*,
+                            IF(COUNT(*) = 1 AND institution_shifts.institution_id = institution_shifts.location_institution_id AND institution_shifts.shift_option_id = 1, 'فترة واحدة',
+                                IF( COUNT(*) = 2 AND COUNT( DISTINCT( institution_shifts.location_institution_id )) = 2,
+                                    'فترة صباحية','')) owner_type
+                        FROM
+                            institution_shifts
+                        WHERE
+                            institution_shifts.academic_period_id = ".$params['academic_period_id']."
+                        GROUP BY
+                            institution_shifts.institution_id
+                    ) institution_owner
+                    ON
+                        institution_owner.institution_id = institutions.id
+                    WHERE
+                        institutions.classification = 1
+                    GROUP BY
+                        institutions.id
+                    ) shift_data
+                    ON
+                        shift_data.institutions_id = institutions.id
+                    WHERE
+                        institutions.id = ".$params['institution_id']."")->fetch('assoc');
+
+            return !empty($JordonSchoolShiftData) ? $JordonSchoolShiftData : ''; 
+        }
+    }
+
+    public function onExcelTemplateInitialiseTotalNonTeachingStaffs(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $connection = ConnectionManager::get('default');
+            $entity = $connection->execute("SELECT COUNT(DISTINCT(subq.staff_id)) non_teaching_staff_count
+                            FROM ( SELECT institution_staff.staff_id, SUM(CASE WHEN staff_position_titles.type = 0 THEN 1 ELSE 0 END) non_teaching_count, SUM(CASE WHEN staff_position_titles.type = 1 THEN 1 ELSE 0 END) teaching_count
+                                FROM institution_staff
+                                INNER JOIN academic_periods
+                                    ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
+                                INNER JOIN institution_positions
+                                    ON institution_positions.id = institution_staff.institution_position_id
+                                INNER JOIN staff_position_titles
+                                    ON staff_position_titles.id = institution_positions.staff_position_title_id
+                                WHERE institution_staff.institution_id = ".$params['institution_id']." AND academic_periods.id = ".$params['academic_period_id']." AND institution_staff.staff_status_id = 1
+                                GROUP BY institution_staff.staff_id
+                            ) subq
+                            WHERE subq.teaching_count = 0 AND subq.non_teaching_count > 0")->fetch();
+            return !empty($entity) ? $entity[0] : 0; 
+        }
+    }//POCOR-7411 ends
 }
