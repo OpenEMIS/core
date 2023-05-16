@@ -30,6 +30,8 @@ use App\Models\InstitutionStudentReportCard;
 use App\Models\InstitutionClassStudents;
 use App\Models\InstitutionStudent;
 use App\Models\InstitutionCompetencyResults;
+use App\Models\InstitutionCompetencyItemComments;
+use App\Models\InstitutionCompetencyPeriodComments;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -1579,5 +1581,69 @@ class InstitutionRepository extends Controller
         }
     }
 
+
+    public function addCompetencyComments($request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+            
+            $store['id'] = Str::uuid();
+            $store['student_id'] = $data['student_id'];
+            $store['competency_template_id'] = $data['competency_template_id'];
+            $store['competency_item_id'] = $data['competency_item_id'];
+            $store['competency_period_id'] = $data['competency_period_id'];
+            $store['institution_id'] = $data['institution_id'];
+            $store['academic_period_id'] = $data['academic_period_id'];
+            $store['comments'] = $data['comments']??Null;
+            $store['created_user_id'] = JWTAuth::user()->id;
+            $store['created'] = Carbon::now()->toDateTimeString();
+            
+            $insert = InstitutionCompetencyItemComments::insert($store);
+            DB::commit();
+            return 1;
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'Failed to add competency result.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add competency result.');
+        }
+    }
+
+
+    public function addCompetencyPeriodComments($request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+            
+            $store['id'] = Str::uuid();
+            $store['student_id'] = $data['student_id'];
+            $store['competency_template_id'] = $data['competency_template_id'];
+            $store['competency_period_id'] = $data['competency_period_id'];
+            $store['institution_id'] = $data['institution_id'];
+            $store['academic_period_id'] = $data['academic_period_id'];
+            $store['comments'] = $data['comments']??Null;
+            $store['created_user_id'] = JWTAuth::user()->id;
+            $store['created'] = Carbon::now()->toDateTimeString();
+            
+            $insert = InstitutionCompetencyPeriodComments::insert($store);
+            DB::commit();
+            return 1;
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'Failed to add competency result.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add competency result.');
+        }
+    }
 }
 
