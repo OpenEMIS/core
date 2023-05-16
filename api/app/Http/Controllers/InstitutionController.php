@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Requests\ReportCardCommentAdd;
 use App\Http\Requests\ReportCardCommentHomeroomAdd;
 use App\Http\Requests\CompetencyResultsAddRequest;
+use App\Http\Requests\CompetencyCommentAddRequest;
+use App\Http\Requests\CompetencyPeriodCommentAddRequest;
 
 class InstitutionController extends Controller
 {
@@ -768,6 +770,51 @@ class InstitutionController extends Controller
             );
 
             return $this->sendErrorResponse('Failed to add competency result.');
+        }
+    }
+
+
+    public function addCompetencyComments(CompetencyCommentAddRequest $request)
+    {
+        try {
+            $data = $this->institutionService->addCompetencyComments($request);
+            
+            if($data == 1){
+                return $this->sendErrorResponse("Competeny comments stored successfully.");
+            } else {
+                return $this->sendSuccessResponse("Competeny comments not stored.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add competency comments.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add competency comments.');
+        }
+    }
+
+
+
+    public function addCompetencyPeriodComments(CompetencyPeriodCommentAddRequest $request)
+    {
+        try {
+            $data = $this->institutionService->addCompetencyPeriodComments($request);
+            
+            if($data == 1){
+                return $this->sendErrorResponse("Competeny comments stored successfully.");
+            } else {
+                return $this->sendSuccessResponse("Competeny comments not stored.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add competency comments.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add competency comments.');
         }
     }
 }
