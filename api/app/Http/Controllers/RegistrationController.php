@@ -38,10 +38,10 @@ class RegistrationController extends Controller
     }
 
 
-    public function educationGradesList()
+    public function educationGradesList(Request $request)
     {
         try {
-            $data = $this->registrationService->educationGradesList();
+            $data = $this->registrationService->educationGradesList($request);
             
             return $this->sendSuccessResponse("Education Grade List Found", $data);
             

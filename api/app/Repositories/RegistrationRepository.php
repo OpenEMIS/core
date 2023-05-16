@@ -35,9 +35,17 @@ class RegistrationRepository extends Controller
     public function academicPeriodsList()
     {
         try {
-            $academicPeriods = AcademicPeriod::select('id', 'name')->where('current', 1)->orderBy('id','DESC')->get();
+            $academicPeriods = AcademicPeriod::select('id', 'name', 'start_year')->where('current', 1)->orderBy('id','DESC')->get()->toArray();
+            $current_start_year = $academicPeriods[0]['start_year']??0;
+
+            $restAcademicPeriods = [];
+            if($current_start_year != 0){
+                $restAcademicPeriods = AcademicPeriod::select('id', 'name', 'start_year')->where('start_year' ,'>', $current_start_year)->get()->toArray();
+            }
+
+            $newArray = array_merge($academicPeriods, $restAcademicPeriods);
             
-            return $academicPeriods;
+            return $newArray;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -48,12 +56,12 @@ class RegistrationRepository extends Controller
         }
     }
 
-    public function educationGradesList()
+    public function educationGradesList($request)
     {
         try {
-            //$educationGrades = EducationGrades::select('id', 'name')->get();
+            $academic_period_id = $request['academic_period_id'];
 
-            $educationGrades = EducationGrades::select(
+            $lists = EducationGrades::select(
                         'academic_periods.id as academic_period_id',
                         'academic_periods.name as academic_period_name',
                         'academic_periods.code as academic_period_code',
@@ -64,10 +72,16 @@ class RegistrationRepository extends Controller
                     ->join('education_cycles', 'education_cycles.id', '=', 'education_programmes.education_cycle_id')
                     ->join('education_levels', 'education_levels.id', '=', 'education_cycles.education_level_id')
                     ->join('education_systems', 'education_systems.id', '=', 'education_levels.education_system_id')
-                    ->join('academic_periods', 'academic_periods.id', '=', 'education_systems.academic_period_id')
-                    ->where('academic_periods.current', 1)
-                    //->where('academic_periods.id', $academic_period_id)
-                    ->get();
+                    ->join('academic_periods', 'academic_periods.id', '=', 'education_systems.academic_period_id');
+
+            if($academic_period_id){
+                $lists = $lists->where('academic_periods.id', $academic_period_id);
+            } else {
+                $lists = $lists->where('academic_periods.current', 1);
+            }
+
+                    
+            $educationGrades = $lists->get();
             
             return $educationGrades;
         } catch (\Exception $e) {
@@ -794,7 +808,6 @@ class RegistrationRepository extends Controller
             return $customFields;
 
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to find custom fields list.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
