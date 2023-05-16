@@ -145,4 +145,23 @@ class EducationSystemController extends Controller
             return $this->sendErrorResponse('Report Cards List Not Found');
         }
     }
+
+
+
+    public function getCompetencies($systemId, $levelId, $cycleId, $programmeId, $gradeId, Request $request)
+    {
+        try {
+            $data = $this->educationSystemService->getCompetencies($systemId, $levelId, $cycleId, $programmeId, $gradeId, $request);
+            
+            return $this->sendSuccessResponse("Competencies List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Competencies List Not Found');
+        }
+    }
 }
