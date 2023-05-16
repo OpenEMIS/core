@@ -318,6 +318,7 @@ class AttachmentsTable extends ControllerActionTable
             $buttons['download']['url']['action'] = $this->alias;
             $buttons['download']['url'][0] = 'download';
             $buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
+            $buttons['download']['url'][2] = $this->paramsEncode(['security_user_id' => $entity->security_user_id]); // POCOR-7384
         }
 
         return $buttons;
