@@ -1269,7 +1269,8 @@ class StudentUserExportTable extends ControllerActionTable
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Associations')]
+            'Associations' => ['text' => __('Associations')],
+            'Curriculars' => ['text' => __('Curriculars')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -1281,6 +1282,10 @@ class StudentUserExportTable extends ControllerActionTable
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
             } elseif ($key == 'Risks') {
+                $type = (array_key_exists('type', $options))? $options['type']: null;
+                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
+            }elseif ($key == 'Curriculars') {
                 $type = (array_key_exists('type', $options))? $options['type']: null;
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);

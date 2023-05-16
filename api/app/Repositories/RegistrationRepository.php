@@ -781,17 +781,20 @@ class RegistrationRepository extends Controller
     public function getStudentCustomFields()
     {
         try {
-            $customFields = StudentCustomFormField::with(
-                'studentCustomField', 
+            $customFields = StudentCustomFormField::with([
+
+                'studentCustomField',
                 'studentCustomField.studentCustomFieldOption:id as option_id,name as option_name,is_default,visible,order as option_order,student_custom_field_id'
-            )
+            ])
             ->whereHas('studentCustomField')
             ->where('student_custom_form_id', 1)
+            ->orderBy('order', 'ASC')
             ->get();
-            
+            //dd($customFields);
             return $customFields;
 
         } catch (\Exception $e) {
+            dd($e);
             Log::error(
                 'Failed to find custom fields list.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]

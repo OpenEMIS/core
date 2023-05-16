@@ -49,6 +49,7 @@ class InstitutionPositionsSummariesTable extends AppTable
 
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
+        $selectedArea = $requestData->area_education_id;
         $where = [];
         if ($institution_id != 0) {
             $where[$this->aliasField('institution_id')] = $institution_id;
@@ -61,10 +62,19 @@ class InstitutionPositionsSummariesTable extends AppTable
             $where[$AcademicPeriodsTable->aliasField('id')] = $academicperiodid; 
         }
 
-        if ($areaId != -1) {
-            $where['Institutions.area_id'] = $areaId;
+        //POCOR-7407 start
+       if ($areaId != -1 && $areaId != '') {
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }
+                $where['Institutions.area_id IN'] = $allselectedAreas;
         }
-
+        //POCOR-7407 end
         $query
         ->SELECT ([
            'start_year' =>'InstitutionPositionsSummaries.start_year',
@@ -197,6 +207,21 @@ class InstitutionPositionsSummariesTable extends AppTable
         ];
 
         $fields->exchangeArray($newFields);
+    }
+
+    //POCOR-7407
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                           ->where([
+                               $Areas->aliasField('parent_id') => $id
+                            ]) 
+                             ->toArray();
+       foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
     }
 
 }
