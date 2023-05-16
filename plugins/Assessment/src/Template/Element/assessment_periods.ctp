@@ -62,11 +62,24 @@
                                     </td>
                                     <td>
                                         <?php
+                                        //POCOR-7409 start
+                                        if($ControllerAction['action'] == 'add'){
                                             echo $this->Form->input("$joinDataPrefix.assessment_grading_type_id", [
                                                 'type' => 'select',
                                                 'label' => false,
-                                                'options' => $assessmentGradingTypeOptions
+                                                'options' => $assessmentGradingTypeOptions,
+                                                // 'disabled' => 'disabled' //POCOR-3745
                                             ]);
+                                        }
+                                        if($ControllerAction['action'] == 'edit'){
+                                            echo $this->Form->input("$joinDataPrefix.assessment_grading_type_id", [
+                                                'type' => 'text',
+                                                'label' => false,
+                                                'value' => $assessmentGradingTypeOptions,
+                                                'readonly' => 'true' 
+                                            ]);
+                                        }
+                                         //POCOR-7409 end
                                         ?>
                                     </td>
                                 </tr>

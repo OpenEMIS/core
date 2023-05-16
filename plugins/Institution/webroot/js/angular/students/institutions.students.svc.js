@@ -420,11 +420,12 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
     }
 
 
-    function getEducationGradeAddStudent(params, first_name, last_name) {
+    function getEducationGradeAddStudent(params, first_name, last_name,openemis_no) {
         var extra = {
             education_grade_id: params,
             first_name: first_name,
-            last_name: last_name
+            last_name: last_name,
+            openemis_no: openemis_no //POCOR-7386
         };
 
         var success = function(response, deferred) {

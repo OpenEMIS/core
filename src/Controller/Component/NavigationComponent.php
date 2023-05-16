@@ -113,6 +113,7 @@ class NavigationComponent extends Component
 
     public function checkPermissions(array &$navigations)
     {
+        //echo "<pre>";print_r($navigations);die;
         $linkOnly = [];
 
         //$ignoredPlugin = ['Profile']; // Plugin that will be excluded from checking //POCOR-5312
@@ -128,6 +129,7 @@ class NavigationComponent extends Component
         // Unset the children
         foreach ($navigations as $key => $value) {
             $rolesRestrictedTo = $roles;
+            //print_r($roles);die;
             if (isset($value['link']) && !$value['link']) {
                 $linkOnly[] = $key;
             } else {
@@ -149,7 +151,7 @@ class NavigationComponent extends Component
 
                 // $ignoredAction will be excluded from permission checking
                 if (array_key_exists('controller', $url) && !in_array($url['plugin'])) {
-//                    print_r($url);die();
+                 //   print_r($url);die();
                     if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
                         unset($navigations[$key]);
                     }
@@ -157,12 +159,12 @@ class NavigationComponent extends Component
             }
         }
         // unset the parents if there is no children
-        $linkOnly = array_reverse($linkOnly);
+        /*$linkOnly = array_reverse($linkOnly);
             foreach ($linkOnly as $link) {
                 if (!array_search($link, $this->array_column($navigations, 'parent'))) {
                     unset($navigations[$link]);
                 }
-            }
+            }*/
     }
 
     public function checkSelectedLink(array &$navigations)
@@ -338,6 +340,12 @@ class NavigationComponent extends Component
                     $userInfo = TableRegistry::get('Security.Users')->get($userId);
                 }//End POCOR-7055
                 /*POCOR-6286 ends*/
+                // Start POCOR-7384
+                elseif ($this->request->params['plugin'] =='Directory' && $this->request->params['controller'] =='Directories' && $this->request->params['pass'][0] =='download' && $action == 'Attachments') {
+                    $userId = $this->controller->paramsDecode($this->request->params['pass'][2])['security_user_id']; 
+                    $userInfo = TableRegistry::get('Security.Users')->get($userId);
+                }
+                // End POCOR-7384
                 else{
                     $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
                 }
@@ -706,6 +714,15 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.Associations'],
                 'params' => ['plugin' => 'Institution']
             ],
+
+            'Institutions.InstitutionCurriculars' => [ //POCOR-6673
+                'title' => 'Curriculars',
+                'parent' => 'Institution.Academic',
+                'selected' => ['Institutions.InstitutionCurriculars','Institutions.InstitutionCurricularStudents'],
+                'params' => ['plugin' => 'Institution'],
+                'action'=>'index',
+            ],
+
             'Institution.Feeders' => [
                 'title' => 'Feeders',
                 'parent' => 'Institution.Academic',
@@ -731,7 +748,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.Students.add', 'Institutions.Students.addExisting', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
                 'Institutions.StudentAdmission', 'Institutions.StudentTransferIn', 'Institutions.StudentTransferOut', 'Institutions.StudentWithdraw', 'Institutions.WithdrawRequests', 'Institutions.StudentUser.add',
-                'Institutions.ImportStudentAdmission', 'Institutions.Students','StudentHistories.index', 'Institutions.BulkStudentAdmission', 'Institutions.ImportStudentBodyMasses', 'Institutions.ImportStudentGuardians', 'Institutions.StudentStatusUpdates','Institutions.ImportStudentExtracurriculars', 'Institutions.BulkStudentTransferIn', 'Institutions.BulkStudentTransferOut'],
+                'Institutions.ImportStudentAdmission', 'Institutions.Students','StudentHistories.index', 'Institutions.BulkStudentAdmission', 'Institutions.ImportStudentBodyMasses', 'Institutions.ImportStudentGuardians', 'Institutions.StudentStatusUpdates','Institutions.ImportStudentExtracurriculars', 'Institutions.BulkStudentTransferIn', 'Institutions.BulkStudentTransferOut','Institutions.StudentCurriculars'],
                 'params' => ['plugin' => 'Institution']
             ],
 
@@ -739,7 +756,7 @@ class NavigationComponent extends Component
                 'title' => 'Staff',
                 'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.StaffUser.pull', 'Institutions.ImportStaff', 'Institutions.ImportStaffSalaries', 'Institutions.Staff', 'Institutions.StaffTransferIn', 'Institutions.StaffTransferOut', 'StaffHistories.index']
+                'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.StaffUser.pull', 'Institutions.ImportStaff', 'Institutions.ImportStaffSalaries', 'Institutions.Staff', 'Institutions.StaffTransferIn', 'Institutions.StaffTransferOut', 'StaffHistories.index','Staff.StaffCurriculars',]
             ],
 
             'Institution.Attendance' => [
@@ -1222,7 +1239,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Assesments', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards', //POCOR-5786 replace results to Assesments
                 'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentRisks', 'Students.Outcomes', 'Institutions.StudentProgrammes.view', 'Institutions.StudentProgrammes.edit',
-                'Students.Competencies', 'Students.AssessmentItemResultsArchived', 'Students.InstitutionStudentAbsencesArchived', 'Institutions.StudentTransition', 'Institutions.Associations','Institutions.StudentAssociations']
+                'Students.Competencies', 'Students.AssessmentItemResultsArchived', 'Students.InstitutionStudentAbsencesArchived', 'Institutions.StudentTransition', 'Institutions.Associations','Institutions.StudentAssociations','Institutions.StudentCurriculars']
             ],
             'Students.StudentScheduleTimetable' => [
                 'title' => 'Timetables',
@@ -1307,7 +1324,7 @@ class NavigationComponent extends Component
                 'title' => 'Career',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.HistoricalStaffPositions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 'Staff.StaffAttendances', 'Staff.InstitutionStaffAttendanceActivities', 'Institutions.StaffLeave', 'Institutions.HistoricalStaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals', 'Institutions.ImportStaffLeave','Staff.Duties','Staff.StaffAssociations', 'Staff.InstitutionStaffAttendancesArchive'],
+                'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.HistoricalStaffPositions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 'Staff.StaffAttendances', 'Staff.InstitutionStaffAttendanceActivities', 'Institutions.StaffLeave', 'Institutions.HistoricalStaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals', 'Institutions.ImportStaffLeave','Staff.Duties','Staff.StaffAssociations', 'Staff.InstitutionStaffAttendancesArchive','Staff.StaffCurriculars'],
             ],
             'Staff.Employments' => [
                 'title' => 'Professional',
@@ -1460,7 +1477,7 @@ class NavigationComponent extends Component
                 'title' => 'Career',
                 'parent' => 'Profiles.Staff',
                 'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.StaffEmploymentStatuses', 'Profiles.StaffPositions', 'Profiles.StaffClasses', 'Profiles.StaffSubjects', 'Profiles.StaffLeave', 'Profiles.HistoricalStaffLeave','Profiles.StaffAttendances','Profiles.StaffBehaviours', 'Profiles.StaffAppraisals','Profiles.StaffDuties','Profiles.StaffAssociations']
+                'selected' => ['Profiles.StaffEmploymentStatuses', 'Profiles.StaffPositions', 'Profiles.StaffClasses', 'Profiles.StaffSubjects', 'Profiles.StaffLeave', 'Profiles.HistoricalStaffLeave','Profiles.StaffAttendances','Profiles.StaffBehaviours', 'Profiles.StaffAppraisals','Profiles.StaffDuties','Profiles.StaffAssociations','Profiles.StaffCurriculars']
             ],
             'Profiles.StaffBankAccounts' => [
                 'title' => 'Finance',
@@ -1509,7 +1526,7 @@ class NavigationComponent extends Component
                 'parent' => 'Profiles.Student',
                 'params' => ['plugin' => 'Profile'],
                 'selected' => ['Profiles.StudentProgrammes.index', 'Profiles.StudentSubjects', 'Profiles.StudentClasses', 'Profiles.StudentAbsences', 'Profiles.StudentBehaviours','Profiles.StudentCompetencies',
-                'Profiles.StudentResults','Profiles.StudentAssessments', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes','Profiles.StudentRisks','Profiles.StudentAssociations', 'Profiles.Absences']
+                'Profiles.StudentResults','Profiles.StudentAssessments', 'Profiles.StudentExaminationResults', 'Profiles.StudentReportCards', 'Profiles.StudentAwards', 'Profiles.StudentExtracurriculars', 'Profiles.StudentTextbooks', 'Profiles.StudentOutcomes','Profiles.StudentRisks','Profiles.StudentAssociations', 'Profiles.Absences','Profiles.StudentCurriculars']
             ],//POCOR-6701 added Profiles.Absences becasue navigation was collapsing //POCOR-6699 adding studentAssessment
             'Profiles.StudentScheduleTimetable' => [
                 'title' => 'Timetables',
@@ -2197,12 +2214,14 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Transfer'],
                 'selected' => ['Archives.Transfer'],
             ],
-            'Archive.Connection' => [
-                'title' => 'Connection',
-                'parent' => 'Administration.Archive',
-                'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Connection', 0 => 'view', $connectionId],
-                'selected' => ['Archives.Connection.view','Archives.Connection.edit'],
-            ],
+            //POCOR-7399::Start : Hide this menu
+            // 'Archive.Connection' => [
+            //     'title' => 'Connection',
+            //     'parent' => 'Administration.Archive',
+            //     'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Connection', 0 => 'view', $connectionId],
+            //     'selected' => ['Archives.Connection.view','Archives.Connection.edit'],
+            // ],
+            //POCOR-7399::End :Hide this menu
         ];
         return $navigation;
     }
