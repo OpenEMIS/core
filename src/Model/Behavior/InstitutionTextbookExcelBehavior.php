@@ -178,6 +178,7 @@ class InstitutionTextbookExcelBehavior extends Behavior
 
 
     private function getData($settings) {
+
         $session = $this->_table->request->session();
         $institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
 
@@ -232,25 +233,31 @@ class InstitutionTextbookExcelBehavior extends Behavior
             $connection = ConnectionManager::get('default');
             foreach ($record as $key => $value) {
 
-                $student_query = $connection->execute('SELECT `name` FROM student_statuses WHERE id='.$value['user']['status']);
+                $student_query = $connection->execute('SELECT `name` FROM student_statuses WHERE id="'.$value['user']['status'].'"');
                 $student_data = $student_query->fetch('assoc');
-                $student_status = $student_data['name'];
+                $student_status = '';
+                if(!empty($student_data)){
+                    $student_status = $student_data['name'];
+                }
 
-                $textbook_query = $connection->execute('SELECT `title` FROM textbooks WHERE id='.$value['textbook_id']);
+                $textbook_query = $connection->execute('SELECT `title` FROM textbooks WHERE id="'.$value['textbook_id'].'"');
                 $textbook_data = $textbook_query->fetch('assoc');
-                $textbook_name = $textbook_data['title'];
+                $textbook_name = '';
+                if(!empty($textbook_data)){
+                    $textbook_name = $textbook_data['title'];
+                }
                                    
 
                 $result[$key] = [$value['academic_period']['name'], $value['code'], "$textbook_name",$value['textbook_condition']['name'],$value['textbook_status']['name'],$value['user']['first_name'].' '.$value['user']['last_name'],"$student_status"];
             }
         }
 
-
         // echo '<pre>';
-        // print_r($where1);
-        // print_r($where2);
-        // print_r($where3);
-        // print_r($record);
+        // // print_r($institution_id);
+        // // print_r($where1);
+        // // print_r($where2);
+        // // print_r($where3);
+        // // print_r($record);
         // print_r($result);
         // die;
 
