@@ -90,7 +90,7 @@ class DataManagementCopyTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
         $this->field('from_academic_period', ['type' => 'select', 'onChangeReload'=>true, 'options' => $academicPeriodOptions]);
         $this->field('to_academic_period', ['type' => 'select', 'options' => $academicPeriodOptions]);
-        $this->field('features', ['type' => 'select', 'options' => $this->getFeatureOptions()]);
+        $this->field('features', ['type' => 'select', 'onChangeReload'=>true,'options' => $this->getFeatureOptions()]);
         $this->setFieldOrder(['from_academic_period','to_academic_period','features']);
 
     }
@@ -313,6 +313,7 @@ class DataManagementCopyTable extends ControllerActionTable
         //This code is for update the corret academic period in institution_grade table [END]
         }
         if($entity->features == "Institution Performance Outcomes"){
+            die('sds');
             $this->log('=======>Before triggerPerformanceOutcomesShell', 'debug');
             $this->triggePerformanceOutcomesShell('PerformanceOutcomes',$entity->from_academic_period, $entity->to_academic_period);
             $this->log(' <<<<<<<<<<======== After triggerPerformanceOutcomesShell', 'debug');
@@ -355,7 +356,9 @@ class DataManagementCopyTable extends ControllerActionTable
 
     public function getFeatureOptions(){
         $options = [
-            'Institution programmes and Grade' => __('Institution programmes and Grade')
+            
+            'Institution Performance Outcomes' => __('Performance Outcomes'), //POCOR-6425
+            'Institution programmes and Grade' => __('Institution programmes and Grade'),
         ];
         return $options;
     }
