@@ -317,7 +317,15 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ])
                 ->first();
                 //POCOR-6838: End
-                
+                //POCOR-7400 start
+                $ExcludedSecurityRoleTable=TableRegistry::get('report_card_excluded_security_roles');
+                $ExcludedSecurityRoleEntity=$ExcludedSecurityRoleTable->find('all')
+                                                                      ->where([
+                                                                        'security_role_id'=>$SecurityGroupUsersData->security_role_id,
+                                                                        'report_card_id'=>$entity->report_card_id
+                                                                      ])
+                                                                      ->toArray();
+                //POCOR-7400 end
                 if ($this->AccessControl->isAdmin()) {
                     if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                         $buttons['generate'] = [
@@ -350,9 +358,21 @@ class ReportCardStatusesTable extends ControllerActionTable
                                     ];
                         } 
                     }
+                  
+                    //POCOR-7400 start
+                    if($ExcludedSecurityRoleEntity){
+                        
+                            $buttons['generate'] = [
+                            'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
+                            'attr' => $indexAttr,
+                            'url' => $generateUrl
+                            ];
+                        
+                    }
+                    //POCOR-7400 end
                 }
             }
-
+        
             // Publish button, status must be generated
             if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'publish']) && $entity->has('report_card_status') 
                     && ( $entity->report_card_status == self::GENERATED 
