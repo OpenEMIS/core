@@ -313,7 +313,7 @@ class DataManagementCopyTable extends ControllerActionTable
         //This code is for update the corret academic period in institution_grade table [END]
         }
         if($entity->features == "Institution Performance Outcomes"){
-            die('sds');
+          //  die('sds');
             $this->log('=======>Before triggerPerformanceOutcomesShell', 'debug');
             $this->triggePerformanceOutcomesShell('PerformanceOutcomes',$entity->from_academic_period, $entity->to_academic_period);
             $this->log(' <<<<<<<<<<======== After triggerPerformanceOutcomesShell', 'debug');
