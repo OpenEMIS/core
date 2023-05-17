@@ -1208,7 +1208,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     private function mergePDFFiles(Array $filenames, $outFile='', $title = '', $author = '', $subject = '')
     {
-        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [370, 220]]); //POCOR-7090
+        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [220, 390]]);
         $mpdf->SetTitle($title);
         $mpdf->SetAuthor($author);
         $mpdf->SetSubject($subject);
