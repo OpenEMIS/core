@@ -364,8 +364,8 @@ class AssessmentPeriodsTable extends ControllerActionTable
          $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 $arr =[];
-                foreach($row->assessment_period_excluded_security_roles as $key=> $dayss){
-                    $arr[$key] = ['id'=>$dayss['security_role_id']];
+                foreach($row->assessment_period_excluded_security_roles as $key=> $role){
+                    $arr[$key] = ['id'=>$role['security_role_id']];
                 }
                 $row['excluded_security_roles'] = $arr;
                 
@@ -403,7 +403,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
                 'label' => $this->getMessage('Assessments.subjects')
             ]
         ]);
-
+        $this->field('excluded_security_roles');//POCOR-7400
         $this->field('weight', [
             'attr' => [
                 'label' => $this->getMessage('Assessments.periodWeight')
@@ -413,7 +413,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $this->controller->set('assessmentGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
 
         $this->setFieldOrder([
-             'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'weight', 'education_subjects'
+             'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled','excluded_security_roles', 'weight', 'education_subjects'
         ]);
 
         //this is to sort array based on certain value on subarray, in this case based on education order value
@@ -818,7 +818,6 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $this->fields['excluded_security_roles']['options'] =  $SecurityRoleOptions;
     }
      
-    //POCOR-7400 start
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
        
@@ -846,5 +845,22 @@ class AssessmentPeriodsTable extends ControllerActionTable
    
         }    
     }
+
+    public function onGetExcludedSecurityRoles(Event $event, Entity $entity)
+    {
+        $table=TableRegistry::get('security_roles');
+        $obj = [];
+        if ($entity->has('excluded_security_roles')) {
+           
+            foreach ($entity->excluded_security_roles as $role) {
+               $res= $table->find('list')->where(['id'=>$role['id']])->first();
+               $obj[] = $res;
+            }
+        }
+          
+        $values = !empty($obj) ? implode(', ', $obj) : __('No Excluded Security Roles ');
+        return $values;
+    }
+
      //POCOR-7400 end
 }
