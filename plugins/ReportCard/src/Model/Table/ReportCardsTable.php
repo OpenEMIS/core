@@ -28,7 +28,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->hasMany('ReportCardSubjects', ['className' => 'ReportCard.ReportCardSubjects', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']);
         $this->hasMany('StudentReportCards', ['className' => 'Institution.InstitutionStudentsReportCards', 'dependent' => true, 'cascadeCallbacks' => true]);
-
+        $this->hasMany('ReportCardExcludedSecurityRoles', ['className' => 'ReportsCard.ReportCardExcludedSecurityRoles', 'foreignKey' => 'report_card_id']); //POCOR-7400
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'excel_template_name',
             'content' => 'excel_template',
@@ -191,9 +191,9 @@ class ReportCardsTable extends ControllerActionTable
             $showFunc
         );
         // End
-
+        $this->field('excluded_security_roles');//POCOR-7400
         $this->setupFields($entity);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date',  'excluded_security_roles','education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
 
         // Added
         $this->setupTabElements($entity);
@@ -202,6 +202,20 @@ class ReportCardsTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain('ReportCardSubjects.EducationSubjects');
+         //POCOR-7400 start
+         $query->contain(['ReportCardExcludedSecurityRoles']);
+         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $arr =[];
+                foreach($row->report_card_excluded_security_roles as $key=> $role){
+                    $arr[$key] = ['id'=>$role['security_role_id']];
+                }
+                $row['excluded_security_roles'] = $arr;
+                
+                return $row;
+            });
+        });
+        //POCOR-7400 end
     }
 
     public function onGetSubjects(Event $event, Entity $entity)
@@ -619,4 +633,51 @@ class ReportCardsTable extends ControllerActionTable
         return $attr;
     }
 
+    //POCOR-7400 start
+      public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $table=TableRegistry::get('report_cards');
+        $entityData=$table->find()->where([$table->aliasField('code')=>$entity->code])->first();
+       
+        $ReportCardExcludedSecurityRolesTable = TableRegistry::get('report_card_excluded_security_roles');
+  
+        if($this->request->params['pass'][0] == 'edit'){
+           
+        $ExcludedSecurityRoleData =  $ReportCardExcludedSecurityRolesTable->find()->where(['report_card_id'=>$entityData->id])->toArray();
+        if($ExcludedSecurityRoleData){
+           foreach($ExcludedSecurityRoleData as $ExcludedSecurityRoleEntity){
+               $deleteEntity =  $ReportCardExcludedSecurityRolesTable->delete($ExcludedSecurityRoleEntity);
+           }}
+        }
+   
+        foreach($entity->excluded_security_roles['_ids'] as $one){
+            
+            $ExcludedSecurityRoleEntity = [ 'report_card_id' => $entityData->id,
+                                            'security_role_id'=> $one
+                                          ];
+            $ExcludedSecurityRoles = $ReportCardExcludedSecurityRolesTable ->newEntity($ExcludedSecurityRoleEntity);
+            $ExcludedSecurityRoleResult = $ReportCardExcludedSecurityRolesTable->save($ExcludedSecurityRoles);
+   
+        }    
+    }
+
+    public function onGetExcludedSecurityRoles(Event $event, Entity $entity)
+    {
+        $table=TableRegistry::get('security_roles');
+        $obj = [];
+        if ($entity->has('excluded_security_roles')) {
+           
+            foreach ($entity->excluded_security_roles as $role) {
+               $res= $table->find('list')->where(['id'=>$role['id']])->first();
+               $obj[] = $res;
+            }
+        }
+          
+        $values = !empty($obj) ? implode(', ', $obj) : __('No Excluded Security Roles ');
+        return $values;
+    }
+
+     //POCOR-7400 end
 }
+
+
