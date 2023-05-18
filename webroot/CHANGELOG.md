@@ -1,3 +1,12 @@
+### [3.83.1] - 2023-05-10
+- Bug Fixed: Students > General > Attachment page: 404 error when downloading attachment
+- Bug Fixed: Registration: Custom fields api need to be arranged in order based on the interface
+- Bug Fixed: Administration > Communications > Alert Rules: Emails are still being sent out even when Alert Rules are disabled
+- Bug Fixed: API: staff api is not having staff_type_name
+- Bug Fixed: Report>Institution/Staff/Student: Area Education should be changed to Area Name
+- Bug Fixed: Administration > Performance > Assessments > Add/Edit Assessments Periods: Unable to click on the dropdown for grading type
+- Bug Fixed: Administration/Institutions>Profile>Institutions: Adding and changing of placeholders
+
 ### [3.83.0] - 2023-05-08
 - Implemented: Change the details of the Linked Records in Institution > Cases
 - Implemented: Administrations > Profiles > Students : Develop additional placeholders for student transcript

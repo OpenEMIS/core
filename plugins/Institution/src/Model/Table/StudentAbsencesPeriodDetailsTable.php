@@ -151,7 +151,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                     $institutionSecurityGroupId = $institutionData->security_group_id;
     
                     $alertRulesTable = TableRegistry::get('alert_rules');
-                    $alertRuleData = $alertRulesTable->find('all',['conditions'=>['feature'=>'StudentAttendance']])->toArray();
+                    $alertRuleData = $alertRulesTable->find('all',['conditions'=>['feature'=>'StudentAttendance', 'enabled'=>1]])->toArray(); //POCOR-7397
                     if(!empty($alertRuleData)){      
                         foreach($alertRuleData as $alertRuleData1){ 
                             $alertRolesTable = TableRegistry::get('alerts_roles');
@@ -364,7 +364,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                                         }
 
                                         //POCOR-7266::End
-                                        if((($alertRuleData1->threshold)-1) <= $absenceCount){
+                                        if(($alertRuleData1->threshold) == $absenceCount){ //POCOR-7398 just changed <= to == also removed -1 after threshold
                                             $absenceCount = $absenceCount+1;
                                             if(!empty($userData->email)){
                                                 $email = new Email('openemis');

@@ -494,7 +494,9 @@ class InstitutionService extends Controller
                     $list[$k]['end_year'] = $d['end_year'];
                     $list[$k]['staff_id'] = $d['staff_id'];
                     $list[$k]['staff_type_id'] = $d['staff_type_id'];
+                    $list[$k]['staff_type_name'] = $d['staff_type']['staff_type_name']??"";
                     $list[$k]['staff_status_id'] = $d['staff_status_id'];
+                    $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
                     $list[$k]['institution_id'] = $d['institution_id'];
                     $list[$k]['institution_position_id'] = $d['institution_position_id'];
                     $list[$k]['security_group_user_id'] = $d['security_group_user_id'];
@@ -540,7 +542,9 @@ class InstitutionService extends Controller
                     $list[$k]['end_year'] = $d['end_year'];
                     $list[$k]['staff_id'] = $d['staff_id'];
                     $list[$k]['staff_type_id'] = $d['staff_type_id'];
+                    $list[$k]['staff_type_name'] = $d['staff_type']['staff_type_name']??"";
                     $list[$k]['staff_status_id'] = $d['staff_status_id'];
+                    $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
                     $list[$k]['institution_id'] = $d['institution_id'];
                     $list[$k]['institution_position_id'] = $d['institution_position_id'];
                     $list[$k]['security_group_user_id'] = $d['security_group_user_id'];
@@ -585,7 +589,9 @@ class InstitutionService extends Controller
                 $list['end_year'] = $data['end_year'];
                 $list['staff_id'] = $data['staff_id'];
                 $list['staff_type_id'] = $data['staff_type_id'];
+                $list['staff_type_name'] = $data['staffType']['staff_type_name']??"";
                 $list['staff_status_id'] = $data['staff_status_id'];
+                $list['staff_status_name'] = $data['staffStatus']['staff_status_name']??"";
                 $list['institution_id'] = $data['institution_id'];
                 $list['institution_position_id'] = $data['institution_position_id'];
                 $list['security_group_user_id'] = $data['security_group_user_id'];

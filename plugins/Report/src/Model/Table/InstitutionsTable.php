@@ -241,7 +241,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('area_education_id', ['type' => 'hidden','attr' => ['label'=>'Area Name']]);//POCOR - 7408
         $this->ControllerAction->field('institution_filter', ['type' => 'hidden']);
         $this->ControllerAction->field('position_filter', ['type' => 'hidden']);
         $this->ControllerAction->field('teaching_filter', ['type' => 'hidden']);//POCOR-6614
@@ -524,6 +524,13 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'area_education_id';
                     $fieldsOrder[] = 'institution_id';
                     $fieldsOrder[] = 'attendance_type';
+                    $fieldsOrder[] = 'format';
+                break;
+                case 'Report.Curriculars': //POCOR-6673
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'area_level_id';
+                    $fieldsOrder[] = 'area_education_id';
+                    $fieldsOrder[] = 'institution_id';
                     $fieldsOrder[] = 'format';
                 break;
                 default:
@@ -913,6 +920,7 @@ class InstitutionsTable extends AppTable
                              //END:POCOR-4570
                              'Report.InstitutionPositionsSummaries',
                              'Report.StudentAbsencesPerDays', //POCOR-7276
+                             'Report.Curriculars', //POCOR-6673
 
 
                          ]
@@ -965,7 +973,8 @@ class InstitutionsTable extends AppTable
                 'Report.Income',
                 'Report.Expenditure',
                 'Report.InstitutionPositionsSummaries',
-                'Report.StudentAbsencesPerDays' //POCOR-7276
+                'Report.StudentAbsencesPerDays', //POCOR-7276
+                'Report.Curriculars'// POCOR-6673
             ]))) {
                 $Areas = TableRegistry::get('AreaLevel.AreaLevels');
                 $entity = $attr['entity'];
@@ -1028,7 +1037,8 @@ class InstitutionsTable extends AppTable
                     'Report.Income',
                     'Report.Expenditure',
                     'Report.InstitutionPositionsSummaries',
-                    'Report.StudentAbsencesPerDays' //POCOR-7276
+                    'Report.StudentAbsencesPerDays', //POCOR-7276
+                    'Report.Curriculars' //POCOR-6673
                 ]))) {
                 $Areas = TableRegistry::get('Area.Areas');
                 $entity = $attr['entity'];
@@ -1347,7 +1357,8 @@ class InstitutionsTable extends AppTable
                 'Report.ClassAttendanceNotMarkedRecords',
                 'Report.ClassAttendanceMarkedSummaryReport',
                 'Report.InstitutionPositionsSummaries',
-                'Report.StudentAbsencesPerDays' //POCOR-7276
+                'Report.StudentAbsencesPerDays', //POCOR-7276
+                'Report.Curriculars' //POCOR-6673
             ];
 
 
