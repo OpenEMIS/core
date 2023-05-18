@@ -2423,7 +2423,7 @@ class InstitutionReportCardsTable extends AppTable
                 $lastYearPromotedStudents= $this->getLastYearStudentStatus($params['institution_id'], $value['id'], $forPromotedStatus);
 
                 $forWithdrawnStatus = 4;
-                $lastYearWithdrawnStudents= $this->getLastYearStudentStatus($params['institution_id'], $value['id'], $forWithdrawndStatus);
+                $lastYearWithdrawnStudents= $this->getLastYearStudentStatus($params['institution_id'], $value['id'], $forWithdrawnStatus);
                 //POCOR-7421 ends
                 //POCOR-6328 ends
                 $entity[] = [
@@ -2452,8 +2452,8 @@ class InstitutionReportCardsTable extends AppTable
                     'male_student_promotion'=>$maleStudentPromoted,//POCOR-7272
                     'female_student_promotion'=>$femaleStudentPromoted,//POCOR-7272
                     'total_student_promotion'=>$totalStudentPromoted,//POCOR-7272
-                    'total_student_enrolment_last_year' => $lastYearEnrolledStudents//POCOR-7421
-                    'total_student_promoted_last_year' => $lastYearPromotedStudents//POCOR-7421
+                    'total_student_enrolment_last_year' => $lastYearEnrolledStudents,//POCOR-7421
+                    'total_student_promoted_last_year' => $lastYearPromotedStudents,//POCOR-7421
                     'total_student_withdrawn_last_year' => $lastYearWithdrawnStudents//POCOR-7421
                 ];
             }
@@ -2532,8 +2532,7 @@ class InstitutionReportCardsTable extends AppTable
                     ) previous_current_join
                         ON previous_current_join.start_year = @previous_start_year
                 ) academic_period_info
-                WHERE academic_periods.id = @previous_year_id AND institutions.id = ". $institutionId ." AND institution_students.education_grade_id = ". $education_grade_id ."  AND institution_students.student_status_id IN (".$status.")
-                GROUP BY education_grades.id";
+                WHERE academic_periods.id = @previous_year_id AND institutions.id = ". $institutionId ." AND institution_students.education_grade_id = ". $education_grade_id ."  AND institution_students.student_status_id IN (".$status.") GROUP BY education_grades.id";
         $result=$LastYearConnection->execute($query)->fetch('assoc');
         $lastYearStudentStatus= !empty($result) ? $result['last_year_students_status'] : 0;
         return $lastYearStudentStatus;
