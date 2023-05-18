@@ -115,6 +115,7 @@ class InstitutionReportCardsTable extends AppTable
                 'SchoolStaffTotalAbsenceDays',//POCOR-7421
                 'AreaStudentsTotalAbsenceDays',//POCOR-7421
                 'AreaStaffTotalAbsenceDays',//POCOR-7421
+                'LastYearEducationGrade',//POCOR-7421
                 'LasrYearInstitutionStudentEnrolled',//POCOR-7421
                 'LasrYearInstitutionStudentPromoted',//POCOR-7421
                 'LasrYearInstitutionStudentWithdrawn',//POCOR-7421
@@ -216,6 +217,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLasrYearInstitutionStudentEnrolled'] = 'onExcelTemplateInitialiseLasrYearInstitutionStudentEnrolled';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLasrYearInstitutionStudentPromoted'] = 'onExcelTemplateInitialiseLasrYearInstitutionStudentPromoted';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLasrYearInstitutionStudentWithdrawn'] = 'onExcelTemplateInitialiseLasrYearInstitutionStudentWithdrawn';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearEducationGrade'] = 'onExcelTemplateInitialiseLastYearEducationGrade';//POCOR-7421
         return $events;
     }
 
@@ -2060,7 +2062,7 @@ class InstitutionReportCardsTable extends AppTable
                 ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])
                 ->hydrate(false)
                 ->toArray()
-            ;
+            ; 
             //POCOR-6330 starts
             $enrolledStudentsData = 0;
             if(empty($EducationGradesData)){
@@ -2415,16 +2417,6 @@ class InstitutionReportCardsTable extends AppTable
                 ;
                 $totalStudentPromoted = $maleStudentPromoted + $femaleStudentPromoted;
                 //POCOR-7272 Male/Female/Total Student Promotion Rate End
-                //POCOR-7421 starts
-                $forEnrolledStatus = "1, 7, 6, 8";
-                $lastYearEnrolledStudents= $this->getLastYearStudentStatus($params['institution_id'], $value['id'], $forEnrolledStatus);
-
-                $forPromotedStatus = 7;
-                $lastYearPromotedStudents= $this->getLastYearStudentStatus($params['institution_id'], $value['id'], $forPromotedStatus);
-
-                $forWithdrawnStatus = 4;
-                $lastYearWithdrawnStudents= $this->getLastYearStudentStatus($params['institution_id'], $value['id'], $forWithdrawnStatus);
-                //POCOR-7421 ends
                 //POCOR-6328 ends
                 $entity[] = [
                     'education_grade_name' => (!empty($value['name']) ? $value['name'] : ''),
@@ -2451,10 +2443,7 @@ class InstitutionReportCardsTable extends AppTable
                     'jordanian_students'=>$jordanian_students,//POCOR-7421
                     'male_student_promotion'=>$maleStudentPromoted,//POCOR-7272
                     'female_student_promotion'=>$femaleStudentPromoted,//POCOR-7272
-                    'total_student_promotion'=>$totalStudentPromoted,//POCOR-7272
-                    'total_student_enrolment_last_year' => $lastYearEnrolledStudents,//POCOR-7421
-                    'total_student_promoted_last_year' => $lastYearPromotedStudents,//POCOR-7421
-                    'total_student_withdrawn_last_year' => $lastYearWithdrawnStudents//POCOR-7421
+                    'total_student_promotion'=>$totalStudentPromoted//POCOR-7272
                 ];
             }
 
@@ -5661,7 +5650,6 @@ class InstitutionReportCardsTable extends AppTable
                     foreach ($institutionsResult as $instit) {
                         $insArr[$i][] = $instit->id;//district array
                     }
-
                     $i++;
                 }
             }
@@ -5732,7 +5720,6 @@ class InstitutionReportCardsTable extends AppTable
                         }
                     }
                 }
-
 
                 $entity[] = [
                         'id' => $edu_val['id'],
@@ -5889,7 +5876,6 @@ class InstitutionReportCardsTable extends AppTable
                     foreach ($institutionsResult as $instit) {
                         $insArr[$i][] = $instit->id;//district array
                     }
-
                     $i++;
                 }
             }
@@ -6242,7 +6228,63 @@ class InstitutionReportCardsTable extends AppTable
                                             WHERE academic_periods.start_date < @current_start_year
                                         ) previous_current_join
                                             ON previous_current_join.start_year = @previous_start_year")->fetch();
-        return !empty($entity) ? $entity['previous_academic_period_id'] : 0;
+        return !empty($entity) ? $entity[0] : 0;
+    }
+
+    public function onExcelTemplateInitialiseLastYearEducationGrade(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $LastYearPeriodId = $this->getLastYearId();
+            $EducationGradesData = $InstitutionGrades->find()
+                ->select([
+                    'id' => 'EducationGrades.id',
+                    'name' => 'EducationGrades.name'
+                ])
+                ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                ->where([
+                    'EducationSystems.academic_period_id' => $LastYearPeriodId
+                ])
+                ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])
+                ->hydrate(false)
+                ->toArray()
+            ; 
+            $enrolledStudentsData = 0;
+            if(empty($EducationGradesData)){
+                $entity[] = [
+                    'education_grade_name' =>  '',
+                    'education_grade_id' =>  0,
+                    'total_student_enrolment_last_year'=> 0,
+                    'total_student_promoted_last_year'=> 0,
+                    'total_student_withdrawn_last_year'=> 0
+                ];
+                return $entity;
+            }
+            $enrolledStudentsData = 0;
+            if(empty($EducationGradesData)){
+                $entity = [];
+                return $entity;
+            }
+            foreach ($EducationGradesData as $value) {
+                $forEnrolledStatus = "1, 6, 7, 8";
+                $lastYearEnrolledStudents= $this->getLastYearStudentStatus($params['institution_id'], $value['id'], $forEnrolledStatus);
+
+                $forPromotedStatus = 7;
+                $lastYearPromotedStudents= $this->getLastYearStudentStatus($params['institution_id'], $value['id'], $forPromotedStatus);
+
+                $forWithdrawnStatus = 4;
+                $lastYearWithdrawnStudents= $this->getLastYearStudentStatus($params['institution_id'], $value['id'], $forWithdrawnStatus);
+
+                $entity[] = [
+                    'education_grade_id' => (!empty($value['id']) ? $value['id'] : 0),
+                    'education_grade_name' => (!empty($value['name']) ? $value['name'] : ''),
+                    'total_student_enrolment_last_year' => $lastYearEnrolledStudents,
+                    'total_student_promoted_last_year' => $lastYearPromotedStudents,
+                    'total_student_withdrawn_last_year' => $lastYearWithdrawnStudents
+                ];
+            }
+            return $entity;
+        }
     }
     //POCOR-7421 Ends
 }
