@@ -20,16 +20,15 @@ class RegistrationService extends Controller
     public function academicPeriodsList()
     {
         try {
-            $data = $this->registrationRepository->academicPeriodsList()->map(
-                function ($item, $key) {
-                    return [
-                        "id" => $item->id,
-                        "name" => $item->name
-                    ];
-                }
-            );
+            $data = $this->registrationRepository->academicPeriodsList();
+
+            $resp = [];
+            foreach($data as $k => $d){
+                $resp[$k]['id'] = $d['id'];
+                $resp[$k]['name'] = $d['name'];
+            }
             
-            return $data;
+            return $resp;
             
         } catch (\Exception $e) {
             Log::error(
@@ -43,10 +42,10 @@ class RegistrationService extends Controller
 
 
 
-    public function educationGradesList()
+    public function educationGradesList($request)
     {
         try {
-            $data = $this->registrationRepository->educationGradesList()->map(
+            $data = $this->registrationRepository->educationGradesList($request)->map(
                 function ($item, $key) {
                     return [
                         "id" => $item->educaiton_grade_id,
