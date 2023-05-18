@@ -132,8 +132,7 @@ class POCOR7271 extends AbstractMigration
           $table->insert($data);
           $table->saveData();
         }
-        // drop survey_filter_id in survey_forms_filters table
-       $this->execute('ALTER TABLE `survey_forms_filters` DROP `survey_filter_id`');
+        
 
        // survey_status data patch logic start
        $surveyStatuses = TableRegistry::get('survey_statuses');
@@ -149,7 +148,8 @@ class POCOR7271 extends AbstractMigration
                                 ] //condition
                                 );
       }
-
+      // drop survey_filter_id in survey_forms_filters table
+       $this->execute('ALTER TABLE `survey_forms_filters` DROP `survey_filter_id`');
 
 
     }
