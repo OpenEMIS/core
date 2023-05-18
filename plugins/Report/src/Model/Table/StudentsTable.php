@@ -118,7 +118,7 @@ class StudentsTable extends AppTable
         $this->ControllerAction->field('position_filter', ['type' => 'hidden']);
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         //pocor 5863 start
-         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
+         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['label'=>'Area Name','required' => true]]);//POCOR - 7408
         //pocor 5863 end
         $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
         $this->ControllerAction->field('risk_type', ['type' => 'hidden']);
