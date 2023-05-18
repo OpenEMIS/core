@@ -1624,7 +1624,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
             // end
         }
-        $getGpa = $this->addGpaReportCards(($institutionId, $institutionClassId, $reportCardId, $studentId = null);
+        $getGpa = $this->addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId);
         Log::write('debug', 'End Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
     }
 
@@ -1945,10 +1945,52 @@ class ReportCardStatusesTable extends ControllerActionTable
     }
     /**POCOR-6836 ends*/ 
 
-    private function addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId = null)
+    //POCOR-7318
+    private function addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId)
     {
         $assessments = TableRegistry::get('assessment_grading_options');
+        $AssessmentTable = TableRegistry::get('Assessment.Assessments');
+        $assessmentItem = TableRegistry::get('assessment_items');
+        $assessmentGradingOption = TableRegistry::get('assessment_grading_options');
         $subjectStudent = TableRegistry::get('institution_subject_students');
+        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods'); 
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+        $selectedAcademicPeriod =  $this->AcademicPeriods->getCurrent();
+        $data = $assessmentItem->find()
+                                ->select(['education_grade_id' => $AssessmentTable->aliasField('education_grade_id'),
+                                 'weight' => $assessmentItem->aliasField('weight'),'education_subject' =>$assessmentItem->aliasField('education_subject_id')])
+                                ->leftJoin([$AssessmentTable->alias() => $AssessmentTable->table()],
+                                [$AssessmentTable->aliasField('id = ') . $assessmentItem->aliasField('assessment_id')])
+                                ->where([$AssessmentTable->aliasField('academic_period_id') =>$selectedAcademicPeriod, $assessmentItem->aliasField('weight IS NOT') =>0.00]);
+        
+        $education_grade_id = [];
+        $education_subject = [];
+        $sumWeight = 0;
+        foreach($data as $key => $value){
+            $education_grade_id[] = $value->education_grade_id;
+            $education_subject[] = $value->education_subject;
+        }
+        $subjectCount = count($education_subject);
+        $StudentsSubject = $subjectStudent->find()->select(['total_mark'])->where([$subjectStudent->aliasField('education_subject_id IN') =>$education_subject,$subjectStudent->aliasField('academic_period_id') =>$selectedAcademicPeriod,$subjectStudent->aliasField('student_id') =>$studentId,$subjectStudent->aliasField('student_status_id') =>1]);
+        
+        foreach($StudentsSubject as $val){
+            $totalMark = $val->total_mark;
+            $getpoint = $AssessmentTable->find()->select(['point' =>$assessmentGradingOption->aliasField('point'),
+                        'min' =>$assessmentGradingOption->aliasField('min'),'max' =>$assessmentGradingOption->aliasField('max'),'id' =>$assessmentGradingOption->aliasField('id')])
+                        ->leftJoin([$assessmentGradingOption->alias() => $assessmentGradingOption->table()],
+                        [$assessmentGradingOption->aliasField('assessment_grading_type_id = ') . $AssessmentTable->aliasField('assessment_grading_type_id')])
+                        ->where([$AssessmentTable->aliasField('academic_period_id') =>$selectedAcademicPeriod,$assessmentGradingOption->aliasField('min <=') =>$totalMark,$assessmentGradingOption->aliasField('max >=') =>$totalMark]);
+            foreach($getpoint as $val){
+                $point = $val->point;
+            }
+        }
 
+        foreach($data as $key => $value){
+            $weight = $value->weight * $point;
+            $sumWeight+= $weight;
+        }
+
+        $finalGpa = $sumWeight/$subjectCount;
+        return $finalGpa;
     } 
 }
