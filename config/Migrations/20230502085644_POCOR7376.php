@@ -29,32 +29,32 @@ class POCOR7376 extends AbstractMigration
         
         $data=[
                  [
-                    `id`=>1,
-                    `name` =>'Education',
-                    `order` =>1,
-                    `visible` => 1,
-                    `editable` => 1,
-                    `default` => 1,
-                    `international_code` => NULL,
-                    `national_code`  =>NULL,
-                    `modified_user_id` => NULL,
-                    `modified` =>NULL,
-                    `created_user_id` =>1,
-                    `created`  =>date('Y-m-d H:i:s')
+                    'id'=>1,
+                    'name' =>'Education',
+                    'order' =>1,
+                    'visible' => 1,
+                    'editable' => 1,
+                    'default' => 1,
+                    'international_code' => NULL,
+                    'national_code'  =>NULL,
+                    'modified_user_id' => NULL,
+                    'modified' =>NULL,
+                    'created_user_id' =>1,
+                    'created'  =>date('Y-m-d H:i:s')
                  ],
                  [
-                    `id`=>2,
-                    `name` =>'Information Technology',
-                    `order` =>2,
-                    `visible` => 1,
-                    `editable` => 1,
-                    `default` => 0,
-                    `international_code` => NULL,
-                    `national_code`  =>NULL,
-                    `modified_user_id` => NULL,
-                    `modified` =>NULL,
-                    `created_user_id` =>1,
-                    `created`  =>date('Y-m-d H:i:s')
+                    'id'=>2,
+                    'name' =>'Information Technology',
+                    'order' =>2,
+                    'visible' => 1,
+                    'editable' => 1,
+                    'default' => 0,
+                    'international_code' => NULL,
+                    'national_code'  =>NULL,
+                    'modified_user_id' => NULL,
+                    'modified' =>NULL,
+                    'created_user_id' =>1,
+                    'created'  =>date('Y-m-d H:i:s')
                  ]
              ];
         
