@@ -53,6 +53,12 @@ class InstitutionRubricsTable extends AppTable {
 		$this->ControllerAction->field('format');
 	}
 
+	//POCOR - 7415 start
+    public function addBeforeAction(Event $event)
+    {
+        $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['label'=>'Area Name']]);
+    }
+    //POCOR - 7415 end
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add') {
 			$attr['options'] = $this->controller->getFeatureOptions($this->alias());
