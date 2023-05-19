@@ -16,6 +16,13 @@ class ExtracurricularsTable extends ControllerActionTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('ExtracurricularTypes', ['className' => 'FieldOption.ExtracurricularTypes']);
+		//POCOR-6673 start
+		$this->toggle('view', false);
+        $this->toggle('edit', false);
+        $this->toggle('search', true);
+        $this->toggle('add', false);
+        $this->toggle('remove', false);
+        //POCOR-6673 end
 	}
 
 	public function beforeAction() {
@@ -41,6 +48,8 @@ class ExtracurricularsTable extends ControllerActionTable {
 		$this->ControllerAction->setFieldOrder('start_date', $order++);
 		$this->ControllerAction->setFieldOrder('extracurricular_type_id', $order++);
 		$this->ControllerAction->setFieldOrder('name', $order++);
+
+
 	
 	}
 
