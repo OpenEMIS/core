@@ -52,8 +52,9 @@ class InstitutionRepository extends Controller
             
             $institutions = new Institutions();
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $institutions = $institutions->orderBy($col);
+                $institutions = $institutions->orderBy($col, $orderBy);
             }
             //$list = $institutions->paginate($limit)->toArray();
             $list = $institutions->paginate($limit)->toArray();
@@ -111,8 +112,9 @@ class InstitutionRepository extends Controller
             
             $grades = new EducationGrades();
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $grades = $grades->orderBy($col);
+                $grades = $grades->orderBy($col, $orderBy);
             }
             //$list = $grades->get();
             $list = $grades->paginate($limit);
@@ -142,8 +144,9 @@ class InstitutionRepository extends Controller
             $institutionGrade = InstitutionGrades::where('institution_id', $institutionId)->with('educationGrades');
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $institutionGrade = $institutionGrade->orderBy($col);
+                $institutionGrade = $institutionGrade->orderBy($col, $orderBy);
             }
 
             //$list = $institutionGrade->get();
@@ -197,8 +200,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $classes = $classes->orderBy($col);
+                $classes = $classes->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -240,8 +244,9 @@ class InstitutionRepository extends Controller
 
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $institutionClasses = $institutionClasses->orderBy($col);
+                $institutionClasses = $institutionClasses->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -310,8 +315,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $subjects = $subjects->orderBy($col);
+                $subjects = $subjects->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -356,8 +362,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $subjects = $subjects->orderBy($col);
+                $subjects = $subjects->orderBy($col, $orderBy);
             }
 
 
@@ -420,8 +427,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $shifts = $shifts->orderBy($col);
+                $shifts = $shifts->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -457,8 +465,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $institutionShifts = $institutionShifts->orderBy($col);
+                $institutionShifts = $institutionShifts->orderBy($col, $orderBy);
             }
 
 
@@ -517,8 +526,9 @@ class InstitutionRepository extends Controller
                 );
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $areas = $areas->orderBy($col);
+                $areas = $areas->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -558,8 +568,9 @@ class InstitutionRepository extends Controller
                 )->where('id', $institutionId);
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $areas = $areas->orderBy($col);
+                $areas = $areas->orderBy($col, $orderBy);
             }
 
 
@@ -624,8 +635,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $summaries = $summaries->orderBy($col);
+                $summaries = $summaries->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -662,8 +674,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $summaries = $summaries->orderBy($col);
+                $summaries = $summaries->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -700,8 +713,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $summaries = $summaries->orderBy($col);
+                $summaries = $summaries->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -738,8 +752,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $summaries = $summaries->orderBy($col);
+                $summaries = $summaries->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -794,8 +809,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $nationalitySummaries = $nationalitySummaries->orderBy($col);
+                $nationalitySummaries = $nationalitySummaries->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -832,8 +848,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $nationalitySummaries = $nationalitySummaries->orderBy($col);
+                $nationalitySummaries = $nationalitySummaries->orderBy($col, $orderBy);
             }
 
 
@@ -871,8 +888,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $nationalitySummaries = $nationalitySummaries->orderBy($col);
+                $nationalitySummaries = $nationalitySummaries->orderBy($col, $orderBy);
             }
 
 
@@ -910,8 +928,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $nationalitySummaries = $nationalitySummaries->orderBy($col);
+                $nationalitySummaries = $nationalitySummaries->orderBy($col, $orderBy);
             }
 
 
@@ -948,8 +967,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $nationalitySummaries = $nationalitySummaries->orderBy($col);
+                $nationalitySummaries = $nationalitySummaries->orderBy($col, $orderBy);
             }
 
 
@@ -982,8 +1002,9 @@ class InstitutionRepository extends Controller
             
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $staffs = $staffs->orderBy($col);
+                $staffs = $staffs->orderBy($col, $orderBy);
             }
 
 
@@ -1016,8 +1037,9 @@ class InstitutionRepository extends Controller
             
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $staffs = $staffs->orderBy($col);
+                $staffs = $staffs->orderBy($col, $orderBy);
             }
 
 
@@ -1071,8 +1093,9 @@ class InstitutionRepository extends Controller
             
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $positions = $positions->orderBy($col);
+                $positions = $positions->orderBy($col, $orderBy);
             }
 
 
@@ -1105,8 +1128,9 @@ class InstitutionRepository extends Controller
             
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $positions = $positions->orderBy($col);
+                $positions = $positions->orderBy($col, $orderBy);
             }
 
 
@@ -1175,8 +1199,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $positions = $positions->orderBy($col);
+                $positions = $positions->orderBy($col, $orderBy);
             }
 
 
@@ -1229,8 +1254,9 @@ class InstitutionRepository extends Controller
             
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $roomType = $roomType->orderBy($col);
+                $roomType = $roomType->orderBy($col, $orderBy);
             }
 
             if(isset($params['academic_period_id'])){
@@ -1266,8 +1292,9 @@ class InstitutionRepository extends Controller
             
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $roomType = $roomType->orderBy($col);
+                $roomType = $roomType->orderBy($col, $orderBy);
             }
 
 
