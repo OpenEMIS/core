@@ -522,7 +522,7 @@ class CustomFormsTable extends ControllerActionTable
         $moduleQuery = $this->getModuleQuery();
         $moduleOptions = $moduleQuery->toArray();
         $selectedModule = $this->queryString('module', $moduleOptions);
-        $this->advancedSelectOptions($moduleOptions, $selectedModule);
+       // $this->advancedSelectOptions($moduleOptions, $selectedModule);
 
         $attr['type'] = 'select';
         $attr['options'] = $moduleOptions;

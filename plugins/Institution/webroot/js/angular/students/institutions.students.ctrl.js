@@ -113,6 +113,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.isIdentityUserExist = false;
     StudentController.isNextButtonShouldDisable = isNextButtonShouldDisable;
     StudentController.getCSPDSearchData = getCSPDSearchData;
+    StudentController.checkUserExistByIdentityFromConfiguaration=checkUserExistByIdentityFromConfiguaration;
 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
@@ -945,6 +946,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     async function goToNextStep()
     {
+        if(StudentController.step === 'confirmation'){
+           const result = await StudentController.checkUserExistByIdentityFromConfiguaration();
+           if(result)return;
+        }
+
         if(StudentController.isInternalSearchSelected) {
             if(StudentController.studentData && StudentController.studentData.is_same_school) {
                 StudentController.step = 'summary';
@@ -1911,5 +1917,59 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         };
         StudentController.externalGridOptions.api.setDatasource(dataSource);
         StudentController.externalGridOptions.api.sizeColumnsToFit(); 
+    }
+
+
+    async function checkUserExistByIdentityFromConfiguaration()
+    {
+        const { identity_type_id, identity_number, nationality_id } = StudentController.selectedStudentData;
+        // StudentController.error.nationality_id = "";
+        StudentController.error.identity_type_id = ""
+        StudentController.error.identity_number = "";
+
+        /* if (!nationality_id)
+        {
+            StudentController.error.nationality_id =
+                "This field cannot be left empty";
+
+                return false;
+        } */
+        if (!identity_type_id)
+        {
+            StudentController.error.identity_type_id =
+                "This field cannot be left empty";
+                return false;
+        }
+        if (!identity_number)
+        {
+            StudentController.error.identity_number =
+                "This field cannot be left empty";
+
+                return false;
+        }
+
+        const result =
+            await InstitutionsStudentsSvc.checkUserAlreadyExistByIdentity({
+                identity_type_id: identity_type_id,
+                identity_number: identity_number,
+              /*   nationality_id: nationality_id, */
+            });
+      
+        if (result.data.user_exist === 1)
+        { 
+            StudentController.messageClass = 'alert-warning';
+            StudentController.message = 'This identity has already existed in the system.';
+            StudentController.isIdentityUserExist = true;
+            StudentController.error.identity_number =
+            "This identity has already existed in the system.";
+            $window.scrollTo({bottom:0});
+        } else
+        { 
+            StudentController.messageClass = '';
+            StudentController.message = '';
+            StudentController.isIdentityUserExist = false;
+            StudentController.error.identity_number ==""
+        }
+        return result.data.user_exist === 1;
     }
 }

@@ -32,6 +32,18 @@ class SurveysController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Survey.SurveyForms']);
     }
 
+    //POCOR-7271
+    public function Filters()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Survey.SurveyFilters']);
+    }
+
+    //POCOR-7271
+    public function Recipients()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Survey.SurveyRecipients']);
+    }
+
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
@@ -49,10 +61,22 @@ class SurveysController extends AppController
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Rules'],
                 'text' => __('Rules')
             ],
+
+            //POCOR-7271
+            'Filters' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Filters'],
+                'text' => __('Filters')
+            ],
             'Status' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Status'],
                 'text' => __('Status')
-            ]
+            ],
+
+            //POCOR-7271
+            'Recipients' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Recipients'],
+                'text' => __('Recipients')
+            ],
         ];
         $name = $this->name;
         $action = $this->request->action;
