@@ -119,6 +119,7 @@ class InstitutionReportCardsTable extends AppTable
                 'LasrYearInstitutionStudentEnrolled',//POCOR-7421
                 'LasrYearInstitutionStudentPromoted',//POCOR-7421
                 'LasrYearInstitutionStudentWithdrawn',//POCOR-7421
+                'LastYearInstitutionEducationGrade',//POCOR-7421
             ]
         ]);
     }
@@ -218,6 +219,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLasrYearInstitutionStudentPromoted'] = 'onExcelTemplateInitialiseLasrYearInstitutionStudentPromoted';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLasrYearInstitutionStudentWithdrawn'] = 'onExcelTemplateInitialiseLasrYearInstitutionStudentWithdrawn';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearEducationGrade'] = 'onExcelTemplateInitialiseLastYearEducationGrade';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionEducationGrade'] = 'onExcelTemplateInitialiseLastYearInstitutionEducationGrade';//POCOR-7421
         return $events;
     }
 
@@ -5543,6 +5545,45 @@ class InstitutionReportCardsTable extends AppTable
             $AreaId = $getInstData->area_id;
         }
         return $AreaId;
+    }
+
+    public function onExcelTemplateInitialiseLastYearInstitutionEducationGrade(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $LastYearPeriodId = $this->getLastYearId();
+            $entity = $InstitutionGrades->find()
+                ->select([
+                    'id' => 'EducationGrades.id',
+                    'name' => 'EducationGrades.name'
+                ])
+                ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                ->where([
+                    'EducationSystems.academic_period_id' => $LastYearPeriodId
+                ])
+                ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])
+                ->group([
+                    'EducationGrades.id'
+                ])
+                ->hydrate(false)
+                ->toArray()
+            ;
+
+            $addEducationheading[] = [
+                'id' =>0,
+                'name' => 'Education Grade'
+            ];
+
+            $entity = array_merge($addEducationheading, $entity);
+
+            $totalArray = [];
+            $totalArray = [
+                'id' => count($entity) + 1,
+                'name' => '',
+            ];
+            $entity[] = $totalArray;
+            return $entity;
+        }
     }
 
     public function onExcelTemplateInitialiseLasrYearInstitutionStudentEnrolled(Event $event, array $params, ArrayObject $extra)
