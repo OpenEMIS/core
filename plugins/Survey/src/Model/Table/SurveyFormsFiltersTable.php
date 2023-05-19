@@ -13,10 +13,10 @@ class SurveyFormsFiltersTable extends AppTable
             'className' => 'Survey.SurveyForms',
             'foreignKey' => 'survey_form_id'
         ]);
-        $this->belongsTo('CustomFilters', [
+        /*$this->belongsTo('CustomFilters', [
             'className' => 'Institution.Types',
             'foreignKey' => 'survey_filter_id'
-        ]);
+        ]);*/
     }
 
     public function getIsAllFilterType($id)
@@ -25,7 +25,7 @@ class SurveyFormsFiltersTable extends AppTable
             ->find()
             ->where([
                 $this->aliasField('survey_form_id') => $id,
-                $this->aliasField('survey_filter_id') => 0
+                //$this->aliasField('survey_filter_id') => 0
             ])
             ->count();
 
