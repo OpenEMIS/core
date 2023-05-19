@@ -10,8 +10,8 @@ class POCOR7402 extends AbstractMigration
     public function up()
     {
        // Backup table
-       $this->execute('CREATE TABLE `zz_7402_config_items` LIKE `config_items`');
-       $this->execute('INSERT INTO `zz_7402_config_items` SELECT * FROM `config_items`');
+    //    $this->execute('CREATE TABLE `zz_7402_config_items` LIKE `config_items`');
+    //    $this->execute('INSERT INTO `zz_7402_config_items` SELECT * FROM `config_items`');
        
         $data=[
             [
@@ -20,6 +20,7 @@ class POCOR7402 extends AbstractMigration
                 'type' => 'Add New Student',
                 'label' => 'Display Address Area Level',
                 'value' => '3',
+                'value_selection'=>'1',
                 'default_value' => '1',
                 'editable' => '1',
                 'visible' => '1',
@@ -36,6 +37,7 @@ class POCOR7402 extends AbstractMigration
                 'type' => 'Add New Student',
                 'label' => 'Display Birthplace Area Level',
                 'value' => '3',
+                'value_selection'=>'1',
                 'default_value' => '1',
                 'editable' => '1',
                 'visible' => '1',
