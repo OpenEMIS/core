@@ -113,6 +113,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.checkConfigForExternalSearch = checkConfigForExternalSearch;
     StaffController.isNextButtonShouldDisable = isNextButtonShouldDisable;
     StaffController.getCSPDSearchData=getCSPDSearchData;
+    StaffController.checkUserExistByIdentityFromConfiguaration=checkUserExistByIdentityFromConfiguaration;
   
     
     $window.savePhoto = function(event) {
@@ -1219,6 +1220,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     async function goToNextStep()
     {
+        if(StaffController.step === 'confirmation'){
+            const result = await StaffController.checkUserExistByIdentityFromConfiguaration();
+            if(result)return;
+         }
      
         if (StaffController.isInternalSearchSelected)
         {
@@ -2557,5 +2562,59 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         };
         StaffController.externalGridOptions.api.setDatasource(dataSource);
         StaffController.externalGridOptions.api.sizeColumnsToFit(); 
+    }
+
+    
+    async function checkUserExistByIdentityFromConfiguaration()
+    { 
+        const { identity_type_id,identity_number } = StaffController.selectedStaffData;
+        StaffController.error.nationality_id = "";
+        StaffController.error.identity_type_id = ""
+        StaffController.error.identity_number = "";
+
+        /* if (!nationality_id)
+        {
+            StaffController.error.nationality_id =
+                "This field cannot be left empty";
+
+                return false;
+        } */
+        if (!identity_type_id)
+        {
+            StaffController.error.identity_type_id =
+                "This field cannot be left empty";
+                return false;
+        }
+        if (!identity_number)
+        {
+            StaffController.error.identity_number =
+                "This field cannot be left empty";
+
+                return false;
+        }
+
+        const result =
+            await InstitutionsStaffSvc.checkUserAlreadyExistByIdentity({
+                identity_type_id: identity_type_id,
+                identity_number: identity_number,
+              /*   nationality_id: nationality_id, */
+            });
+      
+        if (result.data.user_exist === 1)
+        { 
+            StaffController.messageClass = 'alert-warning';
+            StaffController.message = 'This identity has already existed in the system.';
+            StaffController.isIdentityUserExist = true;
+            StaffController.error.identity_number =
+            "This identity has already existed in the system.";
+            $window.scrollTo({bottom:0});
+        } else
+        { 
+            StaffController.messageClass = '';
+            StaffController.message = '';
+            StaffController.isIdentityUserExist = false;
+            StaffController.error.identity_number ==""
+        }
+        return result.data.user_exist === 1;
     }
 }

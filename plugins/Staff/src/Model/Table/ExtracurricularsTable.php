@@ -12,6 +12,7 @@ use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
 
 class ExtracurricularsTable extends AppTable {
+
 	public function initialize(array $config) {
 		$this->table('staff_extracurriculars');
 		parent::initialize($config);
@@ -38,6 +39,13 @@ class ExtracurricularsTable extends AppTable {
 		$this->ControllerAction->setFieldOrder('start_date', $order++);
 		$this->ControllerAction->setFieldOrder('extracurricular_type_id', $order++);
 		$this->ControllerAction->setFieldOrder('name', $order++);
+	}
+
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
+		//if ($this->controller->name == 'Profiles') {
+            unset($settings['indexButtons']['add']);
+        //}
 	}
 
 	public function addEditBeforeAction(Event $event) {
