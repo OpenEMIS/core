@@ -119,6 +119,9 @@ Route::group(
         Route::get('systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/subjects/{subject_id}', 'EducationSystemController@getEducationStructureSubject');
 
 
+        Route::get('systems/{system_id}/levels/{level_id}/cycles/{cycle_id}/programmes/{programme_id}/grades/{grade_id}/competencies', 'EducationSystemController@getCompetencies');
+
+
         Route::get('academic-periods/list', 'RegistrationController@academicPeriodsList');
         Route::get('systems/levels/cycles/programmes/grades/list', 'RegistrationController@educationGradesList');
         Route::get('nationalities/list', 'RegistrationController@nationalityList');
@@ -139,6 +142,16 @@ Route::group(
         Route::post('institutions/{institutionId}/classes/{classId}/reportcardcomment/homeroom', 'InstitutionController@reportCardCommentHomeroomAdd');
 
         Route::post('institutions/{institutionId}/classes/{classId}/reportcardcomment/principal', 'InstitutionController@reportCardCommentPrincipalAdd');
+
+
+
+        Route::get('institutions/{institutionId}/grades/{gradeId}/students/{studentId}', 'InstitutionController@getInstitutionGradeStudentdata');
+        
+        Route::post('institutions/students/competencies/results', 'InstitutionController@addCompetencyResults');
+
+        Route::post('institutions/students/competencies/comments', 'InstitutionController@addCompetencyComments');
+
+        Route::post('institutions/students/competencies/periods/comments', 'InstitutionController@addCompetencyPeriodComments');
     }
 );
 
