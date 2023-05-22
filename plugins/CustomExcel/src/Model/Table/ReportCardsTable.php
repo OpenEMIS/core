@@ -78,7 +78,7 @@ class ReportCardsTable extends AppTable
                 'StudentIdentities',
                 'SubjectTeacher',
                 'AttendanceAge',
-                'CompetencyPeriodsByTemplate'
+                'CompetencyPeriodsByTemplate',
             ]
         ]);
     }
@@ -306,7 +306,8 @@ class ReportCardsTable extends AppTable
                     $StudentsReportCards->aliasField('institution_id'),
                     $StudentsReportCards->aliasField('academic_period_id'),
                     $StudentsReportCards->aliasField('education_grade_id'),
-                    $StudentsReportCards->aliasField('institution_class_id')
+                    $StudentsReportCards->aliasField('institution_class_id'),
+                    $StudentsReportCards->aliasField('gpa'),
                 ])
                 ->contain([
                     'Students' => [
@@ -2260,4 +2261,5 @@ class ReportCardsTable extends AppTable
             return $entity;
         }
     }
+
 }
