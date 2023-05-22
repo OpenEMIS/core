@@ -1990,8 +1990,6 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
         }
 
-        
-
         $finalGpa = $sumWeight/$subjectCount;
         return $finalGpa;
     }
