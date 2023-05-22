@@ -1075,7 +1075,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
                 'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on'),
                 'email_status_id' => $this->ReportCardEmailProcesses->aliasField('status'),
-                'email_error_message' => $this->ReportCardEmailProcesses->aliasField('error_message')
+                'email_error_message' => $this->ReportCardEmailProcesses->aliasField('error_message'),
+                'gpa' => $this->StudentsReportCards->aliasField('gpa')//POCOR-7318
             ])
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
@@ -1573,7 +1574,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $this->ReportCardEmailProcesses->delete($reportCardEmailProcessEntity);
             }
             // end
-
+            $getGpa = $this->addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId);//POCOR-7318 get student GPA
             // Student report card
             $recordIdKeys = [
                 'report_card_id' => $reportCardId,
@@ -1582,6 +1583,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'academic_period_id' => $student->academic_period_id,
                 'education_grade_id' => $student->education_grade_id,
                 'institution_class_id' => $student->institution_class_id,
+                'gpa' => $getGpa,
             ];
             if ($this->StudentsReportCards->exists($recordIdKeys)) {
                 $studentsReportCardEntity = $this->StudentsReportCards->find()
@@ -1624,7 +1626,6 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
             // end
         }
-        $getGpa = $this->addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId);
         Log::write('debug', 'End Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
     }
 
@@ -1971,7 +1972,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $education_subject[] = $value->education_subject;
         }
         $subjectCount = count($education_subject);
-        $StudentsSubject = $subjectStudent->find()->select(['total_mark'])->where([$subjectStudent->aliasField('education_subject_id IN') =>$education_subject,$subjectStudent->aliasField('academic_period_id') =>$selectedAcademicPeriod,$subjectStudent->aliasField('student_id') =>$studentId,$subjectStudent->aliasField('student_status_id') =>1]);
+        $StudentsSubject = $subjectStudent->find()->select(['total_mark'])->where([$subjectStudent->aliasField('education_subject_id IN') => $education_subject,$subjectStudent->aliasField('academic_period_id') =>$selectedAcademicPeriod,$subjectStudent->aliasField('student_id') => $studentId,$subjectStudent->aliasField('student_status_id') => 1,$subjectStudent->aliasField('institution_id') => $institutionId]);
         
         foreach($StudentsSubject as $val){
             $totalMark = $val->total_mark;
@@ -1982,15 +1983,17 @@ class ReportCardStatusesTable extends ControllerActionTable
                         ->where([$AssessmentTable->aliasField('academic_period_id') =>$selectedAcademicPeriod,$assessmentGradingOption->aliasField('min <=') =>$totalMark,$assessmentGradingOption->aliasField('max >=') =>$totalMark]);
             foreach($getpoint as $val){
                 $point = $val->point;
+                foreach($data as $key => $value){
+                    $weight = $value->weight * $point;
+                    $sumWeight+= $weight;
+                }
             }
         }
 
-        foreach($data as $key => $value){
-            $weight = $value->weight * $point;
-            $sumWeight+= $weight;
-        }
+        
 
         $finalGpa = $sumWeight/$subjectCount;
         return $finalGpa;
-    } 
+    }
+
 }
