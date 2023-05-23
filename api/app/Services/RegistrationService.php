@@ -355,4 +355,79 @@ class RegistrationService extends Controller
         }
     }
 
+
+    public function institutionTypesDropdown()
+    {
+        try {
+            $data = $this->registrationRepository->institutionTypesDropdown()->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->name,
+                    ];
+                }
+            );
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institutions Types List Not Found');
+        }
+    }
+
+
+    public function areaLevelsDropdown()
+    {
+        try {
+            $data = $this->registrationRepository->areaLevelsDropdown()->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->name,
+                    ];
+                }
+            );
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Levels List Not Found');
+        }
+    }
+
+
+    public function areasDropdown()
+    {
+        try {
+            $data = $this->registrationRepository->areasDropdown()->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->name,
+                    ];
+                }
+            );
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Names List Not Found');
+        }
+    }
+
 }

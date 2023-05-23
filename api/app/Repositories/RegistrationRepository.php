@@ -24,6 +24,8 @@ use App\Models\InstitutionStudentAdmission;
 use App\Models\StudentCustomFormField;
 use App\Models\StudentCustomFieldValues;
 use App\Models\IdentityTypes;
+use App\Models\InstitutionTypes;
+use App\Models\AreaLevels;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
@@ -852,6 +854,57 @@ class RegistrationRepository extends Controller
             );
 
             return $this->sendErrorResponse('Institutions List Not Found');
+        }
+    }
+
+
+    public function institutionTypesDropdown()
+    {
+        try {
+            $institutions = InstitutionTypes::select('id', 'name')->get();
+            
+            return $institutions;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institutions List Not Found');
+        }
+    }
+
+
+    public function areaLevelsDropdown()
+    {
+        try {
+            $areaLevels = AreaLevels::select('id', 'name')->get();
+            
+            return $areaLevels;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Levels List Not Found');
+        }
+    }
+
+
+    public function areasDropdown()
+    {
+        try {
+            $areas = Areas::select('id', 'name')->get();
+            
+            return $areas;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Levels List Not Found');
         }
     }
 

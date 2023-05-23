@@ -301,4 +301,58 @@ class RegistrationController extends Controller
             return $this->sendErrorResponse('Institutions List Not Found');
         }
     }
+
+
+    public function institutionTypesDropdown()
+    {
+        try {
+            $data = $this->registrationService->institutionTypesDropdown();
+            
+            return $this->sendSuccessResponse("Institution Types List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institutions Types List Not Found');
+        }
+    }
+
+
+    public function areaLevelsDropdown()
+    {
+        try {
+            $data = $this->registrationService->areaLevelsDropdown();
+            
+            return $this->sendSuccessResponse("Area Levels List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Levels List Not Found');
+        }
+    }
+
+
+    public function areasDropdown()
+    {
+        try {
+            $data = $this->registrationService->areasDropdown();
+            
+            return $this->sendSuccessResponse("Area Names List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Names List Not Found');
+        }
+    }
 }
