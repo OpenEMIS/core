@@ -1036,44 +1036,45 @@ class InstitutionSurveysTable extends ControllerActionTable
         if(!empty($institutionId)){ // POCOR-6652
             $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
         }
-        
+    
         $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
 
         foreach ($surveyForms as $surveyFormId => $surveyForm) {
+              
             // check if the institution type matches. only the match type or all type will try go in to check insertion of records
             $filterTypeQuery = $SurveyFormsFilters
                 ->find()
-                ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
-                        'SurveyFormsFilters.survey_form_id = SurveyForms.id'
+                ->leftJoin(['SurveyFormsFilters1' => 'survey_forms_filters'], [
+                        'SurveyFormsFilters1.survey_form_id = SurveyForms.id'
                     ])
                 ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], [
-                        'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'
+                        'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters1.id'
                     ])
                 ->leftJoin(['SurveyFilterInstitutionProviders' => 'survey_filter_institution_providers'], [
-                        'SurveyFilterInstitutionProviders.survey_filter_id = SurveyFormsFilters.id'
+                        'SurveyFilterInstitutionProviders.survey_filter_id = SurveyFormsFilters1.id'
                     ])
                 ->leftJoin(['SurveyFilterAreas' => 'survey_filter_areas'], [
-                        'SurveyFilterAreas.survey_filter_id = SurveyFormsFilters.id'
+                        'SurveyFilterAreas.survey_filter_id = SurveyFormsFilters1.id'
                     ])
-                ->leftJoin(['Institutions' => 'institutions'], [
-                        'Institutions.institution_type_id = SurveyFilterInstitutionTypes.institution_type_id'
+                ->leftJoin(['Institutions1' => 'institutions'], [
+                        'Institutions1.institution_type_id = SurveyFilterInstitutionTypes.institution_type_id'
                     ])
-                ->leftJoin(['Institutions' => 'institutions'], [
-                        'Institutions.institution_provider_id = SurveyFilterInstitutionProviders.institution_provider_id'
+                ->leftJoin(['Institutions2' => 'institutions'], [
+                        'Institutions2.institution_provider_id = SurveyFilterInstitutionProviders.institution_provider_id'
                     ])
-                ->leftJoin(['Institutions' => 'institutions'], [
-                        'Institutions.area_education_id = SurveyFilterAreas.area_education_id'
+                ->leftJoin(['Institutions3' => 'institutions'], [
+                        'Institutions3.area_education_id = SurveyFilterAreas.area_education_id'
                     ])
                 ->where([
                     [$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId],
-                    [
-                        'OR' => [
-                            [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
-                            [$SurveyFormsFilters->aliasField('survey_filter_id') => SurveyForms::ALL_CUSTOM_FILER]
-                        ]
-                    ]
+                    // [
+                    //     'OR' => [
+                    //         [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
+                    //         [$SurveyFormsFilters->aliasField('survey_filter_id') => SurveyForms::ALL_CUSTOM_FILER]
+                    //     ]
+                    // ]
                 ]);
-
+            
             $isInstitutionTypeMatch = $filterTypeQuery->count() > 0;
 
             $openStatusId = null;
