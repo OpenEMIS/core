@@ -672,8 +672,10 @@ class InstitutionController extends Controller
             
             if($data == 0){
                 return $this->sendErrorResponse("Student is not enrolled in the class.");
-            } else {
+            }elseif ($data == 1) {
                 return $this->sendSuccessResponse("Report card comment added successfully.", $data);
+            } else {
+                return $this->sendErrorResponse('Something went wrong.');
             }
             
         } catch (\Exception $e) {
