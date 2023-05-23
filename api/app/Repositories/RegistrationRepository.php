@@ -97,13 +97,26 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function institutionDropdown()
+    public function institutionDropdown($request)
     {
         try {
-            $institutions = Institutions::select('id', 'name', 'code')->get();
+            $institutions = Institutions::select('id', 'name', 'code');
+
+            if($request['institution_type_id']){
+                $institutions = $institutions->where('institution_type_id', $request['institution_type_id']);
+            }
+
+
+            if($request['area_id']){
+                $institutions = $institutions->where('area_id', $request['area_id']);
+            }
+
+
+            $data = $institutions->get();
             
-            return $institutions;
+            return $data;
         } catch (\Exception $e) {
+            dd($e);
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -892,12 +905,18 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function areasDropdown()
+    public function areasDropdown($request)
     {
         try {
-            $areas = Areas::select('id', 'name')->get();
+            $areas = Areas::select('id', 'name');
+
+            if($request['area_level_id']){
+                $areas = $areas->where('area_level_id', $request['area_level_id']);
+            }
+
+            $data = $areas->get();
             
-            return $areas;
+            return $data;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
