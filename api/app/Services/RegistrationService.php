@@ -67,10 +67,10 @@ class RegistrationService extends Controller
     }
 
 
-    public function institutionDropdown()
+    public function institutionDropdown($request)
     {
         try {
-            $data = $this->registrationRepository->institutionDropdown()->map(
+            $data = $this->registrationRepository->institutionDropdown($request)->map(
                 function ($item, $key) {
                     return [
                         "id" => $item->id,
@@ -82,6 +82,7 @@ class RegistrationService extends Controller
             return $data;
             
         } catch (\Exception $e) {
+            dd($e);
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -406,10 +407,10 @@ class RegistrationService extends Controller
     }
 
 
-    public function areasDropdown()
+    public function areasDropdown($request)
     {
         try {
-            $data = $this->registrationRepository->areasDropdown()->map(
+            $data = $this->registrationRepository->areasDropdown($request)->map(
                 function ($item, $key) {
                     return [
                         "id" => $item->id,
