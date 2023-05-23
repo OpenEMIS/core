@@ -56,10 +56,10 @@ class RegistrationController extends Controller
     }
 
 
-    public function institutionDropdown()
+    public function institutionDropdown(Request $request)
     {
         try {
-            $data = $this->registrationService->institutionDropdown();
+            $data = $this->registrationService->institutionDropdown($request);
             
             return $this->sendSuccessResponse("Institutions List Found", $data);
             
@@ -339,10 +339,10 @@ class RegistrationController extends Controller
     }
 
 
-    public function areasDropdown()
+    public function areasDropdown(Request $request)
     {
         try {
-            $data = $this->registrationService->areasDropdown();
+            $data = $this->registrationService->areasDropdown($request);
             
             return $this->sendSuccessResponse("Area Names List Found", $data);
             
