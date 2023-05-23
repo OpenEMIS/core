@@ -15,7 +15,7 @@ class POCOR6670 extends AbstractMigration
     //Auther::Rishabh Sharma
     public function up()
     {   
-        // Backup student_behaviours table
+        // Backup staff_behaviours table
         $this->execute('DROP TABLE IF EXISTS `zz_6670_staff_behaviours`');
         $this->execute('CREATE TABLE `zz_6670_staff_behaviours` LIKE `staff_behaviours`');
         $this->execute('INSERT INTO `zz_6670_staff_behaviours` SELECT * FROM `staff_behaviours`');
