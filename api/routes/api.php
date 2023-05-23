@@ -27,6 +27,11 @@ Route::group(
         Route::get('institutions', 'InstitutionController@getInstitutionsList')->middleware('auth.jwt');
 
         Route::get('institutions/list', 'RegistrationController@institutionDropdown');
+        Route::get('institution-types/list', 'RegistrationController@institutionTypesDropdown');
+
+        Route::get('area-levels/list', 'RegistrationController@areaLevelsDropdown');
+        Route::get('areas/list', 'RegistrationController@areasDropdown');
+
         Route::get('institutions/areas/list', 'RegistrationController@administrativeAreasList');
 
 
