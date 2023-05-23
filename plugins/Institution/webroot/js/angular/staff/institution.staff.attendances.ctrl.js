@@ -317,6 +317,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
                     if (attendance.absence_type_id == 3) {
                         vm.allLateCount = vm.allLateCount + 1;
                         vm.globalLateCount = vm.allLateCount
+                       vm.allLateCount = vm.allLateCount + 1;
                     }
                 });
                 // $scope.$apply();
