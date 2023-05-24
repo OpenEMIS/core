@@ -19,6 +19,11 @@ class POCOR6670 extends AbstractMigration
         $this->execute('DROP TABLE IF EXISTS `zz_6670_staff_behaviours`');
         $this->execute('CREATE TABLE `zz_6670_staff_behaviours` LIKE `staff_behaviours`');
         $this->execute('INSERT INTO `zz_6670_staff_behaviours` SELECT * FROM `staff_behaviours`');
+        //workflow_models
+        $this->execute('DROP TABLE IF EXISTS `zz_6670_workflow_models`');
+        $this->execute('CREATE TABLE `zz_6670_workflow_models` LIKE `workflow_models`');
+        $this->execute('INSERT INTO `zz_6670_workflow_models` SELECT * FROM `workflow_models`');
+
 
         // Backup workflows table
         $this->execute('DROP TABLE IF EXISTS `zz_6670_workflows`');
@@ -223,6 +228,9 @@ class POCOR6670 extends AbstractMigration
         $this->execute('RENAME TABLE `zz_6670_workflow_steps` TO `workflow_steps`');
 
         $this->execute('DROP TABLE IF EXISTS `workflow_actions`');
-        $this->execute('RENAME TABLE `zz_6670_workflow_actions` TO `workflow_actions`');  
+        $this->execute('RENAME TABLE `zz_6670_workflow_actions` TO `workflow_actions`'); 
+        
+        $this->execute('DROP TABLE IF EXISTS `workflow_models`');
+        $this->execute('RENAME TABLE `zz_6670_workflow_models` TO `workflow_models`'); 
     }
 }
