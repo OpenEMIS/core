@@ -36,6 +36,7 @@ class FieldOptionComponent extends Component
         'Course' => ['className' => 'Institution.Course', 'parent' => 'Institution'],
         'ShiftOptions' => ['className' => 'Institution.ShiftOptions', 'parent' => 'Institution'],
         'TextbookConditions' => ['className' => 'Textbook.TextbookConditions', 'parent' => 'Institution'],
+        'TextbookDimensions' => ['className' => 'Textbook.TextbookDimensions', 'parent' => 'Institution'], //POCOR-7362
         'ReportCardCommentCodes' => ['className' => 'ReportCard.ReportCardCommentCodes', 'parent' => 'Institution'],
         'InstitutionCommitteeTypes' => ['className' => 'Institution.InstitutionCommitteeTypes', 'parent' => 'Institution'],
         'InstitutionAttachmentTypes' => ['className' => 'Institution.InstitutionAttachmentTypes', 'parent' => 'Institution'], //START:POCOR-5067

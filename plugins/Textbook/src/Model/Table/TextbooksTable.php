@@ -31,6 +31,8 @@ class TextbooksTable extends ControllerActionTable {
         $this->belongsTo('EducationGrades',     ['className' => 'Education.EducationGrades']);
         $this->belongsTo('EducationSubjects',   ['className' => 'Education.EducationSubjects']);
 
+        // $this->belongsTo('TextbookDimensions',   ['className' => 'Textbook.TextbookDimensions']); //POCOR-7362
+
         $this->hasMany('InstitutionTextbooks', ['className' => 'Institution.InstitutionTextbooks', 'foreignKey' => ['textbook_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallBack' => true]);
 
         $this->setDeleteStrategy('restrict');
@@ -488,6 +490,36 @@ class TextbooksTable extends ControllerActionTable {
         return $attr;
     }
 
+    public function onUpdateFieldTextbookDimensionsId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+
+            if ($action == 'add') {
+
+                // $textbookdimensions = TableRegistry::get('Textbook.TextbookDimensions');
+                // $dimension = $textbookdimensions->('90mm x 140mm');
+
+                //echo $dimension;
+                // echo "<pre>";
+                // print_r($dimension);
+               // exit;
+                
+
+            }
+        }
+
+        //return $attr;
+    }
+
+
+
+    // $result = $this->TextbookDimension->find('first', array(
+    //     'conditions' => array('TextbookDimension.name' => $name)
+    // ));
+
+    // return $result;
+
+
     public function setupFields(Entity $entity)
     {
         $this->field('academic_period_id', [
@@ -522,10 +554,19 @@ class TextbooksTable extends ControllerActionTable {
             'entity' => $entity
         ]);
 
+        // POCOR-7362 add textbook dimension
+
+        $this->field('textbook_dimensions_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
+
+        // POCOR-7362 ends
+
         $this->setFieldOrder([
             'academic_period_id', 'education_level_id', 'education_programme_id', 'education_grade_id', 'education_subject_id',
-            'code', 'title', 'author', 'publisher' , 'year_published', 'ISBN', 'expiry_date'
-        ]);
+            'code', 'title', 'author', 'publisher' , 'year_published', 'textbook_dimensions_id', 'ISBN', 'expiry_date'
+        ]); //POCOR-7362 added dimension only
     }
 
     public function getAcademicPeriodOptions($querystringPeriod)
