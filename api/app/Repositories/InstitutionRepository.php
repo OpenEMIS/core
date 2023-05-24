@@ -1331,24 +1331,57 @@ class InstitutionRepository extends Controller
                 return 0;
             }
 
-            $store['id'] = Str::uuid();
-            $store['comments'] = $data['comment'];
-            $store['academic_period_id'] = $data['academic_period_id'];
-            $store['report_card_id'] = $data['report_card_id'];
-            $store['student_id'] = $data['student_id'];
-            $store['institution_id'] = $institutionId;
-            $store['education_grade_id'] = $data['education_grade_id'];
-            $store['education_subject_id'] = $data['education_subject_id'];
-            if($data['report_card_comment_code_id']){
-                $store['report_card_comment_code_id'] = (int)$data['report_card_comment_code_id'];
-            }
-            $store['staff_id'] = $data['staff_id'];
-            $store['created_user_id'] = JWTAuth::user()->id;
-            $store['created'] = Carbon::now()->toDateTimeString();
-            
-            $insert = InstitutionStudentReportCardComment::insert($store);
+            $isExists = InstitutionStudentReportCardComment::where([
+                'report_card_id' => $data['report_card_id'],
+                'student_id' => $data['student_id'],
+                'institution_id' => $institutionId,
+                'academic_period_id' => $data['academic_period_id'],
+                'education_grade_id' => $data['education_grade_id'],
+                'education_subject_id' => $data['education_subject_id'],
+            ])
+            ->first();
 
-            return true;
+            if($isExists){
+                
+                $updateArr['comments'] = $data['comment'];
+                if($data['report_card_comment_code_id']){
+                    $updateArr['report_card_comment_code_id'] = (int)$data['report_card_comment_code_id'];
+                }
+                $updateArr['staff_id'] = $data['staff_id'];
+                $updateArr['modified_user_id'] = JWTAuth::user()->id;
+                $updateArr['modified'] = Carbon::now()->toDateTimeString();
+                
+                $update = InstitutionStudentReportCardComment::where([
+                    'report_card_id' => $data['report_card_id'],
+                    'student_id' => $data['student_id'],
+                    'institution_id' => $institutionId,
+                    'academic_period_id' => $data['academic_period_id'],
+                    'education_grade_id' => $data['education_grade_id'],
+                    'education_subject_id' => $data['education_subject_id'],
+                ])->update($updateArr);
+            } else {
+                
+                $store['id'] = Str::uuid();
+                $store['comments'] = $data['comment'];
+                $store['academic_period_id'] = $data['academic_period_id'];
+                $store['report_card_id'] = $data['report_card_id'];
+                $store['student_id'] = $data['student_id'];
+                $store['institution_id'] = $institutionId;
+                $store['education_grade_id'] = $data['education_grade_id'];
+                $store['education_subject_id'] = $data['education_subject_id'];
+                if($data['report_card_comment_code_id']){
+                    $store['report_card_comment_code_id'] = (int)$data['report_card_comment_code_id'];
+                }
+                $store['staff_id'] = $data['staff_id'];
+                $store['created_user_id'] = JWTAuth::user()->id;
+                $store['created'] = Carbon::now()->toDateTimeString();
+                
+                $insert = InstitutionStudentReportCardComment::insert($store);
+            }
+
+            
+
+            return 1;
             
         } catch (\Exception $e) {
             Log::error(
