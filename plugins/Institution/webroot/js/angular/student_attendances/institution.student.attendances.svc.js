@@ -752,7 +752,11 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             }, 200)
             var oldValue = data.institution_student_absences[dataKey];
             var newValue = eSelect.value;
-
+            //POCOR-5846 start
+            var div=document.querySelector('.ag-body-viewport');
+            var scrollbar_value=div.scrollTop;
+            localStorage.setItem("scrollbar-value", scrollbar_value);
+            //POCOR-5846 end
             var absenceTypeObj = absenceTypeList.find(obj => obj.id == newValue);
             console.log("absenceTypeObj", absenceTypeObj)
             // data.institution_student_absences.absence_type_id = newValue;
@@ -831,6 +835,11 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                     ],
                     force: true
                 };
+                //POCOR-5846 start
+                var scrollbar_value2=localStorage.getItem("scrollbar-value");
+                var div=document.querySelector('.ag-body-viewport');
+                div.scrollTop=scrollbar_value2;
+                //POCOR-5846 end
                 api.refreshCells(refreshParams);
                 UtilsSvc.isAppendSpinner(false, 'institution-student-attendances-table');
             });
