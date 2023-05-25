@@ -33,6 +33,8 @@ class TextbooksTable extends ControllerActionTable {
 
         // $this->belongsTo('TextbookDimensions',   ['className' => 'Textbook.TextbookDimensions']); //POCOR-7362
 
+        $this->hasMany('TextbookDimensions', ['className' => 'Textbook.TextbookDimensions', 'foreignKey' => ['textbook_id', 'textbook_dimension_id'], 'dependent' => true, 'cascadeCallBack' => true]); //POCOR-7362
+
         $this->hasMany('InstitutionTextbooks', ['className' => 'Institution.InstitutionTextbooks', 'foreignKey' => ['textbook_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallBack' => true]);
 
         $this->setDeleteStrategy('restrict');
@@ -169,6 +171,7 @@ class TextbooksTable extends ControllerActionTable {
         $this->field('author', ['visible' => false]);
         $this->field('year_published', ['visible' => false]);
         $this->field('expiry_date', ['visible' => false]);
+        $this->field('textbook_dimension_id', ['visible' => false]); //POCOR-7362
 
         $this->setFieldOrder([
             'code', 'title', 'ISBN', 'publisher'
@@ -490,11 +493,22 @@ class TextbooksTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldTextbookDimensionsId(Event $event, array $attr, $action, Request $request)
+    // POCOR-7362
+
+    public function onUpdateFieldTextbookDimensionId(Event $event, array $attr, $action, Request $request)
     {
-         $textbookdimensions = TableRegistry::get('TextbookDimensions');
+         $textbookdimensions = TableRegistry::get('textbook_dimensions');
+         if ($action == 'add' || $action == 'edit') {
+         $dimension = $textbookdimensions->find('list')->toArray();
+         
+         $attr['options'] = $dimension;
+         }
+
+         return $attr;
                
     }
+
+    // POCOR-7362 ends
 
     public function setupFields(Entity $entity)
     {
@@ -532,7 +546,7 @@ class TextbooksTable extends ControllerActionTable {
 
         // POCOR-7362 add textbook dimension
 
-        $this->field('textbook_dimensions_id', [
+        $this->field('textbook_dimension_id', [
             'type' => 'select',
             'entity' => $entity
         ]);
@@ -541,8 +555,8 @@ class TextbooksTable extends ControllerActionTable {
 
         $this->setFieldOrder([
             'academic_period_id', 'education_level_id', 'education_programme_id', 'education_grade_id', 'education_subject_id',
-            'code', 'title', 'author', 'publisher' , 'year_published', 'textbook_dimensions_id', 'ISBN', 'expiry_date'
-        ]); //POCOR-7362 added dimension only
+            'code', 'title', 'author', 'publisher' , 'year_published', 'textbook_dimension_id', 'ISBN', 'expiry_date'
+        ]);
     }
 
     public function getAcademicPeriodOptions($querystringPeriod)
