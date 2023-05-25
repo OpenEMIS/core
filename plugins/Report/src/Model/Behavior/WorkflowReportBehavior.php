@@ -81,8 +81,14 @@ class WorkflowReportBehavior extends Behavior
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     { 
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');//POCOR-7433
+        //POCOR-7433 start
+        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
         $requestData = json_decode($settings['process']['params']);
+        $requestData->report_start_date= date('Y-m-d h',strtotime($requestData->report_start_date));
+        $requestData->report_end_date= date('Y-m-d h',strtotime($requestData->report_end_date));
+        $settings['process']['params']=json_encode($requestData);
+        //POCOR-7433 end
+
         /*POCOR-6296 starts*/
         $academicPeriodId = $requestData->academic_period_id;
         $areaId = $requestData->area;
