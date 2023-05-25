@@ -1181,7 +1181,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                     ->where([ $roles->aliasField('security_user_id')  => $userId ])->first();
         $roleId = $userRole['security_role_id'];
         $workflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
-        $this->copyBuildSurveyRecords($controller);
+        // $this->copyBuildSurveyRecords($controller);//POCOR-7412
         $query
             ->select([
                 $this->aliasField('id'),
