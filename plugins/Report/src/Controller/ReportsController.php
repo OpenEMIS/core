@@ -191,7 +191,9 @@ class ReportsController extends AppController
             $options = [
                 'Report.PotentialStudentDuplicates' => __('Potential Student Duplicates'),
                 'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates'),
-                'Report.PotentialWrongBirthdates' => __('Potential Wrong Birthdates')
+                'Report.PotentialWrongBirthdates' => __('Potential Wrong Birthdates'),
+                'Report.EnrollmentOutliers' => __('Enrollment Outliers'),//POCOR-7211
+                'Report.AgeOutliers' => __('Age Outliers'),//POCOR-7211
             ];
         } elseif ($module == 'Audits') {
             $options = [
