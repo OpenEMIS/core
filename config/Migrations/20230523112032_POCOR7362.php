@@ -12,6 +12,11 @@ class POCOR7362 extends AbstractMigration
      */
     public function up()
     {
+
+        $this->execute('ALTER TABLE textbooks
+        ADD COLUMN textbook_dimension_id INT(11) DEFAULT 1 AFTER education_subject_id,
+        ADD CONSTRAINT fk_textbook_dimensions FOREIGN KEY (textbook_dimension_id) REFERENCES textbook_dimensions (id);');
+
         $this->execute("CREATE TABLE IF NOT EXISTS `textbook_dimensions` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
             `name` varchar(50) NOT NULL,
@@ -39,5 +44,6 @@ class POCOR7362 extends AbstractMigration
     public function down()
     {
         $this->execute('DROP TABLE IF EXISTS `textbook_dimensions`');
+        $this->execute('ALTER TABLE textbooks DROP COLUMN textbook_dimension_id');
     }
 }
