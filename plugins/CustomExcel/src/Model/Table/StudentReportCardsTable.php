@@ -800,13 +800,13 @@ class StudentReportCardsTable extends AppTable
                     $studentAbsencesIdss[$k] = $student->id;
                 }
                 
-                //echo "<pre>";print_r($studentAbsencesIdss);die;
-                $CasesRecordsData =$CasesRecords->find()->where([
-                    $CasesRecords->aliasField('record_id in') => $studentAbsencesIdss
-                ])
-                ->group(['institution_case_id'])
-                ->toArray();
-                echo "<pre>";print_r($CasesRecordsData);die;
+                if(!empty($studentAbsencesIdss)){
+                    $CasesRecordsData =$CasesRecords->find()->where([
+                        $CasesRecords->aliasField('record_id in') => $studentAbsencesIdss
+                    ])
+                    ->group(['institution_case_id'])
+                    ->toArray();
+
                 $CasesRecordsIds =[];
                 foreach($CasesRecordsData as $ki =>$CasesRecordsData1){
                     $CasesRecordsIds[$ki] = $CasesRecordsData1->institution_case_id;
@@ -845,6 +845,55 @@ class StudentReportCardsTable extends AppTable
                         $Cases->aliasField('id in') => $CasesRecordsIds,
                     ])
                     ->toArray();
+                    foreach($caseData as $ky => $caseData1){
+                        $comments = $Cases->find()->select([
+                            'institution_id'=>$Cases->aliasField('institution_id'),
+                            'id' =>$Cases->aliasField('id'),
+                            'case_number' =>$Cases->aliasField('case_number'),
+                            'title'=>$Cases->aliasField('title'),
+                            'comment'=>'WorkflowTransitions.comment'
+                        ])
+                        ->InnerJoin(
+                            ['WorkflowSteps' => 'workflow_steps'],
+                            [
+                                'WorkflowSteps.id ='. $Cases->aliasField('status_id'),
+                            ]
+                            )
+                        ->InnerJoin(
+                            ['Workflows' => 'workflows'],
+                            [
+                                'Workflows.id = WorkflowSteps.workflow_id'
+                            ]
+                            )
+                        ->InnerJoin(
+                            ['WorkflowModels' => 'workflow_models'],
+                            [
+                                'WorkflowModels.id = Workflows.workflow_model_id'
+                            ]
+                            )
+                        ->InnerJoin(
+                            ['WorkflowTransitions' => 'workflow_transitions'],
+                            [
+                                'WorkflowTransitions.workflow_model_id = WorkflowModels.id'
+                            ]
+                            )
+                        ->where([
+                            'institution_id' => $params['institution_id'],
+                            $Cases->aliasField('id') => $caseData1['id'],
+                        ])
+                        ->toArray();
+                        $comm='';
+                        foreach($comments as $kyu => $comment){
+                            $comm .= $comment->comment.",";
+                        }
+                        $comm1 = rtrim($comm,',');
+                        $caseData[$ky]['action_taken'] = $comm1;
+                    }	
+                }
+                
+               
+                
+
                 //POCOR-5191 :: End
 				
 			$entity = [
@@ -856,7 +905,6 @@ class StudentReportCardsTable extends AppTable
             foreach($caseData as $ky => $caseData1){
                 $entity[$ky] = $caseData1;
             }	
-            echo "<pre>";print_r($entity);die;
             return $entity;
         }
     }
