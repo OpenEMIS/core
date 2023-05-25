@@ -1044,17 +1044,17 @@ class InstitutionSurveysTable extends ControllerActionTable
             // check if the institution type matches. only the match type or all type will try go in to check insertion of records
             $filterTypeQuery = $SurveyFormsFilters
                 ->find()
-                ->leftJoin(['SurveyFormsFilters1' => 'survey_forms_filters'], [
-                        'SurveyFormsFilters1.survey_form_id = SurveyForms.id'
+                ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
+                        'SurveyFormsFilters.survey_form_id = SurveyForms.id'
                     ])
                 ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], [
-                        'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters1.id'
+                        'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'
                     ])
                 ->leftJoin(['SurveyFilterInstitutionProviders' => 'survey_filter_institution_providers'], [
-                        'SurveyFilterInstitutionProviders.survey_filter_id = SurveyFormsFilters1.id'
+                        'SurveyFilterInstitutionProviders.survey_filter_id = SurveyFormsFilters.id'
                     ])
                 ->leftJoin(['SurveyFilterAreas' => 'survey_filter_areas'], [
-                        'SurveyFilterAreas.survey_filter_id = SurveyFormsFilters1.id'
+                        'SurveyFilterAreas.survey_filter_id = SurveyFormsFilters.id'
                     ])
                 ->leftJoin(['Institutions1' => 'institutions'], [
                         'Institutions1.institution_type_id = SurveyFilterInstitutionTypes.institution_type_id'
@@ -1067,12 +1067,12 @@ class InstitutionSurveysTable extends ControllerActionTable
                     ])
                 ->where([
                     [$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId],
-                    // [
-                    //     'OR' => [
-                    //         [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
-                    //         [$SurveyFormsFilters->aliasField('survey_filter_id') => SurveyForms::ALL_CUSTOM_FILER]
-                    //     ]
-                    // ]
+                    [
+                        'OR' => [
+                            [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
+                            [$SurveyFormsFilters->aliasField('survey_filter_id') => SurveyForms::ALL_CUSTOM_FILER]
+                        ]
+                    ]
                 ]);
             
             $isInstitutionTypeMatch = $filterTypeQuery->count() > 0;
