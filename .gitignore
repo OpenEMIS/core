@@ -66,3 +66,6 @@ api/.DS_Store
 api/public/uploads
 api/.editorconfig
 api/.idea
+api/resources/views/generateOtp.blade.php
+api/resources/views/registrationSuccess.blade.php
+api/config/constants.php

@@ -1,3 +1,13 @@
+### [3.84.1] - 2023-05-25
+- Implemented: Develop a config items to specify the area level for Address Area and Birthplace Area
+- Bug Fixed: Institution > Attendance > Students: When marking attendance to absence or late, the page roll all the way to the top
+- Bug Fixed: Query : Query is frequently generated and is not optimised
+- Bug Fixed: Administration>Localisation>Translation : Russian translation that are missing
+- Bug Fixed: API: User should be able to order by descending
+- Bug Fixed: Institutions>Infrastructure>Overview: Export should only show owner's institution
+- Bug Fixed: Registration: Adding Institution Type and Area Level dropdown
+- Bug Fixed: API: Subject teacher api not working
+
 ### [3.84.0] - 2023-05-19
 - Implemented: Add Export button function - Institutions > Finances > Student Fees
 - Implemented: Develop Curriculars feature
