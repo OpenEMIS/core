@@ -17,7 +17,7 @@ use Cake\Validation\Validator;
 use Directory\Model\Table\DirectoriesTable as UserTypeOption;
 
 class AuditsTable extends AppTable
-{
+{ 
     public function initialize(array $config)
     {
         $this->table('security_users');
@@ -38,7 +38,9 @@ class AuditsTable extends AppTable
                             return in_array($feature, [
                                 'Report.AuditLogins',
                                 'Report.AuditInstitutions',
-                                'Report.AuditUsers'
+                                'Report.AuditUsers',
+                                'Report.AuditSecuritiesRolesPermissions', // POCOR-499
+                                'Report.AuditSecuritiesGroupUserRoles' // POCOR-499
                             ]);         
                         }
                         return true;
@@ -83,6 +85,21 @@ class AuditsTable extends AppTable
                     $fieldsOrder[] = 'report_end_date';
                     $fieldsOrder[] = 'format';
                     break;
+                // Start POCOR-499
+                case 'Report.AuditSecuritiesRolesPermissions': 
+                    // $fieldsOrder[] = 'user_type';
+                    $fieldsOrder[] = 'report_start_date';
+                    $fieldsOrder[] = 'report_end_date';
+                    $fieldsOrder[] = 'format';
+                    break;
+                case 'Report.AuditSecuritiesGroupUserRoles': 
+                    // $fieldsOrder[] = 'user_type';
+                    $fieldsOrder[] = 'report_start_date';
+                    $fieldsOrder[] = 'report_end_date';
+                    $fieldsOrder[] = 'format';
+                    break;
+
+                // End POCOR-499
                 default:
                     break;
             }
@@ -164,7 +181,8 @@ class AuditsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.AuditUsers', 'Report.AuditLogins', 'Report.AuditInstitutions'])) {
+            // Start POCOR-499
+            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles', 'Report.AuditUsers', 'Report.AuditLogins', 'Report.AuditInstitutions'])) {
                 $attr['type'] = 'date';
             }
             return $attr;
@@ -175,7 +193,8 @@ class AuditsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature, ['Report.AuditUsers', 'Report.AuditLogins', 'Report.AuditInstitutions'])) {
+            // Start POCOR-499
+            if (in_array($feature, ['Report.AuditSecuritiesRolesPermissions', 'Report.AuditSecuritiesGroupUserRoles','Report.AuditUsers', 'Report.AuditLogins', 'Report.AuditInstitutions'])) {
                 $attr['type'] = 'date';
                 $attr['value'] = Time::now();
             }
