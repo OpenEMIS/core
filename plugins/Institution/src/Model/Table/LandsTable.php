@@ -1135,7 +1135,18 @@ class LandsTable extends ControllerActionTable
             ->toArray();
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
+        //POCOR-7423 start
+        $conditions=[];
+        $ownerInstitutionIds = $this->getOwnerInstitutionId();
 
+        if (!empty($ownerInstitutionIds)) {
+            $conditions[$this->aliasField('institution_id IN ')] = $ownerInstitutionIds;
+        }
+        else
+        {
+            $conditions[$this->aliasField('institution_id ')] =$institutionId;
+        }
+        //POCOR-7423 end
         foreach($infrastructureLevelsData as $key => $val) {
             $infraType = $val->name .'s';
             $sheets[] = [
@@ -1147,7 +1158,7 @@ class LandsTable extends ControllerActionTable
                 'query' => $this
                     ->find()
                     ->where([
-                        $this->aliasField('institution_id') => $institutionId,
+                        $conditions,//POCOR-7433
                     ]),
                 'orientation' => 'landscape'
             ];
@@ -1442,12 +1453,19 @@ class LandsTable extends ControllerActionTable
         $landType = $sheetData['institution_land_type'];
 
         $conditions = [];
-
+        $ownerInstitutionIds = $this->getOwnerInstitutionId();//POCOR-7423
+        
         if ($landType->name == 'Land') {
-            if (!empty($institutionId)) {
+            //POCOR-7423 start
+            if (!empty($ownerInstitutionIds)) {
+                $conditions[$this->aliasField('institution_id IN ')] = $ownerInstitutionIds;
+                $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
+            }
+            else if (!empty($institutionId)) {
                 $conditions[$this->aliasField('institution_id')] = $institutionId;
                 $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
             }
+           //POCOR-7423 end
             $query
                 ->select([
                     'land_infrastructure_code'=>$this->aliasField('code'),
@@ -1511,12 +1529,18 @@ class LandsTable extends ControllerActionTable
             if($landType->name == 'Building') { $level = "Buildings"; $type ='building';}
             if($landType->name == 'Floor') { $level = "Floors"; $type ='floor';}
             if($landType->name == 'Room') { $level = "Rooms"; $type ='room'; }
-            if (!empty($institutionId)) {
+            //POCOR-7423 start
+            if (!empty($ownerInstitutionIds)) {
+                $conditions['Institution'.$level.'.'.'institution_id IN '] = $ownerInstitutionIds;
+                $conditions['Institution'.$level.'.'.'academic_period_id'] = $academicPeriodId;
+                $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
+            }
+            else if(!empty($institutionId)) {
                 $conditions['Institution'.$level.'.'.'institution_id'] = $institutionId;
                 $conditions['Institution'.$level.'.'.'academic_period_id'] = $academicPeriodId;
                 $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
             }
-
+            //POCOR-7423 end
             //POCOR-6263 start
             if($landType->name == 'Room') { 
             $query
