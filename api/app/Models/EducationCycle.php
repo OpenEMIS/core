@@ -16,4 +16,10 @@ class EducationCycle extends Model
     {
         return $this->hasMany(EducationProgramme::class, 'education_cycle_id', 'id');
     }
+
+
+    public function educationLevel()
+    {
+        return $this->belongsTo(EducationLevel::class, 'education_level_id', 'id');
+    }
 }
