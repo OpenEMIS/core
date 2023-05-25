@@ -492,33 +492,9 @@ class TextbooksTable extends ControllerActionTable {
 
     public function onUpdateFieldTextbookDimensionsId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
-
-            if ($action == 'add') {
-
-                // $textbookdimensions = TableRegistry::get('Textbook.TextbookDimensions');
-                // $dimension = $textbookdimensions->('90mm x 140mm');
-
-                //echo $dimension;
-                // echo "<pre>";
-                // print_r($dimension);
-               // exit;
-                
-
-            }
-        }
-
-        //return $attr;
+         $textbookdimensions = TableRegistry::get('TextbookDimensions');
+               
     }
-
-
-
-    // $result = $this->TextbookDimension->find('first', array(
-    //     'conditions' => array('TextbookDimension.name' => $name)
-    // ));
-
-    // return $result;
-
 
     public function setupFields(Entity $entity)
     {
