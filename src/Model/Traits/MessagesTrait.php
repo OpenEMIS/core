@@ -84,7 +84,7 @@ trait MessagesTrait
                 'failed' => 'The record is not deleted due to errors encountered.',
                 'label' => 'Delete',
             ],
-            'deleteTransfer' =>[
+            'deleteTransfer' => [
                 'restrictDelete' => 'The record cannot be deleted as there are still records associated with it.'
             ],
             'view' => [
@@ -129,7 +129,7 @@ trait MessagesTrait
                     'telephone' => 'Telephone cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
                     'fax' => 'Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
                     'both' => 'Telephone & Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution'
-                ]
+            ]
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
@@ -880,7 +880,7 @@ trait MessagesTrait
             'dateNotWithinPeriod' => 'Date should be within %s and %s',
             'endDate' => [
                     'compareWithStartDate' => 'End Date should not be earlier than Start Date'
-                ]
+            ]
         ],
         'StaffTransfers' => [
             'restrictStaffTransfer' => 'Transfer is not allowed between different institution type or institution provider.'
@@ -2296,7 +2296,7 @@ trait MessagesTrait
             'StaffPositionTitles' => [
                'position_grades' => [
                     'ruleCheckPositionGrades' => 'You are not allowed to remove the following in-use grades: %s',
-                ]
+               ]
             ]
         ],
         'Configuration' => [
@@ -2573,7 +2573,7 @@ trait MessagesTrait
                         return false;
                     }
                     $message = '[Message Not Found]';
-                    Log::write('error', 'MessagesTrait Message Not Found: '. $code);
+                    Log::write('error', 'MessagesTrait Message Not Found: '. $code . ', please add it.');
                     break;
                 }
             }

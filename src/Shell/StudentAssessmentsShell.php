@@ -8,6 +8,7 @@ use Cake\Console\Shell;
 //use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
+
 //use Cake\I18n\Date;
 //use Cake\Utility\Security;
 //use PDOException;
@@ -68,7 +69,7 @@ class StudentAssessmentsShell extends Shell
     function moveRecordsToArchive($academicPeriodId)
     {
         //POCOR-7339-HINDOL
-        $records_count = 0;
+
         $sourceTable = TableRegistry::get('Institution.AssessmentItemResults');
         $targetTableExists = $this->hasArchiveTable($sourceTable);
         if (!$targetTableExists) {
@@ -79,6 +80,8 @@ class StudentAssessmentsShell extends Shell
             // Start a database transaction
             $whereCondition = ['academic_period_id' => $academicPeriodId];
             $records_count = $this->moveRecords($sourceTable, $targetTable, $whereCondition);
+            $this->out("I have $records_count in moveRecordsToArchive");
+            return $records_count;
         } catch (\Exception $e) {
             // An error occurred, rollback the transaction
             $this->out($e->getMessage());
@@ -87,7 +90,7 @@ class StudentAssessmentsShell extends Shell
         return $records_count;
     }
 
-      /**
+    /**
      * @param $academicPeriodId
      * @param $mypid
      * @return array
@@ -225,13 +228,15 @@ class StudentAssessmentsShell extends Shell
     }
 
 
-    public function moveRecords($sourceTable, $targetTable, $whereCondition) {
+    public function moveRecords($sourceTable, $targetTable, $whereCondition)
+    {
+        $affectedRecordsCount = 0;
         $connection = ConnectionManager::get('default');
-        $connection->transactional(function ($connection) use ($sourceTable, $targetTable, $whereCondition) {
+        $connection->transactional(function ($connection) use ($sourceTable, $targetTable, $whereCondition, &$affectedRecordsCount) {
             try {
                 $sourceQuery = $sourceTable->find()->where($whereCondition);
                 $sql = $sourceQuery->sql();
-                $this->out($sql);
+//                $this->out($sql);
                 $count = $sourceQuery->count();
                 $this->out("I found $count records to copy");
                 $matchingRecords = $sourceQuery->all();
@@ -243,16 +248,20 @@ class StudentAssessmentsShell extends Shell
                 $newCount = $targetTable->find()->where($whereCondition)->count();
                 $this->out("I found $newCount records copied");
                 if ($count === $newCount) {
+                    $this->out("OK $newCount copied");
                     $sourceTable->deleteAll($whereCondition);
-                    return $count;
+                    $affectedRecordsCount = $newCount;
+                    return true;
                 } else {
+                    $this->out("$count != $newCount");
                     return false;
                 }
             } catch (\Exception $e) {
+                $this->out('I have exception: ' . $e->getMessage());
                 return false;
             }
         });
 
-        return false;
+        return $affectedRecordsCount;
     }
 }

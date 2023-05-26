@@ -208,7 +208,8 @@ class InstitutionsController extends AppController
             'StudentArchive'  => ['className' => 'Institution.StudentArchive', 'actions' => ['add']],
             'AssessmentsArchive'  => ['className' => 'Institution.AssessmentsArchive', 'actions' => ['index']],
             'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
-            'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
+// POCOR-7339-HINDOL redundancy
+//            'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
             'InstitutionStatistics'              => ['className' => 'Institution.InstitutionStatistics', 'actions' => ['index', 'add']],
             'InstitutionStandards'              => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
             'ImportStudentCurriculars'  => ['className' => 'Institution.ImportStudentCurriculars', 'actions' => ['add']],//POCOR-6673
@@ -335,6 +336,11 @@ class InstitutionsController extends AppController
     public function Assessments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAssessments']);
+    }
+    //POCOR-7339-HINDOL
+    public function AssessmentArchives()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAssessmentArchives']);
     }
     public function AssessmentResults()
     {
@@ -582,35 +588,37 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTransportProviders']);
     }
 
-    // public function AssessmentsArchive()
-    // {
-    //     if (!empty($this->request->param('institutionId'))) {
-    //         $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
-    //     } else {
-    //         $session = $this->request->session();
-    //         $institutionId = $session->read('Institution.Institutions.id');
-    //     }
-
-    //     $backUrl = [
-    //         'plugin' => 'Institution',
-    //         'controller' => 'Institutions',
-    //         'action' => 'Assessments',
-    //         'institutionId' => $institutionId,
-    //         'index',
-    //         $this->ControllerAction->paramsEncode(['id' => $timetableId])
-    //     ];
-    //     $this->set('backUrl', Router::url($backUrl));
-
-    //     $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
-    //         $this->Navigation->addCrumb($crumbTitle);
-    //     $this->set('institution_id', $institutionId);
-    //     $this->set('ngController', 'InstitutionAssessmentsArchiveCtrl as $ctrl');
-    // }
+// POCOR-7339-HINDOL this page is missing
+//     public function AssessmentsArchive()
+//     {
+//         if (!empty($this->request->param('institutionId'))) {
+//             $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+//         } else {
+//             $session = $this->request->session();
+//             $institutionId = $session->read('Institution.Institutions.id');
+//         }
+//
+//         $backUrl = [
+//             'plugin' => 'Institution',
+//             'controller' => 'Institutions',
+//             'action' => 'Assessments',
+//             'institutionId' => $institutionId,
+//             'index',
+//             $this->ControllerAction->paramsEncode(['id' => $timetableId])
+//         ];
+//         $this->set('backUrl', Router::url($backUrl));
+//
+//         $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+//             $this->Navigation->addCrumb($crumbTitle);
+//         $this->set('institution_id', $institutionId);
+//         $this->set('ngController', 'InstitutionAssessmentsArchiveCtrl as $ctrl');
+//     }
 
     public function Distribution()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionDistributions']);
     }
+
     public function ReportCardStatuses()
     {
         $classId = $this->request->query['class_id'];
@@ -650,14 +658,18 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentsReportCards']);
     }
+
     public function InstitutionReportCards()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionReportCards']);
-    }//POCOR-6822 Starts
+    }
+
+    //POCOR-6822 Starts
     public function ClassReportCards()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ClassProfiles']);
     }//POCOR-6822 Ends
+
     public function StaffTransferIn()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferIn']);
@@ -3682,7 +3694,9 @@ class InstitutionsController extends AppController
             'Behaviours' => ['text' => __('Behaviours')],
             'Outcomes' => ['text' => __('Outcomes')],
             'Competencies' => ['text' => __('Competencies')],
-            'Assesments' => ['text' => __('Assessments')],
+// POCOR-7339-HINDOL typo
+//            'Assesments' => ['text' => __('Assessments')],
+            'Assessments' => ['text' => __('Assessments')],
             'ExaminationResults' => ['text' => __('Examinations')],
             'ReportCards' => ['text' => __('Report Cards')],
             'Awards' => ['text' => __('Awards')],
