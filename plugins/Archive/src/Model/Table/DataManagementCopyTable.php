@@ -90,7 +90,7 @@ class DataManagementCopyTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
         $this->field('from_academic_period', ['type' => 'select', 'onChangeReload'=>true, 'options' => $academicPeriodOptions]);
         $this->field('to_academic_period', ['type' => 'select', 'options' => $academicPeriodOptions]);
-        $this->field('features', ['type' => 'select', 'options' => $this->getFeatureOptions()]);
+        $this->field('features', ['type' => 'select', 'onChangeReload'=>true,'options' => $this->getFeatureOptions()]);
         $this->setFieldOrder(['from_academic_period','to_academic_period','features']);
 
     }
@@ -302,6 +302,7 @@ class DataManagementCopyTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $data){
         ini_set('memory_limit', '2G');
+        //This code is for update the corret academic period in institution_grade table [Start]
         $connection = ConnectionManager::get('default');
         $EducationSystems = TableRegistry::get('Education.EducationSystems');
         $EducationLevels = TableRegistry::get('Education.EducationLevels');
@@ -313,11 +314,9 @@ class DataManagementCopyTable extends ControllerActionTable
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $institution_program_grade_subjects = TableRegistry::get('institution_program_grade_subjects');
         $currentData = "'".date('Y-m-d H:i:s')."'";
-
         $from_academic_period = $entity->from_academic_period;
         $to_academic_period = $entity->to_academic_period;
-
-        if($entity->features == "Institution Programmes, Grades and Subjects"){
+        if($entity->features == "Institution Programmes, Grades and Subjects" || $entity->features == "Institution programmes and Grade"){
             $InstitutionGradesdata = $InstitutionGrades
                 ->find('all')
                 ->toArray();
@@ -506,8 +505,6 @@ class DataManagementCopyTable extends ControllerActionTable
                 ->where(['academic_period_id ' => $entity->to_academic_period])
                 ->toArray();
 
-
-
             $institutions = $Institutions->find('all')->toArray();
             $InsIds = [];
             foreach($InstitutionLandsData as $ke => $institutionLand){
@@ -686,9 +683,37 @@ class DataManagementCopyTable extends ControllerActionTable
             
             //**************************POCOR-7326 End************************************** */
 
-
             $this->triggerCopyShell('Infrastructure', $copyFrom, $copyTo);
         }
+
+        //This code is for update the corret academic period in institution_grade table [END]
+        }
+        if($entity->features == "Institution Performance Outcomes"){
+            $this->log('=======>Before triggerPerformanceOutcomesShell', 'debug');
+            $this->triggePerformanceOutcomesShell('PerformanceOutcomes',$entity->from_academic_period, $entity->to_academic_period);
+            $this->log(' <<<<<<<<<<======== After triggerPerformanceOutcomesShell', 'debug');
+        }
+        
+    }
+
+    /*
+    * Function to copy outcome_criterias and outcome_templates to new academic period
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return boolean
+    * @ticket POCOR-6425
+    */
+    
+    public function triggePerformanceOutcomesShell($shellName,$from_academic_period = null, $to_academic_period = null)
+    {
+        $args = '';
+        $args .= !is_null($from_academic_period) ? ' '.$from_academic_period : '';
+        $args .= !is_null($to_academic_period) ? ' '.$to_academic_period : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
     }
 
      /*
@@ -714,6 +739,8 @@ class DataManagementCopyTable extends ControllerActionTable
             'Institution Programmes, Grades and Subjects' => __('Institution Programmes, Grades and Subjects'),
             'Shifts' => __('Shifts'),
             'Infrastructure' => __('Infrastructure')
+            'Institution Performance Outcomes' => __('Performance Outcomes'), //POCOR-6425
+            'Institution programmes and Grade' => __('Institution programmes and Grade'),
         ];
         return $options;
     }
