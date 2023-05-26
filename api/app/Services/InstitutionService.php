@@ -996,12 +996,27 @@ class InstitutionService extends Controller
     }
 
 
-    public function getStudentAssessmentItemResult($request)
+    public function getStudentAssessmentItemResult($request, $institutionId, $studentId)
     {
         try {
-            $data = $this->institutionRepository->getStudentAssessmentItemResult($request);
-            
-            return $data;
+            $lists = $this->institutionRepository->getStudentAssessmentItemResult($request, $institutionId, $studentId);
+            $resp = [];
+
+            if(count($lists) > 0){
+                foreach($lists as $k => $l){
+                    $resp[$k]['academic_period_id'] = $l['academic_period_id'];
+                    $resp[$k]['assessment_grading_option_id'] = $l['assessment_grading_option_id'];
+                    $resp[$k]['assessment_id'] = $l['assessment_id'];
+                    $resp[$k]['assessment_period_id'] = $l['assessment_period_id'];
+                    $resp[$k]['education_grade_id'] = $l['education_grade_id'];
+                    $resp[$k]['education_subject_id'] = $l['education_subject_id'];
+                    $resp[$k]['institution_id'] = $l['institution_id'];
+                    $resp[$k]['marks'] = $l['marks'];
+                    $resp[$k]['student_id'] = $l['student_id'];
+                }
+            }
+
+            return $resp;
             
         } catch (\Exception $e) {
             Log::error(

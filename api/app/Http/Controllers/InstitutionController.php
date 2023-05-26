@@ -822,10 +822,10 @@ class InstitutionController extends Controller
 
 
 
-    public function getStudentAssessmentItemResult(Request $request)
+    public function getStudentAssessmentItemResult(Request $request, $institutionId, $studentId)
     {
         try {
-            $data = $this->institutionService->getStudentAssessmentItemResult($request);
+            $data = $this->institutionService->getStudentAssessmentItemResult($request, $institutionId, $studentId);
             
             return $this->sendSuccessResponse("Student Assessment Details Found", $data);
             
