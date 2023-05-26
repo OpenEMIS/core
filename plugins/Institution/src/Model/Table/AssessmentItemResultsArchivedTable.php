@@ -134,9 +134,13 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
             [
                 $InstitutionSubjectStudents->aliasField('student_status_id = ') . $StudentStatuses->aliasField('id')
             ]
-        )//POCOR-6468 starts
+        )
+            //POCOR-6468 starts
+            //POCOR-7339-HINDOL starts
+                //Where is not applied becouse wrong data is send from svc
         ->where([
-            $this->aliasField('education_subject_id') => $educationSubjectId
+            $this->aliasField('education_subject_id') => $educationSubjectId,
+            $this->aliasField('institution_id') => $institutionId,
         ])
         ->group([
             $InstitutionSubjectStudents->aliasField('student_id'),
