@@ -62,15 +62,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         $this->field('class');
         $this->field('name');
 
-        $this->setFieldOrder(['institution_id',
-            'academic_period_id',
-            'assessment_id',
-            'assessment_period_id',
-            'class',
-            'education_subject_id',
-            'openemis_no',
-            'name',
-            'marks']);
+        $this->setFieldOrder(['institution_id', 'academic_period_id', 'assessment_id', 'assessment_period_id','class','education_subject_id','openemis_no','name', 'marks']);
         $toolbarButtons = $extra['toolbarButtons'];
         // $extra['toolbarButtons']['back'] = [
         //     'url' => [
@@ -343,7 +335,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
                 'class' => $InstitutionClasses->aliasField('name'),
                 'name' => $ArchivedUser->find()->func()->concat([
                     'Users.first_name' => 'literal',
-                    "asdfdsa",
+                    " ",
                     'Users.last_name' => 'literal'
                 ]),
                 'openemis_no' => $ArchivedUser->aliasField('openemis_no')
