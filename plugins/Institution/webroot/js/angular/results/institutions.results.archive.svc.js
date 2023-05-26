@@ -1186,7 +1186,8 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
                                 
                                 studentResults = {
                                     openemis_id: subjectStudent._matchingData.Users.openemis_no,
-                                    name: subjectStudent._matchingData.Users.first_name,
+                                    //POCOR-7339-HINDOL FULL NAME
+                                    name: subjectStudent._matchingData.Users.name,
                                     student_id: currentStudentId,
                                     student_status_id: subjectStudent.StudentStatuses.student_status_id,
                                     student_status_name: subjectStudent.StudentStatuses.name,
