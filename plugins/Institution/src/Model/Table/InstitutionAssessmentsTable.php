@@ -196,7 +196,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                     'controller' => 'Institution',
                     'action' => 'AssessmentArchives',
                     'icon' => '<i class="fa fa-folder"></i>',
-                    'title' => __('Archive (try)'),
+                    'title' => __('Archive'),
                     'queryString' => $archive_query_string
                 ]
             ];
