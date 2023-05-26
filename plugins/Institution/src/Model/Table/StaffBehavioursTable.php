@@ -598,7 +598,7 @@ class StaffBehavioursTable extends ControllerActionTable
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $workflowModel = 'Institutions > Behaviour > Students';
+            $workflowModel = 'Institutions > Behaviour > Staff';
             $workflowModelsTable = TableRegistry::get('workflow_models');
             $workflowStepsTable = TableRegistry::get('workflow_steps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
