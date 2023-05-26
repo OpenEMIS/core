@@ -1,4 +1,5 @@
 <?php
+// POCOR-7339-HINDOL
 namespace Institution\Model\Table;
 
 use ArrayObject;
@@ -9,7 +10,7 @@ use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
 
-class InstitutionAssessmentsTable extends ControllerActionTable {
+class InstitutionAssessmentArchivesTable extends ControllerActionTable {
     public function initialize(array $config) {
         $this->table('institution_classes');
         parent::initialize($config);
@@ -30,7 +31,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             'orientation' => 'landscape'
         ]);
 
-        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportAssessmentItemResults']);
+//        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportAssessmentItemResults']);
 
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -185,19 +186,13 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                     // 'title' => __('Archive'),
                     // 'queryString' => $archive_query_string
 
-// POCOR-7339-HINDOL temp down
+
 //                    'plugin' => 'Institutions',
 //                    'controller' => 'Institution',
 //                    'action' => 'AssessmentItemResultsArchived',
 //                    'icon' => '<i class="fa fa-folder"></i>',
 //                    'title' => __('Archive'),
 //                    'queryString' => $archive_query_string
-                    'plugin' => 'Institutions',
-                    'controller' => 'Institution',
-                    'action' => 'AssessmentArchives',
-                    'icon' => '<i class="fa fa-folder"></i>',
-                    'title' => __('Archive (try)'),
-                    'queryString' => $archive_query_string
                 ]
             ];
     
@@ -226,6 +221,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $Assessments = TableRegistry::get('Assessment.Assessments');
+        $AssessmentItemResultsArchived = TableRegistry::get('Institution.AssessmentItemResultsArchived');
+
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 
@@ -249,6 +246,13 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                 [
                     $Assessments->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $Assessments->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
+                ]
+            )
+            // POCOR-7339-HINDOL only archived will be shown
+            ->innerJoin(
+                [$AssessmentItemResultsArchived->alias() => $AssessmentItemResultsArchived->table()],
+                [
+                    $AssessmentItemResultsArchived->aliasField('assessment_id = ') . $Assessments->aliasField('id'),
                 ]
             )
             ->innerJoin(
@@ -345,8 +349,9 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         }
         $selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
         $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-            'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noAssessments')),
-            'callable' => function($id) use ($Classes, $ClassGrades, $Assessments, $institutionId) {
+// POCOR-7339-HINDOL TO ADD            'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noAssessments')),
+            'message' => '{{label}} - No Archived Assessments ',
+            'callable' => function($id) use ($Classes, $ClassGrades, $Assessments, $institutionId, $AssessmentItemResultsArchived) {
                 return $Classes
                     ->find()
                     ->innerJoin(
@@ -360,6 +365,12 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                         [
                             $Assessments->aliasField('academic_period_id = ') . $Classes->aliasField('academic_period_id'),
                             $Assessments->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
+                        ]
+                    )
+                    ->innerJoin(
+                        [$AssessmentItemResultsArchived->alias() => $AssessmentItemResultsArchived->table()],
+                        [
+                            $AssessmentItemResultsArchived->aliasField('assessment_id = ') . $Assessments->aliasField('id'),
                         ]
                     )
                     ->where([
@@ -445,7 +456,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             $url = [
                 'plugin' => $this->controller->plugin,
                 'controller' => $this->controller->name,
-                'action' => 'Results'
+                'action' => 'AssessmentItemResultsArchived'
             ];
 
             $buttons['view']['url'] = $this->setQueryString($url, [

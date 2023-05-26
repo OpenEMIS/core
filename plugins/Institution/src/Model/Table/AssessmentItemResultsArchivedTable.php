@@ -141,6 +141,9 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         ->where([
             $this->aliasField('education_subject_id') => $educationSubjectId,
             $this->aliasField('institution_id') => $institutionId,
+            $this->aliasField('institution_classes_id') => $classId,
+            $this->aliasField('academic_period_id') => $periodId,
+            $this->aliasField('assessment_id') => $assessmentId,
         ])
         ->group([
             $InstitutionSubjectStudents->aliasField('student_id'),
