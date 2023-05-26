@@ -24,7 +24,7 @@ $this->start('toolbar');
         $backUrl = [
             'plugin' => $this->request->params['plugin'],
             'controller' => $this->request->params['controller'],
-            'action' => 'Assessments',
+            'action' => 'AssessmentArchives', //POCOR-7339-HINDOL Back to assesments archives
             'index'
         ];
         echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false, 'ng-show' => 'action == \'view\'']);
