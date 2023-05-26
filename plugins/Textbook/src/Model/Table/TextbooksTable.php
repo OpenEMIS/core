@@ -590,4 +590,13 @@ class TextbooksTable extends ControllerActionTable {
                 ->order([$this->aliasField('code') => 'ASC'])
                 ->toArray();
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'textbook_dimension_id') {
+            return __('Dimension');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

@@ -237,10 +237,12 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->field('comment', ['visible' => false]);
         $this->field('education_subject_id', ['visible' => false]);
         $this->field('education_grade_id', ['visible' => false]);
+        $this->field('student_status', ['visible' => false]);
+        $this->field('openemis_no');
         $this->field('student_status');
 
         $this->setFieldOrder([
-            'academic_period_id', 'code', 'textbook_id', 'textbook_condition_id', 'textbook_status_id', 'student_id', 'student_status'
+            'academic_period_id', 'code', 'textbook_id', 'textbook_condition_id', 'textbook_status_id', 'openemis_no', 'student_id'
         ]);
 
 
@@ -1218,5 +1220,21 @@ class InstitutionTextbooksTable extends ControllerActionTable
         }
 
         return compact('periodOptions', 'selectedPeriod');
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'code':
+                return __('Textbook ID');
+            case 'textbook_condition_id':
+                return __('Condition');
+            case 'textbook_status_id':
+                return __('Status');
+            case 'student_id':
+                return __('Name');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }
