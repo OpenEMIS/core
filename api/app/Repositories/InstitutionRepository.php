@@ -33,6 +33,7 @@ use App\Models\InstitutionCompetencyResults;
 use App\Models\InstitutionCompetencyItemComments;
 use App\Models\InstitutionCompetencyPeriodComments;
 use App\Models\StaffTypes;
+use App\Models\AssessmentItemResults;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -1708,14 +1709,14 @@ class InstitutionRepository extends Controller
     }
 
 
-    public function getStudentAssessmentItemResult($request)
+    public function getStudentAssessmentItemResult($request, $institutionId, $studentId)
     {
         try {
             $params = $request->all();
-            dd($params);
-            $data = $this->institutionRepository->getStudentAssessmentItemResult($request);
             
-            return $data;
+            $lists = AssessmentItemResults::where('institution_id', $institutionId)->where('student_id', $studentId)->get()->toArray();
+
+            return $lists;
             
         } catch (\Exception $e) {
             Log::error(
