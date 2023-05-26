@@ -1706,5 +1706,26 @@ class InstitutionRepository extends Controller
             return $this->sendErrorResponse('Failed to add competency result.');
         }
     }
+
+
+    public function getStudentAssessmentItemResult($request)
+    {
+        try {
+            $params = $request->all();
+            dd($params);
+            $data = $this->institutionRepository->getStudentAssessmentItemResult($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student assessment data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get student assessment data.');
+        }
+    }
+
 }
 

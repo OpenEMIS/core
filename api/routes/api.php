@@ -157,6 +157,9 @@ Route::group(
         Route::post('institutions/students/competencies/comments', 'InstitutionController@addCompetencyComments');
 
         Route::post('institutions/students/competencies/periods/comments', 'InstitutionController@addCompetencyPeriodComments');
+
+
+        Route::get('institutions/{institutionId}/students/{studentId}/assessment-item-results', 'InstitutionController@getStudentAssessmentItemResult');
     }
 );
 

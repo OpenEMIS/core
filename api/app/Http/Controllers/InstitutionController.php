@@ -819,4 +819,23 @@ class InstitutionController extends Controller
             return $this->sendErrorResponse('Failed to add competency comments.');
         }
     }
+
+
+
+    public function getStudentAssessmentItemResult(Request $request)
+    {
+        try {
+            $data = $this->institutionService->getStudentAssessmentItemResult($request);
+            
+            return $this->sendSuccessResponse("Student Assessment Details Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student assessment data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get student assessment data.');
+        }
+    }
 }
