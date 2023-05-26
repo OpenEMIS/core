@@ -49,7 +49,7 @@ class FieldOptionComponent extends Component
         'GuidanceTypes' => ['className' => 'Student.GuidanceTypes', 'parent' => 'Student'],
         'VisitPurposeTypes' => ['className' => 'Student.StudentVisitPurposeTypes', 'parent' => 'Student'],
         'StudentAttachmentTypes' => ['className' => 'Student.StudentAttachmentTypes', 'parent' => 'Student'], //START:POCOR-5067
-
+        'StudentBehaviourClassifications' => ['className' => 'Student.StudentBehaviourClassifications', 'parent' => 'Student'],//POCOR-7223
     // Meals    
         'MealTypes' => ['className' => 'Meal.MealType', 'parent' => 'Meals'],
         'MealTargets' => ['className' => 'Meal.MealTarget', 'parent' => 'Meals'],
