@@ -14,7 +14,6 @@ use Cake\Utility\Security;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\HtmlTrait;
-
 use Cake\Utility\Text;
 
 class InstitutionTextbooksTable extends ControllerActionTable
@@ -238,11 +237,10 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->field('education_subject_id', ['visible' => false]);
         $this->field('education_grade_id', ['visible' => false]);
         $this->field('student_status', ['visible' => false]);
-        $this->field('openemis_no');
         $this->field('student_status');
 
         $this->setFieldOrder([
-            'academic_period_id', 'code', 'textbook_id', 'textbook_condition_id', 'textbook_status_id', 'openemis_no', 'student_id'
+            'academic_period_id', 'code', 'textbook_id', 'textbook_condition_id', 'textbook_status_id', 'student_id'
         ]);
 
 
@@ -454,6 +452,10 @@ class InstitutionTextbooksTable extends ControllerActionTable
                 ->toArray();
             $textbookId = $entity->textbook_id;
             $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudentBySubject($entity->academic_period_id, $entity->institution_class_id, $entity->education_subject_id);
+
+            $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId); //POCOR-7362
+            $studentOptions = $studentOptions + $staffOptions; //POCOR-7362
+            
             $this->studentOptions = $studentOptions;
             $studentOptions = array_diff_key($studentOptions, $textbookStudents);
             $textbooksStudents = is_array($request->data($this->aliasField('textbooks_students'))) ? array_column($request->data($this->aliasField('textbooks_students')), 'student_id') : [];
@@ -461,7 +463,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
             $this->availableStudent = $studentOptions; //to pass remaining students
         }
         if (!empty($studentOptions)) {
-            $studentOptions = [null => $this->getMessage('Users.select_student'), 'all' => $this->getMessage('Users.add_all_student')] + $studentOptions;
+            $studentOptions = [null => $this->getMessage('Users.select_users'), 'all' => $this->getMessage('Users.add_all_users')] + $studentOptions;
         } else {
             $studentOptions = [null => $this->getMessage('general.select.noOptions')];
         }
@@ -471,6 +473,45 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $attr['attr']['multiple'] = false;
         return $attr;
     }
+
+    // POCOR-7362 starts
+
+    public function getAssignedStaffForInstitution($institutionId){
+
+        $staff = TableRegistry::get('institution_staff');
+        $query = $staff->find()
+                ->select([
+                   'su.openemis_no',
+                    'su.first_name',
+                    'su.middle_name',
+                    'su.third_name',
+                    'su.last_name',
+                    'su.id'
+                ])
+                ->join([
+                    'table' => 'security_users',
+                    'alias' => 'su',
+                    'type' => 'INNER',
+                    'conditions' => 'institution_staff.staff_id = su.id'
+                ])
+                ->where([
+                    'institution_staff.institution_id' => $institutionId
+                ])
+                ->hydrate(false);
+
+        $result = $query->toArray();
+
+        $staffList =[];
+
+        foreach ($result as $key => $value) {
+            $user = $value['su'];
+            $staffList[$user['id']] = $user['openemis_no'] .  " - " .  $user['first_name'] ." ". $user['middle_name']." ". $user['third_name']." ". $user['last_name'];
+        }
+
+        return $staffList;
+        }
+
+    // POCOR-7362 ends
 
     public function onUpdateFieldAvailableStudent(Event $event, array $attr, $action, Request $request)
     {
