@@ -458,9 +458,11 @@ trait MessagesTrait
         'Users' => [
             'student_category' => 'Category',
             'status' => 'Status',
-            'select_student' => 'Select Student',
+            'select_student' => 'Select Student', 
+            'select_users' => 'Select Users', // POCOR-7362
             'select_student_empty' => 'No Other Student Available',
             'add_all_student' => 'Add All Students',
+            'add_all_users' => 'Add All Users', // POCOR-7362
             'add_student' => 'Add Student',
             'select_staff' => 'Select Staff',
             'add_staff' => 'Add Staff',
