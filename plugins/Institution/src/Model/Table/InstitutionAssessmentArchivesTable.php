@@ -37,10 +37,10 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
 
         $this->behaviors()->get('ControllerAction')->config('actions.add', false);
         $this->behaviors()->get('ControllerAction')->config('actions.search', false);
-//        $this->addBehavior('Excel', [
-//            'pages' => ['index'],
-//            'orientation' => 'landscape'
-//        ]);
+        $this->addBehavior('Excel', [
+            'pages' => ['index'],
+            'orientation' => 'landscape'
+        ]);
 
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -107,7 +107,187 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         ini_set('max_execution_time', 9600); //POCOR-7268 ends
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $institutionCode = $this->Institutions->get($institutionId)->code;
-        $settings['file'] = str_replace($this->alias(), str_replace(' ', '_', $institutionCode) . '_Results', $settings['file']);
+        $settings['file'] = str_replace($this->alias(), str_replace(' ', '_', $institutionCode) . '_Results_Archived', $settings['file']);
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        // POCOR-7327 starts
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $conditions = [
+            $this->aliasField('institution_id') => $institutionId,
+
+            ];
+        if(!empty($this->request->query)) {
+            $selectedPeriodID =  $this->request->query['academic_period_id'];
+            if(!empty($selectedPeriodID)){
+            $conditions[$this->aliasField('academic_period_id')] = $selectedPeriodID;
+            }
+
+            $selectedAssessmentPeriodID = $this->request->query['assessment_period_id'];
+            if(!empty($selectedAssessmentPeriodID)){
+                $conditions[$this->aliasField('assessment_period_id')] = $selectedAssessmentPeriodID;
+            }
+
+        }
+        $AssessmentItemResultsArchived = TableRegistry::get('Institution.AssessmentItemResultsArchived');
+
+
+        $Student = TableRegistry::get('User.Users');
+        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+        $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+        $query->innerJoin(
+            [$AssessmentItemResultsArchived->alias() => $AssessmentItemResultsArchived->table()],
+            [
+                $AssessmentItemResultsArchived->aliasField('institution_classes_id = ') .  $this->aliasField('id'),
+            ]
+        )
+            ->select([
+            'institution_class_id' => $this->aliasField('id'),
+            'id' => $this->aliasField('id'),
+            'class_name' => $this->aliasField('name'),
+            'name' => $this->aliasField('name'),
+            'academic_period_id' => $AssessmentItemResultsArchived->aliasField('academic_period_id'),
+            'assessment_id' => $AssessmentItemResultsArchived->aliasField('assessment_id'),
+            'assessment_period_id' => $AssessmentItemResultsArchived->aliasField('assessment_period_id'),
+            'education_subject_id' => $AssessmentItemResultsArchived->aliasField('education_subject_id'),
+            'marks' => $AssessmentItemResultsArchived->aliasField('marks'),
+            'assessment_name' => $Assessments->aliasField('name'),
+            'assessment_period_name' => $AssessmentPeriods->aliasField('name'),
+            'education_subject_name' => $EducationSubjects->aliasField('name'),
+            'student_name' => $Student->find()->func()->concat([
+                'Users.first_name' => 'literal',
+                " ",
+                'Users.last_name' => 'literal'
+            ]),
+            'openemis_no' => $Student->aliasField('openemis_no')
+        ])
+            ->innerJoin(
+                [$Student->alias() => $Student->table()], [
+                    $AssessmentItemResultsArchived->aliasField('student_id = ') . $Student->aliasField('id')
+                ]
+            )
+            ->innerJoin(
+                [$Assessments->alias() => $Assessments->table()], [
+                    $AssessmentItemResultsArchived->aliasField('assessment_id = ') . $Assessments->aliasField('id')
+                ]
+            )
+            ->innerJoin(
+                [$AssessmentPeriods->alias() => $AssessmentPeriods->table()], [
+                    $AssessmentItemResultsArchived->aliasField('assessment_period_id = ') . $AssessmentPeriods->aliasField('id')
+                ]
+            )
+            ->innerJoin(
+                [$EducationSubjects->alias() => $EducationSubjects->table()], [
+                    $AssessmentItemResultsArchived->aliasField('education_subject_id = ') . $EducationSubjects->aliasField('id')
+                ]
+            )
+            ->innerJoin(
+                [$Assessments->alias() => $Assessments->table()], [
+                    $AssessmentItemResultsArchived->aliasField('assessment_id = ') . $Assessments->aliasField('id')
+                ]
+            )
+            ->innerJoin(
+                [$AssessmentPeriods->alias() => $AssessmentPeriods->table()], [
+                    $AssessmentItemResultsArchived->aliasField('assessment_period_id = ') . $AssessmentPeriods->aliasField('id')
+                ]
+            )
+            ->innerJoin(
+                [$EducationSubjects->alias() => $EducationSubjects->table()], [
+                    $AssessmentItemResultsArchived->aliasField('education_subject_id = ') . $EducationSubjects->aliasField('id')
+                ]
+            )
+            ->where($conditions)
+            // POCOR-7339-HINDOL only archived will be shown
+        ;
+    }
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $newFields = [];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'class_name',
+            'type' => 'string',
+            'label' => 'Class Name',
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'assessment_name',
+            'type' => 'string',
+            'label' => 'Assessment',
+        ];
+        $newFields[] = [
+            'key' => '',
+            'field' => 'academic_period_id',
+            'type' => 'integer',
+            'label' => 'Academic Period',
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'assessment_period_name',
+            'type' => 'string',
+            'label' => 'Assessment Period',
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'education_subject_name',
+            'type' => 'string',
+            'label' => 'Subject',
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => 'OpenEMIS ID',
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'student_name',
+            'type' => 'string',
+            'label' => 'Student Name',
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'marks',
+            'type' => 'string',
+            'label' => 'Mark'
+        ];
+
+        // $newFields[] = [
+        //     'key' => 'Users.date_of_birth',
+        //     'field' => 'dob',
+        //     'type' => 'date',
+        //     'label' => '',
+        // ];
+
+        // $newFields[] = [
+        //     'key' => 'Examinations.education_grade',
+        //     'field' => 'education_grade',
+        //     'type' => 'string',
+        //     'label' => '',
+        // ];
+
+        // $newFields[] = [
+        //     'key' => 'InstitutionExaminationStudents.institution_id',
+        //     'field' => 'institution_id',
+        //     'type' => 'integer',
+        //     'label' => '',
+        // ];
+
+        $fields->exchangeArray($newFields);
+    }
+
+    public function onGetOpenemisNo(Event $event, Entity $entity)
+    {
+        return $entity->user->openemis_no;
     }
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
@@ -116,79 +296,127 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         ini_set('memory_limit', -1);
         ini_set('max_execution_time', 9600); //POCOR-7268 ends
 
-        $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-        //POCOR-7268 starts
-        //$query = $InstitutionClassStudentsTable->find();
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-        if (!empty($this->request->query('assessment_id'))) {
-            $academic_period_id = $this->request->query('academic_period_id');
-            $assessmentId = $this->request->query('assessment_id');
-        } else {
-            // Assessments
-            $academic_period_id = $this->AcademicPeriods->getCurrent();
-            $Assessments = TableRegistry::get('Assessment.Assessments');
-            $assessmentOptions = $Assessments
-                ->find('list')
-                ->where([$Assessments->aliasField('academic_period_id') => $academic_period_id])
-                ->toArray();
-            if (!empty($assessmentOptions)) {
-                $assessmentId = $assessmentOptions;
-                $assessmentId = array_keys($assessmentOptions)[0];
-            }
-        }
-
-        $limit = 10;
-        $loop_no = 0;
-        do {
-            $query = $InstitutionClassStudentsTable->find('all', array(
-                    'conditions' => array($InstitutionClassStudentsTable->aliasField('academic_period_id') => $academic_period_id, $InstitutionClassStudentsTable->aliasField('institution_id') => $institutionId),
-                    'limit' => $limit,
-                    'offset' => $limit * $loop_no,
-                    //'order'  => 'id asc',
-                    'recursive' => -1)
-            );
-            $loop_no++;
-        } while (count($query) == $limit);//POCOR-7268 ends
-
-        // For filtering all classes and my classes
-        $AccessControl = $this->AccessControl;
-        $userId = $this->Session->read('Auth.User.id');
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-        $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
-
-        $allSubjectsPermission = true;
-        $mySubjectsPermission = true;
-        $allClassesPermission = true;
-        $myClassesPermission = true;
-
-        if (!$AccessControl->isAdmin()) {
-            if (!$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles)) {
-                $allSubjectsPermission = false;
-                $mySubjectsPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
-            }
-
-            if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles)) {
-                $allClassesPermission = false;
-                $myClassesPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
-            }
-        }
-
-        if ($assessmentId) {
-            $sheets[] = [
-                'name' => $this->alias(),
-                'table' => $InstitutionClassStudentsTable,
-                'query' => $query,
-                'assessmentId' => $assessmentId,
-                'staffId' => $userId,
-                'institutionId' => $institutionId,
-                'mySubjectsPermission' => $mySubjectsPermission,
-                'allSubjectsPermission' => $allSubjectsPermission,
-                'allClassesPermission' => $allClassesPermission,
-                'myClassesPermission' => $myClassesPermission,
-                'orientation' => 'landscape'
-            ];
-        }
+//        $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+//        //POCOR-7268 starts
+//        //$query = $InstitutionClassStudentsTable->find();
+//        $session = $this->request->session();
+//        $institutionId = $session->read('Institution.Institutions.id');
+//        $AssessmentItemResultsArchived = TableRegistry::get('Institution.AssessmentItemResultsArchived');
+//
+//
+//        $limit = 10;
+//        $loop_no = 0;
+//        $session = $this->request->session();
+//        $institutionId = $session->read('Institution.Institutions.id');
+//
+//        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+//        $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+//        $Assessments = TableRegistry::get('Assessment.Assessments');
+//        $AssessmentItemResultsArchived = TableRegistry::get('Institution.AssessmentItemResultsArchived');
+//
+//        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+//        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+//        $archive_query =         $query
+//            ->select([
+//                'institution_class_id' => $ClassGrades->aliasField('institution_class_id'),
+//                'education_grade_id' => $Assessments->aliasField('education_grade_id'),
+//                'assessment_id' => $Assessments->aliasField('id'),
+//                'assessment' => $query->func()->concat([
+//                    $Assessments->aliasField('code') => 'literal',
+//                    " - ",
+//                    $Assessments->aliasField('name') => 'literal'
+//                ])
+//            ])
+//            ->innerJoin(
+//                [$ClassGrades->alias() => $ClassGrades->table()],
+//                [$ClassGrades->aliasField('institution_class_id = ') . $this->aliasField('id')]
+//            )
+//            ->innerJoin(
+//                [$Assessments->alias() => $Assessments->table()],
+//                [
+//                    $Assessments->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+//                    $Assessments->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
+//                ]
+//            )
+//            // POCOR-7339-HINDOL only archived will be shown
+//            ->innerJoin(
+//                [$AssessmentItemResultsArchived->alias() => $AssessmentItemResultsArchived->table()],
+//                [
+//                    $AssessmentItemResultsArchived->aliasField('assessment_id = ') . $Assessments->aliasField('id'),
+//                ]
+//            )
+//            ->innerJoin(
+//                [$EducationGrades->alias() => $EducationGrades->table()],
+//                [$EducationGrades->aliasField('id = ') . $Assessments->aliasField('education_grade_id')]
+//            )
+//            ->innerJoin(
+//                [$EducationProgrammes->alias() => $EducationProgrammes->table()],
+//                [$EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')]
+//            )
+//            ->group([
+//                $ClassGrades->aliasField('institution_class_id'),
+//                /** Ticket : POCOR-6480
+//                 * Added because showing same records multiple time
+//                 * $Assessments->aliasField('id')
+//                 **/
+//            ]);
+//
+//        do {
+//            $query = $InstitutionClassStudentsTable->find('all', array(
+//                    'conditions' => array($InstitutionClassStudentsTable->aliasField('academic_period_id') => $academic_period_id, $InstitutionClassStudentsTable->aliasField('institution_id') => $institutionId),
+//                    'limit' => $limit,
+//                    'offset' => $limit * $loop_no,
+//                    //'order'  => 'id asc',
+//                    'recursive' => -1)
+//            )                // POCOR-7339-HINDOL only archived will be shown
+//            ->innerJoin(
+//                [$AssessmentItemResultsArchived->alias() => $AssessmentItemResultsArchived->table()],
+//                [
+//                    $AssessmentItemResultsArchived->aliasField('institution_classes_id = ') . $InstitutionClassStudentsTable->aliasField('institution_class_id'),
+//                ]
+//            )
+//            ;
+//            $loop_no++;
+//        } while (count($query) == $limit);//POCOR-7268 ends
+//
+//        // For filtering all classes and my classes
+//        $AccessControl = $this->AccessControl;
+//        $userId = $this->Session->read('Auth.User.id');
+//        $institutionId = $this->Session->read('Institution.Institutions.id');
+//        $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+//
+//        $allSubjectsPermission = true;
+//        $mySubjectsPermission = true;
+//        $allClassesPermission = true;
+//        $myClassesPermission = true;
+//
+//        if (!$AccessControl->isAdmin()) {
+//            if (!$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles)) {
+//                $allSubjectsPermission = false;
+//                $mySubjectsPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
+//            }
+//
+//            if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles)) {
+//                $allClassesPermission = false;
+//                $myClassesPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
+//            }
+//        }
+//
+//        if ($assessmentId) {
+//            $sheets[] = [
+//                'name' => $this->alias() . ' Archived Results',
+//                'table' => $InstitutionClassStudentsTable,
+//                'query' => $query,
+//                'assessmentId' => $assessmentId,
+//                'staffId' => $userId,
+//                'institutionId' => $institutionId,
+//                'mySubjectsPermission' => $mySubjectsPermission,
+//                'allSubjectsPermission' => $allSubjectsPermission,
+//                'allClassesPermission' => $allClassesPermission,
+//                'myClassesPermission' => $myClassesPermission,
+//                'orientation' => 'landscape'
+//            ];
+//        }
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -483,7 +711,9 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
 
             $buttons['view']['url'] = $this->setQueryString($url, [
                 'class_id' => $entity->institution_class_id,
+                'institution_class_id' => $entity->id,
                 'assessment_id' => $entity->assessment_id,
+                'assessment_period_id' => $entity->assessment_period_id,
                 'institution_id' => $entity->institution_id,
                 'academic_period_id' => $entity->academic_period_id
             ]);
