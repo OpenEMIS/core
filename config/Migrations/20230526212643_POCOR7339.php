@@ -197,6 +197,7 @@ class POCOR7339 extends AbstractMigration
     {
         $this->execute('CREATE TABLE `z_7339_assessment_item_results_archived` LIKE `assessment_item_results_archived`');
         $this->execute('INSERT INTO `z_7339_assessment_item_results_archived` SELECT * FROM `assessment_item_results_archived`');
+        $this->execute('DROP TABLE `assessment_item_results_archived`');
     }
 
     public function copyArchiveTableFromZ()
