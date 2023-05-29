@@ -4,12 +4,14 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 
+use Cake\Controller\Component;
 use Cake\I18n\Date;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 
 use App\Model\Traits\OptionsTrait;
@@ -67,23 +69,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
 
         $this->setFieldOrder(['institution_id', 'academic_period_id', 'assessment_id', 'assessment_period_id', 'class', 'education_subject_id', 'openemis_no', 'name', 'marks']);
         $toolbarButtons = $extra['toolbarButtons'];
-        // $extra['toolbarButtons']['back'] = [
-        //     'url' => [
-        //         'plugin' => 'Student',
-        //         'controller' => 'Students',
-        //         'action' => 'Results',
-        //         '0' => 'index',
-        //     ],
-        //     'type' => 'button',
-        //     'label' => '<i class="fa kd-back"></i>',
-        //     'attr' => [
-        //         'class' => 'btn btn-xs btn-default',
-        //         'data-toggle' => 'tooltip',
-        //         'data-placement' => 'bottom',
-        //         'escape' => false,
-        //         'title' => __('Back')
-        //     ]
-        // ];
+
     }
 
     public function findStudentResultsArchived(Query $query, array $options)
@@ -196,7 +182,6 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-
         $institutionId = $this->Session->read('Institution.Institutions.id');
         if ($this->request->query('user_id') !== null) {
             $staffId = $this->request->query('user_id');

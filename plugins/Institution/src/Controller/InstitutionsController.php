@@ -81,7 +81,8 @@ class InstitutionsController extends AppController
         'InstitutionStudentAbsencesArchived',
 
         'StudentArchive',
-        'AssessmentsArchive',
+//        'AssessmentsArchive',
+        'AssessmentArchives',
 
         'StudentMeals',
 
@@ -207,7 +208,8 @@ class InstitutionsController extends AppController
             'ImportStudentGuardians' => ['className' => 'Institution.ImportStudentGuardians', 'actions' => ['add']],
             'ImportStudentExtracurriculars' => ['className' => 'Institution.ImportStudentExtracurriculars', 'actions' => ['add']],
             'StudentArchive' => ['className' => 'Institution.StudentArchive', 'actions' => ['add']],
-            'AssessmentsArchive' => ['className' => 'Institution.AssessmentsArchive', 'actions' => ['index']],
+//            'AssessmentsArchive' => ['className' => 'Institution.AssessmentsArchive', 'actions' => ['index']],
+            'AssessmentArchives' => ['className' => 'Institution.AssessmentArchives', 'actions' => ['index']],
             'ImportAssessmentItemResults' => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
 // POCOR-7339-HINDOL redundancy
 //            'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
@@ -563,8 +565,9 @@ class InstitutionsController extends AppController
 
     public function AssessmentItemResultsArchived($pass = '')
     {
-        $this->log($pass, 'debug');
+//        $this->log($pass, 'debug');
         if ($pass == 'excel') {
+
             $classId = $this->ControllerAction->getQueryString('class_id');
             $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
             $institutionId = $this->ControllerAction->getQueryString('institution_id');
@@ -577,9 +580,15 @@ class InstitutionsController extends AppController
         } else {
             $queryString = $this->request->query('queryString');
             $classId = $this->ControllerAction->getQueryString('class_id');
+
             $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
             $institutionId = $this->ControllerAction->getQueryString('institution_id');
             $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
+            $myClassName = $this->getInstitutionClassName($classId);
+            $this->Navigation->addCrumb('Assessments', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Assessments', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
+            $this->Navigation->addCrumb('Assessment Archives', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'AssessmentArchives', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
+            $this->Navigation->addCrumb("$myClassName");
+
 //            $this->log("academic_period_id $academicPeriodId", 'debug');
 //            $this->log("institution_id $institutionId", 'debug');
 //            $this->log("class_id $classId", 'debug');
@@ -8117,6 +8126,18 @@ class InstitutionsController extends AppController
     public function StudentCurriculars()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurriculars']);
+    }
+
+    /**
+     * @param $classId
+     * @return mixed
+     */
+    private function getInstitutionClassName($classId)
+    {
+        $classes_table = TableRegistry::get('Institution.InstitutionClasses');
+        $myClass = $classes_table->get($classId);
+        $myClassName = $myClass->get('name');
+        return $myClassName;
     }
 
 }
