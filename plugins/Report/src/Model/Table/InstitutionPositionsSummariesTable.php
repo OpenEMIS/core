@@ -188,8 +188,8 @@ class InstitutionPositionsSummariesTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'category',
-            'field' => 'category',
+            'key' => 'StaffPositionTitles.name',
+            'field' => 'staff_position_titles',
             'type' => 'string',
             'label' => __('Category')
         ];
