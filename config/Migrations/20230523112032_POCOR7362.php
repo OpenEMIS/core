@@ -34,15 +34,19 @@ class POCOR7362 extends AbstractMigration
 
         $this->execute("INSERT INTO `textbook_dimensions` (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`,`modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (NULL, '90mmx140mm', '2', '1', '1', '0', '', '', NULL, NULL, '1', '2023-05-23 12:00:00')");
 
+        $this->execute('SET FOREIGN_KEY_CHECKS = 0;');
         $this->execute('ALTER TABLE textbooks
         ADD COLUMN textbook_dimension_id INT(11) AFTER education_subject_id,
         ADD CONSTRAINT fk_textbook_dimensions FOREIGN KEY (textbook_dimension_id) REFERENCES textbook_dimensions (id);');
+        $this->execute('SET FOREIGN_KEY_CHECKS = 1;');
 
     }
 
     public function down()
     {
+        $this->execute('SET FOREIGN_KEY_CHECKS = 0;');
         $this->execute('ALTER TABLE textbooks DROP FOREIGN KEY fk_textbook_dimensions');
+        $this->execute('SET FOREIGN_KEY_CHECKS = 1;');
         $this->execute('ALTER TABLE textbooks DROP COLUMN textbook_dimension_id');
         $this->execute('DROP TABLE IF EXISTS `textbook_dimensions`');
     }
