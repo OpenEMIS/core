@@ -283,6 +283,25 @@ class TextbooksTable extends ControllerActionTable {
         }
     }
 
+    // POCOR-7362
+    public function onGetTextbookDimensionId(Event $event, Entity $entity)
+    {
+        
+        $textbookdimensions = TableRegistry::get('textbook_dimensions');
+        $query = $textbookdimensions->find()
+                ->select('name')
+                ->where([
+                    'id' => $entity->textbook_dimension_id
+                ])
+                ->hydrate(false);
+
+        $result = $query->toArray();
+        if ($this->action == 'view') {
+            return $result;
+        }
+    }
+    // POCOR-7362
+
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
