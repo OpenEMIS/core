@@ -586,7 +586,11 @@ class InstitutionsController extends AppController
             $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
             $myClassName = $this->getInstitutionClassName($classId);
             $this->Navigation->addCrumb('Assessments', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Assessments', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
-            $this->Navigation->addCrumb('Assessment Archives', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'AssessmentArchives', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
+            $this->Navigation->addCrumb('Assessment Archives',
+                ['plugin' => $this->plugin,
+                    'controller' => 'Institutions',
+                    'action' => 'AssessmentArchives',
+                    'academic_period_id' => $academicPeriodId]);
             $this->Navigation->addCrumb("$myClassName");
 
 //            $this->log("academic_period_id $academicPeriodId", 'debug');
