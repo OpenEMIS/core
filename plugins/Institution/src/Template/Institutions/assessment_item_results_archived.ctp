@@ -6,7 +6,6 @@
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
 ?>
-
 <style type='text/css'>
     .ag-grid-duration {
         width: 50%;
