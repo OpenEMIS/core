@@ -2067,6 +2067,12 @@ trait MessagesTrait
         'StaffSubjects' => [
             'notActiveTeachingStaff' => 'Not active teaching staff'
         ],
+        'StaffRequirements' => [
+            'studentTeacherRatio' => 'The value for this should be in range of 0-150.',
+            'upperTolerance' => 'The value for this should be in range of 0-100.',
+            'lowerTolerance' => 'The value for this should be in range of 0-100.',
+            'lowerToleranceCompare' => 'Lower tolerance value should not greater than upper tolerance value.',
+        ],
         'Examination' => [
             'Examinations' => [
                 'code' => [
@@ -2460,6 +2466,22 @@ trait MessagesTrait
                 ]
             ]
         ],
+
+        //POCOR-7271 start
+        'Survey' => [
+            'SurveyFilters' => [
+                'institution_type_id' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ],
+                'institution_provider_id' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ],
+                'area_education_id' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ]
+            ]
+        ], //POCOR-7271 end
+        
         'SpecialNeeds' => [
             'SpecialNeedsReferrals' => [
                 'date' => [

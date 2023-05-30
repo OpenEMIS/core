@@ -24,6 +24,7 @@ use Cake\Utility\Security; //POCOR-5672
 use Cake\Utility\Text;//POCOR-5672
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\Time;
+use Cake\Network\Session;
 
 class InstitutionsController extends AppController
 {
@@ -42,6 +43,8 @@ class InstitutionsController extends AppController
         'InstitutionClasses',
         'InstitutionSubjects',
         'InstitutionTextbooks',
+        'InstitutionCurricular',//POCOR-6673
+        'InstitutionCurricularStudents', //POCOR-6673
 
         // students
         'Programmes',
@@ -208,6 +211,7 @@ class InstitutionsController extends AppController
             'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
             'InstitutionStatistics'              => ['className' => 'Institution.InstitutionStatistics', 'actions' => ['index', 'add']],
             'InstitutionStandards'              => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
+            'ImportStudentCurriculars'  => ['className' => 'Institution.ImportStudentCurriculars', 'actions' => ['add']],//POCOR-6673
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -466,6 +470,17 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTrips']);
     }
 
+    //POCOR-6673
+    public function InstitutionCurriculars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurriculars']);
+    }
+    //POCOR-6673
+    public function InstitutionCurricularStudents()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurricularStudents']);
+    }
+
     public function changePageHeaderTrips($model, $modelAlias, $userType)
     {
         $session = $this->request->session();
@@ -481,7 +496,13 @@ class InstitutionsController extends AppController
                 $this->Navigation->addCrumb(__('Trips'));
                 $this->set('contentHeader', $header);
 
-            } 
+            }elseif($this->request->param('action') == 'InstitutionCurriculars') { //POCOR-6673
+                $institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Curriculars');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->addCrumb(__('Curriculars'));
+                $this->set('contentHeader', $header);
+            }
         }
     }
 
@@ -2234,7 +2255,7 @@ class InstitutionsController extends AppController
             $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($this->Auth->user('id'), $id);
             $havePermission = $this->AccessControl->check(['Institutions', 'InstitutionProfileCompletness', 'view'], $roles);
             if($havePermission) {
-                 $header = $name .' - '.__('Institution Completeness');
+                 $header = $name .' - '.__('Institution Data Completeness');//POCOR-6022
             } else {
                  $header = $name .' - '.__('Dashboard');
             }
@@ -2472,7 +2493,8 @@ class InstitutionsController extends AppController
                 'StudentProgrammes' => __('Programmes'),
                 'StudentRisks' => __('Risks'),
                 'StudentTextbooks' => __('Textbox'),
-                'StudentAssociations' => __('Associations')
+                'StudentAssociations' => __('Associations'),
+                'StudentCurriculars' => __('Curriculars') //POCOR-6673 in student tab breadcrumb
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -2548,6 +2570,8 @@ class InstitutionsController extends AppController
                 $header .= ' - '. __('Associations');
             } elseif($model->alias() == 'InstitutionStatistics'){
                 $header .= ' - '. __('Statistics');
+            }elseif ($model->alias() == 'StudentCurriculars') { //POCOR-6673
+                $header .= ' - '. __('Curriculars');
             } else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
@@ -3470,7 +3494,7 @@ class InstitutionsController extends AppController
                 'valueField' => 'name'
             ])
             ->order('type')
-            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 1,$ConfigItem->aliasField('type') => 'Institution Completeness'])
+            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 1,$ConfigItem->aliasField('type') => 'Institution Data Completeness'])//POCOR-6022
             ->toArray();
 
         $typeOptions = array_keys($typeList);
@@ -3481,7 +3505,7 @@ class InstitutionsController extends AppController
                 'valueField' => 'name'
             ])
             ->order('type')
-            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 0,$ConfigItem->aliasField('type') => 'Institution Completeness'])
+            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 0,$ConfigItem->aliasField('type') => 'Institution Data Completeness'])//POCOR-6022
             ->toArray();
             if ($typeListDisable) {
                 $countList = count($typeListDisable);
@@ -3662,17 +3686,18 @@ class InstitutionsController extends AppController
             'ExaminationResults' => ['text' => __('Examinations')],
             'ReportCards' => ['text' => __('Report Cards')],
             'Awards' => ['text' => __('Awards')],
-            'Extracurriculars' => ['text' => __('Extracurriculars')],
+            'Extracurriculars' => ['text' => __('Extracurriculars')], 
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Associations')]
+            'Associations' => ['text' => __('Associations')],
+            'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673 for student tab section
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         // Programme will use institution controller, other will be still using student controller
         foreach ($studentTabElements as $key => $tab) {
-            if (in_array($key, ['Programmes', 'Textbooks', 'Risks','Associations'])) {
+            if (in_array($key, ['Programmes', 'Textbooks', 'Risks','Associations','Curriculars'])) {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
             } else {
@@ -3680,7 +3705,6 @@ class InstitutionsController extends AppController
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
             }
         }
-        //echo '<pre>';print_r($tabElements);die;
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
@@ -4239,18 +4263,58 @@ class InstitutionsController extends AppController
 				->limit(1)
 				->first();
 
-         //Infrastructures Overview
-        $institutionInfrastructuresOverview  = TableRegistry::get('institution_lands');
-		$institutionInfrastructuresOverviewData = $institutionInfrastructuresOverview->find()
+        //Infrastructures Overview
+        //POCOR-6022 start
+        //Land
+        $institutionLand  = TableRegistry::get('institution_lands');
+		$institutionLandData = $institutionLand->find()
 				->select([
 					'created' => 'institution_lands.created',
 					'modified' => 'institution_lands.modified',
 				])
-				->where([$institutionInfrastructuresOverview->aliasField('institution_id') => $institutionId])
+				->where([$institutionLand->aliasField('institution_id') => $institutionId])
                 ->order(['institution_lands.modified'=>'desc'])
 				->limit(1)
 				->first();
-
+        
+        //Room
+        $institutionRoom  = TableRegistry::get('institution_rooms');
+		$institutionRoomData = $institutionRoom->find()
+				->select([
+					'created' => 'institution_rooms.created',
+					'modified' => 'institution_rooms.modified',
+				])
+				->where([$institutionRoom->aliasField('institution_id') => $institutionId])
+                ->order(['institution_rooms.modified'=>'desc'])
+				->limit(1)
+				->first();
+      
+        //Building
+        $institutionBuilding  = TableRegistry::get('institution_buildings');
+        $institutionBuildingData = $institutionBuilding->find()
+                ->select([
+                      'created' => 'institution_buildings.created',
+                      'modified' => 'institution_buildings.modified',
+                ])
+                ->where([$institutionBuilding->aliasField('institution_id') => $institutionId])
+                ->order(['institution_buildings.modified'=>'desc'])
+                ->limit(1)
+                ->first();
+                  
+        //Floor
+        $institutionFloor  = TableRegistry::get('institution_floors');
+        $institutionFloorData = $institutionFloor->find()
+                ->select([
+                      'created' => 'institution_floors.created',
+                      'modified' => 'institution_floors.modified',
+                ])
+                ->where([$institutionFloor->aliasField('institution_id') => $institutionId])
+                ->order(['institution_floors.modified'=>'desc'])
+                ->limit(1)
+                ->first();
+		 //POCOR-6022 ends 
+        $data[16]['feature'] = 'Infrastructures Overview';
+	
         // Infrastructures Needs
         $institutionInfrastructuresNeeds  = TableRegistry::get('infrastructure_needs');
 		$institutionInfrastructuresNeedsData = $institutionInfrastructuresNeeds->find()
@@ -4384,7 +4448,7 @@ class InstitutionsController extends AppController
 		$enabledTypeList = $ConfigItem
             ->find()
             ->order('type')
-            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 1,$ConfigItem->aliasField('type') => 'Institution Completeness'])
+            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 1,$ConfigItem->aliasField('type') => 'Institution Data Completeness'])//POCOR-6022
             ->toArray();
 
         foreach($enabledTypeList as $key => $enabled) {
@@ -4540,11 +4604,21 @@ class InstitutionsController extends AppController
                     }
                 }
                 if ($enabled->name == 'Infrastructures Overview') {
-                    if(!empty($institutionInfrastructuresOverviewData)) {
+                    if(!empty($institutionLandData && $institutionBuildingData && $institutionFloorData  && $institutionRoomData)) {
                         $profileComplete = $profileComplete + 1;
                         $data[$key]['complete'] = 'yes';
-                        $data[$key]['modifiedDate'] = ($institutionInfrastructuresOverviewData->modified)?date("F j,Y",strtotime($institutionInfrastructuresOverviewData->modified)):date("F j,Y",strtotime($institutionInfrastructuresOverviewData->created));
-                    } else {
+                        //POCOR-6022 start
+                        $modifiedDate1=($institutionLandData->modified)?date("F j,Y",strtotime($institutionLandData->modified)):date("F j,Y",strtotime($institutionLandData->created));
+                        $modifiedDate2=($institutionBuildingData->modified)?date("F j,Y",strtotime($institutionBuildingData->modified)):date("F j,Y",strtotime($institutionBuildingData->created));
+                        $modifiedDate3=($institutionFloorData->modified)?date("F j,Y",strtotime($institutionFloorData->modified)):date("F j,Y",strtotime($institutionFloorData->created));
+                        $modifiedDate4=($institutionRoomData->modified)?date("F j,Y",strtotime($institutionRoomData->modified)):date("F j,Y",strtotime($institutionRoomData->created));
+                        $date1=($modifiedDate1 > $modifiedDate2 ? $modifiedDate1 :$modifiedDate2);
+                        $date2=($date1> $modifiedDate3 ? $date1 :$modifiedDate3);
+                        $modifiedDate=($date2> $modifiedDate4 ? $date2 :$modifiedDate4);
+                        $data[$key]['modifiedDate'] =$modifiedDate;
+                        //POCOR-6022 ends
+                        } 
+                        else {
                         $data[$key]['complete'] = 'no';
                         $data[$key]['modifiedDate'] = 'Not updated';
                     }
@@ -7288,19 +7362,30 @@ class InstitutionsController extends AppController
             $identityTypeId = (array_key_exists('identity_type_id', $requestData))? $requestData['identity_type_id'] : null;
             $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
             $nationalityId = (array_key_exists('nationality_id', $requestData))? $requestData['nationality_id']: null;
+            $UserIdentities = TableRegistry::get('user_identities');//POCOR-7390
             if(!empty($identityTypeId) && !empty($identityNumber) && !empty($nationalityId)){
-                $UserIdentities = TableRegistry::get('user_identities');
                 $CheckUserExist = $UserIdentities->find()
-                            ->where([
-                                $UserIdentities->aliasField('identity_type_id') => $identityTypeId,
-                                $UserIdentities->aliasField('number') => $identityNumber,
-                                $UserIdentities->aliasField('nationality_id') => $nationalityId
-                            ])->count();
+                                    ->where([
+                                        $UserIdentities->aliasField('identity_type_id') => $identityTypeId,
+                                        $UserIdentities->aliasField('number') => $identityNumber,
+                                        $UserIdentities->aliasField('nationality_id') => $nationalityId
+                                    ])->count();
                 if($CheckUserExist > 0){
                     echo json_encode(['user_exist' => 1, 'status_code' => 200 ,'message' => __('User already exist with this nationality, identity type & identity number. Kindly select user from below list.')]); 
                 }else{
                     echo json_encode(['user_exist' => 0, 'status_code' => 200 , 'message' => '']); 
                 }
+            }else if(!empty($identityTypeId) && !empty($identityNumber) && empty($nationalityId)){//POCOR-7390 starts
+                $CheckUserExist = $UserIdentities->find()
+                                    ->where([
+                                        $UserIdentities->aliasField('identity_type_id') => $identityTypeId,
+                                        $UserIdentities->aliasField('number') => $identityNumber
+                                    ])->count();
+                if($CheckUserExist > 0){
+                    echo json_encode(['user_exist' => 1, 'status_code' => 200 ,'message' => __('This identity has already existed in the system.')]); 
+                }else{
+                    echo json_encode(['user_exist' => 0, 'status_code' => 200 , 'message' => '']); 
+                }//POCOR-7390 ends
             }else{
                 echo json_encode(['user_exist' => 0, 'status_code' => 400 ,'message' => __('Invalid data.')]); 
             }
@@ -7918,5 +8003,28 @@ class InstitutionsController extends AppController
         }
     }
     //POCOR-7231 :: END
+
+    //POCOR-6673
+    public function getCurricularsTabElements($options = [])
+    {
+        $queryString = $this->request->query('queryString');
+        $tabElements = [
+            'InstitutionCurriculars' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'InstitutionCurriculars', 'view', 'queryString' => $queryString],
+                'text' => __('Curriculars')
+            ],
+            'InstitutionCurricularStudents' => [
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'InstitutionCurricularStudents', 'index', 'queryString' => $queryString],
+                'text' => __('Students')
+            ]
+        ];
+        return $tabElements;
+    }
+
+    //POCOR-6673
+    public function StudentCurriculars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurriculars']);
+    }
 
 }

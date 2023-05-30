@@ -460,9 +460,19 @@ class InstitutionPositionsTable extends ControllerActionTable
             $latestPositionNumber = $latestPositionEntity->position_no;
             $list = explode('-', $latestPositionNumber);
 
-            // if position number is auto generated, index 0 will be the institution code
-            if ($list[0] == $latestInstitutionCode) {
-                $latestTimestamp = $list[1];
+            if(count($list) == 3){ //POCOR-7417
+                // if position number is auto generated, index 0,1 will be the institution code
+                    if ($list[0]."-".$list[1] == $latestInstitutionCode) {
+                        $latestTimestamp = $list[2];
+                    }
+                }else{
+                // if position number is auto generated, index 0 will be the institution code
+                if ($list[0] == $latestInstitutionCode) {
+                    $latestTimestamp = $list[1];
+                    if ($list[0] == $latestInstitutionCode) {
+                        $latestTimestamp = $list[1];
+                    }
+                }
             }
         }
         

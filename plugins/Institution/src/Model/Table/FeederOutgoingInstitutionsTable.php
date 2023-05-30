@@ -353,7 +353,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
             $nextEducationGrades = [];
 
             if ($entity->has('academic_period_id')) {
-                $nextAcademicPeriodId = $this->AcademicPeriods->getNextAcademicPeriodId($entity->academic_period_id);
+                $nextAcademicPeriodId = $entity->academic_period_id;//POCOR-6690
             }
 
             if ($entity->has('education_grade_id')) {
@@ -416,7 +416,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
             $areaEducationId = 0;
 
             if ($entity->has('academic_period_id')) {
-                $nextAcademicPeriodId = $this->AcademicPeriods->getNextAcademicPeriodId($entity->academic_period_id);
+                $nextAcademicPeriodId = $entity->academic_period_id;//POCOR-6690
             }
 
             if ($entity->has('education_grade_id')) {
