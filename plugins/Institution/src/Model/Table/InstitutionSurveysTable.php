@@ -1036,10 +1036,11 @@ class InstitutionSurveysTable extends ControllerActionTable
         if(!empty($institutionId)){ // POCOR-6652
             $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
         }
-        
+    
         $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
 
         foreach ($surveyForms as $surveyFormId => $surveyForm) {
+              
             // check if the institution type matches. only the match type or all type will try go in to check insertion of records
             $filterTypeQuery = $SurveyFormsFilters
                 ->find()
@@ -1055,14 +1056,14 @@ class InstitutionSurveysTable extends ControllerActionTable
                 ->leftJoin(['SurveyFilterAreas' => 'survey_filter_areas'], [
                         'SurveyFilterAreas.survey_filter_id = SurveyFormsFilters.id'
                     ])
-                ->leftJoin(['Institutions' => 'institutions'], [
-                        'Institutions.institution_type_id = SurveyFilterInstitutionTypes.institution_type_id'
+                ->leftJoin(['Institutions1' => 'institutions'], [
+                        'Institutions1.institution_type_id = SurveyFilterInstitutionTypes.institution_type_id'
                     ])
-                ->leftJoin(['Institutions' => 'institutions'], [
-                        'Institutions.institution_provider_id = SurveyFilterInstitutionProviders.institution_provider_id'
+                ->leftJoin(['Institutions2' => 'institutions'], [
+                        'Institutions2.institution_provider_id = SurveyFilterInstitutionProviders.institution_provider_id'
                     ])
-                ->leftJoin(['Institutions' => 'institutions'], [
-                        'Institutions.area_education_id = SurveyFilterAreas.area_education_id'
+                ->leftJoin(['Institutions3' => 'institutions'], [
+                        'Institutions3.area_education_id = SurveyFilterAreas.area_education_id'
                     ])
                 ->where([
                     [$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId],
@@ -1073,7 +1074,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                         ]
                     ]
                 ]);
-
+            
             $isInstitutionTypeMatch = $filterTypeQuery->count() > 0;
 
             $openStatusId = null;
@@ -1180,7 +1181,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                     ->where([ $roles->aliasField('security_user_id')  => $userId ])->first();
         $roleId = $userRole['security_role_id'];
         $workflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
-        $this->copyBuildSurveyRecords($controller);
+        // $this->copyBuildSurveyRecords($controller);//POCOR-7412
         $query
             ->select([
                 $this->aliasField('id'),

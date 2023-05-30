@@ -285,10 +285,10 @@ class RegistrationController extends Controller
 
 
 
-    public function getInstitutionGradesList($gradeId)
+    public function getInstitutionGradesList(Request $request, $gradeId)
     {
         try {
-            $data = $this->registrationService->getInstitutionGradesList($gradeId);
+            $data = $this->registrationService->getInstitutionGradesList($request, $gradeId);
             
             return $this->sendSuccessResponse("Institutions List Found", $data);
             
