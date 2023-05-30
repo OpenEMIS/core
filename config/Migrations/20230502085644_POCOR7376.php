@@ -65,13 +65,17 @@ class POCOR7376 extends AbstractMigration
         $this->execute('INSERT INTO `zz_7376_user_employments` SELECT * FROM `user_employments`');
         $this->execute('ALTER TABLE `user_employments` ADD COLUMN industry_id INT(11) NOT NULL');
        
-          
+
+         
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
         $this->execute('ALTER TABLE `user_employments` ADD FOREIGN KEY (`industry_id`) REFERENCES `industries` (`id`)');
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
 
-        
-        
+        //for field option
+        $this->execute('CREATE TABLE `zz_7376_field_options` LIKE `field_options`');
+        $this->execute('INSERT INTO `zz_7376_field_options` SELECT * FROM `field_options`');
+        $this->execute("INSERT INTO `field_options` (`id`, `name`, `category`, `table_name`, `order`, `modified_by`, `modified`, `created_by`, `created`) VALUES
+        (135, 'Industries', 'Others', 'industries', 134, NULL, NULL, 1, '2023-05-30 12:00:00')");
        
 
         
@@ -81,11 +85,12 @@ class POCOR7376 extends AbstractMigration
 
    public function down()
     {
-        //Backup Table
-        $this->execute('DROP TABLE IF EXISTS `user_employments`');
-        $this->execute('RENAME TABLE `zz_7376_user_employments` TO `user_employments`');
-       
-        $this->execute('DROP TABLE IF EXISTS `industries`');
+       //Backup Table
+       $this->execute('DROP TABLE IF EXISTS `user_employments`');
+       $this->execute('RENAME TABLE `zz_7376_user_employments` TO `user_employments`');
+       $this->execute('DROP TABLE IF EXISTS `field_options`');
+       $this->execute('RENAME TABLE `zz_7376_field_options` TO `field_options`');
+       $this->execute('DROP TABLE IF EXISTS `industries`');
         
     }
 
