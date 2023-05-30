@@ -1447,6 +1447,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.Employments', 'Directories.StaffQualifications', 'Directories.StaffExtracurriculars', 'Directories.StaffMemberships', 'Directories.StaffLicenses', 'Directories.StaffAwards']
             ],
+
             'Directories.SpecialNeedsReferrals' => [
                 'title' => 'Special Needs',
                 'parent' => 'Directories.Directories.index',
@@ -1658,7 +1659,18 @@ class NavigationComponent extends Component
                 'parent' => 'Directories.Student',
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.StudentProfile']
-            ]
+            ],
+
+             //POCOR-7366 - added counselling to directory module
+             'Directories.Counsellings' => [
+                'title' => 'Counselling',
+                'parent' => 'Directories.Student',
+                'params' => ['plugin' => 'Directory'],
+                'selected' => ['Counsellings.add', 'Counsellings.edit', 'Counsellings.view', 'Counsellings.delete']
+            ],
+
+            // POCOR-7366 ends
+
         ];
 
         $session = $this->request->session();
