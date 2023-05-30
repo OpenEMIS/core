@@ -34,7 +34,8 @@ Route::group(
 
         Route::get('institutions/areas/list', 'RegistrationController@administrativeAreasList');
 
-
+        Route::get('institutions/subjects/staff', 'InstitutionController@getSubjectsStaffList');
+        
         Route::get('institutions/grades', 'InstitutionController@getGradesList');
         Route::get('institutions/grades/{grade_id}/list', 'RegistrationController@getInstitutionGradesList');
         Route::get('institutions/classes', 'InstitutionController@getClassesList');
@@ -160,6 +161,7 @@ Route::group(
 
 
         Route::get('institutions/{institutionId}/students/{studentId}/assessment-item-results', 'InstitutionController@getStudentAssessmentItemResult');
+
     }
 );
 
