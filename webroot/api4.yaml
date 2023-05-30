@@ -2364,7 +2364,46 @@ paths:
                   items:
                     $ref: '#/components/schemas/Locale-Content-Details'
           '400':
-            description: Invalid status value        
+            description: Invalid status value    
+
+    /api/v4/institutions/{institutionId}/students/{studentId}/assessment-item-results:
+      get:
+        tags:
+          - Institutions
+        summary: Get All Assessment Item Results
+        description: Get All Assessment Item Results
+        parameters:
+          - name: institutionId
+            in: path
+            description: Add Institution id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+          - name: studentId
+            in: path
+            description: Add Student id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Assessment-Item-Results'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Assessment-Item-Results'
+          '400':
+            description: Invalid status value   
+
 components:
   schemas:
     Institutions:
@@ -3930,6 +3969,46 @@ components:
           type: object
           format: timestamp
           example: "2000-01-01 12:00:00"
+          
+    Assessment-Item-Results:
+      type: object
+      properties:
+        academic_period_id: 
+          type: integer
+          format: int
+          example: 27
+        assessment_grading_option_id: 
+          type: integer
+          format: int
+          example: 5
+        assessment_id: 
+          type: integer
+          format: int
+          example: 20
+        assessment_period_id: 
+          type: integer
+          format: int
+          example: 11
+        education_grade_id: 
+          type: integer
+          format: int
+          example: 139
+        education_subject_id: 
+          type: integer
+          format: int
+          example: 37
+        institution_id: 
+          type: integer
+          format: int
+          example: 6
+        marks: 
+          type: integer
+          format: int
+          example: 59.00
+        student_id: 
+          type: integer
+          format: int
+          example: 1130
     login:
       type: object
       properties:
