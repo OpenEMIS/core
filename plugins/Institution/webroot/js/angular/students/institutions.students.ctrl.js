@@ -818,7 +818,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 enableServerSideSorting: true,
                 enableSorting: false,
                 headerHeight: 38,
-                rowData: [],z
+                rowData: [],
                 rowHeight: 38,
                  rowModelType: 'infinite',
                 // Removed options - Issues in ag-Grid AG-828
