@@ -7312,19 +7312,30 @@ class InstitutionsController extends AppController
             $identityTypeId = (array_key_exists('identity_type_id', $requestData))? $requestData['identity_type_id'] : null;
             $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
             $nationalityId = (array_key_exists('nationality_id', $requestData))? $requestData['nationality_id']: null;
+            $UserIdentities = TableRegistry::get('user_identities');//POCOR-7390
             if(!empty($identityTypeId) && !empty($identityNumber) && !empty($nationalityId)){
-                $UserIdentities = TableRegistry::get('user_identities');
                 $CheckUserExist = $UserIdentities->find()
-                            ->where([
-                                $UserIdentities->aliasField('identity_type_id') => $identityTypeId,
-                                $UserIdentities->aliasField('number') => $identityNumber,
-                                $UserIdentities->aliasField('nationality_id') => $nationalityId
-                            ])->count();
+                                    ->where([
+                                        $UserIdentities->aliasField('identity_type_id') => $identityTypeId,
+                                        $UserIdentities->aliasField('number') => $identityNumber,
+                                        $UserIdentities->aliasField('nationality_id') => $nationalityId
+                                    ])->count();
                 if($CheckUserExist > 0){
                     echo json_encode(['user_exist' => 1, 'status_code' => 200 ,'message' => __('User already exist with this nationality, identity type & identity number. Kindly select user from below list.')]); 
                 }else{
                     echo json_encode(['user_exist' => 0, 'status_code' => 200 , 'message' => '']); 
                 }
+            }else if(!empty($identityTypeId) && !empty($identityNumber) && empty($nationalityId)){//POCOR-7390 starts
+                $CheckUserExist = $UserIdentities->find()
+                                    ->where([
+                                        $UserIdentities->aliasField('identity_type_id') => $identityTypeId,
+                                        $UserIdentities->aliasField('number') => $identityNumber
+                                    ])->count();
+                if($CheckUserExist > 0){
+                    echo json_encode(['user_exist' => 1, 'status_code' => 200 ,'message' => __('This identity has already existed in the system.')]); 
+                }else{
+                    echo json_encode(['user_exist' => 0, 'status_code' => 200 , 'message' => '']); 
+                }//POCOR-7390 ends
             }else{
                 echo json_encode(['user_exist' => 0, 'status_code' => 400 ,'message' => __('Invalid data.')]); 
             }
