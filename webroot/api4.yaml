@@ -3969,7 +3969,7 @@ components:
           type: object
           format: timestamp
           example: "2000-01-01 12:00:00"
-          
+
     Assessment-Item-Results:
       type: object
       properties:
