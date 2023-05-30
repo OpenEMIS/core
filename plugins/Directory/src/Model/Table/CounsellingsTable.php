@@ -10,18 +10,19 @@ use ArrayObject;
 
 use App\Model\Table\ControllerActionTable;
 
-class StudentCounsellingTable extends ControllerActionTable
+class CounsellingsTable extends ControllerActionTable
 {
     const ASSIGNED = 1;
 
     public function initialize(array $config)
     {
+        
         $this->table('institution_counsellings');
         parent::initialize($config);
         //$this->toggle('add', true);
         //$this->addBehavior('Excel', ['pages' => ['index']]);
 
-         $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
+        //  $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
         // $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
         // $this->belongsTo('Requesters', ['className' => 'Security.Users', 'foreign_key' => 'requester_id']);
         // $this->addBehavior('Page.FileUpload', [
