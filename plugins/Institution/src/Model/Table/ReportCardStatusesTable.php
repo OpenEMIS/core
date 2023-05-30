@@ -1490,7 +1490,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ->where([
                       //  $ReportCardProcesses->aliasField('report_card_id') => $params['report_card_id'],
                         $ReportCardProcesses->aliasField('institution_class_id') => $params['institution_class_id'],
-                        $ReportCardProcesses->aliasField('institution_id') => $institutionId
+                        $ReportCardProcesses->aliasField('institution_id') => $institutionId,
+                        $ReportCardProcesses->aliasField('status  IN')=>[1,2]//POCOR-7455
                     ])
                     ->count();  
             }  
