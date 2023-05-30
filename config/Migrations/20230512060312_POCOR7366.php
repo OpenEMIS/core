@@ -15,18 +15,17 @@ class POCOR7366 extends AbstractMigration
         //$this->execute('DROP TABLE IF EXISTS `zz_6515_security_functions`');
         $this->execute('CREATE TABLE `zz_7366_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `zz_7366_security_functions` SELECT * FROM `security_functions`');
-
-        $data = $this->fetchRow("SELECT `order`,`parent_id` FROM `security_functions` WHERE `name` = 'Generate Students Profile' AND `controller` = 'Directories' AND `module` = 'Directory' AND `category` = 'Profiles' ");
-
         $this->insert('security_functions', [
             'name' => 'Counselling',
             'controller' => 'Directories',
             'module' => 'Directory',
             'category' => 'Counselling',
-            'parent_id' => $data[1],
-            '_view' => 'StudentCounselling.index|StudentCounselling.view',
-            '_execute' => 'StudentCounselling.download',            
-            'order' => $data[0] + 1,
+            'parent_id' => 7000,
+            '_view' => 'Counsellings.index|Counsellings.view',
+            '_edit'=>'Counsellings.edit',
+            '_add'=>'Counsellings.add',
+            '_delete'=>'Counsellings.delete',       
+            'order' =>352 ,
             'visible' => 1,
             'description' => NULL,
             'created_user_id' => 1,

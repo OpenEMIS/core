@@ -2053,7 +2053,8 @@ class DirectoriesController extends AppController
      // POCOR-7366 Counselling added in directory
     public function Counsellings()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.StudentCounselling']);
+      
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.Counsellings']);
     }
      // Counselling End
 
