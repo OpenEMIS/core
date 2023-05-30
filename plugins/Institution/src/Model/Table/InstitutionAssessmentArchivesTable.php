@@ -467,15 +467,12 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
     {
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
-
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $Assessments = TableRegistry::get('Assessment.Assessments');
         $AssessmentItemResultsArchived = TableRegistry::get('Institution.AssessmentItemResultsArchived');
-
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-
         $query
             ->select([
                 'institution_class_id' => $ClassGrades->aliasField('institution_class_id'),
@@ -498,13 +495,6 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
                     $Assessments->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
                 ]
             )
-            // POCOR-7339-HINDOL only archived will be shown
-            ->innerJoin(
-                [$AssessmentItemResultsArchived->alias() => $AssessmentItemResultsArchived->table()],
-                [
-                    $AssessmentItemResultsArchived->aliasField('assessment_id = ') . $Assessments->aliasField('id'),
-                ]
-            )
             ->innerJoin(
                 [$EducationGrades->alias() => $EducationGrades->table()],
                 [$EducationGrades->aliasField('id = ') . $Assessments->aliasField('education_grade_id')]
@@ -517,10 +507,39 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
                 $ClassGrades->aliasField('institution_class_id'),
                 /** Ticket : POCOR-6480
                  * Added because showing same records multiple time
-                 * $Assessments->aliasField('id')
+                $Assessments->aliasField('id')
                  **/
             ])
-            ->autoFields(true);
+            ->autoFields(true)
+        ;
+//        $query
+//            ->select([
+//                'institution_class_id' => $this->aliasField('id'),
+//                'education_grade_id' => $AssessmentItemResultsArchived->aliasField('education_grade_id'),
+//                'assessment_id' => $AssessmentItemResultsArchived->aliasField('assessment_id'),
+//                'assessment' => $query->func()->concat([
+//                    $Assessments->aliasField('code') => 'literal',
+//                    " - ",
+//                    $Assessments->aliasField('name') => 'literal'
+//                ])
+//            ])
+//            ->distinct($this->aliasField('id'))
+//            ->innerJoin(
+//                [$AssessmentItemResultsArchived->alias() => $AssessmentItemResultsArchived->table()],
+//                [
+//                    $AssessmentItemResultsArchived->aliasField('institution_classes_id = ') . $this->aliasField('id'),
+//                ]
+//            )
+//            ->innerJoin(
+//                [$Assessments->alias() => $Assessments->table()],
+//                [
+//                    $AssessmentItemResultsArchived->aliasField('assessment_id = ') . $Assessments->aliasField('id'),
+////                    $Assessments->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
+//                ]
+//            )
+//            // POCOR-7339-HINDOL only archived will be shown
+////            ->where([$AssessmentItemResultsArchived->aliasField('institution_id') => $institutionId])
+//            ->autoFields(true);
 
         $extra['options']['order'] = [
             $EducationProgrammes->aliasField('order') => 'asc',
@@ -660,6 +679,17 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
                 unset($extra['toolbarButtons']['export']);
             }
         }
+
+//        $query->bind(':param1', ' - ');
+
+
+        $sql = $query->sql();
+        $this->log("institutionId $institutionId", 'debug');
+        $this->log("selectedAssessment$selectedAssessment", 'debug');
+        $this->log("selectedPeriod $selectedPeriod", 'debug');
+
+        $this->log($sql, 'debug');
+
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
