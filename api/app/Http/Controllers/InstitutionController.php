@@ -7,6 +7,9 @@ use App\Services\InstitutionService;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\ReportCardCommentAdd;
 use App\Http\Requests\ReportCardCommentHomeroomAdd;
+use App\Http\Requests\CompetencyResultsAddRequest;
+use App\Http\Requests\CompetencyCommentAddRequest;
+use App\Http\Requests\CompetencyPeriodCommentAddRequest;
 
 class InstitutionController extends Controller
 {
@@ -669,8 +672,10 @@ class InstitutionController extends Controller
             
             if($data == 0){
                 return $this->sendErrorResponse("Student is not enrolled in the class.");
-            } else {
+            }elseif ($data == 1) {
                 return $this->sendSuccessResponse("Report card comment added successfully.", $data);
+            } else {
+                return $this->sendErrorResponse('Something went wrong.');
             }
             
         } catch (\Exception $e) {
@@ -725,6 +730,93 @@ class InstitutionController extends Controller
             );
 
             return $this->sendErrorResponse('Failed to add report card comment.');
+        }
+    }
+
+
+
+    public function getInstitutionGradeStudentdata(int $institutionId, int $gradeId, int $studentId)
+    {
+        try {
+            $data = $this->institutionService->getInstitutionGradeStudentdata($institutionId, $gradeId, $studentId);
+            
+            return $this->sendSuccessResponse("Student Details Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get student data.');
+        }
+    }
+
+
+
+    public function addCompetencyResults(CompetencyResultsAddRequest $request)
+    {
+        try {
+            $data = $this->institutionService->addCompetencyResults($request);
+            
+            if($data == 1){
+                return $this->sendErrorResponse("Competeny result stored successfully.");
+            } else {
+                return $this->sendSuccessResponse("Competeny result not stored.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add competency result.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add competency result.');
+        }
+    }
+
+
+    public function addCompetencyComments(CompetencyCommentAddRequest $request)
+    {
+        try {
+            $data = $this->institutionService->addCompetencyComments($request);
+            
+            if($data == 1){
+                return $this->sendErrorResponse("Competeny comments stored successfully.");
+            } else {
+                return $this->sendSuccessResponse("Competeny comments not stored.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add competency comments.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add competency comments.');
+        }
+    }
+
+
+
+    public function addCompetencyPeriodComments(CompetencyPeriodCommentAddRequest $request)
+    {
+        try {
+            $data = $this->institutionService->addCompetencyPeriodComments($request);
+            
+            if($data == 1){
+                return $this->sendErrorResponse("Competeny comments stored successfully.");
+            } else {
+                return $this->sendSuccessResponse("Competeny comments not stored.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add competency comments.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add competency comments.');
         }
     }
 }
