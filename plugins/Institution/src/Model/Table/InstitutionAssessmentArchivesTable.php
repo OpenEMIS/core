@@ -761,6 +761,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         $AssessmentItemResultsArchived = TableRegistry::get('Institution.AssessmentItemResultsArchived');
         $count = $AssessmentItemResultsArchived->find()
             ->distinct([$AssessmentItemResultsArchived->aliasField('student_id')])// POCOR-7339-HINDOL
+            ->select([$AssessmentItemResultsArchived->aliasField('student_id')])// POCOR-7339-HINDOL
             ->innerJoin([$Users->alias() => $Users->table()], [
                 $Users->aliasField('id') . ' = ' . $AssessmentItemResultsArchived->aliasField('student_id')
             ])
