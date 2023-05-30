@@ -207,6 +207,21 @@ class PerformanceCompetenciesShell extends Shell
                 }catch (PDOException $e) {
                     echo "<pre>";print_r($e);die;
                 }
+
+                $CompetencyTemplatesData = $CompetencyTemplatesTable
+                ->find('all')
+                ->where(['academic_period_id' => $toAcademicPeriod])
+                ->toArray();
+                foreach($CompetencyTemplatesData as $val){
+                    $templateId = $val->id;
+                
+                $updateCriterias =  $CompetencyCriteriasTable->updateAll(
+                                ['competency_template_id' => $templateId,],    //field
+                                [
+                                 'academic_period_id' => $toAcademicPeriod, 
+                                ] //condition
+                                );
+                }
             }
 
             $ToAcademicPeriodsData = $AcademicPeriods
