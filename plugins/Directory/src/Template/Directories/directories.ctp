@@ -438,6 +438,9 @@
                         <div ng-if="postResponse.error.nationalities[0].nationality_id" class="error-message">
                             <p ng-repeat="error in postResponse.error.nationalities[0].nationality_id">{{ error }}</p>
                         </div>
+                        <div ng-if="error.nationality_id" class="error-message">
+                            <p>{{ error.nationality_id }}</p>
+                        </div>
                     </div>
                     <div ng-class="identity_type_class" class="input select" ng-show="isSearchResultEmpty">
                         <label><?= __('Identity Type') ?></label>
@@ -453,10 +456,16 @@
                         <div ng-if="postResponse.error.identities[0].identity_type_id" class="error-message">
                             <p ng-repeat="error in postResponse.error.identities[0].identity_type_id">{{ error }}</p>
                         </div>
+                        <div ng-if="error.identity_type_id" class="error-message">
+                            <p>{{ error.identity_type_id }}</p>
+                        </div>
                     </div>
                     <div class="input string">
                         <label><?= __('Identity Number') ?></label>
                         <input ng-model="selectedUserData.identity_number" type="string" ng-disabled="!isSearchResultEmpty">
+                        <div ng-if="error.identity_number" class="error-message">
+                            <p>{{ error.identity_number }}</p>
+                        </div>
                     </div>
                     <div class="row section-header header-space-lg">Other Information</div>
                     <div class="input select">

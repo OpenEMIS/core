@@ -1,3 +1,30 @@
+### [3.84.1] - 2023-05-25
+- Implemented: Develop a config items to specify the area level for Address Area and Birthplace Area
+- Bug Fixed: Institution > Attendance > Students: When marking attendance to absence or late, the page roll all the way to the top
+- Bug Fixed: Query : Query is frequently generated and is not optimised
+- Bug Fixed: Administration>Localisation>Translation : Russian translation that are missing
+- Bug Fixed: API: User should be able to order by descending
+- Bug Fixed: Institutions>Infrastructure>Overview: Export should only show owner's institution
+- Bug Fixed: Registration: Adding Institution Type and Area Level dropdown
+- Bug Fixed: API: Subject teacher api not working
+
+### [3.84.0] - 2023-05-19
+- Implemented: Add Export button function - Institutions > Finances > Student Fees
+- Implemented: Develop Curriculars feature
+- Implemented: Develop additional custom filters for surveys: area and provider
+- Implemented: Develop a function to merge and download all student report cards as a single PDF
+- Implemented: Administration > Communications > Alert Rules: Emails should be sent out once
+- Implemented: Develop APIs for Competencies
+- Bug Fixed: Institutions>Academic>Feeders>Outgoing: Not able to configure feeders
+- Bug Fixed: Administration>System Setup>Localisation>Translation: Link the translated words from database to their corresponding words in the interface
+- Bug Fixed: Institutions>Student>Add: Able to add another user with existing identity number
+- Bug Fixed: Report>Institution>Institution Positions: Report shows all area regardless of the area selected in the filter
+- Bug Fixed: Report>Performance/Training/Survey/Rubric/Workflow: Area Education should be changed to Area Name
+- Bug Fixed: Institutions > Students > Academic > Absences page: The page is not showing the correct data
+- Bug Fixed: Administrations > Academic Period : Update on view Academic Periods List
+- Bug Fixed: Institutions>Performance>Report Cards: PDF is not showing in one page
+- Bug Fixed: Institutions > Performances > Assessments > Edit : Edit button is hidden for normal users eventhough the permission is granted and current date falls between date enabled/disabled
+
 ### [3.83.1] - 2023-05-10
 - Bug Fixed: Students > General > Attachment page: 404 error when downloading attachment
 - Bug Fixed: Registration: Custom fields api need to be arranged in order based on the interface

@@ -335,13 +335,19 @@ class ConfigItemsTable extends AppTable
                     }
                     else if ($entity->code == 'date_time_format') {
                         $attr['type'] = 'date';
+                    } else if ($entity->type == 'Maximum Student Number') { //POCOR-7211
+                        $attr['type'] = 'integer';
+                        $attr['attr'] = ['min' => 1, 'max' => 100];
+                    } else if ($entity->type == 'Minimum Student Number') { //POCOR-7211
+                        $attr['type'] = 'integer';
+                        $attr['attr'] = ['min' => 1, 'max' => 100];
                     }
                 }
             }
         }
         return $attr;
     }
-
+ 
     public function onGetValue(Event $event, Entity $entity)
     {
         if ($entity->type == 'Custom Validation') {
@@ -441,7 +447,7 @@ class ConfigItemsTable extends AppTable
             /**
              * options list is from ConfigItemOptions table
              */
-            }else if ($entity->type == 'Institution Completeness') {
+            }else if ($entity->type == 'Institution Data Completeness') {//POCOR 6022
                 if ($entity->{$valueField} == 0) {
                  return __('Disabled');
                 } else {
@@ -480,7 +486,7 @@ class ConfigItemsTable extends AppTable
                 } else {
                  return __('Enabled');
                 }   //POCOR-6248 end            
-            } else if ($entity->type == 'User Completeness') {
+            } else if ($entity->type == 'User Data Completeness') {//POCOR-6022
                 if ($entity->{$valueField} == 0) {
                  return __('Disabled');
                 } else {

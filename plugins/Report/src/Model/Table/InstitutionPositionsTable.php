@@ -93,7 +93,7 @@ class InstitutionPositionsTable extends AppTable
             }else{
                 $allselectedAreas = $selectedArea1;
             }
-                $conditions['Institutions.area_id IN'] = $allselectedAreas;
+                $where['Institutions.area_id IN'] = $allselectedAreas;
         } //POCOR-7354 end
         $query
             ->select([
@@ -222,7 +222,7 @@ class InstitutionPositionsTable extends AppTable
                 ]
             )
             
-            ->where([$where])
+            ->where($where)
             ->order(['institution_name', 'position_no']);
        
         // if ($positionFilter == self::POSITION_WITH_STAFF) {

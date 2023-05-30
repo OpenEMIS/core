@@ -38,10 +38,10 @@ class RegistrationController extends Controller
     }
 
 
-    public function educationGradesList()
+    public function educationGradesList(Request $request)
     {
         try {
-            $data = $this->registrationService->educationGradesList();
+            $data = $this->registrationService->educationGradesList($request);
             
             return $this->sendSuccessResponse("Education Grade List Found", $data);
             
@@ -56,10 +56,10 @@ class RegistrationController extends Controller
     }
 
 
-    public function institutionDropdown()
+    public function institutionDropdown(Request $request)
     {
         try {
-            $data = $this->registrationService->institutionDropdown();
+            $data = $this->registrationService->institutionDropdown($request);
             
             return $this->sendSuccessResponse("Institutions List Found", $data);
             
@@ -285,10 +285,10 @@ class RegistrationController extends Controller
 
 
 
-    public function getInstitutionGradesList($gradeId)
+    public function getInstitutionGradesList(Request $request, $gradeId)
     {
         try {
-            $data = $this->registrationService->getInstitutionGradesList($gradeId);
+            $data = $this->registrationService->getInstitutionGradesList($request, $gradeId);
             
             return $this->sendSuccessResponse("Institutions List Found", $data);
             
@@ -299,6 +299,60 @@ class RegistrationController extends Controller
             );
 
             return $this->sendErrorResponse('Institutions List Not Found');
+        }
+    }
+
+
+    public function institutionTypesDropdown()
+    {
+        try {
+            $data = $this->registrationService->institutionTypesDropdown();
+            
+            return $this->sendSuccessResponse("Institution Types List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institutions Types List Not Found');
+        }
+    }
+
+
+    public function areaLevelsDropdown()
+    {
+        try {
+            $data = $this->registrationService->areaLevelsDropdown();
+            
+            return $this->sendSuccessResponse("Area Levels List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Levels List Not Found');
+        }
+    }
+
+
+    public function areasDropdown(Request $request)
+    {
+        try {
+            $data = $this->registrationService->areasDropdown($request);
+            
+            return $this->sendSuccessResponse("Area Names List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Names List Not Found');
         }
     }
 }

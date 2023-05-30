@@ -76,7 +76,7 @@
                                                 'type' => 'text',
                                                 'label' => false,
                                                 'value' => $assessmentGradingTypeOptions,
-                                                'disabled' => 'disabled'
+                                                'disabled' => 'disabled' //POCOR-7431
                                             ]);
                                         }
                                          //POCOR-7409 end
