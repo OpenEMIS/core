@@ -1494,15 +1494,17 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ])
                     ->count();  
             }  
-            //POCOR-6692 end       
+            //POCOR-6692 end     
+            
 
-            if (!$inProgress) {                   
+            // if (!$inProgress) {        // POCOR-7443            
                 $this->addReportCardsToProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
                 $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
                 $this->Alert->warning('ReportCardStatuses.generateAll');
-            } else {
-                $this->Alert->warning('ReportCardStatuses.inProgress');
-            }
+            // POCOR-7443           
+                // } else {
+            //     $this->Alert->warning('ReportCardStatuses.inProgress');
+            // }
         } else {
             $this->Alert->warning('ReportCardStatuses.noTemplate');
         }
@@ -1784,6 +1786,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             ->where($where)
             ->toArray();
 
+
         foreach ($classStudents as $student) {
             // Report card processes
             $idKeys = [
@@ -1830,7 +1833,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
                 $newData = [
                     'status' => $this->StudentsReportCards::NEW_REPORT,
-                    'started_on' => NULL,
+                    'started_on' => date('Y-m-d H:i:s'),
                     'completed_on' => NULL,
                     'file_name' => NULL,
                     'file_content' => NULL,
