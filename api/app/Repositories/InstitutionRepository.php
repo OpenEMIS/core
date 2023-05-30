@@ -34,6 +34,7 @@ use App\Models\InstitutionCompetencyItemComments;
 use App\Models\InstitutionCompetencyPeriodComments;
 use App\Models\StaffTypes;
 use App\Models\AssessmentItemResults;
+use App\Models\InstitutionSubjectStaff;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -1728,5 +1729,40 @@ class InstitutionRepository extends Controller
         }
     }
 
+    public function getSubjectsStaffList($request)
+    {
+        try {
+            $params = $request->all();
+
+            $resp = InstitutionSubjectStaff::with(
+                        'staff', 
+                        'institution', 
+                        'institutionSubject',
+                        'institutionSubject.classes.institutionClass',
+                        'institutionSubject.students.securityUser',
+                        'institutionSubject.academicPeriod',
+                        'institutionSubject.educationGrades',
+                        'institutionSubject.educationSubjects',
+                        'institutionSubject.educationGrades.educationProgramme',
+                        'institutionSubject.educationGrades.educationProgramme.educationCycle',
+                        'institutionSubject.educationGrades.educationProgramme.educationCycle.educationLevel',
+                        'institutionSubject.educationGrades.educationProgramme.educationCycle.educationLevel.educationSystem',
+                    )
+                    ->where('staff_id', $params['staff_id'])
+                    ->where('institution_id', $params['institution_id'])
+                    ->get();
+
+            
+            return $resp;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Subjects Staff List Not Found');
+        }
+    }
 }
 
