@@ -26,6 +26,7 @@ class InstitutionPositionsSummariesTable extends AppTable
         $this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
         $this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
         $this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades','foreignKey' => 'staff_position_grade_id']); //POCOR-7377
+        //$this->belongsTo('StaffPositionCategories', ['className' => 'StaffPositionTitles.StaffPositionCategories','foreignKey' => 'staff_position_categories_id']); //POCOR-7377
         $this->belongsTo('Staffs', ['className' => 'User.Users']);
         $this->belongsTo('Areas', ['className' => 'Institution.Areas']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -77,6 +78,8 @@ class InstitutionPositionsSummariesTable extends AppTable
         }
         $workflowStepsTable = TableRegistry::get('workflow_steps');
         $position = TableRegistry::get('Institution.InstitutionPositions');
+        $StaffPositionCategories = TableRegistry::get('staff_position_categories');
+        $staffTitle = TableRegistry::get('staff_position_titles');
         //POCOR-7407 end
         $query
         ->SELECT ([
@@ -85,7 +88,7 @@ class InstitutionPositionsSummariesTable extends AppTable
            'id' =>'InstitutionPositionsSummaries.id',
            'area_code' =>'Areas.code',
            'area_name' =>'Areas.name',
-           'category' => $workflowStepsTable->aliasField('name'),
+           'Category' => $StaffPositionCategories->aliasField('name'),
            'institutions_code' =>'Institutions.code',
            'institutions_name' =>'Institutions.name',
            'institutions_id' =>'Institutions.id',
@@ -140,8 +143,10 @@ class InstitutionPositionsSummariesTable extends AppTable
 
         )->LeftJoin([$position->alias() => $position->table()],
                     [$position->aliasField('id') . ' = '. $this->aliasField('institution_position_id')])
-        ->LeftJoin([$workflowStepsTable->alias() => $workflowStepsTable->table()],
-                    [$workflowStepsTable->aliasField('id') . ' = '. $position->aliasField('status_id')])
+        ->LeftJoin([$staffTitle->alias() => $staffTitle->table()],
+                    [$staffTitle->aliasField('id') . ' = '. $position->aliasField('staff_position_title_id')])
+        ->LeftJoin([$StaffPositionCategories->alias() => $StaffPositionCategories->table()],
+                    [$StaffPositionCategories->aliasField('id') . ' = '. $staffTitle->aliasField('staff_position_categories_id')])
 
         ->where($where)
         ->group(['Institutions.id','StaffPositionTitles.id','StaffPositionGrades.id'])
@@ -188,8 +193,8 @@ class InstitutionPositionsSummariesTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'StaffPositionTitles.name',
-            'field' => 'staff_position_titles',
+            'key' => 'Category',
+            'field' => 'Category',
             'type' => 'string',
             'label' => __('Category')
         ];
