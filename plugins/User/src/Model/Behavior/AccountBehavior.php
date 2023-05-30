@@ -226,7 +226,7 @@ class AccountBehavior extends Behavior
                             $SecurityRoles->aliasField('id = ') . $GroupUsers->aliasField('security_role_id')
                         ]
                     )
-                    ->where([$InstitutionStaff->aliasField('staff_id') => $entity->id, $InstitutionStaff->aliasField('staff_status_id') => 1, $SecurityGroupInstitutions->aliasField('institution_id') => $institutionId])
+                    ->where([$InstitutionStaff->aliasField('staff_id') => $entity->id, $InstitutionStaff->aliasField('staff_status_id') => 1])//POCOR-7444
                     ->group([$GroupUsers->aliasField('security_role_id')])
                     ->all();
             }else{//POCOR-7309 ends

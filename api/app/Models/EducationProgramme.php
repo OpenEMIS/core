@@ -17,4 +17,10 @@ class EducationProgramme extends Model
     {
         return $this->hasMany(EducationGrades::class, 'education_programme_id', 'id');
     }
+
+
+    public function educationCycle()
+    {
+        return $this->belongsTo(EducationCycle::class, 'education_cycle_id', 'id');
+    }
 }
