@@ -750,36 +750,37 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
      */
     private function getGenderStudentsCount(Entity $entity, $genderCode)
     {
+
         $grade = $entity->education_grade_id;
         $class = $entity->institution_class_id;
         $institutionId = $entity->institution->id;
         $period = $entity->academic_period->id;
-        $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+//        $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
         $Users = TableRegistry::get('Security.Users');
         $Genders = TableRegistry::get('User.Genders');
         $AssessmentItemResultsArchived = TableRegistry::get('Institution.AssessmentItemResultsArchived');
-        $count = $InstitutionClassStudentsTable->find()
-            ->distinct([$InstitutionClassStudentsTable->aliasField('student_id')])// POCOR-7339-HINDOL
+        $count = $AssessmentItemResultsArchived->find()
+            ->distinct([$AssessmentItemResultsArchived->aliasField('student_id')])// POCOR-7339-HINDOL
             ->innerJoin([$Users->alias() => $Users->table()], [
-                $Users->aliasField('id') . ' = ' . $InstitutionClassStudentsTable->aliasField('student_id')
+                $Users->aliasField('id') . ' = ' . $AssessmentItemResultsArchived->aliasField('student_id')
             ])
-            ->innerJoin(
-                [$AssessmentItemResultsArchived->alias() => $AssessmentItemResultsArchived->table()],
-                [
-                    $AssessmentItemResultsArchived->aliasField('student_id = ') . $InstitutionClassStudentsTable->aliasField('student_id'),
-                ]
-            )
             ->innerJoin([$Genders->alias() => $Genders->table()], [
                 $Genders->aliasField('id') . ' = ' . $Users->aliasField('gender_id')
             ])
             ->where([
-                $InstitutionClassStudentsTable->aliasField('institution_class_id') => $class,
-                $InstitutionClassStudentsTable->aliasField('education_grade_id') => $grade,
-                $InstitutionClassStudentsTable->aliasField('academic_period_id') => $period,
-                $InstitutionClassStudentsTable->aliasField('institution_id') => $institutionId,
+                $AssessmentItemResultsArchived->aliasField('institution_classes_id') => $class,
+                $AssessmentItemResultsArchived->aliasField('education_grade_id') => $grade,
+                $AssessmentItemResultsArchived->aliasField('academic_period_id') => $period,
+                $AssessmentItemResultsArchived->aliasField('institution_id') => $institutionId,
                 $Genders->aliasField('code') => $genderCode,
 //                    $InstitutionClassStudentsTable->aliasField('student_status_id') => 1 // POCOR-7339-HINDOL results for all types of students
-            ])->count();
+            ])->first();
+        if($count) {
+            $count = "<i class='fa fa-check'></i>"; //POCOR-HINDOL just optimize count
+        }
+        if(!$count) {
+            $count = 0;
+        }
         return $count;
     }
 }
