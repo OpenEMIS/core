@@ -2067,6 +2067,12 @@ trait MessagesTrait
         'StaffSubjects' => [
             'notActiveTeachingStaff' => 'Not active teaching staff'
         ],
+        'StaffRequirements' => [
+            'studentTeacherRatio' => 'The value for this should be in range of 0-150.',
+            'upperTolerance' => 'The value for this should be in range of 0-100.',
+            'lowerTolerance' => 'The value for this should be in range of 0-100.',
+            'lowerToleranceCompare' => 'Lower tolerance value should not greater than upper tolerance value.',
+        ],
         'Examination' => [
             'Examinations' => [
                 'code' => [
