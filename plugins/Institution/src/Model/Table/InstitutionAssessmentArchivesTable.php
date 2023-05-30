@@ -586,7 +586,8 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         }
 
         // Academic Periods
-        $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
+        $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true]);
+        //POCOR-7339-HINDOL Get uneditable years as well
         if (is_null($this->request->query('academic_period_id'))) {
             // default to current Academic Period
             $this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
@@ -595,35 +596,18 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 // POCOR-7339-HINDOL TO ADD            'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noAssessments')),
             'message' => '{{label}} - No Archived Assessments ',
-            'callable' => function ($id) use ($Classes, $ClassGrades, $Assessments, $institutionId, $AssessmentItemResultsArchived) {
-                return $Classes
+            'callable' => function ($id) use ($institutionId, $AssessmentItemResultsArchived) {
+                return $AssessmentItemResultsArchived
                     ->find()
-                    ->innerJoin(
-                        [$ClassGrades->alias() => $ClassGrades->table()],
-                        [
-                            $ClassGrades->aliasField('institution_class_id = ') . $Classes->aliasField('id')
-                        ]
-                    )
-                    ->innerJoin(
-                        [$Assessments->alias() => $Assessments->table()],
-                        [
-                            $Assessments->aliasField('academic_period_id = ') . $Classes->aliasField('academic_period_id'),
-                            $Assessments->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
-                        ]
-                    )
-                    ->innerJoin(
-                        [$AssessmentItemResultsArchived->alias() => $AssessmentItemResultsArchived->table()],
-                        [
-                            $AssessmentItemResultsArchived->aliasField('assessment_id = ') . $Assessments->aliasField('id'),
-                        ]
-                    )
+                    ->distinct([$AssessmentItemResultsArchived->aliasField('academic_period_id')])
                     ->where([
-                        $Classes->aliasField('institution_id') => $institutionId,
-                        $Classes->aliasField('academic_period_id') => $id
+                        $AssessmentItemResultsArchived->aliasField('institution_id') => $institutionId,
+                        $AssessmentItemResultsArchived->aliasField('academic_period_id') => $id
                     ])
                     ->count();
             }
         ]);
+        //POCOR-7339-HINDOL end
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
         // End
 
