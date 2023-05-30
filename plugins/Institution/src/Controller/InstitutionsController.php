@@ -2363,8 +2363,8 @@ class InstitutionsController extends AppController
         if ($action == 'dashboard') {
             $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($this->Auth->user('id'), $id);
             $havePermission = $this->AccessControl->check(['Institutions', 'InstitutionProfileCompletness', 'view'], $roles);
-            if ($havePermission) {
-                $header = $name . ' - ' . __('Institution Completeness');
+            if($havePermission) {
+                 $header = $name .' - '.__('Institution Data Completeness');//POCOR-6022
             } else {
                 $header = $name . ' - ' . __('Dashboard');
             }
@@ -3601,7 +3601,12 @@ class InstitutionsController extends AppController
                 'valueField' => 'name'
             ])
             ->order('type')
-            ->where([$ConfigItem->aliasField('visible') => 1, $ConfigItem->aliasField('value') => 1, $ConfigItem->aliasField('type') => 'Institution Completeness'])
+
+            ->where([
+                $ConfigItem->aliasField('visible') => 1,
+                $ConfigItem->aliasField('value') => 1,
+                $ConfigItem->aliasField('type') => 'Institution Data Completeness'
+            ])//POCOR-6022
             ->toArray();
 
         $typeOptions = array_keys($typeList);
@@ -3612,7 +3617,12 @@ class InstitutionsController extends AppController
                 'valueField' => 'name'
             ])
             ->order('type')
-            ->where([$ConfigItem->aliasField('visible') => 1, $ConfigItem->aliasField('value') => 0, $ConfigItem->aliasField('type') => 'Institution Completeness'])
+
+            ->where([
+                $ConfigItem->aliasField('visible') => 1,
+                $ConfigItem->aliasField('value') => 0,
+                $ConfigItem->aliasField('type') => 'Institution Data Completeness'
+            ])//POCOR-6022
             ->toArray();
         if ($typeListDisable) {
             $countList = count($typeListDisable);
@@ -4367,28 +4377,69 @@ class InstitutionsController extends AppController
 
         //Institution Fees
         $institutionInstitutionFees = TableRegistry::get('institution_fees');
-        $institutionInstitutionFeesData = $institutionInstitutionFees->find()
-            ->select([
-                'created' => 'institution_fees.created',
-                'modified' => 'institution_fees.modified',
-            ])
-            ->where([$institutionInstitutionFees->aliasField('institution_id') => $institutionId])
-            ->order(['institution_fees.modified' => 'desc'])
-            ->limit(1)
-            ->first();
+
+		$institutionInstitutionFeesData = $institutionInstitutionFees->find()
+				->select([
+					'created' => 'institution_fees.created',
+					'modified' => 'institution_fees.modified',
+				])
+				->where([$institutionInstitutionFees->aliasField('institution_id') => $institutionId])
+                ->order(['institution_fees.modified'=>'desc'])
+				->limit(1)
+				->first();
 
         //Infrastructures Overview
-        $institutionInfrastructuresOverview = TableRegistry::get('institution_lands');
-        $institutionInfrastructuresOverviewData = $institutionInfrastructuresOverview->find()
-            ->select([
-                'created' => 'institution_lands.created',
-                'modified' => 'institution_lands.modified',
-            ])
-            ->where([$institutionInfrastructuresOverview->aliasField('institution_id') => $institutionId])
-            ->order(['institution_lands.modified' => 'desc'])
-            ->limit(1)
-            ->first();
-
+        //POCOR-6022 start
+        //Land
+        $institutionLand  = TableRegistry::get('institution_lands');
+		$institutionLandData = $institutionLand->find()
+				->select([
+					'created' => 'institution_lands.created',
+					'modified' => 'institution_lands.modified',
+				])
+				->where([$institutionLand->aliasField('institution_id') => $institutionId])
+                ->order(['institution_lands.modified'=>'desc'])
+				->limit(1)
+				->first();
+        
+        //Room
+        $institutionRoom  = TableRegistry::get('institution_rooms');
+		$institutionRoomData = $institutionRoom->find()
+				->select([
+					'created' => 'institution_rooms.created',
+					'modified' => 'institution_rooms.modified',
+				])
+				->where([$institutionRoom->aliasField('institution_id') => $institutionId])
+                ->order(['institution_rooms.modified'=>'desc'])
+				->limit(1)
+				->first();
+      
+        //Building
+        $institutionBuilding  = TableRegistry::get('institution_buildings');
+        $institutionBuildingData = $institutionBuilding->find()
+                ->select([
+                      'created' => 'institution_buildings.created',
+                      'modified' => 'institution_buildings.modified',
+                ])
+                ->where([$institutionBuilding->aliasField('institution_id') => $institutionId])
+                ->order(['institution_buildings.modified'=>'desc'])
+                ->limit(1)
+                ->first();
+                  
+        //Floor
+        $institutionFloor  = TableRegistry::get('institution_floors');
+        $institutionFloorData = $institutionFloor->find()
+                ->select([
+                      'created' => 'institution_floors.created',
+                      'modified' => 'institution_floors.modified',
+                ])
+                ->where([$institutionFloor->aliasField('institution_id') => $institutionId])
+                ->order(['institution_floors.modified'=>'desc'])
+                ->limit(1)
+                ->first();
+		 //POCOR-6022 ends 
+        $data[16]['feature'] = 'Infrastructures Overview';
+	
         // Infrastructures Needs
         $institutionInfrastructuresNeeds = TableRegistry::get('infrastructure_needs');
         $institutionInfrastructuresNeedsData = $institutionInfrastructuresNeeds->find()
@@ -4522,7 +4573,10 @@ class InstitutionsController extends AppController
         $enabledTypeList = $ConfigItem
             ->find()
             ->order('type')
-            ->where([$ConfigItem->aliasField('visible') => 1, $ConfigItem->aliasField('value') => 1, $ConfigItem->aliasField('type') => 'Institution Completeness'])
+            ->where([
+                $ConfigItem->aliasField('visible') => 1,
+                $ConfigItem->aliasField('value') => 1,
+                $ConfigItem->aliasField('type') => 'Institution Data Completeness'])//POCOR-6022
             ->toArray();
 
         foreach ($enabledTypeList as $key => $enabled) {
@@ -4676,15 +4730,25 @@ class InstitutionsController extends AppController
                     $data[$key]['complete'] = 'no';
                     $data[$key]['modifiedDate'] = 'Not updated';
                 }
-            }
-            if ($enabled->name == 'Infrastructures Overview') {
-                if (!empty($institutionInfrastructuresOverviewData)) {
-                    $profileComplete = $profileComplete + 1;
-                    $data[$key]['complete'] = 'yes';
-                    $data[$key]['modifiedDate'] = ($institutionInfrastructuresOverviewData->modified) ? date("F j,Y", strtotime($institutionInfrastructuresOverviewData->modified)) : date("F j,Y", strtotime($institutionInfrastructuresOverviewData->created));
-                } else {
-                    $data[$key]['complete'] = 'no';
-                    $data[$key]['modifiedDate'] = 'Not updated';
+                if ($enabled->name == 'Infrastructures Overview') {
+                    if(!empty($institutionLandData && $institutionBuildingData && $institutionFloorData  && $institutionRoomData)) {
+                        $profileComplete = $profileComplete + 1;
+                        $data[$key]['complete'] = 'yes';
+                        //POCOR-6022 start
+                        $modifiedDate1=($institutionLandData->modified)?date("F j,Y",strtotime($institutionLandData->modified)):date("F j,Y",strtotime($institutionLandData->created));
+                        $modifiedDate2=($institutionBuildingData->modified)?date("F j,Y",strtotime($institutionBuildingData->modified)):date("F j,Y",strtotime($institutionBuildingData->created));
+                        $modifiedDate3=($institutionFloorData->modified)?date("F j,Y",strtotime($institutionFloorData->modified)):date("F j,Y",strtotime($institutionFloorData->created));
+                        $modifiedDate4=($institutionRoomData->modified)?date("F j,Y",strtotime($institutionRoomData->modified)):date("F j,Y",strtotime($institutionRoomData->created));
+                        $date1=($modifiedDate1 > $modifiedDate2 ? $modifiedDate1 :$modifiedDate2);
+                        $date2=($date1 > $modifiedDate3 ? $date1 :$modifiedDate3);
+                        $modifiedDate=($date2 > $modifiedDate4 ? $date2 :$modifiedDate4);
+                        $data[$key]['modifiedDate'] =$modifiedDate;
+                        //POCOR-6022 ends
+                        } 
+                        else {
+                        $data[$key]['complete'] = 'no';
+                        $data[$key]['modifiedDate'] = 'Not updated';
+                    }
                 }
             }
             if ($enabled->name == 'Infrastructures Needs') {
