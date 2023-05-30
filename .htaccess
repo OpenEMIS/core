@@ -4,7 +4,7 @@
     RewriteRule    ^$    webroot/    [L]
     RewriteRule    (.*) webroot/$1    [L]
 
-#Header set X-XSS-Protection "1; mode=block"
-#Header always append X-Frame-Options DENY
-#Header set X-Content-Type-Options nosniff
+Header set X-XSS-Protection "1; mode=block"
+Header always append X-Frame-Options DENY
+Header set X-Content-Type-Options nosniff
 </IfModule>
