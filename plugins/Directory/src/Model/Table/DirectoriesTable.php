@@ -1473,4 +1473,839 @@ class DirectoriesTable extends ControllerActionTable
         return $result;
     }
     //POCOR-7083 :: end
+
+    //POCOR-7224-HINDOL[start]
+    /**
+     * @author Dr Khindol Madraimov khindol.madraimov@gmail.com
+     * @param $security_user_id
+     * @return mixed
+     * todo move to model
+     */
+    private static function getPendingTransfer($security_user_id)
+    {
+        $institutions = TableRegistry::get('institutions');
+        $transfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+        $doneStatus = $transfers::DONE;
+        $pendingTransfer = $transfers->find()
+            ->select([
+                'institution_id' => $transfers->aliasField('institution_id'),
+                'student_id' => $transfers->aliasField('student_id'),
+                'institution_name' => $institutions->aliasField('name'),
+                'institution_code' => $institutions->aliasField('code'),
+                'academic_period_id' => $transfers->aliasField('academic_period_id'),
+            ])
+            ->InnerJoin([$institutions->alias() => $institutions->table()], [
+                $institutions->aliasField('id =') . $transfers->aliasField('institution_id')
+            ])
+            ->matching('Statuses', function ($q) use ($doneStatus) {
+                return $q->where([
+                    'Statuses.category <> ' => $doneStatus,
+                ]);
+            })
+            ->where([
+                $transfers->aliasField('student_id') => $security_user_id,
+            ])
+            ->first();
+        return $pendingTransfer;
+    }
+
+    /**
+     * @param Table $institutions
+     * @param $security_user_id
+     * @return mixed
+     */
+    private static function getPendingWithdraw(Table $institutions, $security_user_id)
+    {
+        $institutions = TableRegistry::get('institutions');
+        $withdraws = TableRegistry::get('Institution.StudentWithdraw');
+        $doneStatus = $withdraws::DONE;
+        $pendingWithdrawQuery = $withdraws->find()
+            ->select([
+                'institution_id' => $withdraws->aliasField('institution_id'),
+                'student_id' => $withdraws->aliasField('student_id'),
+                'institution_name' => $institutions->aliasField('name'),
+                'institution_code' => $institutions->aliasField('code'),
+                'academic_period_id' => $withdraws->aliasField('academic_period_id'),
+            ])
+            ->InnerJoin([$institutions->alias() => $institutions->table()], [
+                $institutions->aliasField('id =') . $withdraws->aliasField('institution_id')
+            ])
+            ->matching('Statuses', function ($q) use ($doneStatus) {
+                return $q->where([
+                    'Statuses.category <> ' => $doneStatus,
+                ]);
+            })
+            ->where([
+                $withdraws->aliasField('student_id') => $security_user_id,
+            ]);
+        $pendingWithdraw = $pendingWithdrawQuery->first();
+        return $pendingWithdraw;
+    }
+
+    /**
+     * @author Dr Khindol Madraimov khindol.madraimov@gmail.com
+     * @param $security_user_id
+     * @return mixed
+     */
+    private static function getStudent($security_user_id)
+    {
+        $institutionStudents = TableRegistry::get('institution_students');
+        $studentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $institutions = TableRegistry::get('institutions');
+        $statuses = $studentStatuses->findCodeList();
+        $studentStatusCurrent = $statuses['CURRENT'];
+
+        $student = $institutionStudents
+            ->find()
+            ->select([
+                'institution_id' => $institutionStudents->aliasField('institution_id'),
+                'student_id' => $institutionStudents->aliasField('student_id'),
+                'student_status_id' => $institutionStudents->aliasField('student_status_id'),
+                'institution_name' => $institutions->aliasField('name'),
+                'institution_code' => $institutions->aliasField('code'),
+                'academic_period_id' => $institutionStudents->aliasField('academic_period_id'),
+                'academic_period_year' => $institutionStudents->aliasField('start_year'),
+                'education_grade_id' => $institutionStudents->aliasField('education_grade_id')
+            ])
+            ->InnerJoin([$institutions->alias() => $institutions->table()], [
+                $institutions->aliasField('id =') . $institutionStudents->aliasField('institution_id')
+            ])
+            ->where([
+                $institutionStudents->aliasField('student_id') => $security_user_id,
+                $institutionStudents->aliasField('student_status_id') => $studentStatusCurrent
+            ])->first();
+        return $student;
+    }
+
+    private static function getCountInternalSearch($conditions = [], $identityNumber, $identityCondition = [], $userTypeCondition = [])
+    {
+        $security_users = TableRegistry::get('security_users');
+        $userIdentities = TableRegistry::get('user_identities');
+        $genders = TableRegistry::get('genders');
+        $mainIdentityTypes = TableRegistry::get('identity_types');
+        $mainNationalities = TableRegistry::get('nationalities');
+        if ($identityNumber == '') {
+            $security_users_result = $security_users
+                ->find()
+                ->select([
+                    $security_users->aliasField('id'),
+                    $security_users->aliasField('openemis_no'),
+                    $security_users->aliasField('first_name'),
+                    $security_users->aliasField('middle_name'),
+                    $security_users->aliasField('third_name'),
+                    $security_users->aliasField('last_name'),
+                    $security_users->aliasField('address_area_id'),
+                    $security_users->aliasField('birthplace_area_id'),
+                    $security_users->aliasField('gender_id'),
+                    $security_users->aliasField('date_of_birth'),
+                    $security_users->aliasField('nationality_id'),
+                    $security_users->aliasField('identity_number'),
+                    $security_users->aliasField('super_admin'),
+                    $security_users->aliasField('status'),
+                    $security_users->aliasField('is_student'),
+                    $security_users->aliasField('is_staff'),
+                    $security_users->aliasField('is_guardian'),
+                    'Genders_id' => $genders->aliasField('id'),
+                    'Genders_name' => $genders->aliasField('name'),
+                    'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
+                    'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
+                    'MainNationalities_id' => $mainNationalities->aliasField('id'),
+                    'MainNationalities_name' => $mainNationalities->aliasField('name'),
+                ])
+                ->LeftJoin(['Identities' => 'user_identities'], [
+                    'Identities.security_user_id' => $security_users->aliasField('id'),
+                ])
+                ->LeftJoin([$genders->alias() => $genders->table()], [
+                    $genders->aliasField('id =') . $security_users->aliasField('gender_id')
+                ])
+                ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                    $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
+                ])
+                ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                    $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
+                ])
+                ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $conditions])
+                ->group([$security_users->aliasField('id')])
+                ->count();
+        } else {
+            //POCOR-5672 start new changes searching users by identity number
+            $get_result_by_identity_users_result = $security_users
+                ->find()
+                ->select([
+                    $security_users->aliasField('id'),
+                    $security_users->aliasField('openemis_no'),
+                    $security_users->aliasField('first_name'),
+                    $security_users->aliasField('middle_name'),
+                    $security_users->aliasField('third_name'),
+                    $security_users->aliasField('last_name'),
+                    $security_users->aliasField('address_area_id'),
+                    $security_users->aliasField('birthplace_area_id'),
+                    $security_users->aliasField('gender_id'),
+                    $security_users->aliasField('date_of_birth'),
+                    $security_users->aliasField('nationality_id'),
+                    $security_users->aliasField('identity_number'),
+                    $security_users->aliasField('super_admin'),
+                    $security_users->aliasField('status'),
+                    $security_users->aliasField('is_student'),
+                    $security_users->aliasField('is_staff'),
+                    $security_users->aliasField('is_guardian'),
+                    'Genders_id' => $genders->aliasField('id'),
+                    'Genders_name' => $genders->aliasField('name'),
+                    'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
+                    'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
+                    'MainNationalities_id' => $mainNationalities->aliasField('id'),
+                    'MainNationalities_name' => $mainNationalities->aliasField('name'),
+                ])
+                ->InnerJoin([$userIdentities->alias() => $userIdentities->table()], [
+                    $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
+                    $identityCondition
+                ])
+                ->LeftJoin([$genders->alias() => $genders->table()], [
+                    $genders->aliasField('id =') . $security_users->aliasField('gender_id')
+                ])
+                ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                    $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
+                ])
+                ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                    $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
+                ])
+                ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $userTypeCondition])
+                ->group([$security_users->aliasField('id')])
+                ->count();
+            if ($get_result_by_identity_users_result == 0) {
+                $security_users_result = $security_users
+                    ->find()
+                    ->select([
+                        $security_users->aliasField('id'),
+                        $security_users->aliasField('openemis_no'),
+                        $security_users->aliasField('first_name'),
+                        $security_users->aliasField('middle_name'),
+                        $security_users->aliasField('third_name'),
+                        $security_users->aliasField('last_name'),
+                        $security_users->aliasField('address_area_id'),
+                        $security_users->aliasField('birthplace_area_id'),
+                        $security_users->aliasField('gender_id'),
+                        $security_users->aliasField('date_of_birth'),
+                        $security_users->aliasField('nationality_id'),
+                        $security_users->aliasField('identity_number'),
+                        $security_users->aliasField('super_admin'),
+                        $security_users->aliasField('status'),
+                        $security_users->aliasField('is_student'),
+                        $security_users->aliasField('is_staff'),
+                        $security_users->aliasField('is_guardian'),
+                        'Genders_id' => $genders->aliasField('id'),
+                        'Genders_name' => $genders->aliasField('name'),
+                        'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
+                        'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
+                        'MainNationalities_id' => $mainNationalities->aliasField('id'),
+                        'MainNationalities_name' => $mainNationalities->aliasField('name'),
+                    ])
+                    ->InnerJoin([$userIdentities->alias() => $userIdentities->table()], [
+                        $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
+                        $identityCondition
+                    ])
+                    ->LeftJoin([$genders->alias() => $genders->table()], [
+                        $genders->aliasField('id =') . $security_users->aliasField('gender_id')
+                    ])
+                    ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                        $mainIdentityTypes->aliasField('id =') . $security_users->aliasField('identity_type_id')
+                    ])
+                    ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                        $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
+                    ])
+                    ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $conditions])
+                    ->group([$security_users->aliasField('id')])
+                    ->count();
+            } else {
+                $security_users_result = $get_result_by_identity_users_result;
+            }
+        }
+        //POCOR-5672 ends
+        return $security_users_result;
+    }
+
+    private static function getStudentCustomData($student_id = null)
+    {
+        $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
+        $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
+        $studentCustomFields = TableRegistry::get('student_custom_fields');
+        $studentCustomData = $studentCustomFieldValues->find()
+            ->select([
+                'id' => $studentCustomFieldValues->aliasField('id'),
+                'custom_id' => 'studentCustomField.id',
+                'student_id' => $studentCustomFieldValues->aliasField('student_id'),
+                'student_custom_field_id' => $studentCustomFieldValues->aliasField('student_custom_field_id'),
+                'text_value' => $studentCustomFieldValues->aliasField('text_value'),
+                'number_value' => $studentCustomFieldValues->aliasField('number_value'),
+                'decimal_value' => $studentCustomFieldValues->aliasField('decimal_value'),
+                'textarea_value' => $studentCustomFieldValues->aliasField('textarea_value'),
+                'date_value' => $studentCustomFieldValues->aliasField('date_value'),
+                'time_value' => $studentCustomFieldValues->aliasField('time_value'),
+                'option_value_text' => $studentCustomFieldOptions->aliasField('name'),
+                'name' => 'studentCustomField.name',
+                'field_type' => 'studentCustomField.field_type',
+            ])->leftJoin(
+                ['studentCustomField' => 'student_custom_fields'],
+                [
+                    'studentCustomField.id = ' . $studentCustomFieldValues->aliasField('student_custom_field_id')
+                ])
+            ->leftJoin(
+                [$studentCustomFieldOptions->alias() => $studentCustomFieldOptions->table()],
+                [
+                    $studentCustomFieldOptions->aliasField('student_custom_field_id = ') . $studentCustomFieldValues->aliasField('student_custom_field_id'),
+                    $studentCustomFieldOptions->aliasField('id = ') . $studentCustomFieldValues->aliasField('number_value')
+                ])
+            ->where([
+                $studentCustomFieldValues->aliasField('student_id') => $student_id,
+            ])->hydrate(false)->toArray();
+        $custom_field = array();
+        $count = 0;
+        if (!empty($studentCustomData)) {
+            foreach ($studentCustomData as $val) {
+                $custom_field['custom_field'][$count]["id"] = (!empty($val['custom_id']) ? $val['custom_id'] : '');
+                $custom_field['custom_field'][$count]["name"] = (!empty($val['name']) ? $val['name'] : '');
+                $fieldTypes[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
+                $fieldType = $fieldTypes[$count];
+                if ($fieldType == 'TEXT') {
+                    $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                } else if ($fieldType == 'CHECKBOX') {
+                    $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
+                } else if ($fieldType == 'NUMBER') {
+                    $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
+                } else if ($fieldType == 'DECIMAL') {
+                    $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
+                } else if ($fieldType == 'TEXTAREA') {
+                    $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
+                } else if ($fieldType == 'DROPDOWN') {
+                    $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['option_value_text']) ? $val['option_value_text'] : '');
+                } else if ($fieldType == 'DATE') {
+                    $custom_field['custom_field'][$count]["date_value"] = date('Y-m-d', strtotime($val->date_value));
+                } else if ($fieldType == 'TIME') {
+                    $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val->time_value));
+                } else if ($fieldType == 'COORDINATES') {
+                    $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
+                }
+                $count++;
+            }
+        }
+        return $custom_field;
+    }//POCOR-7072 ends
+
+    /**
+     * @param $requestDataParams
+     * @return array
+     */
+    public static function getUserInternalSearch($requestDataParams)
+    {
+
+        $institutionId = (array_key_exists('institution_id', $requestDataParams)) ? $requestDataParams['institution_id'] : null;
+        $userTypeId = (array_key_exists('user_type_id', $requestDataParams)) ? $requestDataParams['user_type_id'] : null;
+        $firstName = (array_key_exists('first_name', $requestDataParams)) ? $requestDataParams['first_name'] : null;
+        $lastName = (array_key_exists('last_name', $requestDataParams)) ? $requestDataParams['last_name'] : null;
+        $openemisNo = (array_key_exists('openemis_no', $requestDataParams)) ? $requestDataParams['openemis_no'] : null;
+        $identityNumber = (array_key_exists('identity_number', $requestDataParams)) ? $requestDataParams['identity_number'] : null;
+        $dateOfBirth = (array_key_exists('date_of_birth', $requestDataParams)) ? $requestDataParams['date_of_birth'] : null;
+        $identityTypeId = (array_key_exists('identity_type_id', $requestDataParams)) ? $requestDataParams['identity_type_id'] : null;
+        $nationalityId = (array_key_exists('nationality_id', $requestDataParams)) ? $requestDataParams['nationality_id'] : null;
+        $limit = (array_key_exists('limit', $requestDataParams)) ? $requestDataParams['limit'] : 10;
+        $page = (array_key_exists('page', $requestDataParams)) ? $requestDataParams['page'] : 1;
+        $get_user_id = (array_key_exists('id', $requestDataParams)) ? $requestDataParams['id'] : null;
+
+        $conditions = [];
+        $security_users = TableRegistry::get('security_users');
+        $userIdentities = TableRegistry::get('user_identities');
+        $genders = TableRegistry::get('genders');
+        $mainIdentityTypes = TableRegistry::get('identity_types');
+        $mainNationalities = TableRegistry::get('nationalities');
+        $areaAdministratives = TableRegistry::get('area_administratives');
+        $birthAreaAdministratives = TableRegistry::get('area_administratives');
+
+        if (!empty($firstName)) {
+            $conditions[$security_users->aliasField('first_name') . ' LIKE'] = $firstName . '%';
+        }
+        if (!empty($lastName)) {
+            $conditions[$security_users->aliasField('last_name') . ' LIKE'] = $lastName . '%';
+        }
+        if (!empty($openemisNo)) {
+            $conditions[$security_users->aliasField('openemis_no') . ' LIKE'] = $openemisNo . '%';
+        }
+        if (!empty($dateOfBirth)) {
+            $conditions[$security_users->aliasField('date_of_birth')] = date_create($dateOfBirth)->format('Y-m-d');
+        }
+
+        if (!empty($userTypeId)) {
+            //POCOR-7192 comment user_type condition starts
+            /*if($userTypeId ==1){
+                $conditions[$security_users->aliasField('is_student')] = 1;
+            }else if($userTypeId ==2){
+                $conditions[$security_users->aliasField('is_staff')] = 1;
+            }else if($userTypeId ==3){
+                $conditions[$security_users->aliasField('is_guardian')] = 1;
+            }*///POCOR-7192 Ends
+        }
+
+        //it is user for getting single user data
+        if (!empty($get_user_id)) {
+            $conditions[$security_users->aliasField('id')] = $get_user_id;
+        }
+        $totalCount = 0;
+        if ($identityNumber == '') {
+            $security_users_result = $security_users
+                ->find()
+                ->select([
+                    $security_users->aliasField('id'),
+                    $security_users->aliasField('username'),
+                    $security_users->aliasField('password'),
+                    $security_users->aliasField('openemis_no'),
+                    $security_users->aliasField('first_name'),
+                    $security_users->aliasField('middle_name'),
+                    $security_users->aliasField('third_name'),
+                    $security_users->aliasField('last_name'),
+                    $security_users->aliasField('preferred_name'),
+                    $security_users->aliasField('email'),
+                    $security_users->aliasField('address'),
+                    $security_users->aliasField('postal_code'),
+                    $security_users->aliasField('date_of_death'),
+                    $security_users->aliasField('external_reference'),
+                    $security_users->aliasField('last_login'),
+                    $security_users->aliasField('photo_name'),
+                    $security_users->aliasField('photo_content'),
+                    $security_users->aliasField('preferred_language'),
+                    $security_users->aliasField('address_area_id'),
+                    $security_users->aliasField('birthplace_area_id'),
+                    $security_users->aliasField('gender_id'),
+                    $security_users->aliasField('date_of_birth'),
+                    $security_users->aliasField('nationality_id'),
+                    $security_users->aliasField('identity_number'),
+                    $security_users->aliasField('super_admin'),
+                    $security_users->aliasField('status'),
+                    $security_users->aliasField('is_student'),
+                    $security_users->aliasField('is_staff'),
+                    $security_users->aliasField('is_guardian'),
+                    'Genders_id' => $genders->aliasField('id'),
+                    'Genders_name' => $genders->aliasField('name'),
+                    'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
+                    'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
+                    'MainNationalities_id' => $mainNationalities->aliasField('id'),
+                    'MainNationalities_name' => $mainNationalities->aliasField('name'),
+                    'area_name' => $areaAdministratives->aliasField('name'),
+                    'area_code' => $areaAdministratives->aliasField('code'),
+                    'birth_area_name' => 'birthAreaAdministratives.name',
+                    'birth_area_code' => 'birthAreaAdministratives.code',
+                    'MainIdentityTypes_number' => $userIdentities->aliasField('number'),
+                ])
+                ->LeftJoin([$userIdentities->alias() => $userIdentities->table()], [
+                    $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id')
+                ])
+                ->LeftJoin([$genders->alias() => $genders->table()], [
+                    $genders->aliasField('id =') . $security_users->aliasField('gender_id')
+                ])
+                ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                    $mainIdentityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')
+                ])
+                ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                    $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
+                ])
+                ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
+                    $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
+                ])
+                ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->table()], [
+                    'birthAreaAdministratives.id =' . $security_users->aliasField('birthplace_area_id')
+                ])
+                ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $conditions])
+                ->group([$security_users->aliasField('id')])
+                ->limit($limit)
+                ->page($page)
+                ->toArray();
+
+            $totalCount = self::getCountInternalSearch($conditions, $identityNumber);
+        } else {
+            //POCOR-5672 start new changes searching users by identity number
+            $userTypeCondition = [];
+            if (!empty($userTypeId)) {
+                //POCOR-7192 comment user_type condition starts
+                /*if($userTypeId ==1){
+                    $userTypeCondition[$security_users->aliasField('is_student')] = 1;
+                }else if($userTypeId ==2){
+                    $userTypeCondition[$security_users->aliasField('is_staff')] = 1;
+                }else if($userTypeId ==3){
+                    $userTypeCondition[$security_users->aliasField('is_guardian')] = 1;
+                }*///POCOR-7192 ends
+            }
+            $identityCondition = [];
+            if (!empty($identityTypeId) && !empty($identityNumber) && !empty($nationalityId)) {
+                $identityCondition[$userIdentities->aliasField('identity_type_id')] = $identityTypeId;
+                $identityCondition[$userIdentities->aliasField('nationality_id')] = $nationalityId;
+                $identityCondition[$userIdentities->aliasField('number')] = $identityNumber;
+            } else if (!empty($identityTypeId) && !empty($identityNumber) && empty($nationalityId)) {
+                $identityCondition[$userIdentities->aliasField('identity_type_id')] = $identityTypeId;
+                $identityCondition[$userIdentities->aliasField('number')] = $identityNumber;
+            } else if (empty($identityTypeId) && !empty($identityNumber) && empty($nationalityId)) {
+                $identityCondition[$userIdentities->aliasField('number')] = $identityNumber;
+            }
+
+            $get_result_by_identity_users_result = $security_users
+                ->find()
+                ->select([
+                    $security_users->aliasField('id'),
+                    $security_users->aliasField('username'),
+                    $security_users->aliasField('password'),
+                    $security_users->aliasField('openemis_no'),
+                    $security_users->aliasField('first_name'),
+                    $security_users->aliasField('middle_name'),
+                    $security_users->aliasField('third_name'),
+                    $security_users->aliasField('last_name'),
+                    $security_users->aliasField('preferred_name'),
+                    $security_users->aliasField('email'),
+                    $security_users->aliasField('address'),
+                    $security_users->aliasField('postal_code'),
+                    $security_users->aliasField('date_of_death'),
+                    $security_users->aliasField('external_reference'),
+                    $security_users->aliasField('last_login'),
+                    $security_users->aliasField('photo_name'),
+                    $security_users->aliasField('photo_content'),
+                    $security_users->aliasField('preferred_language'),
+                    $security_users->aliasField('address_area_id'),
+                    $security_users->aliasField('birthplace_area_id'),
+                    $security_users->aliasField('gender_id'),
+                    $security_users->aliasField('date_of_birth'),
+                    $security_users->aliasField('nationality_id'),
+                    $security_users->aliasField('identity_number'),
+                    $security_users->aliasField('super_admin'),
+                    $security_users->aliasField('status'),
+                    $security_users->aliasField('is_student'),
+                    $security_users->aliasField('is_staff'),
+                    $security_users->aliasField('is_guardian'),
+                    'Genders_id' => $genders->aliasField('id'),
+                    'Genders_name' => $genders->aliasField('name'),
+                    'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
+                    'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
+                    'MainNationalities_id' => $mainNationalities->aliasField('id'),
+                    'MainNationalities_name' => $mainNationalities->aliasField('name'),
+                    'area_name' => $areaAdministratives->aliasField('name'),
+                    'area_code' => $areaAdministratives->aliasField('code'),
+                    'birth_area_name' => 'birthAreaAdministratives.name',
+                    'birth_area_code' => 'birthAreaAdministratives.code',
+                    'MainIdentityTypes_number' => $userIdentities->aliasField('number'),
+                ])
+                ->InnerJoin([$userIdentities->alias() => $userIdentities->table()], [
+                    $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
+                    $identityCondition
+                    //$userIdentities->aliasField('number') ." LIKE '" . $identityNumber . "%'"
+                ])
+                ->LeftJoin([$genders->alias() => $genders->table()], [
+                    $genders->aliasField('id =') . $security_users->aliasField('gender_id')
+                ])
+                ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                    $mainIdentityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')
+                ])
+                ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                    $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
+                ])
+                ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
+                    $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
+                ])
+                ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->table()], [
+                    'birthAreaAdministratives.id =' . $security_users->aliasField('birthplace_area_id')
+                ])
+                ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $userTypeCondition])
+                ->group([$security_users->aliasField('id')])
+                ->limit($limit)
+                ->page($page)
+                ->toArray();
+            if (empty($get_result_by_identity_users_result)) {
+                $security_users_result = $security_users
+                    ->find()
+                    ->select([
+                        $security_users->aliasField('id'),
+                        $security_users->aliasField('username'),
+                        $security_users->aliasField('password'),
+                        $security_users->aliasField('openemis_no'),
+                        $security_users->aliasField('first_name'),
+                        $security_users->aliasField('middle_name'),
+                        $security_users->aliasField('third_name'),
+                        $security_users->aliasField('last_name'),
+                        $security_users->aliasField('preferred_name'),
+                        $security_users->aliasField('email'),
+                        $security_users->aliasField('address'),
+                        $security_users->aliasField('postal_code'),
+                        $security_users->aliasField('date_of_death'),
+                        $security_users->aliasField('external_reference'),
+                        $security_users->aliasField('last_login'),
+                        $security_users->aliasField('photo_name'),
+                        $security_users->aliasField('photo_content'),
+                        $security_users->aliasField('preferred_language'),
+                        $security_users->aliasField('address_area_id'),
+                        $security_users->aliasField('birthplace_area_id'),
+                        $security_users->aliasField('gender_id'),
+                        $security_users->aliasField('date_of_birth'),
+                        $security_users->aliasField('nationality_id'),
+                        $security_users->aliasField('identity_number'),
+                        $security_users->aliasField('super_admin'),
+                        $security_users->aliasField('status'),
+                        $security_users->aliasField('is_student'),
+                        $security_users->aliasField('is_staff'),
+                        $security_users->aliasField('is_guardian'),
+                        'Genders_id' => $genders->aliasField('id'),
+                        'Genders_name' => $genders->aliasField('name'),
+                        'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
+                        'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
+                        'MainNationalities_id' => $mainNationalities->aliasField('id'),
+                        'MainNationalities_name' => $mainNationalities->aliasField('name'),
+                        'area_name' => $areaAdministratives->aliasField('name'),
+                        'area_code' => $areaAdministratives->aliasField('code'),
+                        'birth_area_name' => 'birthAreaAdministratives.name',
+                        'birth_area_code' => 'birthAreaAdministratives.code',
+                        'MainIdentityTypes_number' => $userIdentities->aliasField('number'),
+                    ])
+                    ->InnerJoin([$userIdentities->alias() => $userIdentities->table()], [
+                        $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
+                        $identityCondition
+                    ])
+                    ->LeftJoin([$genders->alias() => $genders->table()], [
+                        $genders->aliasField('id =') . $security_users->aliasField('gender_id')
+                    ])
+                    ->LeftJoin([$mainIdentityTypes->alias() => $mainIdentityTypes->table()], [
+                        $mainIdentityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')
+                    ])
+                    ->LeftJoin([$mainNationalities->alias() => $mainNationalities->table()], [
+                        $mainNationalities->aliasField('id =') . $security_users->aliasField('nationality_id')
+                    ])
+                    ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()], [
+                        $areaAdministratives->aliasField('id =') . $security_users->aliasField('address_area_id')
+                    ])
+                    ->LeftJoin(['birthAreaAdministratives' => $birthAreaAdministratives->table()], [
+                        'birthAreaAdministratives.id =' . $security_users->aliasField('birthplace_area_id')
+                    ])
+                    ->where([$security_users->aliasField('super_admin') . ' <> ' => 1, $conditions])
+                    ->group([$security_users->aliasField('id')])
+                    ->limit($limit)
+                    ->page($page)
+                    ->toArray();
+            } else {
+                $security_users_result = $get_result_by_identity_users_result;
+            }
+
+            $totalCount = self::getCountInternalSearch($conditions, $identityNumber, $identityCondition, $userTypeCondition);//POCOR-5672 ends
+        }
+        $institutions = TableRegistry::get('institutions');
+        $institutionsTbl = $institutions
+            ->find()
+            ->select([
+                'institution_name' => $institutions->aliasField('name'),
+                'institution_code' => $institutions->aliasField('code')
+            ])->where([
+                $institutions->aliasField('id') => $institutionId
+            ])->first();
+
+        $institutionStudents = TableRegistry::get('institution_students');
+        $institutionStaff = TableRegistry::get('institution_staff');
+
+        $user_internal_search_result = [];
+        foreach ($security_users_result AS $security_user) {
+            $MainNationalities_id = !empty($security_user['MainNationalities_id']) ? $security_user['MainNationalities_id'] : '';
+            $MainNationalities_name = !empty($security_user['MainNationalities_name']) ? $security_user['MainNationalities_name'] : '';
+            $MainIdentityTypes_id = !empty($security_user['MainIdentityTypes_id']) ? $security_user['MainIdentityTypes_id'] : '';
+            $MainIdentityTypes_name = !empty($security_user['MainIdentityTypes_name']) ? $security_user['MainIdentityTypes_name'] : '';
+            $identity_number = !empty($security_user['MainIdentityTypes_number']) ? $security_user['MainIdentityTypes_number'] : '';
+            $security_user_id = $security_user['id'];
+
+            $UserNeeds = TableRegistry::get('user_special_needs_assessments');
+            $SpecialNeeds = $UserNeeds->find()
+                ->where([$UserNeeds->aliasField('security_user_id') => $security_user_id])
+                ->count();
+            $has_special_needs = ($SpecialNeeds == 1) ? true : false;
+
+            $is_same_school = $is_diff_school = $academic_period_id = $academic_period_year = 0;
+            $education_grade_id = $institution_id = $institution_code = $institution_name = '';
+            $CustomDataArray = [];
+            if (!empty($userTypeId)) {
+                if ($security_user['is_student'] == 1) {
+                    $account_type = 'Student';
+                } else if ($security_user['is_staff'] == 1) {
+                    $account_type = 'Staff';
+                } else if ($security_user['is_guardian'] == 1) {
+                    $account_type = 'Guardian';
+                } else {
+                    $account_type = 'Others';
+                }
+                if ($userTypeId == self::STUDENT) {
+                    //POCOR-7224-HINDOL
+                    //$account_type = 'Student';
+                    $student = self::getStudent( $security_user_id);
+                    if (!empty($student)) {
+                        $institution_id = $student->institution_id;
+                        $institution_name = $student->institution_name;
+                        $institution_code = $student->institution_code;
+                        $academic_period_id = $student->academic_period_id;
+                        $academic_period_year = $student->academic_period_year;
+                        $education_grade_id = $student->education_grade_id;
+                        if ($student->institution_id == $institutionId) {
+                            $is_same_school = 1;
+                        } else {
+                            $is_diff_school = 1;
+                        }
+                    }
+
+
+                    if (empty($student)) {
+                        $pendingTransfer = self::getPendingTransfer($security_user_id);
+
+                        if ($pendingTransfer) {
+                            $has_pending_transfer = 1;
+                            $institution_id = $pendingTransfer->institution_id;
+                            $institution_name = $pendingTransfer->institution_name;
+                            $institution_code = $pendingTransfer->institution_code;
+                            $academic_period_id = $pendingTransfer->academic_period_id;
+                        }
+                        if (empty($pendingTransfer)) {
+                            $pendingWithdraw = self::getPendingWithdraw($security_user_id);
+                            if ($pendingWithdraw) {
+                                $has_pending_withdraw = 1;
+                                $institution_id = $pendingWithdraw->institution_id;
+                                $institution_name = $pendingWithdraw->institution_name;
+                                $institution_code = $pendingWithdraw->institution_code;
+                                $academic_period_id = $pendingWithdraw->academic_period_id;
+                            }
+                        }
+                    }
+//
+                    //get student custom data
+                    $CustomDataArray = self::getStudentCustomData($security_user_id);
+                }
+                if ($userTypeId == self::STAFF) {
+                    //$account_type = 'Staff';
+                    $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+                    $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+
+                    $institutionStaffTbl = $institutionStaff
+                        ->find()
+                        ->select([
+                            'institution_id' => $institutionStaff->aliasField('institution_id'),
+                            'staff_id' => $institutionStaff->aliasField('staff_id'),
+                            'institution_position_id' => $institutionStaff->aliasField('institution_position_id'),
+                            'staff_status_id' => $institutionStaff->aliasField('staff_status_id'),
+                            'institution_name' => $institutions->aliasField('name'),
+                            'institution_code' => $institutions->aliasField('code')
+                        ])
+                        ->InnerJoin([$institutions->alias() => $institutions->table()], [
+                            $institutions->aliasField('id =') . $institutionStaff->aliasField('institution_id')
+                        ])
+                        ->where([
+                            $institutionStaff->aliasField('staff_id') => $security_user_id,
+                            $institutionStaff->aliasField('staff_status_id') => $assignedStatus,
+                            $institutionStaff->aliasField('institution_id') => $institutionId
+                        ])->toArray();
+
+                    if (!empty($institutionStaffTbl)) {
+                        $positionArray = [];
+                        $is_same_school = 1;
+                        foreach ($institutionStaffTbl as $skey => $sval) {
+                            $institution_id = $sval->institution_id;
+                            $institution_name = $sval->institution_name;
+                            $institution_code = $sval->institution_code;
+                            $positionArray[$skey] = $sval->institution_position_id;
+                        }
+                    } else {
+                        $institutionStaffTbl = $institutionStaff
+                            ->find()
+                            ->select([
+                                'institution_id' => $institutionStaff->aliasField('institution_id'),
+                                'staff_id' => $institutionStaff->aliasField('staff_id'),
+                                'institution_position_id' => $institutionStaff->aliasField('institution_position_id'),
+                                'staff_status_id' => $institutionStaff->aliasField('staff_status_id'),
+                                'institution_name' => $institutions->aliasField('name'),
+                                'institution_code' => $institutions->aliasField('code')
+                            ])
+                            ->InnerJoin([$institutions->alias() => $institutions->table()], [
+                                $institutions->aliasField('id =') . $institutionStaff->aliasField('institution_id')
+                            ])
+                            ->where([
+                                $institutionStaff->aliasField('staff_id') => $security_user_id,
+                                $institutionStaff->aliasField('staff_status_id') => $assignedStatus
+                            ])->toArray();
+                        if (empty($institutionStaffTbl)) {
+                            $is_diff_school = 0;
+                        } else {
+                            $is_diff_school = 1;
+                        }
+                        $positionArray = [];
+                        foreach ($institutionStaffTbl as $skey => $sval) {
+                            $institution_id = $sval->institution_id;
+                            $institution_name = $sval->institution_name;
+                            $institution_code = $sval->institution_code;
+                            $positionArray[$skey] = $sval->institution_position_id;
+                        }
+                    }
+                    //get staff custom data
+                    $CustomDataArray = self::getStaffCustomData($security_user_id);
+                }
+                if ($userTypeId == self::GUARDIAN) {
+                    //$account_type = 'Guardian';
+                }
+                if ($userTypeId == self::OTHER) {
+                    //$account_type = 'Others';
+                }
+            }
+
+            $user_internal_search_result[] = [
+                'id' => $security_user_id,
+                'username' => $security_user['username'],
+                'password' => $security_user['password'],
+                'openemis_no' => $security_user['openemis_no'],
+                'first_name' => $security_user['first_name'],
+                'middle_name' => $security_user['middle_name'],
+                'third_name' => $security_user['third_name'],
+                'last_name' => $security_user['last_name'],
+                'preferred_name' => $security_user['preferred_name'],
+                'email' => $security_user['email'],
+                'address' => $security_user['address'],
+                'postal_code' => $security_user['postal_code'],
+                'gender_id' => $security_user['gender_id'],
+                'external_reference' => $security_user['external_reference'],
+                'last_login' => $security_user['last_login'],
+                'photo_name' => $security_user['photo_name'],
+                'photo_content' => $security_user['photo_content'],
+                'preferred_language' => $security_user['preferred_language'],
+                'address_area_id' => $security_user['address_area_id'],
+                'birthplace_area_id' => $security_user['birthplace_area_id'],
+                'super_admin' => $security_user['super_admin'],
+                'status' => $security_user['status'],
+                'is_student' => $security_user['is_student'],
+                'is_staff' => $security_user['is_staff'],
+                'is_guardian' => $security_user['is_guardian'],
+                'name' => $security_user['first_name'] . " " . $security_user['last_name'],
+                'date_of_birth' => $security_user['date_of_birth']->format('Y-m-d'),
+                'gender' => $security_user['Genders_name'],
+                'nationality_id' => $MainNationalities_id,
+                'nationality' => $MainNationalities_name,
+                'identity_type_id' => $MainIdentityTypes_id,
+                'identity_type' => $MainIdentityTypes_name,
+                'identity_number' => $identity_number,
+                'has_special_needs' => $has_special_needs,
+                'area_name' => $security_user['area_name'],
+                'area_code' => $security_user['area_code'],
+                'birth_area_name' => $security_user['birth_area_name'],
+                'birth_area_code' => $security_user['birth_area_code'],
+                'is_same_school' => $is_same_school,
+                'is_diff_school' => $is_diff_school,
+                'has_pending_withdraw' => $has_pending_withdraw,
+                'has_pending_transfer' => $has_pending_transfer,
+                'current_enrol_institution_id' => $institution_id,
+                'current_enrol_institution_name' => $institution_name,
+                'current_enrol_institution_code' => $institution_code,
+                'current_enrol_academic_period_id' => $academic_period_id,
+                'current_enrol_academic_period_year' => $academic_period_year,
+                'current_enrol_education_grade_id' => $education_grade_id,
+                'institution_name' => $institutionsTbl->institution_name,
+                'institution_code' => $institutionsTbl->institution_code,
+                'positions' => $positionArray,
+                'account_type' => $account_type,
+                'custom_data' => $CustomDataArray];
+        }
+        $userInternalSearch = ['data' => $user_internal_search_result, 'total' => $totalCount];
+        return $userInternalSearch;
+    }
+
+    //POCOR-7224-HINDOL[end]
 }
