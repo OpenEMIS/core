@@ -33,6 +33,7 @@ use App\Models\InstitutionCompetencyResults;
 use App\Models\InstitutionCompetencyItemComments;
 use App\Models\InstitutionCompetencyPeriodComments;
 use App\Models\StaffTypes;
+use App\Models\ConfigItem;
 use App\Models\InstitutionSubjectStaff;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -1715,6 +1716,55 @@ class InstitutionRepository extends Controller
     }
 
 
+    public function displayAddressAreaLevel($request)
+    {
+        try {
+            $params = $request->all();
+            $areaLevel = [];
+
+            $configItem = ConfigItem::where('code', 'address_area_level')->first();
+            if($configItem){
+                $val = $configItem->value;
+                $areaLevel = AreaAdministratives::where('area_administrative_level_id', $val)->get();
+                
+            }
+            return $areaLevel;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get address area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get address area level area.');
+        }
+    }
+
+
+
+    public function displayBirthplaceAreaLevel($request)
+    {
+        try {
+            $params = $request->all();
+            $areaLevel = [];
+
+            $configItem = ConfigItem::where('code', 'birthplace_area_level')->first();
+            if($configItem){
+                $val = $configItem->value;
+                $areaLevel = AreaAdministratives::where('area_administrative_level_id', $val)->get();
+                
+            }
+            return $areaLevel;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get address area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get address area level area.');
+        }
+    }
     public function getSubjectsStaffList($request)
     {
         try {
