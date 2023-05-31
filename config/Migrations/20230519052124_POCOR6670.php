@@ -167,6 +167,8 @@ class POCOR6670 extends AbstractMigration
             ])
             ->extract('id')
             ->first();
+
+        $this->execute("UPDATE staff_behaviours SET staff_behaviours.status_id = $openStatusId");
             
         //  workflow_actions
         $workflowActionData = [
