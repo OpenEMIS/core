@@ -154,8 +154,8 @@ class SurveysTable extends AppTable
             $institutionType = $SurveyFormsFilters->find()
                 ->where([
                     $SurveyFormsFilters->aliasField('survey_form_id').' = '.$surveyFormId,
-                ])
-                ->select([ 'institution_type_id' => $SurveyFormsFilters->aliasField('survey_filter_id') ]);
+                ]);
+                //->select([ 'institution_type_id' => $SurveyFormsFilters->aliasField('survey_filter_id') ]); //POCOR-7442::comment this line
 
             $InstitutionsTable = $this->Institutions;
 
@@ -443,9 +443,9 @@ class SurveysTable extends AppTable
             ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
                 'SurveyFormsFilters.survey_form_id = SurveyForms.id'
             ])
-            ->leftJoin(['InstitutionTypes' => 'institution_types'], [
-                'SurveyFormsFilters.survey_filter_id = InstitutionTypes.id'
-            ])
+            // ->leftJoin(['InstitutionTypes' => 'institution_types'], [
+            //     'SurveyFormsFilters.survey_filter_id = InstitutionTypes.id'
+            // ]) //POCOR-7442 :: Comment this join bcoz field not found in SurveyFormsFilters table
             ->leftJoin(['Institutions' => 'institutions'], [
                 'InstitutionTypes.id = Institutions.institution_type_id'
             ])
