@@ -299,7 +299,10 @@ class DirectoriesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
     }
     // Special Needs - End
-
+    public function Counsellings()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.Counsellings']);
+    }
     public function Employments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']);
@@ -999,8 +1002,11 @@ class DirectoriesController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
+    
     public function getProfessionalTabElements($options = [])
     {
+        echo "hey";
+        exit;
         $session = $this->request->session();
         $isStudent = $session->read('Directory.Directories.is_student');
         $isStaff = $session->read('Directory.Directories.is_staff');
@@ -2051,9 +2057,10 @@ class DirectoriesController extends AppController
     /*POCOR-6286 ends*/
 
      // POCOR-7366 Counselling added in directory
-    public function Counsellings()
+    public function DirectoryCounsellings()
     {
-      
+      echo "hey";
+      exit;
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.Counsellings']);
     }
      // Counselling End
