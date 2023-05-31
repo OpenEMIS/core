@@ -34,6 +34,7 @@ use App\Models\InstitutionCompetencyItemComments;
 use App\Models\InstitutionCompetencyPeriodComments;
 use App\Models\StaffTypes;
 use App\Models\AssessmentItemResults;
+use App\Models\ConfigItem;
 use App\Models\InstitutionSubjectStaff;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -1324,6 +1325,7 @@ class InstitutionRepository extends Controller
 
     public function reportCardCommentAdd($request, int $institutionId, int $classId)
     {
+        DB::beginTransaction();
         try {
             $data = $request->all();
 
@@ -1342,11 +1344,11 @@ class InstitutionRepository extends Controller
                 'education_subject_id' => $data['education_subject_id'],
             ])
             ->first();
-
+            //dd($isExists);
             if($isExists){
                 
                 $updateArr['comments'] = $data['comment'];
-                if($data['report_card_comment_code_id']){
+                if(isset($data['report_card_comment_code_id'])){
                     $updateArr['report_card_comment_code_id'] = (int)$data['report_card_comment_code_id'];
                 }
                 $updateArr['staff_id'] = $data['staff_id'];
@@ -1371,7 +1373,7 @@ class InstitutionRepository extends Controller
                 $store['institution_id'] = $institutionId;
                 $store['education_grade_id'] = $data['education_grade_id'];
                 $store['education_subject_id'] = $data['education_subject_id'];
-                if($data['report_card_comment_code_id']){
+                if(isset($data['report_card_comment_code_id'])){
                     $store['report_card_comment_code_id'] = (int)$data['report_card_comment_code_id'];
                 }
                 $store['staff_id'] = $data['staff_id'];
@@ -1382,10 +1384,11 @@ class InstitutionRepository extends Controller
             }
 
             
-
+            DB::commit();
             return 1;
             
         } catch (\Exception $e) {
+            DB::rollback();
             Log::error(
                 'Failed to add report card comment.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1399,6 +1402,7 @@ class InstitutionRepository extends Controller
 
     public function reportCardCommentHomeroomAdd($request, int $institutionId, int $classId)
     {
+        DB::beginTransaction();
         try {
             $data = $request->all();
             //dd($data);
@@ -1457,10 +1461,11 @@ class InstitutionRepository extends Controller
                 $insert = InstitutionStudentReportCard::insert($store);
             }
 
-
+            DB::commit();
             return true;
             
         } catch (\Exception $e) {
+            DB::rollback();
             Log::error(
                 'Failed to add report card comment.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1501,6 +1506,7 @@ class InstitutionRepository extends Controller
 
     public function reportCardCommentPrincipalAdd($request, int $institutionId, int $classId)
     {
+        DB::beginTransaction();
         try {
             $data = $request->all();
             
@@ -1559,10 +1565,11 @@ class InstitutionRepository extends Controller
                 $insert = InstitutionStudentReportCard::insert($store);
             }
 
-
+            DB::commit();
             return true;
             
         } catch (\Exception $e) {
+            DB::rollback();
             Log::error(
                 'Failed to add report card comment.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1729,6 +1736,57 @@ class InstitutionRepository extends Controller
         }
     }
 
+    public function displayAddressAreaLevel($request)
+    {
+        try {
+            $params = $request->all();
+            $areaLevel = [];
+
+            $configItem = ConfigItem::where('code', 'address_area_level')->first();
+            if($configItem){
+                $val = $configItem->value;
+                $areaLevel = AreaAdministratives::where('area_administrative_level_id', $val)->get();
+                
+            }
+            return $areaLevel;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get address area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get address area level area.');
+        }
+    }
+
+
+
+    public function displayBirthplaceAreaLevel($request)
+    {
+        try {
+            $params = $request->all();
+            $areaLevel = [];
+
+            $configItem = ConfigItem::where('code', 'birthplace_area_level')->first();
+            if($configItem){
+                $val = $configItem->value;
+                $areaLevel = AreaAdministratives::where('area_administrative_level_id', $val)->get();
+                
+            }
+            return $areaLevel;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get address area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get address area level area.');
+        }
+    }
+
+    
     public function getSubjectsStaffList($request)
     {
         try {
