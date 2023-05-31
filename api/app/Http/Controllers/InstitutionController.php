@@ -10,6 +10,7 @@ use App\Http\Requests\ReportCardCommentHomeroomAdd;
 use App\Http\Requests\CompetencyResultsAddRequest;
 use App\Http\Requests\CompetencyCommentAddRequest;
 use App\Http\Requests\CompetencyPeriodCommentAddRequest;
+use App\Http\Requests\DeleteClassAttendanceRequest;
 
 class InstitutionController extends Controller
 {
@@ -828,6 +829,24 @@ class InstitutionController extends Controller
                 return $this->sendErrorResponse('Staff id and institution id is required.');
             }
             $data = $this->institutionService->getSubjectsStaffList($request);
+            return $this->sendSuccessResponse("Subjects Staff List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Subjects Staff List Not Found');
+        }
+    }
+
+
+    public function deleteClassAttendance(DeleteClassAttendanceRequest $request)
+    {
+        try {
+            dd($request->all());
+            $data = $this->institutionService->deleteClassAttendance($request);
             return $this->sendSuccessResponse("Subjects Staff List Found", $data);
             
         } catch (\Exception $e) {

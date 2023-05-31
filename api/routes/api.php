@@ -160,6 +160,9 @@ Route::group(
         Route::post('institutions/students/competencies/periods/comments', 'InstitutionController@addCompetencyPeriodComments');
 
 
+        Route::delete('institutions/institution-classes/education-grades/class-attendance', 'InstitutionController@deleteClassAttendance');
+
+
 
     }
 );
