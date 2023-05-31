@@ -284,7 +284,7 @@ class NavigationComponent extends Component
         ];
 
         $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'ScholarshipsDirectory', 'ProfileApplicationInstitutionChoices', 'ProfileApplicationAttachments'];
-        $directoryControllers = ['DirectoryBodyMasses', 'DirectoryComments', 'DirectoryInsurances'];
+        $directoryControllers = ['DirectoryBodyMasses', 'DirectoryComments', 'DirectoryInsurances','Counsellings'];
         $guardianNavsControllers = [];
         if (in_array($controller->name, $institutionControllers) || (
             $controller->name == 'Institutions'
@@ -1447,7 +1447,15 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.Employments', 'Directories.StaffQualifications', 'Directories.StaffExtracurriculars', 'Directories.StaffMemberships', 'Directories.StaffLicenses', 'Directories.StaffAwards']
             ],
-
+            'Directories.Counsellings' => [
+                'title' => 'Counsellings',
+                'parent' => 'Directories.Directories.index',
+                'params' => ['plugin' => 'Directory'],
+                'selected' => ['Counsellings.add', 'Counsellings.edit', 'Counsellings.view', 'Counsellings.delete']
+ 
+               
+            ],
+          
             'Directories.SpecialNeedsReferrals' => [
                 'title' => 'Special Needs',
                 'parent' => 'Directories.Directories.index',
@@ -1661,15 +1669,15 @@ class NavigationComponent extends Component
                 'selected' => ['Directories.StudentProfile']
             ],
 
-             //POCOR-7366 - added counselling to directory module
-             'Directories.Counsellings' => [
-                'title' => 'Counselling',
-                'parent' => 'Directories.Student',
-                'params' => ['plugin' => 'Directory'],
-                'selected' => ['Counsellings.add', 'Counsellings.edit', 'Counsellings.view', 'Counsellings.delete']
-            ],
+            //  //POCOR-7366 - added counselling to directory module
+            //  'Directories.Counsellings' => [
+            //     'title' => 'Counselling',
+            //     'parent' => 'Directories.Students.index',
+            //     'params' => ['plugin' => 'Directory'],
+            //     'selected' => ['Counsellings.add', 'Counsellings.edit', 'Counsellings.view', 'Counsellings.delete']
+            // ],
 
-            // POCOR-7366 ends
+            // // POCOR-7366 ends
 
         ];
 
