@@ -578,7 +578,7 @@ class InstitutionService extends Controller
     {
         try {
             $data = $this->institutionRepository->getInstitutionStaffData($institutionId, $staffId);
-            //dd($data);
+            
             $list = [];
             if($data){
                 $list['id'] = $data['id'];
@@ -1041,6 +1041,70 @@ class InstitutionService extends Controller
             );
 
             return $this->sendErrorResponse('Failed to get birthplace area level area.');
+        }
+    }
+
+    
+    public function getSubjectsStaffList($request)
+    {
+        try {
+            $data = $this->institutionRepository->getSubjectsStaffList($request);
+            
+            //dd($data);
+
+            $resp = [];
+            if($data){
+                foreach($data as $k => $d){
+                    
+                    $resp[$k]['education_systems_name'] = $d['institutionSubject']['educationGrades']['educationProgramme']['educationCycle']['educationLevel']['educationSystem']['name'];
+
+                    $resp[$k]['education_levels_name'] = $d['institutionSubject']['educationGrades']['educationProgramme']['educationCycle']['educationLevel']['name'];
+
+                    $resp[$k]['education_cycles_name'] = $d['institutionSubject']['educationGrades']['educationProgramme']['educationCycle']['name'];
+
+                    $resp[$k]['education_programmes_code'] = $d['institutionSubject']['educationGrades']['educationProgramme']['code'];
+
+                    $resp[$k]['education_programmes_name'] = $d['institutionSubject']['educationGrades']['educationProgramme']['name'];
+
+                    $resp[$k]['education_grades_code'] = $d['institutionSubject']['educationGrades']['code'];
+                    $resp[$k]['education_grades_name'] = $d['institutionSubject']['educationGrades']['name'];
+                    $resp[$k]['education_subjects_code'] = $d['institutionSubject']['educationSubjects']['code'];
+                    $resp[$k]['education_subjects_name'] = $d['institutionSubject']['educationSubjects']['name'];
+                    $resp[$k]['institutions_id'] = $d['institution']['id'];
+                    $resp[$k]['institutions_code'] = $d['institution']['code'];
+                    $resp[$k]['institutions_name'] = $d['institution']['name'];
+
+                    $resp[$k]['institution_classes_name'] = $d['institutionSubject']['classes'][0]['institutionClass']['name']??"";
+
+                    $resp[$k]['academic_periods_code'] = $d['institutionSubject']['academicPeriod']['code'];
+                    $resp[$k]['academic_periods_name'] = $d['institutionSubject']['academicPeriod']['name'];
+                    $resp[$k]['institution_subjects_id'] = $d['institutionSubject']['id'];
+                    $resp[$k]['institution_subjects_name'] = $d['institutionSubject']['name'];
+
+                    $resp[$k]['security_users_openemis_no_subject_teachers'] = $d['staff']['openemis_no'];
+
+                    $openEmisNo = [];
+
+                    if(count($d['institutionSubject']['students']) > 0){
+                        $students = $d['institutionSubject']['students'];
+
+                        foreach($students as $s){
+                            $openEmisNo[] = $s['securityUser']['openemis_no'];
+                        }
+                    }
+
+                    $resp[$k]['security_users_openemis_no_students'] = $openEmisNo;
+                }
+                
+            }
+            return $resp;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Subjects Staff List Not Found');
         }
     }
 

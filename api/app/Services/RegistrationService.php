@@ -82,7 +82,6 @@ class RegistrationService extends Controller
             return $data;
             
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -332,10 +331,10 @@ class RegistrationService extends Controller
     }
 
 
-    public function getInstitutionGradesList($gradeId)
+    public function getInstitutionGradesList($request, $gradeId)
     {
         try {
-            $data = $this->registrationRepository->getInstitutionGradesList($gradeId)->map(
+            $data = $this->registrationRepository->getInstitutionGradesList($request, $gradeId)->map(
                 function ($item, $key) {
                     return [
                         "id" => $item->id,
