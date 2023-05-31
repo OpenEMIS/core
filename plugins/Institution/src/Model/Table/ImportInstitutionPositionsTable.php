@@ -11,6 +11,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Workflow\Model\Behavior\WorkflowBehavior;
+use Cake\Datasource\ConnectionManager;
 
 class ImportInstitutionPositionsTable extends AppTable
 {
@@ -38,6 +39,7 @@ class ImportInstitutionPositionsTable extends AppTable
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         $events['Model.import.onImportGetHomeroomTeacherId'] = 'onImportGetHomeroomTeacherId';
         $events['Model.import.onImportPopulateStaffPositionTitlesData'] = 'onImportPopulateStaffPositionTitlesData';
+        $events['Model.import.onImportPopulateInstitutionShiftsData'] = 'onImportPopulateInstitutionShiftsData'; //POCOR-7417
         $events['Model.import.onImportPopulateHomeroomTeacherData'] = 'onImportPopulateHomeroomTeacherData';
         $events['Model.import.onImportPopulateWorkflowStepsData'] = 'onImportPopulateWorkflowStepsData';
         $events['Model.import.onImportSetModelPassedRecord'] = 'onImportSetModelPassedRecord';
@@ -56,6 +58,42 @@ class ImportInstitutionPositionsTable extends AppTable
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 
+    //POCOR-7417:Start
+    public function onImportPopulateInstitutionShiftsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
+        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $periodEntity = $AcademicPeriods->getCurrent();
+        $InstitutionShiftsResults = $lookedUpTable
+            ->find()
+            ->contain(['ShiftOptions','AcademicPeriods'])
+            ->select([
+                'shift_id' => $lookedUpTable->aliasField('id'),
+                'id' => 'ShiftOptions.id',
+                'name' => 'ShiftOptions.name'
+            ])
+            ->where([
+                $lookedUpTable->aliasField('academic_period_id') => $periodEntity,
+                $lookedUpTable->aliasField('location_institution_id') =>$_SESSION['Institution']['Institutions']['id'],
+            ])
+            ->autoFields(false)
+            ->all();
+        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+        
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+        if (!$InstitutionShiftsResults->isEmpty()) {
+            $modelData = $InstitutionShiftsResults->toArray();
+            
+            foreach ($modelData as $row) {
+                $data[$columnOrder]['data'][] = [
+                    $row->name,
+                    $row->id
+                ];
+            }
+        }
+    }
+//POCOR-7417:end
     public function onImportGetHomeroomTeacherId(Event $event, $cellValue)
     {
         $options = $this->getSelectOptions('general.yesno');
@@ -166,6 +204,48 @@ class ImportInstitutionPositionsTable extends AppTable
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
+        //POCOR-7417:Start
+        $conn = ConnectionManager::get('default');
+        $status = $tempRow['status_id'];
+        $insId = $_SESSION['Institution']['Institutions']['id'];
+        $result = $conn->execute("SELECT MIN(security_group_users.security_user_id)
+        FROM security_group_users
+        WHERE security_group_users.security_group_id IN 
+        (
+            SELECT security_group_institutions.security_group_id
+            FROM security_group_institutions
+            WHERE security_group_institutions.institution_id = $insId
+        
+            UNION 
+        
+            SELECT security_group_areas.security_group_id
+            FROM security_group_areas
+            INNER JOIN institutions
+            ON institutions.area_id = security_group_areas.area_id
+            AND institutions.id = $insId
+        
+            UNION 
+        
+            SELECT institutions.security_group_id
+            FROM institutions
+            WHERE institutions.id = $insId
+        )
+        AND security_group_users.security_role_id IN
+        (
+            SELECT workflow_steps_roles.security_role_id
+            FROM workflow_steps_roles
+            INNER JOIN workflow_steps
+            ON workflow_steps.id = workflow_steps_roles.workflow_step_id
+            INNER JOIN workflows
+            ON workflows.id = workflow_steps.workflow_id
+            INNER JOIN workflow_models
+            ON workflow_models.id = workflows.workflow_model_id
+            WHERE workflow_models.name LIKE 'Institutions > Positions'
+            AND workflow_steps.id = $status -- This values is coming from Template > References > Status
+        )");
+        $rows = $result->fetch('assoc');
+        $userRow = $rows['MIN(security_group_users.security_user_id)'];
+        //POCOR-7417:end
         if (!$this->institutionId) {
             $rowInvalidCodeCols['institution_id'] = __('No active institution');
             $tempRow['institution_id'] = false;
@@ -173,6 +253,11 @@ class ImportInstitutionPositionsTable extends AppTable
         }
 
         $tempRow['assignee_id'] = WorkflowBehavior::AUTO_ASSIGN;
+        //POCOR-7417:Start
+        if($tempRow['assignee_id'] == '-1'){
+            $tempRow['assignee_id'] = $userRow;
+        }
+        //POCOR-7417:end
         $tempRow['institution_id'] = $this->institutionId;
 
         if (!isset($tempRow['position_no'])) {

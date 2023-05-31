@@ -2367,7 +2367,45 @@ paths:
             description: Invalid status value 
 
 
-  /api/v4/area-administrative/display-address-area-level:
+  /api/v4/institutions/subjects/staff:
+      get:
+        tags:
+          - Institution
+        summary: Get Staff's Subjects detail
+        description: Get staff's subjects details on the bases of institution
+        parameters:
+          - name: staff_id
+            in: path
+            description: Add Staff id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+          - name: institution_id
+            in: path
+            description: Add Institution id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Institution-Subjects-Staff'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Institution-Subjects-Staff'
+          '400':
+            description: Invalid status value 
+
+    /api/v4/area-administrative/display-address-area-level:
       get:
         tags:
           - Institution Areas
@@ -3987,3 +4025,92 @@ components:
           type: object
           format: varchar
           example: "{token:heyJoeXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9kZW1vLm9wZW5lbWlzLm9yZ1wvY29yZVwvYXBpXC92NFwvbG9naW4iLCJpYXQiOjE2NzQ3MDQ1NjUsImV4cCI6MTY3NDcwODE2NSwibmJmIjoxNjc0NzA0NTY1LCJqdGkiOiJBUElEaGtWak9FUHdzUXc2Iiwic3ViIjoyLCJwcnYiOiJlMjE0OWY2ZjU0YWJlZjFjN2Q2NjMzYTUzYzkyMmM1NzgxODA1ZThjIn0.7Qcz1wiCG9LDxxVOUgGAgkTyOCHqfQ5861QGg6xuPOI}"
+    Institution-Subjects-Staff:
+      type: object
+      properties:
+        education_systems_name:
+          type: string
+          format: varchar
+          example: "National Education System 2023"
+        education_levels_name:
+          type: string
+          format: varchar
+          example: "Primary Education"
+        education_cycles_name:
+          type: string
+          format: varchar
+          example: "Primary - General"
+        education_programmes_code:
+          type: string
+          format: varchar
+          example: "Primary"
+        education_programmes_name:
+          type: string
+          format: varchar
+          example: "Primary"
+        education_grades_code:
+          type: string
+          format: varchar
+          example: "Primary 1"
+        education_grades_name:
+          type: string
+          format: varchar
+          example: "Primary 1"
+        education_subjects_code:
+          type: string
+          format: varchar
+          example: "SSMC"
+        education_subjects_name:
+          type: string
+          format: varchar
+          example: "Social Studies"
+        institutions_id:
+          type: integer
+          format: int
+          example: 6
+        institutions_code:
+          type: string
+          format: varchar
+          example: "P1002"
+        institutions_name:
+          type: string
+          format: varchar
+          example: "Avory Primary School"
+        institution_classes_name:
+          type: string
+          format: varchar
+          example: "Primary 1-A"
+        academic_periods_name:
+          type: string
+          format: varchar
+          example: "YR2023"
+        academic_periods_code:
+          type: string
+          format: varchar
+          example: "2023"
+        institution_subjects_id:
+          type: integer
+          format: int
+          example: 4516
+        institution_subjects_name:
+          type: string
+          format: varchar
+          example: "Social Studies"
+        security_users_openemis_no_subject_teachers:
+          type: string
+          format: varchar
+          example: "1522952429"
+        security_users_openemis_no_students:
+          type: string
+          format: varchar
+          example: ""
+        tags:
+          type: array
+          xml:
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/Institution-Grades'
+        complete:
+          type: boolean
+      xml:
+        name: order
