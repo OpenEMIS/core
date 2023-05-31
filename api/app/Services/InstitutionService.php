@@ -1028,6 +1028,53 @@ class InstitutionService extends Controller
         }
     }
 
+    public function displayAddressAreaLevel($request)
+    {
+        try {
+            $data = $this->institutionRepository->displayAddressAreaLevel($request)->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->name,
+                    ];
+                }
+            );
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get address area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get address area level area.');
+        }
+    }
+
+
+    public function displayBirthplaceAreaLevel($request)
+    {
+        try {
+            $data = $this->institutionRepository->displayBirthplaceAreaLevel($request)->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->name,
+                    ];
+                }
+            );
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get birthplace area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get birthplace area level area.');
+        }
+    }
+
     
     public function getSubjectsStaffList($request)
     {

@@ -839,6 +839,42 @@ class InstitutionController extends Controller
         }
     }
     
+    public function displayAddressAreaLevel(Request $request)
+    {
+        try {
+            $data = $this->institutionService->displayAddressAreaLevel($request);
+            
+            return $this->sendSuccessResponse("Address area level area found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get address area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get address area level area.');
+        }
+    }
+
+
+    public function displayBirthplaceAreaLevel(Request $request)
+    {
+        try {
+            $data = $this->institutionService->displayBirthplaceAreaLevel($request);
+            
+            return $this->sendSuccessResponse("Birthplace area level area found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get birthplace area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get birthplace area level area.');
+        }
+    }
+
+    
     public function getSubjectsStaffList(Request $request)
     {
         try {
