@@ -363,7 +363,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         # Update the status of student process
         $StudentsReportCards->query()->update()
             ->set([
-                'status' => self::COMPLETED,  // POCOR-7443
+                'status' => self::NEW_PROCESS,  // POCOR-7443
                 // 'started_on' => null,    // POCOR-7443
                 // 'completed_on' => null   // POCOR-7443
             ])
