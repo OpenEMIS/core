@@ -11,8 +11,13 @@ class POCOR7366 extends AbstractMigration
      * @return void
      */
     public function up()
-    {
-        //$this->execute('DROP TABLE IF EXISTS `zz_6515_security_functions`');
+    { 
+        $this->execute('CREATE TABLE `zz_7366_institution_counsellings` LIKE `institution_counsellings`');
+        $this->execute('INSERT INTO `zz_7366_institution_counsellings` SELECT * FROM `institution_counsellings`');
+        $this->execute('RENAME TABLE `institution_counsellings` TO `counsellings`');
+
+
+        $this->execute('DROP TABLE IF EXISTS `zz_7366_security_functions`');
         $this->execute('CREATE TABLE `zz_7366_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `zz_7366_security_functions` SELECT * FROM `security_functions`');
         $this->insert('security_functions', [
@@ -36,6 +41,9 @@ class POCOR7366 extends AbstractMigration
 
     public function down()
     {
+        $this->execute('DROP TABLE IF EXISTS `counsellings`');
+        $this->execute('RENAME TABLE `zz_7366_institution_counsellings` TO `institution_counsellings`');
+
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
         $this->execute('RENAME TABLE `zz_7366_security_functions` TO `security_functions`');
     }
