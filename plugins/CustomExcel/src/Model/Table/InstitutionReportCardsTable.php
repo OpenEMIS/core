@@ -1003,52 +1003,32 @@ class InstitutionReportCardsTable extends AppTable
             return $entity;
         }
     }
-
+    //POCOR-7449 Starts
     public function onExcelTemplateInitialiseStudentTotalAbsences(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionStudentAbsences = TableRegistry::get('institution_student_absences');
-
-            $entity = $InstitutionStudentAbsences
-                ->find()
-                ->where([
-                    $InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
-                ])
-                ->where([
-                    $InstitutionStudentAbsences->aliasField('absence_type_id IN') => [1,2,3],
-                ])
-                ->count();
-
-            return $entity;
+            $connection = ConnectionManager::get('default');
+            $absenceDaysData = $connection->execute("SELECT SUM(subq.absence_days) absence_days FROM ( SELECT COUNT(DISTINCT(institution_student_absence_details.date)) absence_days FROM institution_student_absence_details WHERE institution_student_absence_details.academic_period_id = ". $params['institution_id'] ." AND institution_student_absence_details.institution_id = ". $params['academic_period_id'] ." AND institution_student_absence_details.absence_type_id != 3 GROUP BY institution_student_absence_details.student_id ) subq")->fetch();
+            $absenceDays = 0;
+            if(!empty($absenceDaysData)){
+                $absenceDays = $absenceDaysData[0];
+            }
+            return $absenceDays;
         }
     }
-
+    
     public function onExcelTemplateInitialiseStaffTotalAbsences(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionStaff = TableRegistry::get('Institution.Staff');
-            $InstitutionStaffAttendances = TableRegistry::get('institution_staff_attendances');
-
-            $totalStaff = $InstitutionStaff
-                ->find()
-                ->where([
-                    $InstitutionStaff->aliasField('institution_id') => $params['institution_id'],
-                ])
-                ->count();
-
-            $staffPresent = $InstitutionStaffAttendances
-                ->find()
-                ->where([
-                    $InstitutionStaffAttendances->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $InstitutionStaffAttendances->aliasField('institution_id') => $params['institution_id'],
-                ])
-                ->count();
-            $entity = $totalStaff - $staffPresent;
-
-            return $entity;
+            $connection = ConnectionManager::get('default');
+            $schoolStaffAbsentDaysData = $connection->execute("SELECT ROUND(IFNULL(SUM(institution_staff_leave.number_of_days), 0), 0) school_staff_absent_days FROM institution_staff_leave WHERE institution_staff_leave.academic_period_id = ". $params['academic_period_id'] ." AND institution_staff_leave.institution_id = ". $params['institution_id'] ."")->fetch();
+            $schoolStaffAbsentDays = 0;
+            if(!empty($schoolStaffAbsentDaysData)){
+                $schoolStaffAbsentDays = $schoolStaffAbsentDaysData[0];
+            }
+            return $schoolStaffAbsentDays;
         }
-    }
+    }//POCOR-7449 Ends
 
     public function onExcelTemplateInitialiseSpecialNeedMaleStudents(Event $event, array $params, ArrayObject $extra)
     {
@@ -5338,42 +5318,47 @@ class InstitutionReportCardsTable extends AppTable
             return $entity;
         }
     }*/
-
+    //POCOR-7449 Starts
     public function onExcelTemplateInitialiseStaffFromEducationProgramme(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $connection = ConnectionManager::get('default');
-            $StaffFromEducationProgrammeData = $connection->execute("SELECT education_grades.education_programme_id 
-                                    ,education_programmes.name programme_name
-                                    ,COUNT(DISTINCT(CASE WHEN security_users.gender_id = 1 THEN institution_subject_staff.staff_id END)) male_teaching_staff
-                                    ,COUNT(DISTINCT(CASE WHEN security_users.gender_id = 2 THEN institution_subject_staff.staff_id END)) female_teaching_staff
-                                    ,COUNT(DISTINCT(CASE WHEN security_users.gender_id IN (1, 2) THEN institution_subject_staff.staff_id END)) total_teaching_staff
-                                    ,COUNT(DISTINCT(CASE WHEN fulltime_staff.staff_id IS NOT NULL AND fulltime_staff.full_staff_positions < 1 AND fulltime_staff.temp_staff_positions > 0 THEN institution_subject_staff.staff_id END)) temp_teaching_staff
-                                FROM institution_subject_staff
-                                INNER JOIN institution_subjects
-                                    ON institution_subjects.id = institution_subject_staff.institution_subject_id
-                                INNER JOIN education_grades
-                                    ON education_grades.id = institution_subjects.education_grade_id
-                                INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
-                                INNER JOIN security_users
-                                    ON security_users.id = institution_subject_staff.staff_id
-                                LEFT JOIN 
-                                (
-                                    SELECT institution_staff.staff_id
-                                        ,SUM(CASE WHEN staff_types.international_code = 'temporary' THEN 1 ELSE 0 END) temp_staff_positions
-                                        ,SUM(CASE WHEN staff_types.international_code != 'temporary' OR staff_types.international_code IS NULL THEN 1 ELSE 0 END) full_staff_positions
-                                        ,staff_types.international_code
-                                    FROM institution_staff
-                                    INNER JOIN staff_types
-                                        ON staff_types.id = institution_staff.staff_type_id
-                                    INNER JOIN academic_periods
-                                        ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
-                                    WHERE institution_staff.institution_id = ". $params['institution_id'] ." AND academic_periods.id = ". $params['academic_period_id'] ." AND institution_staff.staff_status_id = 1
-                                    GROUP BY institution_staff.staff_id
-                                ) fulltime_staff
-                                ON fulltime_staff.staff_id = institution_subject_staff.staff_id
-                                WHERE institution_subject_staff.institution_id = ". $params['institution_id'] ." AND institution_subjects.academic_period_id =  ". $params['academic_period_id'] ." 
-                                GROUP BY education_grades.education_programme_id")->fetchAll(\PDO::FETCH_ASSOC);
+            $StaffFromEducationProgrammeData = $connection->execute("SELECT education_grades.education_programme_id, COUNT(DISTINCT(CASE WHEN security_users.gender_id = 1 THEN institution_subject_staff.staff_id END)) male_teaching_staff, COUNT(DISTINCT(CASE WHEN security_users.gender_id = 2 THEN institution_subject_staff.staff_id END)) female_teaching_staff, COUNT(DISTINCT(CASE WHEN security_users.gender_id IN (1, 2) THEN institution_subject_staff.staff_id END)) total_teaching_staff, COUNT(DISTINCT(CASE WHEN fulltime_staff.staff_id IS NOT NULL AND fulltime_staff.full_staff_positions < 1 AND fulltime_staff.temp_staff_positions > 0 THEN institution_subject_staff.staff_id END)) temp_teaching_staff
+                FROM institution_subject_staff
+                INNER JOIN institution_subjects
+                    ON institution_subjects.id = institution_subject_staff.institution_subject_id
+                INNER JOIN education_grades
+                    ON education_grades.id = institution_subjects.education_grade_id
+                INNER JOIN security_users
+                    ON security_users.id = institution_subject_staff.staff_id
+                INNER JOIN 
+                (
+                    SELECT institution_staff.staff_id
+                    FROM institution_staff
+                    INNER JOIN institution_positions
+                        ON institution_positions.id = institution_staff.institution_position_id
+                    INNER JOIN staff_position_titles 
+                        ON staff_position_titles.id = institution_positions.staff_position_title_id
+                    INNER JOIN academic_periods
+                        ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
+                    WHERE institution_staff.institution_id = ". $params['institution_id'] ." AND staff_position_titles.type = 1 AND academic_periods.id = ". $params['academic_period_id'] ." AND institution_staff.staff_status_id = 1
+                    GROUP BY institution_staff.staff_id
+                ) teaching_staff_info
+                    ON teaching_staff_info.staff_id = institution_subject_staff.staff_id
+                LEFT JOIN 
+                (
+                    SELECT institution_staff.staff_id, SUM(CASE WHEN staff_types.international_code = 'temporary' THEN 1 ELSE 0 END) temp_staff_positions, SUM(CASE WHEN staff_types.international_code != 'temporary' OR staff_types.international_code IS NULL THEN 1 ELSE 0 END) full_staff_positions, staff_types.international_code
+                    FROM institution_staff
+                    INNER JOIN staff_types
+                        ON staff_types.id = institution_staff.staff_type_id
+                    INNER JOIN academic_periods
+                        ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
+                    WHERE institution_staff.institution_id = ". $params['institution_id'] ." AND academic_periods.id = ". $params['academic_period_id'] ." AND institution_staff.staff_status_id = 1
+                    GROUP BY institution_staff.staff_id
+                ) fulltime_staff
+                    ON fulltime_staff.staff_id = institution_subject_staff.staff_id
+                WHERE institution_subject_staff.institution_id = ". $params['institution_id'] ." AND institution_subjects.academic_period_id = ". $params['academic_period_id'] ." 
+                GROUP BY education_grades.education_programme_id")->fetchAll(\PDO::FETCH_ASSOC);
             $entity = $result = [];
             if (!empty($StaffFromEducationProgrammeData)) {
                 foreach ($StaffFromEducationProgrammeData as $key => $data) {
@@ -5391,7 +5376,7 @@ class InstitutionReportCardsTable extends AppTable
             }
             return $entity;                                                                                                             
         }
-    }//POCOR-7378 ends
+    }//POCOR-7449 ends
     //POCOR-7411 Starts
     public function onExcelTemplateInitialiseJordonSchoolShifts(Event $event, array $params, ArrayObject $extra)
     {
