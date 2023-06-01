@@ -11,4 +11,10 @@ class InstitutionClassSubjects extends Model
 
     public $timestamps = false;
     protected $table = "institution_class_subjects";
+
+
+    public function institutionClass()
+    {
+        return $this->belongsTo(InstitutionClasses::class, 'institution_class_id', 'id');
+    }
 }
