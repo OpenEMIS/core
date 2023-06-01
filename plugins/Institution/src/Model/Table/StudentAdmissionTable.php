@@ -131,7 +131,14 @@ class StudentAdmissionTable extends ControllerActionTable
                 ],
                 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
                     'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', []],
-                    'on' => function ($context) { 
+                    'on' => function ($context) {
+                        //POCOR-6172-HINDOL[START]
+                        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+                        $multipleInstitutions = $ConfigItems->value('multiple_institutions_student_enrollment');
+                        $multipleInstitutions = ($multipleInstitutions == "1") ? true : false ;
+//                        $this->log($multipleInstitutions);
+                        if ($multipleInstitutions) return false;
+                        //POCOR-6172-HINDOL[END]
                         if (array_key_exists('institution_id', $context['data']) && !empty($context['data']['institution_id']) && array_key_exists('education_grade_id', $context['data']) && !empty($context['data']['education_grade_id'])) {
                             $Institutions = TableRegistry::get('Institution.Institutions');
                             $institutionExists = $Institutions->exists([$Institutions->primaryKey() => $context['data']['institution_id']]);
