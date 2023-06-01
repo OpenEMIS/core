@@ -350,3 +350,5 @@ if (Configure::read('debug')) {
 Plugin::load('OAuth', ['routes' => true]);
 
 Plugin::load('Archive', ['bootstrap' => false, 'routes' => true]);
+//Configure::write('DebugKit.forceEnable', true);
+//Plugin::load('DebugKit');

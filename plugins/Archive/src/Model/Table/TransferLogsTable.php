@@ -407,7 +407,7 @@ use Cake\Utility\Security;
         $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
         $args .= !is_null($pid) ? ' '.$pid : '';
 
-        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
+        $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $shellName . $args;
         $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
         exec($shellCmd);
