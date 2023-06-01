@@ -2375,14 +2375,14 @@ paths:
         description: Get staff's subjects details on the bases of institution
         parameters:
           - name: staff_id
-            in: path
+            in: query
             description: Add Staff id to filter
             required: true
             schema:
               type: integer
               format: int
           - name: institution_id
-            in: path
+            in: query
             description: Add Institution id to filter
             required: true
             schema:
