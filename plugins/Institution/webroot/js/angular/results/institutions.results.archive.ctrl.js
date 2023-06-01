@@ -5,6 +5,9 @@ angular
 InstitutionsResultsController.$inject = ['$q', '$scope', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsAssessmentArchiveSvc'];
 
 function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsAssessmentArchiveSvc) {
+    var vm = this;
+    vm.exportexcel = '';
+    vm.excelExportAUrl = '';
     $scope.action = 'view';
     $scope.message = null;
     $scope.gradingTypes = null;

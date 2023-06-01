@@ -163,6 +163,9 @@ Route::group(
         Route::delete('institutions/institution-classes/education-grades/class-attendance', 'InstitutionController@deleteClassAttendance');
 
 
+        Route::get('area-administrative/display-address-area-level', 'InstitutionController@displayAddressAreaLevel');
+
+        Route::get('area-administrative/display-birthplace-area-level', 'InstitutionController@displayBirthplaceAreaLevel');
 
     }
 );
