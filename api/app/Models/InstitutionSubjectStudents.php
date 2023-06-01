@@ -11,4 +11,10 @@ class InstitutionSubjectStudents extends Model
 
     public $timestamps = false;
     protected $table = "institution_subject_students";
+
+
+    public function securityUser()
+    {
+        return $this->belongsTo(SecurityUsers::class, 'student_id', 'id');
+    }
 }
