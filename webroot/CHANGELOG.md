@@ -1,3 +1,9 @@
+### [3.85.1] - 2023-06-01
+- Implemented: APIs to return the area levels from config items for Address Area and Birthplace Area
+- Bug Fixed: Institutions > Performance > Assessments > Archive : Filters are incomplete
+- Bug Fixed: API: When report_card_comment_code_id is not in the params, the API failed to add the comment
+- Bug Fixed: Institutions>Performance>Report Cards: Report card start and completed column does not show the date and time when report cards are generated
+
 ### [3.85.0] - 2023-05-30
 - Implemented: 2.10 Reports > Staff > Requirements Report
 - Implemented: Develop a function to copy risks from one academic period to another
