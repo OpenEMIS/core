@@ -210,4 +210,19 @@ class FieldOptionsController extends AppController
 
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); 
     }
+
+
+    
+
+    
+    //POCOR-7363 start
+    public function FoodType(){
+
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); 
+    } 
+    public function MealRatings(){
+
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); 
+    } 
+     //POCOR-7363 end
 }
