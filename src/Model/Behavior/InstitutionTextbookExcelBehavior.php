@@ -409,7 +409,7 @@ class InstitutionTextbookExcelBehavior extends Behavior
         header("Content-Disposition: attachment; filename=".$filename);
         header("Content-Transfer-Encoding: binary");
         header("Content-Length: ".filesize($path));
-        echo file_get_contents($path);
+        echo file_get_contents($path); die; // POCOR-3627
     }
 
     private function purge($path)
