@@ -299,10 +299,12 @@ class DirectoriesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
     }
     // Special Needs - End
+    //POCOR-7366 start
     public function Counsellings()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.Counsellings']);
     }
+       //POCOR-7366 end
     public function Employments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']);
@@ -1005,8 +1007,7 @@ class DirectoriesController extends AppController
     
     public function getProfessionalTabElements($options = [])
     {
-        echo "hey";
-        exit;
+       
         $session = $this->request->session();
         $isStudent = $session->read('Directory.Directories.is_student');
         $isStaff = $session->read('Directory.Directories.is_staff');
@@ -2056,16 +2057,10 @@ class DirectoriesController extends AppController
     public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.StudentProfiles']); }
     /*POCOR-6286 ends*/
 
-     // POCOR-7366 Counselling added in directory
-    public function DirectoryCounsellings()
-    {
-      echo "hey";
-      exit;
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.Counsellings']);
-    }
-     // Counselling End
+    
+   
 
-    /*POCOR-6700 start - registering function*/
+   /*POCOR-6700 start - registering function*/
     public function StudentExtracurriculars() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Extracurriculars']); }
     /*POCOR-6700 ends*/
 }
