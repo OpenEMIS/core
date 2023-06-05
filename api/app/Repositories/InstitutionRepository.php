@@ -33,6 +33,8 @@ use App\Models\InstitutionCompetencyResults;
 use App\Models\InstitutionCompetencyItemComments;
 use App\Models\InstitutionCompetencyPeriodComments;
 use App\Models\StaffTypes;
+use App\Models\ConfigItem;
+use App\Models\InstitutionSubjectStaff;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -52,8 +54,9 @@ class InstitutionRepository extends Controller
             
             $institutions = new Institutions();
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $institutions = $institutions->orderBy($col);
+                $institutions = $institutions->orderBy($col, $orderBy);
             }
             //$list = $institutions->paginate($limit)->toArray();
             $list = $institutions->paginate($limit)->toArray();
@@ -111,8 +114,9 @@ class InstitutionRepository extends Controller
             
             $grades = new EducationGrades();
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $grades = $grades->orderBy($col);
+                $grades = $grades->orderBy($col, $orderBy);
             }
             //$list = $grades->get();
             $list = $grades->paginate($limit);
@@ -142,8 +146,9 @@ class InstitutionRepository extends Controller
             $institutionGrade = InstitutionGrades::where('institution_id', $institutionId)->with('educationGrades');
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $institutionGrade = $institutionGrade->orderBy($col);
+                $institutionGrade = $institutionGrade->orderBy($col, $orderBy);
             }
 
             //$list = $institutionGrade->get();
@@ -197,8 +202,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $classes = $classes->orderBy($col);
+                $classes = $classes->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -240,8 +246,9 @@ class InstitutionRepository extends Controller
 
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $institutionClasses = $institutionClasses->orderBy($col);
+                $institutionClasses = $institutionClasses->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -310,8 +317,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $subjects = $subjects->orderBy($col);
+                $subjects = $subjects->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -356,8 +364,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $subjects = $subjects->orderBy($col);
+                $subjects = $subjects->orderBy($col, $orderBy);
             }
 
 
@@ -420,8 +429,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $shifts = $shifts->orderBy($col);
+                $shifts = $shifts->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -457,8 +467,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $institutionShifts = $institutionShifts->orderBy($col);
+                $institutionShifts = $institutionShifts->orderBy($col, $orderBy);
             }
 
 
@@ -517,8 +528,9 @@ class InstitutionRepository extends Controller
                 );
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $areas = $areas->orderBy($col);
+                $areas = $areas->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -558,8 +570,9 @@ class InstitutionRepository extends Controller
                 )->where('id', $institutionId);
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $areas = $areas->orderBy($col);
+                $areas = $areas->orderBy($col, $orderBy);
             }
 
 
@@ -624,8 +637,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $summaries = $summaries->orderBy($col);
+                $summaries = $summaries->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -662,8 +676,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $summaries = $summaries->orderBy($col);
+                $summaries = $summaries->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -700,8 +715,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $summaries = $summaries->orderBy($col);
+                $summaries = $summaries->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -738,8 +754,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $summaries = $summaries->orderBy($col);
+                $summaries = $summaries->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -794,8 +811,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $nationalitySummaries = $nationalitySummaries->orderBy($col);
+                $nationalitySummaries = $nationalitySummaries->orderBy($col, $orderBy);
             }
 
             $limit = config('constants.defaultPaginateLimit');
@@ -832,8 +850,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $nationalitySummaries = $nationalitySummaries->orderBy($col);
+                $nationalitySummaries = $nationalitySummaries->orderBy($col, $orderBy);
             }
 
 
@@ -871,8 +890,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $nationalitySummaries = $nationalitySummaries->orderBy($col);
+                $nationalitySummaries = $nationalitySummaries->orderBy($col, $orderBy);
             }
 
 
@@ -910,8 +930,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $nationalitySummaries = $nationalitySummaries->orderBy($col);
+                $nationalitySummaries = $nationalitySummaries->orderBy($col, $orderBy);
             }
 
 
@@ -948,8 +969,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $nationalitySummaries = $nationalitySummaries->orderBy($col);
+                $nationalitySummaries = $nationalitySummaries->orderBy($col, $orderBy);
             }
 
 
@@ -982,8 +1004,9 @@ class InstitutionRepository extends Controller
             
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $staffs = $staffs->orderBy($col);
+                $staffs = $staffs->orderBy($col, $orderBy);
             }
 
 
@@ -1016,8 +1039,9 @@ class InstitutionRepository extends Controller
             
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $staffs = $staffs->orderBy($col);
+                $staffs = $staffs->orderBy($col, $orderBy);
             }
 
 
@@ -1071,8 +1095,9 @@ class InstitutionRepository extends Controller
             
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $positions = $positions->orderBy($col);
+                $positions = $positions->orderBy($col, $orderBy);
             }
 
 
@@ -1105,8 +1130,9 @@ class InstitutionRepository extends Controller
             
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $positions = $positions->orderBy($col);
+                $positions = $positions->orderBy($col, $orderBy);
             }
 
 
@@ -1175,8 +1201,9 @@ class InstitutionRepository extends Controller
             }
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $positions = $positions->orderBy($col);
+                $positions = $positions->orderBy($col, $orderBy);
             }
 
 
@@ -1229,8 +1256,9 @@ class InstitutionRepository extends Controller
             
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $roomType = $roomType->orderBy($col);
+                $roomType = $roomType->orderBy($col, $orderBy);
             }
 
             if(isset($params['academic_period_id'])){
@@ -1266,8 +1294,9 @@ class InstitutionRepository extends Controller
             
 
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $roomType = $roomType->orderBy($col);
+                $roomType = $roomType->orderBy($col, $orderBy);
             }
 
 
@@ -1295,6 +1324,7 @@ class InstitutionRepository extends Controller
 
     public function reportCardCommentAdd($request, int $institutionId, int $classId)
     {
+        DB::beginTransaction();
         try {
             $data = $request->all();
 
@@ -1304,26 +1334,60 @@ class InstitutionRepository extends Controller
                 return 0;
             }
 
-            $store['id'] = Str::uuid();
-            $store['comments'] = $data['comment'];
-            $store['academic_period_id'] = $data['academic_period_id'];
-            $store['report_card_id'] = $data['report_card_id'];
-            $store['student_id'] = $data['student_id'];
-            $store['institution_id'] = $institutionId;
-            $store['education_grade_id'] = $data['education_grade_id'];
-            $store['education_subject_id'] = $data['education_subject_id'];
-            if($data['report_card_comment_code_id']){
-                $store['report_card_comment_code_id'] = (int)$data['report_card_comment_code_id'];
+            $isExists = InstitutionStudentReportCardComment::where([
+                'report_card_id' => $data['report_card_id'],
+                'student_id' => $data['student_id'],
+                'institution_id' => $institutionId,
+                'academic_period_id' => $data['academic_period_id'],
+                'education_grade_id' => $data['education_grade_id'],
+                'education_subject_id' => $data['education_subject_id'],
+            ])
+            ->first();
+            //dd($isExists);
+            if($isExists){
+                
+                $updateArr['comments'] = $data['comment'];
+                if(isset($data['report_card_comment_code_id'])){
+                    $updateArr['report_card_comment_code_id'] = (int)$data['report_card_comment_code_id'];
+                }
+                $updateArr['staff_id'] = $data['staff_id'];
+                $updateArr['modified_user_id'] = JWTAuth::user()->id;
+                $updateArr['modified'] = Carbon::now()->toDateTimeString();
+                
+                $update = InstitutionStudentReportCardComment::where([
+                    'report_card_id' => $data['report_card_id'],
+                    'student_id' => $data['student_id'],
+                    'institution_id' => $institutionId,
+                    'academic_period_id' => $data['academic_period_id'],
+                    'education_grade_id' => $data['education_grade_id'],
+                    'education_subject_id' => $data['education_subject_id'],
+                ])->update($updateArr);
+            } else {
+                
+                $store['id'] = Str::uuid();
+                $store['comments'] = $data['comment'];
+                $store['academic_period_id'] = $data['academic_period_id'];
+                $store['report_card_id'] = $data['report_card_id'];
+                $store['student_id'] = $data['student_id'];
+                $store['institution_id'] = $institutionId;
+                $store['education_grade_id'] = $data['education_grade_id'];
+                $store['education_subject_id'] = $data['education_subject_id'];
+                if(isset($data['report_card_comment_code_id'])){
+                    $store['report_card_comment_code_id'] = (int)$data['report_card_comment_code_id'];
+                }
+                $store['staff_id'] = $data['staff_id'];
+                $store['created_user_id'] = JWTAuth::user()->id;
+                $store['created'] = Carbon::now()->toDateTimeString();
+                
+                $insert = InstitutionStudentReportCardComment::insert($store);
             }
-            $store['staff_id'] = $data['staff_id'];
-            $store['created_user_id'] = JWTAuth::user()->id;
-            $store['created'] = Carbon::now()->toDateTimeString();
-            
-            $insert = InstitutionStudentReportCardComment::insert($store);
 
-            return true;
+            
+            DB::commit();
+            return 1;
             
         } catch (\Exception $e) {
+            DB::rollback();
             Log::error(
                 'Failed to add report card comment.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1337,6 +1401,7 @@ class InstitutionRepository extends Controller
 
     public function reportCardCommentHomeroomAdd($request, int $institutionId, int $classId)
     {
+        DB::beginTransaction();
         try {
             $data = $request->all();
             //dd($data);
@@ -1395,10 +1460,11 @@ class InstitutionRepository extends Controller
                 $insert = InstitutionStudentReportCard::insert($store);
             }
 
-
+            DB::commit();
             return true;
             
         } catch (\Exception $e) {
+            DB::rollback();
             Log::error(
                 'Failed to add report card comment.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1439,6 +1505,7 @@ class InstitutionRepository extends Controller
 
     public function reportCardCommentPrincipalAdd($request, int $institutionId, int $classId)
     {
+        DB::beginTransaction();
         try {
             $data = $request->all();
             
@@ -1497,10 +1564,11 @@ class InstitutionRepository extends Controller
                 $insert = InstitutionStudentReportCard::insert($store);
             }
 
-
+            DB::commit();
             return true;
             
         } catch (\Exception $e) {
+            DB::rollback();
             Log::error(
                 'Failed to add report card comment.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1644,6 +1712,92 @@ class InstitutionRepository extends Controller
             );
 
             return $this->sendErrorResponse('Failed to add competency result.');
+        }
+    }
+
+
+    public function displayAddressAreaLevel($request)
+    {
+        try {
+            $params = $request->all();
+            $areaLevel = [];
+
+            $configItem = ConfigItem::where('code', 'address_area_level')->first();
+            if($configItem){
+                $val = $configItem->value;
+                $areaLevel = AreaAdministratives::where('area_administrative_level_id', $val)->get();
+                
+            }
+            return $areaLevel;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get address area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get address area level area.');
+        }
+    }
+
+
+
+    public function displayBirthplaceAreaLevel($request)
+    {
+        try {
+            $params = $request->all();
+            $areaLevel = [];
+
+            $configItem = ConfigItem::where('code', 'birthplace_area_level')->first();
+            if($configItem){
+                $val = $configItem->value;
+                $areaLevel = AreaAdministratives::where('area_administrative_level_id', $val)->get();
+                
+            }
+            return $areaLevel;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get address area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get address area level area.');
+        }
+    }
+    public function getSubjectsStaffList($request)
+    {
+        try {
+            $params = $request->all();
+
+            $resp = InstitutionSubjectStaff::with(
+                        'staff', 
+                        'institution', 
+                        'institutionSubject',
+                        'institutionSubject.classes.institutionClass',
+                        'institutionSubject.students.securityUser',
+                        'institutionSubject.academicPeriod',
+                        'institutionSubject.educationGrades',
+                        'institutionSubject.educationSubjects',
+                        'institutionSubject.educationGrades.educationProgramme',
+                        'institutionSubject.educationGrades.educationProgramme.educationCycle',
+                        'institutionSubject.educationGrades.educationProgramme.educationCycle.educationLevel',
+                        'institutionSubject.educationGrades.educationProgramme.educationCycle.educationLevel.educationSystem',
+                    )
+                    ->where('staff_id', $params['staff_id'])
+                    ->where('institution_id', $params['institution_id'])
+                    ->get();
+
+            
+            return $resp;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Subjects Staff List Not Found');
         }
     }
 }
