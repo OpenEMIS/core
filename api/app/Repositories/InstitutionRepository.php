@@ -1800,5 +1800,24 @@ class InstitutionRepository extends Controller
             return $this->sendErrorResponse('Subjects Staff List Not Found');
         }
     }
+
+
+
+    public function deleteClassAttendance($request)
+    {
+        try {
+            $param = $request->all();
+
+            dd($param);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to delete student attendance.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to delete student attendance.');
+        }
+    }
 }
 

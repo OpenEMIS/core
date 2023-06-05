@@ -880,17 +880,20 @@ class InstitutionController extends Controller
     public function deleteClassAttendance(DeleteClassAttendanceRequest $request)
     {
         try {
-            dd($request->all());
             $data = $this->institutionService->deleteClassAttendance($request);
-            return $this->sendSuccessResponse("Subjects Staff List Found", $data);
+            if($data == 1){
+                return $this->sendErrorResponse("Student attendance deleted successfully.");
+            } else {
+                return $this->sendSuccessResponse("Student attendance not deleted.", $data);
+            }
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to fetch data from DB',
+                'Failed to delete student attendance.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('Subjects Staff List Not Found');
+            return $this->sendErrorResponse('Failed to delete student attendance.');
         }
     }
 }
