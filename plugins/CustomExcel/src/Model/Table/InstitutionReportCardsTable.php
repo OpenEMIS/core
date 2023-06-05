@@ -1008,8 +1008,8 @@ class InstitutionReportCardsTable extends AppTable
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $connection = ConnectionManager::get('default');
-            $absenceDaysData = $connection->execute("SELECT SUM(subq.absence_days) absence_days FROM ( SELECT COUNT(DISTINCT(institution_student_absence_details.date)) absence_days FROM institution_student_absence_details WHERE institution_student_absence_details.academic_period_id = ". $params['institution_id'] ." AND institution_student_absence_details.institution_id = ". $params['academic_period_id'] ." AND institution_student_absence_details.absence_type_id != 3 GROUP BY institution_student_absence_details.student_id ) subq")->fetch();
-            $absenceDays = 0;
+            $absenceDaysData = $connection->execute("SELECT SUM(subq.absence_days) absence_days FROM ( SELECT COUNT(DISTINCT(institution_student_absence_details.date)) absence_days FROM institution_student_absence_details WHERE institution_student_absence_details.academic_period_id = ". $params['academic_period_id'] ." AND institution_student_absence_details.institution_id = ". $params['institution_id'] ." AND institution_student_absence_details.absence_type_id != 3 GROUP BY institution_student_absence_details.student_id ) subq")->fetch();
+            $absenceDays = " 0";
             if(!empty($absenceDaysData)){
                 $absenceDays = $absenceDaysData[0];
             }
@@ -1022,7 +1022,7 @@ class InstitutionReportCardsTable extends AppTable
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $connection = ConnectionManager::get('default');
             $schoolStaffAbsentDaysData = $connection->execute("SELECT ROUND(IFNULL(SUM(institution_staff_leave.number_of_days), 0), 0) school_staff_absent_days FROM institution_staff_leave WHERE institution_staff_leave.academic_period_id = ". $params['academic_period_id'] ." AND institution_staff_leave.institution_id = ". $params['institution_id'] ."")->fetch();
-            $schoolStaffAbsentDays = 0;
+            $schoolStaffAbsentDays = " 0";
             if(!empty($schoolStaffAbsentDaysData)){
                 $schoolStaffAbsentDays = $schoolStaffAbsentDaysData[0];
             }
@@ -5323,12 +5323,13 @@ class InstitutionReportCardsTable extends AppTable
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $connection = ConnectionManager::get('default');
-            $StaffFromEducationProgrammeData = $connection->execute("SELECT education_grades.education_programme_id, COUNT(DISTINCT(CASE WHEN security_users.gender_id = 1 THEN institution_subject_staff.staff_id END)) male_teaching_staff, COUNT(DISTINCT(CASE WHEN security_users.gender_id = 2 THEN institution_subject_staff.staff_id END)) female_teaching_staff, COUNT(DISTINCT(CASE WHEN security_users.gender_id IN (1, 2) THEN institution_subject_staff.staff_id END)) total_teaching_staff, COUNT(DISTINCT(CASE WHEN fulltime_staff.staff_id IS NOT NULL AND fulltime_staff.full_staff_positions < 1 AND fulltime_staff.temp_staff_positions > 0 THEN institution_subject_staff.staff_id END)) temp_teaching_staff
+            $StaffFromEducationProgrammeData = $connection->execute("SELECT education_grades.education_programme_id, education_programmes.name programme_name, COUNT(DISTINCT(CASE WHEN security_users.gender_id = 1 THEN institution_subject_staff.staff_id END)) male_teaching_staff, COUNT(DISTINCT(CASE WHEN security_users.gender_id = 2 THEN institution_subject_staff.staff_id END)) female_teaching_staff, COUNT(DISTINCT(CASE WHEN security_users.gender_id IN (1, 2) THEN institution_subject_staff.staff_id END)) total_teaching_staff, COUNT(DISTINCT(CASE WHEN fulltime_staff.staff_id IS NOT NULL AND fulltime_staff.full_staff_positions < 1 AND fulltime_staff.temp_staff_positions > 0 THEN institution_subject_staff.staff_id END)) temp_teaching_staff
                 FROM institution_subject_staff
                 INNER JOIN institution_subjects
                     ON institution_subjects.id = institution_subject_staff.institution_subject_id
                 INNER JOIN education_grades
                     ON education_grades.id = institution_subjects.education_grade_id
+                INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
                 INNER JOIN security_users
                     ON security_users.id = institution_subject_staff.staff_id
                 INNER JOIN 
