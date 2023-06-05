@@ -200,6 +200,8 @@ class ReportsController extends AppController
                 'Report.AuditLogins' => __('Logins'),
                 'Report.AuditInstitutions' => __('Institutions'),
                 'Report.AuditUsers' => __('Users')
+                ,'Report.AuditSecuritiesRolesPermissions' => __('Security Roles and Permissions') // POCOR-499
+                ,'Report.AuditSecuritiesGroupUserRoles' => __('Security Group User Roles') // POCOR-499
             ];
         } elseif ($module == 'Examinations') {
             $options = [
