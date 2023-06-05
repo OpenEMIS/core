@@ -152,7 +152,7 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
                         deferred.resolve(subjects);
                     } else
                     {
-                        deferred.reject('You need to configure Assessment Items first');
+                        deferred.reject('No Results Returned');
                     }
                 };
 
@@ -211,7 +211,7 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
             return deferred.promise;
         },
 
-        getDataSubjects: function(roles, assessmentId, classId,academic_period_id,institution_id)
+        getDataSubjects: function(roles, assessmentId, classId, academic_period_id, institution_id)
         {
             var deferred = $q.defer();
             var isSuperAdmin = 0;
@@ -1186,7 +1186,8 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
                                 
                                 studentResults = {
                                     openemis_id: subjectStudent._matchingData.Users.openemis_no,
-                                    name: subjectStudent._matchingData.Users.first_name,
+                                    //POCOR-7339-HINDOL FULL NAME
+                                    name: subjectStudent._matchingData.Users.name,
                                     student_id: currentStudentId,
                                     student_status_id: subjectStudent.StudentStatuses.student_status_id,
                                     student_status_name: subjectStudent.StudentStatuses.name,
@@ -1242,17 +1243,19 @@ function InstitutionsAssessmentArchiveSvc($http, $q, $filter, KdDataSvc, KdSessi
                     }
                 }
             };
-
-            return AssessmentItemResultsArchivedTable
-            .select()
-            .find('StudentResultsArchived', {
+            var search_params = {
                 institution_id: institutionId,
                 class_id: classId,
                 assessment_id: assessmentId,
                 academic_period_id: academicPeriodId,
                 subject_id: educationSubjectId,
                 grade_id: educationGradeId
-            })
+            };
+            console.log('search_params');
+            console.log(search_params);
+            return AssessmentItemResultsArchivedTable
+            .select()
+            .find('StudentResultsArchived', search_params)
             .ajax({success: success, defer: true})
             ;
         },
