@@ -29,10 +29,10 @@ class DeleteClassAttendanceRequest extends FormRequest
     {
         return [
             'academic_period_id' => 'required',
-            'institution_id' => 'required'
-            'institution_class_id' => 'required'
-            'education_grade_id' => 'required'
-            'date' => 'required'
+            'institution_id' => 'required',
+            'institution_class_id' => 'required',
+            'education_grade_id' => 'required',
+            'date' => 'required',
         ];
     }
 
