@@ -24,6 +24,8 @@ use App\Models\InstitutionStudentAdmission;
 use App\Models\StudentCustomFormField;
 use App\Models\StudentCustomFieldValues;
 use App\Models\IdentityTypes;
+use App\Models\InstitutionTypes;
+use App\Models\AreaLevels;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
@@ -95,13 +97,26 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function institutionDropdown()
+    public function institutionDropdown($request)
     {
         try {
-            $institutions = Institutions::select('id', 'name', 'code')->get();
+            $institutions = Institutions::select('id', 'name', 'code');
+
+            if($request['institution_type_id']){
+                $institutions = $institutions->where('institution_type_id', $request['institution_type_id']);
+            }
+
+
+            if($request['area_id']){
+                $institutions = $institutions->where('area_id', $request['area_id']);
+            }
+
+
+            $data = $institutions->get();
             
-            return $institutions;
+            return $data;
         } catch (\Exception $e) {
+            
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -836,13 +851,42 @@ class RegistrationRepository extends Controller
 
 
 
-    public function getInstitutionGradesList($gradeId)
+    public function getInstitutionGradesList($request, $gradeId)
     {
         try {
             $institutions = Institutions::whereHas('educationGrades',
                     function ($query) use ($gradeId) {
                         $query->where('education_grade_id', $gradeId);
-                    })->select('id', 'name', 'code')->get();
+                    })->select('id', 'name', 'code');
+
+
+            if($request['institution_type_id']){
+                $institutions = $institutions->where('institution_type_id', $request['institution_type_id']);
+            }
+
+
+            if($request['area_id']){
+                $institutions = $institutions->where('area_id', $request['area_id']);
+            }
+
+            $lists = $institutions->get();
+            
+            return $lists;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institutions List Not Found');
+        }
+    }
+
+
+    public function institutionTypesDropdown()
+    {
+        try {
+            $institutions = InstitutionTypes::select('id', 'name')->get();
             
             return $institutions;
         } catch (\Exception $e) {
@@ -852,6 +896,46 @@ class RegistrationRepository extends Controller
             );
 
             return $this->sendErrorResponse('Institutions List Not Found');
+        }
+    }
+
+
+    public function areaLevelsDropdown()
+    {
+        try {
+            $areaLevels = AreaLevels::select('id', 'name')->get();
+            
+            return $areaLevels;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Levels List Not Found');
+        }
+    }
+
+
+    public function areasDropdown($request)
+    {
+        try {
+            $areas = Areas::select('id', 'name');
+
+            if($request['area_level_id']){
+                $areas = $areas->where('area_level_id', $request['area_level_id']);
+            }
+
+            $data = $areas->get();
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Levels List Not Found');
         }
     }
 

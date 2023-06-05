@@ -241,7 +241,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('area_education_id', ['type' => 'hidden','attr' => ['label'=>'Area Name']]);//POCOR - 7408
+        $this->ControllerAction->field('area_education_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_filter', ['type' => 'hidden']);
         $this->ControllerAction->field('position_filter', ['type' => 'hidden']);
         $this->ControllerAction->field('teaching_filter', ['type' => 'hidden']);//POCOR-6614
@@ -324,11 +324,11 @@ class InstitutionsTable extends AppTable
                 case 'Report.InstitutionAssociations':
                 case 'Report.InstitutionProgrammes':
                 case 'Report.InstitutionClasses':
-                    $fieldsOrder[] = 'academic_period_id';	/*POCOR-6637 :: START*/
-                    $fieldsOrder[] = 'area_level_id';	
-                    $fieldsOrder[] = 'area_education_id';	
-                    $fieldsOrder[] = 'institution_id';	
-                    $fieldsOrder[] = 'education_grade_id';	
+                    $fieldsOrder[] = 'academic_period_id';  /*POCOR-6637 :: START*/
+                    $fieldsOrder[] = 'area_level_id';   
+                    $fieldsOrder[] = 'area_education_id';   
+                    $fieldsOrder[] = 'institution_id';  
+                    $fieldsOrder[] = 'education_grade_id';  
                     $fieldsOrder[] = 'format';
                     break;  /*POCOR-6637 :: END*/
                 case 'Report.StudentAbsences':
@@ -524,13 +524,6 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'area_education_id';
                     $fieldsOrder[] = 'institution_id';
                     $fieldsOrder[] = 'attendance_type';
-                    $fieldsOrder[] = 'format';
-                break;
-                case 'Report.Curriculars': //POCOR-6673
-                    $fieldsOrder[] = 'academic_period_id';
-                    $fieldsOrder[] = 'area_level_id';
-                    $fieldsOrder[] = 'area_education_id';
-                    $fieldsOrder[] = 'institution_id';
                     $fieldsOrder[] = 'format';
                 break;
                 default:
@@ -920,7 +913,6 @@ class InstitutionsTable extends AppTable
                              //END:POCOR-4570
                              'Report.InstitutionPositionsSummaries',
                              'Report.StudentAbsencesPerDays', //POCOR-7276
-                             'Report.Curriculars', //POCOR-6673
 
 
                          ]
@@ -973,8 +965,7 @@ class InstitutionsTable extends AppTable
                 'Report.Income',
                 'Report.Expenditure',
                 'Report.InstitutionPositionsSummaries',
-                'Report.StudentAbsencesPerDays', //POCOR-7276
-                'Report.Curriculars'// POCOR-6673
+                'Report.StudentAbsencesPerDays' //POCOR-7276
             ]))) {
                 $Areas = TableRegistry::get('AreaLevel.AreaLevels');
                 $entity = $attr['entity'];
@@ -1037,8 +1028,7 @@ class InstitutionsTable extends AppTable
                     'Report.Income',
                     'Report.Expenditure',
                     'Report.InstitutionPositionsSummaries',
-                    'Report.StudentAbsencesPerDays', //POCOR-7276
-                    'Report.Curriculars' //POCOR-6673
+                    'Report.StudentAbsencesPerDays' //POCOR-7276
                 ]))) {
                 $Areas = TableRegistry::get('Area.Areas');
                 $entity = $attr['entity'];
@@ -1357,8 +1347,7 @@ class InstitutionsTable extends AppTable
                 'Report.ClassAttendanceNotMarkedRecords',
                 'Report.ClassAttendanceMarkedSummaryReport',
                 'Report.InstitutionPositionsSummaries',
-                'Report.StudentAbsencesPerDays', //POCOR-7276
-                'Report.Curriculars' //POCOR-6673
+                'Report.StudentAbsencesPerDays' //POCOR-7276
             ];
 
 
@@ -1414,12 +1403,12 @@ class InstitutionsTable extends AppTable
                     /**POCOR-6896 starts - updated condition to fetch Institutions query on that bases of selected area level and area education*/
                     $areaIds = [];
                     $lft = $this->Areas->get($areaId)->lft;
-				    $rgt = $this->Areas->get($areaId)->rght;
+                    $rgt = $this->Areas->get($areaId)->rght;
                     $areaFilter = $this->Areas->find('all')
                                 ->select(['area_id' => $this->Areas->aliasField('id')])
                                 ->where([
                                     $this->Areas->aliasField('lft >= ') => $lft,
-								    $this->Areas->aliasField('rght <=') => $rgt,
+                                    $this->Areas->aliasField('rght <=') => $rgt,
                                 ])->toArray();
                     if (!empty($areaFilter)) {
                         foreach ($areaFilter as $area) {
@@ -2068,17 +2057,18 @@ class InstitutionsTable extends AppTable
                 $institutionStaffLeave = TableRegistry::get('institution_staff_leave');
                 $workflowModelsTable = TableRegistry::get('workflow_models');
                 $workflowsTable = TableRegistry::get('workflow_statuses');
-
+                $workflowsData = TableRegistry::get('workflows');
+                $status = array('Active', 'Inactive');
                 $workflowStepsTable = TableRegistry::get('workflow_steps');
-
-                $workflowModel = $workflowModelsTable->find('all',['conditions'=>['model'=> 'Institution.InstitutionPositions' ]])->first();
-                $workflowStepsOptions = $workflowsTable
+                //POCOR-7445 start
+                $workflowModel = $workflowsData->find()->where([$workflowsData->aliasField('code') => 'POSITION-1001'])->first()->id;
+                $workflowStepsOptions = $workflowStepsTable
                         ->find('list', [
                             'keyField' => 'id',
                             'valueField' => 'name'
                         ])
-                        ->where(['workflow_model_id'=> $workflowModel->id]);
-                        
+                        ->where(['workflow_id'=> $workflowModel,$workflowStepsTable->aliasField('name IN') =>$status]);
+                //POCOR-7445 end
                 $institutionStaffLeaveList = $workflowStepsOptions->toArray();
                 if (empty($institutionStaffLeaveList)) {
                     $workflowStepsOptions = ['' => $this->getMessage('general.select.noOptions')];
