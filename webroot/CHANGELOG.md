@@ -1,3 +1,29 @@
+### [3.85.1] - 2023-06-01
+- Implemented: APIs to return the area levels from config items for Address Area and Birthplace Area
+- Bug Fixed: Institutions > Performance > Assessments > Archive : Filters are incomplete
+- Bug Fixed: API: When report_card_comment_code_id is not in the params, the API failed to add the comment
+- Bug Fixed: Institutions>Performance>Report Cards: Report card start and completed column does not show the date and time when report cards are generated
+
+### [3.85.0] - 2023-05-30
+- Implemented: 2.10 Reports > Staff > Requirements Report
+- Implemented: Develop a function to copy risks from one academic period to another
+- Implemented: 1.29 Devlop a function to show percentage of data completion v2
+- Implemented: Develop a function to copy Institution > Performance > Assessments from one academic period to another
+- Implemented: Develop changes to Field Options to store in a database table
+- Implemented: Development of JoLearn v4 API - institutions subjects staff
+- Bug Fixed: Report>Data Quality: Data Quality should include Data Outliers Report
+- Bug Fixed: Workbench : The system does not display Pending Issues (Open/Pending Approval) that are assigned to the user in Workbench
+- Bug Fixed: Institutions>Appointment>Positions: User is unable to import positions
+- Bug Fixed: Administration>Profile>Institution: Updates to placeholder
+- Bug Fixed: Administration > Performance > Report Cards: Placeholder not updated
+- Bug Fixed: Institutions>Performance>Assessments: Getting 404 error when editing assessment period and viewing assessment period
+- Bug Fixed: Report>Workflow: Report should not get stuck in progress
+- Bug Fixed: Reports > Surveys : Survey reports no longer work
+- Bug Fixed: Institutions>Staff>General>Account: The page is not showing any security roles even when there positions assigned to users
+- Bug Fixed: Institutions Positions Summaries: Report is also counting for unassigned staff for the active positions
+- Bug Fixed: Registration: Institution api is not working
+- Bug Fixed: Institutions>Performance>Report Cards: The status should change when the user click generate all button
+
 ### [3.84.1] - 2023-05-25
 - Implemented: Develop a config items to specify the area level for Address Area and Birthplace Area
 - Bug Fixed: Institution > Attendance > Students: When marking attendance to absence or late, the page roll all the way to the top

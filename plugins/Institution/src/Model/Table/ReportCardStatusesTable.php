@@ -1510,17 +1510,19 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ->where([
                       //  $ReportCardProcesses->aliasField('report_card_id') => $params['report_card_id'],
                         $ReportCardProcesses->aliasField('institution_class_id') => $params['institution_class_id'],
-                        $ReportCardProcesses->aliasField('institution_id') => $institutionId
+                        $ReportCardProcesses->aliasField('institution_id') => $institutionId,
+                        $ReportCardProcesses->aliasField('status  IN')=>[1,2]//POCOR-7455
                     ])
                     ->count();  
             }  
-            //POCOR-6692 end       
+            //POCOR-6692 end     
+            
 
-            if (!$inProgress) {                   
+            if (!$inProgress) {           
                 $this->addReportCardsToProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
                 $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
-                $this->Alert->warning('ReportCardStatuses.generateAll');
-            } else {
+                $this->Alert->warning('ReportCardStatuses.generateAll');      
+                } else {
                 $this->Alert->warning('ReportCardStatuses.inProgress');
             }
         } else {
@@ -1804,6 +1806,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             ->where($where)
             ->toArray();
 
+
         foreach ($classStudents as $student) {
             // Report card processes
             $idKeys = [
@@ -1849,8 +1852,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ->first();
 
                 $newData = [
-                    'status' => $this->StudentsReportCards::NEW_REPORT,
-                    'started_on' => NULL,
+                    'status' => $this->StudentsReportCards::IN_PROGRESS,
+                    'started_on' => date('Y-m-d H:i:s'),
                     'completed_on' => NULL,
                     'file_name' => NULL,
                     'file_content' => NULL,
