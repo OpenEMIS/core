@@ -13,6 +13,7 @@ class UserEmploymentsTable extends ControllerActionTable {
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		$this->belongsTo('Industries', ['className' => 'FieldOption.Industries', 'foreignKey' => 'industry_id']);//POCOR-7376
 	}
 
 	public function validationDefault(Validator $validator)
@@ -116,4 +117,16 @@ class UserEmploymentsTable extends ControllerActionTable {
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', __('Employments'));
 	}
+	//POCOR-7376 start
+	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('date_from');
+		$this->field('date_to');
+		$this->field('organisation');
+		$this->field('position');
+		$this->field('industry_id',["type"=>"select"]);
+        $this->setFieldOrder([
+            'date_from', 'date_to', 'organisation', 'position', 'industry_id', 
+        ]);
+    }
 }
