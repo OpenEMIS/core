@@ -185,10 +185,16 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                     // 'title' => __('Archive'),
                     // 'queryString' => $archive_query_string
 
-
+// POCOR-7339-HINDOL temp down
+//                    'plugin' => 'Institutions',
+//                    'controller' => 'Institution',
+//                    'action' => 'AssessmentItemResultsArchived',
+//                    'icon' => '<i class="fa fa-folder"></i>',
+//                    'title' => __('Archive'),
+//                    'queryString' => $archive_query_string
                     'plugin' => 'Institutions',
                     'controller' => 'Institution',
-                    'action' => 'AssessmentItemResultsArchived',
+                    'action' => 'AssessmentArchives',
                     'icon' => '<i class="fa fa-folder"></i>',
                     'title' => __('Archive'),
                     'queryString' => $archive_query_string
@@ -464,14 +470,18 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             'controller' => $this->controller->name,
             'action' => 'AssessmentItemResultsArchived'
         ];
-
-        $archive_query_string = $buttons['view']['url'] = $this->setQueryString($url, [
+        //
+        //POCOR-7339-HINDOL check query string
+        //
+        $archive_query_string_params = [
             'class_id' => $entity->institution_class_id,
             'assessment_id' => $entity->assessment_id,
             'institution_id' => $entity->institution_id,
             'academic_period_id' => $entity->academic_period_id
-        ]);
+        ];
+        $archive_query_string = $buttons['view']['url'] = $this->setQueryString($url, $archive_query_string_params);
         $session = $this->Session;
+
         $session->write('archive_query_string', $archive_query_string);
 
         $grade = $entity->education_grade_id;
