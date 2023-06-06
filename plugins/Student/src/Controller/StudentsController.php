@@ -119,7 +119,7 @@ class StudentsController extends AppController
             $this->set('selectedAction', 'Assessments');
             // End
             //POCOR-7474-HINDOL TYPO FIX
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssessments']);
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurrentAssessments']);
         }
         //$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssisments']);	
     }
@@ -481,7 +481,7 @@ class StudentsController extends AppController
         /**
          * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
          */
-
+        $this->log($model, 'debug');
         $session = $this->request->session();
         if ($session->check('Student.Students.id')) {
             $header = '';
