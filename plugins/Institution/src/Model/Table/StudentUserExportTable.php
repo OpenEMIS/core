@@ -980,7 +980,7 @@ class StudentUserExportTable extends ControllerActionTable
             ];
             $newFields[] = [
                 'key' => '',
-                'field' => 'assesment_period',
+                'field' => 'assessment_period',
                 'type' => 'string',
                 'label' => __('Assessment Periods')
             ];
@@ -1195,7 +1195,8 @@ class StudentUserExportTable extends ControllerActionTable
             ->select([
                 'asses_academic_period' => $AcademicPeriods->aliasField('name'),
                 'asses_institution_name' => $institutions->aliasField('name'),
-                'assesment_period' => $AssessmentPeriods->find()->func()->concat([
+                //POCOR-7474-HINDOL TYPO FIX
+                'assessment_period' => $AssessmentPeriods->find()->func()->concat([
                     $AssessmentPeriods->aliasField('code') => 'literal',
                     " - ",
                     $AssessmentPeriods->aliasField('name') => 'literal'
