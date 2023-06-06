@@ -1237,7 +1237,10 @@ class NavigationComponent extends Component
                 'title' => 'Academic',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Assesments', 'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards', //POCOR-5786 replace results to Assesments
+                'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours',
+                    //POCOR-7474-HINDOL TYPO FIX
+                    'Students.Assessments',
+                    'Students.ExaminationResults', 'Students.ReportCards', 'Students.Awards', //POCOR-5786 replace results to Assessments
                 'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentRisks', 'Students.Outcomes', 'Institutions.StudentProgrammes.view', 'Institutions.StudentProgrammes.edit',
                 'Students.Competencies', 'Students.AssessmentItemResultsArchived', 'Students.InstitutionStudentAbsencesArchived', 'Institutions.StudentTransition', 'Institutions.Associations','Institutions.StudentAssociations','Institutions.StudentCurriculars']
             ],

@@ -101,14 +101,16 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']);
     }
 
-    public function Assesments()	
+    //POCOR-7474-HINDOL TYPO FIX
+    public function Assessments()
     {	
 
         $session = $this->request->session();
 
         if ($session->check('Student.Students.id')) {
             $studentId = $session->read('Student.Students.id');
-            $session->write('Student.Assesments.student_id', $studentId);
+            //POCOR-7474-HINDOL TYPO FIX
+            $session->write('Student.Assessments.student_id', $studentId);
 
             // tabs
             $options = ['type' => 'student'];
@@ -116,8 +118,8 @@ class StudentsController extends AppController
             $this->set('tabElements', $tabElements);
             $this->set('selectedAction', 'Assessments');
             // End
-
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssesments']);
+            //POCOR-7474-HINDOL TYPO FIX
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssessments']);
         }
         //$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssisments']);	
     }

@@ -569,7 +569,8 @@ class AssessmentResultsTable extends AppTable
                             ->toArray();
                     if(!empty($assessmentItemResultsData)){
                         $withTerm_sum_marks = [];
-                        $withTerm_sum_assesment_weight = [];
+                        //POCOR-7474-HINDOL TYPO FIX
+                        $withTerm_sum_assessment_weight = [];
                         foreach ($assessmentItemResultsData as $item_key => $item_val) {
                             $assessmentItemResultsArr = $assessmentItemResults->find()
                                     ->select([
@@ -596,12 +597,12 @@ class AssessmentResultsTable extends AppTable
                                     ->first();
                                 
                                 $withTerm_sum_marks[] = $assessmentItemResultsArr->marks;   
-                                $withTerm_sum_assesment_weight[] = $assessmentItemResultsArr->marks*$value['assessment_period']['weight'];
+                                $withTerm_sum_assessment_weight[] = $assessmentItemResultsArr->marks*$value['assessment_period']['weight'];
                         }
                         //$withTerm[$key]['marks'] = $assessmentItemResultsData->marks;
                         //$withTerm[$key]['academic_term_total_weighted_marks'] = $assessmentItemResultsData->marks*$value['assessment_period']['weight'];
                         $withTerm[$key]['marks'] = array_sum($withTerm_sum_marks); 
-                        $withTerm[$key]['academic_term_total_weighted_marks'] = array_sum($withTerm_sum_assesment_weight);
+                        $withTerm[$key]['academic_term_total_weighted_marks'] = array_sum($withTerm_sum_assessment_weight);
                     } 
                     //POCOR-6586 ends
                 }
@@ -701,7 +702,7 @@ class AssessmentResultsTable extends AppTable
                                 ->toArray();
                         if(!empty($assessmentItemResultsData)){
                             $withoutTerm_sum_marks = [];
-                            $withoutTerm_sum_assesment_weight = [];
+                            $withoutTerm_sum_assessment_weight = [];
                             foreach ($assessmentItemResultsData as $item_key => $item_val) {
                                 $assessmentItemResultsArr = $assessmentItemResults->find()
                                         ->select([
@@ -728,12 +729,12 @@ class AssessmentResultsTable extends AppTable
                                         ->first();
                                     
                                     $withoutTerm_sum_marks[] = $assessmentItemResultsArr->marks;   
-                                    $withoutTerm_sum_assesment_weight[] = $assessmentItemResultsArr->marks*$value['assessment_period']['weight'];
+                                    $withoutTerm_sum_assessment_weight[] = $assessmentItemResultsArr->marks*$value['assessment_period']['weight'];
                             }
                             //$withoutTerm[$key]['marks'] = $assessmentItemResultsData->marks;
                             //$withoutTerm[$key]['academic_term_total_weighted_marks'] += $assessmentItemResultsArr->marks*$value['assessment_period']['weight'];
                             $withoutTerm[$key]['marks'] = array_sum($withoutTerm_sum_marks); 
-                            $withoutTerm[$key]['academic_term_total_weighted_marks'] = array_sum($withoutTerm_sum_assesment_weight);
+                            $withoutTerm[$key]['academic_term_total_weighted_marks'] = array_sum($withoutTerm_sum_assessment_weight);
                         } 
                         //POCOR-6586 ends
                     }
