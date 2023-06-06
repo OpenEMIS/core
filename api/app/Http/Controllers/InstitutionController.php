@@ -896,4 +896,25 @@ class InstitutionController extends Controller
             return $this->sendErrorResponse('Failed to delete student attendance.');
         }
     }
+
+
+    public function deleteStudentAttendance(DeleteClassAttendanceRequest $request, $studentId)
+    {
+        try {
+            $data = $this->institutionService->deleteStudentAttendance($request, $studentId);
+            if($data == 1){
+                return $this->sendErrorResponse("Student attendance deleted successfully.");
+            } else {
+                return $this->sendSuccessResponse("Student attendance not deleted.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to delete student attendance.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to delete student attendance.');
+        }
+    }
 }

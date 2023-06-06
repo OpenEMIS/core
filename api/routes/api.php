@@ -162,6 +162,8 @@ Route::group(
 
         Route::delete('institutions/institution-classes/education-grades/class-attendance', 'InstitutionController@deleteClassAttendance');
 
+        Route::delete('institutions/student/{studentId}/absence', 'InstitutionController@deleteStudentAttendance');
+
 
         Route::get('area-administrative/display-address-area-level', 'InstitutionController@displayAddressAreaLevel');
 
