@@ -81,11 +81,6 @@ class InstitutionPositionsSummariesTable extends AppTable
                 $where['Institutions.area_id IN'] = $allselectedAreas;
                 $selectArea = "AND institutions.area_id IN = ".$allselectedAreas;
         }
-        //print_r($where);die;
-        $workflowStepsTable = TableRegistry::get('workflow_steps');
-        $position = TableRegistry::get('Institution.InstitutionPositions');
-        $StaffPositionCategories = TableRegistry::get('staff_position_categories');
-        $staffTitle = TableRegistry::get('staff_position_titles');
         $this->InstitutionStaff = TableRegistry::get('institution_staff');
         $join = [];
         //POCOR-7407 end
