@@ -761,8 +761,14 @@ class ConsoleOptionParser
         if (substr($name, 0, 2) === '--') {
             return isset($this->_options[substr($name, 2)]);
         }
-        if ($name{0} === '-' && $name{1} !== '-') {
-            return isset($this->_shortOptions[$name{1}]);
+
+//        if ($name{0} === '-' && $name{1} !== '-') {
+//            return isset($this->_shortOptions[$name{1}]);
+//        }
+// POCOR-7339-HINDOL avoid nuisance warning Array and string offset access syntax with curly braces is deprecated
+
+        if ($name[0] === '-' && $name[1] !== '-') {
+            return isset($this->_shortOptions[$name[1]]);
         }
 
         return false;

@@ -113,6 +113,7 @@ class ExcelReportBehavior extends Behavior
 
 
         $extra['params'] = $params;
+        $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateBeforeGenerate', [$params, $extra], $this); // POCOR-7443
         $extra['vars'] = $this->getVars($params, $extra);
 
 
@@ -201,7 +202,6 @@ class ExcelReportBehavior extends Behavior
 
             if ($entity->has('excel_template_name')) {
                 $file = $this->getFile($entity->excel_template);
-
                 // Create a temporary file
                 $filepath = tempnam($extra['path'], $this->config('filename') . '_Template_');
                 $extra['tmp_file_path'] = $filepath;

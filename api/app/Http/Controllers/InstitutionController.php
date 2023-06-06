@@ -819,4 +819,59 @@ class InstitutionController extends Controller
             return $this->sendErrorResponse('Failed to add competency comments.');
         }
     }
+
+
+
+    public function displayAddressAreaLevel(Request $request)
+    {
+        try {
+            $data = $this->institutionService->displayAddressAreaLevel($request);
+            
+            return $this->sendSuccessResponse("Address area level area found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get address area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get address area level area.');
+        }
+    }
+
+
+    public function displayBirthplaceAreaLevel(Request $request)
+    {
+        try {
+            $data = $this->institutionService->displayBirthplaceAreaLevel($request);
+            
+            return $this->sendSuccessResponse("Birthplace area level area found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get birthplace area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get birthplace area level area.');
+        }
+    }
+    public function getSubjectsStaffList(Request $request)
+    {
+        try {
+            if(!isset($request['staff_id']) || !isset($request['institution_id'])){
+                return $this->sendErrorResponse('Staff id and institution id is required.');
+            }
+            $data = $this->institutionService->getSubjectsStaffList($request);
+            return $this->sendSuccessResponse("Subjects Staff List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Subjects Staff List Not Found');
+        }
+    }
 }
