@@ -39,6 +39,23 @@ class POCOR7223 extends AbstractMigration
     $this->execute('SET FOREIGN_KEY_CHECKS=0;');
     $this->execute('ALTER TABLE `student_behaviours` ADD FOREIGN KEY (`student_behaviour_classification_id`) REFERENCES `student_behaviour_classifications` (`id`)');
     $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+
+    $this->execute('CREATE TABLE `zz_7223_field_options` LIKE `field_options`');
+    $this->execute('INSERT INTO `zz_7223_field_options` SELECT * FROM `field_options`');
+    $order = $this->fetchRow("SELECT `order` FROM `field_options` ORDER BY `id` DESC LIMIT 1");
+    $data=[
+                    'name' => 'Student Behaviour Classifications',
+                    'category' => 'Student',
+                    'table_name' => 'student_behaviour_classifications',
+                    'order' => $order[0]+1,
+                    'modified_by' => NULL,
+                    'modified'=>NULL,
+                    'created_by' =>'1',
+                    'created' => date('Y-m-d H:i:s'),
+    ];
+     
+   $this->insert('field_options', $data);
+
     }
 
     public function down()
@@ -47,5 +64,8 @@ class POCOR7223 extends AbstractMigration
         $this->execute('RENAME TABLE `zz_7223_student_behaviours` TO `student_behaviours`');
 
         $this->execute('DROP TABLE IF EXISTS `student_behaviour_classifications`');
+
+        $this->execute('DROP TABLE IF EXISTS `field_options`');
+        $this->execute('RENAME TABLE `zz_7363_field_options` TO `field_options`');
     }
 }
