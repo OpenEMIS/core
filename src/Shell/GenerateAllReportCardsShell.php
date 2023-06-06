@@ -51,6 +51,9 @@ class GenerateAllReportCardsShell extends Shell
                 ->hydrate(false)
                 ->first();
 
+                // echo '<pre>';
+                // print_r($recordToProcess ); die;
+
             if (!empty($recordToProcess)) {
                 $this->out('Generating report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
                 try {
