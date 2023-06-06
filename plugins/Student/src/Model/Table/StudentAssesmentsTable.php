@@ -65,7 +65,7 @@ class StudentAssesmentsTable extends ControllerActionTable
             ]);
         
         $this->setFieldOrder(['assessment_period_name', 'assessments_name','education_subject_name','marks','total_mark']);
-        $extra['elements']['controls'] = ['name' => 'Student.Assesments/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $extra['elements']['controls'] = ['name' => 'Student.Assessments/controls', 'data' => [], 'options' => [], 'order' => 1];
 
         // Start POCOR-5188
         $toolbarButtons = $extra['toolbarButtons'];
@@ -210,6 +210,6 @@ class StudentAssesmentsTable extends ControllerActionTable
         $options = ['type' => 'student'];
         $tabElements = $this->controller->getAcademicTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'Assesments');
+        $this->controller->set('selectedAction', 'Assessments');
     }
 }
