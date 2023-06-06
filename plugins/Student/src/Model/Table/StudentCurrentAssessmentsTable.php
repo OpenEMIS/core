@@ -11,7 +11,7 @@ use Cake\ORM\TableRegistry;
 
 use App\Model\Table\ControllerActionTable;
 
-class StudentAssesmentsTable extends ControllerActionTable
+class StudentCurrentAssessmentsTable extends ControllerActionTable
 {
 
     public function initialize(array $config)
@@ -65,7 +65,7 @@ class StudentAssesmentsTable extends ControllerActionTable
             ]);
         
         $this->setFieldOrder(['assessment_period_name', 'assessments_name','education_subject_name','marks','total_mark']);
-        $extra['elements']['controls'] = ['name' => 'Student.Assessments/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $extra['elements']['controls'] = ['name' => 'Student.StudentCurrentAssessments/controls', 'data' => [], 'options' => [], 'order' => 1];
 
         // Start POCOR-5188
         $toolbarButtons = $extra['toolbarButtons'];
@@ -210,6 +210,6 @@ class StudentAssesmentsTable extends ControllerActionTable
         $options = ['type' => 'student'];
         $tabElements = $this->controller->getAcademicTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'Assessments');
+        $this->controller->set('selectedAction', 'Assesments');
     }
 }
