@@ -20,18 +20,14 @@ class InstitutionPositionsSummariesTable extends AppTable
 
     public function initialize(array $config)
     {
-        $this->table('institution_staff');
+        $this->table('institution_positions');
         parent::initialize($config);
-        
-        $this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
+        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
-        $this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades','foreignKey' => 'staff_position_grade_id']); //POCOR-7377
-        //$this->belongsTo('StaffPositionCategories', ['className' => 'StaffPositionTitles.StaffPositionCategories','foreignKey' => 'staff_position_categories_id']); //POCOR-7377
-        $this->belongsTo('Staffs', ['className' => 'User.Users']);
-        $this->belongsTo('Areas', ['className' => 'Institution.Areas']);
+        $this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->belongsTo('workflowSteps', ['className' => 'InstitutionPositions.workflowSteps']);
-
+        $this->belongsTo('Assignees', ['className' => 'Security.Users']);
+        $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff']);
         $this->addBehavior('Excel', [
             'autoFields' => false
         ]);
@@ -40,28 +36,36 @@ class InstitutionPositionsSummariesTable extends AppTable
         $this->addBehavior('AcademicPeriod.Period');
     }
 
+    // query change in POCOR-7460
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicperiodid = $requestData->academic_period_id;
         $area_level_id = $requestData->area_level_id;
         $statusFilter = $requestData->position_status;  //POCOR-7445
-
         $AcademicPeriodsTable = TableRegistry::get('academic_periods');
 
-        $institution_id = $requestData->institution_id;
+        $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
         $selectedArea = $requestData->area_education_id;
         $where = [];
-        if ($institution_id != 0) {
-            $where[$this->aliasField('institution_id')] = $institution_id;
-        }
+        
 
-        if ($statusFilter != 0) {
-            $where[$this->aliasField('InstitutionPositions.status_id')] = $statusFilter; 
+        if ($statusFilter == 0) {
+            $where = NULL;
+            $statusFilters = NULL;
+        }else{
+            $where[$this->aliasField('status_id')] = $statusFilter;  
+           $statusFilters = "AND institution_positions.status_id = ".$statusFilter;
         }
         if ($academicperiodid != -1) {
             $where[$AcademicPeriodsTable->aliasField('id')] = $academicperiodid; 
+        }
+        if ($institutionId == 0) { 
+           $condition = NULL;
+        }else{
+            $where['institutions.id'] = $institutionId; 
+            $condition = "AND institution_staff.institution_id = ".$institutionId;
         }
 
         //POCOR-7407 start
@@ -75,83 +79,73 @@ class InstitutionPositionsSummariesTable extends AppTable
                 $allselectedAreas = $selectedArea1;
             }
                 $where['Institutions.area_id IN'] = $allselectedAreas;
+                $selectArea = "AND institutions.area_id IN = ".$allselectedAreas;
         }
+        //print_r($where);die;
         $workflowStepsTable = TableRegistry::get('workflow_steps');
         $position = TableRegistry::get('Institution.InstitutionPositions');
         $StaffPositionCategories = TableRegistry::get('staff_position_categories');
         $staffTitle = TableRegistry::get('staff_position_titles');
+        $this->InstitutionStaff = TableRegistry::get('institution_staff');
+        $join = [];
         //POCOR-7407 end
-        $query
-        ->SELECT ([
-           'start_year' =>'InstitutionPositionsSummaries.start_year',
-           'end_year' =>'InstitutionPositionsSummaries.end_year',
-           'id' =>'InstitutionPositionsSummaries.id',
-           'area_code' =>'Areas.code',
-           'area_name' =>'Areas.name',
-           'Category' => $StaffPositionCategories->aliasField('name'),
-           'institutions_code' =>'Institutions.code',
-           'institutions_name' =>'Institutions.name',
-           'institutions_id' =>'Institutions.id',
-           'staff_position_titles' =>'StaffPositionTitles.name',
-           'staff_position_grades' =>'StaffPositionGrades.name',
-           'staff_name' =>'Staffs.first_name',
-           'total_male' => "( SUM(CASE WHEN Staffs.gender_id = 1 THEN 1 ELSE 0 END) )",
-           'total_female' => "( SUM(CASE WHEN Staffs.gender_id = 2 THEN 1 ELSE 0 END) )",
-           'total' => "( SUM(CASE WHEN Staffs.gender_id in (1,2 ) THEN 1 ELSE 0 END) )",
-        ])
-        ->contain(['InstitutionPositions','InstitutionPositions.StaffPositionTitles','StaffPositionGrades','Institutions.Areas','Staffs' ]) //POCOR-7377
+        $query->select([
+                'area_code' => 'areas.code',
+                'area_name' => 'areas.name',
+                'institutions_code' => 'institutions.code',
+                'institutions_name' => 'institutions.name',
+                'staff_position_titles' => 'staff_position_titles.name',
+                'Category' => 'staff_position_categories.name',
+                'staff_position_grades' =>'IFNULL(teaching_staff_info.staff_position_grades_name, "")',
+                'total_male' => 'SUM(CASE WHEN teaching_staff_info.gender_id = 1 THEN 1 ELSE 0 END)',
+                'total_female' => 'SUM(CASE WHEN teaching_staff_info.gender_id = 2 THEN 1 ELSE 0 END)',
+                'total' =>'SUM(CASE WHEN teaching_staff_info.gender_id IN (1,2) THEN 1 ELSE 0 END)'
+                ])
+            ->innerJoin('institutions', [
+                'institutions.id ='. $this->aliasField('institution_id')
+            ])
+            ->innerJoin('areas', [
+                'areas.id = institutions.area_id'
+            ])
+            ->innerJoin('staff_position_titles', [
+                'staff_position_titles.id ='. $this->aliasField('staff_position_title_id')
+            ])
+            ->innerJoin('staff_position_categories', [
+                'staff_position_categories.id = staff_position_titles.staff_position_categories_id'
+            ])->innerJoin('academic_periods', [
+                '(
+                    (institutions.date_closed IS NOT NULL AND institutions.date_opened <= academic_periods.start_date AND institutions.date_closed >= academic_periods.start_date)
+                    OR
+                    (institutions.date_closed IS NOT NULL AND institutions.date_opened <= academic_periods.end_date AND institutions.date_closed >= academic_periods.end_date)
+                    OR
+                    (institutions.date_closed IS NOT NULL AND institutions.date_opened >= academic_periods.start_date AND institutions.date_closed <= academic_periods.end_date)
+                    OR
+                    (institutions.date_closed IS NULL AND institutions.date_opened <= academic_periods.end_date)
+                )']);
 
-        ->innerJoin(
-            [$AcademicPeriodsTable->alias() => $AcademicPeriodsTable->table()],
-            [
-                
-                ['OR'=>[
-
-                    'OR'=>[
-                            [
-                                $this->aliasField('end_date IS NOT NULL') ,
-                                $this->aliasField('start_date <=') .$AcademicPeriodsTable->aliasField('start_date'),
-                                $this->aliasField('end_date >=') .$AcademicPeriodsTable->aliasField('start_date'),
-                            ],
-                            [
-                                $this->aliasField('end_date IS NOT NULL') ,
-                                $this->aliasField('start_date <=') .$AcademicPeriodsTable->aliasField('end_date'),
-                                $this->aliasField('end_date >=') .$AcademicPeriodsTable->aliasField('end_date'),
-                            ],
-                            [
-                                $this->aliasField('end_date IS NOT NULL') ,
-                                $this->aliasField('start_date >=') .$AcademicPeriodsTable->aliasField('start_date'),
-                                $this->aliasField('end_date <=') .$AcademicPeriodsTable->aliasField('end_date'),
-                            ]
-                        ],
-                    
-                    
-                        ['AND'=>
-
-                            [
-                                $this->aliasField('end_date IS NULL') ,
-                                $this->aliasField('start_date <=') .$AcademicPeriodsTable->aliasField('end_date'),
-                            // $this->aliasField('end_date >=') .$AcademicPeriodsTable->aliasField('start_date'),
-                            ]
-                        
-                        ]
-                ]
-                ]
-                
-
-            ]
-
-        )->LeftJoin([$position->alias() => $position->table()],
-                    [$position->aliasField('id') . ' = '. $this->aliasField('institution_position_id')])
-        ->LeftJoin([$staffTitle->alias() => $staffTitle->table()],
-                    [$staffTitle->aliasField('id') . ' = '. $position->aliasField('staff_position_title_id')])
-        ->LeftJoin([$StaffPositionCategories->alias() => $StaffPositionCategories->table()],
-                    [$StaffPositionCategories->aliasField('id') . ' = '. $staffTitle->aliasField('staff_position_categories_id')])
-
-        ->where($where)
-        ->group(['Institutions.id','StaffPositionTitles.id','StaffPositionGrades.id'])
-        ->order(['Areas.name','Institutions.name','StaffPositionTitles.name','StaffPositionGrades.name']);
-        
+        $join['teaching_staff_info'] = [
+        'type' => 'left',
+         'table' => "(SELECT institution_staff.staff_position_grade_id
+                    ,staff_position_grades.name staff_position_grades_name
+                    ,institution_positions.id institution_position_id
+                    ,security_users.gender_id
+                FROM institution_staff
+                INNER JOIN institution_positions
+                ON institution_positions.id = institution_staff.institution_position_id
+                INNER JOIN academic_periods
+                ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
+                INNER JOIN security_users
+                ON security_users.id = institution_staff.staff_id
+                INNER JOIN staff_position_grades
+                ON staff_position_grades.id = institution_staff.staff_position_grade_id 
+                WHERE  academic_periods.id = $academicperiodid
+                 $statusFilters $condition AND institution_staff.staff_status_id = 1
+                GROUP BY institution_staff.staff_id,institution_positions.id )",
+                'conditions' => ['teaching_staff_info.institution_position_id='. $this->aliasField('id')],
+                ];
+    $query->where($where)->group(['institutions.id','staff_position_titles.id','teaching_staff_info.staff_position_grade_id'])
+    ->order(['areas.name','institutions.name','staff_position_titles.name']);
+    $query->join($join);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
