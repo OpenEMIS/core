@@ -1552,7 +1552,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'institution_class_id' => $student->institution_class_id,
                 'student_id' => $student->student_id
             ];
-
+            $educationGradeId = $student->education_grade_id;
             $data = [
                 'status' => $ReportCardProcesses::NEW_PROCESS,
                 'institution_id' => $student->institution_id,
@@ -1574,7 +1574,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $this->ReportCardEmailProcesses->delete($reportCardEmailProcessEntity);
             }
             // end
-            $getGpa = $this->addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId);//POCOR-7318 get student GPA
+            $getGpa = $this->addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId,$educationGradeId);//POCOR-7318 get student GPA
             // Student report card
             $recordIdKeys = [
                 'report_card_id' => $reportCardId,
@@ -1947,51 +1947,40 @@ class ReportCardStatusesTable extends ControllerActionTable
     /**POCOR-6836 ends*/ 
 
     //POCOR-7318
-    private function addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId)
+    private function addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId,$educationGradeId)
     {
-        $assessments = TableRegistry::get('assessment_grading_options');
-        $AssessmentTable = TableRegistry::get('Assessment.Assessments');
-        $assessmentItem = TableRegistry::get('assessment_items');
-        $assessmentGradingOption = TableRegistry::get('assessment_grading_options');
-        $subjectStudent = TableRegistry::get('institution_subject_students');
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods'); 
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod =  $this->AcademicPeriods->getCurrent();
-        $data = $assessmentItem->find()
-                                ->select(['education_grade_id' => $AssessmentTable->aliasField('education_grade_id'),
-                                 'weight' => $assessmentItem->aliasField('weight'),'education_subject' =>$assessmentItem->aliasField('education_subject_id')])
-                                ->leftJoin([$AssessmentTable->alias() => $AssessmentTable->table()],
-                                [$AssessmentTable->aliasField('id = ') . $assessmentItem->aliasField('assessment_id')])
-                                ->where([$AssessmentTable->aliasField('academic_period_id') =>$selectedAcademicPeriod, $assessmentItem->aliasField('weight IS NOT') =>0.00]);
-        
-        $education_grade_id = [];
-        $education_subject = [];
-        $sumWeight = 0;
-        foreach($data as $key => $value){
-            $education_grade_id[] = $value->education_grade_id;
-            $education_subject[] = $value->education_subject;
+        $selectedAcademicPeriodId =  $this->AcademicPeriods->getCurrent();
+        $gpa = 0.00;
+        $connection = ConnectionManager::get('default');
+        $statement = $connection->prepare("SELECT subq.student_id
+                        ,AVG(subq.gpa_per_subject) gpa_per_student
+                    FROM
+                    (
+                        SELECT institution_subject_students.student_id
+                            ,MAX(IFNULL(assessment_grading_options.point, 0)) gpa_per_subject
+                        FROM institution_subject_students
+                        LEFT JOIN assessment_grading_options
+                        ON institution_subject_students.total_mark >= assessment_grading_options.min 
+                        AND institution_subject_students.total_mark <= assessment_grading_options.max
+                        WHERE institution_subject_students.academic_period_id = $selectedAcademicPeriodId
+                        AND institution_subject_students.institution_id = $institutionId
+                        AND institution_subject_students.education_grade_id = $educationGradeId
+                        AND institution_subject_students.student_id = $studentId
+                        GROUP BY institution_subject_students.student_id
+                                ,institution_subject_students.education_subject_id
+                    ) subq
+                    GROUP BY subq.student_id");
+        $statement->execute();
+        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        if(!empty($result)){
+           foreach($result as $val){
+            $gpa = $val->gpa_per_student;
+           }
         }
-        $subjectCount = count($education_subject);
-        $StudentsSubject = $subjectStudent->find()->select(['total_mark'])->where([$subjectStudent->aliasField('education_subject_id IN') => $education_subject,$subjectStudent->aliasField('academic_period_id') =>$selectedAcademicPeriod,$subjectStudent->aliasField('student_id') => $studentId,$subjectStudent->aliasField('student_status_id') => 1,$subjectStudent->aliasField('institution_id') => $institutionId]);
+        return $gpa;
         
-        foreach($StudentsSubject as $val){
-            $totalMark = $val->total_mark;
-            $getpoint = $AssessmentTable->find()->select(['point' =>$assessmentGradingOption->aliasField('point'),
-                        'min' =>$assessmentGradingOption->aliasField('min'),'max' =>$assessmentGradingOption->aliasField('max'),'id' =>$assessmentGradingOption->aliasField('id')])
-                        ->leftJoin([$assessmentGradingOption->alias() => $assessmentGradingOption->table()],
-                        [$assessmentGradingOption->aliasField('assessment_grading_type_id = ') . $AssessmentTable->aliasField('assessment_grading_type_id')])
-                        ->where([$AssessmentTable->aliasField('academic_period_id') =>$selectedAcademicPeriod,$assessmentGradingOption->aliasField('min <=') =>$totalMark,$assessmentGradingOption->aliasField('max >=') =>$totalMark]);
-            foreach($getpoint as $val){
-                $point = $val->point;
-                foreach($data as $key => $value){
-                    $weight = $value->weight * $point;
-                    $sumWeight+= $weight;
-                }
-            }
-        }
-
-        $finalGpa = $sumWeight/$subjectCount;
-        return $finalGpa;
     }
 
 }
