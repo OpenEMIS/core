@@ -104,24 +104,11 @@ class StudentsController extends AppController
     //POCOR-7474-HINDOL TYPO FIX
     public function Assessments()
     {	
-
-        $session = $this->request->session();
-
-        if ($session->check('Student.Students.id')) {
-            $studentId = $session->read('Student.Students.id');
-            //POCOR-7474-HINDOL TYPO FIX
-            $session->write('Student.Assessments.student_id', $studentId);
-
-            // tabs
-            $options = ['type' => 'student'];
-            $tabElements = $this->getAcademicTabElements($options);
-            $this->set('tabElements', $tabElements);
-            $this->set('selectedAction', 'Assessments');
-            // End
-            //POCOR-7474-HINDOL TYPO FIX
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurrentAssessments']);
-        }
-        //$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssisments']);	
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.CurrentAssessments']);
+    }
+    public function AssessmentsArchived()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.ArchivedAssessments']);
     }
 
     public function Nationalities()
