@@ -233,7 +233,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearStudentWithdrawnByArea'] = 'onExcelTemplateInitialiseLastYearStudentWithdrawnByArea';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearStudentRepeatedByArea'] = 'onExcelTemplateInitialiseLastYearStudentRepeatedByArea';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseTeachingStaffTotalAbsences'] = 'onExcelTemplateInitialiseTeachingStaffTotalAbsences';//POCOR-7421
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAreaTeachingStaffTotalAbsenceDays'] = 'onExcelTemplateInitialiseTeachingAreaTeachingStaffTotalAbsenceDays';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAreaTeachingStaffTotalAbsenceDays'] = 'onExcelTemplateInitialiseAreaTeachingStaffTotalAbsenceDays';//POCOR-7421
 
         return $events;
     }
@@ -6543,7 +6543,7 @@ class InstitutionReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseTeachingAreaTeachingStaffTotalAbsenceDays(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseAreaTeachingStaffTotalAbsenceDays(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $AreaId = $this->getAreaIdByInstitutionId($params['institution_id']);
