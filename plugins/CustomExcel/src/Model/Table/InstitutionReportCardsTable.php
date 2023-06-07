@@ -125,6 +125,8 @@ class InstitutionReportCardsTable extends AppTable
                 'LastYearStudentPromotedByArea',//POCOR-7421
                 'LastYearStudentWithdrawnByArea',//POCOR-7421
                 'LastYearStudentRepeatedByArea',//POCOR-7421
+                'TeachingStaffTotalAbsences',//POCOR-7449
+                'AreaTeachingStaffTotalAbsenceDays',//POCOR-7449
             ]
         ]);
     }
@@ -230,6 +232,9 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearStudentPromotedByArea'] = 'onExcelTemplateInitialiseLastYearStudentPromotedByArea';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearStudentWithdrawnByArea'] = 'onExcelTemplateInitialiseLastYearStudentWithdrawnByArea';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearStudentRepeatedByArea'] = 'onExcelTemplateInitialiseLastYearStudentRepeatedByArea';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseTeachingStaffTotalAbsences'] = 'onExcelTemplateInitialiseTeachingStaffTotalAbsences';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAreaTeachingStaffTotalAbsenceDays'] = 'onExcelTemplateInitialiseTeachingAreaTeachingStaffTotalAbsenceDays';//POCOR-7421
+
         return $events;
     }
 
@@ -5447,7 +5452,7 @@ class InstitutionReportCardsTable extends AppTable
                                 GROUP BY institution_staff.staff_id
                             ) subq
                             WHERE subq.teaching_count = 0 AND subq.non_teaching_count > 0")->fetch();
-            return !empty($entity) ? $entity[0] : 0; 
+            return !empty($entity[0]) ? $entity[0] : " 0"; 
         }
     }//POCOR-7411 ends
     //POCOR-7421 Starts
@@ -5529,7 +5534,7 @@ class InstitutionReportCardsTable extends AppTable
             if(!empty($entity)){
                 $entity['area_size'] = $entity['area_size'];
             }
-            return !empty($entity) ? $entity : 0; 
+            return !empty($entity) ? $entity : " 0"; 
         }
     }
 
@@ -5544,7 +5549,7 @@ class InstitutionReportCardsTable extends AppTable
                                             INNER JOIN academic_periods
                                                 ON (((institutions.date_closed IS NOT NULL AND institutions.date_opened <= academic_periods.start_date AND institutions.date_closed >= academic_periods.start_date) OR (institutions.date_closed IS NOT NULL AND institutions.date_opened <= academic_periods.end_date AND institutions.date_closed >= academic_periods.end_date) OR (institutions.date_closed IS NOT NULL AND institutions.date_opened >= academic_periods.start_date AND institutions.date_closed <= academic_periods.end_date)) OR (institutions.date_closed IS NULL AND institutions.date_opened <= academic_periods.end_date))
                                             WHERE academic_periods.id = ". $params['academic_period_id'] ." AND institutions.id = ". $params['institution_id'] ." AND institution_student_absence_days.start_date BETWEEN academic_periods.start_date AND academic_periods.end_date")->fetch();
-            return !empty($entity) ? $entity[0] : 0; 
+            return !empty($entity[0]) ? $entity[0] : " 0"; 
         }
     }
 
@@ -5555,7 +5560,7 @@ class InstitutionReportCardsTable extends AppTable
             $entity = $connection->execute("SELECT ROUND(IFNULL(SUM(institution_staff_leave.number_of_days), 0), 0) school_staff_absent_days
                                             FROM institution_staff_leave
                                             WHERE institution_staff_leave.academic_period_id = ". $params['academic_period_id'] ." AND institution_staff_leave.institution_id = ". $params['institution_id'] ."")->fetch();
-            return !empty($entity) ? $entity[0] : 0; 
+            return !empty($entity[0]) ? $entity[0] : " 0"; 
         }
     }
         
@@ -5573,7 +5578,7 @@ class InstitutionReportCardsTable extends AppTable
                                             WHERE academic_periods.id = ". $params['academic_period_id'] ."
                                             AND institutions.area_id = ".$AreaId."
                                             AND institution_student_absence_days.start_date BETWEEN academic_periods.start_date AND academic_periods.end_date")->fetch();
-            return !empty($entity) ? $entity[0] : 0; 
+            return !empty($entity[0]) ? $entity[0] : " 0"; 
         }
     }
 
@@ -5587,7 +5592,7 @@ class InstitutionReportCardsTable extends AppTable
                                             INNER JOIN institutions
                                                 ON institutions.id = institution_staff_leave.institution_id
                                             WHERE institution_staff_leave.academic_period_id = ". $params['academic_period_id'] ." AND institutions.area_id = ".$AreaId."")->fetch();
-            return !empty($entity) ? $entity[0] : 0; 
+            return !empty($entity[0]) ? $entity[0] : " 0"; 
         }
     }
 
@@ -6508,4 +6513,67 @@ class InstitutionReportCardsTable extends AppTable
         return $data;
     }
     //POCOR-7421 Ends
+    //POCOR-7449 Starts
+    public function onExcelTemplateInitialiseTeachingStaffTotalAbsences(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $connection = ConnectionManager::get('default');
+            $StaffLeaveData = $connection->execute("SELECT ROUND(IFNULL(SUM(institution_staff_leave.number_of_days), 0), 0) school_staff_absent_days
+                            FROM institution_staff_leave
+                            INNER JOIN 
+                            (
+                                SELECT institution_staff.staff_id
+                                FROM institution_staff
+                                INNER JOIN institution_positions
+                                    ON institution_positions.id = institution_staff.institution_position_id
+                                INNER JOIN staff_position_titles 
+                                    ON staff_position_titles.id = institution_positions.staff_position_title_id
+                                INNER JOIN academic_periods
+                                    ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
+                                WHERE institution_staff.institution_id = ". $params['institution_id'] ." AND staff_position_titles.type = 1 AND academic_periods.id = ". $params['academic_period_id'] ." AND institution_staff.staff_status_id = 1
+                                GROUP BY institution_staff.staff_id
+                            ) teaching_staff_info
+                                ON teaching_staff_info.staff_id = institution_staff_leave.staff_id
+                            WHERE institution_staff_leave.academic_period_id = ". $params['academic_period_id'] ." AND institution_staff_leave.institution_id = ". $params['institution_id'] ."")->fetch('assoc');
+            $data = " 0";
+            if(!empty($StaffLeaveData)){
+                $data = !empty($StaffLeaveData['school_staff_absent_days']) ? $StaffLeaveData['school_staff_absent_days'] : " 0";
+            }
+            return $data;
+        }
+    }
+
+    public function onExcelTemplateInitialiseTeachingAreaTeachingStaffTotalAbsenceDays(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $AreaId = $this->getAreaIdByInstitutionId($params['institution_id']);
+            $connection = ConnectionManager::get('default');
+            $AreaStaffAbsentDaysData = $connection->execute("SELECT ROUND(IFNULL(SUM(institution_staff_leave.number_of_days), 0), 0) area_staff_absent_days
+                                FROM institution_staff_leave
+                                INNER JOIN institutions
+                                    ON institutions.id = institution_staff_leave.institution_id
+                                INNER JOIN 
+                                (
+                                    SELECT institution_staff.staff_id
+                                    FROM institution_staff
+                                    INNER JOIN institutions
+                                        ON institutions.id = institution_staff.institution_id
+                                    INNER JOIN institution_positions
+                                        ON institution_positions.id = institution_staff.institution_position_id
+                                    INNER JOIN staff_position_titles 
+                                        ON staff_position_titles.id = institution_positions.staff_position_title_id
+                                    INNER JOIN academic_periods
+                                        ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
+                                    WHERE institutions.area_id = ".$AreaId." AND staff_position_titles.type = 1 AND academic_periods.id = ". $params['academic_period_id'] ." AND institution_staff.staff_status_id = 1
+                                    GROUP BY institution_staff.staff_id
+                                ) teaching_staff_info
+                                    ON teaching_staff_info.staff_id = institution_staff_leave.staff_id
+                                WHERE institution_staff_leave.academic_period_id = ". $params['academic_period_id'] ." AND institutions.area_id = ".$AreaId."")->fetch('assoc');
+            $data = " 0";
+            if(!empty($AreaStaffAbsentDaysData)){
+                $data = !empty($AreaStaffAbsentDaysData['area_staff_absent_days']) ? $AreaStaffAbsentDaysData['area_staff_absent_days'] : " 0";
+            }
+            return $data;
+        }
+    }//POCOR-7449 Ends
 }
