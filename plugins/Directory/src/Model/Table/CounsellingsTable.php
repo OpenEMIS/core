@@ -1,15 +1,25 @@
 <?php
 namespace Directory\Model\Table;
-use ArrayObject;
-use Cake\Validation\Validator;
-use Cake\Event\Event;
-use App\Model\Table\AppTable;
-use Cake\ORM\Entity;
-use Cake\ORM\Query; 
-use Cake\ORM\TableRegistry;
-use Cake\I18n\Time;
 
+use ArrayObject;
+use stdClass;
+use Cake\ORM\Query;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
+use Cake\Event\Event;
+use Cake\Network\Request;
+use Cake\Utility\Inflector;
+use Cake\Utility\Text;
+use Cake\Validation\Validator;
+use Cake\Collection\Collection;
+use Cake\I18n\Date;
+use Cake\Log\Log;
+use Cake\Routing\Router;
 use App\Model\Table\ControllerActionTable;
+use App\Model\Traits\MessagesTrait;
+use Cake\Datasource\ResultSetInterface;
+use Cake\Network\Session;
+
 
 class CounsellingsTable extends ControllerActionTable
 {
@@ -21,9 +31,27 @@ class CounsellingsTable extends ControllerActionTable
         $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
         $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
         $this->belongsTo('Requesters', ['className' => 'Security.Users', 'foreign_key' => 'requester_id']);
-
+        $this->addBehavior('ControllerAction.FileUpload', [
+            'name' => 'file_name',
+            'content' => 'file_content',
+            'size' => '2MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'all',
+            'useDefaultName' => true
+        ]);
+        $this->toggle('view', true);
+        $this->toggle('edit', true);
+      
     }
-   
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+    }
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator->allowEmpty('file_content');
+    }
     public function addEditBeforeAction(Event $event, ArrayObject $extra){
         $session = $this->request->session();
         $StudentId = $session->read('Student.Students.id');
@@ -35,7 +63,9 @@ class CounsellingsTable extends ControllerActionTable
         $institutionId=$institutionStudent->institution_id;
         $requestorOptions=$this->getRequesterOptions($institutionId);
         $counselorOptions=$this->getCounselorOptions($institutionId);
-       
+        // $this->field('file_name', ['visible' => false]);
+        // $this->field('file_content', ['visible' => false]);
+        // $this->field('file_name', ['visible' => true]);
         $this->fields['requester_id']['type'] = 'select';
         $this->fields['requester_id']['options'] = $requestorOptions;
         $this->fields['guidance_type_id']['type'] = 'select';
@@ -44,6 +74,7 @@ class CounsellingsTable extends ControllerActionTable
         $this->fields['counselor_id']['options'] = $counselorOptions;
         $this->fields['date']['type'] = 'date';
         $this->fields['date']['value'] = Time::now()->format('d-m-Y');
+        $this->setFieldOrder(['date','counselor_id','guidance_type_id','requester_id', 'guidance_utilized', 'description', 'intervention', 'comment', 'attachment']);
         
     }
     
@@ -141,5 +172,129 @@ class CounsellingsTable extends ControllerActionTable
     
         }
 
+            
+        // public function indexAfterAction(Event $event)
+        // {
+        //     $this->field('file_content', ['visible' => false]);
+        //     $this->field('file_name', ['visible' => false]);
+        //     $this->field('comment', ['visible' => false]);
+        //     $this->field('guidance_utilized', ['visible' => false]);
+            
+        //     $this->setFieldOrder(['date', 'description', 'intervention', 'counselor_id', 'guidance_type_id', 'requester_id',  'Actions']);
+        // }
 
-}
+        // public function viewBeforeAction(Event $event, ArrayObject $extra){
+           
+        //     $this->field('file_name', ['visible' => false]);
+        //     $this->setFieldOrder(['date','counselor_id','guidance_type_id','requester_id', 'guidance_utilized', 'description', 'intervention', 'comment', 'attachment']);
+        // }
+        public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'file_content':
+                return __('Attachment');
+            case 'modified_user_id';
+                return __('Modified By');
+            case 'modified';
+                return __('Modified On');
+            case 'created_user_id';
+                return __('Created By');
+            case 'created';
+                return __('Created On');
+            
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    // public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    // {
+       
+       
+    //      $this->field('file_name', ['visible' => false]);
+    //     $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+    //     $this->setupFields($entity);
+    // }
+    private function setupFields(Entity $entity)
+    {
+      $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+    }
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+      
+    }
+    // private function setupFields(Entity $entity)
+    // {
+    //     // $this->field('severe', ['after' => 'description']);
+    //     // $this->field('health_allergy_type_id', ['type' => 'select', 'after' => 'comment']);
+    //     $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+    // }
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+       
+    }
+    // public function viewBeforeAction(Event $event, ArrayObject $extra)
+    // {
+    //     echo "<pre>";
+    //     print_r($extra);
+    //     exit;
+    // 
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        
+          
+        //     $institutionId = $session->read('Institution.Institutions.id');
+        //     $curricularStudent = TableRegistry::get('institution_curricular_students');
+        //     $users = TableRegistry::get('security_users');
+    
+            $query->select([
+                    'id',
+                    'date',
+                    'guidance_utilized',
+                    'description',
+                    'intervention',
+                    'comment',
+                    'file_name',
+                    'file_content',
+                    'counselor_id',
+                    'student_id',
+                    'guidance_type_id',
+                    'requester_id',
+                    'modified_user_id',
+                    'modified',
+                    'created_user_id',
+                    'created',
+            ])->contain('Counselors');
+         
+        //         ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId'],
+        //         $this->aliasField('institution_id') => $institutionId])
+        //         ->group([$this->aliasField('id')]);
+    
+        //     if (!$sortable) {
+        //         $query
+        //             ->order([
+        //                 $this->aliasField('name') => 'ASC'
+        //             ]);
+        //     }
+            $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
+            $query = $this->request->query;
+            $this->field('file_content', ['visible' => false]);
+            $this->field('file_name', ['visible' => false]);
+            $this->field('comment', ['visible' => false]);
+            $this->field('guidance_utilized', ['visible' => false]);
+            
+            $this->field('modified_user_id', ['visible' => false]);
+            $this->field('modified', ['visible' => false]);
+            $this->field('created_user_id', ['visible' => false]);
+            $this->field('created', ['visible' => false]);
+            $this->setFieldOrder([
+                'name', 'staff_id','category','total_male_students', 'total_female_students', 'total_students'
+            ]);
+            $this->setFieldOrder(['date', 'description', 'intervention', 'counselor_id', 'guidance_type_id', 'requester_id',  'Actions']);
+  
+            
+        // }
+      
+    }
+    }
