@@ -1398,6 +1398,7 @@ class NavigationComponent extends Component
                 'selected' => ['Students.Classes',
                     'Students.Subjects',
                     'Students.Absences',
+                    'Students.ArchivedAbsences',
                     'Students.Behaviours',
                     //POCOR-7474-HINDOL TYPO FIX
                     'Students.Assessments',
@@ -1904,8 +1905,11 @@ class NavigationComponent extends Component
                     'Profiles.StudentAwards',
                     'Profiles.StudentExtracurriculars',
                     'Profiles.StudentTextbooks',
-                    'Profiles.StudentOutcomes', 'Profiles.StudentRisks', 'Profiles.StudentAssociations',
-                    'Profiles.Absences', 'Profiles.StudentCurriculars']
+                    'Profiles.StudentOutcomes',
+                    'Profiles.StudentRisks',
+                    'Profiles.StudentAssociations',
+                    'Profiles.Absences',
+                    'Profiles.StudentCurriculars']
             ],//POCOR-6701 added Profiles.Absences becasue navigation was collapsing //POCOR-6699 adding studentAssessment
             'Profiles.StudentScheduleTimetable' => [
                 'title' => 'Timetables',

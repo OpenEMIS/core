@@ -175,6 +175,11 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
     }
 
+    public function ArchivedAbsences()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.ArchivedAbsences']);
+    }
+
     public function Meals()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionMealStudents']);

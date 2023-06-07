@@ -11,14 +11,14 @@ use Cake\ORM\TableRegistry;
 use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
 
-class AbsencesTable extends ControllerActionTable
+class ArchivedAbsencesTable extends ControllerActionTable
 {
     private $institutionId = null;
     private $studentId = null;
     public function initialize(array $config)
     {
         /*POCOR-6313 changed main table as per client requirement*/
-        $this->table('institution_student_absence_details');
+        $this->table('institution_student_absence_details_archived');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -47,6 +47,13 @@ class AbsencesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $session = $this->controller->request->session();
+        if ($session->check('Institution.Institutions.id')) {
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+        $studentId = $this->Session->read('Student.Students.id');
+        $this->institutionId = $institutionId;
+        $this->studentId = $studentId;
         // $this->fields['student_absence_reason_id']['type'] = 'select';
         $this->fields['institution_student_absence_day_id']['visible'] = false;
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -71,13 +78,7 @@ class AbsencesTable extends ControllerActionTable
                 return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Absences','index']);
             }
         }
-        $session = $this->controller->request->session();
-        if ($session->check('Institution.Institutions.id')) {
-            $institutionId = $session->read('Institution.Institutions.id');
-        }
-        $studentId = $this->Session->read('Student.Students.id');
-        $this->institutionId = $institutionId;
-        $this->studentId = $studentId;
+
 		// Start POCOR-5188
 		if($this->request->params['controller'] == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Personal','Absences','Students - Academic');       
@@ -118,29 +119,6 @@ class AbsencesTable extends ControllerActionTable
 
 		}
 		// End POCOR-5188
-        $toolbarButtons = $extra['toolbarButtons'];
-        if ($toolbarButtons->offsetExists('back')) {
-            $encodedParams = $this->request->params['pass'][1];
-            if ($this->controller->name == 'Directories') {
-                $backUrl = [
-                    'plugin' => 'Directory',
-                    'controller' => 'Directories',
-                    'action' => 'Absences',
-                    'index',
-                    $encodedParams
-                ];
-            } else {
-                $backUrl = [
-                    'plugin' => 'Student',
-                    'controller' => 'Students',
-                    'action' => 'Absences',
-                    'index',
-                    $encodedParams
-                ];
-            }
-
-            $toolbarButtons['back']['url'] = $backUrl;
-        }
     }
     /*POCOR-6313 starts*/
     public function indexBeforeAction(Event $event, ArrayObject $settings)
@@ -207,7 +185,8 @@ class AbsencesTable extends ControllerActionTable
     {
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->institutionId;
+        $studentId = $this->studentId;
         if ($this->request->query('user_id') !== null) {
             $staffId = $this->request->query('user_id');
             $this->Session->write('Staff.Staff.id', $staffId);
@@ -222,7 +201,24 @@ class AbsencesTable extends ControllerActionTable
         $selectedPeriod = $this->request->query['academic_period'];
 
         $this->request->query['academic_period'] = $selectedPeriod;
-        $this->advancedSelectOptions($academicPeriodList, $selectedPeriod);
+        $AssessmentItemResultsArchived = TableRegistry::get('institution_student_absence_details_archived');
+        $this->advancedSelectOptions($academicPeriodOptions, $selectedPeriod, [
+//
+            'message' => '{{label}} - No Archived Absences ',
+            'callable' => function ($id) use ($institutionId, $AssessmentItemResultsArchived, $studentId) {
+                return $AssessmentItemResultsArchived
+                    ->find()
+                    ->distinct([$AssessmentItemResultsArchived->aliasField('academic_period_id')])
+                    ->where([
+                        $AssessmentItemResultsArchived->aliasField('student_id') => $studentId,
+                        $AssessmentItemResultsArchived->aliasField('institution_id') => $institutionId,
+                        $AssessmentItemResultsArchived->aliasField('academic_period_id') => $id
+                    ])
+                    ->count();
+            }
+        ]);
+
+//        $this->advancedSelectOptions($academicPeriodList, $selectedPeriod);
 
 
         // $selectedPeriod = $this->request->query['academic_period_id'];
@@ -368,6 +364,9 @@ class AbsencesTable extends ControllerActionTable
                 
             }
         }
+        $sql = $query->sql();
+//        $this->log('sql', 'debug');
+//        $this->log($sql, 'debug');
     }
     
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -383,7 +382,7 @@ class AbsencesTable extends ControllerActionTable
         $options['type'] = 'student';
         $tabElements = $this->controller->getAcademicTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'Absences');
+        $this->controller->set('selectedAction', $this->alias());
     }
 
     public function indexAfterAction(Event $event, $data)
@@ -422,7 +421,7 @@ class AbsencesTable extends ControllerActionTable
                 }
             }
         }
-        $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
+        $InstitutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details_archived');
         $query
             ->find('all')
             ->autoFields(true)
@@ -467,7 +466,7 @@ class AbsencesTable extends ControllerActionTable
                 $backUrl = [
                     'plugin' => 'Directory',
                     'controller' => 'Directories',
-                    'action' => 'Absences',
+                    'action' => 'ArchivedAbsences',
                     'index',
                     $encodedParams
                 ];
@@ -475,7 +474,7 @@ class AbsencesTable extends ControllerActionTable
                 $backUrl = [
                     'plugin' => 'Student',
                     'controller' => 'Students',
-                    'action' => 'Absences',
+                    'action' => 'ArchivedAbsences',
                     'index',
                     $encodedParams
                 ];
@@ -515,7 +514,8 @@ class AbsencesTable extends ControllerActionTable
     private function addExtraButtons(ArrayObject $extra)
     {
         $toolbarButtons = $extra['toolbarButtons'];
-        $this->addArchiveButton($toolbarButtons);
+//        $this->addArchiveButton($toolbarButtons);
+        $this->addBackButton($toolbarButtons);
     }
 
 
@@ -586,6 +586,22 @@ class AbsencesTable extends ControllerActionTable
         $customButton['url'] = $url;
         $name = 'archive';
         $toolbarButtons[$name] = $customButton;
+    }
+
+    private function addBackButton($toolbarButtons)
+    {
+        $is_archive_exists = true;
+        if ($is_archive_exists) {
+            $customButtonName = 'back';
+            $customButtonUrl = [
+                'plugin' => 'Student',
+                'controller' => 'Students',
+                'action' => 'Absences'
+            ];
+            $customButtonLabel = '<i class="fa kd-back"></i>';
+            $customButtonTitle = __('Back');
+            $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl);
+        }
     }
 
 }
