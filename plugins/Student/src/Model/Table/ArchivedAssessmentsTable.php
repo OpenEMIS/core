@@ -120,7 +120,7 @@ class ArchivedAssessmentsTable extends ControllerActionTable
             $this->AcademicPeriods->getCurrent();
 
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod, [
-// POCOR-7339-HINDOL TO ADD            'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noAssessments')),
+//
             'message' => '{{label}} - No Archived Assessments ',
             'callable' => function ($id) use ($institutionId, $AssessmentItemResultsArchived, $studentId) {
                 return $AssessmentItemResultsArchived
