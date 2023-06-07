@@ -78,7 +78,7 @@ class InstitutionPositionsSummariesTable extends AppTable
             }else{
                 $allselectedAreas = $selectedArea1;
             }
-                $where['Institutions.area_id IN'] = $allselectedAreas;
+                $where['institutions.area_id IN'] = $allselectedAreas;
                 $selectArea = "AND institutions.area_id IN = ".$allselectedAreas;
         }
         $this->InstitutionStaff = TableRegistry::get('institution_staff');
