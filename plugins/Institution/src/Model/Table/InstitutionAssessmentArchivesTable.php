@@ -683,12 +683,12 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
 //        $query->bind(':param1', ' - ');
 
 
-        $sql = $query->sql();
-        $this->log("institutionId $institutionId", 'debug');
-        $this->log("selectedAssessment$selectedAssessment", 'debug');
-        $this->log("selectedPeriod $selectedPeriod", 'debug');
-
-        $this->log($sql, 'debug');
+//        $sql = $query->sql();
+//        $this->log("institutionId $institutionId", 'debug');
+//        $this->log("selectedAssessment$selectedAssessment", 'debug');
+//        $this->log("selectedPeriod $selectedPeriod", 'debug');
+//
+//        $this->log($sql, 'debug');
 
     }
 
@@ -776,7 +776,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
     /**
      * @param Entity $entity
      * @param $genderCode
-     * @return int
+     * @return int|mixed|string
      */
     private function getGenderStudentsCount(Entity $entity, $genderCode)
     {

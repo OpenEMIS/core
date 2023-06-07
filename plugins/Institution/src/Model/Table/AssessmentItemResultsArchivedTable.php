@@ -360,7 +360,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
     {
         // POCOR-7327 starts
 
-        $institutionID = $this->Session->read('Institution.Institutions.id');
+        $institutionID = $this->Session->read('Institutio$academicPeriodOptionsn.Institutions.id');
 
         if (empty($this->request->query)) {
 
