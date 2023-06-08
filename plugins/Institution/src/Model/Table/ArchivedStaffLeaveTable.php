@@ -115,7 +115,12 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
         $this->addExtraButtons($extra);
 
     }
-
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        unset($buttons['edit']);
+        return $buttons;
+    }
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->setupTabElements();
