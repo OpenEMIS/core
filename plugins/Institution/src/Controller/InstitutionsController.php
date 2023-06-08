@@ -63,6 +63,7 @@ class InstitutionsController extends AppController
         'StaffUser',
         'StaffAccount',
         'StaffLeave',
+        'ArchivedStaffLeave',
         'StaffAppraisals',
         'Associations',
         'StaffTrainingNeeds',
@@ -447,6 +448,11 @@ class InstitutionsController extends AppController
     public function StaffLeave()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']);
+    }
+
+    public function ArchivedStaffLeave()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ArchivedStaffLeave']);
     }
 
     public function VisitRequests()
