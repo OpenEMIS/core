@@ -280,7 +280,8 @@ class GuardianNavsController extends AppController
             'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Associations')]
+            'Associations' => ['text' => __('Associations')],
+            'Curriculars' => ['text' => __('Curriculars')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);

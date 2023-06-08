@@ -1,3 +1,84 @@
+### [3.85.1] - 2023-06-01
+- Implemented: APIs to return the area levels from config items for Address Area and Birthplace Area
+- Bug Fixed: Institutions > Performance > Assessments > Archive : Filters are incomplete
+- Bug Fixed: API: When report_card_comment_code_id is not in the params, the API failed to add the comment
+- Bug Fixed: Institutions>Performance>Report Cards: Report card start and completed column does not show the date and time when report cards are generated
+
+### [3.85.0] - 2023-05-30
+- Implemented: 2.10 Reports > Staff > Requirements Report
+- Implemented: Develop a function to copy risks from one academic period to another
+- Implemented: 1.29 Devlop a function to show percentage of data completion v2
+- Implemented: Develop a function to copy Institution > Performance > Assessments from one academic period to another
+- Implemented: Develop changes to Field Options to store in a database table
+- Implemented: Development of JoLearn v4 API - institutions subjects staff
+- Bug Fixed: Report>Data Quality: Data Quality should include Data Outliers Report
+- Bug Fixed: Workbench : The system does not display Pending Issues (Open/Pending Approval) that are assigned to the user in Workbench
+- Bug Fixed: Institutions>Appointment>Positions: User is unable to import positions
+- Bug Fixed: Administration>Profile>Institution: Updates to placeholder
+- Bug Fixed: Administration > Performance > Report Cards: Placeholder not updated
+- Bug Fixed: Institutions>Performance>Assessments: Getting 404 error when editing assessment period and viewing assessment period
+- Bug Fixed: Report>Workflow: Report should not get stuck in progress
+- Bug Fixed: Reports > Surveys : Survey reports no longer work
+- Bug Fixed: Institutions>Staff>General>Account: The page is not showing any security roles even when there positions assigned to users
+- Bug Fixed: Institutions Positions Summaries: Report is also counting for unassigned staff for the active positions
+- Bug Fixed: Registration: Institution api is not working
+- Bug Fixed: Institutions>Performance>Report Cards: The status should change when the user click generate all button
+
+### [3.84.1] - 2023-05-25
+- Implemented: Develop a config items to specify the area level for Address Area and Birthplace Area
+- Bug Fixed: Institution > Attendance > Students: When marking attendance to absence or late, the page roll all the way to the top
+- Bug Fixed: Query : Query is frequently generated and is not optimised
+- Bug Fixed: Administration>Localisation>Translation : Russian translation that are missing
+- Bug Fixed: API: User should be able to order by descending
+- Bug Fixed: Institutions>Infrastructure>Overview: Export should only show owner's institution
+- Bug Fixed: Registration: Adding Institution Type and Area Level dropdown
+- Bug Fixed: API: Subject teacher api not working
+
+### [3.84.0] - 2023-05-19
+- Implemented: Add Export button function - Institutions > Finances > Student Fees
+- Implemented: Develop Curriculars feature
+- Implemented: Develop additional custom filters for surveys: area and provider
+- Implemented: Develop a function to merge and download all student report cards as a single PDF
+- Implemented: Administration > Communications > Alert Rules: Emails should be sent out once
+- Implemented: Develop APIs for Competencies
+- Bug Fixed: Institutions>Academic>Feeders>Outgoing: Not able to configure feeders
+- Bug Fixed: Administration>System Setup>Localisation>Translation: Link the translated words from database to their corresponding words in the interface
+- Bug Fixed: Institutions>Student>Add: Able to add another user with existing identity number
+- Bug Fixed: Report>Institution>Institution Positions: Report shows all area regardless of the area selected in the filter
+- Bug Fixed: Report>Performance/Training/Survey/Rubric/Workflow: Area Education should be changed to Area Name
+- Bug Fixed: Institutions > Students > Academic > Absences page: The page is not showing the correct data
+- Bug Fixed: Administrations > Academic Period : Update on view Academic Periods List
+- Bug Fixed: Institutions>Performance>Report Cards: PDF is not showing in one page
+- Bug Fixed: Institutions > Performances > Assessments > Edit : Edit button is hidden for normal users eventhough the permission is granted and current date falls between date enabled/disabled
+
+### [3.83.1] - 2023-05-10
+- Bug Fixed: Students > General > Attachment page: 404 error when downloading attachment
+- Bug Fixed: Registration: Custom fields api need to be arranged in order based on the interface
+- Bug Fixed: Administration > Communications > Alert Rules: Emails are still being sent out even when Alert Rules are disabled
+- Bug Fixed: API: staff api is not having staff_type_name
+- Bug Fixed: Report>Institution/Staff/Student: Area Education should be changed to Area Name
+- Bug Fixed: Administration > Performance > Assessments > Add/Edit Assessments Periods: Unable to click on the dropdown for grading type
+- Bug Fixed: Administration/Institutions>Profile>Institutions: Adding and changing of placeholders
+
+### [3.83.0] - 2023-05-08
+- Implemented: Change the details of the Linked Records in Institution > Cases
+- Implemented: Administrations > Profiles > Students : Develop additional placeholders for student transcript
+- Implemented: Develop a function to view student report cards on the server
+- Implemented: Hide the Administration > Data Management > Connection menu item
+- Bug Fixed: Institutions>Assessments/Competencies>Student records missing when change grading type from marks to grades
+- Bug Fixed: Administration > Textbook: Configuration was changed after saved.
+- Bug Fixed: Institutions>Students>Student1>Academic>Subject: The total marks are calculating total_marks based on new institutions even if user is filtering against an old institution
+- Bug Fixed: Institutions>Students: End date is not reflected in database
+- Bug Fixed: Institutions>Performance>Report Cards>PDF: Corrections to pdf
+- Bug Fixed: Institutions>Profiles>Institution: Correction to Institutions template
+- Bug Fixed: Users API: Limit and Page params are not working correctly
+- Bug Fixed: Institutions>Performance>Report Cards: Unable to publish report card and download pdf is not working
+- Bug Fixed: Registrations: Number custom field is not working
+- Bug Fixed: Institutions>Students>Add:Students are unable to be added to any Education Grade
+- Bug Fixed: Administration>System Setup>Themes: Unable to access page
+- Bug Fixed: Report>Institutions>Positions:Change Positions to Institution Positions
+- Bug Fixed: Administration>Administrative Boundaries:Not able to delete Area - Administrative under Administrative Boundaries
+
 ### [3.82.0] - 2023-04-27
 - Bug Fixed: Unable to install OpenEMIS
 - Bug Fixed: Summary Tables not populating

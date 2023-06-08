@@ -29,7 +29,27 @@ class ReportCardStatusesTable extends ControllerActionTable
     CONST ERROR = -1; //POCOR-6788
 
     CONST MAX_PROCESSES = 2;
-
+    // POCOR-7321 start
+    public $fileTypes = [
+        'jpeg'  => 'image/jpeg',
+        'jpg'   => 'image/jpeg',
+        'gif'   => 'image/gif',
+        'png'   => 'image/png',
+        // 'jpeg'=>'image/pjpeg',
+        // 'jpeg'=>'image/x-png'
+        'rtf'   => 'text/rtf',
+        'txt'   => 'text/plain',
+        'csv'   => 'text/csv',
+        'pdf'   => 'application/pdf',
+        'ppt'   => 'application/vnd.ms-powerpoint',
+        'pptx'  => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'doc'   => 'application/msword',
+        'docx'  => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'xls'   => 'application/vnd.ms-excel',
+        'xlsx'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'zip'   => 'application/zip'
+    ];
+     // POCOR-7321 end
     public function initialize(array $config)
     {
         $this->table('institution_class_students');
@@ -70,6 +90,8 @@ class ReportCardStatusesTable extends ControllerActionTable
         $events['ControllerAction.Model.generateAll'] = 'generateAll';
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
         $events['ControllerAction.Model.downloadAllPdf'] = 'downloadAllPdf';
+        $events['ControllerAction.Model.mergeAnddownloadAllPdf'] = 'mergeAnddownloadAllPdf';   // POCOR-7320
+        $events['ControllerAction.Model.viewPDF'] = 'viewPDF';//POCOR-7321
         $events['ControllerAction.Model.publish'] = 'publish';
         $events['ControllerAction.Model.publishAll'] = 'publishAll';
         $events['ControllerAction.Model.unpublish'] = 'unpublish';
@@ -100,9 +122,9 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'academic_period_id' => $entity->academic_period_id,
                 'education_grade_id' => $entity->education_grade_id,
             ];
-
             // Download button, status must be generated or published
             if ($this->AccessControl->check(['Institutions', 'InstitutionStudentsReportCards', 'download']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
+              
                 $downloadUrl = [
                     'plugin' => 'Institution',
                     'controller' => 'Institutions',
@@ -246,7 +268,16 @@ class ReportCardStatusesTable extends ControllerActionTable
                         ];
                     }
                 }
+                 //POCOR-7321 start
+              $viewPdfUrl = $this->setQueryString($this->url('viewPDF'),$params);
+              $buttons['viewPdf'] = [
+                  'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
+                  'attr' =>[ 'role' => 'menuitem', 'tabindex' => '-1', 'escape' => false,'target'=>'_blank'],
+                  'url' => $viewPdfUrl
+              ];
+            //POCOR-7321 end
             }
+           
             //POCOR:6838 END
             $params['institution_class_id'] = $entity->institution_class_id;
 
@@ -451,7 +482,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 }//POCOR-7067 Ends
             }//POCOR-6841 ends
         }
-        $stmtNew = $conn->query("UPDATE institution_students_report_cards INNER JOIN report_card_processes ON institution_students_report_cards.report_card_id = report_card_processes.report_card_id AND institution_students_report_cards.student_id = report_card_processes.student_id AND institution_students_report_cards.institution_id = report_card_processes.institution_id AND institution_students_report_cards.academic_period_id = report_card_processes.academic_period_id AND institution_students_report_cards.education_grade_id = report_card_processes.education_grade_id AND institution_students_report_cards.institution_class_id = report_card_processes.institution_class_id SET institution_students_report_cards.status = report_card_processes.status");
+        $stmtNew = $conn->query("UPDATE institution_students_report_cards INNER JOIN report_card_processes ON institution_students_report_cards.report_card_id = report_card_processes.report_card_id AND institution_students_report_cards.student_id = report_card_processes.student_id AND institution_students_report_cards.institution_id = report_card_processes.institution_id AND institution_students_report_cards.academic_period_id = report_card_processes.academic_period_id AND institution_students_report_cards.education_grade_id = report_card_processes.education_grade_id AND institution_students_report_cards.institution_class_id = report_card_processes.institution_class_id SET institution_students_report_cards.status = report_card_processes.status  where institution_students_report_cards.status In (1,2,3)");//POCOR-7383 added where condition for publish reports
         $successQQ =$stmtNew->execute();
         //END:POCOR-6785
         $this->field('report_queue');
@@ -708,6 +739,45 @@ class ReportCardStatusesTable extends ControllerActionTable
                                             //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
                                             ])
                                         ->count();
+                    // Start POCOR-7320
+                    $SecurityFunctionsMergeGenerateAllData = $SecurityFunctions
+                    ->find()
+                    ->where([
+                        $SecurityFunctions->aliasField('name') => 'Merge and Download PDF'])
+                    ->first();
+
+                    $SecurityRoleFunctionsTableMergeGenerateAllData = $SecurityRoleFunctionsTable
+                    ->find()
+                    ->where([
+                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsMergeGenerateAllData->id,
+                        //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
+                        ])
+                        ->count();            
+                        
+
+                    if ($generatedCount > 0 || $publishedCount > 0) {
+                        if ($this->AccessControl->isAdmin()) {
+                            $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
+                            $downloadButtonPdf['type'] = 'button';
+                            $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
+                            $downloadButtonPdf['attr'] = $toolbarAttr;
+                            $downloadButtonPdf['attr']['title'] = __('Merge and Download PDF');
+                            $downloadButtonPdf['attr']['target'] = '_blank';
+                            $extra['toolbarButtons']['mergeAnddownloadAllPdf'] = $downloadButtonPdf;
+                        }else{
+                            if($SecurityRoleFunctionsTableMergeGenerateAllData >= 1){
+                                $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
+                                $downloadButtonPdf['type'] = 'button';
+                                $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
+                                $downloadButtonPdf['attr'] = $toolbarAttr;
+                                $downloadButtonPdf['attr']['title'] = __('Merge and Download PDF');
+                                $downloadButtonPdf['attr']['target'] = '_blank';
+                                $extra['toolbarButtons']['mergeAnddownloadAllPdf'] = $downloadButtonPdf;
+                            }
+                        }
+                    }        
+
+                    // End POCOR-7320
                     
                     // Download all button
                      if ($generatedCount > 0 || $publishedCount > 0) {
@@ -918,6 +988,46 @@ class ReportCardStatusesTable extends ControllerActionTable
                                             $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds])//POCOR-7131
                                         ->count();//POCOR-7131
                     //POCOR-6838: End
+
+                    // Start POCOR-7320
+                    $SecurityFunctionsMergeGenerateAllData = $SecurityFunctions
+                    ->find()
+                    ->where([
+                        $SecurityFunctions->aliasField('name') => 'Merge and Download PDF'])
+                    ->first();
+
+                    $SecurityRoleFunctionsTableMergeGenerateAllData = $SecurityRoleFunctionsTable
+                    ->find()
+                    ->where([
+                        $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsMergeGenerateAllData->id,
+                        //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
+                        ])
+                        ->count();            
+                        
+                        
+                    if ($generatedCount > 0 || $publishedCount > 0) {
+                        if ($this->AccessControl->isAdmin()) {
+                            $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
+                            $downloadButtonPdf['type'] = 'button';
+                            $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
+                            $downloadButtonPdf['attr'] = $toolbarAttr;
+                            $downloadButtonPdf['attr']['title'] = __('Merge and Download PDF');
+                            $downloadButtonPdf['attr']['target'] = '_blank';
+                            $extra['toolbarButtons']['mergeAnddownloadAllPdf'] = $downloadButtonPdf;
+                        }else{
+                            if($SecurityRoleFunctionsTableMergeGenerateAllData >= 1){
+                                $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
+                                $downloadButtonPdf['type'] = 'button';
+                                $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
+                                $downloadButtonPdf['attr'] = $toolbarAttr;
+                                $downloadButtonPdf['attr']['title'] = __('Merge and Download PDF');
+                                $downloadButtonPdf['attr']['target'] = '_blank';
+                                $extra['toolbarButtons']['mergeAnddownloadAllPdf'] = $downloadButtonPdf;
+                            }
+                        }
+                    }        
+
+                    // End POCOR-7320
                     // Download all button
                      if ($generatedCount > 0 || $publishedCount > 0) {
                         if ($this->AccessControl->isAdmin()) {
@@ -1049,7 +1159,96 @@ class ReportCardStatusesTable extends ControllerActionTable
         
         
     }
+    // Start POCOR-7320
 
+    public function mergeAnddownloadAllPdf(Event $event, ArrayObject $extra){
+        // ini_set('max_execution_time', '1500');
+        $params = $this->getQueryString();
+        $statusArray = [self::GENERATED, self::PUBLISHED];
+        $files = $this->StudentsReportCards->find()
+            ->contain(['Students', 'ReportCards'])
+            ->where([
+                $this->StudentsReportCards->aliasField('institution_id') => $params['institution_id'],
+                $this->StudentsReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
+                $this->StudentsReportCards->aliasField('report_card_id') => $params['report_card_id'],
+                $this->StudentsReportCards->aliasField('status IN ') => $statusArray,
+                $this->StudentsReportCards->aliasField('file_name IS NOT NULL'),
+                $this->StudentsReportCards->aliasField('file_content IS NOT NULL'),
+                $this->StudentsReportCards->aliasField('file_content_pdf IS NOT NULL')
+            ])
+            ->toArray();
+
+        if (!empty($files)) {          
+            header('Content-type: application/pdf'); 
+            header('Content-Disposition: inline; filename="' .$fileName. '"'); 
+            header('Content-Transfer-Encoding: binary'); 
+            header('Accept-Ranges: bytes'); 
+            $filePaths = [];
+            
+            $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
+            $counter = 0;
+            foreach ($files as $file) {
+                $filename = 'ReportCards' . '_' . date('Ymd') . '_' .$counter . '.pdf';
+                $filepath = $path . $filename;
+                file_put_contents($filepath, $this->getFile($file->file_content_pdf));
+                $filePaths[] = $path.$filename;    
+                $counter++;     
+            }
+            if(!empty($filePaths)){
+                $this->mergePDFFiles($filePaths);
+            }
+
+        } else {
+            $event->stopPropagation();
+            $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
+            return $this->controller->redirect($this->url('index'));
+        }
+    }
+
+
+    private function mergePDFFiles(Array $filenames, $outFile='', $title = '', $author = '', $subject = '')
+    {
+        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [400, 220]]);
+        $mpdf->SetTitle($title);
+        $mpdf->SetAuthor($author);
+        $mpdf->SetSubject($subject);
+
+
+        if ($filenames) {
+            $filesTotal = sizeof($filenames);
+            $mpdf->SetImportUse();
+
+            for ($i = 0; $i<count($filenames);$i++) {
+                $curFile = $filenames[$i];
+                if (file_exists($curFile)){
+                    $pageCount = $mpdf->SetSourceFile($curFile);
+                    for ($p = 1; $p <= $pageCount; $p++) {
+                        $tplId = $mpdf->ImportPage($p);
+                        $wh = $mpdf->getTemplateSize($tplId);
+                        if (($p==1)){
+                            $mpdf->state = 0;
+                            $mpdf->AddPage('L');
+
+                            $mpdf->UseTemplate ($tplId);
+                        }
+                        else {
+                            $mpdf->state = 1;
+                            $mpdf->AddPage('L');
+
+                            $mpdf->UseTemplate($tplId);
+                        }
+                    }
+                }
+            }
+            foreach ($filenames as $filepath) {
+                unlink($filepath);
+            }
+        }
+
+        $mpdf->Output('mergedPDFReport.pdf', "D");
+    }
+
+    // End POCOR-7320
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'student_id';
@@ -1235,7 +1434,6 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         return $value;
     }
-
     public function generate(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
@@ -1292,17 +1490,19 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ->where([
                       //  $ReportCardProcesses->aliasField('report_card_id') => $params['report_card_id'],
                         $ReportCardProcesses->aliasField('institution_class_id') => $params['institution_class_id'],
-                        $ReportCardProcesses->aliasField('institution_id') => $institutionId
+                        $ReportCardProcesses->aliasField('institution_id') => $institutionId,
+                        $ReportCardProcesses->aliasField('status  IN')=>[1,2]//POCOR-7455
                     ])
                     ->count();  
             }  
-            //POCOR-6692 end       
+            //POCOR-6692 end     
+            
 
-            if (!$inProgress) {                   
+            if (!$inProgress) {           
                 $this->addReportCardsToProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
                 $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
-                $this->Alert->warning('ReportCardStatuses.generateAll');
-            } else {
+                $this->Alert->warning('ReportCardStatuses.generateAll');      
+                } else {
                 $this->Alert->warning('ReportCardStatuses.inProgress');
             }
         } else {
@@ -1312,9 +1512,52 @@ class ReportCardStatusesTable extends ControllerActionTable
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
+    //POCOR-7321 start 
+    public function viewPDF(Event $event, ArrayObject $extra){
 
+        $params = $this->getQueryString();
+        $statusArray = [self::GENERATED, self::PUBLISHED];
+        $data = $this->StudentsReportCards->find()
+        ->contain(['Students', 'ReportCards'])
+        ->where([
+            $this->StudentsReportCards->aliasField('report_card_id') => $params['report_card_id'],
+            $this->StudentsReportCards->aliasField('student_id') => $params['student_id'],
+            $this->StudentsReportCards->aliasField('institution_id') => $params['institution_id'],
+            $this->StudentsReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
+            $this->StudentsReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
+            $this->StudentsReportCards->aliasField('education_grade_id') => $params['education_grade_id'],
+            $this->StudentsReportCards->aliasField('status IN ') => $statusArray,
+            $this->StudentsReportCards->aliasField('file_name IS NOT NULL'),
+            $this->StudentsReportCards->aliasField('file_content IS NOT NULL')
+        ])
+        ->first();
+   
+        if(!empty($data)){
+        $fileName = $data->file_name;
+        $fileNameData = explode(".",$fileName);
+        $fileName = $fileNameData[0].'.pdf';
+        $pathInfo['extension'] = 'pdf';
+        $file = $this->getFile($data->file_content_pdf);
+        $fileType = 'image/jpg';
+        if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
+            $fileType = $this->fileTypes[$pathInfo['extension']];
+        }
+       // echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
+        header("Pragma: public", true);
+        header("Expires: 0"); // set expiration time
+        header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+        // header("Content-Type: application/force-download");
+        header("Content-Type: application/octet-stream");
+        header("Content-Type: " . $fileType);
+        header('Content-Disposition: inline; filename="' . $fileName . '"');
+        echo $file;
+        }
+        exit();
+    }
+     //POCOR-7321 ends
     public function downloadAll(Event $event, ArrayObject $extra)
     {
+
         $params = $this->getQueryString();
 
         // only download report cards with generated or published status
@@ -1543,6 +1786,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             ->where($where)
             ->toArray();
 
+
         foreach ($classStudents as $student) {
             // Report card processes
             $idKeys = [
@@ -1588,8 +1832,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ->first();
 
                 $newData = [
-                    'status' => $this->StudentsReportCards::NEW_REPORT,
-                    'started_on' => NULL,
+                    'status' => $this->StudentsReportCards::IN_PROGRESS,
+                    'started_on' => date('Y-m-d H:i:s'),
                     'completed_on' => NULL,
                     'file_name' => NULL,
                     'file_content' => NULL,

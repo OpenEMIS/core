@@ -81,7 +81,14 @@ class WorkflowReportBehavior extends Behavior
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     { 
+        //POCOR-7433 start
+        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
         $requestData = json_decode($settings['process']['params']);
+        $requestData->report_start_date= date('Y-m-d h',strtotime($requestData->report_start_date));
+        $requestData->report_end_date= date('Y-m-d h',strtotime($requestData->report_end_date));
+        $settings['process']['params']=json_encode($requestData);
+        //POCOR-7433 end
+
         /*POCOR-6296 starts*/
         $academicPeriodId = $requestData->academic_period_id;
         $areaId = $requestData->area;
@@ -105,10 +112,13 @@ class WorkflowReportBehavior extends Behavior
                 }
             }
         }
+       
         if ($institution_id == 0) {
+            //POCOR-7433
+            if($institutionIds!=[]){
             $conditions['Institutions.id IN'] = $institutionIds;
-        }   
-
+            }   
+        }
         //echo "<pre>";print_r($conditions);die();  
         /*POCOR-6296 ends*/
         if($requestData->model == 'Report.WorkflowStudentTransferIn' || $requestData->model == 'Report.WorkflowStudentTransferOut'){
@@ -155,14 +165,19 @@ class WorkflowReportBehavior extends Behavior
             if ($category != -1) {
                 $query
                     ->contain('Statuses', 'Institutions')
-                    ->where(['Statuses.category' => $category, $conditions]);
+                    ->where(['Statuses.category' => $category]);
             } else { //POCOR-6296
                 $query
-                    ->contain('Statuses', 'Institutions')
-                    ->where([$conditions]);
+                    ->contain('Statuses', 'Institutions');
+                   
+            }
+            //POCOR-7433(if condition)
+            if($conditions!=[]){
+                $query->where([$conditions]);
             }
         } /*POCOR-6296 starts*/elseif ($requestData->model == 'Report.WorkflowStaffTransferIn' || $requestData->model == 'Report.WorkflowStaffTransferOut') {
-                $category = $requestData->category;
+         
+            $category = $requestData->category;
                 $newConditions = [];
                 if ($areaId != 0) {
                     $newConditions['OR'][] = ['NewInstitutions.area_id' => $areaId];
@@ -175,23 +190,36 @@ class WorkflowReportBehavior extends Behavior
                 if ($category != -1) {
                     $query
                         ->contain('Statuses', 'NewInstitutions', 'PreviousInstitutions')
-                        ->where(['Statuses.category' => $category, $newConditions]);
+                        ->where(['Statuses.category' => $category]);
                 } else { //POCOR-6296
                     $query
-                        ->contain('Statuses', 'NewInstitutions', 'PreviousInstitutions')
-                        ->where([$newConditions]);
+                        ->contain('Statuses', 'NewInstitutions', 'PreviousInstitutions');
+                      
                 }
-            } else {
+                //POCOR-7433(if condition)
+                if($newConditions!=[]){
+                    $query->where([$newConditions]);
+                }
+            }
+             else {
+                
                 $category = $requestData->category;
                 if ($category != -1) {
                     $query
-                        ->contain('Statuses', 'Institutions')
-                        ->where(['Statuses.category' => $category, $conditions]);
+                        ->contain('Statuses')
+                        ->leftJoin([ $InstitutionsTable ->alias() =>  $InstitutionsTable ->table()])//POCOR-7433
+                        ->where(['Statuses.category' => $category]);
                 } else { //POCOR-6296
-                    $query
-                        ->contain(['Statuses', 'Institutions'])
-                        ->where([$conditions]);
+                   $query
+                        ->contain(['Statuses'])
+                        ->leftJoin([ $InstitutionsTable ->alias() =>  $InstitutionsTable ->table()]);//POCOR-7433
+                        
+                      }
+                //POCOR-7433(if condition)
+                if($conditions!=[]){
+                    $query->where([$conditions]);
                 }
             }/*POCOR-6296 ends*/
+       
         }
 }

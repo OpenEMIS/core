@@ -494,7 +494,9 @@ class InstitutionService extends Controller
                     $list[$k]['end_year'] = $d['end_year'];
                     $list[$k]['staff_id'] = $d['staff_id'];
                     $list[$k]['staff_type_id'] = $d['staff_type_id'];
+                    $list[$k]['staff_type_name'] = $d['staff_type']['staff_type_name']??"";
                     $list[$k]['staff_status_id'] = $d['staff_status_id'];
+                    $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
                     $list[$k]['institution_id'] = $d['institution_id'];
                     $list[$k]['institution_position_id'] = $d['institution_position_id'];
                     $list[$k]['security_group_user_id'] = $d['security_group_user_id'];
@@ -540,7 +542,9 @@ class InstitutionService extends Controller
                     $list[$k]['end_year'] = $d['end_year'];
                     $list[$k]['staff_id'] = $d['staff_id'];
                     $list[$k]['staff_type_id'] = $d['staff_type_id'];
+                    $list[$k]['staff_type_name'] = $d['staff_type']['staff_type_name']??"";
                     $list[$k]['staff_status_id'] = $d['staff_status_id'];
+                    $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
                     $list[$k]['institution_id'] = $d['institution_id'];
                     $list[$k]['institution_position_id'] = $d['institution_position_id'];
                     $list[$k]['security_group_user_id'] = $d['security_group_user_id'];
@@ -574,7 +578,7 @@ class InstitutionService extends Controller
     {
         try {
             $data = $this->institutionRepository->getInstitutionStaffData($institutionId, $staffId);
-            //dd($data);
+            
             $list = [];
             if($data){
                 $list['id'] = $data['id'];
@@ -585,7 +589,9 @@ class InstitutionService extends Controller
                 $list['end_year'] = $data['end_year'];
                 $list['staff_id'] = $data['staff_id'];
                 $list['staff_type_id'] = $data['staff_type_id'];
+                $list['staff_type_name'] = $data['staffType']['staff_type_name']??"";
                 $list['staff_status_id'] = $data['staff_status_id'];
+                $list['staff_status_name'] = $data['staffStatus']['staff_status_name']??"";
                 $list['institution_id'] = $data['institution_id'];
                 $list['institution_position_id'] = $data['institution_position_id'];
                 $list['security_group_user_id'] = $data['security_group_user_id'];
@@ -893,6 +899,212 @@ class InstitutionService extends Controller
             );
 
             return $this->sendErrorResponse('Failed to add report card comment.');
+        }
+    }
+
+
+
+    public function getInstitutionGradeStudentdata($institutionId, $gradeId, $studentId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionGradeStudentdata($institutionId, $gradeId, $studentId);
+            
+            $resp = [];
+            if($data){
+                $resp['academic_period_id'] = $data['academic_period_id'];
+                $resp['institution_id'] = $data['institution_id'];
+                $resp['education_grade_id'] = $data['education_grade_id'];
+                $resp['student_status_id'] = $data['student_status_id'];
+                $resp['student_id'] = $data['student_id'];
+                $resp['username'] = $data['securityUser']['username'];
+                $resp['openemis_no'] = $data['securityUser']['openemis_no'];
+                $resp['first_name'] = $data['securityUser']['first_name'];
+                $resp['last_name'] = $data['securityUser']['last_name'];
+                $resp['gender_id'] = $data['securityUser']['gender_id'];
+                $resp['date_of_birth'] = $data['securityUser']['date_of_birth'];
+                $resp['start_year'] = $data['start_year'];
+                $resp['start_date'] = $data['start_date'];
+                $resp['end_year'] = $data['end_year'];
+                $resp['end_date'] = $data['end_date'];
+            }
+            return $resp;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get student data.');
+        }
+    }
+
+
+
+    public function addCompetencyResults($request)
+    {
+        try {
+            $data = $this->institutionRepository->addCompetencyResults($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add competency result.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add competency result.');
+        }
+    }
+
+
+    public function addCompetencyComments($request)
+    {
+        try {
+            $data = $this->institutionRepository->addCompetencyComments($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add competency comments.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add competency comments.');
+        }
+    }
+
+
+
+    public function addCompetencyPeriodComments($request)
+    {
+        try {
+            $data = $this->institutionRepository->addCompetencyPeriodComments($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add competency comments.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add competency comments.');
+        }
+    }
+
+
+
+    public function displayAddressAreaLevel($request)
+    {
+        try {
+            $data = $this->institutionRepository->displayAddressAreaLevel($request)->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->name,
+                    ];
+                }
+            );
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get address area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get address area level area.');
+        }
+    }
+
+
+    public function displayBirthplaceAreaLevel($request)
+    {
+        try {
+            $data = $this->institutionRepository->displayBirthplaceAreaLevel($request)->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->name,
+                    ];
+                }
+            );
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get birthplace area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get birthplace area level area.');
+        }
+    }
+
+    
+    public function getSubjectsStaffList($request)
+    {
+        try {
+            $data = $this->institutionRepository->getSubjectsStaffList($request);
+            
+            //dd($data);
+
+            $resp = [];
+            if($data){
+                foreach($data as $k => $d){
+                    
+                    $resp[$k]['education_systems_name'] = $d['institutionSubject']['educationGrades']['educationProgramme']['educationCycle']['educationLevel']['educationSystem']['name'];
+
+                    $resp[$k]['education_levels_name'] = $d['institutionSubject']['educationGrades']['educationProgramme']['educationCycle']['educationLevel']['name'];
+
+                    $resp[$k]['education_cycles_name'] = $d['institutionSubject']['educationGrades']['educationProgramme']['educationCycle']['name'];
+
+                    $resp[$k]['education_programmes_code'] = $d['institutionSubject']['educationGrades']['educationProgramme']['code'];
+
+                    $resp[$k]['education_programmes_name'] = $d['institutionSubject']['educationGrades']['educationProgramme']['name'];
+
+                    $resp[$k]['education_grades_code'] = $d['institutionSubject']['educationGrades']['code'];
+                    $resp[$k]['education_grades_name'] = $d['institutionSubject']['educationGrades']['name'];
+                    $resp[$k]['education_subjects_code'] = $d['institutionSubject']['educationSubjects']['code'];
+                    $resp[$k]['education_subjects_name'] = $d['institutionSubject']['educationSubjects']['name'];
+                    $resp[$k]['institutions_id'] = $d['institution']['id'];
+                    $resp[$k]['institutions_code'] = $d['institution']['code'];
+                    $resp[$k]['institutions_name'] = $d['institution']['name'];
+
+                    $resp[$k]['institution_classes_name'] = $d['institutionSubject']['classes'][0]['institutionClass']['name']??"";
+
+                    $resp[$k]['academic_periods_code'] = $d['institutionSubject']['academicPeriod']['code'];
+                    $resp[$k]['academic_periods_name'] = $d['institutionSubject']['academicPeriod']['name'];
+                    $resp[$k]['institution_subjects_id'] = $d['institutionSubject']['id'];
+                    $resp[$k]['institution_subjects_name'] = $d['institutionSubject']['name'];
+
+                    $resp[$k]['security_users_openemis_no_subject_teachers'] = $d['staff']['openemis_no'];
+
+                    $openEmisNo = [];
+
+                    if(count($d['institutionSubject']['students']) > 0){
+                        $students = $d['institutionSubject']['students'];
+
+                        foreach($students as $s){
+                            $openEmisNo[] = $s['securityUser']['openemis_no'];
+                        }
+                    }
+
+                    $resp[$k]['security_users_openemis_no_students'] = $openEmisNo;
+                }
+                
+            }
+            return $resp;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Subjects Staff List Not Found');
         }
     }
 

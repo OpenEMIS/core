@@ -616,7 +616,7 @@ class ProfilesTable extends ControllerActionTable
 	public function downloadPDF(Event $event, ArrayObject $extra)
     {
 		$model = $this->InstitutionReportCards;
-        $ids = $this->getQueryString();
+        $ids = $this->getQueryString(); 
 		
         if ($model->exists($ids)) {
             $data = $model->get($ids);

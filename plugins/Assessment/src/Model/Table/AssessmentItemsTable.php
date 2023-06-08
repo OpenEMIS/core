@@ -286,13 +286,38 @@ class AssessmentItemsTable extends AppTable
                     //checking whether logged in user is admin or not
                     $UsersTable = TableRegistry::get('User.Users');
                     $users = $UsersTable->find()->where([$UsersTable->aliasField('id') => $loggedInUserId])->first();
+                    //POCOR-7432 start
+                    $SecurityGroupUsersTable=TableRegistry::get('security_group_users');
+                    $SecurityRoleFunTable=TableRegistry::get('security_role_functions');
+                    $securityGroupUserData=$SecurityGroupUsersTable->find('all')->where([$SecurityGroupUsersTable->aliasField('security_user_id') => $users->id])->first();
+                    if($securityGroupUserData){
+                    $SecurityRoleFunData=$SecurityRoleFunTable->find('all')
+                                                         ->select(['edit'=>$SecurityRoleFunTable->aliasField('_edit')])
+                                                         ->where(
+                                                                [
+                                                                    $SecurityRoleFunTable->aliasField('security_role_id')=>$securityGroupUserData->security_role_id,
+                                                                    $SecurityRoleFunTable->aliasField('security_function_id')=>1015,
+                                                                ]
+                                                          )
+                                                         ->first();
+                                                                }
+                    //POCOR-7432 end
+
                     if (!empty($users) && $users->super_admin == 1) {
                         $row['is_editable'] = 1;
                     } else {
                         if (!empty($data)) {
                             $row['is_editable'] = 1;
                         } else {
-                            $row['is_editable'] = 0;
+                            //POCOR-7432 start
+                            if($SecurityRoleFunData->edit==1){
+                                $row['is_editable'] = 1;
+                            }
+                            else{
+                                $row['is_editable'] = 0;
+                            }
+                             //POCOR-7432 end
+                           
                         }
                     }
 

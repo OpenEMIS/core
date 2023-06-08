@@ -42,22 +42,44 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
             $education_grade_id = $entity['education_grade_id'];
             $date = date('Y-m-d', strtotime($entity['date']));
             $connection = ConnectionManager::get('default');
+            // $statement = $connection->prepare("SELECT
+            //                 education_systems.academic_period_id,
+            //                 correct_grade.id AS correct_grade_id,
+            //                 student_attendance_marked_records.*
+            //             FROM
+            //                 `student_attendance_marked_records`
+            //             INNER JOIN education_grades wrong_grade ON
+            //                 wrong_grade.id = student_attendance_marked_records.education_grade_id
+            //             INNER JOIN education_grades correct_grade ON
+            //                 correct_grade.code = wrong_grade.code
+            //             INNER JOIN education_programmes ON correct_grade.education_programme_id = education_programmes.id
+            //             INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+            //             INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+            //             INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id AND education_systems.academic_period_id = student_attendance_marked_records.academic_period_id
+            //             WHERE
+            //                 (correct_grade.id != student_attendance_marked_records.education_grade_id) AND student_attendance_marked_records.academic_period_id = ".$academic_period_id." Group by correct_grade_id LIMIT 1");
+
+            //  Start POCOR-7375
+
             $statement = $connection->prepare("SELECT
-                            education_systems.academic_period_id,
-                            correct_grade.id AS correct_grade_id,
-                            student_attendance_marked_records.*
-                        FROM
-                            `student_attendance_marked_records`
-                        INNER JOIN education_grades wrong_grade ON
-                            wrong_grade.id = student_attendance_marked_records.education_grade_id
-                        INNER JOIN education_grades correct_grade ON
-                            correct_grade.code = wrong_grade.code
-                        INNER JOIN education_programmes ON correct_grade.education_programme_id = education_programmes.id
-                        INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
-                        INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
-                        INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id AND education_systems.academic_period_id = student_attendance_marked_records.academic_period_id
-                        WHERE
-                            (correct_grade.id != student_attendance_marked_records.education_grade_id) AND student_attendance_marked_records.academic_period_id = ".$academic_period_id." Group by correct_grade_id LIMIT 1");
+                        education_systems.academic_period_id,
+                        correct_grade.id AS correct_grade_id,
+                        student_attendance_marked_records.*
+                    FROM
+                        `student_attendance_marked_records`
+                    INNER JOIN education_grades wrong_grade ON
+                        wrong_grade.id = student_attendance_marked_records.education_grade_id
+                    INNER JOIN education_grades correct_grade ON
+                        correct_grade.code = wrong_grade.code
+                    INNER JOIN education_programmes ON correct_grade.education_programme_id = education_programmes.id
+                    INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                    INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+                    INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id AND education_systems.academic_period_id = student_attendance_marked_records.academic_period_id
+                    WHERE
+                        (correct_grade.id != student_attendance_marked_records.education_grade_id) AND student_attendance_marked_records.academic_period_id = ".$academic_period_id." AND student_attendance_marked_records.institution_id = ".$institution_id." AND student_attendance_marked_records.institution_class_id = ".$institution_class_id." AND student_attendance_marked_records.education_grade_id = ".$education_grade_id." Group by correct_grade_id");
+                
+            //  End POCOR-7375
+            
             $statement->execute();
             $row = $statement->fetchAll(\PDO::FETCH_ASSOC);
             $StudentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
