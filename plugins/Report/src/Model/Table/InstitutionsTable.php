@@ -73,14 +73,14 @@ class InstitutionsTable extends AppTable
                     'on' => function ($context) {
                         $feature = $context['data']['feature'];
                         return in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionCases', 'Report.StudentAttendanceSummary',
-                            'Report.ClassAttendanceMarkedSummaryReport']);
+                            'Report.ClassAttendanceMarkedSummaryReport','Report.StudentAbsences']);
                     }
                 ],
                 'ruleInAcademicPeriod' => [
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []],
                     'on' => function ($context) {
                         $feature = $context['data']['feature'];
-                        return in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionCases' , 'Report.StudentAttendanceSummary']);
+                        return in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionCases' , 'Report.StudentAttendanceSummary','Report.StudentAbsences']);
                     },
                     'message' => __('Report Start Date should be later than Academic Period Start Date')
                 ],
@@ -92,7 +92,7 @@ class InstitutionsTable extends AppTable
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []],
                     'on' => function ($context) {
                         $feature = $context['data']['feature'];
-                        return in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionCases', 'Report.StudentAttendanceSummary']);
+                        return in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionCases', 'Report.StudentAttendanceSummary','Report.StudentAbsences']);
                     },
                     'message' => __('Report End Date should be earlier than Academic Period End Date')
                 ],
@@ -100,7 +100,7 @@ class InstitutionsTable extends AppTable
                     'rule' => ['forOneMonthDate'],
                     'on' => function ($context) {
                         $feature = $context['data']['feature'];
-                        return in_array($feature, ['Report.StudentAttendanceSummary']);
+                        return in_array($feature, ['Report.StudentAttendanceSummary','Report.StudentAbsences']);
                     },
                     'message' => __('Date range should be one month only')
                 ]
@@ -170,6 +170,16 @@ class InstitutionsTable extends AppTable
     }
 
     public function validationStudentAttendanceSummary(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('institution_type_id')
+            ->notEmpty('institution_id')
+            ->notEmpty('education_grade_id');
+        return $validator;
+    }
+
+    public function validationStudentAbsences(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
         $validator = $validator
@@ -288,6 +298,8 @@ class InstitutionsTable extends AppTable
             $options['validate'] = 'staff';
         } elseif ($data[$this->alias()]['feature'] == 'Report.StudentAttendanceSummary') {
             $options['validate'] = 'studentAttendanceSummary';
+        } elseif ($data[$this->alias()]['feature'] == 'Report.StudentAbsences') {
+            $options['validate'] = 'studentAbsences';
         } elseif ($data[$this->alias()]['feature'] == 'Report.StaffAttendances') {
             $options['validate'] = 'staffAttendances';
         } elseif ($data[$this->alias()]['feature'] == 'Report.BodyMasses') {
@@ -331,7 +343,7 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'education_grade_id';  
                     $fieldsOrder[] = 'format';
                     break;  /*POCOR-6637 :: END*/
-                case 'Report.StudentAbsences':
+                // case 'Report.StudentAbsences':
                 case 'Report.StudentWithdrawalReport':
                 case 'Report.InstitutionSummaryReport':
                 case 'Report.BodyMasses':
@@ -421,6 +433,17 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'format';
                     break;
                 case 'Report.StudentAttendanceSummary':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'area_level_id';
+                    $fieldsOrder[] = 'area_education_id';
+                    $fieldsOrder[] = 'institution_type_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'education_grade_id';
+                    $fieldsOrder[] = 'report_start_date';
+                    $fieldsOrder[] = 'report_end_date';
+                    $fieldsOrder[] = 'format';
+                    break;
+                case 'Report.StudentAbsences':
                     $fieldsOrder[] = 'academic_period_id';
                     $fieldsOrder[] = 'area_level_id';
                     $fieldsOrder[] = 'area_education_id';
@@ -882,6 +905,7 @@ class InstitutionsTable extends AppTable
                           'Report.ClassAttendanceNotMarkedRecords',
                           'Report.InstitutionSubjects',
                           'Report.StudentAttendanceSummary',
+                          'Report.StudentAbsences',
                           'Report.StaffAttendances',
                           'Report.BodyMasses',
 
@@ -947,6 +971,7 @@ class InstitutionsTable extends AppTable
                 'Report.InstitutionStaff',
                 'Report.StudentAbsences',
                 'Report.StudentAttendanceSummary',
+                'Report.StudentAbsences',
                 'Report.StudentWithdrawalReport',
                 'Report.InstitutionSummaryReport',
                 'Report.BodyMasses',
@@ -1146,6 +1171,7 @@ class InstitutionsTable extends AppTable
                             'Report.SubjectsBookLists',
                             'Report.InstitutionSubjectsClasses',
                             'Report.StudentAttendanceSummary',
+                            'Report.StudentAbsences',
                             'Report.ClassAttendanceMarkedSummaryReport',
                             'Report.InstitutionClasses'
                         ])
@@ -1180,7 +1206,7 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['select'] = false;
-                if (in_array($feature, ['Report.StudentAttendanceSummary', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport','Report.InstitutionClasses'])) {
+                if (in_array($feature, ['Report.StudentAttendanceSummary', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport','Report.InstitutionClasses','Report.StudentAbsences'])) {
                     $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
                 } else {
                     $attr['options'] = $gradeOptions;
@@ -1189,6 +1215,7 @@ class InstitutionsTable extends AppTable
             } elseif (in_array($feature,
                                [
                                    'Report.StudentAttendanceSummary',
+                                   'Report.StudentAbsences',
                                    'Report.InstitutionSubjectsClasses'
                                ])
                       ) {
@@ -1205,7 +1232,7 @@ class InstitutionsTable extends AppTable
                 if (empty($gradeList)) {
                     $gradeOptions = ['' => $this->getMessage('general.select.noOptions')];
                 } else {
-                    if (!in_array($feature, ['Report.StudentAttendanceSummary'])) {
+                    if (!in_array($feature, ['Report.StudentAttendanceSummary','Report.StudentAbsences'])) {
                         $gradeOptions = ['' => __('All Grades')] + $gradeList;
                     } else {
                         $gradeOptions = $gradeList;
@@ -1232,6 +1259,7 @@ class InstitutionsTable extends AppTable
                         [
                             'Report.InstitutionSubjects',
                             'Report.StudentAttendanceSummary',
+                            'Report.StudentAbsences',
                             'Report.Guardians',
                             'Report.SubjectsBookLists',
                             'Report.InstitutionSubjects'
@@ -1247,9 +1275,9 @@ class InstitutionsTable extends AppTable
                     ->toArray();
 
                 $attr['type'] = 'select';
-                $attr['onChangeReload'] = true;
+                $attr['onChangeReload'] = true; 
 
-                if($feature == 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities' || $feature == 'Report.WashReports' || $feature == 'Report.InstitutionSubjects' || $feature == 'Report.Guardians' || $feature == 'Report.InstitutionInfrastructures') {
+                if($feature == 'Report.StudentAbsences' || $feature == 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities' || $feature == 'Report.WashReports' || $feature == 'Report.InstitutionSubjects' || $feature == 'Report.Guardians' || $feature == 'Report.InstitutionInfrastructures') {
                     $attr['options'] = ['0' => __('All Types')] +  $typeOptions;
                 } else {
                     $attr['options'] = $typeOptions;
@@ -1321,6 +1349,7 @@ class InstitutionsTable extends AppTable
                 'Report.InstitutionSubjects',
                 'Report.InstitutionSubjectsClasses',
                 'Report.StudentAttendanceSummary',
+                'Report.StudentAbsences',
                 'Report.StaffAttendances',
                 'Report.BodyMasses',
                 'Report.WashReports',
@@ -1461,7 +1490,7 @@ class InstitutionsTable extends AppTable
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 } else {
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentWithdrawalReport','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure', 'Report.WashReports','Report.InstitutionInfrastructures', 'Report.StudentAttendanceSummary'])) {
+                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentWithdrawalReport','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure', 'Report.WashReports','Report.InstitutionInfrastructures', 'Report.StudentAttendanceSummary','Report.StudentAbsences'])) {
                         /*POCOR-6304 Starts*/
                         if (count($institutionList) > 1) {
                            $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
@@ -1497,6 +1526,7 @@ class InstitutionsTable extends AppTable
             if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords',
                                     'Report.InstitutionCases',
                                     //'Report.StudentAttendanceSummary',
+                                    //Report.StudentAbsences,
                                     'Report.ClassAttendanceMarkedSummaryReport',
                                     'Report.StaffAttendances'
                 ]) && isset($this->request->data[$this->alias()]['academic_period_id'])
@@ -1510,7 +1540,7 @@ class InstitutionsTable extends AppTable
                 $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
                 $attr['value'] = $selectedPeriod->start_date;
             } elseif (in_array($feature, [
-                                    'Report.StudentAttendanceSummary'
+                                    'Report.StudentAttendanceSummary','Report.StudentAbsences'
                 ]) && isset($this->request->data[$this->alias()]['academic_period_id'])
                 ) {
 
@@ -1553,6 +1583,7 @@ class InstitutionsTable extends AppTable
             if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords',
                                     'Report.InstitutionCases',
                                     //'Report.StudentAttendanceSummary',
+                                    //'Report.StudentAbsences',
                                     'Report.ClassAttendanceMarkedSummaryReport',
                                     'Report.StaffAttendances'
                                     ])
@@ -1575,7 +1606,7 @@ class InstitutionsTable extends AppTable
                 $attr['value'] = $selectedPeriod->end_date;
                 //POCOR-5907[END]
             } elseif (in_array($feature, [
-                                    'Report.StudentAttendanceSummary'
+                                    'Report.StudentAttendanceSummary','Report.StudentAbsences'
                                     ])
                 ) {
 
