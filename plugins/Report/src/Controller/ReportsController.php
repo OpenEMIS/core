@@ -73,7 +73,7 @@ class ReportsController extends AppController
             $options = [
                 'Report.Institutions' => __('Institutions'),
                 'Report.InstitutionAssociations' => __('Associations'),
-                'Report.InstitutionPositions' => __('Positions'),
+                'Report.InstitutionPositions' => __('Institution Positions'),
                 'Report.InstitutionProgrammes' => __('Programmes'),
                 'Report.InstitutionClasses' => __('Classes'),
                 'Report.InstitutionSubjects' => __('Subjects'),
@@ -104,7 +104,8 @@ class ReportsController extends AppController
                 'Report.InfrastructureNeeds' => __('Infrastructure Needs'),
                 'Report.Income' => __('Income Report'),
                 'Report.Expenditure' => __('Expenditure Report'),
-                'Report.StudentAbsencesPerDays' => __('Student Absences per Day') //POCOR-7276
+                'Report.StudentAbsencesPerDays' => __('Student Absences per Day'), //POCOR-7276
+                'Report.Curriculars' => __('Curriculars'), //POCOR-6673
             ];
         } elseif ($module == 'Students') {
             $options = [
@@ -143,7 +144,7 @@ class ReportsController extends AppController
                 'Report.StaffExtracurriculars' => __('Staff Extracurricular'),
                 'Report.InstitutionStaffDetailed' => __('Detailed Staff Data'), //POCOR-6662
                 'Report.StaffSubjects' => __('Staff Subjects'), //POCOR-6688
-
+                'Report.StaffRequirements' => __('Staff Requirements'), // POCOR-5185
             ];
         } elseif ($module == 'Textbooks') {
             $options = [
@@ -190,7 +191,9 @@ class ReportsController extends AppController
             $options = [
                 'Report.PotentialStudentDuplicates' => __('Potential Student Duplicates'),
                 'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates'),
-                'Report.PotentialWrongBirthdates' => __('Potential Wrong Birthdates')
+                'Report.PotentialWrongBirthdates' => __('Potential Wrong Birthdates'),
+                'Report.EnrollmentOutliers' => __('Enrollment Outliers'),//POCOR-7211
+                'Report.AgeOutliers' => __('Age Outliers'),//POCOR-7211
             ];
         } elseif ($module == 'Audits') {
             $options = [

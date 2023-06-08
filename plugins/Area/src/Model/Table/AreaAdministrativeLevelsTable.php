@@ -121,15 +121,18 @@ class AreaAdministrativeLevelsTable extends ControllerActionTable
 
     public function configItemsPopulateOptions(Event $event, ArrayObject $customOptions)
     {
+        $names=['World','Continent'];
         $query = $this->find('all')
                 ->contain('Countries')
-                ->where([
-                    'Countries.is_main_country' => 1
-                ])
+                ->where(
+                    // 'Countries.is_main_country' => 1
+                       [$this->aliasField('name NOT IN' )=> $names]
+                )
                 ->toArray();
         
         foreach ($query as $key => $value) {
             $customOptions[$value->id] = $value->name;
         }
     }
+   
 }

@@ -279,6 +279,20 @@ class DataManagementCopyTable extends ControllerActionTable
                 //return false;
             }
         }
+
+        // Start POCOR-5337
+        $RiskData = TableRegistry::get('Institution.Risks');
+        if($entity->features == 'Risks'){
+            $RiskRecords = $RiskData
+                ->find('all')
+                ->where(['academic_period_id ' => $entity->to_academic_period])
+                ->toArray();
+            if(!empty($RiskRecords)){
+                $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+                return false;
+            }
+        }
+        // End POCOR-5337
     }
 
     /***************POCOR-7326 Start*********************** */
@@ -689,6 +703,16 @@ class DataManagementCopyTable extends ControllerActionTable
 
             $this->triggerCopyShell('Infrastructure', $copyFrom, $copyTo);
         }
+
+        // Start POCOR-5337
+        if($entity->features == "Risks"){
+            $from_academic_period = $entity->from_academic_period;
+            $to_academic_period = $entity->to_academic_period;
+            $copyFrom = $from_academic_period;
+            $copyTo = $to_academic_period;
+            $this->triggerCopyShell('Risk', $copyFrom, $copyTo);
+        }
+        // End POCOR-5337
     }
 
      /*
@@ -714,6 +738,7 @@ class DataManagementCopyTable extends ControllerActionTable
             'Institution Programmes, Grades and Subjects' => __('Institution Programmes, Grades and Subjects'),
             'Shifts' => __('Shifts'),
             'Infrastructure' => __('Infrastructure')
+            ,'Risks' => __('Risks') // POCOR-5337
         ];
         return $options;
     }

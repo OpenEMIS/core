@@ -27,7 +27,14 @@ class StudentReportCardsTable extends ControllerActionTable
         $this->toggle('remove', false);
         $this->toggle('search', false);
     }
-
+    //POCOR-7321 start
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.viewPDF'] = 'viewPDF';//POCOR-7321
+        return $events;
+    }
+     //POCOR-7321 end
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->fields['principal_comments']['visible'] = false;
@@ -43,7 +50,7 @@ class StudentReportCardsTable extends ControllerActionTable
         $this->fields['institution_id']['type'] = 'integer';
         $this->fields['academic_period_id']['type'] = 'integer';
     }
-
+   
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->setFieldOrder(['academic_period_id', 'institution_id', 'report_card_id', 'education_grade_id', 'institution_class_id']);
@@ -162,7 +169,23 @@ class StudentReportCardsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-          
+        //POCOR 7321 start    
+        $params = [
+            'report_card_id' => $entity->report_card_id,
+            'student_id' => $entity->student_id,
+            'institution_id' => $entity->institution_id,
+            'academic_period_id' => $entity->academic_period_id,
+            'education_grade_id' => $entity->education_grade_id
+        ];
+        
+        $viewPdfUrl = $this->url('viewPDF');
+        $viewPdfUrl[1] = $this->paramsEncode($params);
+        $buttons['viewPdf'] = [
+                'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
+                'attr' =>[ 'role' => 'menuitem', 'tabindex' => '-1', 'escape' => false,'target'=>'_blank'],
+                'url' => $viewPdfUrl
+        ];
+        //POCOR-7321 end
         $downloadAccess = false;
         if ($this->controller->name == 'Students') {
             $downloadAccess = $this->AccessControl->check(['Students', 'ReportCards', 'download']);
@@ -234,5 +257,43 @@ class StudentReportCardsTable extends ControllerActionTable
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'ReportCards');
     }
+    //POCOR-7321 start
+    public function viewPDF(Event $event, ArrayObject $extra){
+        $model = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        $ids = $this->paramsDecode($this->paramsPass(0));
 
+        if ($model->exists($ids)) {
+            $data = $model->get($ids);
+            $fileName = $data->file_name;
+			$fileNameData = explode(".",$fileName);
+			$fileName = $fileNameData[0].'.pdf';
+			$pathInfo['extension'] = 'pdf';
+            $file = $this->getFile($data->file_content_pdf);
+            $fileType = 'application/pdf';
+            
+            header("Pragma: public", true);
+            header("Expires: 0"); // set expiration time
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            // header("Content-Type: application/force-download");
+            header("Content-Type: application/octet-stream");
+            header("Content-Type: " . $fileType);
+            header('Content-Disposition: inline; filename="' . $fileName . '"');
+
+            echo $file;
+            
+        }
+        exit();
+   
+    }
+    private function getFile($phpResourceFile)
+    {
+        $file = '';
+        while (!feof($phpResourceFile)) {
+            $file .= fread($phpResourceFile, 8192);
+        }
+        fclose($phpResourceFile);
+
+        return $file;
+    }
+    //POCOR-7321 ends
 }

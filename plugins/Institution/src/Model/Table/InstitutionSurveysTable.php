@@ -279,7 +279,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                 $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
                 $SurveyStatuses = $this->SurveyForms->SurveyStatuses;
                 $SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
-                $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
+                //$institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
                 $todayDate = date("Y-m-d");
                 $list = [];
 
@@ -289,15 +289,17 @@ class InstitutionSurveysTable extends ControllerActionTable
                     // check if survey form filter type matches
                     $institutionFilterCount = $SurveyFormsFilters
                         ->find()
+                        ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], 
+                            ['SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'])
                         ->where([
                             'AND' => [
                                 [$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId],
-                                [
+                                /*[
                                     'OR' => [
                                         [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
                                         [$SurveyFormsFilters->aliasField('survey_filter_id') => SurveyForms::ALL_CUSTOM_FILER]
                                     ]
-                                ]
+                                ]*/ //comment line in POCOR-7271
                             ]
                         ])
                         ->count();
@@ -458,16 +460,21 @@ class InstitutionSurveysTable extends ControllerActionTable
         $firstVal = preg_replace('/\D/', '', $filterOne);
         $getdata = ['',$firstVal];
         $SurveyFormsFilters = TableRegistry::get('survey_forms_filters');
+        $SurveyFilterType = TableRegistry::get('survey_filter_institution_types');
         $session = $this->controller->request->session();
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
         }
         $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
+        $institutionAreaId = $this->Institutions->get($institutionId)->area_education_id;
+        $institutionProviderId = $this->Institutions->get($institutionId)->institution_provider_id;
         $type  = [0,$institutionTypeId];
+        $area  = [0,$institutionAreaId];
+        $providers  = [0,$institutionProviderId];
+        
         //POCOR-6976 end
         // change in filter condition POCOR-6976 start
         if(!empty($firstVal) && $firstVal!=1){
-            // Do not show expired records
             $extra['auto_contain'] = false;
             $todayDate = date("Y-m-d");
             $query
@@ -508,14 +515,21 @@ class InstitutionSurveysTable extends ControllerActionTable
                 ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
                         'SurveyFormsFilters.survey_form_id = SurveyForms.id'
                     ])
+                ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], [
+                        'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'
+                    ])
+                ->leftJoin(['SurveyFilterInstitutionProviders' => 'survey_filter_institution_providers'], [
+                        'SurveyFilterInstitutionProviders.survey_filter_id = SurveyFormsFilters.id'
+                    ])
+                ->leftJoin(['SurveyFilterAreas' => 'survey_filter_areas'], [
+                        'SurveyFilterAreas.survey_filter_id = SurveyFormsFilters.id'
+                    ])
                 ->innerJoin(
                     ['surveyStatuses' => 'survey_statuses'],
-                    [
-                        'surveyStatuses.survey_form_id = SurveyForms.id'
-                    ]
-                )
+                    ['surveyStatuses.survey_form_id = SurveyForms.id'])
                 ->where([
                 $this->aliasField('status_id <> ') => self::EXPIRED,
+                $this->aliasField('institution_id') => $institutionId,
                 //POCOR-5666 Condition[START]
                 //Survey should only show for the active institution
                 $this->aliasField('Institutions.institution_status_id = ') => 1,
@@ -524,12 +538,15 @@ class InstitutionSurveysTable extends ControllerActionTable
                 'surveyStatuses.date_enabled <=' => $todayDate,
                 'surveyStatuses.date_disabled >=' => $todayDate,
                 'OR' => [
-                            $this->aliasField('SurveyFormsFilters.survey_filter_id IN')=>$type,
+                            $this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>$type,
+                            $this->aliasField('SurveyFilterInstitutionProviders.institution_provider_id IN')=>$providers,
+                            $this->aliasField('SurveyFilterAreas.area_education_id IN')=>$area,
+                            $this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>-1,
+                            $this->aliasField('SurveyFilterInstitutionProviders.institution_provider_id IN')=>-1,
+                            $this->aliasField('SurveyFilterAreas.area_education_id IN')=>-1,
                         ]
-            ]);
+            ])->distinct([$this->aliasField('survey_form_id'),$this->aliasField('academic_period_id')]);
             }elseif($filterVal==1){
-                //die('ddf');
-                // Do not show expired records
             $extra['auto_contain'] = false;
             $todayDate = date("Y-m-d");
             $query
@@ -570,6 +587,18 @@ class InstitutionSurveysTable extends ControllerActionTable
                 ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
                         'SurveyFormsFilters.survey_form_id = SurveyForms.id'
                     ])
+                ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
+                        'SurveyFormsFilters.survey_form_id = SurveyForms.id'
+                    ])
+                ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], [
+                        'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'
+                    ])
+                ->leftJoin(['SurveyFilterInstitutionProviders' => 'survey_filter_institution_providers'], [
+                        'SurveyFilterInstitutionProviders.survey_filter_id = SurveyFormsFilters.id'
+                    ])
+                ->leftJoin(['SurveyFilterAreas' => 'survey_filter_areas'], [
+                        'SurveyFilterAreas.survey_filter_id = SurveyFormsFilters.id'
+                    ])
                 ->innerJoin(
                     ['surveyStatuses' => 'survey_statuses'],
                     [
@@ -578,6 +607,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                 )
                 ->where([
                 $this->aliasField('status_id <> ') => self::EXPIRED,
+                $this->aliasField('institution_id') => $institutionId,
                 //POCOR-5666 Condition[START]
                 //Survey should only show for the active institution
                 $this->aliasField('Institutions.institution_status_id = ') => 1,
@@ -585,71 +615,93 @@ class InstitutionSurveysTable extends ControllerActionTable
                 'surveyStatuses.date_enabled <=' => $todayDate,
                 'surveyStatuses.date_disabled >=' => $todayDate,
                 'OR' => [
-                            $this->aliasField('SurveyFormsFilters.survey_filter_id IN')=>$type,
+                            $this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>$type,
+                            $this->aliasField('SurveyFilterInstitutionProviders.institution_provider_id IN')=>$providers,
+                            $this->aliasField('SurveyFilterAreas.area_education_id IN')=>$area,
+                            $this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>-1,
+                            $this->aliasField('SurveyFilterInstitutionProviders.institution_provider_id IN')=>-1,
+                            $this->aliasField('SurveyFilterAreas.area_education_id IN')=>-1,
                         ]
-            ]);
+            ])->distinct([$this->aliasField('survey_form_id'),$this->aliasField('academic_period_id')]);
                 
             }else{
-                //die('ddf');
                 // Do not show expired records
-            $extra['auto_contain'] = false;
-            $todayDate = date("Y-m-d");
-            $query
-                ->contain([
-                    'Statuses' => [
-                        'fields' => [
-                            'id',
-                            'name'
+                $extra['auto_contain'] = false;
+                $todayDate = date("Y-m-d");
+                $query
+                    ->contain([
+                        'Statuses' => [
+                            'fields' => [
+                                'id',
+                                'name'
+                            ]
+                        ],
+                        'AcademicPeriods' => [
+                            'fields' => [
+                                'name'
+                            ]
+                        ],
+                        'Institutions' => [
+                            'fields' => [
+                                'institution_status_id'
+                            ]
+                        ],
+                        'SurveyForms' => [
+                            'fields' => [
+                                'name', 'description'
+                            ]
+                        ],
+                        'Assignees' => [
+                            'fields' => [
+                                'first_name', 'middle_name', 'third_name', 'last_name'
+                            ]
                         ]
-                    ],
-                    'AcademicPeriods' => [
-                        'fields' => [
-                            'name'
-                        ]
-                    ],
-                    'Institutions' => [
-                        'fields' => [
-                            'institution_status_id'
-                        ]
-                    ],
-                    'SurveyForms' => [
-                        'fields' => [
-                            'name', 'description'
-                        ]
-                    ],
-                    'Assignees' => [
-                        'fields' => [
-                            'first_name', 'middle_name', 'third_name', 'last_name'
-                        ]
-                    ]
-                ])
-                ->innerJoin(
-                    ['SurveyForms' => 'survey_forms'],
-                    [
-                        'SurveyForms.id = '.$this->aliasField('survey_form_id')
-                    ]
-                )
-                ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
-                        'SurveyFormsFilters.survey_form_id = SurveyForms.id'
                     ])
-                ->innerJoin(
-                    ['surveyStatuses' => 'survey_statuses'],
-                    [
-                        'surveyStatuses.survey_form_id = SurveyForms.id'
-                    ]
-                )
-                ->where([
-                $this->aliasField('status_id <> ') => self::EXPIRED,
-                //POCOR-5666 Condition[START]
-                //Survey should only show for the active institution
-                $this->aliasField('Institutions.institution_status_id = ') => 1,
-                //POCOR-5666 Condition[END]
-                'surveyStatuses.date_enabled <=' => $todayDate,
-                'surveyStatuses.date_disabled >=' => $todayDate,
-                'OR' => [
-                            $this->aliasField('SurveyFormsFilters.survey_filter_id IN')=>$type,
+                    ->innerJoin(
+                        ['SurveyForms' => 'survey_forms'],
+                        [
+                            'SurveyForms.id = '.$this->aliasField('survey_form_id')
                         ]
-            ]);
+                    )
+                    ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
+                            'SurveyFormsFilters.survey_form_id = SurveyForms.id'
+                        ])
+                    ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
+                            'SurveyFormsFilters.survey_form_id = SurveyForms.id'
+                        ])
+                    ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], [
+                            'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'
+                        ])
+                    ->leftJoin(['SurveyFilterInstitutionProviders' => 'survey_filter_institution_providers'], [
+                            'SurveyFilterInstitutionProviders.survey_filter_id = SurveyFormsFilters.id'
+                        ])
+                    ->leftJoin(['SurveyFilterAreas' => 'survey_filter_areas'], [
+                            'SurveyFilterAreas.survey_filter_id = SurveyFormsFilters.id'
+                        ])
+                    ->innerJoin(
+                        ['surveyStatuses' => 'survey_statuses'],
+                        [
+                            'surveyStatuses.survey_form_id = SurveyForms.id'
+                        ]
+                    )
+                    ->where([
+                    $this->aliasField('status_id <> ') => self::EXPIRED,
+                    $this->aliasField('institution_id') => $institutionId,
+                    //POCOR-5666 Condition[START]
+                    //Survey should only show for the active institution
+                    $this->aliasField('Institutions.institution_status_id = ') => 1,
+                    //POCOR-5666 Condition[END]
+                    'surveyStatuses.date_enabled <=' => $todayDate,
+                    'surveyStatuses.date_disabled >=' => $todayDate,
+                    'OR' => [
+                                $this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>$type,
+                                $this->aliasField('SurveyFilterInstitutionProviders.institution_provider_id IN')=>$providers,
+                                $this->aliasField('SurveyFilterAreas.area_education_id IN')=>$area,
+                                $this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>-1,
+                                $this->aliasField('SurveyFilterInstitutionProviders.institution_provider_id IN')=>-1,
+                                $this->aliasField('SurveyFilterAreas.area_education_id IN')=>-1,
+                            ]
+                ])->distinct([$this->aliasField('survey_form_id'),$this->aliasField('academic_period_id')]);
             }
             // change in filter condition POCOR-6976 end
         // POCOR-4027 fixed search function (search assignee and survey form)
@@ -984,13 +1036,35 @@ class InstitutionSurveysTable extends ControllerActionTable
         if(!empty($institutionId)){ // POCOR-6652
             $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
         }
-        
+    
         $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
 
         foreach ($surveyForms as $surveyFormId => $surveyForm) {
+              
             // check if the institution type matches. only the match type or all type will try go in to check insertion of records
             $filterTypeQuery = $SurveyFormsFilters
                 ->find()
+                ->leftJoin(['SurveyFormsFilters' => 'survey_forms_filters'], [
+                        'SurveyFormsFilters.survey_form_id = SurveyForms.id'
+                    ])
+                ->leftJoin(['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'], [
+                        'SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id'
+                    ])
+                ->leftJoin(['SurveyFilterInstitutionProviders' => 'survey_filter_institution_providers'], [
+                        'SurveyFilterInstitutionProviders.survey_filter_id = SurveyFormsFilters.id'
+                    ])
+                ->leftJoin(['SurveyFilterAreas' => 'survey_filter_areas'], [
+                        'SurveyFilterAreas.survey_filter_id = SurveyFormsFilters.id'
+                    ])
+                ->leftJoin(['Institutions1' => 'institutions'], [
+                        'Institutions1.institution_type_id = SurveyFilterInstitutionTypes.institution_type_id'
+                    ])
+                ->leftJoin(['Institutions2' => 'institutions'], [
+                        'Institutions2.institution_provider_id = SurveyFilterInstitutionProviders.institution_provider_id'
+                    ])
+                ->leftJoin(['Institutions3' => 'institutions'], [
+                        'Institutions3.area_education_id = SurveyFilterAreas.area_education_id'
+                    ])
                 ->where([
                     [$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId],
                     [
@@ -1000,7 +1074,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                         ]
                     ]
                 ]);
-
+            
             $isInstitutionTypeMatch = $filterTypeQuery->count() > 0;
 
             $openStatusId = null;
@@ -1107,7 +1181,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                     ->where([ $roles->aliasField('security_user_id')  => $userId ])->first();
         $roleId = $userRole['security_role_id'];
         $workflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
-        $this->copyBuildSurveyRecords($controller);
+        // $this->copyBuildSurveyRecords($controller);//POCOR-7412
         $query
             ->select([
                 $this->aliasField('id'),

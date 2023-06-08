@@ -35,6 +35,7 @@ class FieldOptionsController extends AppController
             $alias = __('Vaccinations Type');     
         }
         //POCOR-5890 ends
+       // print_r($alias);die;
         $header = __('Field Options') . ' - ' . $model->getHeader($alias);
 
         $this->Navigation->addCrumb(str_replace ('Wash', 'WASH', $model->getHeader($alias)));
@@ -194,5 +195,19 @@ class FieldOptionsController extends AppController
     public function DiagnosticDisabilityDegree()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); } //POCOR-6873
     // public function DiagnosticsLevels()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
 
+    public function LanguageProficiencies()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); } //POCOR-7395
+
     //END:POCOR-6873
+
+    //POCOR-6673
+    public function CurricularTypes(){
+
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); 
+    }
+    
+    //POCOR-6673
+    public function CurricularPositions(){
+
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); 
+    }
 }

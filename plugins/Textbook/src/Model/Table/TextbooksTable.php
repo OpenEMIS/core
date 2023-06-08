@@ -242,8 +242,8 @@ class TextbooksTable extends ControllerActionTable {
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'AcademicPeriods',
-            'EducationSubjects.EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'
+            'AcademicPeriods','EducationSubjects',
+            'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems' //POCOR-5035
         ]);
     }
 
@@ -260,14 +260,14 @@ class TextbooksTable extends ControllerActionTable {
     public function onGetEducationLevelId(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
-            return $entity->education_subject->education_grades[0]->education_programme->education_cycle->education_level->system_level_name;
+            return $entity->education_grade->education_programme->education_cycle->education_level->system_level_name;//POCOR-5035
         }
     }
 
     public function onGetEducationProgrammeId(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
-            return $entity->education_subject->education_grades[0]->education_programme->cycle_programme_name;
+            return $entity->education_grade->education_programme->cycle_programme_name;//POCOR-5035
         }
     }
 
@@ -315,8 +315,8 @@ class TextbooksTable extends ControllerActionTable {
             } else if ($action == 'edit') {
 
                 $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $attr['entity']->education_subject->education_grades[0]->education_programme->education_cycle->education_level->system_level_name;
-                $attr['value'] = $attr['entity']->education_subject->education_grades[0]->education_programme->education_cycle->education_level->id;
+                $attr['attr']['value'] = $attr['entity']->education_grade->education_programme->education_cycle->education_level->system_level_name;//POCOR-5035
+                $attr['value'] = $attr['entity']->education_grade->education_programme->education_cycle->education_level->id;//POCOR-5035
                 // pr($attr['entity']);
 
             }
@@ -358,8 +358,8 @@ class TextbooksTable extends ControllerActionTable {
             } else if ($action == 'edit') {
 
                 $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $attr['entity']->education_subject->education_grades[0]->education_programme->cycle_programme_name;
-                $attr['value'] = $attr['entity']->education_subject->education_grades[0]->education_programme->id;
+                $attr['attr']['value'] = $attr['entity']->education_grade->education_programme->cycle_programme_name;//POCOR-5035
+                $attr['value'] = $attr['entity']->education_grade->education_programme->id;//POCOR-5035
             }
 
         }
@@ -399,8 +399,8 @@ class TextbooksTable extends ControllerActionTable {
             } else {
 
                 $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $attr['entity']->education_subject->education_grades[0]->name;
-                $attr['value'] = $attr['entity']->education_subject->education_grades[0]->id;
+                $attr['attr']['value'] = $attr['entity']->education_grade->name;//POCOR-5035
+                $attr['value'] = $attr['entity']->education_grade->id; //POCOR-5035
 
             }
         }
