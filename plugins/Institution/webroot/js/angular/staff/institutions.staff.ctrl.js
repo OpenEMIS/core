@@ -2565,7 +2565,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     
-    async function checkUserExistByIdentityFromConfiguaration()
+    async function checkUserExistByIdentityFromConfiguration()
     { 
         const { identity_type_id,identity_number } = StaffController.selectedStaffData;
         StaffController.error.nationality_id = "";
