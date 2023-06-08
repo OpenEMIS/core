@@ -1324,7 +1324,7 @@ class NavigationComponent extends Component
                 'title' => 'Career',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-                'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.HistoricalStaffPositions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 'Staff.StaffAttendances', 'Staff.InstitutionStaffAttendanceActivities', 'Institutions.StaffLeave', 'Institutions.HistoricalStaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals', 'Institutions.ImportStaffLeave','Staff.Duties','Staff.StaffAssociations', 'Staff.InstitutionStaffAttendancesArchive','Staff.StaffCurriculars'],
+                'selected' => ['Staff.EmploymentStatuses', 'Staff.Positions', 'Staff.HistoricalStaffPositions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences', 'Staff.StaffAttendances', 'Staff.InstitutionStaffAttendanceActivities', 'Institutions.StaffLeave','Institutions.ArchivedStaffLeave', 'Institutions.HistoricalStaffLeave', 'Staff.Behaviours', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add', 'Institutions.StaffAppraisals', 'Institutions.ImportStaffLeave','Staff.Duties','Staff.StaffAssociations', 'Staff.InstitutionStaffAttendancesArchive','Staff.StaffCurriculars'],
             ],
             'Staff.Employments' => [
                 'title' => 'Professional',
@@ -1477,7 +1477,7 @@ class NavigationComponent extends Component
                 'title' => 'Career',
                 'parent' => 'Profiles.Staff',
                 'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.StaffEmploymentStatuses', 'Profiles.StaffPositions', 'Profiles.StaffClasses', 'Profiles.StaffSubjects', 'Profiles.StaffLeave', 'Profiles.HistoricalStaffLeave','Profiles.StaffAttendances','Profiles.StaffBehaviours', 'Profiles.StaffAppraisals','Profiles.StaffDuties','Profiles.StaffAssociations','Profiles.StaffCurriculars']
+                'selected' => ['Profiles.StaffEmploymentStatuses', 'Profiles.StaffPositions', 'Profiles.StaffClasses', 'Profiles.StaffSubjects', 'Profiles.StaffLeave','Profiles.ArchivedStaffLeave', 'Profiles.HistoricalStaffLeave','Profiles.StaffAttendances','Profiles.StaffBehaviours', 'Profiles.StaffAppraisals','Profiles.StaffDuties','Profiles.StaffAssociations','Profiles.StaffCurriculars']
             ],
             'Profiles.StaffBankAccounts' => [
                 'title' => 'Finance',
@@ -1598,7 +1598,7 @@ class NavigationComponent extends Component
                 'title' => 'Career',
                 'parent' => 'Directories.Staff',
                 'params' => ['plugin' => 'Directory'],
-                'selected' => ['Directories.StaffEmploymentStatuses', 'Directories.StaffPositions', 'Directories.HistoricalStaffPositions', 'Directories.StaffClasses', 'Directories.StaffSubjects', 'Directories.StaffLeave', 'Directories.HistoricalStaffLeave', 'Directories.StaffAttendances', 'Directories.StaffBehaviours', 'Directories.StaffAppraisals','Directories.StaffDuties','Directories.StaffAssociations']
+                'selected' => ['Directories.StaffEmploymentStatuses', 'Directories.StaffPositions', 'Directories.HistoricalStaffPositions', 'Directories.StaffClasses', 'Directories.StaffSubjects', 'Directories.StaffLeave','Directories.ArchivedStaffLeave', 'Directories.HistoricalStaffLeave', 'Directories.StaffAttendances', 'Directories.StaffBehaviours', 'Directories.StaffAppraisals','Directories.StaffDuties','Directories.StaffAssociations']
             ],
             'Directories.StaffBankAccounts' => [
                 'title' => 'Finance',
