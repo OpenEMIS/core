@@ -42,6 +42,7 @@ class StaffAttendancesShell extends Shell
         $mypid = getmypid();
 
         $systemProcessId = $this->startSystemProcess($academicPeriodId, $mypid);
+
         $this->setSystemProcessRunning($systemProcessId);
 //        $countOfArchivedRecords = 1;
         $archivedRecords = $this->moveRecordsToArchive($academicPeriodId, $pid);
@@ -75,16 +76,23 @@ class StaffAttendancesShell extends Shell
     public function moveRecordsToArchive($academicPeriodId, $pid)
     {
         //POCOR-7468-HINDOL a) removed code about remote backup db b)
+        $this->out('started moving');
         $connection = ConnectionManager::get('default');
         $sourceTable = TableRegistry::get('institution_staff_attendances');
         $targetTableExists = $this->hasArchiveTable($sourceTable);
+        $this->out('checked for target table institution_staff_attendances');
         $sourceTable = null;
         $result = ['moved_leaves' => -1, 'moved_attendances' => -1];
         if (!$targetTableExists) {
+            $result_r = print_r($result, true);
+            $this->out($result_r);
             return $result;
         }
-        $statement_a = $connection->execute("INSERT INTO `institution_staff_attendances_archive` SELECT * FROM `institution_staff_attendances` WHERE academic_period_id = $academicPeriodId");
+        $statement_a = $connection->execute("INSERT INTO `institution_staff_attendances_archived` SELECT * FROM `institution_staff_attendances` WHERE academic_period_id = $academicPeriodId");
+        $statement_a_ar = print_r((Array) $statement_a, true);
+        $this->out($statement_a_ar);
         $moved_attendances = intval($statement_a->rowCount());
+        $this->out('moved_attendances' . ':' . $moved_attendances);
         $connection->execute("DELETE FROM institution_staff_attendances WHERE academic_period_id = $academicPeriodId");
         $this->log('staff attendances moved', 'debug');
         $result = ['moved_leaves' => -1, 'moved_attendances' => $moved_attendances];
@@ -92,13 +100,18 @@ class StaffAttendancesShell extends Shell
         $targetTableExists = $this->hasArchiveTable($sourceTable);
         $sourceTable = null;
         if (!$targetTableExists) {
+            $result_r = print_r($result, true);
+            $this->out($result_r);
             return $result;
         }
         $statement_l = $connection->execute("INSERT INTO `institution_staff_leave_archived` SELECT * FROM `institution_staff_leave` WHERE academic_period_id = $academicPeriodId");
         $moved_leaves = intval($statement_l->rowCount());
         $connection->execute("DELETE FROM institution_staff_leave WHERE academic_period_id = $academicPeriodId");
         //institution_staff_leave[END]
-        return ['moved_leaves' => $moved_leaves, 'moved_attendances' => $moved_attendances];
+        $result = ['moved_leaves' => $moved_leaves, 'moved_attendances' => $moved_attendances];
+        $result_r = print_r($result, true);
+        $this->out($result_r);
+        return $result;
     }
 
     public function hasArchiveTable($sourceTable)
@@ -188,7 +201,7 @@ class StaffAttendancesShell extends Shell
     {
         $SystemProcesses = TableRegistry::get('SystemProcesses');
         $processInfo = date('d-m-Y H:i:s');
-        $this->out($processInfo . ' - Running System PID:' . $systemProcessId);
+        $this->out($processInfo . ': Running System PID:' . $systemProcessId);
         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::RUNNING, 1);
     }
 
