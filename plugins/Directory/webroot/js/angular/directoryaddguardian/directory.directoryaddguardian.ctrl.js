@@ -749,7 +749,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             await checkUserAlreadyExistByIdentity();
         }
         if(scope.step === 'confirmation'){
-            const result = await scope.checkUserExistByIdentityFromConfiguaration();
+            const result = await scope.checkUserExistByIdentityFromConfiguration();
             if(result)return;
         }
         
@@ -807,7 +807,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
     scope.goToNextStep = async function() {
         if(scope.step === 'confirmation'){
-            const result = await scope.checkUserExistByIdentityFromConfiguaration();
+            const result = await scope.checkUserExistByIdentityFromConfiguration();
             if(result)return;
          }
         if(scope.isInternalSearchSelected) {
