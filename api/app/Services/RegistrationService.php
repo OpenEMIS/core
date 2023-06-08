@@ -20,16 +20,15 @@ class RegistrationService extends Controller
     public function academicPeriodsList()
     {
         try {
-            $data = $this->registrationRepository->academicPeriodsList()->map(
-                function ($item, $key) {
-                    return [
-                        "id" => $item->id,
-                        "name" => $item->name
-                    ];
-                }
-            );
+            $data = $this->registrationRepository->academicPeriodsList();
+
+            $resp = [];
+            foreach($data as $k => $d){
+                $resp[$k]['id'] = $d['id'];
+                $resp[$k]['name'] = $d['name'];
+            }
             
-            return $data;
+            return $resp;
             
         } catch (\Exception $e) {
             Log::error(
@@ -43,10 +42,10 @@ class RegistrationService extends Controller
 
 
 
-    public function educationGradesList()
+    public function educationGradesList($request)
     {
         try {
-            $data = $this->registrationRepository->educationGradesList()->map(
+            $data = $this->registrationRepository->educationGradesList($request)->map(
                 function ($item, $key) {
                     return [
                         "id" => $item->educaiton_grade_id,
@@ -68,10 +67,10 @@ class RegistrationService extends Controller
     }
 
 
-    public function institutionDropdown()
+    public function institutionDropdown($request)
     {
         try {
-            $data = $this->registrationRepository->institutionDropdown()->map(
+            $data = $this->registrationRepository->institutionDropdown($request)->map(
                 function ($item, $key) {
                     return [
                         "id" => $item->id,
@@ -274,26 +273,29 @@ class RegistrationService extends Controller
     public function getStudentCustomFields()
     {
         try {
-            $data = $this->registrationRepository->getStudentCustomFields()->map(
-                function ($item, $key) {
-                    
-                    return [
-                        "student_custom_form_id" => $item->student_custom_form_id,
-                        "student_custom_field_id" => $item->student_custom_field_id,
-                        "section" => $item->section,
-                        "name" => $item->name,
-                        "is_mandatory" => $item->is_mandatory,
-                        "is_unique" => $item->is_unique,
-                        "order" => $item->order,
-                        "params" => $item->studentCustomField->params??Null,
-                        "field_type" => $item->studentCustomField->field_type??Null,
-                        "options" => $item->studentCustomField->studentCustomFieldOption??Null,
-                        "description" => $item->studentCustomField->description??Null
-                    ];
-                }
-            );
+            $data = $this->registrationRepository->getStudentCustomFields();
+            $resp = [];
 
-            return $data;
+            foreach($data as $k => $d){
+                $section = $d['section'];
+                $arr['student_custom_form_id'] = $d['student_custom_form_id'];
+                $arr['student_custom_field_id'] = $d['student_custom_field_id'];
+                $arr['section'] = $d['section'];
+                $arr['name'] = $d['name'];
+                $arr['is_mandatory'] = $d['is_mandatory'];
+                $arr['is_unique'] = $d['is_unique'];
+                $arr['order'] = $d['order'];
+                $arr['is_unique'] = $d['is_unique'];
+                $arr['params'] = $d['studentCustomField']['params']??Null;
+                $arr['field_type'] = $d['studentCustomField']['field_type']??Null;
+                $arr['options'] = $d['studentCustomField']['studentCustomFieldOption']??Null;
+                $arr['description'] = $d['studentCustomField']['description']??Null;
+
+
+                $resp[$section][] = $arr;
+            }
+
+            return $resp;
             
         } catch (\Exception $e) {
             Log::error(
@@ -329,10 +331,10 @@ class RegistrationService extends Controller
     }
 
 
-    public function getInstitutionGradesList($gradeId)
+    public function getInstitutionGradesList($request, $gradeId)
     {
         try {
-            $data = $this->registrationRepository->getInstitutionGradesList($gradeId)->map(
+            $data = $this->registrationRepository->getInstitutionGradesList($request, $gradeId)->map(
                 function ($item, $key) {
                     return [
                         "id" => $item->id,
@@ -350,6 +352,81 @@ class RegistrationService extends Controller
             );
 
             return $this->sendErrorResponse('Institutions List Not Found');
+        }
+    }
+
+
+    public function institutionTypesDropdown()
+    {
+        try {
+            $data = $this->registrationRepository->institutionTypesDropdown()->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->name,
+                    ];
+                }
+            );
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institutions Types List Not Found');
+        }
+    }
+
+
+    public function areaLevelsDropdown()
+    {
+        try {
+            $data = $this->registrationRepository->areaLevelsDropdown()->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->name,
+                    ];
+                }
+            );
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Levels List Not Found');
+        }
+    }
+
+
+    public function areasDropdown($request)
+    {
+        try {
+            $data = $this->registrationRepository->areasDropdown($request)->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->name,
+                    ];
+                }
+            );
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Names List Not Found');
         }
     }
 

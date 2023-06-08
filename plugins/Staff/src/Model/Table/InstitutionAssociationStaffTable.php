@@ -72,7 +72,7 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $staffId = $this->Session->read('Staff.Staff.id');
         if (!empty($staffId)) {

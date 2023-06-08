@@ -84,7 +84,7 @@ trait MessagesTrait
                 'failed' => 'The record is not deleted due to errors encountered.',
                 'label' => 'Delete',
             ],
-            'deleteTransfer' =>[
+            'deleteTransfer' => [
                 'restrictDelete' => 'The record cannot be deleted as there are still records associated with it.'
             ],
             'view' => [
@@ -129,7 +129,7 @@ trait MessagesTrait
                     'telephone' => 'Telephone cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
                     'fax' => 'Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
                     'both' => 'Telephone & Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution'
-                ]
+            ]
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
@@ -880,7 +880,7 @@ trait MessagesTrait
             'dateNotWithinPeriod' => 'Date should be within %s and %s',
             'endDate' => [
                     'compareWithStartDate' => 'End Date should not be earlier than Start Date'
-                ]
+            ]
         ],
         'StaffTransfers' => [
             'restrictStaffTransfer' => 'Transfer is not allowed between different institution type or institution provider.'
@@ -2067,6 +2067,12 @@ trait MessagesTrait
         'StaffSubjects' => [
             'notActiveTeachingStaff' => 'Not active teaching staff'
         ],
+        'StaffRequirements' => [
+            'studentTeacherRatio' => 'The value for this should be in range of 0-150.',
+            'upperTolerance' => 'The value for this should be in range of 0-100.',
+            'lowerTolerance' => 'The value for this should be in range of 0-100.',
+            'lowerToleranceCompare' => 'Lower tolerance value should not greater than upper tolerance value.',
+        ],
         'Examination' => [
             'Examinations' => [
                 'code' => [
@@ -2296,7 +2302,7 @@ trait MessagesTrait
             'StaffPositionTitles' => [
                'position_grades' => [
                     'ruleCheckPositionGrades' => 'You are not allowed to remove the following in-use grades: %s',
-                ]
+               ]
             ]
         ],
         'Configuration' => [
@@ -2460,6 +2466,22 @@ trait MessagesTrait
                 ]
             ]
         ],
+
+        //POCOR-7271 start
+        'Survey' => [
+            'SurveyFilters' => [
+                'institution_type_id' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ],
+                'institution_provider_id' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ],
+                'area_education_id' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ]
+            ]
+        ], //POCOR-7271 end
+        
         'SpecialNeeds' => [
             'SpecialNeedsReferrals' => [
                 'date' => [
@@ -2557,7 +2579,7 @@ trait MessagesTrait
                         return false;
                     }
                     $message = '[Message Not Found]';
-                    Log::write('error', 'MessagesTrait Message Not Found: '. $code);
+                    Log::write('error', 'MessagesTrait Message Not Found: '. $code . ', please add it.');
                     break;
                 }
             }

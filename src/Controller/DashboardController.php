@@ -241,7 +241,7 @@ class DashboardController extends AppController
 		$enabledTypeList = $ConfigItem
             ->find()
             ->order('type')
-            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 1,$ConfigItem->aliasField('type') => 'User Completeness'])
+            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 1,$ConfigItem->aliasField('type') => 'User Data Completeness'])//POCOR-6022
             ->toArray();
             foreach($enabledTypeList as $key => $enabled) {
                 $data[$key]['feature'] = $enabled->name;
@@ -467,7 +467,7 @@ class DashboardController extends AppController
                 'valueField' => 'name'
             ])
             ->order('type')
-            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 1,$ConfigItem->aliasField('type') => 'User Completeness'])
+            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 1,$ConfigItem->aliasField('type') => 'User Data Completeness'])//POCOR-6022
             ->toArray();
           
         $typeOptions = array_keys($typeList);
@@ -478,7 +478,7 @@ class DashboardController extends AppController
                 'valueField' => 'name'
             ])
             ->order('type')
-            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 0,$ConfigItem->aliasField('type') => 'User Completeness'])
+            ->where([$ConfigItem->aliasField('visible') => 1,$ConfigItem->aliasField('value') => 0,$ConfigItem->aliasField('type') => 'User Data Completeness'])//POCOR-6022
             ->toArray();
             if ($typeListDisable) {
                 $countList = count($typeListDisable);

@@ -237,7 +237,9 @@ class ConsoleOutput
             }
         }
 
-        return "\033[" . implode($styleInfo, ';') . 'm' . $matches['text'] . "\033[0m";
+//        return "\033[" . implode($styleInfo, ';') . 'm' . $matches['text'] . "\033[0m";
+// POCOR-7339-HINDOL Passing glue string after array is deprecated
+        return "\033[" . implode(';', $styleInfo) . 'm' . $matches['text'] . "\033[0m";
     }
 
     /**

@@ -24,11 +24,12 @@ class UserRepository extends Controller
             
             $users = SecurityUsers::with('nationalities', 'identities');
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $users = $users->orderBy($col);
+                $users = $users->orderBy($col, $orderBy);
             }
-            $list = $users->paginate($limit);
-            //dd($list);
+            $list = $users->paginate($limit)->toArray();
+            
             return $list;
             
         } catch (\Exception $e) {

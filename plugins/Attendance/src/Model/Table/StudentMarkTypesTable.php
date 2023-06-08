@@ -21,7 +21,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         parent::initialize($config);
 
         //$this->toggle('add', false);
-        $this->toggle('remove', false);
+        $this->toggle('remove', true);//POCOR-7393 Case 2nd
         $this->toggle('reorder', false);
 
         $this->removeBehavior('Reorder');

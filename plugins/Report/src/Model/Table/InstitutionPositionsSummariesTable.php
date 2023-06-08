@@ -26,9 +26,11 @@ class InstitutionPositionsSummariesTable extends AppTable
         $this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
         $this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
         $this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades','foreignKey' => 'staff_position_grade_id']); //POCOR-7377
+        //$this->belongsTo('StaffPositionCategories', ['className' => 'StaffPositionTitles.StaffPositionCategories','foreignKey' => 'staff_position_categories_id']); //POCOR-7377
         $this->belongsTo('Staffs', ['className' => 'User.Users']);
         $this->belongsTo('Areas', ['className' => 'Institution.Areas']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('workflowSteps', ['className' => 'InstitutionPositions.workflowSteps']);
 
         $this->addBehavior('Excel', [
             'autoFields' => false
@@ -43,28 +45,42 @@ class InstitutionPositionsSummariesTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $academicperiodid = $requestData->academic_period_id;
         $area_level_id = $requestData->area_level_id;
-        $statusFilter = $requestData->status;  
+        $statusFilter = $requestData->position_status;  //POCOR-7445
 
         $AcademicPeriodsTable = TableRegistry::get('academic_periods');
 
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
+        $selectedArea = $requestData->area_education_id;
         $where = [];
         if ($institution_id != 0) {
             $where[$this->aliasField('institution_id')] = $institution_id;
         }
 
         if ($statusFilter != 0) {
-            $where[$this->aliasField('InstitutionPositions.status_id')] <= $statusFilter; 
+            $where[$this->aliasField('InstitutionPositions.status_id')] = $statusFilter; 
         }
         if ($academicperiodid != -1) {
             $where[$AcademicPeriodsTable->aliasField('id')] = $academicperiodid; 
         }
 
-        if ($areaId != -1) {
-            $where['Institutions.area_id'] = $areaId;
+        //POCOR-7407 start
+       if ($areaId != -1 && $areaId != '') {
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }
+                $where['Institutions.area_id IN'] = $allselectedAreas;
         }
-
+        $workflowStepsTable = TableRegistry::get('workflow_steps');
+        $position = TableRegistry::get('Institution.InstitutionPositions');
+        $StaffPositionCategories = TableRegistry::get('staff_position_categories');
+        $staffTitle = TableRegistry::get('staff_position_titles');
+        //POCOR-7407 end
         $query
         ->SELECT ([
            'start_year' =>'InstitutionPositionsSummaries.start_year',
@@ -72,6 +88,7 @@ class InstitutionPositionsSummariesTable extends AppTable
            'id' =>'InstitutionPositionsSummaries.id',
            'area_code' =>'Areas.code',
            'area_name' =>'Areas.name',
+           'Category' => $StaffPositionCategories->aliasField('name'),
            'institutions_code' =>'Institutions.code',
            'institutions_name' =>'Institutions.name',
            'institutions_id' =>'Institutions.id',
@@ -123,8 +140,15 @@ class InstitutionPositionsSummariesTable extends AppTable
                 
 
             ]
-        )
-        ->where([$where])
+
+        )->LeftJoin([$position->alias() => $position->table()],
+                    [$position->aliasField('id') . ' = '. $this->aliasField('institution_position_id')])
+        ->LeftJoin([$staffTitle->alias() => $staffTitle->table()],
+                    [$staffTitle->aliasField('id') . ' = '. $position->aliasField('staff_position_title_id')])
+        ->LeftJoin([$StaffPositionCategories->alias() => $StaffPositionCategories->table()],
+                    [$StaffPositionCategories->aliasField('id') . ' = '. $staffTitle->aliasField('staff_position_categories_id')])
+
+        ->where($where)
         ->group(['Institutions.id','StaffPositionTitles.id','StaffPositionGrades.id'])
         ->order(['Areas.name','Institutions.name','StaffPositionTitles.name','StaffPositionGrades.name']);
         
@@ -169,8 +193,8 @@ class InstitutionPositionsSummariesTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'StaffPositionGrades.name',
-            'field' => 'staff_position_grades',
+            'key' => 'Category',
+            'field' => 'Category',
             'type' => 'string',
             'label' => __('Category')
         ];
@@ -197,6 +221,21 @@ class InstitutionPositionsSummariesTable extends AppTable
         ];
 
         $fields->exchangeArray($newFields);
+    }
+
+    //POCOR-7407
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                           ->where([
+                               $Areas->aliasField('parent_id') => $id
+                            ]) 
+                             ->toArray();
+       foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
     }
 
 }
