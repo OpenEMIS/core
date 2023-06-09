@@ -139,6 +139,17 @@ class StudentBehavioursTable extends ControllerActionTable
         }
     }
 
+    // START POCOR-7473
+    public function onGetStatusId(Event $event, Entity $entity)
+    {
+        if ($entity->status_id > 0) {
+            return '<span class="status highlight">' . $entity->status->name . '</span>';
+        } else {
+            return '<span class="status highlight">Open</span>';
+        }
+    }
+    // END POCOR-7473
+
     /*public function beforeAction($event)
     {
         $this->field('openemis_no');
