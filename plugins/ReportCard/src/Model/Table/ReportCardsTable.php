@@ -201,17 +201,17 @@ class ReportCardsTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain('ReportCardSubjects.EducationSubjects');
-         //POCOR-7400 start
-         $query->contain(['ReportCardExcludedSecurityRoles']);
-         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+        //POCOR-7400 start
+        $query->contain(['ReportCardSubjects.EducationSubjects','ReportCardExcludedSecurityRoles']);
+       
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 $arr =[];
                 foreach($row->report_card_excluded_security_roles as $key=> $role){
                     $arr[$key] = ['id'=>$role['security_role_id']];
                 }
                 $row['excluded_security_roles'] = $arr;
-                
+              
                 return $row;
             });
         });
@@ -637,7 +637,9 @@ class ReportCardsTable extends ControllerActionTable
       public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $table=TableRegistry::get('report_cards');
-        $entityData=$table->find()->where([$table->aliasField('code')=>$entity->code])->first();
+        $entityData=$table->find()->where([$table->aliasField('code')=>$entity->code,
+                                $table->aliasField('academic_period_id')=>$entity->academic_period_id
+                                ])->first();
        
         $ReportCardExcludedSecurityRolesTable = TableRegistry::get('report_card_excluded_security_roles');
   
