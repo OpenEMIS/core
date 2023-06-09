@@ -822,8 +822,11 @@ class AssessmentPeriodsTable extends ControllerActionTable
     {
        
         $table=TableRegistry::get('assessment_periods');
-        $entityData=$table->find()->where([$table->aliasField('code')=>$entity->code])->first();
-       
+        $entityData=$table->find()->where([$table->aliasField('code')=>$entity->code,
+                                           $table->aliasField('assessment_id')=>$entity->assessment_id,
+                                           $table->aliasField('academic_term')=>$entity->academic_term,
+        ])->first();
+      
         $AssessmentPeriodExcludedSecurityRolesTable = TableRegistry::get('assessment_period_excluded_security_roles');
   
         if($this->request->params['pass'][0] == 'edit'){
