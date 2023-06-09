@@ -17,18 +17,10 @@ use Cake\Log\Log;
 use Cake\Utility\Security;
 
 /**
- * DeletedLogs Model
- *
- * @property \Cake\ORM\Association\BelongsTo $AcademicPeriods
- *
- * @method \Archive\Model\Entity\DeletedLog get($primaryKey, $options = [])
- * @method \Archive\Model\Entity\DeletedLog newEntity($data = null, array $options = [])
- * @method \Archive\Model\Entity\DeletedLog[] newEntities(array $data, array $options = [])
- * @method \Archive\Model\Entity\DeletedLog|bool save(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \Archive\Model\Entity\DeletedLog patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method \Archive\Model\Entity\DeletedLog[] patchEntities($entities, array $data, array $options = [])
- * @method \Archive\Model\Entity\DeletedLog findOrCreate($search, callable $callback = null, $options = [])
- */class TransferLogsTable extends ControllerActionTable
+ * Class TransferLogsTable
+ * @package Archive\Model\Table
+ */
+class TransferLogsTable extends ControllerActionTable
 {
 
     /**
