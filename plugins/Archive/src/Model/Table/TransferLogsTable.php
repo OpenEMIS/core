@@ -173,7 +173,7 @@ use Cake\Utility\Security;
 
         $this->Alert->info('Archive.backupReminder');
         try {
-
+// POCOR-7486-HINDOL removed backup DB check
 //            $DataManagementConnections =  TableRegistry::get('Archive.DataManagementConnections');
 //            $DataManagementConnectionsData = $DataManagementConnections->find('all')
 //                ->select([
