@@ -15,15 +15,16 @@ echo $this->Html->css('OpenEmis.../plugins/toggle-switch/toggle-switch');
 // echo $this->Html->css('OpenEmis.../plugins/ng-agGrid/css/ag-grid');
 // echo $this->Html->css('OpenEmis.../plugins/ng-agGrid/css/theme-fresh');
 
-echo $this->Resource->css('OpenEmis.master.min');
+//Fix Method App\View\Helper\ResourceHelper::css does not exist
+echo $this->Html->css('OpenEmis.master.min');
 
 if (isset($theme)) {
-	echo $this->Resource->css($theme);
+	echo $this->Html->css($theme);
 }
 ?>
 <link rel="stylesheet" href="<?= $this->Url->css('themes/layout.min') ?>?timestamp=<?=$lastModified?>" >
 <!--[if gte IE 9]>
 <?php
-	echo $this->Resource->css('OpenEmis.ie/ie9-fixes');
+	echo $this->Html->css('OpenEmis.ie/ie9-fixes');
 ?>
 <![endif]-->

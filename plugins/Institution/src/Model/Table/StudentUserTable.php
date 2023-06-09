@@ -1052,7 +1052,8 @@ class StudentUserTable extends ControllerActionTable
             ];
             $newFields[] = [
                 'key' => '',
-                'field' => 'assesment_period',
+                //POCOR-7474-HINDOL TYPO FIX
+                'field' => 'assessment_period',
                 'type' => 'string',
                 'label' => __('Assessment Periods')
             ];
@@ -1253,7 +1254,8 @@ class StudentUserTable extends ControllerActionTable
             ->select([
                 'asses_academic_period' => $AcademicPeriods->aliasField('name'),
                 'asses_institution_name' => $institutions->aliasField('name'),
-                'assesment_period' => $AssessmentPeriods->find()->func()->concat([
+                //POCOR-7474-HINDOL TYPO FIX
+                'assessment_period' => $AssessmentPeriods->find()->func()->concat([
                     $AssessmentPeriods->aliasField('code') => 'literal',
                     " - ",
                     $AssessmentPeriods->aliasField('name') => 'literal'
@@ -1320,7 +1322,8 @@ class StudentUserTable extends ControllerActionTable
             'Behaviours' => ['text' => __('Behaviours')],
             'Outcomes' => ['text' => __('Outcomes')],
             'Competencies' => ['text' => __('Competencies')],
-            'Assesments' => ['text' => __('Assessments')], //POCOR-5786
+            //POCOR-7474-HINDOL TYPO FIX
+            'Assessments' => ['text' => __('Assessments')], //POCOR-5786
             'ExaminationResults' => ['text' => __('Examinations')],
             'ReportCards' => ['text' => __('Report Cards')],
             'Awards' => ['text' => __('Awards')],
