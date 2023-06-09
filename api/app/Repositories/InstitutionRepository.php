@@ -33,6 +33,7 @@ use App\Models\InstitutionCompetencyResults;
 use App\Models\InstitutionCompetencyItemComments;
 use App\Models\InstitutionCompetencyPeriodComments;
 use App\Models\StaffTypes;
+use App\Models\AssessmentItemResults;
 use App\Models\ConfigItem;
 use App\Models\InstitutionSubjectStaff;
 use App\Models\StudentAttendanceMarkedRecords;
@@ -1720,6 +1721,25 @@ class InstitutionRepository extends Controller
     }
 
 
+    public function getStudentAssessmentItemResult($request, $institutionId, $studentId)
+    {
+        try {
+            $params = $request->all();
+            
+            $lists = AssessmentItemResults::where('institution_id', $institutionId)->where('student_id', $studentId)->get()->toArray();
+
+            return $lists;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student assessment data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get student assessment data.');
+        }
+    }
+
     public function displayAddressAreaLevel($request)
     {
         try {
@@ -1769,6 +1789,8 @@ class InstitutionRepository extends Controller
             return $this->sendErrorResponse('Failed to get address area level area.');
         }
     }
+
+    
     public function getSubjectsStaffList($request)
     {
         try {
