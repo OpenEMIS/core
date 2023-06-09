@@ -126,7 +126,18 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
         $this->setupTabElements();
     }
 
-    private function setupTabElements()
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $staffId = $this->staffId;
+        $institutionId = $this->institutionId;
+        $query->where([
+            $this->aliasField('staff_id') => $staffId,
+            $this->aliasField('institution_id') => $institutionId,
+            //POCOR-7486
+        ]);
+    }
+
+        private function setupTabElements()
     {
         $options['type'] = 'staff';
         $userId = $this->staffId;
