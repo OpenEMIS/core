@@ -519,48 +519,6 @@ class ArchivedAbsencesTable extends ControllerActionTable
     }
 
 
-
-    /**
-     * @param $toolbarButtons
-     */
-    private function addArchiveButton($toolbarButtons)
-    {
-        $is_archive_exists = $this->isArchiveExists();
-        if ($is_archive_exists) {
-            $customButtonName = 'archive';
-            $customButtonUrl = [
-                'plugin' => 'Student',
-                'controller' => 'Students',
-                'action' => 'ArchivedAbsences'
-            ];
-            $customButtonLabel = '<i class="fa fa-folder"></i>';
-            $customButtonTitle = __('Archive');
-            $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl);
-        }
-    }
-
-    private function isArchiveExists()
-    {
-        $is_archive_exists = false;
-        $institutionId = $this->institutionId;
-        $studentId = $this->studentId;
-        $AssessmentItemResultsArchived = TableRegistry::get('institution_student_absence_details_archived');
-        $count = $AssessmentItemResultsArchived->find()
-//            ->distinct([$AssessmentItemResultsArchived->aliasField('student_id')])// POCOR-7339-HINDOL
-            ->select([$AssessmentItemResultsArchived->aliasField('student_id')])// POCOR-7339-HINDOL
-            ->where([
-                $AssessmentItemResultsArchived->aliasField('institution_id') => $institutionId,
-                $AssessmentItemResultsArchived->aliasField('student_id') => $studentId,
-            ])->first();
-        if($count) {
-            $is_archive_exists = true;
-        }
-        if(!$count) {
-            $is_archive_exists = false;
-        }
-        return $is_archive_exists;
-    }
-
     private function generateButton(ArrayObject $toolbarButtons, $name, $title, $label, $url, $btnAttr = null)
     {
         if (!$btnAttr) {

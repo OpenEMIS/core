@@ -2,6 +2,8 @@
 namespace Student\Model\Table;
 
 use ArrayObject;
+use Cake\Database\Schema\Table;
+use Cake\Datasource\ConnectionManager;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
@@ -542,6 +544,10 @@ class AbsencesTable extends ControllerActionTable
     private function isArchiveExists()
     {
         $is_archive_exists = false;
+        $targetTableExists = $this->hasArchiveTable($this);
+        if (!$targetTableExists) {
+            return $is_archive_exists;
+        }
         $institutionId = $this->institutionId;
         $studentId = $this->studentId;
         $AssessmentItemResultsArchived = TableRegistry::get('institution_student_absence_details_archived');
@@ -559,6 +565,69 @@ class AbsencesTable extends ControllerActionTable
             $is_archive_exists = false;
         }
         return $is_archive_exists;
+    }
+
+    public function hasArchiveTable($sourceTable)
+    {
+        $sourceTableName = $sourceTable->table();
+        $targetTableName = $sourceTableName . '_archived';
+        $connection = ConnectionManager::get('default');
+        $schemaCollection = new \Cake\Database\Schema\Collection($connection);
+        $existingTables = $schemaCollection->listTables();
+        $tableExists = in_array($targetTableName, $existingTables);
+
+        if ($tableExists) {
+            return true;
+        }
+
+        $sourceTableSchema = $schemaCollection->describe($sourceTableName);
+
+        // Create a new table schema for the target table
+        $targetTableSchema = new Table($targetTableName);
+
+        // Copy the columns from the source table to the target table
+        foreach ($sourceTableSchema->columns() as $column) {
+            $columnDefinition = $sourceTableSchema->column($column);
+            $targetTableSchema->addColumn($column, $columnDefinition);
+        }
+        $randomString = $this->generateRandomString();
+        // Copy the indexes from the source table to the target table
+        foreach ($sourceTableSchema->indexes() as $index) {
+            $indexDefinition = $sourceTableSchema->index($index);
+            $targetTableSchema->addIndex($index . $randomString, $indexDefinition);
+        }
+
+        // Copy the constraints from the source table to the target table
+        // FIX for random FK name
+
+        foreach ($sourceTableSchema->constraints() as $constraint) {
+            $constraintDefinition = $sourceTableSchema->constraint($constraint);
+            $targetTableSchema->addConstraint($constraint . $randomString, $constraintDefinition);
+        }
+
+
+
+        // Generate the SQL statement to create the target table
+        $createTableSql = $targetTableSchema->createSql($connection);
+
+        // Execute the SQL statement to create the target table
+        foreach ($createTableSql as $sql) {
+            $connection->execute($sql);
+        }
+
+        // Check if the target table was created successfully
+        $existingTables = $schemaCollection->listTables();
+        $tableExists = in_array($targetTableName, $existingTables);
+        if ($tableExists) {
+            return true;
+        }
+
+        return false; // Return false if the table couldn't be created
+    }
+
+    private function generateRandomString($length = 4) {
+        $bytes = random_bytes($length);
+        return substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $length);
     }
 
     private function generateButton(ArrayObject $toolbarButtons, $name, $title, $label, $url, $btnAttr = null)
