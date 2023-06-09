@@ -1,4 +1,5 @@
 <?php
+
 namespace Import\Model\Behavior;
 
 use ArrayObject;
@@ -92,11 +93,11 @@ class ImportBehavior extends Behavior
     protected $_fileTypesMap = [
         // 'csv'    => 'text/plain',
         // 'csv'    => 'text/csv',
-        'xls'   => ['application/vnd.ms-excel', 'application/vnd.ms-office'],
+        'xls' => ['application/vnd.ms-excel', 'application/vnd.ms-office'],
         // Use for openoffice .xls format
-        'xlsx'  => ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
-        'ods'   => ['application/vnd.oasis.opendocument.spreadsheet'],
-        'zip'   => ['application/zip']
+        'xlsx' => ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+        'ods' => ['application/vnd.oasis.opendocument.spreadsheet'],
+        'zip' => ['application/zip']
     ];
     private $institutionId = false;
     private $recordHeader = '';
@@ -125,7 +126,7 @@ class ImportBehavior extends Behavior
         $plugin = $this->config('plugin');
         if (empty($plugin)) {
             $exploded = explode('.', $this->_table->registryAlias());
-            if (count($exploded)==2) {
+            if (count($exploded) == 2) {
                 $this->config('plugin', $exploded[0]);
             }
         }
@@ -149,11 +150,11 @@ class ImportBehavior extends Behavior
     }
 
 
-/******************************************************************************************************************
-**
-** Events
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+     **
+     ** Events
+     **
+     ******************************************************************************************************************/
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
@@ -174,17 +175,17 @@ class ImportBehavior extends Behavior
             case 'add':
                 $downloadUrl = $toolbarButtons['back']['url'];
                 $downloadUrl[0] = 'template';
-                if ($buttons['add']['url']['action']=='ImportInstitutionSurveys') {
+                if ($buttons['add']['url']['action'] == 'ImportInstitutionSurveys') {
                     $downloadUrl[1] = $buttons['add']['url'][1];
                 }
-                $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
+                $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='" . Router::url($downloadUrl) . "'");
                 break;
         }
 
         //back button
         if (!empty($this->config('backUrl'))) {
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->config('backUrl'));
-        } elseif ($toolbarButtons['back']['url']['plugin']=='Directory') { //back button for directory
+        } elseif ($toolbarButtons['back']['url']['plugin'] == 'Directory') { //back button for directory
             $back = [];
             if ($this->_table->request->params['pass'][0] == 'add') {
                 $back['action'] = 'Directories';
@@ -193,7 +194,7 @@ class ImportBehavior extends Behavior
                 $back[0] = 'add';
             };
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
-        } elseif ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
+        } elseif ($this->institutionId && $toolbarButtons['back']['url']['plugin'] == 'Institution') {
             $back = [];
 
             if ($this->_table->request->params['pass'][0] == 'add') {
@@ -224,7 +225,7 @@ class ImportBehavior extends Behavior
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
         }
-        $this->sessionKey = $this->config('plugin').'.'.$this->config('model').'.Import.data';
+        $this->sessionKey = $this->config('plugin') . '.' . $this->config('model') . '.Import.data';
 
         $this->_table->ControllerAction->field('plugin', ['visible' => false]);
         $this->_table->ControllerAction->field('model', ['visible' => false]);
@@ -278,9 +279,9 @@ class ImportBehavior extends Behavior
 
     /**
      * addBeforePatch turns off the validation when patching entity with post data, and check the uploaded file size.
-     * @param Event       $event   [description]
-     * @param Entity      $entity  [description]
-     * @param ArrayObject $data    [description]
+     * @param Event $event [description]
+     * @param Entity $entity [description]
+     * @param ArrayObject $data [description]
      * @param ArrayObject $options [description]
      *
      * Refer to phpFileUploadErrors below for the list of file upload errors defination.
@@ -292,9 +293,9 @@ class ImportBehavior extends Behavior
 
     /**
      * Actual Import business logics reside in this function
-     * @param  Event        $event  Event object
-     * @param  Entity       $entity Entity object containing the uploaded file parameters
-     * @param  ArrayObject  $data   Event object
+     * @param Event $event Event object
+     * @param Entity $entity Entity object containing the uploaded file parameters
+     * @param ArrayObject $data Event object
      * @return Response             Response object
      */
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
@@ -344,7 +345,7 @@ class ImportBehavior extends Behavior
             $dataPassed = [];
             $extra = new ArrayObject(['lookup' => [], 'entityValidate' => true]);
 
-            $activeModel = TableRegistry::get($this->config('plugin').'.'.$this->config('model'));
+            $activeModel = TableRegistry::get($this->config('plugin') . '.' . $this->config('model'));
             $activeModel->addBehavior('DefaultValidation');
 
             $maxRows = $this->config('max_rows');
@@ -362,7 +363,7 @@ class ImportBehavior extends Behavior
                 $entity->errors('select_file', [$this->getExcelLabel('Import', 'no_answers')], true);
                 return false;
             }
-            
+
             ($this->isCustomText()) ? $startCheck = 3 : $startCheck = 2;
 
             for ($row = $startCheck; $row <= $highestRow; ++$row) {
@@ -378,23 +379,23 @@ class ImportBehavior extends Behavior
                         break;
                     }
                 }
-                
+
                 // check for unique record
                 $tempRow = new ArrayObject;
                 $rowInvalidCodeCols = new ArrayObject;
                 $params = [$sheet, $row, $columns, $tempRow, $importedUniqueCodes, $rowInvalidCodeCols];
                 $this->dispatchEvent($this->_table, $this->eventKey('onImportCheckUnique'), 'onImportCheckUnique', $params);
-                
+
                 // for each columns
                 $references = [
-                    'sheet'=>$sheet,
-                    'mapping'=>$mapping,
-                    'columns'=>$columns,
-                    'lookup'=>$lookup,
-                    'totalColumns'=>$totalColumns,
-                    'row'=>$row,
-                    'activeModel'=>$activeModel,
-                    'systemDateFormat'=>$systemDateFormat,
+                    'sheet' => $sheet,
+                    'mapping' => $mapping,
+                    'columns' => $columns,
+                    'lookup' => $lookup,
+                    'totalColumns' => $totalColumns,
+                    'row' => $row,
+                    'activeModel' => $activeModel,
+                    'systemDateFormat' => $systemDateFormat,
                 ];
 
                 $originalRow = new ArrayObject;
@@ -404,7 +405,7 @@ class ImportBehavior extends Behavior
 
                 if ($rowPass !== NULL && !$rowPass) {
                     $activeModel->setImportValidationFailed();
-                }else{
+                } else {
                     $activeModel->setImportValidationPassed();
                 }
 
@@ -423,13 +424,13 @@ class ImportBehavior extends Behavior
                     $tempRow['action_type'] = 'imported';
                     $activeModel->patchEntity($tableEntity, $tempRow);
                 }
-                    
+
                 $errors = $tableEntity->errors();
                 $rowInvalidCodeCols = $rowInvalidCodeCols->getArrayCopy();
 
                 // to-do: saving of entity into table with composite primary keys (Exam Results) give wrong isNew value
                 $isNew = $tableEntity->isNew();
-                
+
                 if ($extra['entityValidate'] == true) {
                     // POCOR-4258 - shifted saving model before updating errors to implement try-catch to catch database errors
                     try {
@@ -472,7 +473,7 @@ class ImportBehavior extends Behavior
                                     $rowCodeError .= '<li>' . $arr[key($arr)] . '</li>';
                                     $rowCodeErrorForExcel[] = $arr[key($arr)];
                                 }
-                                $model->log('@ImportBehavior line ' . __LINE__ . ': ' . $activeModel->registryAlias() .' -> ' . $field . ' => ' . $arr[key($arr)], 'info');
+                                $model->log('@ImportBehavior line ' . __LINE__ . ': ' . $activeModel->registryAlias() . ' -> ' . $field . ' => ' . $arr[key($arr)], 'info');
                             }
                         }
                     }
@@ -531,21 +532,21 @@ class ImportBehavior extends Behavior
     }
 
 
-/******************************************************************************************************************
-**
-** Actions
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+     **
+     ** Actions
+     **
+     ******************************************************************************************************************/
     public function template()
     {
         $folder = $this->prepareDownload();
         $modelName = $this->config('model');
         $modelName = str_replace(' ', '_', Inflector::humanize(Inflector::tableize($modelName)));
         //5695 starts
-        if($modelName == 'Training_Session_Trainee_Results'){
+        if ($modelName == 'Training_Session_Trainee_Results') {
             $modelNameforTemplate = 'Training_Results';
             $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xlsx', $modelNameforTemplate);
-        }else{
+        } else {
             // Do not lcalize file name as certain non-latin characters might cause issue
             $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xlsx', $modelName);
         }//5695 ends
@@ -554,12 +555,12 @@ class ImportBehavior extends Behavior
         $mapping = $this->getMapping();
         $header = $this->getHeader($mapping);
         //5695 starts
-        if($modelName == 'Training_Session_Trainee_Results'){
+        if ($modelName == 'Training_Session_Trainee_Results') {
             $newheader = [];
             foreach ($header as $key => $value) {
-                if($value == 'Training Session'){
+                if ($value == 'Training Session') {
                     $value = 'Training Session Code';
-                }else if($value == 'Training Result Type'){
+                } else if ($value == 'Training Result Type') {
                     $value = 'Result Types';
                 }
                 $newheader[$key] = $value;
@@ -597,7 +598,7 @@ class ImportBehavior extends Behavior
     {
         $session = $this->_table->Session;
         if ($session->check($this->sessionKey)) {
-            
+
             $completedData = $session->read($this->sessionKey);
             $this->_table->ControllerAction->field('select_file', ['visible' => false]);
             $this->_table->ControllerAction->field('results', [
@@ -629,34 +630,35 @@ class ImportBehavior extends Behavior
     }
 
 
-/******************************************************************************************************************
-**
-** Import Functions
-**
-******************************************************************************************************************/
+    /******************************************************************************************************************
+     **
+     ** Import Functions
+     **
+     ******************************************************************************************************************/
     public function beginExcelHeaderStyling($objPHPExcel, $dataSheetName, $title = '')
     {
         if (empty($title)) {
             $title = $dataSheetName;
-        }else{//5695 starts   
-            if($title == 'Import Training Session Trainee Results Data'){
+        } else {//5695 starts
+            if ($title == 'Import Training Session Trainee Results Data') {
                 $title = 'Import Training Results Data';
             }//5695 ends   
         }
         $activeSheet = $objPHPExcel->getActiveSheet();
         $activeSheet->setTitle($dataSheetName);
-
-        $gdImage = imagecreatefromjpeg(ROOT . DS . 'plugins' . DS . 'Import' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.jpg');
-        $objDrawing = new \PHPExcel_Worksheet_MemoryDrawing();
-        $objDrawing->setName('OpenEMIS Logo');
-        $objDrawing->setDescription('OpenEMIS Logo');
-        $objDrawing->setImageResource($gdImage);
-        $objDrawing->setRenderingFunction(\PHPExcel_Worksheet_MemoryDrawing::RENDERING_JPEG);
-        $objDrawing->setMimeType(\PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_DEFAULT);
-        $objDrawing->setHeight(100);
-        $objDrawing->setCoordinates('A1');
-        $objDrawing->setWorksheet($activeSheet);
-
+        if (function_exists('imagecreatefromjpeg')) {
+            //POCOR-7474-HINDOL - in case that imagecreatefromjpeg is not available
+            $gdImage = imagecreatefromjpeg(ROOT . DS . 'plugins' . DS . 'Import' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.jpg');
+            $objDrawing = new \PHPExcel_Worksheet_MemoryDrawing();
+            $objDrawing->setName('OpenEMIS Logo');
+            $objDrawing->setDescription('OpenEMIS Logo');
+            $objDrawing->setImageResource($gdImage);
+            $objDrawing->setRenderingFunction(\PHPExcel_Worksheet_MemoryDrawing::RENDERING_JPEG);
+            $objDrawing->setMimeType(\PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_DEFAULT);
+            $objDrawing->setHeight(100);
+            $objDrawing->setCoordinates('A1');
+            $objDrawing->setWorksheet($activeSheet);
+        }
         $activeSheet->getRowDimension(1)->setRowHeight(75);
         $activeSheet->getRowDimension(2)->setRowHeight(25);
 
@@ -668,18 +670,18 @@ class ImportBehavior extends Behavior
     public function endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $lastRowToAlign = 2, $applyFillFontSetting = [], $applyCellBorder = [])
     {
         if (empty($applyFillFontSetting)) {
-            ($this->isCustomText()) ? $applyFillFontSetting = ['s'=>3, 'e'=>3] : $applyFillFontSetting = ['s'=>2, 'e'=>2];
+            ($this->isCustomText()) ? $applyFillFontSetting = ['s' => 3, 'e' => 3] : $applyFillFontSetting = ['s' => 2, 'e' => 2];
         }
 
         if (empty($applyCellBorder)) {
-            ($this->isCustomText()) ? $applyCellBorder = ['s'=>3, 'e'=>3] : $applyCellBorder = ['s'=>2, 'e'=>2];
+            ($this->isCustomText()) ? $applyCellBorder = ['s' => 3, 'e' => 3] : $applyCellBorder = ['s' => 2, 'e' => 2];
         }
 
         $activeSheet = $objPHPExcel->getActiveSheet();
 
         // merging should start from cell C1 instead of A1 since the title is already set in cell C1 in beginExcelHeaderStyling()
-        if (!in_array($headerLastAlpha, ['A','B','C'])) {
-            $activeSheet->mergeCells('C1:'. $headerLastAlpha .'1');
+        if (!in_array($headerLastAlpha, ['A', 'B', 'C'])) {
+            $activeSheet->mergeCells('C1:' . $headerLastAlpha . '1');
         }
 
         $activeSheet->getStyle("A1:" . $headerLastAlpha . "1")->getFont()->setBold(true)->setSize(16);
@@ -689,10 +691,10 @@ class ImportBehavior extends Behavior
                 'vertical' => \PHPExcel_Style_Alignment::VERTICAL_CENTER
             ]
         ];
-        $activeSheet->getStyle("A1:". $headerLastAlpha . $lastRowToAlign)->applyFromArray($style)->getFont()->setBold(true);
-        $activeSheet->getStyle("A". $applyFillFontSetting['s'] .":". $headerLastAlpha . $applyFillFontSetting['e'])->getFont()->setBold(true)->getColor()->setARGB('FFFFFF');
-        $activeSheet->getStyle("A". $applyFillFontSetting['s'] .":". $headerLastAlpha . $applyFillFontSetting['e'])->getFill()->setFillType(\PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setARGB('6699CC'); // OpenEMIS Core product color
-        $activeSheet->getStyle("A". $applyCellBorder['s'] .":". $headerLastAlpha . $applyCellBorder['e'])->getBorders()->getAllBorders()->setBorderStyle(\PHPExcel_Style_Border::BORDER_THIN);
+        $activeSheet->getStyle("A1:" . $headerLastAlpha . $lastRowToAlign)->applyFromArray($style)->getFont()->setBold(true);
+        $activeSheet->getStyle("A" . $applyFillFontSetting['s'] . ":" . $headerLastAlpha . $applyFillFontSetting['e'])->getFont()->setBold(true)->getColor()->setARGB('FFFFFF');
+        $activeSheet->getStyle("A" . $applyFillFontSetting['s'] . ":" . $headerLastAlpha . $applyFillFontSetting['e'])->getFill()->setFillType(\PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setARGB('6699CC'); // OpenEMIS Core product color
+        $activeSheet->getStyle("A" . $applyCellBorder['s'] . ":" . $headerLastAlpha . $applyCellBorder['e'])->getBorders()->getAllBorders()->setBorderStyle(\PHPExcel_Style_Border::BORDER_THIN);
     }
 
     public function setImportDataTemplate($objPHPExcel, $dataSheetName, $header, $type)
@@ -725,7 +727,7 @@ class ImportBehavior extends Behavior
             $activeSheet->setCellValue("A2", $this->customText);
         }
 
-        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName,  __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName);
+        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) . ' ' . $dataSheetName);
 
         $currentRowHeight = $activeSheet->getRowDimension($lastRowToAlign)->getRowHeight();
 
@@ -733,33 +735,33 @@ class ImportBehavior extends Behavior
             $alpha = $this->getExcelColumnAlpha($key);
             $activeSheet->setCellValue($alpha . $lastRowToAlign, $value);
             $activeSheet->getColumnDimension($alpha)->setAutoSize(true);
-            if (strlen($value)<50) {
+            if (strlen($value) < 50) {
                 // if the $value is in $dateHeader array, it is a date format.
                 if (in_array($value, $dateHeader)) {
                     $activeSheet->getStyle($alpha)
                         ->getNumberFormat()
                         ->setFormatCode('dd/mm/yyyy');
-                }                
+                }
             } else {
                 $currentRowHeight = $this->suggestRowHeight(strlen($value), $currentRowHeight);
                 $activeSheet->getRowDimension($lastRowToAlign)->setRowHeight($currentRowHeight);
                 $activeSheet->getStyle($alpha . $lastRowToAlign)->getAlignment()->setWrapText(true);
             }
         }
-        $headerLastAlpha = $this->getExcelColumnAlpha(count($header)-1);
+        $headerLastAlpha = $this->getExcelColumnAlpha(count($header) - 1);
 
         $this->endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $lastRowToAlign);
     }
 
     public function suggestRowHeight($stringLen, $currentRowHeight)
     {
-        if ($stringLen>=50) {
+        if ($stringLen >= 50) {
             $multiplier = $stringLen % 50;
         } else {
             $multiplier = 0;
         }
         $rowHeight = (3 * $multiplier) + 25;
-        if ($rowHeight > $currentRowHeight && $rowHeight<=250) {
+        if ($rowHeight > $currentRowHeight && $rowHeight <= 250) {
             $currentRowHeight = $rowHeight;
         }
         return $currentRowHeight;
@@ -787,9 +789,9 @@ class ImportBehavior extends Behavior
             $firstColumn = $lastColumn + 1;
             $lastColumn = $firstColumn + count($modelArr['data'][0]) - 1;
 
-            $objPHPExcel->getActiveSheet()->mergeCells($this->getExcelColumnAlpha($firstColumn) ."2:". $this->getExcelColumnAlpha($lastColumn) ."2");
-            $objPHPExcel->getActiveSheet()->setCellValue($this->getExcelColumnAlpha($firstColumn) ."2", $modelArr['sheetName']);
-            if (strlen($modelArr['sheetName'])<50) {
+            $objPHPExcel->getActiveSheet()->mergeCells($this->getExcelColumnAlpha($firstColumn) . "2:" . $this->getExcelColumnAlpha($lastColumn) . "2");
+            $objPHPExcel->getActiveSheet()->setCellValue($this->getExcelColumnAlpha($firstColumn) . "2", $modelArr['sheetName']);
+            if (strlen($modelArr['sheetName']) < 50) {
                 $objPHPExcel->getActiveSheet()->getColumnDimension($this->getExcelColumnAlpha($firstColumn))->setAutoSize(true);
             } else {
                 // $objPHPExcel->getActiveSheet()->getColumnDimension( $this->getExcelColumnAlpha($firstColumn) )->setWidth(35);
@@ -806,12 +808,12 @@ class ImportBehavior extends Behavior
                 }
             }
 
-            if (count($modelData)>1 && !array_key_exists('noDropDownList', $modelArr)) {
+            if (count($modelData) > 1 && !array_key_exists('noDropDownList', $modelArr)) {
                 $lookupColumn = $firstColumn + intval($modelArr['lookupColumn']) - 1;
                 $alpha = $this->getExcelColumnAlpha($columnOrder - 1);
                 $lookupColumnAlpha = $this->getExcelColumnAlpha($lookupColumn);
                 ($this->isCustomText()) ? $lookupStart = 4 : $lookupStart = 3;
-                for ($i=$lookupStart; $i < 103; $i++) {
+                for ($i = $lookupStart; $i < 103; $i++) {
                     $objPHPExcel->setActiveSheetIndex(0);
                     $objValidation = $objPHPExcel->getActiveSheet()->getCell($alpha . $i)->getDataValidation();
                     $objValidation->setType(\PHPExcel_Cell_DataValidation::TYPE_LIST);
@@ -820,7 +822,7 @@ class ImportBehavior extends Behavior
                     $objValidation->setShowInputMessage(true);
                     $objValidation->setShowErrorMessage(true);
                     $objValidation->setShowDropDown(true);
-                    $listLocation = "'". $sheetName ."'!$". $lookupColumnAlpha ."$4:$". $lookupColumnAlpha ."$". (count($modelData)+2);
+                    $listLocation = "'" . $sheetName . "'!$" . $lookupColumnAlpha . "$4:$" . $lookupColumnAlpha . "$" . (count($modelData) + 2);
                     $objValidation->setFormula1($listLocation);
                 }
                 $objPHPExcel->setActiveSheetIndex(1);
@@ -829,16 +831,16 @@ class ImportBehavior extends Behavior
 
         if ($lastColumn > -1) { //if got no reference data.
             $headerLastAlpha = $this->getExcelColumnAlpha($lastColumn);
-            $objPHPExcel->getActiveSheet()->getStyle( "A2:" . $headerLastAlpha . "2" )->getFont()->setBold(true)->setSize(12);
-            $this->endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, 3, ['s'=>3, 'e'=>3], ['s'=>2, 'e'=>3] );
+            $objPHPExcel->getActiveSheet()->getStyle("A2:" . $headerLastAlpha . "2")->getFont()->setBold(true)->setSize(12);
+            $this->endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, 3, ['s' => 3, 'e' => 3], ['s' => 2, 'e' => 3]);
         }
     }
 
     /**
      * Set a record columns value based on what is being saved in the table.
-     * @param  Entity $entity           Cloned entity. The actual entity is not saved yet but already validated but we are using a cloned entity in case it might be messed up.
-     * @param  Array  $columns          Target Model columns defined in import_mapping table.
-     * @param  string $systemDateFormat System Date Format which varies across deployed environments.
+     * @param Entity $entity Cloned entity. The actual entity is not saved yet but already validated but we are using a cloned entity in case it might be messed up.
+     * @param Array $columns Target Model columns defined in import_mapping table.
+     * @param string $systemDateFormat System Date Format which varies across deployed environments.
      * @return Array                    The columns value that will be written to a downloadable excel file.
      */
     protected function _getReorderedEntityArray(Entity $entity, array $columns, ArrayObject $originalRow, $systemDateFormat)
@@ -888,7 +890,7 @@ class ImportBehavior extends Behavior
                     $activeSheet->setCellValue($alpha . ($index + $rowData), $value);
                     $activeSheet->getColumnDimension($alpha)->setAutoSize(true);
 
-                    if ($key==(count($values)-1) && $type == 'failed') {
+                    if ($key == (count($values) - 1) && $type == 'failed') {
                         $suggestedRowHeight = $this->suggestRowHeight(strlen($value), 15);
                         $activeSheet->getRowDimension(($index + $rowData))->setRowHeight($suggestedRowHeight);
                         $activeSheet->getStyle($alpha . ($index + $rowData))->getAlignment()->setWrapText(true);
@@ -916,7 +918,7 @@ class ImportBehavior extends Behavior
 
     /**
      * Get the string representation of a column based on excel grid
-     * @param  mixed $column_number either an integer or a string named as "last"
+     * @param mixed $column_number either an integer or a string named as "last"
      * @return string               the string representation of a column based on excel grid
      * @todo  the alpha string array values should be auto-generated instead of hard-coded
      */
@@ -927,15 +929,15 @@ class ImportBehavior extends Behavior
 
     /**
      * Check if all the columns in the row is not empty
-     * @param  WorkSheet $sheet      The worksheet object
-     * @param  integer $totalColumns Total number of columns to be checked
-     * @param  integer $row          Row number
+     * @param WorkSheet $sheet The worksheet object
+     * @param integer $totalColumns Total number of columns to be checked
+     * @param integer $row Row number
      * @return boolean               the result to be return as true or false
      */
     public function checkRowCells($sheet, $totalColumns, $row)
     {
         $cellsState = [];
-        for ($col=0; $col < $totalColumns; $col++) {
+        for ($col = 0; $col < $totalColumns; $col++) {
             $cell = $sheet->getCellByColumnAndRow($col, $row);
             $value = $cell->getValue();
             if (empty($value)) {
@@ -950,22 +952,22 @@ class ImportBehavior extends Behavior
     /**
      * Check if the uploaded file is the correct template by comparing the headers extracted from mapping table
      * and first row of the uploaded file record
-     * @param  array        $header         The headers extracted from mapping table according to active model
-     * @param  WorkSheet    $sheet          The worksheet object
-     * @param  integer      $totalColumns   Total number of columns to be checked
-     * @param  integer      $row            Row number
+     * @param array $header The headers extracted from mapping table according to active model
+     * @param WorkSheet $sheet The worksheet object
+     * @param integer $totalColumns Total number of columns to be checked
+     * @param integer $row Row number
      * @return boolean                      the result to be return as true or false
      */
     public function isCorrectTemplate($header, $sheet, $totalColumns, $row)
     {
         //5695 starts
         $model = $this->_table;
-        if($model->alias == 'ImportTrainingSessionTraineeResults'){
+        if ($model->alias == 'ImportTrainingSessionTraineeResults') {
             $newheader = [];
             foreach ($header as $key => $value) {
-                if($value == 'Training Session'){
+                if ($value == 'Training Session') {
                     $value = 'Training Session Code';
-                }else if($value == 'Training Result Type'){
+                } else if ($value == 'Training Result Type') {
                     $value = 'Result Types';
                 }
                 $newheader[$key] = $value;
@@ -973,7 +975,7 @@ class ImportBehavior extends Behavior
             $header = $newheader;
         }//5695 ends
         $cellsValue = [];
-        for ($col=0; $col < $totalColumns; $col++) {
+        for ($col = 0; $col < $totalColumns; $col++) {
             $cell = $sheet->getCellByColumnAndRow($col, $row);
             $cellsValue[] = $cell->getValue();
         }
@@ -985,7 +987,7 @@ class ImportBehavior extends Behavior
         $model = $this->_table;
         $mapping = $model->find('all')
             ->where([
-                $model->aliasField('model') => $this->config('plugin').'.'.$this->config('model')
+                $model->aliasField('model') => $this->config('plugin') . '.' . $this->config('model')
             ])
             ->order($model->aliasField('order'))
             ->toArray();
@@ -1036,10 +1038,10 @@ class ImportBehavior extends Behavior
 
                 if (!empty($value->description)) {
                     //POCOR-5913 starts 
-                    if($value->model == 'Student.StudentGuardians') {
-                        $label =  __($value->description);   
-                    }else{
-                        $label .= ' ' . __($value->description);     
+                    if ($value->model == 'Student.StudentGuardians') {
+                        $label = __($value->description);
+                    } else {
+                        $label .= ' ' . __($value->description);
                     }
                     //POCOR-5913 ends 
                 }
@@ -1109,12 +1111,11 @@ class ImportBehavior extends Behavior
     {
         $mapping = $model->find('all')
             ->where([
-                $model->aliasField('model') => $this->config('plugin').'.'.$this->config('model'),
+                $model->aliasField('model') => $this->config('plugin') . '.' . $this->config('model'),
                 $model->aliasField('foreign_key') . ' IN' => [self::FIELD_OPTION, self::DIRECT_TABLE, self::NON_TABLE_LIST]
             ])
             ->order($model->aliasField('order'))
-            ->toArray()
-            ;
+            ->toArray();
 
         $data = new ArrayObject;
         foreach ($mapping as $row) {
@@ -1128,45 +1129,45 @@ class ImportBehavior extends Behavior
 
             $sheetName = trim($this->getExcelLabel($row->model, $row->column_name));
             $data[$row->order] = [
-                'data'=>[],
-                'sheetName'=>$sheetName
+                'data' => [],
+                'sheetName' => $sheetName
             ];
             $modelData = [];
             if ($foreignKey == self::FIELD_OPTION) {
                 if (TableRegistry::exists($lookupModel)) {
                     $relatedModel = TableRegistry::get($lookupModel);
-                } elseif($mappingModel == 'Student.Extracurriculars' && $lookupModel == 'Users') {
+                } elseif ($mappingModel == 'Student.Extracurriculars' && $lookupModel == 'Users') {
                     $institutionId = 0;
                     $session = $this->_table->Session;
                     if ($session->check('Institution.Institutions.id')) {
                         $institutionId = $session->read('Institution.Institutions.id');
                     }
-                    
-                    $relatedModel = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel.'Table'])->findStudents($institutionId);
-                }else{
-                    $relatedModel = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel.'Table']);
+
+                    $relatedModel = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel . 'Table'])->findStudents($institutionId);
+                } else {
+                    $relatedModel = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel . 'Table']);
                 }
-                
-                if($mappingModel == 'Student.Extracurriculars' && $lookupModel == 'Users') {
-                    
+
+                if ($mappingModel == 'Student.Extracurriculars' && $lookupModel == 'Users') {
+
                     $emptyCodeRecords = $relatedModel;
                     $modelData = $relatedModel;
-                }else{
+                } else {
                     $modelData = $relatedModel->getList($relatedModel->find());
                     $emptyCodeRecords = $modelData;
                     $emptyCodeRecords = $emptyCodeRecords->stopWhen(function ($record, $key) {
                         return !empty($record->national_code);
                     })->toArray();
-                    
+
                     $modelData = $modelData->toArray();
                 }
-                
+
                 $data[$row->order]['lookupColumn'] = 2;
                 $data[$row->order]['data'][] = [__('Name'), $translatedCol];
-                
+
                 if (!empty($modelData)) {
                     foreach ($modelData as $record) {
-                        if (count($emptyCodeRecords)<1) {
+                        if (count($emptyCodeRecords) < 1) {
                             $data[$row->order]['data'][] = [$record->name, $record->national_code];
                         } else {
                             $data[$row->order]['data'][] = [$record->name, $record->id];
@@ -1175,7 +1176,7 @@ class ImportBehavior extends Behavior
                 }
             } elseif ($foreignKey == self::DIRECT_TABLE || $foreignKey == self::NON_TABLE_LIST) {
                 $params = [$lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, $data, $row->order];
-                $this->dispatchEvent($this->_table, $this->eventKey('onImportPopulate'.$lookupModel.'Data'), 'onImportPopulate'.$lookupModel.'Data', $params);
+                $this->dispatchEvent($this->_table, $this->eventKey('onImportPopulate' . $lookupModel . 'Data'), 'onImportPopulate' . $lookupModel . 'Data', $params);
             }
         }
         return $data;
@@ -1221,9 +1222,9 @@ class ImportBehavior extends Behavior
         header("Content-Type: application/force-download");
         header("Content-Type: application/octet-stream");
         header("Content-Type: application/download");
-        header("Content-Disposition: attachment; filename=".$filename);
+        header("Content-Disposition: attachment; filename=" . $filename);
         header("Content-Transfer-Encoding: binary");
-        header("Content-Length: ".filesize($excelPath));
+        header("Content-Length: " . filesize($excelPath));
         echo file_get_contents($excelPath);
     }
 
@@ -1240,15 +1241,15 @@ class ImportBehavior extends Behavior
         if (!empty($this->labels) && isset($this->labels[$module]) && isset($this->labels[$module][$columnName])) {
             $translatedCol = $this->labels[$module][$columnName];
         } else {
-            if ($module=='Import') {
-                $translatedCol = $this->_table->getMessage($module.'.'.$columnName);
+            if ($module == 'Import') {
+                $translatedCol = $this->_table->getMessage($module . '.' . $columnName);
             } else {
                 /**
                  * $language should provide the current selected locale language
                  */
                 $language = '';
                 $translatedCol = $this->_table->onGetFieldLabel(new Event($this), $module, $columnName, $language);
-                if (empty($translatedCol) || ($translatedCol==$columnName && $columnName!='FTE')) { // checking for column name FTE should not be hard-coded here, do revisit this in the future
+                if (empty($translatedCol) || ($translatedCol == $columnName && $columnName != 'FTE')) { // checking for column name FTE should not be hard-coded here, do revisit this in the future
                     $translatedCol = Inflector::humanize(Inflector::singularize(Inflector::tableize($columnName)));
                 }
             }
@@ -1260,15 +1261,15 @@ class ImportBehavior extends Behavior
 
     /**
      * Extract the values in every columns
-     * @param  array        $references         the variables/arrays in this array are for references
-     * @param  ArrayObject  $tempRow            for holding converted values extracted from the excel sheet on a per row basis
-     * @param  ArrayObject  $originalRow        for holding the original value extracted from the excel sheet on a per row basis
-     * @param  ArrayObject  $rowInvalidCodeCols for holding error messages found on option field columns
+     * @param array $references the variables/arrays in this array are for references
+     * @param ArrayObject $tempRow for holding converted values extracted from the excel sheet on a per row basis
+     * @param ArrayObject $originalRow for holding the original value extracted from the excel sheet on a per row basis
+     * @param ArrayObject $rowInvalidCodeCols for holding error messages found on option field columns
      * @return boolean                          returns whether the row being checked pass option field columns check
      */
     protected function _extractRecord($references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols, ArrayObject $extra)
     {
-        
+
         // $references = [$sheet, $mapping, $columns, $lookup, $totalColumns, $row, $activeModel, $systemDateFormat];
         $sheet = $references['sheet'];
         $mapping = $references['mapping'];
@@ -1283,8 +1284,8 @@ class ImportBehavior extends Behavior
         $rowPass = true;
         $customColumnCounter = 0;
 
-        for ($col =0; $col < $totalColumns; ++$col) {
-            $cell = $sheet->getCellByColumnAndRow($col, $row); 
+        for ($col = 0; $col < $totalColumns; ++$col) {
+            $cell = $sheet->getCellByColumnAndRow($col, $row);
 
             if (self::timeTwelvehoursValidator($cell->getFormattedValue()) == 1) {
                 $cell->getStyle()->getNumberFormat()->setFormatCode('h:mm:ss');
@@ -1295,13 +1296,13 @@ class ImportBehavior extends Behavior
             } else {
                 $originalValue = $cell->getValue();
             }
-            
+
             $cellValue = $originalValue;
             // need to understand this check
             // @hanafi - this might be for type casting a double or boolean value to a string to avoid data loss when assigning
             // them to $val. Example: the value of latitude, "1.05647" might become "1" if not casted as a string type.
             if (gettype($cellValue) == 'double' || gettype($cellValue) == 'boolean') {
-                $cellValue = (string) $cellValue;
+                $cellValue = (string)$cellValue;
             }
             // need to understand the above check
 
@@ -1313,66 +1314,66 @@ class ImportBehavior extends Behavior
             $lookupColumnName = $excelMappingObj->column_name;
             $mappingModel = $excelMappingObj->model;
 
-            if($mappingModel == 'Student.Extracurriculars'  && $lookupColumnName == 'openemis_no'){
+            if ($mappingModel == 'Student.Extracurriculars' && $lookupColumnName == 'openemis_no') {
                 $columnName = 'security_user_id';
                 $securityUser = TableRegistry::get('User.Users')->find()->where(['openemis_no' => $originalValue])->first();
-                if(!$securityUser) {
+                if (!$securityUser) {
                     $rowInvalidCodeCols[$columnName] = __('OpenEMIS ID is not valid');
                     $rowPass = false;
                     $extra['entityValidate'] = false;
                 }
                 $originalRow[$col] = $securityUser->id;
                 $cellValue = $securityUser->id;
-            }else if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id' && $lookupColumn == 'openemis_no' && !empty($originalValue)){ //POCOR-5913 starts
-                $i=1;
+            } else if ($mappingModel == 'Student.StudentGuardians' && $lookupColumnName == 'guardian_id' && $lookupColumn == 'openemis_no' && !empty($originalValue)) { //POCOR-5913 starts
+                $i = 1;
                 $columnName = 'guardian_id';
                 $userIdentities = TableRegistry::get('user_identities');
                 $identityTypes = TableRegistry::get('identity_types');
                 $User = TableRegistry::get('security_users');
                 $securityUser = $User
-                                    ->find()
-                                    ->select([
-                                        'id' => $User->aliasField('id'), 
-                                        'openemis_id' => $User->aliasField('openemis_no'),
-                                        'user_identities_id' => $userIdentities->aliasField('id'),
-                                        'identity_type_id' => $userIdentities->aliasField('identity_type_id'),
-                                        'number' => $userIdentities->aliasField('number'),
-                                        'security_user_id' => $userIdentities->aliasField('security_user_id'),
-                                        'identityTypes_id' => $identityTypes->aliasField('id'),
-                                        'default' => $identityTypes->aliasField('default')
-                                    ])
-                                    ->leftJoin(
-                                        [$userIdentities->alias() => $userIdentities->table()],
-                                        [$userIdentities->aliasField('security_user_id = ') .$User->aliasField('id')]
-                                    )
-                                    ->leftJoin(
-                                        [$identityTypes->alias() => $identityTypes->table()],
-                                        [$identityTypes->aliasField('id =') .$userIdentities->aliasField('identity_type_id')]
-                                    )
-                                    ->where([
-                                        'OR'=>[
-                                            $User->aliasField('openemis_no') => $originalValue,
-                                            'AND'=>[
-                                                $userIdentities->aliasField('number') => $originalValue,
-                                                $identityTypes->aliasField('default') => 1
-                                            ]
-                                        ]
+                    ->find()
+                    ->select([
+                        'id' => $User->aliasField('id'),
+                        'openemis_id' => $User->aliasField('openemis_no'),
+                        'user_identities_id' => $userIdentities->aliasField('id'),
+                        'identity_type_id' => $userIdentities->aliasField('identity_type_id'),
+                        'number' => $userIdentities->aliasField('number'),
+                        'security_user_id' => $userIdentities->aliasField('security_user_id'),
+                        'identityTypes_id' => $identityTypes->aliasField('id'),
+                        'default' => $identityTypes->aliasField('default')
+                    ])
+                    ->leftJoin(
+                        [$userIdentities->alias() => $userIdentities->table()],
+                        [$userIdentities->aliasField('security_user_id = ') . $User->aliasField('id')]
+                    )
+                    ->leftJoin(
+                        [$identityTypes->alias() => $identityTypes->table()],
+                        [$identityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')]
+                    )
+                    ->where([
+                        'OR' => [
+                            $User->aliasField('openemis_no') => $originalValue,
+                            'AND' => [
+                                $userIdentities->aliasField('number') => $originalValue,
+                                $identityTypes->aliasField('default') => 1
+                            ]
+                        ]
 
-                                    ])
-                                    ->first();
-                if(!$securityUser) {
+                    ])
+                    ->first();
+                if (!$securityUser) {
                     $rowInvalidCodeCols[$columnName] = __('OpenEMIS ID is not valid');
                     $rowPass = false;
                     $extra['entityValidate'] = false;
 
                     $originalRow[$col] = $originalValue;
                     $cellValue = $originalValue;
-                }else{
+                } else {
                     $originalRow[$col] = $securityUser->id;
                     $cellValue = $securityUser->id;
                 }
-            }else if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id' && $lookupColumn == 'number' && !empty($originalValue)){ 
-                if($i == 1){
+            } else if ($mappingModel == 'Student.StudentGuardians' && $lookupColumnName == 'guardian_id' && $lookupColumn == 'number' && !empty($originalValue)) {
+                if ($i == 1) {
                     break;
                 }
                 $k = 1;
@@ -1381,74 +1382,74 @@ class ImportBehavior extends Behavior
                 $identityTypes = TableRegistry::get('identity_types');
                 $User = TableRegistry::get('security_users');
                 $securityUser = $User
-                                    ->find()
-                                    ->select([
-                                        'id' => $User->aliasField('id'), 
-                                        'openemis_id' => $User->aliasField('openemis_no'),
-                                        'user_identities_id' => $userIdentities->aliasField('id'),
-                                        'identity_type_id' => $userIdentities->aliasField('identity_type_id'),
-                                        'number' => $userIdentities->aliasField('number'),
-                                        'security_user_id' => $userIdentities->aliasField('security_user_id'),
-                                        'identityTypes_id' => $identityTypes->aliasField('id'),
-                                        'default' => $identityTypes->aliasField('default')
-                                    ])
-                                    ->leftJoin(
-                                        [$userIdentities->alias() => $userIdentities->table()],
-                                        [$userIdentities->aliasField('security_user_id = ') .$User->aliasField('id')]
-                                    )
-                                    ->leftJoin(
-                                        [$identityTypes->alias() => $identityTypes->table()],
-                                        [$identityTypes->aliasField('id =') .$userIdentities->aliasField('identity_type_id')]
-                                    )
-                                    ->where([
-                                        'OR'=>[
-                                            $User->aliasField('openemis_no') => $originalValue,
-                                            'AND'=>[
-                                                $userIdentities->aliasField('number') => $originalValue,
-                                                $identityTypes->aliasField('default') => 1
-                                            ]
-                                        ]
+                    ->find()
+                    ->select([
+                        'id' => $User->aliasField('id'),
+                        'openemis_id' => $User->aliasField('openemis_no'),
+                        'user_identities_id' => $userIdentities->aliasField('id'),
+                        'identity_type_id' => $userIdentities->aliasField('identity_type_id'),
+                        'number' => $userIdentities->aliasField('number'),
+                        'security_user_id' => $userIdentities->aliasField('security_user_id'),
+                        'identityTypes_id' => $identityTypes->aliasField('id'),
+                        'default' => $identityTypes->aliasField('default')
+                    ])
+                    ->leftJoin(
+                        [$userIdentities->alias() => $userIdentities->table()],
+                        [$userIdentities->aliasField('security_user_id = ') . $User->aliasField('id')]
+                    )
+                    ->leftJoin(
+                        [$identityTypes->alias() => $identityTypes->table()],
+                        [$identityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')]
+                    )
+                    ->where([
+                        'OR' => [
+                            $User->aliasField('openemis_no') => $originalValue,
+                            'AND' => [
+                                $userIdentities->aliasField('number') => $originalValue,
+                                $identityTypes->aliasField('default') => 1
+                            ]
+                        ]
 
-                                    ])
-                                    ->first();
-                if(!$securityUser) {
+                    ])
+                    ->first();
+                if (!$securityUser) {
                     $rowInvalidCodeCols[$columnName] = __('Identity number is not valid');
                     $rowPass = false;
                     $extra['entityValidate'] = false;
 
                     $originalRow[$col] = $originalValue;
                     $cellValue = $originalValue;
-                }else{
+                } else {
                     $originalRow[$col] = $securityUser->id;
                     $cellValue = $securityUser->id;
                 }
                 //POCOR-5913 ends
-            }else if($mappingModel == 'Training.TrainingSessionTraineeResults'  && $lookupColumnName == 'OpenEMIS_ID'){ //POCOR-5695 starts
+            } else if ($mappingModel == 'Training.TrainingSessionTraineeResults' && $lookupColumnName == 'OpenEMIS_ID') { //POCOR-5695 starts
                 $columnName = 'OpenEMIS_ID';
                 $securityUser = TableRegistry::get('User.Users')->find()->where(['openemis_no' => $originalValue])->first();
-                if(!$securityUser) {
+                if (!$securityUser) {
                     $rowInvalidCodeCols[$columnName] = __('OpenEMIS ID is not valid');
                     $rowPass = false;
                     $extra['entityValidate'] = false;
                 }
                 $originalRow[$col] = $originalValue;
                 $cellValue = $originalValue;//POCOR-5695 ends
-            }else{
+            } else {
                 $columnName = $columns[$col];
                 $originalRow[$col] = $originalValue;
             }
-            
+
             //POCOR-5913 starts
-            if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id' && $lookupColumn == 'openemis_no' && empty($originalValue)){
-                $i=0;
+            if ($mappingModel == 'Student.StudentGuardians' && $lookupColumnName == 'guardian_id' && $lookupColumn == 'openemis_no' && empty($originalValue)) {
+                $i = 0;
                 continue;
-            }else if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id' && $lookupColumn == 'number' && empty($originalValue)){
-                if($i==0){
+            } else if ($mappingModel == 'Student.StudentGuardians' && $lookupColumnName == 'guardian_id' && $lookupColumn == 'number' && empty($originalValue)) {
+                if ($i == 0) {
                     /*$columnName = 'guardian_id';
                     $rowInvalidCodeCols[$columnName] = __('Please enter either OpenEMIS ID or Identity number for guardian');
                     $rowPass = false;
                     $extra['entityValidate'] = false;*/
-                }else{
+                } else {
                     continue;
                 }
             }
@@ -1461,7 +1462,7 @@ class ImportBehavior extends Behavior
             // example; openemis_no
             // but if the value is 0, it will still proceed
             // example; class for importing students into an institution default value is 0
-            if (isset($tempRow[$columnName]) && !empty($tempRow[$columnName]) && $tempRow[$columnName]!==0) {
+            if (isset($tempRow[$columnName]) && !empty($tempRow[$columnName]) && $tempRow[$columnName] !== 0) {
                 continue;
             }
             if (!empty($val)) {
@@ -1526,18 +1527,18 @@ class ImportBehavior extends Behavior
                         $record = $extra['lookup'][$excelLookupModel->alias()][$cellValue];
                     } else {
                         //POCOR-5913 starts
-                        if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id'){
-                            if($securityUser){
+                        if ($mappingModel == 'Student.StudentGuardians' && $lookupColumnName == 'guardian_id') {
+                            if ($securityUser) {
                                 $cellValue = $securityUser->openemis_id;
-                            }else{
+                            } else {
                                 $cellValue = $originalValue;
                             }
 
-                            if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id' && $lookupColumn == 'number'){
+                            if ($mappingModel == 'Student.StudentGuardians' && $lookupColumnName == 'guardian_id' && $lookupColumn == 'number') {
                                 $lookupColumn = 'openemis_no';
                             }
                         }//POCOR-5913 ends
-                        
+
                         $lookupQuery = $excelLookupModel->find()->where([$excelLookupModel->aliasField($lookupColumn) => $cellValue]);
                         $record = $lookupQuery->first();
                         $extra['lookup'][$excelLookupModel->alias()][$cellValue] = $record;
@@ -1559,9 +1560,9 @@ class ImportBehavior extends Behavior
                 if (!$excludeValidation) {
                     if (!empty($record)) {
                         //POCOR-6681 starts
-                        if($mappingModel == 'Institution.InstitutionMealStudents'  && $lookupColumnName == 'OpenEMIS_ID' && $lookupColumn == 'openemis_no'){
+                        if ($mappingModel == 'Institution.InstitutionMealStudents' && $lookupColumnName == 'OpenEMIS_ID' && $lookupColumn == 'openemis_no') {
                             $val = $record->openemis_no;//POCOR-6681 end
-                        }else{
+                        } else {
                             $val = $record->id;
                         }
                         $this->directTables[$registryAlias][$val] = $record->name;
@@ -1574,15 +1575,15 @@ class ImportBehavior extends Behavior
                             }
                         } else {
                             //POCOR-5913 starts
-                            if($mappingModel == 'Student.StudentGuardians'  && $lookupColumnName == 'guardian_id' && $lookupColumn == 'number' && empty($originalValue)){
-                                if($i==0){
+                            if ($mappingModel == 'Student.StudentGuardians' && $lookupColumnName == 'guardian_id' && $lookupColumn == 'number' && empty($originalValue)) {
+                                if ($i == 0) {
                                     $columnName = 'guardian_id';
                                     $rowInvalidCodeCols[$columnName] = __('Please enter either OpenEMIS ID or Identity number for guardian');
                                     $rowPass = false;
                                     $extra['entityValidate'] = false;
                                 }
-                            //POCOR-5913 ends
-                            }else{
+                                //POCOR-5913 ends
+                            } else {
                                 $rowPass = false;
                                 $rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
                             }
@@ -1593,7 +1594,7 @@ class ImportBehavior extends Behavior
                 }
             } elseif ($foreignKey == self::NON_TABLE_LIST) {
                 if (strlen($cellValue) > 0) {
-                    $getIdEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet'.$excelMappingObj->lookup_model.'Id'), 'onImportGet'.$excelMappingObj->lookup_model.'Id', [$cellValue]);
+                    $getIdEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet' . $excelMappingObj->lookup_model . 'Id'), 'onImportGet' . $excelMappingObj->lookup_model . 'Id', [$cellValue]);
                     $recordId = $getIdEvent->result;
                     if (strlen($recordId) > 0) {
                         $val = $recordId;
@@ -1610,7 +1611,7 @@ class ImportBehavior extends Behavior
             } elseif ($foreignKey == self::CUSTOM) { //foreign_key = 4
 
                 $params = [$tempRow, $cellValue];
-                $event = $this->dispatchEvent($this->_table, $this->eventKey('onImportCheck'.ucfirst($excelMappingObj->column_name).'Config'), 'onImportCheck'.$excelMappingObj->column_name.'Config', $params);
+                $event = $this->dispatchEvent($this->_table, $this->eventKey('onImportCheck' . ucfirst($excelMappingObj->column_name) . 'Config'), 'onImportCheck' . $excelMappingObj->column_name . 'Config', $params);
 
                 if ($event->result !== true) {
                     $rowInvalidCodeCols[$columnName] = __($event->result);
@@ -1647,42 +1648,43 @@ class ImportBehavior extends Behavior
         return $rowPass;
     }
 
-   private static function timeTwelvehoursValidator( $time ) {
-
-      
-     $regex = '/^(1[012]|[1-9])\:[0-5][0-9]\:[0-5][0-9]\s*[ap]m$/i';
-       
-      if ( preg_match($regex, $time) ) {
-        return true;
-      }
-
-      $regex = '/^(1[012]|[1-9])\:[0-5][0-9]\s*[ap]m$/i';
-       
-      if ( preg_match($regex, $time) ) {
-        return true;
-      }
-        
-       $regex = '/^([0-1][0-9])\:[0-5][0-9]\s*[ap]m$/i';
-       
-      if ( preg_match($regex, $time) ) {
-        return true;
-      }
-      
-      $regex = '/^([0-1][0-9])\:[0-5][0-9]\:[0-5][0-9]\s*[ap]m$/i';
-       
-      if ( preg_match($regex, $time) ) {
-        return true;
-      }
-      
-      return false;
-}
+    private static function timeTwelvehoursValidator($time)
+    {
 
 
-/******************************************************************************************************************
-**
-** Miscelleneous Functions
-**
-******************************************************************************************************************/
+        $regex = '/^(1[012]|[1-9])\:[0-5][0-9]\:[0-5][0-9]\s*[ap]m$/i';
+
+        if (preg_match($regex, $time)) {
+            return true;
+        }
+
+        $regex = '/^(1[012]|[1-9])\:[0-5][0-9]\s*[ap]m$/i';
+
+        if (preg_match($regex, $time)) {
+            return true;
+        }
+
+        $regex = '/^([0-1][0-9])\:[0-5][0-9]\s*[ap]m$/i';
+
+        if (preg_match($regex, $time)) {
+            return true;
+        }
+
+        $regex = '/^([0-1][0-9])\:[0-5][0-9]\:[0-5][0-9]\s*[ap]m$/i';
+
+        if (preg_match($regex, $time)) {
+            return true;
+        }
+
+        return false;
+    }
+
+
+    /******************************************************************************************************************
+     **
+     ** Miscelleneous Functions
+     **
+     ******************************************************************************************************************/
     public function getAcademicPeriodByStartDate($date)
     {
         if (empty($date)) {
@@ -1694,13 +1696,13 @@ class ImportBehavior extends Behavior
             $date = $date->format('Y-m-d');
         }
         $period = $this->AcademicPeriods
-                    ->find()
-                    ->where([
-                        "date(start_date) <= date '".$date."'",
-                        "date(end_date) >= date '".$date."'",
-                        'parent_id <> 0',
-                        'visible = 1'
-                    ]);
+            ->find()
+            ->where([
+                "date(start_date) <= date '" . $date . "'",
+                "date(end_date) >= date '" . $date . "'",
+                'parent_id <> 0',
+                'visible = 1'
+            ]);
         return $period->toArray();
     }
 
@@ -1710,13 +1712,13 @@ class ImportBehavior extends Behavior
             return false;
         }
         $period = $this->AcademicPeriods
-                    ->find()
-                    ->select([
-                        'academic_period_level_id'
-                    ])
-                    ->where([
-                        "id = ".$academicPeriodId
-                    ]);
+            ->find()
+            ->select([
+                'academic_period_level_id'
+            ])
+            ->where([
+                "id = " . $academicPeriodId
+            ]);
         return $period->toArray();
     }
 
@@ -1760,6 +1762,7 @@ class ImportBehavior extends Behavior
             return round($size);
         }
     }
+
     /**
      *
      */
