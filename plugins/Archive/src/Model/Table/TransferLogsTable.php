@@ -154,8 +154,10 @@ use Cake\Utility\Security;
         $condition = [$this->AcademicPeriods->aliasField('current').' <> ' => "1"];
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
         foreach($academicPeriodOptions AS $key => $val){
+            //POCOR-7486-HINDOL
             $transferLogdata = $this->find('all')
-                                    ->where(['academic_period_id' => $key])->toArray();
+                                    ->where(['academic_period_id' => $key,
+                                        'process_status' => $this::DONE])->toArray();
             $getFeatureOptionsCount = count($this->getFeatureOptions());
             if($getFeatureOptionsCount == count($transferLogdata)){
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -172,34 +174,34 @@ use Cake\Utility\Security;
         $this->Alert->info('Archive.backupReminder');
         try {
 
-            $DataManagementConnections =  TableRegistry::get('Archive.DataManagementConnections');
-            $DataManagementConnectionsData = $DataManagementConnections->find('all')
-                ->select([
-                    'DataManagementConnections.host','DataManagementConnections.db_name','DataManagementConnections.host','DataManagementConnections.username','DataManagementConnections.password','DataManagementConnections.db_name'
-                ])
-                ->first();
-            if ( base64_encode(base64_decode($DataManagementConnectionsData['password'], true)) === $DataManagementConnectionsData['password']){
-            $db_password = $this->decrypt($DataManagementConnectionsData['password'], Security::salt());
-            }
-            else {
-            $db_password = $dbConnection['db_password'];
-            }
-            $connectiontwo = ConnectionManager::config($DataManagementConnectionsData['db_name'], [
-                'className' => 'Cake\Database\Connection',
-                'driver' => 'Cake\Database\Driver\Mysql',
-                'persistent' => false,
-                'host' => $DataManagementConnectionsData['host'],
-                'username' => $DataManagementConnectionsData['username'],
-                'password' => $db_password,
-                'database' => $DataManagementConnectionsData['db_name'],
-                'encoding' => 'utf8mb4',
-                'timezone' => 'UTC',
-                'cacheMetadata' => true,
-            ]);
-            $connection = ConnectionManager::get($DataManagementConnectionsData['db_name']);
-            $connected = $connection->connect();
+//            $DataManagementConnections =  TableRegistry::get('Archive.DataManagementConnections');
+//            $DataManagementConnectionsData = $DataManagementConnections->find('all')
+//                ->select([
+//                    'DataManagementConnections.host','DataManagementConnections.db_name','DataManagementConnections.host','DataManagementConnections.username','DataManagementConnections.password','DataManagementConnections.db_name'
+//                ])
+//                ->first();
+//            if ( base64_encode(base64_decode($DataManagementConnectionsData['password'], true)) === $DataManagementConnectionsData['password']){
+//            $db_password = $this->decrypt($DataManagementConnectionsData['password'], Security::salt());
+//            }
+//            else {
+//            $db_password = $dbConnection['db_password'];
+//            }
+//            $connectiontwo = ConnectionManager::config($DataManagementConnectionsData['db_name'], [
+//                'className' => 'Cake\Database\Connection',
+//                'driver' => 'Cake\Database\Driver\Mysql',
+//                'persistent' => false,
+//                'host' => $DataManagementConnectionsData['host'],
+//                'username' => $DataManagementConnectionsData['username'],
+//                'password' => $db_password,
+//                'database' => $DataManagementConnectionsData['db_name'],
+//                'encoding' => 'utf8mb4',
+//                'timezone' => 'UTC',
+//                'cacheMetadata' => true,
+//            ]);
+//            $connection = ConnectionManager::get($DataManagementConnectionsData['db_name']);
+//            $connected = $connection->connect();
 
-        }catch (Exception $connectionError) {
+        } catch (Exception $connectionError) {
             //$this->Alert->warning('Connection.archiveConfigurationFail'); //POCOR-7399
         }
     }
