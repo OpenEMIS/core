@@ -322,10 +322,11 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $ExcludedSecurityRoleTable=TableRegistry::get('report_card_excluded_security_roles');
                 $ExcludedSecurityRoleEntity=$ExcludedSecurityRoleTable->find('all')
                                                                       ->where([
-                                                                        'security_role_id'=>$SecurityGroupUsersData->security_role_id,
-                                                                        'report_card_id'=>$entity->report_card_id
+                                                                        'security_role_id'=> $SecurityRoleFunctionsTableGenerateData->security_role_id,
+                                                                        'report_card_id'=>$reportCard->id
                                                                       ])
                                                                       ->toArray();
+                                                                      
                 //POCOR-7400 end
                 if ($this->AccessControl->isAdmin()) {
                     if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
