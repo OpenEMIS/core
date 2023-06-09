@@ -3,6 +3,8 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use Cake\Database\Schema\Table;
+use Cake\Datasource\ConnectionManager;
 use DatePeriod;
 use DateInterval;
 use Cake\Event\Event;
@@ -999,12 +1001,71 @@ class StaffLeaveTable extends ControllerActionTable
             $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl);
         }
     }
+    public function hasArchiveTable($sourceTable)
+    {
+        $sourceTableName = $sourceTable->table();
+        $targetTableName = $sourceTableName . '_archived';
+        $connection = ConnectionManager::get('default');
+        $schemaCollection = new \Cake\Database\Schema\Collection($connection);
+        $existingTables = $schemaCollection->listTables();
+        $tableExists = in_array($targetTableName, $existingTables);
+
+        if ($tableExists) {
+            return true;
+        }
+
+        $sourceTableSchema = $schemaCollection->describe($sourceTableName);
+
+        // Create a new table schema for the target table
+        $targetTableSchema = new Table($targetTableName);
+
+        // Copy the columns from the source table to the target table
+        foreach ($sourceTableSchema->columns() as $column) {
+            $columnDefinition = $sourceTableSchema->column($column);
+            $targetTableSchema->addColumn($column, $columnDefinition);
+        }
+
+        // Copy the indexes from the source table to the target table
+        foreach ($sourceTableSchema->indexes() as $index) {
+            $indexDefinition = $sourceTableSchema->index($index);
+            $targetTableSchema->addIndex($index, $indexDefinition);
+        }
+
+        // Copy the constraints from the source table to the target table
+        foreach ($sourceTableSchema->constraints() as $constraint) {
+            $constraintDefinition = $sourceTableSchema->constraint($constraint);
+            $targetTableSchema->addConstraint($constraint, $constraintDefinition);
+        }
+
+        // Generate the SQL statement to create the target table
+        $createTableSql = $targetTableSchema->createSql($connection);
+
+        // Execute the SQL statement to create the target table
+        foreach ($createTableSql as $sql) {
+            $connection->execute($sql);
+        }
+
+        // Check if the target table was created successfully
+        $existingTables = $schemaCollection->listTables();
+        $tableExists = in_array($targetTableName, $existingTables);
+        if ($tableExists) {
+            return true;
+        }
+
+        return false; // Return false if the table couldn't be created
+    }
+
 
     private function isArchiveExists()
     {
         $is_archive_exists = false;
         $institutionId = $this->institutionId;
         $staffId = $this->staffId;
+        //This is for POCOR-7475 as well
+        if(!$this->hasArchiveTable($this)){
+            $is_archive_exists = false;
+            return $is_archive_exists;
+        }
         $tableArchived = TableRegistry::get('institution_staff_leave_archived');
         $count = $tableArchived->find()
             ->select([$tableArchived->aliasField('staff_id')])// POCOR-7339-HINDOL
