@@ -34,9 +34,8 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']); //POCOR-5186
         $this->belongsTo('Students', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories']);
+        $this->belongsTo('StudentBehaviourClassifications', ['className' => 'Student.StudentBehaviourClassifications','foreignKey' => 'student_behaviour_classification_id']);//POCOR-7223
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);//POCOR-5186
-        
-        
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
         $this->belongsTo('InstitutionStudents', ['className' => 'InstitutionStudent.InstitutionStudents', 'foreignKey' => 'student_id']);
@@ -156,6 +155,7 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->field('openemis_no', ['visible' => true]);
         $this->field('student_id', ['visible' => true]);
         $this->field('student_behaviour_category_id', ['visible' => true]);
+        $this->field('student_behaviour_classification_id', ['visible' => true]);//POCOR-7223
         $this->field('description', ['visible' => false]);
         $this->field('action', ['visible' => false]);
         $this->field('time_of_behaviour', ['visible' => false]);
@@ -374,7 +374,7 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->field('class', ['entity' => $entity]);
         $this->field('date_of_behaviour', ['entity' => $entity]);
         $this->field('assignee_id', ['entity' => $entity]);//POCOR-5186
-        $this->setFieldOrder(['academic_period_id', 'class', 'student_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour','assignee_id']);
+        $this->setFieldOrder(['academic_period_id', 'class', 'student_id', 'student_behaviour_category_id','student_behaviour_classification_id','date_of_behaviour', 'time_of_behaviour','description','action','assignee_id']);//POCOR-7223
         // POCOR 6154 
 
     }
@@ -395,7 +395,8 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->field('academic_period_id', ['entity' => $entity]);
         $this->field('date_of_behaviour', ['entity' => $entity]);
         $this->fields['student_id']['attr']['value'] = $entity->student->name_with_id;
-
+        $this->setFieldOrder(['academic_period_id', 'class', 'student_id', 'student_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour','description','action','assignee_id']);//POCOR-7223
+    
         // PHPOE-1916
         // Not yet implemented due to possible performance issue
         // $InstitutionClassStudentTable = TableRegistry::get('Institution.InstitutionClassStudents');
@@ -476,8 +477,11 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->field('student_id', ['attr' => ['label' => __('Student')]]);
 
         $this->fields['student_behaviour_category_id']['type'] = 'select';
-        $this->field('student_behaviour_category_id', ['attr' => ['label' => __('Student Behaviour Category')]]);
+        $this->field('student_behaviour_category_id', ['attr' => ['label' => __('Category')]]);//POCOR-7223
+        $this->fields['student_behaviour_classification_id']['type'] = 'select';
+        $this->field('student_behaviour_classification_id', ['attr' => ['label' => __('Classification')]]);//POCOR-7223
         $this->fields['assignee_id']['type'] = 'select';//POCOR-5186
+   
     }
     /* pocor-6154 */
 
@@ -1059,8 +1063,24 @@ class StudentBehavioursTable extends ControllerActionTable
 
         return $query;
     }
-   
-
+    
+    //POCOR-7223 start
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'student_behaviour_category_id':
+                return __('Category');
+            case 'student_behaviour_classification_id':
+                return __('Classification');
+            case 'date_of_behaviour':
+                return __('Date');
+            case 'time_of_behaviour':
+                    return __('Time');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    //POCOR-7223 end
 }
 
 
