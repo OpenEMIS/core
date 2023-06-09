@@ -101,25 +101,14 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']);
     }
 
-    public function Assesments()	
+    //POCOR-7474-HINDOL TYPO FIX
+    public function Assessments()
     {	
-
-        $session = $this->request->session();
-
-        if ($session->check('Student.Students.id')) {
-            $studentId = $session->read('Student.Students.id');
-            $session->write('Student.Assesments.student_id', $studentId);
-
-            // tabs
-            $options = ['type' => 'student'];
-            $tabElements = $this->getAcademicTabElements($options);
-            $this->set('tabElements', $tabElements);
-            $this->set('selectedAction', 'Assessments');
-            // End
-
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssesments']);
-        }
-        //$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssisments']);	
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.CurrentAssessments']);
+    }
+    public function AssessmentsArchived()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.ArchivedAssessments']);
     }
 
     public function Nationalities()
@@ -184,6 +173,11 @@ class StudentsController extends AppController
     public function Absences()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
+    }
+
+    public function ArchivedAbsences()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.ArchivedAbsences']);
     }
 
     public function Meals()
@@ -479,7 +473,7 @@ class StudentsController extends AppController
         /**
          * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
          */
-
+        $this->log($model, 'debug');
         $session = $this->request->session();
         if ($session->check('Student.Students.id')) {
             $header = '';

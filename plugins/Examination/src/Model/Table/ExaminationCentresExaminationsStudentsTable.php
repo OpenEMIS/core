@@ -566,9 +566,9 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                         }
 
                         // if student was not added to any room
-                        if (!$assigned) {
-                            $model->Alert->warning($this->aliasField('notAssignedRoom'));
-                        }
+                        // if (!$assigned) {
+                        //     $model->Alert->warning($this->aliasField('notAssignedRoom'));
+                        // }
                         return true;
                     } else {
                         return false;
