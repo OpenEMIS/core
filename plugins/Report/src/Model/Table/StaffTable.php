@@ -190,7 +190,7 @@ class StaffTable extends AppTable  {
                 'Report.StaffQualifications','Report.StaffLicenses',
                 'Report.StaffEmploymentStatuses',
                 'Report.StaffTrainingReports','Report.StaffPositions','Report.PositionSummary',
-                'Report.StaffExtracurriculars','Report.InstitutionStaffDetailed','Report.StaffSubjects', 'Report.StaffRequirements'])) {
+                'Report.StaffExtracurriculars','Report.InstitutionStaffDetailed','Report.StaffSubjects', 'Report.StaffRequirements','Report.StaffOutOfSchool'])) {   // POCOR-4827
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
                 $currentPeriod = $AcademicPeriodTable->getCurrent();//POCOR-6662
@@ -526,6 +526,7 @@ class StaffTable extends AppTable  {
                         'Report.InstitutionStaffDetailed'//POCOR-6662
                         ,'Report.StaffSubjects' //POCOR-6688
                         ,'Report.StaffRequirements' //POCOR-5785
+                        ,'Report.StaffOutOfSchool' //POCOR- 4827
                     ])) {
                         if (!empty($institutionList) && count($institutionList) > 1) {
 
