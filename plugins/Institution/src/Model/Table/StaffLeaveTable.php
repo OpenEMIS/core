@@ -1024,18 +1024,22 @@ class StaffLeaveTable extends ControllerActionTable
             $columnDefinition = $sourceTableSchema->column($column);
             $targetTableSchema->addColumn($column, $columnDefinition);
         }
-
+        $randomString = $this->generateRandomString();
         // Copy the indexes from the source table to the target table
         foreach ($sourceTableSchema->indexes() as $index) {
             $indexDefinition = $sourceTableSchema->index($index);
-            $targetTableSchema->addIndex($index, $indexDefinition);
+            $targetTableSchema->addIndex($index . $randomString, $indexDefinition);
         }
 
         // Copy the constraints from the source table to the target table
+        // FIX for random FK name
+
         foreach ($sourceTableSchema->constraints() as $constraint) {
             $constraintDefinition = $sourceTableSchema->constraint($constraint);
-            $targetTableSchema->addConstraint($constraint, $constraintDefinition);
+            $targetTableSchema->addConstraint($constraint . $randomString, $constraintDefinition);
         }
+
+
 
         // Generate the SQL statement to create the target table
         $createTableSql = $targetTableSchema->createSql($connection);
@@ -1055,6 +1059,10 @@ class StaffLeaveTable extends ControllerActionTable
         return false; // Return false if the table couldn't be created
     }
 
+    private function generateRandomString($length = 4) {
+        $bytes = random_bytes($length);
+        return substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $length);
+    }
 
     private function isArchiveExists()
     {
