@@ -451,7 +451,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
                 ->hydrate(false)
                 ->toArray();
             $textbookId = $entity->textbook_id;
-            $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudentBySubject($entity->academic_period_id, $entity->institution_class_id, $entity->education_subject_id);
+            $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudent($entity->academic_period_id, $entity->education_subject_id);
 
             $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId); //POCOR-7362
             $studentOptions = $studentOptions + $staffOptions; //POCOR-7362
@@ -585,28 +585,6 @@ class InstitutionTextbooksTable extends ControllerActionTable
         return $entity->textbook->code_title;
     }
 
-    public function onGetStudentStatus(Event $event, Entity $entity)
-    {
-        if (!empty($entity->user)) {
-            $InstitutionStudents = TableRegistry::get('Institution.Students');
-            $query = $InstitutionStudents
-                    ->find()
-                    ->matching('StudentStatuses')
-                    ->select([
-                        'status_name' => 'StudentStatuses.name'
-                    ])
-                    ->where([
-                        $InstitutionStudents->aliasField('institution_id') => $entity->institution->id,
-                        $InstitutionStudents->aliasField('student_id') => $entity->user->id,
-                        $InstitutionStudents->aliasField('education_grade_id') => $entity->education_grade->id,
-                        $InstitutionStudents->aliasField('academic_period_id') => $entity->academic_period->id
-                    ])
-                    ->first();
-
-            return __($query->status_name);
-        }
-    }
-
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
@@ -656,7 +634,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEducationLevelId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
@@ -670,132 +648,21 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
 				$list = $InstitutionGrades
 					->find()
-					->select(['level_id' => 'EducationLevels.id', 'level_name' => 'EducationLevels.name', 'system_name' => 'EducationSystems.name'])
+					->select(['level_id' => 'EducationGrades.id', 'level_name' => 'EducationGrades.name'])
 					->matching('EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems')
 					->where([
 						'EducationSystems.academic_period_id' => $academicPeriodId,
 						$InstitutionGrades->aliasField('institution_id') => $this->institutionId
 					])
-					->order(['EducationSystems.order', 'EducationLevels.order'])
-					->group(['level_id'])
 					->toArray();
 
 				$returnList = [];
 				foreach ($list as $key => $value) {
-					$returnList[$value->level_id] = $value->system_name . " - " . $value->level_name;
+					$returnList[$value->level_id] =  $value->level_name;
 				}
 				
-				$educationLevelOptions = $returnList;
+				$gradeOptions = $returnList;
 		
-                $attr['options'] = $educationLevelOptions;
-                $attr['onChangeReload'] = 'changeEducationLevel';
-
-            } else if ($action == 'edit') {
-
-                $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $attr['entity']->education_subject->education_grades[0]->education_programme->education_cycle->education_level->system_level_name;
-                $attr['value'] = $attr['entity']->education_subject->education_grades[0]->education_programme->education_cycle->education_level->id;
-                // pr($attr['entity']);
-
-            }
-        }
-        return $attr;
-    }
-
-    public function addEditOnChangeEducationLevel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    {
-        $request = $this->request;
-        $request->query['programme'] = -1;
-        $request->query['grade'] = -1;
-        $request->query['class'] = -1;
-        $request->query['subject'] = -1;
-
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-                    $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
-                }
-
-                if (array_key_exists('education_level_id', $request->data[$this->alias()])) {
-                    $request->query['level'] = $request->data[$this->alias()]['education_level_id'];
-                }
-
-                if (isset($data[$this->alias()]['textbooks_students'])) {
-                    unset($data[$this->alias()]['textbooks_students']);
-                }
-                if (isset($data[$this->alias()]['education_grade_id'])) {
-                    unset($data[$this->alias()]['education_grade_id']);
-                }
-            }
-        }
-    }
-
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-
-            if ($action == 'add') {
-
-                $selectedLevel = $request->data($this->aliasField('education_level_id'));
-
-                $programmeOptions = [];
-                if ($selectedLevel) {
-                    $programmeOptions = $this->EducationProgrammes->getEducationProgrammesList($selectedLevel);
-                }
-                $attr['options'] = $programmeOptions;
-                $attr['onChangeReload'] = 'changeEducationProgramme';
-
-            } else if ($action == 'edit') {
-
-                $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $attr['entity']->education_subject->education_grades[0]->education_programme->cycle_programme_name;
-                $attr['value'] = $attr['entity']->education_subject->education_grades[0]->education_programme->id;
-            }
-
-        }
-        return $attr;
-    }
-
-    public function addEditOnChangeEducationProgramme(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    {
-        $request = $this->request;
-        $request->query['grade'] = -1;
-        $request->query['class'] = -1;
-        $request->query['subject'] = -1;
-
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
-                    $request->query['programme'] = $request->data[$this->alias()]['education_programme_id'];
-                }
-            }
-
-            if (isset($data[$this->alias()]['textbooks_students'])) {
-                unset($data[$this->alias()]['textbooks_students']);
-            }
-            if (isset($data[$this->alias()]['education_grade_id'])) {
-                unset($data[$this->alias()]['education_grade_id']);
-            }
-        }
-    }
-
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-
-            if ($action == 'add') {
-
-                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
-
-                $selectedProgramme = $request->data($this->aliasField('education_programme_id'));
-                $gradeOptions = [];
-                if ($selectedProgramme) {
-                    $gradeOptions = $this->EducationGrades->getEducationGradesByProgrammes($selectedProgramme);
-                }
-
-                $attr['options'] = $gradeOptions;
-                $attr['onChangeReload'] = 'changeEducationGrade';
-
                 $attr['options'] = $gradeOptions;
                 $attr['onChangeReload'] = 'changeEducationGrade';
 
@@ -1169,7 +1036,9 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
             $studentOptions = [];
             if ($selectedPeriod && $selectedClass && $selectedSubject) {
-                $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudentBySubject($selectedPeriod, $selectedClass, $selectedSubject);
+                $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudent($selectedPeriod, $selectedSubject);
+                $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId); //POCOR-7362
+                $studentOptions = $studentOptions + $staffOptions; //POCOR-7362
                 $studentOptions = array_diff_key($studentOptions, $textbookStudents->toArray());
             }
             $attr['options'] = $studentOptions;
@@ -1185,16 +1054,6 @@ class InstitutionTextbooksTable extends ControllerActionTable
             'entity' => $entity
         ]);
 
-        $this->field('education_level_id', [
-            'type' => 'select',
-            'entity' => $entity
-        ]);
-
-        $this->field('education_programme_id', [
-            'type' => 'select',
-            'entity' => $entity
-        ]);
-
         $this->field('education_grade_id', [
             'type' => 'select',
             'entity' => $entity
@@ -1206,11 +1065,6 @@ class InstitutionTextbooksTable extends ControllerActionTable
         ]);
 
         $this->field('textbook_id', [
-            'type' => 'select',
-            'entity' => $entity
-        ]);
-
-        $this->field('institution_class_id', [
             'type' => 'select',
             'entity' => $entity
         ]);
@@ -1247,7 +1101,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
             'entity' => $entity
         ]);
 
-        $this->field('student_status');
+        // $this->field('student_status');
     }
 
     public function getAcademicPeriodOptions($querystringPeriod)
