@@ -2335,76 +2335,76 @@ paths:
           '400':
             description: Invalid status value        
         
-    /api/v4/locale-contents/{localeId}:
-      get:
-        tags:
-          - Locale Content Details
-        summary: Get All Translations for one Language
-        description: Multiple values can be provided with comma separated strings
-        parameters:
-          - name: localeId
-            in: path
-            description: Add Institution id to filter
-            required: true
-            schema:
-              type: integer
-              format: int
-        responses:
-          '200':
-            description: successful operation
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Locale-Content-Details'         
-              application/xml:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Locale-Content-Details'
-          '400':
-            description: Invalid status value    
+  /api/v4/locale-contents/{localeId}:
+    get:
+      tags:
+        - Locale Content Details
+      summary: Get All Translations for one Language
+      description: Multiple values can be provided with comma separated strings
+      parameters:
+        - name: localeId
+          in: path
+          description: Add Institution id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Locale-Content-Details'         
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Locale-Content-Details'
+        '400':
+          description: Invalid status value    
 
-    /api/v4/institutions/{institutionId}/students/{studentId}/assessment-item-results:
-      get:
-        tags:
-          - Institutions
-        summary: Get All Assessment Item Results
-        description: Get All Assessment Item Results
-        parameters:
-          - name: institutionId
-            in: path
-            description: Add Institution id to filter
-            required: true
-            schema:
-              type: integer
-              format: int
-          - name: studentId
-            in: path
-            description: Add Student id to filter
-            required: true
-            schema:
-              type: integer
-              format: int
-        responses:
-          '200':
-            description: successful operation
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Assessment-Item-Results'         
-              application/xml:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Assessment-Item-Results'
-          '400':
-            description: Invalid status value
+  /api/v4/institutions/{institutionId}/students/{studentId}/assessment-item-results:
+    get:
+      tags:
+        - Institutions
+      summary: Get All Assessment Item Results
+      description: Get All Assessment Item Results
+      parameters:
+        - name: institutionId
+          in: path
+          description: Add Institution id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+        - name: studentId
+          in: path
+          description: Add Student id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Assessment-Item-Results'         
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Assessment-Item-Results'
+        '400':
+          description: Invalid status value
 
-    /api/v4/institutions/subjects/staff:
+  /api/v4/institutions/subjects/staff:
       get:
         tags:
           - Institution
