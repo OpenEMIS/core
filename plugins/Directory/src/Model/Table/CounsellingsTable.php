@@ -19,7 +19,7 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Network\Session;
-
+use Cake\I18n\Time;
 
 class CounsellingsTable extends ControllerActionTable
 {
@@ -43,9 +43,6 @@ class CounsellingsTable extends ControllerActionTable
         $this->toggle('edit', true);
       
     }
-    public function beforeAction(Event $event, ArrayObject $extra)
-    {
-    }
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
@@ -63,13 +60,9 @@ class CounsellingsTable extends ControllerActionTable
         $institutionId=$institutionStudent->institution_id;
         $requestorOptions=$this->getRequesterOptions($institutionId);
         $counselorOptions=$this->getCounselorOptions($institutionId);
-        // $this->field('file_name', ['visible' => false]);
-        // $this->field('file_content', ['visible' => false]);
-        // $this->field('file_name', ['visible' => true]);
         $this->fields['requester_id']['type'] = 'select';
         $this->fields['requester_id']['options'] = $requestorOptions;
         $this->fields['guidance_type_id']['type'] = 'select';
-        // $this->fields['guidance_type_id']['options'] = $guidanceOptions;
         $this->fields['counselor_id']['type'] = 'select';
         $this->fields['counselor_id']['options'] = $counselorOptions;
         $this->fields['date']['type'] = 'date';
@@ -114,8 +107,8 @@ class CounsellingsTable extends ControllerActionTable
         $InstitutionStudents = TableRegistry::get('institution_students');
         $Institutions = TableRegistry::get('Institution.Institutions');
         $UserData = TableRegistry::get('User.Users');
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $academicPeriodId = $this->AcademicPeriods->getCurrent();
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodId = $AcademicPeriods->getCurrent();
         $join = [];
         $join[''] = [
         'type' => 'inner',
@@ -172,23 +165,7 @@ class CounsellingsTable extends ControllerActionTable
     
         }
 
-            
-        // public function indexAfterAction(Event $event)
-        // {
-        //     $this->field('file_content', ['visible' => false]);
-        //     $this->field('file_name', ['visible' => false]);
-        //     $this->field('comment', ['visible' => false]);
-        //     $this->field('guidance_utilized', ['visible' => false]);
-            
-        //     $this->setFieldOrder(['date', 'description', 'intervention', 'counselor_id', 'guidance_type_id', 'requester_id',  'Actions']);
-        // }
-
-        // public function viewBeforeAction(Event $event, ArrayObject $extra){
-           
-        //     $this->field('file_name', ['visible' => false]);
-        //     $this->setFieldOrder(['date','counselor_id','guidance_type_id','requester_id', 'guidance_utilized', 'description', 'intervention', 'comment', 'attachment']);
-        // }
-        public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'file_content':
@@ -206,95 +183,20 @@ class CounsellingsTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-    // public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    // {
-       
-       
-    //      $this->field('file_name', ['visible' => false]);
-    //     $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
-    //     $this->setupFields($entity);
-    // }
-    private function setupFields(Entity $entity)
-    {
-      $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
-    }
+
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
       
     }
-    // private function setupFields(Entity $entity)
-    // {
-    //     // $this->field('severe', ['after' => 'description']);
-    //     // $this->field('health_allergy_type_id', ['type' => 'select', 'after' => 'comment']);
-    //     $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
-    // }
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-       
-    }
-    // public function viewBeforeAction(Event $event, ArrayObject $extra)
-    // {
-    //     echo "<pre>";
-    //     print_r($extra);
-    //     exit;
-    // 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
+        $this->field('file_content', ['visible' => false]);
+        $this->field('file_name', ['visible' => false]);
+        $this->field('comment', ['visible' => false]);
+        $this->field('guidance_utilized', ['visible' => false]);
         
-          
-        //     $institutionId = $session->read('Institution.Institutions.id');
-        //     $curricularStudent = TableRegistry::get('institution_curricular_students');
-        //     $users = TableRegistry::get('security_users');
-    
-            $query->select([
-                    'id',
-                    'date',
-                    'guidance_utilized',
-                    'description',
-                    'intervention',
-                    'comment',
-                    'file_name',
-                    'file_content',
-                    'counselor_id',
-                    'student_id',
-                    'guidance_type_id',
-                    'requester_id',
-                    'modified_user_id',
-                    'modified',
-                    'created_user_id',
-                    'created',
-            ])->contain('Counselors');
-         
-        //         ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId'],
-        //         $this->aliasField('institution_id') => $institutionId])
-        //         ->group([$this->aliasField('id')]);
-    
-        //     if (!$sortable) {
-        //         $query
-        //             ->order([
-        //                 $this->aliasField('name') => 'ASC'
-        //             ]);
-        //     }
-            $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
-            $query = $this->request->query;
-            $this->field('file_content', ['visible' => false]);
-            $this->field('file_name', ['visible' => false]);
-            $this->field('comment', ['visible' => false]);
-            $this->field('guidance_utilized', ['visible' => false]);
-            
-            $this->field('modified_user_id', ['visible' => false]);
-            $this->field('modified', ['visible' => false]);
-            $this->field('created_user_id', ['visible' => false]);
-            $this->field('created', ['visible' => false]);
-            $this->setFieldOrder([
-                'name', 'staff_id','category','total_male_students', 'total_female_students', 'total_students'
-            ]);
-            $this->setFieldOrder(['date', 'description', 'intervention', 'counselor_id', 'guidance_type_id', 'requester_id',  'Actions']);
-  
-            
-        // }
-      
+        $this->setFieldOrder(['date', 'description', 'intervention', 'counselor_id', 'guidance_type_id', 'requester_id',  'Actions']);
     }
     }
