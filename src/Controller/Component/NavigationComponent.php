@@ -1543,7 +1543,6 @@ class NavigationComponent extends Component
                 'title' => 'Career',
                 'parent' => 'Institutions.Staff.index',
                 'params' => ['plugin' => 'Staff'],
-
                 'selected' => ['Staff.EmploymentStatuses',
                     'Staff.Positions',
                     'Staff.HistoricalStaffPositions',
@@ -1561,8 +1560,7 @@ class NavigationComponent extends Component
                     'Institutions.StaffPositionProfiles.add',
                     'Institutions.StaffAppraisals',
                     'Institutions.ImportStaffLeave',
-                    'Staff.Duties',
-                    'Staff.StaffAssociations',
+                    'Staff.Duties','Staff.StaffAssociations',
                     'Staff.InstitutionStaffAttendancesArchive',
                     'Staff.StaffCurriculars'],
             ],
@@ -1844,15 +1842,14 @@ class NavigationComponent extends Component
                     'Profiles.StaffClasses',
                     'Profiles.StaffSubjects',
                     'Profiles.StaffLeave',
-                        'Profiles.ArchivedStaffLeave',
+                    'Profiles.ArchivedStaffLeave',
                     'Profiles.HistoricalStaffLeave',
-                        'Profiles.StaffAttendances',
-                        'Profiles.StaffBehaviours',
+                    'Profiles.StaffAttendances',
+                    'Profiles.StaffBehaviours',
                     'Profiles.StaffAppraisals',
-                        'Profiles.StaffDuties',
-                        'Profiles.StaffAssociations',
-                        'Profiles.StaffCurriculars']
-
+                    'Profiles.StaffDuties',
+                    'Profiles.StaffAssociations',
+                    'Profiles.StaffCurriculars']
             ],
             'Profiles.StaffBankAccounts' => [
                 'title' => 'Finance',
