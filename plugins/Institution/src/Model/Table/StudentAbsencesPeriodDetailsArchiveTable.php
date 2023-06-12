@@ -60,23 +60,13 @@ class StudentAbsencesPeriodDetailsArchiveTable extends ControllerActionTable
 
     public function findClassStudentsWithAbsenceArchive(Query $query, array $options)
     {
-        $InstitutionStaffAttendances = TableRegistry::get('Institution.InstitutionStaffAttendancesArchive');
-        $InstitutionStaffShiftsTable = TableRegistry::get('Institution.InstitutionStaffShifts');
-        $StudentAttendances = TableRegistry::get('Institution.StudentAttendances');
-        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $StaffLeaveTable = TableRegistry::get('Institution.StaffLeaveArchived');
+        //POCOR-7474-HINDOL fix unnecessary links
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
-        $ownAttendanceView = $options['own_attendance_view'];
-        $otherAttendanceView = $options['other_attendance_view'];
-        $shiftId = $options['shift_id'];
-        $weekStartDate = $options['week_start_day'];
-        $weekEndDate = $options['week_end_day'];
         $dayId = $options['day_id'];
 
         if ($dayId != -1) {
-            $weekStartDate = $dayDate;
-            $weekEndDate = $dayDate;
+
             $where = [
                 $this->aliasField("date >= '") . $dayId . "'",
                 $this->aliasField("date <= '") . $dayId . "'"

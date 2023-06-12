@@ -594,7 +594,7 @@ class AcademicPeriodsTable extends AppTable
         return $list;
     }
 
-    public function getArchivedYearList($academicPeriod)
+    public function getArchivedYearList($academicPeriod, $params = [])
     {
         $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
         $withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
