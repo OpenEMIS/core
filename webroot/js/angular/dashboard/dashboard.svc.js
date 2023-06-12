@@ -366,8 +366,8 @@ function DashboardSvc($q, $filter, KdDataSvc) {
 
         return columnDefs;
     };
-
-    function getWorkbenchRowData(model, limit, page) {
+    //POCOR-7489 starts function comment for testing purpose
+    /*function getWorkbenchRowData(model, limit, page) {
         // console.log('model', model);
         var success = function(response, deferred) {
             deferred.resolve(response);
@@ -381,5 +381,9 @@ function DashboardSvc($q, $filter, KdDataSvc) {
                 success: success,
                 defer: true
             });
+    };*/
+    function getWorkbenchRowData(model, limit, page) {
+       console.log('workbench');
     };
+    //POCOR-7489 ends
 }
