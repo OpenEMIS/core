@@ -18,7 +18,7 @@ class POCOR5191 extends AbstractMigration
             `student_profile_template_id` int NOT NULL,
             `created` datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (`id`)
-          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci");
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci");
     }
     public function down()
     {
