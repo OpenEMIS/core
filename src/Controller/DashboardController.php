@@ -22,7 +22,7 @@ class DashboardController extends AppController
         $this->loadModel('Workflow.WorkflowRules');
         $workflowRules = $this->WorkflowRules->find()->where(['feature' => 'StudentUnmarkedAttendances'])->hydrate(false)->toArray();
         if(!empty($workflowRules)){
-            $this->triggerUnmarkedAttendanceShell();
+            //$this->triggerUnmarkedAttendanceShell(); //POCOR-7489 comment it for taking time and utlized the max cpu memory on server
         }
         //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
