@@ -1,3 +1,7 @@
+### [3.86.1] - 2023-06-12
+- Bug Fixed: Institutions>Performance>Report Cards: Placeholder is not working
+- Bug Fixed: Login: Login is causing high load on the cpu
+
 ### [3.86.0] - 2023-06-10
 - Implemented: Develop standard Security Reports
 - Implemented: Develop OpenEMIS Core textbook export
