@@ -1547,6 +1547,7 @@ class ReportCardsTable extends AppTable
                     $Staff->aliasField('institution_id') => $params['institution_id']
 
                 ])
+                ->group(['staff_id']) //POCOR-7478
                 ->toArray();
                 $name = [];
                 // POCOR[7033]
