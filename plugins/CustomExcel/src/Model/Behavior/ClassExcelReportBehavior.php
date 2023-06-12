@@ -105,7 +105,7 @@ class ClassExcelReportBehavior extends Behavior
     {
         $model = $this->_table;
         $format = $this->config('format');
-
+            
         if (array_key_exists('requestQuery', $extra)) {
             $params = $extra['requestQuery'];
         } else {
@@ -123,14 +123,12 @@ class ClassExcelReportBehavior extends Behavior
         $temppath = tempnam($extra['path'], $this->config('filename') . '_');
         $extra['file_path'] = $temppath;
 
-
         $objSpreadsheet = $this->loadExcelTemplate($extra);
         $this->generateExcel($objSpreadsheet, $extra);
 
         Log::write('debug', 'ClassExcelReportBehavior >>> renderExcelTemplate');
 		
-		
-        $this->saveFile($objSpreadsheet, $temppath, $format, $params['institution_id']);
+	    $this->saveFile($objSpreadsheet, $temppath, $format, $params['institution_id']);
 		
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
@@ -153,7 +151,7 @@ class ClassExcelReportBehavior extends Behavior
             $pdfFileContent = file_get_contents($pdfFilePath);
 			
 			$ClassProfiles = TableRegistry::get('Institution.ClassProfiles');
-			// save Pdf file
+            // save Pdf file
 			$ClassProfiles->updateAll([
 				'file_content_pdf' => $pdfFileContent
 			], $params);

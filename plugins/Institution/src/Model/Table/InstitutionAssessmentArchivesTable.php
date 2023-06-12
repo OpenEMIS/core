@@ -51,7 +51,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         $sourceTableName = $sourceTable->table();
         $targetTableName = $sourceTableName . '_archived';
         $connection = ConnectionManager::get('default');
-        $schemaCollection = new Collection($connection);
+        $schemaCollection = new \Cake\Database\Schema\Collection($connection);
         $existingTables = $schemaCollection->listTables();
         $tableExists = in_array($targetTableName, $existingTables);
 
@@ -69,18 +69,22 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
             $columnDefinition = $sourceTableSchema->column($column);
             $targetTableSchema->addColumn($column, $columnDefinition);
         }
-
+        $randomString = $this->generateRandomString();
         // Copy the indexes from the source table to the target table
         foreach ($sourceTableSchema->indexes() as $index) {
             $indexDefinition = $sourceTableSchema->index($index);
-            $targetTableSchema->addIndex($index, $indexDefinition);
+            $targetTableSchema->addIndex($index . $randomString, $indexDefinition);
         }
 
         // Copy the constraints from the source table to the target table
+        // FIX for random FK name
+
         foreach ($sourceTableSchema->constraints() as $constraint) {
             $constraintDefinition = $sourceTableSchema->constraint($constraint);
-            $targetTableSchema->addConstraint($constraint, $constraintDefinition);
+            $targetTableSchema->addConstraint($constraint . $randomString, $constraintDefinition);
         }
+
+
 
         // Generate the SQL statement to create the target table
         $createTableSql = $targetTableSchema->createSql($connection);
@@ -98,6 +102,11 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         }
 
         return false; // Return false if the table couldn't be created
+    }
+
+    private function generateRandomString($length = 4) {
+        $bytes = random_bytes($length);
+        return substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $length);
     }
 
     public function onExcelBeforeGenerate(Event $event, ArrayObject $settings)
@@ -683,12 +692,12 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
 //        $query->bind(':param1', ' - ');
 
 
-        $sql = $query->sql();
-        $this->log("institutionId $institutionId", 'debug');
-        $this->log("selectedAssessment$selectedAssessment", 'debug');
-        $this->log("selectedPeriod $selectedPeriod", 'debug');
-
-        $this->log($sql, 'debug');
+//        $sql = $query->sql();
+//        $this->log("institutionId $institutionId", 'debug');
+//        $this->log("selectedAssessment$selectedAssessment", 'debug');
+//        $this->log("selectedPeriod $selectedPeriod", 'debug');
+//
+//        $this->log($sql, 'debug');
 
     }
 
@@ -776,7 +785,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
     /**
      * @param Entity $entity
      * @param $genderCode
-     * @return int
+     * @return int|mixed|string
      */
     private function getGenderStudentsCount(Entity $entity, $genderCode)
     {

@@ -9,6 +9,7 @@ use Cake\Utility\Inflector;
 use Cake\Utility\Security;
 use App\Model\Table\AppTable;
 use Cake\I18n\Time;//POCOR-7319
+use Cake\Datasource\ConnectionManager;
 class ReportCardsTable extends AppTable
 {
     private $fileType = 'xlsx';
@@ -1119,6 +1120,7 @@ class ReportCardsTable extends AppTable
             $CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
             $AbsenceTypesTable = TableRegistry::get('absence_types');
             $InstitutionStudentAbsenceDays = TableRegistry::get('institution_student_absence_days');
+            $conn = ConnectionManager::get('default');
             $entity = $CompetencyPeriods->find()
                 ->select([
                     'id' => $CompetencyPeriods->aliasField('id'),
@@ -1144,7 +1146,8 @@ class ReportCardsTable extends AppTable
             foreach($entity as $k => $row){
                 $start_date = date("Y-m-d",strtotime($row['start_date']));
                 $end_date = date("Y-m-d",strtotime($row['end_date']));
-
+                $competenID = $row['id'];
+                $stuID = $params['student_id'];
 
                 $noOFExcusedDays = $InstitutionStudentAbsenceDays->find('all',[
                     'conditions'=>[
@@ -1175,13 +1178,58 @@ class ReportCardsTable extends AppTable
                         'end_date <=' => $end_date
                     ]
                 ])->count();
-
+                
+                //TOTAL Full DAYS  ABSENCE
+                
+                $result11 = $conn->execute("SELECT 
+                subq.academic_period_id
+                ,student_id
+                ,institution_class_id
+                ,institution_id
+                ,SUM(full_day_absent) absent_days
+                ,competency_periods.id competency_period_id
+                FROM
+                    (
+                     SELECT
+                    institution_class_students.academic_period_id
+                    ,institution_class_students.student_id
+                    ,student_attendance_marked_records.date
+                    ,student_attendance_marked_records.institution_class_id
+                    ,student_attendance_marked_records.institution_id
+                    , IF(config_items.value = 1 AND count(institution_student_absence_details.date) >=1,'1',
+                            IF(config_items.value = 1 AND count(institution_student_absence_details.date) =0,'0',
+                                IF(config_items.value = 2 AND (count(student_attendance_marked_records.date) - count(institution_student_absence_details.date)) >=1, '0',
+                                    IF(config_items.value = 2 AND count(institution_student_absence_details.date) >=1,'1','0'))))AS full_day_absent
+                    FROM institution_class_students
+                    INNER JOIN student_attendance_marked_records ON institution_class_students.institution_class_id = student_attendance_marked_records.institution_class_id
+                    INNER JOIN config_items ON config_items.code = 'calculate_daily_attendance'
+                    LEFT JOIN institution_student_absence_details 
+                    ON institution_student_absence_details.student_id = institution_class_students.student_id
+                    AND institution_student_absence_details.date = student_attendance_marked_records.date
+                    AND institution_student_absence_details.institution_class_id = institution_class_students.institution_class_id
+                    AND institution_student_absence_details.period = student_attendance_marked_records.period
+                    AND institution_student_absence_details.absence_type_id != 3
+                    WHERE institution_class_students.student_status_id = 1
+                    GROUP BY institution_class_students.student_id,student_attendance_marked_records.date
+                    ) AS subq
+                    INNER JOIN competency_periods ON subq.date BETWEEN competency_periods.start_date AND competency_periods.end_date
+                    WHERE subq.student_id = $stuID
+                GROUP BY subq.academic_period_id,student_id,institution_class_id,institution_id,competency_periods.id
+                ORDER BY subq.academic_period_id DESC");
+                
+                $rowsss = $result11->fetchAll('assoc');
+                $totalDAys=''; 
+                foreach($rowsss as $rowss){ 
+                    if($rowss['competency_period_id'] ==$competenID){
+                        $totalDAys = $rowss['absent_days'];
+                    }
+                }
                 $entity[$k]['start_date'] = $start_date;
                 $entity[$k]['end_date']   = $end_date;
                 $entity[$k]['excused']    = $noOFExcusedDays;
                 $entity[$k]['unexcused']  = $noOFUnexcusedDays;
                 $entity[$k]['late']       = $noOFLateDays;
-                $entity[$k]['total']      = $noOFExcusedDays+$noOFUnexcusedDays+$noOFLateDays;
+                $entity[$k]['total']      = $totalDAys; //POCOR-7471
 
             }
 
