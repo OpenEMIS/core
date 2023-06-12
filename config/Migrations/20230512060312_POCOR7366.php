@@ -24,7 +24,7 @@ class POCOR7366 extends AbstractMigration
             'name' => 'Counselling',
             'controller' => 'Directories',
             'module' => 'Directory',
-            'category' => 'Counselling',
+            'category' => 'Counsellings',
             'parent_id' => 7000,
             '_view' => 'Counsellings.index|Counsellings.view',
             '_edit'=>'Counsellings.edit',

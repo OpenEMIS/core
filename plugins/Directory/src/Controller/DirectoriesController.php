@@ -304,7 +304,7 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.Counsellings']);
     }
-       //POCOR-7366 end
+    //POCOR-7366 end
     public function Employments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']);

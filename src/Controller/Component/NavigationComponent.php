@@ -284,7 +284,7 @@ class NavigationComponent extends Component
         ];
 
         $profileControllers = ['ProfileBodyMasses', 'ProfileComments', 'ProfileInsurances', 'ScholarshipsDirectory', 'ProfileApplicationInstitutionChoices', 'ProfileApplicationAttachments'];
-        $directoryControllers = ['DirectoryBodyMasses', 'DirectoryComments', 'DirectoryInsurances','Counsellings'];
+        $directoryControllers = ['DirectoryBodyMasses', 'DirectoryComments', 'DirectoryInsurances'];
         $guardianNavsControllers = [];
         if (in_array($controller->name, $institutionControllers) || (
             $controller->name == 'Institutions'
@@ -1452,7 +1452,7 @@ class NavigationComponent extends Component
                 'title' => 'Counsellings',
                 'parent' => 'Directories.Directories.index',
                 'params' => ['plugin' => 'Directory'],
-                'selected' => ['Counsellings.add', 'Counsellings.edit', 'Counsellings.view', 'Counsellings.delete']
+                'selected' => ['Directories.Counsellings']
             ],
             //POCOR-7366 end
             'Directories.SpecialNeedsReferrals' => [
@@ -1668,17 +1668,7 @@ class NavigationComponent extends Component
                 'selected' => ['Directories.StudentProfile']
             ],
 
-            //  //POCOR-7366 - added counselling to directory module
-            //  'Directories.Counsellings' => [
-            //     'title' => 'Counselling',
-            //     'parent' => 'Directories.Students.index',
-            //     'params' => ['plugin' => 'Directory'],
-            //     'selected' => ['Counsellings.add', 'Counsellings.edit', 'Counsellings.view', 'Counsellings.delete']
-            // ],
-
-            // // POCOR-7366 ends
-
-        ];
+    ];
 
         $session = $this->request->session();
         $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
