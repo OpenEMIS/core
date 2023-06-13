@@ -221,7 +221,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
                 ->get($selectedAcademicPeriodId)
                 ->name;
 
-            $attr['type'] = 'readonly';
+            // $attr['type'] = 'readonly'; // POCOR-7467
             $attr['value'] = $selectedAcademicPeriodId;
             $attr['attr']['value'] = $academicPeriodName;
 
