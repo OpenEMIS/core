@@ -214,6 +214,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $institutionClassId = $options['institution_class_id'];
         $educationGradeId = $options['education_grade_id'];        
         $day = $options['day_id'];
+
         $period = $options['attendance_period_id'];
         $subjectId = $options['subject_id'];
         $data = $this->markedRecordAfterSave($options); //POCOR-7143

@@ -867,10 +867,24 @@ class StudentProfilesTable extends ControllerActionTable
     public function publishAll(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-
+        //POCOR:7448 ::Start
+        $condition = [];
+        if(!empty($params['institution_id'])){
+            $condition['institution_id'] = $params['institution_id'];
+        }
+        if(!empty($params['academic_period_id'])){
+            $condition['academic_period_id'] = $params['academic_period_id'];
+        }
+        if(!empty($params['education_grade_id'])){
+            $condition['education_grade_id'] = $params['education_grade_id'];
+        }
+        if(!empty($params['student_profile_template_id'])){
+            $condition['student_profile_template_id'] = $params['student_profile_template_id'];
+        }
+        //POCOR:7448 ::end
         // only publish report cards with generated status to published status
         $result = $this->InstitutionStudentsProfileTemplates->updateAll(['status' => self::PUBLISHED], [
-            $params,
+            $condition, //POCOR-7448
             'status' => self::GENERATED
         ]);
 
