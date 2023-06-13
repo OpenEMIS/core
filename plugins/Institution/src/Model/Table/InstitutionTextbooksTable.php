@@ -50,6 +50,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
 
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportInstitutionTextbooks']);
+        $this->addBehavior('InstitutionTextbookExcel', ['excludes' => ['security_group_id'], 'pages' => ['index']]); // POCOR-3627
     }
 
     public function validationDefault(Validator $validator) {

@@ -100,6 +100,7 @@ class ClassesProfilesTable extends ControllerActionTable
         // check if report card request is valid
         $reportCardId = $this->request->query('class_profile_template_id');
         $academicPeriodId = $this->request->query('academic_period_id');
+        $areaId = $this->request->query('area_id');//POCOR-7382
         //START:POCOR-6667
         unset($buttons['view']);
         //END:POCOR-6667
@@ -110,6 +111,7 @@ class ClassesProfilesTable extends ControllerActionTable
 				'institution_id' => $entity->id,
 				'academic_period_id' => $academicPeriodId,
                 'institution_class_id' => $entity->institution_class_id,
+                'area_id' => $areaId//POCOR-7382
             ];
 		
             // Download button, status must be generated or published
@@ -668,8 +670,8 @@ class ClassesProfilesTable extends ControllerActionTable
     {
 		$model = $this->ClassProfiles;
         $ids = $this->getQueryString();
-		
-        if ($model->exists($ids)) {
+        unset($ids['area_id']);//POCOR-7382
+		if ($model->exists($ids)) {
             $data = $model->get($ids);
             $fileName = $data->file_name;
             $pathInfo = pathinfo($fileName);
@@ -766,7 +768,7 @@ class ClassesProfilesTable extends ControllerActionTable
         
         if ($hasTemplate) {
             $this->addReportCardsToProcesses($params['academic_period_id'], $params['class_profile_template_id'], $params['institution_id'], $params['institution_class_id']);
-            $this->triggerGenerateAllReportCardsShell($params['academic_period_id'], $params['class_profile_template_id'], $params['institution_id'], $params['institution_class_id']);
+            $this->triggerGenerateAllReportCardsShell($params['academic_period_id'], $params['class_profile_template_id'], $params['institution_id'], $params['institution_class_id'], $params['area_id']);//POCOR-7382 add area_id
             $this->Alert->warning('ReportCardStatuses.generate');
         } else {
             $url = $this->url('index');
@@ -795,7 +797,7 @@ class ClassesProfilesTable extends ControllerActionTable
             
             if (!$inProgress) {                   
                 $this->addReportCardsToProcesses($params['academic_period_id'], $params['class_profile_template_id'], $params['institution_id'], $params['institution_class_id']);
-				$this->triggerGenerateAllReportCardsShell($params['academic_period_id'], $params['class_profile_template_id'], $params['institution_id'], $params['institution_class_id']);
+				$this->triggerGenerateAllReportCardsShell($params['academic_period_id'], $params['class_profile_template_id'], $params['institution_id'], $params['institution_class_id'], $params['area_id']);//POCOR-7382 add area_id
 				$this->Alert->warning('ReportCardStatuses.generateAll');
             } else {
                 $this->Alert->warning('ReportCardStatuses.inProgress');
@@ -1048,7 +1050,7 @@ class ClassesProfilesTable extends ControllerActionTable
         Log::write('debug', 'End Add All Class profile Report Cards '.$reportCardId.' for Class '.$institution->institution_class_id.' of Institution'.$institution->id.' to processes ('.Time::now().')');
     }
 
-    private function triggerGenerateAllReportCardsShell($academicPeriodId, $reportCardId, $institutionId = null, $institutionClassId = null)
+    private function triggerGenerateAllReportCardsShell($academicPeriodId, $reportCardId, $institutionId = null, $institutionClassId = null, $areaId =null)
     {
         $SystemProcesses = TableRegistry::get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
@@ -1078,7 +1080,7 @@ class ClassesProfilesTable extends ControllerActionTable
             
             $params = json_encode($passArray);
 
-            $args = $processModel . " " . $params;
+            $args = $processModel . " " . $params. ' '.$areaId;//POCOR-7382 add $areaId
 
             $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllClassProfiles '.$args;
             $logs = ROOT . DS . 'logs' . DS . 'GenerateAllClassProfiles.log & echo $!';

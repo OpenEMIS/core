@@ -200,7 +200,7 @@ class FieldOptionsController extends AppController
     public function LanguageProficiencies()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); } //POCOR-7395
 
     //END:POCOR-6873
-
+    
     //POCOR-6673
     public function CurricularTypes(){
 
@@ -212,4 +212,8 @@ class FieldOptionsController extends AppController
 
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); 
     }
+    //POCOR-7376
+    public function Industries()    { 
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); 
+    }  
 }
