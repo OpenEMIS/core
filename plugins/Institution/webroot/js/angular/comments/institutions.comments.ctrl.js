@@ -174,8 +174,8 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 if(vm.teacherCommentsRequired == 1){//POCOR-7137
                    $scope.checkEditAction = 1; 
                 }
-            }else if((userData.super_admin != 1) && ((vm.teacherCommentsRequired == 0) || (allSubjectTeacherPermissionData.data.result <= 0))){
-                vm.teacherCommentsRequired = 0;
+            }else if((userData.super_admin != 1) && (allSubjectTeacherPermissionData.data.result <= 0)){
+                vm.teacherCommentsRequired = (vm.teacherCommentsRequired == 0) ? 0 : 1; //POCOR-7483
             }else{
                 $scope.checkEditAction = 1;//POCOR-6800
             }
