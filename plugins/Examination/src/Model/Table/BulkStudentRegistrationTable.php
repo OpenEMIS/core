@@ -466,9 +466,9 @@ class BulkStudentRegistrationTable extends ControllerActionTable
                                 $counter--;
                             }
                         }
-                        if (!empty($roomStudents)) {
-                            $model->Alert->warning($this->aliasField('notAssignedRoom'));
-                        }
+                        // if (!empty($roomStudents)) {
+                        //     $model->Alert->warning($this->aliasField('notAssignedRoom'));
+                        // }
                         return true;
                     } else {
                         return false;

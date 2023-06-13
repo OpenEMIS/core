@@ -145,6 +145,7 @@ class ReportsController extends AppController
                 'Report.InstitutionStaffDetailed' => __('Detailed Staff Data'), //POCOR-6662
                 'Report.StaffSubjects' => __('Staff Subjects'), //POCOR-6688
                 'Report.StaffRequirements' => __('Staff Requirements'), // POCOR-5185
+                'Report.StaffOutOfSchool' => __('Staff Out of School') //POCOR-4827
             ];
         } elseif ($module == 'Textbooks') {
             $options = [
@@ -200,6 +201,8 @@ class ReportsController extends AppController
                 'Report.AuditLogins' => __('Logins'),
                 'Report.AuditInstitutions' => __('Institutions'),
                 'Report.AuditUsers' => __('Users')
+                ,'Report.AuditSecuritiesRolesPermissions' => __('Security Roles and Permissions') // POCOR-499
+                ,'Report.AuditSecuritiesGroupUserRoles' => __('Security Group User Roles') // POCOR-499
             ];
         } elseif ($module == 'Examinations') {
             $options = [
