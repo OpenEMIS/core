@@ -268,7 +268,8 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                         eSelect.addEventListener('blur', function () {
                             var newValue = eSelect.value;
 
-                            if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
+                            // if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
+                            if (newValue != oldValue) {
                                 params.data[params.colDef.field] = newValue;
 
                                 var outcomeCriteriaId = params.data.outcome_criteria_id;
