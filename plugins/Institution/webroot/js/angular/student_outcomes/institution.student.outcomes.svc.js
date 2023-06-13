@@ -76,7 +76,11 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer:true});
     }
 
-    function getSubjectOptions(classId, institutionId, academicPeriodId, gradeId, studentId) { //6198 studentId 
+    function getSubjectOptions(classId,
+                               institutionId,
+                               academicPeriodId,
+                               gradeId,
+                               studentId) { //6198 studentId
         var success = function(response, deferred) { 
             deferred.resolve(response.data.data);
         };
@@ -92,7 +96,8 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer: true});
     }
 
-    function getOutcomeTemplate(academicPeriodId, outcomeTemplateId) {
+    function getOutcomeTemplate(academicPeriodId,
+                                outcomeTemplateId) {
         var primaryKey = KdDataSvc.urlsafeB64Encode(JSON.stringify({academic_period_id: academicPeriodId, id: outcomeTemplateId}));
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
@@ -113,7 +118,13 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer:true});
     }
 
-    function getStudentOutcomeResults(studentId, templateId, periodId, gradeId, subjectId, institutionId, academicPeriodId) {
+    function getStudentOutcomeResults(studentId,
+                                      templateId,
+                                      periodId,
+                                      gradeId,
+                                      subjectId,
+                                      institutionId,
+                                      academicPeriodId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
@@ -130,7 +141,13 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer:true});
     }
 
-    function getStudentOutcomeComments(studentId,  templateId, periodId, gradeId, subjectId, institutionId, academicPeriodId) {
+    function getStudentOutcomeComments(studentId,
+                                       templateId,
+                                       periodId,
+                                       gradeId,
+                                       subjectId,
+                                       institutionId,
+                                       academicPeriodId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
@@ -147,7 +164,13 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer:true});
     }
 
-    function getColumnDefs(period, subject, student, periodOptions, subjectOptions, studentOptions, studentResults) {
+    function getColumnDefs(period,
+                           subject,
+                           student,
+                           periodOptions,
+                           subjectOptions,
+                           studentOptions,
+                           studentResults) {
         var menuTabs = [];
         var filterParams = {
             cellHeight: 30
@@ -156,7 +179,12 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         // dynamic table headers
         var criteriaHeader = 'Outcome Criteria';
         var resultHeader = 'Result';
-        if (periodOptions.length > 0 && period != null && subjectOptions.length > 0 && subject != null && studentOptions.length > 0 && student != null) {
+        if (periodOptions.length > 0
+            && period != null
+            && subjectOptions.length > 0
+            && subject != null
+            && studentOptions.length > 0
+            && student != null) {
             var subjectObj = $filter('filter')(subjectOptions, {'id':subject});
             if (subjectObj.length > 0) {
                 criteriaHeader = subjectObj[0].code_name + ' Criteria';
@@ -191,7 +219,13 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         return {data: columnDefs};
     }
 
-    function getRowData(outcomeTemplateId, subjectId, defaultRow, gradingOptions, studentResults, limit, page) {
+    function getRowData(outcomeTemplateId,
+                        subjectId,
+                        defaultRow,
+                        gradingOptions,
+                        studentResults,
+                        limit,
+                        page) {
         var success = function(response, deferred) {
             var criterias = response.data.data;
 
@@ -360,7 +394,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                                 } else {
                                     AlertSvc.info(controller, 'Changes will be automatically saved when any value is changed');
                                 } 
-                                
+
                                 vm.saveOutcomeComments(params)
                                 .then(function(response) {
                                     params.data.save_error[params.colDef.field] = false;

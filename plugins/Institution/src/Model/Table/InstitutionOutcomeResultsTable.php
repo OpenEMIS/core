@@ -118,18 +118,20 @@ class InstitutionOutcomeResultsTable extends AppTable
     */
     public function findDeleteRecords(Query $query, array $options)
     {
+        //POCOR-7480-HINDOL
         if($options['outcome_grading_option_id'] == 0 ){
             $InstitutionOutcomeResults = TableRegistry::get('Institution.InstitutionOutcomeResults');
             $InstitutionOutcomeResults->deleteAll([
-                                        'student_id' => $options['student_id'],
-                                        'outcome_period_id' => $options['outcome_period_id'],
-                                        'education_grade_id' => $options['education_grade_id'],
-                                        'education_subject_id' => $options['education_subject_id'],
-                                        'institution_id' => $options['institution_id'],
-                                        'academic_period_id' => $options['academic_period_id'],
-                                        'outcome_criteria_id' => $options['outcome_criteria_id'],
-                                        'outcome_template_id' => $options['outcome_template_id']
-                                        ]);
+                    $InstitutionOutcomeResults->aliasField('student_id') => $options['student_id'],
+                    $InstitutionOutcomeResults->aliasField('outcome_period_id') => $options['outcome_period_id'],
+                    $InstitutionOutcomeResults->aliasField('education_grade_id') => $options['education_grade_id'],
+                    $InstitutionOutcomeResults->aliasField('education_subject_id') => $options['education_subject_id'],
+                    $InstitutionOutcomeResults->aliasField('institution_id') => $options['institution_id'],
+                    $InstitutionOutcomeResults->aliasField('academic_period_id') => $options['academic_period_id'],
+                    $InstitutionOutcomeResults->aliasField('outcome_criteria_id') => $options['outcome_criteria_id'],
+                    $InstitutionOutcomeResults->aliasField('outcome_template_id') => $options['outcome_template_id']
+            ])
+            ;
         }
     }
 
