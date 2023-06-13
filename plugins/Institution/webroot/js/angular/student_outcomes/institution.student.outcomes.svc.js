@@ -269,6 +269,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                             var newValue = eSelect.value;
 
                             // if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
+                            // POCOR-7480-KHINDOL - removed check for error that led to loop
                             if (newValue != oldValue) {
                                 params.data[params.colDef.field] = newValue;
 
@@ -345,7 +346,10 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                         textInput.addEventListener('blur', function() {
                             var newValue = textInput.value;
                             var controller = params.context._controller;
-                            if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
+                            // if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
+                            //POCOR-7480-KHINDOL
+                            if (newValue != oldValue) {
+
                                 params.data[params.colDef.field] = newValue;
                                 
                                 var newVal = newValue;
