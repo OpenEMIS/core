@@ -239,9 +239,10 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->field('education_grade_id', ['visible' => false]);
         $this->field('student_status', ['visible' => false]);
         $this->field('student_status');
+        $this->field('openemis_no');
 
         $this->setFieldOrder([
-            'academic_period_id', 'code', 'textbook_id', 'textbook_condition_id', 'textbook_status_id', 'student_id'
+            'academic_period_id', 'code', 'textbook_id', 'textbook_condition_id', 'textbook_status_id', 'openemis_no', 'student_id'
         ]);
 
 
@@ -301,7 +302,14 @@ class InstitutionTextbooksTable extends ControllerActionTable
             $query->where([$conditions]);
         }
     }
-    
+
+    public function onGetOpenEmisNo(Event $event, Entity $entity)
+    {
+        if (($this->action == 'index')) {
+            return $entity->user->openemis_no;
+        }
+    }
+
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
@@ -405,12 +413,15 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if ($entity->student_id) { //retrieve student grade and class
-            $studentClassGrade = $this->InstitutionSubjectStudents->getStudentClassGradeDetails($entity->academic_period_id, $this->institutionId, $entity->student_id, $entity->education_subject_id);
-            $entity->education_grade_id = $studentClassGrade[0]->education_grade_id;
-            $entity->institution_class_id = $studentClassGrade[0]->institution_class_id;
+        if ($entity->student_id) { //retrieve student and staff POCOR-7362 
+
+            $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudent($entity->academic_period_id, $entity->education_subject_id); 
+            $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId);
+            $studentOptions = $studentOptions + $staffOptions;
+            $entity->institution_class_id = $studentOptions;
             // pr($entity);
-        } else { //if no student assigned to the book, then use the textbook details
+        } 
+        else { //if no student assigned to the book, then use the textbook details
             $entity->education_grade_id = $entity->textbook->education_grade_id;
             $entity->institution_class_id = '';
         }
@@ -495,8 +506,15 @@ class InstitutionTextbooksTable extends ControllerActionTable
                     'type' => 'INNER',
                     'conditions' => 'institution_staff.staff_id = su.id'
                 ])
+                ->join([
+                    'table' => 'staff_statuses',
+                    'alias' => 'ss',
+                    'type' => 'INNER',
+                    'conditions' => 'institution_staff.staff_status_id = ss.id'
+                ])
                 ->where([
-                    'institution_staff.institution_id' => $institutionId
+                    'institution_staff.institution_id' => $institutionId,
+                    'ss.id' => 1
                 ])
                 ->hydrate(false);
 
@@ -730,29 +748,6 @@ class InstitutionTextbooksTable extends ControllerActionTable
             }
         }
         return $attr;
-    }
-
-    public function addEditOnChangeInstitutionClass(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    {
-        $request = $this->request;
-        $request->query['subject'] = '-1';
-        $request->query['textbook'] = '-1';
-        $request->query['student'] = '-1';
-
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-                    $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
-                }
-
-                if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
-                    $request->query['grade'] = $request->data[$this->alias()]['education_grade_id'];
-                }
-                if (array_key_exists('institution_class_id', $request->data[$this->alias()])) {
-                    $request->query['class'] = $request->data[$this->alias()]['institution_class_id'];
-                }
-            }
-        }
     }
 
     public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
