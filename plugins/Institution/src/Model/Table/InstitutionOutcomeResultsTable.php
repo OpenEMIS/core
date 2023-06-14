@@ -70,25 +70,23 @@ class InstitutionOutcomeResultsTable extends AppTable
         return $validator;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        // delete record if user removes result
-        // POCOR-7480-HINDOL
-
-        $delete = false;
+        // do not save new record if result is empty
         $gradingOption = $entity->outcome_grading_option_id;
-        if(empty($gradingOption)) $delete = true;
-        if(intval($gradingOption) == -1) $delete = true;
-        if ($delete) {
-            $this->delete($entity);
+        if ($entity->isNew() && empty($gradingOption)) {
+            return false;
         }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         // delete record if user removes result
+        $delete = false;
         $gradingOption = $entity->outcome_grading_option_id;
-        if (empty($gradingOption)) {
+        if(empty($gradingOption)) $delete = true;
+        if(intval($gradingOption) == -1) $delete = true;
+        if ($delete) {
             $this->delete($entity);
         }
     }
@@ -116,7 +114,7 @@ class InstitutionOutcomeResultsTable extends AppTable
     }
 
     /*
-    * Function is delete records from the table if oprtion is select as 0 
+    * Function is delete records from the table if oprtion is select as 0
     * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
     * return data
     * @ticket POCOR-7114
