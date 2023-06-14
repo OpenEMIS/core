@@ -104,9 +104,99 @@ class ImportInstitutionTextbooksTable extends AppTable
         }
     }
 
+     // POCOR-7362 starts
+
+    public function getAssignedStaffId(){
+
+        $staff = TableRegistry::get('institution_staff');
+        $query = $staff->find()
+                ->select([
+                    'su.id'
+                ])
+                ->join([
+                    'table' => 'security_users',
+                    'alias' => 'su',
+                    'type' => 'INNER',
+                    'conditions' => 'institution_staff.staff_id = su.id'
+                ])
+                ->join([
+                    'table' => 'staff_statuses',
+                    'alias' => 'ss',
+                    'type' => 'INNER',
+                    'conditions' => 'institution_staff.staff_status_id = ss.id'
+                ])
+                ->where([
+
+                    'ss.id' => 1
+                ])
+                ->hydrate(false);
+
+        $result = $query->toArray();
+
+        foreach ($result as $key => $value) {
+            $user = $value['su'];
+            $assignedStaffIds[] = $user['id'];
+        }
+
+        return $assignedStaffIds;
+        }
+    
+        public function getEnrolledStudentId(){
+
+            $staff = TableRegistry::get('institution_students');
+            $query = $staff->find()
+                    ->select([
+                        'su.id'
+                    ])
+                    ->join([
+                        'table' => 'security_users',
+                        'alias' => 'su',
+                        'type' => 'INNER',
+                        'conditions' => 'institution_students.student_id = su.id'
+                    ])
+                    ->join([
+                        'table' => 'student_statuses',
+                        'alias' => 'ss',
+                        'type' => 'INNER',
+                        'conditions' => 'institution_students.student_status_id = ss.id'
+                    ])
+                    ->where([
+    
+                        'ss.id' => 1
+                    ])
+                    ->hydrate(false);
+    
+            $result = $query->toArray();
+    
+            foreach ($result as $key => $value) {
+                $user = $value['su'];
+                $enrolledStudentIds[] = $user['id'];
+            }
+    
+            return $enrolledStudentIds;
+            }
+     // POCOR-7362 ends
+
+
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         
+         // POCOR-7362 starts
+
+        // In institutionTextbooksTable staff is also added to studentoptions and hence in temprow['student_id'] staff Ids also populate, following methods checks if student or staff id are enrolled/assigned 
+
+        $enrolledStudent = $this->getEnrolledStudentId();
+        $assignedStaff = $this->getAssignedStaffId();
+
+        $users = array_merge($enrolledStudent, $assignedStaff);
+        
+        if(!in_array($tempRow['student_id'], $users)){
+            $rowInvalidCodeCols['student_id'] = __('Not a enrolled/assigned user');
+            return false;
+        }
+
+        // POCOR-7362 ends
+
         if (!$this->institutionId) {
             $rowInvalidCodeCols['institution_id'] = __('No active institution');
             $tempRow['institution_id'] = false;
