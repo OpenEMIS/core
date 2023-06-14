@@ -297,9 +297,10 @@ class StaffTable extends AppTable
 
     public function getCareerTabElements($options = [])
     {
+        //POCOR-7486-HINDOL minor logical typo
         $tabElements = [];
-        $studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
-        $studentTabElements = [
+        $staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+        $staffTabElements = [
             'EmploymentStatuses' => ['text' => __('Statuses')],
             'Positions' => ['text' => __('Positions')],
             'Classes' => ['text' => __('Classes')],
@@ -319,22 +320,22 @@ class StaffTable extends AppTable
             $InstitutionTable = TableRegistry::get('Institution.Institutions');
             $classification = $InstitutionTable->get($institutionId)->classification;
             if ($classification == $InstitutionTable::NON_ACADEMIC) {
-                unset($studentTabElements['Classes']);
-                unset($studentTabElements['Subjects']);
+                unset($staffTabElements['Classes']);
+                unset($staffTabElements['Subjects']);
             }
         }
 
-        $tabElements = array_merge($tabElements, $studentTabElements);
+        $tabElements = array_merge($tabElements, $staffTabElements);
 
-        foreach ($studentTabElements as $key => $tab) {
+        foreach ($staffTabElements as $key => $tab) {
             if ($key == 'StaffLeave' || $key == 'StaffAppraisals' ) {
-                $studentUrl = array_key_exists('url', $options) ? $options['url'] : $studentUrl;
-                $userId = array_key_exists('user_id', $options) ? $options['user_id'] : 0;
+                $staffUrl = array_key_exists('url', $options) ? $options['url'] : $staffUrl;
+                $staffId = array_key_exists('user_id', $options) ? $options['user_id'] : 0;
 
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index', 'user_id' => $userId]);
+                $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', 'user_id' => $staffId]);
             } else {
-                $studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+                $staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+                $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index']);
             }
         }
         return $tabElements;
@@ -342,6 +343,7 @@ class StaffTable extends AppTable
 
     public function getProfessionalTabElements($options = [])
     {
+        //POCOR-7486-HINDOL minor logical typo
         $tabElements = [];
         $staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
         $staffTabElements = [
@@ -357,7 +359,6 @@ class StaffTable extends AppTable
         $tabElements = array_merge($tabElements, $staffTabElements);
 
         foreach ($staffTabElements as $key => $tab) {
-            $staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
             $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index']);
         }
         return $tabElements;
