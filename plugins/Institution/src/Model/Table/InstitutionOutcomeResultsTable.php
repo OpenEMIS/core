@@ -70,18 +70,11 @@ class InstitutionOutcomeResultsTable extends AppTable
         return $validator;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        // do not save new record if result is empty
-        $gradingOption = $entity->outcome_grading_option_id;
-        if ($entity->isNew() && empty($gradingOption)) {
-            return false;
-        }
-    }
-
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         // delete record if user removes result
+        // POCOR-7480-HINDOL
+
         $delete = false;
         $gradingOption = $entity->outcome_grading_option_id;
         if(empty($gradingOption)) $delete = true;
@@ -91,25 +84,34 @@ class InstitutionOutcomeResultsTable extends AppTable
         }
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // delete record if user removes result
+        $gradingOption = $entity->outcome_grading_option_id;
+        if (empty($gradingOption)) {
+            $this->delete($entity);
+        }
+    }
+
     public function findStudentResults(Query $query, array $options)
     {
-        $student_id = $options['student_id'];
-        $outcome_template_id = $options['outcome_template_id'];
-        $outcome_period_id = $options['outcome_period_id'];
-        $education_grade_id = $options['education_grade_id'];
-        $education_subject_id = $options['education_subject_id'];
-        $institution_id = $options['institution_id'];
-        $academic_period_id = $options['academic_period_id'];
+        $studentId = $options['student_id'];
+        $outcomeTemplateId = $options['outcome_template_id'];
+        $outcomePeriodId = $options['outcome_period_id'];
+        $educationGradeId = $options['education_grade_id'];
+        $educationSubjectId = $options['education_subject_id'];
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
 
         return $query
             ->where([
-                $this->aliasField('student_id') => $student_id,
-                $this->aliasField('outcome_template_id') => $outcome_template_id,
-                $this->aliasField('outcome_period_id') => $outcome_period_id,
-                $this->aliasField('education_grade_id') => $education_grade_id,
-                $this->aliasField('education_subject_id') => $education_subject_id,
-                $this->aliasField('institution_id') => $institution_id,
-                $this->aliasField('academic_period_id') => $academic_period_id,
+                $this->aliasField('student_id') => $studentId,
+                $this->aliasField('outcome_template_id') => $outcomeTemplateId,
+                $this->aliasField('outcome_period_id') => $outcomePeriodId,
+                $this->aliasField('education_grade_id') => $educationGradeId,
+                $this->aliasField('education_subject_id') => $educationSubjectId,
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId
             ]);
     }
 
@@ -122,28 +124,19 @@ class InstitutionOutcomeResultsTable extends AppTable
     public function findDeleteRecords(Query $query, array $options)
     {
         if($options['outcome_grading_option_id'] == 0 ){
-            $connection = $this->connection();
-            $student_id = $options['student_id'];
-            $outcome_period_id = $options['outcome_period_id'];
-            $education_grade_id = $options['education_grade_id'];
-            $education_subject_id = $options['education_subject_id'];
-            $institution_id = $options['institution_id'];
-            $academic_period_id = $options['academic_period_id'];
-            $outcome_criteria_id = $options['outcome_criteria_id'];
-            $outcome_template_id = $options['outcome_template_id'];
-            $sql = "DELETE FROM institution_outcome_results 
-            where `student_id` = $student_id 
-            AND `outcome_period_id` = $outcome_period_id 
-            AND `education_grade_id` = $education_grade_id 
-            AND `education_subject_id` = $education_subject_id
-            AND `institution_id` = $institution_id
-            AND `academic_period_id` = $academic_period_id
-            AND `outcome_criteria_id` = $outcome_criteria_id
-            AND `outcome_template_id` = $outcome_template_id";
-            $connection->execute($sql);
+            $InstitutionOutcomeResults = TableRegistry::get('Institution.InstitutionOutcomeResults');
+            $InstitutionOutcomeResults->deleteAll([
+                                        'student_id' => $options['student_id'],
+                                        'outcome_period_id' => $options['outcome_period_id'],
+                                        'education_grade_id' => $options['education_grade_id'],
+                                        'education_subject_id' => $options['education_subject_id'],
+                                        'institution_id' => $options['institution_id'],
+                                        'academic_period_id' => $options['academic_period_id'],
+                                        'outcome_criteria_id' => $options['outcome_criteria_id'],
+                                        'outcome_template_id' => $options['outcome_template_id']
+                                        ]);
         }
     }
-
 
     private function getAllowedSubjectList()
     {
