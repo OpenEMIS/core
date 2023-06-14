@@ -103,13 +103,13 @@ class InstitutionOutcomeResultsTable extends AppTable
 
         return $query
             ->where([
-                $this->alias_field('student_id') => $student_id,
-                $this->alias_field('outcome_template_id') => $outcome_template_id,
-                $this->alias_field('outcome_period_id') => $outcome_period_id,
-                $this->alias_field('education_grade_id') => $education_grade_id,
-                $this->alias_field('education_subject_id') => $education_subject_id,
-                $this->alias_field('institution_id') => $institution_id,
-                $this->alias_field('academic_period_id') => $academic_period_id,
+                $this->aliasField('student_id') => $student_id,
+                $this->aliasField('outcome_template_id') => $outcome_template_id,
+                $this->aliasField('outcome_period_id') => $outcome_period_id,
+                $this->aliasField('education_grade_id') => $education_grade_id,
+                $this->aliasField('education_subject_id') => $education_subject_id,
+                $this->aliasField('institution_id') => $institution_id,
+                $this->aliasField('academic_period_id') => $academic_period_id,
             ]);
     }
 
