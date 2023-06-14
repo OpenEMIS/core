@@ -160,6 +160,7 @@ Route::group(
         Route::post('institutions/students/competencies/periods/comments', 'InstitutionController@addCompetencyPeriodComments');
 
 
+        Route::get('institutions/{institutionId}/students/{studentId}/assessment-item-results', 'InstitutionController@getStudentAssessmentItemResult');
         Route::get('area-administrative/display-address-area-level', 'InstitutionController@displayAddressAreaLevel');
 
         Route::get('area-administrative/display-birthplace-area-level', 'InstitutionController@displayBirthplaceAreaLevel');

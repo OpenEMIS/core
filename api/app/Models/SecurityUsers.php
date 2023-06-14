@@ -70,4 +70,10 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     {
         return $this->belongsTo(Nationalities::class, 'nationality_id', 'id');
     }
+
+
+    public function identityType()
+    {
+        return $this->belongsTo(IdentityTypes::class, 'identity_type_id', 'id');
+    }
 }
