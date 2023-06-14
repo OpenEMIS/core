@@ -165,6 +165,13 @@ Route::group(
 
         Route::get('area-administrative/display-birthplace-area-level', 'InstitutionController@displayBirthplaceAreaLevel');
 
+        // POCOR-7368 starts
+
+        Route::get('textbooks-conditions', 'TextbookController@getTextbookCondition');
+        Route::get('textbooks/{textbookId}', 'TextbookController@getTextbookByID');
+
+        // POCOR-7368 ends
+
     }
 );
 
