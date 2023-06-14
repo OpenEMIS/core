@@ -1,7 +1,10 @@
 <?php
+
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use Cake\Database\Schema\Table;
+use Cake\Datasource\ConnectionManager;
 use DatePeriod;
 use DateInterval;
 use Cake\Event\Event;
@@ -25,6 +28,9 @@ class StaffLeaveTable extends ControllerActionTable
     const TO_DO = 1;
     const IN_PROGRESS = 2;
     const DONE = 3;
+
+    private $institutionId = null;
+    private $staffId = null;
 
     public function initialize(array $config)
     {
@@ -81,23 +87,23 @@ class StaffLeaveTable extends ControllerActionTable
 
         if ($allowOutAcademicYear == 1) {
             $validator
-            ->add('date_to', 'ruleDateToInRange', [
-                'rule' => ['DateToInRange'],
-                'message' => __('Date to is greater than number of year range')
-            ]);
+                ->add('date_to', 'ruleDateToInRange', [
+                    'rule' => ['DateToInRange'],
+                    'message' => __('Date to is greater than number of year range')
+                ]);
         } else {
             $validator
-            ->add('date_to', 'ruleInAcademicPeriod', [
-                'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
-            ]);
+                ->add('date_to', 'ruleInAcademicPeriod', [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+                ]);
         }
-        
+
         return $validator
             ->add('date_to', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'date_from', true]
-            ])  
+            ])
             ->add('date_from', 'ruleInAcademicPeriod', [
-                'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
+                'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             ])
             ->add('date_from', 'leavePeriodOverlap', [
                 'rule' => ['noOverlappingStaffAttendance']
@@ -120,7 +126,7 @@ class StaffLeaveTable extends ControllerActionTable
         $dateFrom = $entity['date_from']->format('Y-m-d');
         $dateTo = $entity['date_to']->format('Y-m-d');
         $entity = $this->getNumberOfDays($entity);
-        
+
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
         $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
         $staffData = $InstitutionStaff
@@ -134,33 +140,33 @@ class StaffLeaveTable extends ControllerActionTable
                 ]
             )
             ->where([
-                        $InstitutionStaff->aliasField('institution_id = ') => $institutionId,
-                        $InstitutionStaff->aliasField('staff_id = ') => $staffId
-                    ])
+                $InstitutionStaff->aliasField('institution_id = ') => $institutionId,
+                $InstitutionStaff->aliasField('staff_id = ') => $staffId
+            ])
             ->order([
-                     $StaffStatuses->aliasField('code') => 'ASC'
-                   ])
+                $StaffStatuses->aliasField('code') => 'ASC'
+            ])
             ->first();
-            $startDate = $staffData->start_date->format('Y-m-d');
-            if ($startDate > $dateFrom) {
+        $startDate = $staffData->start_date->format('Y-m-d');
+        if ($startDate > $dateFrom) {
             $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
-           return false;
+            return false;
         }
-        
+
         if (!empty($staffData->end_date)) {
             $endDate = $staffData->end_date->format('Y-m-d');
             if ($startDate > $dateFrom) {
                 $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
                 return false;
-            } 
-                if ($dateFrom > $endDate) {
-                    $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDate', ['reset' => true]);
-                    return false;
-                } else if ($dateTo > $endDate) {
-                    $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDateTo', ['reset' => true]);
-                    return false;
-                }
             }
+            if ($dateFrom > $endDate) {
+                $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDate', ['reset' => true]);
+                return false;
+            } else if ($dateTo > $endDate) {
+                $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDateTo', ['reset' => true]);
+                return false;
+            }
+        }
         if (!$entity) {
             // Error message to tell that leave period applied has overlapped exisiting leave records.
             $this->Alert->error('AlertRules.StaffLeave.leavePeriodOverlap', ['reset' => true]);
@@ -192,6 +198,9 @@ class StaffLeaveTable extends ControllerActionTable
         $this->field('staff_id', ['type' => 'hidden']);
         $this->field('end_academic_period_id', ['visible' => false]);
         $this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'time', 'start_time', 'full_day', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content']);
+
+        $this->setInstitutionStaffIDs();
+
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -199,45 +208,22 @@ class StaffLeaveTable extends ControllerActionTable
         $this->field('start_time', ['visible' => false]);
         $this->field('end_time', ['visible' => false]);
         $this->field('time', ['after' => 'date_to']);
-
-        // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Personal','Leave','Staff - Career');       
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
-
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+        //todo generate buttons
+        $this->addExtraButtons($extra);
 
     }
 
     public function indexHistoricalBeforeQuery(Event $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-        if ($session->check('Staff.Staff.id')) {
-            $userId = $session->read('Staff.Staff.id');
-        } elseif (isset($this->request->query['user_id'])) {
-            $userId = $this->request->query['user_id'];
-        }
+        $institutionId = $this->institutionId;
+        $staffId = $this->staffId;
         //POCOR-5364 starts
         if (isset($extra['toolbarButtons']['search']['data']['url']['filter'])) {
             $leaveTypeId = $extra['toolbarButtons']['search']['data']['url']['filter'];
         } elseif (isset($this->request->query['filter'])) {
             $leaveTypeId = $this->request->query['filter'];
         }
-        
+
         if (!empty($leaveTypeId) && $leaveTypeId != -1) {
             $where = [$this->aliasField('staff_leave_type_id') => $leaveTypeId];
         }
@@ -269,7 +255,7 @@ class StaffLeaveTable extends ControllerActionTable
                 'staff_id' => $this->aliasField('staff_id'),
                 'staff_leave_type_id' => $this->aliasField('staff_leave_type_id'),
                 'assignee_id' => $this->aliasField('assignee_id'),
-                'academic_period_id' =>$this->aliasField('academic_period_id'),
+                'academic_period_id' => $this->aliasField('academic_period_id'),
                 'status_id' => $this->aliasField('status_id'),
                 'number_of_days' => $this->aliasField('number_of_days'),
                 'institution_id' => $this->aliasField('institution_id'),
@@ -298,7 +284,7 @@ class StaffLeaveTable extends ControllerActionTable
                 'Statuses'
             ])
             ->where([
-                $this->aliasField('staff_id') => $userId,
+                $this->aliasField('staff_id') => $staffId,
                 $this->aliasField('institution_id') => $institutionId,
                 $where //POCOR-5364
             ]);
@@ -323,7 +309,7 @@ class StaffLeaveTable extends ControllerActionTable
                 'institution_id' => 'Institutions.id',
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
-                'academic_period_id' =>  '(null)',
+                'academic_period_id' => '(null)',
                 'leave_type_id' => 'StaffLeaveTypes.id',
                 'leave_type_name' => 'StaffLeaveTypes.name',
                 'statuses_id' => '(null)',
@@ -342,7 +328,7 @@ class StaffLeaveTable extends ControllerActionTable
                 'Institutions'
             ])
             ->where([
-                $HistoricalTable->aliasField('staff_id') => $userId,
+                $HistoricalTable->aliasField('staff_id') => $staffId,
                 $HistoricalTable->aliasField('institution_id') => $institutionId
             ]);
     }
@@ -364,16 +350,17 @@ class StaffLeaveTable extends ControllerActionTable
         ]);
 
         // after $this->field(), field ordering will mess up, so need to reset the field order
-        $this->setFieldOrder(['staff_leave_type_id', 'academic_period_id','date_from', 'date_to', 'full_day', 'start_time', 'end_time','number_of_days', 'comments', 'file_name', 'file_content', 'assignee_id']);
+        $this->setFieldOrder(['staff_leave_type_id', 'academic_period_id', 'date_from', 'date_to', 'full_day', 'start_time', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content', 'assignee_id']);
     }
 
-    public function onGetTime(Event $event, Entity $entity) {
+    public function onGetTime(Event $event, Entity $entity)
+    {
         $time = '-';
         $isFullDay = $this->getFieldEntity($entity->is_historical, $entity->id, 'full_day');
-        if($entity->full_day == 0){
+        if ($entity->full_day == 0) {
             $startTime = $this->getFieldEntity($entity->is_historical, $entity->id, 'start_time');
             $endTime = $this->getFieldEntity($entity->is_historical, $entity->id, 'end_time');
-            $time = $this->formatTime($startTime). ' - '. $this->formatTime($endTime);
+            $time = $this->formatTime($startTime) . ' - ' . $this->formatTime($endTime);
         }
         return $time;
     }
@@ -388,7 +375,7 @@ class StaffLeaveTable extends ControllerActionTable
         if ($this->action == 'view') {
             $statusName = $entity->status->name;
         } elseif ($this->action == 'index') {
-            if ($entity->is_historical){
+            if ($entity->is_historical) {
                 $statusName = 'Historical';
             } else {
                 $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'status');
@@ -456,7 +443,7 @@ class StaffLeaveTable extends ControllerActionTable
     public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $userId = $this->getUserId();
+            $userId = $this->getStaffId();
 
             $attr['value'] = $userId;
         }
@@ -483,7 +470,7 @@ class StaffLeaveTable extends ControllerActionTable
                 $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
                 $attr['value'] = $currentAcademicPeriodId;
                 $attr['attr']['value'] = $currentAcademicPeriodId;
-             }
+            }
 
             $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
             $attr['type'] = 'select';
@@ -544,9 +531,9 @@ class StaffLeaveTable extends ControllerActionTable
     private function setupTabElements()
     {
         $options['type'] = 'staff';
-        $userId = $this->getUserId();
-        if (!is_null($userId)) {
-            $options['user_id'] = $userId;
+        $staffId = $this->getStaffId();
+        if (!is_null($staffId)) {
+            $options['user_id'] = $staffId;
         }
 
         $tabElements = $this->controller->getCareerTabElements($options);
@@ -554,7 +541,7 @@ class StaffLeaveTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->alias());
     }
 
-    public function getUserId()
+    public function getStaffId()
     {
         $userId = null;
         if (!is_null($this->request->query('user_id'))) {
@@ -617,12 +604,12 @@ class StaffLeaveTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias(), $this->StaffLeaveTypes->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
+            ->contain([$this->Users->alias(), $this->StaffLeaveTypes->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(), 'Assignees'])
             ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
-                'Assignees.super_admin IS NOT' => 1]) //POCOR-7102
+                'Assignees.super_admin IS NOT' => 1])//POCOR-7102
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
                 return $results->map(function ($row) {
@@ -699,8 +686,7 @@ class StaffLeaveTable extends ControllerActionTable
                 $this->aliasField('date_to') . ' IS NOT NULL',
                 $conditions[$thresholdArray['condition']]
             ])
-            ->hydrate(false)
-            ;
+            ->hydrate(false);
 
         return $licenseData->toArray();
     }
@@ -710,7 +696,8 @@ class StaffLeaveTable extends ControllerActionTable
         return (($comparison_date >= $start_date) && ($comparison_date <= $end_date));
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (array_key_exists('view', $buttons)) {
             if ($entity->is_historical) {
@@ -788,33 +775,33 @@ class StaffLeaveTable extends ControllerActionTable
         $CalendarEvents = TableRegistry::get('Calendars');
         $CalendarTypes = TableRegistry::get('CalendarTypes');
         $publicCalendarEvents = $CalendarEvents
-                                ->find('all')
-                                ->contain(['CalendarTypes','CalendarEventDates'])
-                                ->join([
-                                    [
-                                        'type' => 'left',
-                                        'table' => 'calendar_types',
-                                        'conditions' => [
-                                            $CalendarEvents->aliasField('calendar_type_id') => $CalendarTypes->aliasField('id')
-                                        ]
-                                    ]
-                                ])                                
-                                ->where([
-                                    $CalendarEvents->aliasField('institution_id') => $institutionId])                               
-                                ->orWhere([ 
-                                    $CalendarEvents->aliasField('institution_id') => -1
-                                ])
-                                ->andWhere([
-                                    $CalendarTypes->aliasField('code') => 'PUBLICHOLIDAY'
-                                ])
-                                ->toArray();
+            ->find('all')
+            ->contain(['CalendarTypes', 'CalendarEventDates'])
+            ->join([
+                [
+                    'type' => 'left',
+                    'table' => 'calendar_types',
+                    'conditions' => [
+                        $CalendarEvents->aliasField('calendar_type_id') => $CalendarTypes->aliasField('id')
+                    ]
+                ]
+            ])
+            ->where([
+                $CalendarEvents->aliasField('institution_id') => $institutionId])
+            ->orWhere([
+                $CalendarEvents->aliasField('institution_id') => -1
+            ])
+            ->andWhere([
+                $CalendarTypes->aliasField('code') => 'PUBLICHOLIDAY'
+            ])
+            ->toArray();
         $collection = new Collection($publicCalendarEvents);
 
         $mapCollection = $collection->map(function ($value, $key) {
             return $value['calendar_event_dates'][0]['date']->format('Y-m-d');
         });
         $publicCalendarEventDates = $mapCollection->toArray();
-        
+
         $count = 0;
         $overlap = false;
         foreach ($datePeriod as $key => $date) {
@@ -834,20 +821,20 @@ class StaffLeaveTable extends ControllerActionTable
 
                         if ($isDateInRange) {
                             //If leave date applied overlaps existing records and both are non full day leave, check for overlapping in time.
-                            if($comparisonFullDay == 0 && $isFullDayLeave == 0){
+                            if ($comparisonFullDay == 0 && $isFullDayLeave == 0) {
                                 $existingConditions[$this->aliasField('date_from >=')] = $comparisonDateStr;
                                 $existingConditions[$this->aliasField('date_to <=')] = $comparisonDateStr;
                                 $overlapHalfDayLeaveRecords = $this
-                                ->find()
-                                ->where([$existingConditions])
-                                ->count();
+                                    ->find()
+                                    ->where([$existingConditions])
+                                    ->count();
                                 if ($overlapHalfDayLeaveRecords >= 2) {
                                     $overlap = true;
                                     break;
                                 } else if (($comparisonStartTime <= $entityEndTime) && ($comparisonEndTime >= $entityStartTime)) {
-                                   // Overlapping in time found
-                                   $overlap = true;
-                                   break;
+                                    // Overlapping in time found
+                                    $overlap = true;
+                                    break;
                                 }
                             } else {
                                 $overlap = true;
@@ -879,24 +866,24 @@ class StaffLeaveTable extends ControllerActionTable
             $workflowStepsTable = TableRegistry::get('workflow_steps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workModelId = $Workflows
-                            ->find()
-                            ->select(['id'=>$workflowModelsTable->aliasField('id'),
-                            'workflow_id'=>$Workflows->aliasField('id'),
-                            'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
-                                [
-                                    $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
-                                ])
-                            ->where([$workflowModelsTable->aliasField('name')=>$workflowModel])->first();
+                ->find()
+                ->select(['id' => $workflowModelsTable->aliasField('id'),
+                    'workflow_id' => $Workflows->aliasField('id'),
+                    'is_school_based' => $workflowModelsTable->aliasField('is_school_based')])
+                ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                    [
+                        $workflowModelsTable->aliasField('id') . ' = ' . $Workflows->aliasField('workflow_model_id')
+                    ])
+                ->where([$workflowModelsTable->aliasField('name') => $workflowModel])->first();
             $workflowId = $workModelId->workflow_id;
             $isSchoolBased = $workModelId->is_school_based;
             $workflowStepsOptions = $workflowStepsTable
-                            ->find()
-                            ->select([
-                                'stepId'=>$workflowStepsTable->aliasField('id'),
-                            ])
-                            ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
-                            ->first();
+                ->find()
+                ->select([
+                    'stepId' => $workflowStepsTable->aliasField('id'),
+                ])
+                ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
+                ->first();
             $stepId = $workflowStepsOptions->stepId;
             $session = $request->session();
             if ($session->check('Institution.Institutions.id')) {
@@ -912,7 +899,7 @@ class StaffLeaveTable extends ControllerActionTable
                     $Areas = TableRegistry::get('Area.Areas');
                     $Institutions = TableRegistry::get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {                        
+                        if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
@@ -921,19 +908,19 @@ class StaffLeaveTable extends ControllerActionTable
                             // School based assignee
                             $where = [
                                 'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
-                                        ['Institutions.id' => $institutionId]],
+                                    ['Institutions.id' => $institutionId]],
                                 $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
                             ];
                             $schoolBasedAssigneeQuery = $SecurityGroupUsers
-                                    ->find('userList', ['where' => $where])
-                                    ->leftJoinWith('SecurityGroups.Institutions');
+                                ->find('userList', ['where' => $where])
+                                ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                            
+
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
-                                        ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                            
+                                ->find('UserList', ['where' => $where, 'area' => $areaObj]);
+
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
@@ -941,8 +928,8 @@ class StaffLeaveTable extends ControllerActionTable
                     } else {
                         $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                         $assigneeQuery = $SecurityGroupUsers
-                                ->find('userList', ['where' => $where])
-                                ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
+                            ->find('userList', ['where' => $where])
+                            ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
                         $assigneeOptions = $assigneeQuery->toArray();
                     }
                 }
@@ -955,4 +942,210 @@ class StaffLeaveTable extends ControllerActionTable
             return $attr;
         }
     }
+
+    private function addExtraButtons(ArrayObject $extra)
+    {
+
+        $toolbarButtons = $extra['toolbarButtons'];
+        $this->addManualButton($toolbarButtons);
+
+        $this->addArchiveButton($toolbarButtons);
+
+
+    }
+
+    /**
+     * @param $toolbarButtons
+     */
+    private function addManualButton($toolbarButtons)
+    {
+        // Start POCOR-5188
+        $is_manual_exist = $this->getManualUrl('Personal', 'Leave', 'Staff - Career');
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
+
+            $customButtonName = 'help';
+            $customButtonUrl = $is_manual_exist['url'];
+            $customButtonLabel = '<i class="fa fa-question-circle"></i>';
+            $customButtonTitle = __('Help');
+            $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl, $btnAttr);
+        }
+
+
+    }
+
+
+
+    /**
+     * @param $toolbarButtons
+     */
+    private function addArchiveButton($toolbarButtons)
+    {
+
+        $is_archive_exists = $this->isArchiveExists();
+        if ($is_archive_exists) {
+            $customButtonName = 'archive';
+            $customButtonUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'ArchivedStaffLeave'
+            ];
+            $customButtonLabel = '<i class="fa fa-folder"></i>';
+            $customButtonTitle = __('Archive');
+            $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl);
+        }
+    }
+    public function hasArchiveTable($sourceTable)
+    {
+        $sourceTableName = $sourceTable->table();
+        $targetTableName = $sourceTableName . '_archived';
+        $connection = ConnectionManager::get('default');
+        $schemaCollection = new \Cake\Database\Schema\Collection($connection);
+        $existingTables = $schemaCollection->listTables();
+        $tableExists = in_array($targetTableName, $existingTables);
+
+        if ($tableExists) {
+            return true;
+        }
+
+        $sourceTableSchema = $schemaCollection->describe($sourceTableName);
+
+        // Create a new table schema for the target table
+        $targetTableSchema = new Table($targetTableName);
+
+        // Copy the columns from the source table to the target table
+        foreach ($sourceTableSchema->columns() as $column) {
+            $columnDefinition = $sourceTableSchema->column($column);
+            $targetTableSchema->addColumn($column, $columnDefinition);
+        }
+        $randomString = $this->generateRandomString();
+        // Copy the indexes from the source table to the target table
+        foreach ($sourceTableSchema->indexes() as $index) {
+            $indexDefinition = $sourceTableSchema->index($index);
+            $targetTableSchema->addIndex($index . $randomString, $indexDefinition);
+        }
+
+        // Copy the constraints from the source table to the target table
+        // FIX for random FK name
+
+        foreach ($sourceTableSchema->constraints() as $constraint) {
+            $constraintDefinition = $sourceTableSchema->constraint($constraint);
+            $targetTableSchema->addConstraint($constraint . $randomString, $constraintDefinition);
+        }
+
+
+
+        // Generate the SQL statement to create the target table
+        $createTableSql = $targetTableSchema->createSql($connection);
+
+        // Execute the SQL statement to create the target table
+        foreach ($createTableSql as $sql) {
+            $connection->execute($sql);
+        }
+
+        // Check if the target table was created successfully
+        $existingTables = $schemaCollection->listTables();
+        $tableExists = in_array($targetTableName, $existingTables);
+        if ($tableExists) {
+            return true;
+        }
+
+        return false; // Return false if the table couldn't be created
+    }
+
+    private function generateRandomString($length = 4) {
+        $bytes = random_bytes($length);
+        return substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $length);
+    }
+
+    private function isArchiveExists()
+    {
+        $is_archive_exists = false;
+        $institutionId = $this->institutionId;
+        $staffId = $this->staffId;
+        //This is for POCOR-7475 as well
+        if(!$this->hasArchiveTable($this)){
+            $is_archive_exists = false;
+            return $is_archive_exists;
+        }
+        $tableArchived = TableRegistry::get('institution_staff_leave_archived');
+        $count = $tableArchived->find()
+            ->select([$tableArchived->aliasField('staff_id')])// POCOR-7339-HINDOL
+            ->where([
+                $tableArchived->aliasField('institution_id') => $institutionId,
+                $tableArchived->aliasField('staff_id') => $staffId,
+            ])->first();
+        if($count) {
+            $is_archive_exists = true;
+        }
+        if(!$count) {
+            $is_archive_exists = false;
+        }
+        return $is_archive_exists;
+    }
+
+    private function generateButton(ArrayObject $toolbarButtons, $name, $title, $label, $url, $btnAttr = null)
+    {
+        if (!$btnAttr) {
+            $btnAttr = $this->getButtonAttr();
+        }
+        $customButton = [];
+        if (array_key_exists('_ext', $url)) {
+            unset($customButton['url']['_ext']);
+        }
+        if (array_key_exists('pass', $url)) {
+            unset($customButton['url']['pass']);
+        }
+        if (array_key_exists('paging', $url)) {
+            unset($customButton['url']['paging']);
+        }
+        if (array_key_exists('filter', $url)) {
+            unset($customButton['url']['filter']);
+        }
+        $customButton['type'] = 'button';
+        $customButton['attr'] = $btnAttr;
+        $customButton['attr']['title'] = $title;
+        $customButton['label'] = $label;
+        $customButton['url'] = $url;
+        $toolbarButtons[$name] = $customButton;
+    }
+
+    private function addBackButton($toolbarButtons)
+    {
+        $is_archive_exists = true;
+        if ($is_archive_exists) {
+            $customButtonName = 'back';
+            $customButtonUrl = [
+                'plugin' => 'Student',
+                'controller' => 'Students',
+                'action' => 'Absences'
+            ];
+            $customButtonLabel = '<i class="fa kd-back"></i>';
+            $customButtonTitle = __('Back');
+            $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl);
+        }
+    }
+
+    private function setInstitutionStaffIDs()
+    {
+        $institutionId = $staffId = null;
+        $session = $this->controller->request->session();
+        if ($session->check('Institution.Institutions.id')) {
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+        $staffId = $this->getStaffId();
+        if (!$staffId) {
+            $staffId = $this->Session->read('Institution.Staff.id');
+        }
+        $this->institutionId = $institutionId;
+        $this->staffId = $staffId;
+    }
+
+
 }
