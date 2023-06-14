@@ -1552,14 +1552,17 @@ class NavigationComponent extends Component
                     'Staff.StaffAttendances',
                     'Staff.InstitutionStaffAttendanceActivities',
                     'Institutions.StaffLeave',
+                    'Institutions.ArchivedStaffLeave',
                     'Institutions.HistoricalStaffLeave',
                     'Staff.Behaviours',
                     'Institutions.Staff.edit',
                     'Institutions.Staff.view',
                     'Institutions.StaffPositionProfiles.add',
                     'Institutions.StaffAppraisals',
-                    'Institutions.ImportStaffLeave', 'Staff.Duties', 'Staff.StaffAssociations',
-                    'Staff.InstitutionStaffAttendancesArchive', 'Staff.StaffCurriculars'],
+                    'Institutions.ImportStaffLeave',
+                    'Staff.Duties','Staff.StaffAssociations',
+                    'Staff.InstitutionStaffAttendancesArchive',
+                    'Staff.StaffCurriculars'],
             ],
             'Staff.Employments' => [
                 'title' => 'Professional',
@@ -1839,8 +1842,14 @@ class NavigationComponent extends Component
                     'Profiles.StaffClasses',
                     'Profiles.StaffSubjects',
                     'Profiles.StaffLeave',
-                    'Profiles.HistoricalStaffLeave', 'Profiles.StaffAttendances', 'Profiles.StaffBehaviours',
-                    'Profiles.StaffAppraisals', 'Profiles.StaffDuties', 'Profiles.StaffAssociations', 'Profiles.StaffCurriculars']
+                    'Profiles.ArchivedStaffLeave',
+                    'Profiles.HistoricalStaffLeave',
+                    'Profiles.StaffAttendances',
+                    'Profiles.StaffBehaviours',
+                    'Profiles.StaffAppraisals',
+                    'Profiles.StaffDuties',
+                    'Profiles.StaffAssociations',
+                    'Profiles.StaffCurriculars']
             ],
             'Profiles.StaffBankAccounts' => [
                 'title' => 'Finance',
@@ -2006,10 +2015,13 @@ class NavigationComponent extends Component
                     'Directories.StaffClasses',
                     'Directories.StaffSubjects',
                     'Directories.StaffLeave',
+                    'Directories.ArchivedStaffLeave',
                     'Directories.HistoricalStaffLeave',
                     'Directories.StaffAttendances',
                     'Directories.StaffBehaviours',
-                    'Directories.StaffAppraisals', 'Directories.StaffDuties', 'Directories.StaffAssociations']
+                    'Directories.StaffAppraisals',
+                    'Directories.StaffDuties',
+                    'Directories.StaffAssociations']
             ],
             'Directories.StaffBankAccounts' => [
                 'title' => 'Finance',
