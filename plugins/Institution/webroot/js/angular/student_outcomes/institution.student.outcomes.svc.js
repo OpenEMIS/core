@@ -76,11 +76,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer:true});
     }
 
-    function getSubjectOptions(classId,
-                               institutionId,
-                               academicPeriodId,
-                               gradeId,
-                               studentId) { //6198 studentId
+    function getSubjectOptions(classId, institutionId, academicPeriodId, gradeId, studentId) { //6198 studentId 
         var success = function(response, deferred) { 
             deferred.resolve(response.data.data);
         };
@@ -96,8 +92,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer: true});
     }
 
-    function getOutcomeTemplate(academicPeriodId,
-                                outcomeTemplateId) {
+    function getOutcomeTemplate(academicPeriodId, outcomeTemplateId) {
         var primaryKey = KdDataSvc.urlsafeB64Encode(JSON.stringify({academic_period_id: academicPeriodId, id: outcomeTemplateId}));
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
@@ -118,13 +113,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer:true});
     }
 
-    function getStudentOutcomeResults(studentId,
-                                      templateId,
-                                      periodId,
-                                      gradeId,
-                                      subjectId,
-                                      institutionId,
-                                      academicPeriodId) {
+    function getStudentOutcomeResults(studentId, templateId, periodId, gradeId, subjectId, institutionId, academicPeriodId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
@@ -141,13 +130,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer:true});
     }
 
-    function getStudentOutcomeComments(studentId,
-                                       templateId,
-                                       periodId,
-                                       gradeId,
-                                       subjectId,
-                                       institutionId,
-                                       academicPeriodId) {
+    function getStudentOutcomeComments(studentId,  templateId, periodId, gradeId, subjectId, institutionId, academicPeriodId) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
@@ -164,13 +147,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
             .ajax({success: success, defer:true});
     }
 
-    function getColumnDefs(period,
-                           subject,
-                           student,
-                           periodOptions,
-                           subjectOptions,
-                           studentOptions,
-                           studentResults) {
+    function getColumnDefs(period, subject, student, periodOptions, subjectOptions, studentOptions, studentResults) {
         var menuTabs = [];
         var filterParams = {
             cellHeight: 30
@@ -179,12 +156,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         // dynamic table headers
         var criteriaHeader = 'Outcome Criteria';
         var resultHeader = 'Result';
-        if (periodOptions.length > 0
-            && period != null
-            && subjectOptions.length > 0
-            && subject != null
-            && studentOptions.length > 0
-            && student != null) {
+        if (periodOptions.length > 0 && period != null && subjectOptions.length > 0 && subject != null && studentOptions.length > 0 && student != null) {
             var subjectObj = $filter('filter')(subjectOptions, {'id':subject});
             if (subjectObj.length > 0) {
                 criteriaHeader = subjectObj[0].code_name + ' Criteria';
@@ -219,13 +191,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         return {data: columnDefs};
     }
 
-    function getRowData(outcomeTemplateId,
-                        subjectId,
-                        defaultRow,
-                        gradingOptions,
-                        studentResults,
-                        limit,
-                        page) {
+    function getRowData(outcomeTemplateId, subjectId, defaultRow, gradingOptions, studentResults, limit, page) {
         var success = function(response, deferred) {
             var criterias = response.data.data;
 
@@ -302,9 +268,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                         eSelect.addEventListener('blur', function () {
                             var newValue = eSelect.value;
 
-                            // if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
-                            // POCOR-7480-KHINDOL - removed check for error that led to loop
-                            if (newValue != oldValue) {
+                            if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
                                 params.data[params.colDef.field] = newValue;
 
                                 var outcomeCriteriaId = params.data.outcome_criteria_id;
@@ -380,10 +344,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                         textInput.addEventListener('blur', function() {
                             var newValue = textInput.value;
                             var controller = params.context._controller;
-                            // if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
-                            //POCOR-7480-KHINDOL
-                            if (newValue != oldValue) {
-
+                            if (newValue != oldValue || params.data.save_error[params.colDef.field]) {
                                 params.data[params.colDef.field] = newValue;
                                 
                                 var newVal = newValue;
@@ -394,7 +355,7 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                                 } else {
                                     AlertSvc.info(controller, 'Changes will be automatically saved when any value is changed');
                                 } 
-
+                                
                                 vm.saveOutcomeComments(params)
                                 .then(function(response) {
                                     params.data.save_error[params.colDef.field] = false;
@@ -447,26 +408,43 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         var outcomeCriteriaId = params.data.outcome_criteria_id;
         var institutionId = params.context.institution_id;
         var academicPeriodId = params.context.academic_period_id;
-        
+        let currentDate = new Date();
+        let formattedDate = currentDate.toISOString().replace(/T/, ' ').replace(/\..+/, '');
+        console.log('saveOutcomeResults');
+        console.log(formattedDate);
+
         //POCOR-7114[START]
         if(parseInt(outcomeGradingOptionId) == 0 ){
-            var success = function(response, deferred) {
-                deferred.resolve(response.data.data);
-            };
-            return InstitutionOutcomeResults
-            .find('deleteRecords', {
-                student_id: studentId,
-                outcome_grading_option_id: parseInt(outcomeGradingOptionId),
-                outcome_period_id: outcomePeriodId,
-                education_grade_id: educationGradeId,
-                education_subject_id: educationSubjectId,
-                institution_id: institutionId,
-                academic_period_id: academicPeriodId,
-                outcome_criteria_id: outcomeCriteriaId,
-                outcome_template_id: outcomeTemplateId  
-            })
-            .ajax({success: success, defer:true});
-        }else{
+            // var success = function(response, deferred) {
+            //     deferred.resolve(response.data.data);
+            //     currentDate = new Date();
+            //     formattedDate = currentDate.toISOString().replace(/T/, ' ').replace(/\..+/, '');
+            //     console.log('sucesssucess');
+            //     console.log(formattedDate);
+            //
+            // };
+            // const deleter = InstitutionOutcomeResults
+            // .find('deleteRecords', {
+            //     student_id: studentId,
+            //     outcome_grading_option_id: parseInt(outcomeGradingOptionId),
+            //     outcome_period_id: outcomePeriodId,
+            //     education_grade_id: educationGradeId,
+            //     education_subject_id: educationSubjectId,
+            //     institution_id: institutionId,
+            //     academic_period_id: academicPeriodId,
+            //     outcome_criteria_id: outcomeCriteriaId,
+            //     outcome_template_id: outcomeTemplateId
+            // })
+            // .ajax({success: success, defer:true});
+
+            parseInt(outcomeGradingOptionId) == -1;
+            currentDate = new Date();
+            formattedDate = currentDate.toISOString().replace(/T/, ' ').replace(/\..+/, '');
+            console.log('before delete');
+            console.log(formattedDate);
+            }
+
+        // else{
             var saveObj = {
                 outcome_grading_option_id: parseInt(outcomeGradingOptionId),
                 student_id: studentId,
@@ -478,8 +456,13 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId
             };
+        currentDate = new Date();
+        formattedDate = currentDate.toISOString().replace(/T/, ' ').replace(/\..+/, '');
+        console.log('after delete or change');
+        console.log(formattedDate);
+
             return InstitutionOutcomeResults.save(saveObj);
-        }
+        // }
         //POCOR-7114[END]
     }
 
