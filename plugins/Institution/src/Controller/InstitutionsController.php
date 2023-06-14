@@ -63,6 +63,7 @@ class InstitutionsController extends AppController
         'StaffUser',
         'StaffAccount',
         'StaffLeave',
+        'ArchivedStaffLeave',
         'StaffAppraisals',
         'Associations',
         'StaffTrainingNeeds',
@@ -447,6 +448,11 @@ class InstitutionsController extends AppController
     public function StaffLeave()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']);
+    }
+
+    public function ArchivedStaffLeave()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ArchivedStaffLeave']);
     }
 
     public function VisitRequests()
@@ -7521,31 +7527,29 @@ class InstitutionsController extends AppController
         if (!empty($requestData)) {
             $identityTypeId = (array_key_exists('identity_type_id', $requestData)) ? $requestData['identity_type_id'] : null;
             $identityNumber = (array_key_exists('identity_number', $requestData)) ? $requestData['identity_number'] : null;
+            //POCOR-7481-HINDOL if the identity belongs to the same openemis_no - skip
+            $userId = (array_key_exists('user_id', $requestData)) ? $requestData['user_id'] : null;
             $nationalityId = (array_key_exists('nationality_id', $requestData)) ? $requestData['nationality_id'] : null;
-            $UserIdentities = TableRegistry::get('user_identities');//POCOR-7390
-            if (!empty($identityTypeId) && !empty($identityNumber) && !empty($nationalityId)) {
+
+
+            if (!empty($identityTypeId) && !empty($identityNumber)) {//POCOR-7390 starts
+                $UserIdentities = TableRegistry::get('user_identities');//POCOR-7390
+                $where = [$UserIdentities->aliasField('identity_type_id') => $identityTypeId,
+                    $UserIdentities->aliasField('number') => $identityNumber];
+                if (!empty($userId)) {
+                    $where[] = $UserIdentities->aliasField('security_user_id') . ' != ' . $userId;
+                }
+                if (!empty($nationalityId)) {
+                    $where[$UserIdentities->aliasField('nationalityId')] = $nationalityId;
+                }
+
                 $CheckUserExist = $UserIdentities->find()
-                    ->where([
-                        $UserIdentities->aliasField('identity_type_id') => $identityTypeId,
-                        $UserIdentities->aliasField('number') => $identityNumber,
-                        $UserIdentities->aliasField('nationality_id') => $nationalityId
-                    ])->count();
+                    ->where($where)->count();
                 if ($CheckUserExist > 0) {
                     echo json_encode(['user_exist' => 1, 'status_code' => 200, 'message' => __('User already exist with this nationality, identity type & identity number. Kindly select user from below list.')]);
                 } else {
                     echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => '']);
                 }
-            } else if (!empty($identityTypeId) && !empty($identityNumber) && empty($nationalityId)) {//POCOR-7390 starts
-                $CheckUserExist = $UserIdentities->find()
-                    ->where([
-                        $UserIdentities->aliasField('identity_type_id') => $identityTypeId,
-                        $UserIdentities->aliasField('number') => $identityNumber
-                    ])->count();
-                if ($CheckUserExist > 0) {
-                    echo json_encode(['user_exist' => 1, 'status_code' => 200, 'message' => __('This identity has already existed in the system.')]);
-                } else {
-                    echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => '']);
-                }//POCOR-7390 ends
             } else {
                 echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid data.')]);
             }

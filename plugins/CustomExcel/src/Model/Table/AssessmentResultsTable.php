@@ -606,11 +606,6 @@ class AssessmentResultsTable extends AppTable
                     } 
                     //POCOR-6586 ends
                 }
-            if (!empty($withTerm)) { // If academic_term is setup, to use the academic_term to calculate the average
-                // $recordsToUse = $withTerm->toArray();
-                $recordsToUse = $withTerm;
-                $withoutTerm = []; //POCOR-6911
-            } else { // else, to calculate the average by subject_classification
                 //Without Term
                 $withoutTerm = $AssessmentItemResults->find()
                     ->select([
@@ -739,9 +734,14 @@ class AssessmentResultsTable extends AppTable
                         //POCOR-6586 ends
                     }
                 // $recordsToUse = $withoutTerm->toArray();
-                $recordsToUse = $withoutTerm; 
-                $withTerm = []; //POCOR-6911
+            //POCOR-7648 start
+            if (!empty($withTerm)) { 
+                 $recordsToUse = $withTerm;
+                }
+            else{
+                $recordsToUse = $withoutTerm;
             }
+            //POCOR-7648 end
             //POCOR-6506[START]
             foreach ($recordsToUse as $record) {
                 $studentId = $record['student_id'];
