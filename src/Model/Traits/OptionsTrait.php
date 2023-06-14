@@ -208,7 +208,16 @@ trait OptionsTrait
                         1 => __('Days before disbursement date'),
                         2 => __('Days after disbursement date')
                     ]
-                ]
+                    ],
+                //POCOR-7462 start
+                'Cases' => [
+                    'workflow_steps' => [
+                            59 => __('Open'),
+                            60 => __('Pending For Approval'),
+                            61 => __('Closed'),
+                        ]
+                    ],
+                //POCOR-7462 end
             ]
         ];
 
