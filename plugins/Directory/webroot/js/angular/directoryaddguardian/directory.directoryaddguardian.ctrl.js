@@ -749,7 +749,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             await checkUserAlreadyExistByIdentity();
         }
         if(scope.step === 'confirmation'){
-            const result = await scope.checkUserExistByIdentityFromConfiguaration();
+            const result = await scope.checkUserExistByIdentityFromConfiguration();
             if(result)return;
         }
         
@@ -807,7 +807,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
     scope.goToNextStep = async function() {
         if(scope.step === 'confirmation'){
-            const result = await scope.checkUserExistByIdentityFromConfiguaration();
+            const result = await scope.checkUserExistByIdentityFromConfiguration();
             if(result)return;
          }
         if(scope.isInternalSearchSelected) {
@@ -1454,7 +1454,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         scope.externalGridOptions.api.setDatasource(dataSource);
         scope.externalGridOptions.api.sizeColumnsToFit(); 
     }
-    scope.checkUserExistByIdentityFromConfiguaration = async function checkUserExistByIdentityFromConfiguaration()
+    scope.checkUserExistByIdentityFromConfiguration = async function checkUserExistByIdentityFromConfiguration()
     {
         const { identity_type_id, identity_number, nationality_id } = scope.selectedUserData;
         // scope.error.nationality_id = "";
