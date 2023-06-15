@@ -17,11 +17,11 @@ class TextbookService extends Controller
     }
 
     
-    public function getTextbookCondition(){
+    public function getTextbookConditions(){
     
         try {
-            $data = $this->textbookRepository->getTextbookCondition();
-            return $this->sendSuccessResponse("Textbook condition  List Found", $data);
+            $data = $this->textbookRepository->getTextbookConditions();
+            return $data;
             
         } catch (\Exception $e) {
             Log::error(
@@ -29,7 +29,7 @@ class TextbookService extends Controller
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('Textbook condition List Not Found');
+            return $this->sendErrorResponse('Textbook Conditions Not Found');
         }
     }
 
@@ -37,7 +37,7 @@ class TextbookService extends Controller
     
         try {
             $data = $this->textbookRepository->getTextbookByID($id);
-            return $this->sendSuccessResponse("Textbook Found", $data);
+            return $data;
             
         } catch (\Exception $e) {
             Log::error(
@@ -46,6 +46,38 @@ class TextbookService extends Controller
             );
 
             return $this->sendErrorResponse('Textbook Not Found');
+        }
+    }
+
+    public function getTextbookStatuses(){
+    
+        try {
+            $data = $this->textbookRepository->getTextbookStatuses();
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Textbook Statuses Not Found');
+        }
+    }
+
+    public function getTextbookDimensions(){
+    
+        try {
+            $data = $this->textbookRepository->getTextbookDimensions();
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Textbook Dimensions Not Found');
         }
     }
 }
