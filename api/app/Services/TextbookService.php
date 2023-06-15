@@ -80,4 +80,21 @@ class TextbookService extends Controller
             return $this->sendErrorResponse('Textbook Dimensions Not Found');
         }
     }
+
+    public function addTextbooks($request){
+        try {
+            $data = $this->textbookRepository->addTextbooks($request);
+            
+            return $data;
+
+        }
+        catch(\Exception $e) {
+            Log::error(
+                'Failed to add Textbook.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add Textbook.');
+        }
+    }
 }

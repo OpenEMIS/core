@@ -1139,4 +1139,21 @@ class InstitutionService extends Controller
         }
     }
 
+    public function getInstitutionTextbookdata(int $institutionId, int $textbookId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionTextbookdata($institutionId, $textbookId);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution Textbook Data Not Found');
+        }
+    }
+
 }
