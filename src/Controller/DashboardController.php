@@ -24,7 +24,13 @@ class DashboardController extends AppController
         if(!empty($workflowRules)){
             $this->triggerUnmarkedAttendanceShell();
         }
-        $this->triggerAlertCasesShell();//POCOR-7462 
+        //POCOR-7462 start   
+        $this->loadModel('Alerts.AlertRules');
+        $alertRules = $this->AlertRules->find()->where(['feature' => 'Cases'])->hydrate(false)->toArray();
+        if(!empty($alertRules)){
+            $this->triggerAlertCasesShell();
+        }
+        //POCOR-7462 end
         //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
 		
