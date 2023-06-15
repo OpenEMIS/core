@@ -52,7 +52,7 @@ class AlertCasesShell extends AlertShell
             // sleep(10);
 
             $filesArray = $dir->find($processName . '.stop');
-        } while (0);
+        } while (empty($filesArray));
 
         $this->Alerts->updateAll(['process_id' => NULL, 'modified' => Time::now()], ['process_name' => $processName]);
     }
