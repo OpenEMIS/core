@@ -24,6 +24,7 @@ class DashboardController extends AppController
         if(!empty($workflowRules)){
             $this->triggerUnmarkedAttendanceShell();
         }
+        $this->triggerAlertCasesShell();//POCOR-7462 
         //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
 		
@@ -155,7 +156,18 @@ class DashboardController extends AppController
         Log::write('debug', $shellCmd); 
     
     }
-
+    //POCOR-7462 start
+    private function triggerAlertCasesShell()
+    {
+        $cmd = ROOT . DS . 'bin' . DS . 'cake AlertCases';
+        $logs = ROOT . DS . 'logs' . DS . 'AlertCases.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        $pid = exec($shellCmd);
+        Log::write('debug', $shellCmd); 
+    
+    }
+    //POCOR-7462 end
+    
     private function triggerInstitutionClassSubjectsShell()
     {
         $script = 'InstitutionClassSubjects';
