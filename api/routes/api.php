@@ -164,6 +164,9 @@ Route::group(
 
         Route::get('area-administrative/display-birthplace-area-level', 'InstitutionController@displayBirthplaceAreaLevel');
 
+
+        Route::post('institutions/save-student', 'InstitutionController@saveStudentData');
+
     }
 );
 

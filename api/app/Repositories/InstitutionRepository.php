@@ -35,6 +35,8 @@ use App\Models\InstitutionCompetencyPeriodComments;
 use App\Models\StaffTypes;
 use App\Models\ConfigItem;
 use App\Models\InstitutionSubjectStaff;
+use App\Models\AcademicPeriod;
+use App\Models\StudentStatuses;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -1798,6 +1800,43 @@ class InstitutionRepository extends Controller
             );
 
             return $this->sendErrorResponse('Subjects Staff List Not Found');
+        }
+    }
+
+
+
+    public function saveStudentData($request)
+    {
+        try {
+            $param = $request->all();
+            
+            $academicPeriod = AcademicPeriod::where('id', $param['academic_period_id'])->first();
+
+            if(!$academicPeriod){
+                return 1;
+            }
+
+            $start_year = $academicPeriod->start_year;
+            $end_year = $academicPeriod->end_year;
+
+            //get prefered language
+            $pref_lang = ConfigItem::where('code', 'language')->where('type', 'System')->first();
+
+
+            //get Student Status List
+            $studentStatus = StudentStatuses::pluck('code', 'id')->toArray();
+            dd($studentStatus);
+
+            //get nationality data
+            $nationalities = '';
+        } catch (\Exception $e) {
+            dd($e);
+            Log::error(
+                'Failed to store student data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to store student data.');
         }
     }
 }
