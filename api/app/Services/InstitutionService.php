@@ -1108,4 +1108,22 @@ class InstitutionService extends Controller
         }
     }
 
+
+
+    public function saveStudentData($request)
+    {
+        try {
+            $data = $this->institutionRepository->saveStudentData($request);
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to store student data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to store student data.');
+        }
+    }
+
 }
