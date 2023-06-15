@@ -1,3 +1,13 @@
+### [3.87.0] - 2023-06-14
+- Implemented: Development of JoLearn v4 API - institutions assessment grades
+- Implemented: Develop client id API for all OpenEMIS Core APIs v4
+- Bug Fixed: Institutions>Performance>Assessments: The current assessment report is no longer showing the Assessment Period scores
+- Bug Fixed: Institutions > Add Students: Unable to add student via identity number
+- Bug Fixed: Institutions > Staff > Carreer > Leave Tab : System does not show archive button
+- Bug Fixed: Institutions > Students > Academic > Assessments: Marks is not showing the correct marks but showing the total marks
+- Bug Fixed: API: api/v4/users/{userId} is not returning identity_type_name
+- Bug Fixed: Institutions > Performances > Outcomes : Page does not stop loading once user change selection to Default --Select-- value.
+
 ### [3.86.1] - 2023-06-12
 - Bug Fixed: Institutions>Performance>Report Cards: Placeholder is not working
 - Bug Fixed: Login: Login is causing high load on the cpu
