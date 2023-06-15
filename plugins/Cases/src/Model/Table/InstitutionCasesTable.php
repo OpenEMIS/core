@@ -703,5 +703,26 @@ class InstitutionCasesTable extends ControllerActionTable
             'title', 'description', 'assignee_id'
         ]);
     }
+    //POCOR-7642 start
+    public function getModelAlertData($threshold)
+    {
+        $dayBefore = $threshold['value'];
+        $workflowCategory = $threshold['workflow_steps'];
+        $sqlConditions = [
+            1 => ('DATEDIFF( NOW(),InstitutionCases.created)' . '>' . $dayBefore), // before
+        ];
+        $caseResults = $this->find()
+        ->contain(['Institutions', 'Assignees', 'Statuses'])
+        ->where([
+            $this->Statuses->aliasField('id In') => $workflowCategory,
+            $this->aliasField('modified is ')."null",
+            $this->aliasField('modified_user_id is ')."null",
+            $sqlConditions
+        ]);
+
+         return $caseResults->toArray();
+
+    }
+    //POCOR-7642 end
 
 }

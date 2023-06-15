@@ -34,44 +34,20 @@ class AlertRuleCasesBehavior extends AlertRuleBehavior
                     'type' => 'chosenSelect',
                     'select' => false,
                     'after' => 'security_roles',
-                    'options' => 'Cases.workflow_steps'
+                    'options' =>'Cases.workflow_steps'
                 ],
         ],
         'placeholder' => [
             '${threshold.value}' => 'Threshold value.',
-            '${license_type.name}' => 'License type.',
-            '${license_number}' => 'License number.',
-            '${issue_date}' => 'Issue date.',
-            '${expiry_date}' => 'Expiry date.',
-            '${day_difference}' => 'Days difference between today and expiry date.',
-            '${issuer}' => 'Issuer.',
-            '${cases.casenumber}'=>'Case Number.',
+            '${case_number}'=>'Case Number.',
             '${assignee.openemis_no}'=>'Assignee OpenEMIS ID.',
             '${assignee.first_name}'=>'Assignee First Name.',
-            '${assignee.Middle_name}'=>'Assignee Middle Name.',
+            '${assignee.middle_name}'=>'Assignee Middle Name.',
             '${assignee.third_name}'=>'Assignee Third Name.',
             '${assignee.last_name}'=>'Assignee Last Name.',
-            '${user.openemis_no}' => 'OpenEMIS ID.',
-            '${user.first_name}' => 'First name.',
-            '${user.middle_name}' => 'Middle name.',
-            '${user.third_name}' => 'Third name.',
-            '${user.last_name}' => 'Last name.',
-            '${user.preferred_name}' => 'Preferred name.',
-            '${user.email}' => 'Email.',
-            '${user.address}' => 'Address.',
-            '${user.postal_code}' => 'Postal code.',
-            '${user.date_of_birth}' => 'Date of birth.',
-            '${institution.name}' => 'Institution name.',
-            '${institution.code}' => 'Institution code.',
-            '${institution.address}' => 'Institution address.',
-            '${institution.postal_code}' => 'Institution postal code.',
-            '${institution.contact_person}' => 'Institution contact person.',
-            '${institution.telephone}' => 'Institution telephone number.',
-            '${institution.fax}' => 'Institution fax number.',
-            '${institution.email}' => 'Institution email.',
-            '${institution.website}' => 'Institution website.',
         ]
-    ];
+       
+     ];
 
     public function initialize(array $config)
     {
