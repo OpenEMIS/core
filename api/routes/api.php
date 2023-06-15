@@ -171,6 +171,10 @@ Route::group(
         Route::get('textbooks-conditions', 'TextbookController@getTextbookConditions');
         Route::get('textbooks/{textbookId}', 'TextbookController@getTextbookByID');
 
+        Route::post('textbooks', 'TextbookController@addTextbooks');
+
+        Route::get('institutions/{institutionId}/textbooks/{textbookId}', 'InstitutionController@getInstitutionTextbookdata');
+
         // POCOR-7368 ends
 
     }
