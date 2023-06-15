@@ -36,6 +36,7 @@ use App\Models\StaffTypes;
 use App\Models\AssessmentItemResults;
 use App\Models\ConfigItem;
 use App\Models\InstitutionSubjectStaff;
+use App\Models\InstitutionTextbooks;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -1822,5 +1823,27 @@ class InstitutionRepository extends Controller
             return $this->sendErrorResponse('Subjects Staff List Not Found');
         }
     }
+
+    public function getInstitutionTextbookdata(int $institutionId, int $textbookId)
+    {
+        try {
+            $institutionTextbook = InstitutionTextbooks::where([
+                'institution_id'=> $institutionId,
+                 'textbook_id' => $textbookId
+                 ])
+                 ->first();
+
+            return $institutionTextbook;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution Textbook Data Not Found');
+        }
+    }
+
 }
 
