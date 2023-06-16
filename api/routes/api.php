@@ -175,6 +175,8 @@ Route::group(
 
         Route::get('institutions/{institutionId}/textbooks/{textbookId}', 'InstitutionController@getInstitutionTextbookdata');
 
+        Route::post('institutions/{institutionId}/textbooks', 'InstitutionController@addInstitutionTextbooks');
+
         // POCOR-7368 ends
 
     }
