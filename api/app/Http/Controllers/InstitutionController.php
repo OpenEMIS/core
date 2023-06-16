@@ -10,6 +10,8 @@ use App\Http\Requests\ReportCardCommentHomeroomAdd;
 use App\Http\Requests\CompetencyResultsAddRequest;
 use App\Http\Requests\CompetencyCommentAddRequest;
 use App\Http\Requests\CompetencyPeriodCommentAddRequest;
+use App\Http\Requests\InstitutionTextbookAddRequest;
+use Exception;
 
 class InstitutionController extends Controller
 {
@@ -894,6 +896,7 @@ class InstitutionController extends Controller
         }
     }
 
+    // POCOR-7368 starts
     public function getInstitutionTextbookdata(int $institutionId, int $textbookId)
     {
         try {
@@ -910,4 +913,28 @@ class InstitutionController extends Controller
             return $this->sendErrorResponse('Institution Textbook Data Not Found');
         }
     }
+
+    public function addInstitutionTextbooks(InstitutionTextbookAddRequest $request)
+    {
+        try {
+
+            $data = $this->institutionService->addInstitutionTextbooks($request);
+            if($data == 1){
+                return $this->sendErrorResponse("Institution Textbook stored successfully.");
+            } else {
+                return $this->sendSuccessResponse("Institution Textbook not stored.", $data);
+            }
+        }
+        catch(\Exception $e) {
+            Log::error(
+                'Failed to add Institution Textbook',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add Institution Textbook.');
+
+        }
+    }
+    // POCOR-7368 ends
+
 }
