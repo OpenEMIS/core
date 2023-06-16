@@ -37,6 +37,7 @@ use App\Models\ConfigItem;
 use App\Models\InstitutionSubjectStaff;
 use App\Models\AcademicPeriod;
 use App\Models\StudentStatuses;
+use App\Models\Nationalities;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -1807,6 +1808,7 @@ class InstitutionRepository extends Controller
 
     public function saveStudentData($request)
     {
+        DB::beginTransaction();
         try {
             $param = $request->all();
             
@@ -1825,11 +1827,43 @@ class InstitutionRepository extends Controller
 
             //get Student Status List
             $studentStatus = StudentStatuses::pluck('code', 'id')->toArray();
-            dd($studentStatus);
+            
 
             //get nationality data
             $nationalities = '';
+            if(isset($param['nationality_name']) && ($param['nationality_name'] != "")){
+                $nationality = Nationalities::where('name', $param['nationality_name'])->first();
+                if(!$nationality){
+                    //Adding new nationality...
+                    $orderNationalities = Nationalities::orderBy('order', 'DESC')->first();
+                    $storeArr = [
+                        'name' => $param['nationality_name'],
+                        'order' => !empty($orderNationalities->order) ? $orderNationalities->order + 1 : 0,
+                        'visible' => 1,
+                        'editable' => 1,
+                        'identity_type_id' => null,
+                        'default' => 0,
+                        'international_code' => '',
+                        'national_code' => '',
+                        'external_validation' => 0,
+                        'created_user_id' => JWTAuth::user()->id,
+                        'created' => Carbon::now()->toDateTimeString()
+                    ];
+
+                    $nationalityId = Nationalities::insertGetId($storeArr);
+                } else {
+                    $nationalityId = $nationality->id;
+                }
+            }
+
+
+            if(isset($param['is_diff_school']) && ($param['is_diff_school'] == 1)){
+                //
+            }
+            DB::commit();
+            dd("qwqwqww");
         } catch (\Exception $e) {
+            DB::rollback();
             dd($e);
             Log::error(
                 'Failed to store student data.',
