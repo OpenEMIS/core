@@ -236,19 +236,13 @@ class InstitutionSubjectStaffTable extends AppTable
 
     public function findSubjectEditPermission(Query $query, array $options)
     {
-//        $options['user'] = $this->Session->read('Auth.User');
         $subjectId = $options['subject_id'];
         $academicPeriodId = $options['academic_period_id'];
         $institutionId = $options['institution_id']; // current institution POCOR-4981
-
-        $security_user_id = $options['security_user_id']; // current user
-        $is_super_admin = $options['is_super_admin']; // current user
-        if(!$security_user_id){
-            trigger_error('User undefined', E_USER_ERROR);
-        }
+        $userId = $options['user']['id']; // current user
         
-        if (!$is_super_admin) { // if he is not super admin
-            $allSubjectPermission = $this->getRoleEditPermissionAccessForAllSubjects($security_user_id, $institutionId); //POCOR-4983
+        if ($options['user']['super_admin'] == 0) { // if he is not super admin
+            $allSubjectPermission = $this->getRoleEditPermissionAccessForAllSubjects($userId, $institutionId); //POCOR-4983
             $query
                 ->find('bySecurityAccess')
                 ->matching('InstitutionSubjects', function ($q) use (
@@ -272,7 +266,7 @@ class InstitutionSubjectStaffTable extends AppTable
                     
                 })
                 ->where([
-                    $this->aliasField('staff_id') => $security_user_id
+                    $this->aliasField('staff_id') => $userId
                 ])
                 ->group([$this->aliasField('staff_id')]);
 
@@ -283,7 +277,7 @@ class InstitutionSubjectStaffTable extends AppTable
         // POCOR-4981
         if( isset($institutionId) 
             && $institutionId > 0 
-            && $is_super_admin) // if he is super admin
+            && $options['user']['super_admin'] == 1) // if he is super admin
         {
             $query->where([$this->aliasField('institution_id') => $institutionId]);
         }
