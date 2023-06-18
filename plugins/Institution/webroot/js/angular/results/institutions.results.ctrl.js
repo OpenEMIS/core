@@ -362,15 +362,18 @@ function InstitutionsResultsController($q,
             console.log(JSON.stringify(result));
             var promise;
 //                return InstitutionsResultsSvc.getRowData($scope.gradingTypes, $scope.periods, $scope.institution_id, $scope.class_id, $scope.assessment_id, $scope.academic_period_id, $scope.subject.education_subject_id, $scope.education_grade_id);
+            var options = {
+                grading_types: $scope.gradingTypes,
+                periods: $scope.periods,
+                institution_id: $scope.institution_id,
+                class_id: $scope.class_id,
+                assessment_id: $scope.assessment_id,
+                academic_period_id: $scope.academic_period_id,
+                education_subject_id: $scope.education_subject_id,
+                education_grade_id: $scope.education_grade_id
+            };
             promise = InstitutionsResultsSvc.getNewRowData(
-                $scope.gradingTypes,
-                $scope.periods,
-                $scope.institution_id,
-                $scope.class_id,
-                $scope.assessment_id,
-                $scope.academic_period_id,
-                $scope.education_subject_id,
-                $scope.education_grade_id);
+                options);
             return promise.then(function (result) {
                 return result;
             });
