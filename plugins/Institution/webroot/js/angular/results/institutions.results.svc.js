@@ -1128,8 +1128,8 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
         },
 
         getNewRowData: function(options) {
-            console.log('handleGetPermissions');
-            console.log(JSON.stringify(options));
+            // console.log('handleGetPermissions');
+            // console.log(JSON.stringify(options));
             var grading_types = options.grading_types;
             var gradingTypes = options.grading_types;
             var periods = options.periods;
@@ -1174,8 +1174,8 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                                 if (studentId != null) {
                                     this.push(studentResults);
                                 }
-                                console.log('subjectStudent');
-                                console.log(JSON.stringify(subjectStudent));
+                                // console.log('subjectStudent');
+                                // console.log(JSON.stringify(subjectStudent));
                                 studentResults = {
                                     openemis_id: subjectStudent._matchingData.Users.openemis_no,
                                     name: subjectStudent._matchingData.Users.name,
@@ -1207,18 +1207,18 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                             }
 
                             if (isMarksType) {
-                                console.log("1");
+                                // console.log("isMarksType");
                                 var marks = parseFloat(subjectStudent.AssessmentItemResults.marks);
                                 if (!isNaN(marks)) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = marks;
                                 }
                             } else if (isGradesType) {
-                                console.log("2");
+                                // console.log("isGradesType");
                                 if (subjectStudent.AssessmentItemResults.assessment_grading_option_id != null && subjectStudent.AssessmentItemResults.marks == null) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.AssessmentItemResults.assessment_grading_option_id;
                                 }
                             } else if (isDurationType) {
-                                console.log("3");
+                                // console.log("isDurationType");
                                 var duration = parseFloat(subjectStudent.AssessmentItemResults.marks);
                                 if (!isNaN(duration)) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.AssessmentItemResults.marks;

@@ -30,6 +30,7 @@ function InstitutionsResultsController($q,
         // No Assessment
         console.log(error);
         AlertSvc.warning($scope, error);
+        removeLoader();
     }
 
     function removeLoader() {
@@ -153,9 +154,9 @@ function InstitutionsResultsController($q,
     $scope.$watch('action', watchAction);
 
     function watchAction(newValue, oldValue) {
-        console.log('watchAction');
-        console.log(JSON.stringify(newValue));
-        console.log(JSON.stringify(oldValue));
+        // console.log('watchAction');
+        // console.log(JSON.stringify(newValue));
+        // console.log(JSON.stringify(oldValue));
         if (angular.isDefined(newValue) && angular.isDefined(oldValue) && newValue != oldValue) {
             $scope.action = newValue;
             $scope.resetColumnDefs($scope.action, $scope.subject, $scope.periods, $scope.gradingTypes);
@@ -208,8 +209,8 @@ function InstitutionsResultsController($q,
         }
 
         function onAggridCellValueChanged(params) {
-            console.log('onCellValueChanged')
-            console.log(JSON.stringify(params));
+            // console.log('onCellValueChanged')
+            // console.log(JSON.stringify(params));
             if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
                 var index = params.colDef.field.replace(/period_(\d+)/, '$1');
 
@@ -275,7 +276,7 @@ function InstitutionsResultsController($q,
 
     $scope.resetColumnDefs = function (action, subject, periods, gradingTypes) {
         var response = InstitutionsResultsSvc.getColumnDefs(action, subject, periods, gradingTypes, $scope.results, $scope.enrolledStatus);
-        console.log(JSON.stringify(response));
+        // console.log(JSON.stringify(response));
         if (angular.isDefined(response.error)) {
             // No Grading Options
             AlertSvc.warning($scope, response.error);
@@ -308,7 +309,7 @@ function InstitutionsResultsController($q,
     };
 
     $scope.onChangeSubject = function (subject = undefined, editable = undefined) {
-        console.log('$scope.onChangeSubject');
+        // console.log('$scope.onChangeSubject');
 
         AlertSvc.reset($scope);
         $scope.action = 'view';
@@ -330,7 +331,7 @@ function InstitutionsResultsController($q,
         $scope.education_subject_id = $scope.subject.id;
 
         if ($scope.gridOptions != null) {
-            console.log('$scope.gridOptions != null')
+            // console.log('$scope.gridOptions != null')
             // update value in context
             $scope.gridOptions.context.education_subject_id = $scope.subject.education_subject_id;
             // Always reset
@@ -352,14 +353,14 @@ function InstitutionsResultsController($q,
             });
 
         function handleGetRowData(result) {
-            console.log('handleGetRowData');
-            console.log(JSON.stringify(result));
+            // console.log('handleGetRowData');
+            // console.log(JSON.stringify(result));
             $scope.gridOptions.api.setRowData(result);
         }
 
         function handleResetColumnDefs(result) {
-            console.log('handleGetPermissions');
-            console.log(JSON.stringify(result));
+            // console.log('handleGetPermissions');
+            // console.log(JSON.stringify(result));
             var promise;
 //                return InstitutionsResultsSvc.getRowData($scope.gradingTypes, $scope.periods, $scope.institution_id, $scope.class_id, $scope.assessment_id, $scope.academic_period_id, $scope.subject.education_subject_id, $scope.education_grade_id);
             var options = {
@@ -380,8 +381,8 @@ function InstitutionsResultsController($q,
         }
 
         function handleGetPermissions(result) {
-            console.log('handleGetPermissions');
-            console.log(JSON.stringify(result));
+            // console.log('handleGetPermissions');
+            // console.log(JSON.stringify(result));
             var promise;
             var is_super_admin = result[0];
             var security_user_id = result[1];
@@ -400,8 +401,8 @@ function InstitutionsResultsController($q,
         }
 
         function handleGetSubjectEditPermission(result) {
-            console.log('handleGetSubjectEditPermission');
-            console.log(JSON.stringify(result));
+            // console.log('handleGetSubjectEditPermission');
+            // console.log(JSON.stringify(result));
             var promise;
             $scope.editPermissionForSelectedSubject = result;
             promise = InstitutionsResultsSvc.getPeriods($scope.assessment_id, $scope.selectedAcademicTerm)
@@ -411,8 +412,8 @@ function InstitutionsResultsController($q,
         }
 
         function handleGetPeriods(result) {
-            console.log('handleGetPeriods');
-            console.log(JSON.stringify(result));
+            // console.log('handleGetPeriods');
+            // console.log(JSON.stringify(result));
             var promise;
             $scope.periods = result;
 
@@ -423,8 +424,8 @@ function InstitutionsResultsController($q,
         }
 
         function handleGetGradingTypes(result) {
-            console.log('handleGetGradingTypes');
-            console.log(JSON.stringify(result));
+            // console.log('handleGetGradingTypes');
+            // console.log(JSON.stringify(result));
             var promise;
             $scope.gradingTypes = result;
 
@@ -457,7 +458,7 @@ function InstitutionsResultsController($q,
                 }
             }, function (error) {
                 console.log(error);
-            })
+            });
     };
 
     $scope.onBackClick = function () {
