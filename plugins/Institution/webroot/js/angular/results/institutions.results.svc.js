@@ -14,7 +14,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
         AssessmentPeriodsTable: 'Assessment.AssessmentPeriods',
         AssessmentItemResultsTable: 'Assessment.AssessmentItemResults',
         InstitutionSubjectStudentsTable: 'Institution.InstitutionSubjectStudents',
-        SecurityGroupUsersTable: 'Security.SecurityGroupUsers',
+        // SecurityGroupUsersTable: 'Security.SecurityGroupUsers',
         StudentStatusesTable: 'Student.StudentStatuses',
         InstitutionClassesTable: 'Institution.InstitutionClasses',
         // add subject staff table to link over there
@@ -54,7 +54,12 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             return $q.all(promises);
         },
 
-        getSubjectEditPermission(subjectId, classId, academicPeriodId, institutionId)
+        getSubjectEditPermission(subjectId,
+                                 classId,
+                                 academicPeriodId,
+                                 institutionId,
+                                 securityUserId,
+                                 isSuperAdmin)
         {
             var success = function(response, deferred) {
                 if (angular.isDefined(response.data)) {
@@ -69,7 +74,10 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     subject_id: subjectId,
                     class_id: classId,
                     academic_period_id: academicPeriodId,
-                    institution_id: institutionId
+                    institution_id: institutionId,
+                    security_user_id: securityUserId,
+                    is_super_admin: isSuperAdmin,
+
                 })
                 .ajax({success: success, defer: true});
         },
@@ -1119,7 +1127,16 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             ;
         },
 
-        getNewRowData: function(gradingTypes, periods, institutionId, classId, assessmentId, academicPeriodId, educationSubjectId, educationGradeId) {
+        getNewRowData: function(gradingTypes,
+                                periods,
+                                institutionId,
+                                classId,
+                                assessmentId,
+                                academicPeriodId,
+                                educationSubjectId,
+                                educationGradeId) {
+            console.log('getNewRowData');
+
             var success = function(response, deferred) {
                 if (angular.isDefined(response.data.error)) {
                     deferred.reject(response.data.error);
@@ -1143,8 +1160,8 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         var isGradesType = false;
                         var isDurationType = false;
                         var resultType = null;
-
-                        angular.forEach(subjectStudents, function(subjectStudent, key) {
+                        var oneStudents  = subjectStudents.slice(0, 1);
+                        angular.forEach(oneStudents, function(subjectStudent, key) {
                             currentStudentId = parseInt(subjectStudent.student_id);
                             totalMarks = parseInt(subjectStudent.total_mark);
                             assessmentPeriodId = subjectStudent.AssessmentItemResults.assessment_period_id;
@@ -1229,8 +1246,8 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 class_id: classId,
                 assessment_id: assessmentId,
                 academic_period_id: academicPeriodId,
-                subject_id: educationSubjectId,
-                grade_id: educationGradeId
+                education_subject_id: educationSubjectId,
+                education_grade_id: educationGradeId
             })
             .ajax({success: success, defer: true})
             ;
