@@ -18,16 +18,18 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
         StudentStatusesTable: 'Student.StudentStatuses',
         InstitutionClassesTable: 'Institution.InstitutionClasses',
         // add subject staff table to link over there
-        InstitutionSubjectStaffTable: 'Institution.InstitutionSubjectStaff'
+        InstitutionSubjectStaffTable: 'Institution.InstitutionSubjectStaff',
+        AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
     };
 
-    var handleSuccess = function (response, deferred, errorMessage) {
+    var handleSuccessData = function (response, deferred, errorMessage) {
         if (angular.isDefined(response.data)) {
             deferred.resolve(response);
         } else {
             deferred.reject(errorMessage);
         }
     };
+
 
     return {
         init: function (baseUrl) {
@@ -52,6 +54,23 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             return AssessmentsTable.get(assessmentId).ajax({defer: true});
         },
 
+        getAcademicPeriod: function()
+        {
+            var success = function(response, deferred) {
+                var terms = response.data.data;
+
+                if (angular.isObject(terms) && terms.length > 0) {
+                    deferred.resolve(terms);
+                } else {
+                    deferred.resolve([]);
+                }
+            };
+            return AcademicPeriods
+                .select()
+                .find('AcademicPeriod')
+                .ajax({success: success, defer: true});
+        },
+
         getPermissions: function () {
             var promises = [];
 
@@ -72,7 +91,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
             var errorMessage = 'There is an error retrieving the permission for the subject';
             var success = function (response, deferred) {
-                handleSuccess(response, deferred, errorMessage);
+                handleSuccessData(response, deferred, errorMessage);
             };
 
             if (typeof options.security_user_id === 'undefined') {
@@ -86,10 +105,14 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 .ajax({success: success, defer: true});
         },
 
-        getSubjects: function (roles, assessmentId, classId) {
+        getDataSubjects: function (roles,
+                                   assessment_id,
+                                   class_id,
+                                   academic_period_id,
+                                   institution_id) {
             var deferred = $q.defer();
-            var isSuperAdmin = 0;
-            var securityUserId = 0;
+            var is_super_admin = 0;
+            var security_user_id = 0;
 
             var allSubjectRoles = [];
             var subjectRoles = [];
@@ -99,158 +122,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
             this.getPermissions()
                 .then(handleGetPermissions, handleError)
-                .then(function (roles) {
-                    var promises = [];
-
-                    promises.push(KdAccessSvc.checkPermission('Institutions.AllSubjects.view', roles));
-                    promises.push(KdAccessSvc.checkPermission('Institutions.Subjects.view', roles));
-                    promises.push(vm.checkHomeOrStaff(classId, securityUserId));
-
-                    return $q.all(promises);
-                }, function (error) {
-
-                })
-                .then(function (response) {
-
-                    var allSubjectsPermission = response[0];
-                    var mySubjectsPermission = response[1];
-                    var isHomeOrSecondary = response[2];
-
-                    // Only get assessment items that are available for the class
-                    var assessmentSubjects = AssessmentItemsTable
-                        .select()
-                        .find('AssessmentItemsInClass', {
-                            class_id: classId,
-                            assessment_id: assessmentId
-                        });
-
-                    // For no subjects
-                    var fail = function (response, deferred) {
-                        deferred.reject('You do not have access to subjects');
-                    };
-
-                    // For returning of results
-                    var success = function (response, deferred) {
-                        var items = response.data.data;
-
-                        if (angular.isObject(items) && items.length > 0) {
-                            var educationSubject = null;
-
-                            var subjects = [];
-                            angular.forEach(items, function (item, key) {
-                                educationSubject = item.InstitutionSubjects;
-                                educationSubject.grading_type = item.grading_type;
-
-                                this.push(educationSubject);
-                            }, subjects);
-
-                            deferred.resolve(subjects);
-                        } else {
-                            deferred.reject('You need to configure Assessment Items first');
-                        }
-                    };
-
-                    if (isSuperAdmin) {
-                        // Super admin will return all subjects
-                        assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
-                    } else {
-                        // Non super admin logic
-
-                        // Check if has all subjects permission
-                        if (!allSubjectsPermission) {
-                            // If no all subjects permission, check if user has my subjects permisson
-                            if (mySubjectsPermission) {
-
-                                // Additional check for homeroom/secondary teacher
-                                if (isHomeOrSecondary.total > 0) {
-                                    assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
-
-                                } else {
-                                    assessmentSubjects = assessmentSubjects
-                                        .find('staffSubjects', {class_id: classId, staff_id: securityUserId})
-                                        .ajax({success: success, defer: true});
-
-                                }
-                            } else {
-                                // Display nothing
-                                assessmentSubjects = AssessmentItemsTable.ajax({success: fail, defer: true});
-                            }
-                        } else {
-                            // Display all subjects
-                            assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
-                        }
-
-                    }
-
-                    return assessmentSubjects;
-                }, function (error) {
-                    console.log('error:');
-                    console.log(error);
-                    deferred.reject(error);
-                })
-                // 3rd
-                .then(function (response) {
-                    deferred.resolve(response);
-                }, function (error) {
-                    console.log('error:');
-                    console.log(error);
-                    deferred.reject(error);
-                });
-
-            function handleGetPermissions(response) {
-                isSuperAdmin = response[0];
-                securityUserId = response[1];
-                return roles;
-            }
-
-            function handleError(error) {
-                console.log('error:');
-                console.log(error);
-                deferred.reject(error);
-            }
-
-            return deferred.promise;
-        },
-
-        getDataSubjects: function (roles,
-                                   assessmentId,
-                                   classId,
-                                   academic_period_id,
-                                   institution_id) {
-            var deferred = $q.defer();
-            var isSuperAdmin = 0;
-            var securityUserId = 0;
-
-            var allSubjectRoles = [];
-            var subjectRoles = [];
-            var subjects = [];
-
-            var vm = this;
-
-            this.getPermissions()
-                .then(function (response) {
-                    isSuperAdmin = response[0];
-                    securityUserId = response[1];
-                    var institutionId = response[2];
-
-                    return roles;
-
-                }, function (error) {
-                    console.log('error:');
-                    console.log(error);
-                    deferred.reject(error);
-                })
-                .then(function (roles) {
-                    var promises = [];
-
-                    promises.push(KdAccessSvc.checkPermission('Institutions.AllSubjects.view', roles));
-                    promises.push(KdAccessSvc.checkPermission('Institutions.Subjects.view', roles));
-                    promises.push(vm.checkHomeOrStaff(classId, securityUserId));
-
-                    return $q.all(promises);
-                }, function (error) {
-
-                })
+                .then(checkAllMyHomeSecondaryPermissions, handleError)
                 .then(function (response) {
 
                     var allSubjectsPermission = response[0];
@@ -261,8 +133,8 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     var assessmentSubjects = AssessmentItemsTable
                         .select()
                         .find('subjectNewTab', {
-                            class_id: classId,
-                            assessment_id: assessmentId,
+                            class_id: class_id,
+                            assessment_id: assessment_id,
                             academic_period_id: academic_period_id,
                             institution_id: institution_id
                         });
@@ -276,7 +148,6 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     var success = function (response, deferred) {
 
                         var items = response.data.data;
-
 
                         if (angular.isObject(items) && items.length > 0) {
                             var educationSubject = null;
@@ -296,7 +167,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         }
                     };
 
-                    if (isSuperAdmin) {
+                    if (is_super_admin) {
                         // Super admin will return all subjects
                         assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
                     } else {
@@ -312,7 +183,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
                                 } else {
                                     assessmentSubjects = assessmentSubjects
-                                        .find('CopyStaffSubjects', {class_id: classId, staff_id: securityUserId})
+                                        .find('CopyStaffSubjects', {class_id: classId, staff_id: security_user_id})
                                         .ajax({success: success, defer: true});
 
                                 }
@@ -328,30 +199,52 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     }
 
                     return assessmentSubjects;
-                }, function (error) {
-                    console.log('error:');
-                    console.log(error);
-                    deferred.reject(error);
-                })
+                }, handleError)
                 // 3rd
                 .then(function (response) {
                     deferred.resolve(response);
-                }, function (error) {
-                    console.log('error:');
-                    console.log(error);
-                    deferred.reject(error);
-                });
+                }, handleError);
+
+            function checkAllMyHomeSecondaryPermissions () {
+                console.log('checkAllMyHomeSecondaryPermissions');
+                var promises = [];
+
+
+                var checkAllSubjectsPermission = KdAccessSvc.checkPermission('Institutions.AllSubjects.view', roles);
+                promises.push(checkAllSubjectsPermission);
+                var checkMySubjectsPermissions = KdAccessSvc.checkPermission('Institutions.Subjects.view', roles);
+                promises.push(checkMySubjectsPermissions);
+                var checkHomeOrStaffPermission = vm.checkHomeOrStaff(class_id, security_user_id);
+                promises.push(checkHomeOrStaffPermission);
+
+                return $q.all(promises);
+            };
+
+            function handleGetPermissions (response) {
+                console.log('handleGetPermissions');
+                is_super_admin = response[0];
+                security_user_id = response[1];
+                return true;
+            };
+
+            function handleError (error) {
+                console.log('error:');
+                console.log(error);
+                deferred.reject(error);
+            };
 
             return deferred.promise;
+
+
         },
 
 
-        checkHomeOrStaff: function (classId, securityUserId) {
+        checkHomeOrStaff: function (class_id, security_user_id) {
             return InstitutionClassesTable
                 .select()
                 .find('homeOrSecondary', {
-                    class_id: classId,
-                    staff_id: securityUserId
+                    class_id: class_id,
+                    staff_id: security_user_id
                 })
                 .ajax({defer: true});
 

@@ -92,11 +92,7 @@ function InstitutionsResultsController($q,
                 $scope.selectedAcademicTerm = $scope.academicTermOptions[0]['name'];
             }
             //promises[0] = InstitutionsResultsSvc.getSubjects($scope.roles, $scope.assessment_id, $scope.class_id);
-            promise = InstitutionsResultsSvc.getDataSubjects($scope.roles,
-                $scope.assessment_id,
-                $scope.class_id,
-                $scope.academic_period_id,
-                $scope.institution_id);
+            promise = InstitutionsResultsSvc.getAcademicPeriod();
 
             return promise.then(function (result) {
                 return result;
