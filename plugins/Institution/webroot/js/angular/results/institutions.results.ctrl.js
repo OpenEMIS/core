@@ -386,15 +386,15 @@ function InstitutionsResultsController($q,
             var promise;
             var is_super_admin = result[0];
             var security_user_id = result[1];
-
-            promise = InstitutionsResultsSvc.getSubjectEditPermission(
-                $scope.subject.education_subject_id,
-                $scope.class_id,
-                $scope.academic_period_id,
-                $scope.institution_id,
-                security_user_id,
-                is_super_admin,
-            );
+            var options = {
+                subject_id: $scope.subject.education_subject_id,
+                class_id: $scope.class_id,
+                academic_period_id: $scope.academic_period_id,
+                institution_id: $scope.institution_id,
+                security_user_id: security_user_id,
+                is_super_admin: is_super_admin,
+            };
+            promise = InstitutionsResultsSvc.getSubjectEditPermission(options);
             return promise.then(function (result) {
                 return result;
             });
@@ -447,7 +447,17 @@ function InstitutionsResultsController($q,
         if ($scope.subject === undefined) {
             return;
         }
-        InstitutionsResultsSvc.getSubjectEditPermission($scope.subject.education_subject_id, $scope.class_id, $scope.academic_period_id, $scope.institution_id)
+        var options = {
+            subject_id: $scope.subject.education_subject_id,
+            class_id: $scope.class_id,
+            academic_period_id: $scope.academic_period_id,
+            institution_id: $scope.institution_id,
+            security_user_id: undefined,
+            is_super_admin: undefined,
+        };
+
+
+        InstitutionsResultsSvc.getSubjectEditPermission(options)
             .then(function (hasPermission) {
                 if (hasPermission) {
                     $scope.action = 'edit';
