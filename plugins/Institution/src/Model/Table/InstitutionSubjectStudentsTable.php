@@ -234,6 +234,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                 $this->aliasField('education_subject_id'),//POCOR-6479 
                 $this->aliasField('student_status_id'),
                 $this->aliasField('total_mark'),
+                $Users->aliasField('id'),
                 $Users->aliasField('openemis_no'),
                 $Users->aliasField('first_name'),
                 $Users->aliasField('middle_name'),
@@ -243,7 +244,16 @@ class InstitutionSubjectStudentsTable extends AppTable
                 $StudentStatuses->aliasField('code'),
                 $StudentStatuses->aliasField('name')
             ])
-            ->matching('Users')
+            ->matching('Users')->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {
+                    unset($row['Users']['name_with_id']);
+                    unset($row['Users']['name_with_id_role']);
+                    unset($row['Users']['default_identity_type']);
+                    unset($row['Users']['has_special_needs']);
+                    // Remove any other virtual fields you want to exclude
+                    return $row;
+                });
+            })
             ->contain('StudentStatuses')
             ->innerJoin(
                 [$InstitutionSubjects->alias() => $InstitutionSubjects->table()],
@@ -354,10 +364,10 @@ class InstitutionSubjectStudentsTable extends AppTable
         return $query;
     }
 
-    //copy for POCOR-5758
+
     public function findStudentResults(Query $query, array $options)
     {
-
+// POCOR-7419-KHINDOL
 //        $this->log('findStudentResults', 'debug');
 //        $this->log($options, 'debug');
         $institution_id = $options['institution_id'];
@@ -388,7 +398,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                 $this->aliasField('student_id'),
                 $this->aliasField('student_status_id'),
                 $this->aliasField('total_mark'),
-                $Users->aliasField('id'),
+//                $Users->aliasField('id'),
                 $Users->aliasField('openemis_no'),
                 $Users->aliasField('first_name'),
                 $Users->aliasField('middle_name'),

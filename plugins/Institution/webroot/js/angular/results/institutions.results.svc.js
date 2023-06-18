@@ -21,30 +21,38 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
         InstitutionSubjectStaffTable: 'Institution.InstitutionSubjectStaff'
     };
 
+    var handleSuccess = function (response, deferred, errorMessage) {
+        if (angular.isDefined(response.data)) {
+            deferred.resolve(response);
+        } else {
+            deferred.reject(errorMessage);
+        }
+    };
+
     return {
-        init: function(baseUrl) {
+        init: function (baseUrl) {
             KdDataSvc.base(baseUrl);
             KdDataSvc.controllerAction('Results');
             KdSessionSvc.base(baseUrl);
-            angular.forEach(models, function(model, key) {
+            angular.forEach(models, function (model, key) {
                 window[key] = KdDataSvc.init(model);
             });
         },
 
-        translate: function(data) {
+        translate: function (data) {
             KdDataSvc.init({translation: 'translate'});
-            var success = function(response, deferred) {
+            var success = function (response, deferred) {
                 var translated = response.data.translated;
                 deferred.resolve(translated);
             };
-            return translation.translate(data, {success:success, defer: true});
+            return translation.translate(data, {success: success, defer: true});
         },
 
-        getAssessment: function(assessmentId) {
+        getAssessment: function (assessmentId) {
             return AssessmentsTable.get(assessmentId).ajax({defer: true});
         },
 
-        getPermissions: function() {
+        getPermissions: function () {
             var promises = [];
 
             promises.push(KdSessionSvc.read('Auth.User.super_admin'));
@@ -54,36 +62,31 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             return $q.all(promises);
         },
 
-        getSubjectEditPermission(subjectId,
-                                 classId,
-                                 academicPeriodId,
-                                 institutionId,
-                                 securityUserId,
-                                 isSuperAdmin)
-        {
-            var success = function(response, deferred) {
-                if (angular.isDefined(response.data)) {
-                    deferred.resolve(response);
-                } else {
-                    deferred.reject('There is an error retrieving the permission for the subject');
-                }
+        getSubjectEditPermission: function (options) {
+            //subject_id,
+            //class_id,
+            //academic_period_id,
+            //institution_id,
+            //security_user_id,
+            //is_super_admin
+
+            var errorMessage = 'There is an error retrieving the permission for the subject';
+            var success = function (response, deferred) {
+                handleSuccess(response, deferred, errorMessage);
             };
 
+            if (typeof options.security_user_id === 'undefined') {
+                delete options.security_user_id;
+            }
+            if (typeof options.is_super_admin === 'undefined') {
+                delete options.is_super_admin;
+            }
             return InstitutionSubjectStaffTable  //Change to subject staff table
-                .find('SubjectEditPermission', {
-                    subject_id: subjectId,
-                    class_id: classId,
-                    academic_period_id: academicPeriodId,
-                    institution_id: institutionId,
-                    security_user_id: securityUserId,
-                    is_super_admin: isSuperAdmin,
-
-                })
+                .find('SubjectEditPermission', options)
                 .ajax({success: success, defer: true});
         },
 
-        getSubjects: function(roles, assessmentId, classId)
-        {
+        getSubjects: function (roles, assessmentId, classId) {
             var deferred = $q.defer();
             var isSuperAdmin = 0;
             var securityUserId = 0;
@@ -95,129 +98,125 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             var vm = this;
 
             this.getPermissions()
-            .then(function(response) {
+                .then(handleGetPermissions, handleError)
+                .then(function (roles) {
+                    var promises = [];
+
+                    promises.push(KdAccessSvc.checkPermission('Institutions.AllSubjects.view', roles));
+                    promises.push(KdAccessSvc.checkPermission('Institutions.Subjects.view', roles));
+                    promises.push(vm.checkHomeOrStaff(classId, securityUserId));
+
+                    return $q.all(promises);
+                }, function (error) {
+
+                })
+                .then(function (response) {
+
+                    var allSubjectsPermission = response[0];
+                    var mySubjectsPermission = response[1];
+                    var isHomeOrSecondary = response[2];
+
+                    // Only get assessment items that are available for the class
+                    var assessmentSubjects = AssessmentItemsTable
+                        .select()
+                        .find('AssessmentItemsInClass', {
+                            class_id: classId,
+                            assessment_id: assessmentId
+                        });
+
+                    // For no subjects
+                    var fail = function (response, deferred) {
+                        deferred.reject('You do not have access to subjects');
+                    };
+
+                    // For returning of results
+                    var success = function (response, deferred) {
+                        var items = response.data.data;
+
+                        if (angular.isObject(items) && items.length > 0) {
+                            var educationSubject = null;
+
+                            var subjects = [];
+                            angular.forEach(items, function (item, key) {
+                                educationSubject = item.InstitutionSubjects;
+                                educationSubject.grading_type = item.grading_type;
+
+                                this.push(educationSubject);
+                            }, subjects);
+
+                            deferred.resolve(subjects);
+                        } else {
+                            deferred.reject('You need to configure Assessment Items first');
+                        }
+                    };
+
+                    if (isSuperAdmin) {
+                        // Super admin will return all subjects
+                        assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
+                    } else {
+                        // Non super admin logic
+
+                        // Check if has all subjects permission
+                        if (!allSubjectsPermission) {
+                            // If no all subjects permission, check if user has my subjects permisson
+                            if (mySubjectsPermission) {
+
+                                // Additional check for homeroom/secondary teacher
+                                if (isHomeOrSecondary.total > 0) {
+                                    assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
+
+                                } else {
+                                    assessmentSubjects = assessmentSubjects
+                                        .find('staffSubjects', {class_id: classId, staff_id: securityUserId})
+                                        .ajax({success: success, defer: true});
+
+                                }
+                            } else {
+                                // Display nothing
+                                assessmentSubjects = AssessmentItemsTable.ajax({success: fail, defer: true});
+                            }
+                        } else {
+                            // Display all subjects
+                            assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
+                        }
+
+                    }
+
+                    return assessmentSubjects;
+                }, function (error) {
+                    console.log('error:');
+                    console.log(error);
+                    deferred.reject(error);
+                })
+                // 3rd
+                .then(function (response) {
+                    deferred.resolve(response);
+                }, function (error) {
+                    console.log('error:');
+                    console.log(error);
+                    deferred.reject(error);
+                });
+
+            function handleGetPermissions(response) {
                 isSuperAdmin = response[0];
                 securityUserId = response[1];
-                var institutionId = response[2];
-
                 return roles;
+            }
 
-            }, function(error) {
+            function handleError(error) {
                 console.log('error:');
                 console.log(error);
                 deferred.reject(error);
-            })
-            .then(function(roles) {
-                var promises = [];
-
-                promises.push(KdAccessSvc.checkPermission('Institutions.AllSubjects.view', roles));
-                promises.push(KdAccessSvc.checkPermission('Institutions.Subjects.view', roles));
-                promises.push(vm.checkHomeOrStaff(classId,securityUserId));
-               
-                return $q.all(promises);
-            }, function(error) {
-
-            })
-            .then(function(response) {
-
-                var allSubjectsPermission = response[0];
-                var mySubjectsPermission = response[1];
-                var isHomeOrSecondary = response[2];
-
-                // Only get assessment items that are available for the class
-                var assessmentSubjects = AssessmentItemsTable
-                    .select()
-                    .find('AssessmentItemsInClass', {
-                        class_id: classId,
-                        assessment_id: assessmentId
-                    });
-
-                // For no subjects
-                var fail = function(response, deferred) {
-                    deferred.reject('You do not have access to subjects');
-                };
-
-                // For returning of results
-                var success = function(response, deferred) {
-                    var items = response.data.data;
-
-                    if (angular.isObject(items) && items.length > 0)
-                    {
-                        var educationSubject = null;
-
-                        var subjects = [];
-                        angular.forEach(items, function(item, key)
-                        {
-                            educationSubject = item.InstitutionSubjects;
-                            educationSubject.grading_type = item.grading_type;
-                            
-                            this.push(educationSubject);
-                        }, subjects);
-
-                        deferred.resolve(subjects);
-                    } else
-                    {
-                        deferred.reject('You need to configure Assessment Items first');
-                    }
-                };
-
-                if (isSuperAdmin)
-                {
-                    // Super admin will return all subjects
-                    assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
-                } else
-                {
-                    // Non super admin logic
-
-                    // Check if has all subjects permission
-                    if (!allSubjectsPermission)
-                    {
-                        // If no all subjects permission, check if user has my subjects permisson
-                        if (mySubjectsPermission)
-                        {     
-
-                           // Additional check for homeroom/secondary teacher
-                            if(isHomeOrSecondary.total >0) {
-                                assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
-     
-                            } else {
-                                assessmentSubjects = assessmentSubjects
-                                    .find('staffSubjects', {class_id: classId, staff_id: securityUserId})
-                                    .ajax({success: success, defer: true});
-                                  
-                            }
-                        } else
-                        {
-                            // Display nothing
-                            assessmentSubjects = AssessmentItemsTable.ajax({success: fail, defer: true});
-                        }
-                    } else {
-                        // Display all subjects
-                        assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
-                    }
-
-                }
-
-                return assessmentSubjects;
-            }, function(error) {
-                console.log('error:');
-                console.log(error);
-                deferred.reject(error);
-            })
-            // 3rd
-            .then(function(response) {
-                deferred.resolve(response);
-            }, function(error) {
-                console.log('error:');
-                console.log(error);
-                deferred.reject(error);
-            });
+            }
 
             return deferred.promise;
         },
 
-        getDataSubjects: function(roles, assessmentId, classId,academic_period_id,institution_id)
-        {
+        getDataSubjects: function (roles,
+                                   assessmentId,
+                                   classId,
+                                   academic_period_id,
+                                   institution_id) {
             var deferred = $q.defer();
             var isSuperAdmin = 0;
             var securityUserId = 0;
@@ -229,147 +228,137 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             var vm = this;
 
             this.getPermissions()
-            .then(function(response) {
-               isSuperAdmin = response[0];
-                securityUserId = response[1];
-                var institutionId = response[2];
+                .then(function (response) {
+                    isSuperAdmin = response[0];
+                    securityUserId = response[1];
+                    var institutionId = response[2];
 
-                return roles;
+                    return roles;
 
-            }, function(error) {
-                console.log('error:');
-                console.log(error);
-                deferred.reject(error);
-            })
-            .then(function(roles) {
-                var promises = [];
+                }, function (error) {
+                    console.log('error:');
+                    console.log(error);
+                    deferred.reject(error);
+                })
+                .then(function (roles) {
+                    var promises = [];
 
-                promises.push(KdAccessSvc.checkPermission('Institutions.AllSubjects.view', roles));
-                promises.push(KdAccessSvc.checkPermission('Institutions.Subjects.view', roles));
-                promises.push(vm.checkHomeOrStaff(classId,securityUserId));
-                
-                return $q.all(promises);
-            }, function(error) {
+                    promises.push(KdAccessSvc.checkPermission('Institutions.AllSubjects.view', roles));
+                    promises.push(KdAccessSvc.checkPermission('Institutions.Subjects.view', roles));
+                    promises.push(vm.checkHomeOrStaff(classId, securityUserId));
 
-            })
-            .then(function(response) {
+                    return $q.all(promises);
+                }, function (error) {
 
-                var allSubjectsPermission = response[0];
-                var mySubjectsPermission = response[1];
-                var isHomeOrSecondary = response[2];
+                })
+                .then(function (response) {
 
-                // Only get assessment items that are available for the class
-                var assessmentSubjects = AssessmentItemsTable
-                    .select()
-                    .find('subjectNewTab', {
-                        class_id: classId,
-                        assessment_id: assessmentId,
-                        academic_period_id: academic_period_id,
-                        institution_id: institution_id
-                    });
+                    var allSubjectsPermission = response[0];
+                    var mySubjectsPermission = response[1];
+                    var isHomeOrSecondary = response[2];
 
-                // For no subjects
-                var fail = function(response, deferred) {
-                    deferred.reject('You do not have access to subjects');
-                };
+                    // Only get assessment items that are available for the class
+                    var assessmentSubjects = AssessmentItemsTable
+                        .select()
+                        .find('subjectNewTab', {
+                            class_id: classId,
+                            assessment_id: assessmentId,
+                            academic_period_id: academic_period_id,
+                            institution_id: institution_id
+                        });
 
-                // For returning of results
-                var success = function(response, deferred) {
-                    
-                    var items = response.data.data;
+                    // For no subjects
+                    var fail = function (response, deferred) {
+                        deferred.reject('You do not have access to subjects');
+                    };
+
+                    // For returning of results
+                    var success = function (response, deferred) {
+
+                        var items = response.data.data;
 
 
-                    if (angular.isObject(items) && items.length > 0)
-                    {
-                        var educationSubject = null;
+                        if (angular.isObject(items) && items.length > 0) {
+                            var educationSubject = null;
 
-                        var subjects = [];
-                        angular.forEach(items, function(item, key)
-                        {
-                            educationSubject = item.InstitutionSubjects;
-                            educationSubject.grading_type = item.grading_type;
-                            educationSubject.is_editable=item.is_editable;
-                            
-                            this.push(educationSubject);
-                        }, subjects);
+                            var subjects = [];
+                            angular.forEach(items, function (item, key) {
+                                educationSubject = item.InstitutionSubjects;
+                                educationSubject.grading_type = item.grading_type;
+                                educationSubject.is_editable = item.is_editable;
 
-                        deferred.resolve(subjects);
-                    } else
-                    {
-                        deferred.reject('You need to configure Assessment Items first');
-                    }
-                };
+                                this.push(educationSubject);
+                            }, subjects);
 
-                if (isSuperAdmin)
-                {
-                    // Super admin will return all subjects
-                    assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
-                } else
-                {
-                    // Non super admin logic
-
-                    // Check if has all subjects permission
-                    if (!allSubjectsPermission)
-                    {
-                        // If no all subjects permission, check if user has my subjects permisson
-                        if (mySubjectsPermission)
-                        {  
-                           // Additional check for homeroom/secondary teacher
-                            if(isHomeOrSecondary.total >0) {
-                                assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
-     
-                            } else {
-                                assessmentSubjects = assessmentSubjects
-                                    .find('CopyStaffSubjects', {class_id: classId, staff_id: securityUserId})
-                                    .ajax({success: success, defer: true});
-                                  
-                            }
-                        } else
-                        {
-                            // Display nothing
-                            assessmentSubjects = AssessmentItemsTable.ajax({success: fail, defer: true});
+                            deferred.resolve(subjects);
+                        } else {
+                            deferred.reject('You need to configure Assessment Items first');
                         }
-                    } else {
-                        // Display all subjects
+                    };
+
+                    if (isSuperAdmin) {
+                        // Super admin will return all subjects
                         assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
+                    } else {
+                        // Non super admin logic
+
+                        // Check if has all subjects permission
+                        if (!allSubjectsPermission) {
+                            // If no all subjects permission, check if user has my subjects permisson
+                            if (mySubjectsPermission) {
+                                // Additional check for homeroom/secondary teacher
+                                if (isHomeOrSecondary.total > 0) {
+                                    assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
+
+                                } else {
+                                    assessmentSubjects = assessmentSubjects
+                                        .find('CopyStaffSubjects', {class_id: classId, staff_id: securityUserId})
+                                        .ajax({success: success, defer: true});
+
+                                }
+                            } else {
+                                // Display nothing
+                                assessmentSubjects = AssessmentItemsTable.ajax({success: fail, defer: true});
+                            }
+                        } else {
+                            // Display all subjects
+                            assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
+                        }
+
                     }
 
-                }
-
-                return assessmentSubjects;
-            }, function(error) {
-                console.log('error:');
-                console.log(error);
-                deferred.reject(error);
-            })
-            // 3rd
-            .then(function(response) {
-                deferred.resolve(response);
-            }, function(error) {
-                console.log('error:');
-                console.log(error);
-                deferred.reject(error);
-            });
+                    return assessmentSubjects;
+                }, function (error) {
+                    console.log('error:');
+                    console.log(error);
+                    deferred.reject(error);
+                })
+                // 3rd
+                .then(function (response) {
+                    deferred.resolve(response);
+                }, function (error) {
+                    console.log('error:');
+                    console.log(error);
+                    deferred.reject(error);
+                });
 
             return deferred.promise;
         },
 
 
-        checkHomeOrStaff: function(classId,securityUserId)
-        { 
-             return InstitutionClassesTable
-                    .select()
-                    .find('homeOrSecondary', {
-                        class_id: classId,
-                        staff_id: securityUserId
-                    })
-                    .ajax({defer: true});   
+        checkHomeOrStaff: function (classId, securityUserId) {
+            return InstitutionClassesTable
+                .select()
+                .find('homeOrSecondary', {
+                    class_id: classId,
+                    staff_id: securityUserId
+                })
+                .ajax({defer: true});
 
         },
 
-        getAssessmentTerms: function(assessmentId)
-        {
-            var success = function(response, deferred) {
+        getAssessmentTerms: function (assessmentId) {
+            var success = function (response, deferred) {
                 var terms = response.data.data;
 
                 if (angular.isObject(terms) && terms.length > 0) {
@@ -386,9 +375,8 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 .ajax({success: success, defer: true});
         },
 
-        getPeriods: function(assessmentId, academicTerm = undefined)
-        {
-            var success = function(response, deferred) {
+        getPeriods: function (assessmentId, academicTerm = undefined) {
+            var success = function (response, deferred) {
                 var periods = response.data.data;
 
                 if (angular.isObject(periods) && periods.length > 0) {
@@ -412,14 +400,13 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
         },
 
-        getGradingTypes: function(assessmentId, subjectId)
-        {
-            var success = function(response, deferred) {
+        getGradingTypes: function (assessmentId, subjectId) {
+            var success = function (response, deferred) {
                 var gradingTypes = response.data.data;
 
                 if (angular.isObject(gradingTypes) && gradingTypes.length > 0) {
                     var indexedGradingTypes = {};
-                    angular.forEach(gradingTypes, function(obj, key) {
+                    angular.forEach(gradingTypes, function (obj, key) {
                         indexedGradingTypes[obj.assessment_period_id] = obj;
                     });
 
@@ -430,20 +417,19 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             };
 
             return AssessmentItemsGradingTypesTable
-            .select()
-            .contain(['EducationSubjects', 'AssessmentGradingTypes.GradingOptions'])
-            .where({assessment_id: assessmentId, education_subject_id: subjectId})
-            .ajax({success: success, defer: true});
+                .select()
+                .contain(['EducationSubjects', 'AssessmentGradingTypes.GradingOptions'])
+                .where({assessment_id: assessmentId, education_subject_id: subjectId})
+                .ajax({success: success, defer: true});
         },
 
-        getCopyGradingTypes: function(assessmentId, subjectId)
-        {
-            var success = function(response, deferred) {
+        getCopyGradingTypes: function (assessmentId, subjectId) {
+            var success = function (response, deferred) {
                 var gradingTypes = response.data.data;
 
                 if (angular.isObject(gradingTypes) && gradingTypes.length > 0) {
                     var indexedGradingTypes = {};
-                    angular.forEach(gradingTypes, function(obj, key) {
+                    angular.forEach(gradingTypes, function (obj, key) {
                         indexedGradingTypes[obj.assessment_period_id] = obj;
                     });
 
@@ -454,19 +440,18 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             };
 
             return AssessmentItemsGradingTypesTable
-            .select()
-            .contain(['EducationSubjects', 'AssessmentGradingTypes.GradingOptions'])
-            .where({assessment_id: assessmentId, education_subject_id: subjectId})
-            .ajax({success: success, defer: true});
+                .select()
+                .contain(['EducationSubjects', 'AssessmentGradingTypes.GradingOptions'])
+                .where({assessment_id: assessmentId, education_subject_id: subjectId})
+                .ajax({success: success, defer: true});
         },
 
-        getStudentStatusId: function(statusCode)
-        {
+        getStudentStatusId: function (statusCode) {
             return StudentStatusesTable.select(['id']).where({code: statusCode}).ajax({defer: true});
         },
 
-        getColumnDefs: function(action, subject, periods, gradingTypes, _results, enrolledStatus) {
-            var menuTabs = [ "filterMenuTab" ];
+        getColumnDefs: function (action, subject, periods, gradingTypes, _results, enrolledStatus) {
+            var menuTabs = ["filterMenuTab"];
             var filterParams = {
                 cellHeight: 30
             };
@@ -517,7 +502,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             });
 
             var ResultsSvc = this;
-            angular.forEach(periods, function(period, key) {
+            angular.forEach(periods, function (period, key) {
                 var isMarksType = true; // default is MARKS type
                 var isGradesType = false;
 
@@ -538,7 +523,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
                     if (isDurationType) {
                         markAsFloat = parseFloat(maxMark);
-                        durationInMinutes = $filter('number')(markAsFloat/60, 2);
+                        durationInMinutes = $filter('number')(markAsFloat / 60, 2);
                         maxMark = durationInMinutes.replace(".", " : ");
                     }
                 }
@@ -574,14 +559,14 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 } else if (isGradesType) {
                     if (subject.grading_type != null) {
                         var gradingOptions = {
-                            0 : {
+                            0: {
                                 id: 0,
                                 code: '',
                                 name: '-- Select --'
                             }
                         };
 
-                        angular.forEach(subject.grading_type.grading_options, function(obj, key) {
+                        angular.forEach(subject.grading_type.grading_options, function (obj, key) {
                             gradingOptions[obj.id] = obj;
                         });
 
@@ -625,7 +610,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 field: "total_mark",
                 menuTabs: menuTabs,
                 filter: "number",
-                valueGetter: function(params) {
+                valueGetter: function (params) {
                     var value = ResultsSvc.calculateTotal(params.data);
                     params.data[params.colDef.field] = value;
 
@@ -647,7 +632,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             return {data: columnDefs};
         },
 
-        renderMarks: function(allowEdit, cols, extra, _results) {
+        renderMarks: function (allowEdit, cols, extra, _results) {
             var minMark = extra.minMark;
             var passMark = extra.passMark;
             var maxMark = extra.maxMark;
@@ -655,14 +640,14 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
             cols = angular.merge(cols, {
                 filter: 'number',
-                cellStyle: function(params) {
+                cellStyle: function (params) {
                     if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) < passMark) {
                         return {color: '#CC5C5C'};
                     } else {
                         return {color: '#333'};
                     }
                 },
-                valueGetter: function(params) {
+                valueGetter: function (params) {
                     var value = params.data[params.colDef.field];
 
                     if (!isNaN(parseFloat(value))) {
@@ -676,20 +661,20 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             if (allowEdit) {
                 cols = angular.merge(cols, {
                     cellClassRules: {
-                        'oe-cell-highlight': function(params) {
+                        'oe-cell-highlight': function (params) {
                             var studentStatusId = params.data.student_status_id;
                             return (studentStatusId == enrolledStatus);
                         },
-                        'oe-cell-error': function(params) {
+                        'oe-cell-error': function (params) {
                             return params.data.save_error[params.colDef.field];
                         }
                     },
-                    editable: function(params) {
+                    editable: function (params) {
                         // only enrolled student is editable
                         studentStatusId = params.node.data.student_status_id;
                         return (studentStatusId == enrolledStatus);
                     },
-                    newValueHandler: function(params) {
+                    newValueHandler: function (params) {
                         var valueAsFloat = parseFloat(params.newValue);
 
                         if (params.newValue.length > 0 && (isNaN(valueAsFloat) || (valueAsFloat < minMark || valueAsFloat > maxMark))) {
@@ -704,7 +689,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             return cols;
         },
 
-        renderGrades: function(allowEdit, cols, extra, _results) {
+        renderGrades: function (allowEdit, cols, extra, _results) {
             var gradingOptions = extra.gradingOptions;
             var period = extra.period;
             var enrolledStatus = extra.enrolledStatus;
@@ -713,11 +698,11 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             if (allowEdit) {
                 cols = angular.merge(cols, {
                     cellClassRules: {
-                        'oe-cell-error': function(params) {
+                        'oe-cell-error': function (params) {
                             return params.data.save_error[params.colDef.field];
                         }
                     },
-                    cellRenderer: function(params) {
+                    cellRenderer: function (params) {
                         studentStatusId = params.data.student_status_id;
 
                         if (studentStatusId == enrolledStatus) {
@@ -734,7 +719,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
                             var eSelect = document.createElement("select");
 
-                            angular.forEach(gradingOptions, function(obj, key) {
+                            angular.forEach(gradingOptions, function (obj, key) {
                                 var eOption = document.createElement("option");
                                 var labelText = obj.name;
                                 if (obj.code.length > 0) {
@@ -764,24 +749,24 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
                                     var scope = params.context._scope;
                                     vm.saveSingleRecordData(params, extra)
-                                    .then(function(response) {
-                                        params.data.save_error[params.colDef.field] = false;
-                                        AlertSvc.info(scope, 'Student result will be saved after the result has been entered.');
-                                        params.api.refreshCells({
-                                            rowNodes: [params.node],
-                                            columns: [params.colDef.field],
-                                            force: true
+                                        .then(function (response) {
+                                            params.data.save_error[params.colDef.field] = false;
+                                            AlertSvc.info(scope, 'Student result will be saved after the result has been entered.');
+                                            params.api.refreshCells({
+                                                rowNodes: [params.node],
+                                                columns: [params.colDef.field],
+                                                force: true
+                                            });
+                                        }, function (error) {
+                                            params.data.save_error[params.colDef.field] = true;
+                                            console.log(error);
+                                            AlertSvc.error(scope, 'There was an error when saving the result');
+                                            params.api.refreshCells({
+                                                rowNodes: [params.node],
+                                                columns: [params.colDef.field],
+                                                force: true
+                                            });
                                         });
-                                    }, function(error) {
-                                        params.data.save_error[params.colDef.field] = true;
-                                        console.log(error);
-                                        AlertSvc.error(scope, 'There was an error when saving the result');
-                                        params.api.refreshCells({
-                                            rowNodes: [params.node],
-                                            columns: [params.colDef.field],
-                                            force: true
-                                        });
-                                    });
                                 }
                             });
 
@@ -808,7 +793,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 });
             } else {
                 cols = angular.merge(cols, {
-                    cellRenderer: function(params) {
+                    cellRenderer: function (params) {
                         var cellValue = '';
                         if (params.value.length != 0 && params.value != 0) {
                             cellValue = gradingOptions[params.value]['name'];
@@ -831,7 +816,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             return cols;
         },
 
-        renderDuration: function(allowEdit, cols, extra, _results) {
+        renderDuration: function (allowEdit, cols, extra, _results) {
             var minMark = extra.minMark;
             var passMark = extra.passMark;
             var maxMark = extra.maxMark;
@@ -839,7 +824,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             var vm = this;
 
             cols = angular.merge(cols, {
-                cellStyle: function(params) {
+                cellStyle: function (params) {
                     var value = params.data[params.colDef.field];
                     var duration = String(value).split(".");
                     var minInSeconds = parseInt(duration[0]) * 60;
@@ -852,7 +837,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         return {color: '#333', direction: 'ltr'};
                     }
                 },
-                valueGetter: function(params) {
+                valueGetter: function (params) {
                     var value = params.data[params.colDef.field];
 
                     if (!isNaN(parseFloat(value))) {
@@ -867,15 +852,15 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             if (allowEdit) {
                 cols = angular.merge(cols, {
                     cellClassRules: {
-                        'oe-cell-highlight': function(params) {
+                        'oe-cell-highlight': function (params) {
                             var studentStatusId = params.data.student_status_id;
                             return (studentStatusId == enrolledStatus);
                         },
-                        'oe-cell-error': function(params) {
+                        'oe-cell-error': function (params) {
                             return params.data.save_error[params.colDef.field];
                         }
                     },
-                    cellRenderer: function(params) {
+                    cellRenderer: function (params) {
                         var oldValue = params.data[params.colDef.field];
                         var studentStatusId = params.data.student_status_id;
 
@@ -913,11 +898,11 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                                 secondInput.value = duration[1];
                             }
 
-                            minuteInput.addEventListener('blur', function() {
+                            minuteInput.addEventListener('blur', function () {
                                 vm.parseDuration(minuteInput, secondInput, oldValue, params, _results, extra);
                             });
 
-                            secondInput.addEventListener('blur', function() {
+                            secondInput.addEventListener('blur', function () {
                                 vm.parseDuration(minuteInput, secondInput, oldValue, params, _results, extra);
                             });
                             return eCell;
@@ -940,7 +925,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             return cols;
         },
 
-        parseDuration: function(minuteInput, secondInput, oldValue, params, _results, extra) {
+        parseDuration: function (minuteInput, secondInput, oldValue, params, _results, extra) {
             var studentId = params.data.student_id;
             var periodId = extra.period.id;
             var vm = this;
@@ -993,36 +978,36 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             if (durationAsFloat != oldValue || params.data.save_error[params.colDef.field]) {
                 var scope = params.context._scope;
                 vm.saveSingleRecordData(params, extra)
-                .then(function(response) {
-                    params.data.save_error[params.colDef.field] = false;
-                    AlertSvc.info(scope, 'Student result will be saved after the result has been entered.');
-                    params.api.refreshCells({
-                        rowNodes: [params.node],
-                        columns: [params.colDef.field],
-                        force: true
+                    .then(function (response) {
+                        params.data.save_error[params.colDef.field] = false;
+                        AlertSvc.info(scope, 'Student result will be saved after the result has been entered.');
+                        params.api.refreshCells({
+                            rowNodes: [params.node],
+                            columns: [params.colDef.field],
+                            force: true
+                        });
+                    }, function (error) {
+                        params.data.save_error[params.colDef.field] = true;
+                        console.log(error);
+                        AlertSvc.error(scope, 'There was an error when saving the result');
+                        params.api.refreshCells({
+                            rowNodes: [params.node],
+                            columns: [params.colDef.field],
+                            force: true
+                        });
                     });
-                }, function(error) {
-                    params.data.save_error[params.colDef.field] = true;
-                    console.log(error);
-                    AlertSvc.error(scope, 'There was an error when saving the result');
-                    params.api.refreshCells({
-                        rowNodes: [params.node],
-                        columns: [params.colDef.field],
-                        force: true
-                    });
-                });
             }
         },
 
-        getRowData: function(gradingTypes, periods, institutionId, classId, assessmentId, academicPeriodId, educationSubjectId, educationGradeId) {
-            var success = function(response, deferred) {
+        getRowData: function (gradingTypes, periods, institutionId, classId, assessmentId, academicPeriodId, educationSubjectId, educationGradeId) {
+            var success = function (response, deferred) {
                 if (angular.isDefined(response.data.error)) {
                     deferred.reject(response.data.error);
                 } else {
                     var subjectStudents = response.data.data;
 
                     var periodObj = {};
-                    angular.forEach(periods, function(period, key) {
+                    angular.forEach(periods, function (period, key) {
                         periodObj[period.id] = period;
                     }, periodObj);
 
@@ -1038,7 +1023,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         var isDurationType = false;
                         var resultType = null;
 
-                        angular.forEach(subjectStudents, function(subjectStudent, key) {
+                        angular.forEach(subjectStudents, function (subjectStudent, key) {
                             currentStudentId = parseInt(subjectStudent.student_id);
                             assessmentPeriodId = subjectStudent.AssessmentItemResults.assessment_period_id;
                             if (assessmentPeriodId != null && angular.isDefined(gradingTypes[assessmentPeriodId])) {
@@ -1053,7 +1038,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                                 if (studentId != null) {
                                     this.push(studentResults);
                                 }
-                        
+
                                 studentResults = {
                                     openemis_id: subjectStudent._matchingData.Users.openemis_no,
                                     name: subjectStudent._matchingData.Users.name,
@@ -1066,7 +1051,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                                 };
 
                                 var periodWeight = 0;
-                                angular.forEach(periods, function(period, key) {
+                                angular.forEach(periods, function (period, key) {
                                     var resultTypeByPeriod = gradingTypes[period.id].assessment_grading_type.result_type;
 
                                     // if is GRADES type, set weight to empty so that will not be included when calculate total marks.
@@ -1114,33 +1099,33 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             };
 
             return InstitutionSubjectStudentsTable
-            .select()
-            .find('Results', {
-                institution_id: institutionId,
-                class_id: classId,
-                assessment_id: assessmentId,
-                academic_period_id: academicPeriodId,
-                subject_id: educationSubjectId,
-                grade_id: educationGradeId
-            })
-            .ajax({success: success, defer: true})
-            ;
+                .select()
+                .find('Results', {
+                    institution_id: institutionId,
+                    class_id: classId,
+                    assessment_id: assessmentId,
+                    academic_period_id: academicPeriodId,
+                    subject_id: educationSubjectId,
+                    grade_id: educationGradeId
+                })
+                .ajax({success: success, defer: true})
+                ;
         },
 
-        getNewRowData: function(options) {
+        getNewRowData: function (options) {
             // console.log('handleGetPermissions');
             // console.log(JSON.stringify(options));
             var grading_types = options.grading_types;
             var gradingTypes = options.grading_types;
             var periods = options.periods;
-            var success = function(response, deferred) {
+            var success = function (response, deferred) {
                 if (angular.isDefined(response.data.error)) {
                     deferred.reject(response.data.error);
                 } else {
                     var subjectStudents = response.data.data;
 
                     var periodObj = {};
-                    angular.forEach(periods, function(period, key) {
+                    angular.forEach(periods, function (period, key) {
                         periodObj[period.id] = period;
                     }, periodObj);
 
@@ -1157,8 +1142,8 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         var isDurationType = false;
                         var resultType = null;
                         // var oneStudents  = subjectStudents.slice(0, 1);
-                        var oneStudents  = subjectStudents;
-                        angular.forEach(oneStudents, function(subjectStudent, key) {
+                        var oneStudents = subjectStudents;
+                        angular.forEach(oneStudents, function (subjectStudent, key) {
                             currentStudentId = parseInt(subjectStudent.student_id);
                             totalMarks = parseInt(subjectStudent.total_mark);
                             assessmentPeriodId = subjectStudent.AssessmentItemResults.assessment_period_id;
@@ -1187,7 +1172,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                                     save_error: {}
                                 };
                                 var periodWeight = 0;
-                                angular.forEach(periods, function(period, key) {
+                                angular.forEach(periods, function (period, key) {
                                     var resultTypeByPeriod = gradingTypes[period.id].assessment_grading_type.result_type;
 
                                     // if is GRADES type, set weight to empty so that will not be included when calculate total marks.
@@ -1238,25 +1223,25 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             };
 
             return InstitutionSubjectStudentsTable
-            .select()
-            .find('StudentResults', {
-                institution_id: options.institution_id,
-                class_id: options.class_id,
-                assessment_id: options.assessment_id,
-                academic_period_id: options.academic_period_id,
-                education_subject_id: options.education_subject_id,
-                education_grade_id: options.education_grade_id
-            })
-            .ajax({success: success, defer: true})
-            ;
+                .select()
+                .find('StudentResults', {
+                    institution_id: options.institution_id,
+                    class_id: options.class_id,
+                    assessment_id: options.assessment_id,
+                    academic_period_id: options.academic_period_id,
+                    education_subject_id: options.education_subject_id,
+                    education_grade_id: options.education_grade_id
+                })
+                .ajax({success: success, defer: true})
+                ;
         },
 
 
-        getResultTypes: function() {
+        getResultTypes: function () {
             return resultTypes;
         },
 
-        getGrading: function(subject, marks) {
+        getGrading: function (subject, marks) {
             var gradingOptions = subject.grading_type.grading_options;
             var gradingResults = {
                 id: null,
@@ -1264,7 +1249,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 name: ''
             };
 
-            angular.forEach(gradingOptions, function(gradingOption, key) {
+            angular.forEach(gradingOptions, function (gradingOption, key) {
                 if (marks >= gradingOption.min && marks <= gradingOption.max) {
                     this.id = gradingOption.id;
                     this.code = gradingOption.code;
@@ -1275,10 +1260,10 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             return gradingResults;
         },
 
-        calculateTotal: function(data) {
+        calculateTotal: function (data) {
             var returnValue = 0;
             var valueEnabled = false;
-            angular.forEach(data, function(value, key) {
+            angular.forEach(data, function (value, key) {
                 if (key.indexOf('period_') >= 0) {
                     var periodId = parseInt(key.replace('period_', ''));
                     if (!isNaN(parseFloat(value))) {
@@ -1297,7 +1282,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             }
         },
 
-        saveSingleRecordData: function(params, extra) {
+        saveSingleRecordData: function (params, extra) {
             var assessmentId = params.context.assessment_id;
             var educationSubjectId = params.context.education_subject_id;
             var educationGradeId = params.context.education_grade_id;
@@ -1339,17 +1324,17 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             }
 
             var data = {
-                "marks" : marks,
-                "assessment_grading_option_id" : gradingOptionId,
-                "assessment_id" : assessmentId,
-                "education_subject_id" : educationSubjectId,
-                "education_grade_id" : educationGradeId,
-                "institution_id" : institutionId,
-                "academic_period_id" : academicPeriodId,
-                "institution_classes_id" : classId,
-                "student_status_id" : studentStatusId,
-                "student_id" : parseInt(studentId),
-                "assessment_period_id" : parseInt(assessmentPeriodId)
+                "marks": marks,
+                "assessment_grading_option_id": gradingOptionId,
+                "assessment_id": assessmentId,
+                "education_subject_id": educationSubjectId,
+                "education_grade_id": educationGradeId,
+                "institution_id": institutionId,
+                "academic_period_id": academicPeriodId,
+                "institution_classes_id": classId,
+                "student_status_id": studentStatusId,
+                "student_id": parseInt(studentId),
+                "assessment_period_id": parseInt(assessmentPeriodId)
             };
             return AssessmentItemResultsTable.save(data);
         }
