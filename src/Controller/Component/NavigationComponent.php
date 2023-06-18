@@ -152,7 +152,7 @@ class NavigationComponent extends Component
                 }
 
                 // $ignoredAction will be excluded from permission checking
-                if (array_key_exists('controller', $url) && !in_array('plugin', $url)) {
+                if (array_key_exists('controller', $url) && !in_array($url['plugin'])) {
                     //   print_r($url);die();
                     if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
                         unset($navigations[$key]);
