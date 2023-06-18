@@ -1127,16 +1127,12 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             ;
         },
 
-        getNewRowData: function(gradingTypes,
-                                periods,
-                                institutionId,
-                                classId,
-                                assessmentId,
-                                academicPeriodId,
-                                educationSubjectId,
-                                educationGradeId) {
-            console.log('getNewRowData');
-
+        getNewRowData: function(options) {
+            console.log('handleGetPermissions');
+            console.log(JSON.stringify(options));
+            var grading_types = options.grading_types;
+            var gradingTypes = options.grading_types;
+            var periods = options.periods;
             var success = function(response, deferred) {
                 if (angular.isDefined(response.data.error)) {
                     deferred.reject(response.data.error);
@@ -1160,13 +1156,14 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         var isGradesType = false;
                         var isDurationType = false;
                         var resultType = null;
-                        var oneStudents  = subjectStudents.slice(0, 1);
+                        // var oneStudents  = subjectStudents.slice(0, 1);
+                        var oneStudents  = subjectStudents;
                         angular.forEach(oneStudents, function(subjectStudent, key) {
                             currentStudentId = parseInt(subjectStudent.student_id);
                             totalMarks = parseInt(subjectStudent.total_mark);
                             assessmentPeriodId = subjectStudent.AssessmentItemResults.assessment_period_id;
                             if (assessmentPeriodId != null && angular.isDefined(gradingTypes[assessmentPeriodId])) {
-                                resultType = gradingTypes[assessmentPeriodId].assessment_grading_type.result_type;
+                                resultType = grading_types[assessmentPeriodId].assessment_grading_type.result_type;
                             }
 
                             isMarksType = (resultType == resultTypes.MARKS);
@@ -1177,7 +1174,8 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                                 if (studentId != null) {
                                     this.push(studentResults);
                                 }
-                                
+                                console.log('subjectStudent');
+                                console.log(JSON.stringify(subjectStudent));
                                 studentResults = {
                                     openemis_id: subjectStudent._matchingData.Users.openemis_no,
                                     name: subjectStudent._matchingData.Users.name,
@@ -1242,12 +1240,12 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             return InstitutionSubjectStudentsTable
             .select()
             .find('StudentResults', {
-                institution_id: institutionId,
-                class_id: classId,
-                assessment_id: assessmentId,
-                academic_period_id: academicPeriodId,
-                education_subject_id: educationSubjectId,
-                education_grade_id: educationGradeId
+                institution_id: options.institution_id,
+                class_id: options.class_id,
+                assessment_id: options.assessment_id,
+                academic_period_id: options.academic_period_id,
+                education_subject_id: options.education_subject_id,
+                education_grade_id: options.education_grade_id
             })
             .ajax({success: success, defer: true})
             ;
