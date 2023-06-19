@@ -38,8 +38,12 @@ use App\Models\InstitutionSubjectStaff;
 use App\Models\AcademicPeriod;
 use App\Models\StudentStatuses;
 use App\Models\Nationalities;
+use App\Models\Workflows;
+use App\Models\InstitutionStudentTransfers;
+use App\Models\SecurityUsers;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class InstitutionRepository extends Controller
 {
@@ -1858,7 +1862,73 @@ class InstitutionRepository extends Controller
 
 
             if(isset($param['is_diff_school']) && ($param['is_diff_school'] == 1)){
-                //
+                $workflows = Workflows::join('workflow_steps', 'workflow_steps.workflow_id', '=', 'workflows.id')
+                    ->where('workflow_steps.name', 'Open')
+                    ->where('workflows.name', 'Student Transfer - Receiving')
+                    ->select('workflow_steps.id as workflowSteps_id')
+                    ->first();
+                
+
+
+                $entityTransferData = [
+                    'start_date' => $param['start_date']??null,
+                    'end_date' => $param['end_date']??null,
+                    'requested_date' => null,
+                    'student_id' => $param['student_id']??null,
+                    'status_id' => $workflows->workflowSteps_id,
+                    'assignee_id' => JWTAuth::user()->id, //POCOR-7080
+                    'institution_id' => $param['institution_id']??null,
+                    'academic_period_id' => $param['academic_period_id']??null,
+                    'education_grade_id' => $param['education_grade_id']??null,
+                    'institution_class_id' => $param['institution_class_id']??null,
+                    'previous_institution_id' => $param['previous_institution_id']??null,
+                    'previous_academic_period_id' => $param['previous_academic_period_id']??null,
+                    'previous_education_grade_id' => $param['previous_education_grade_id']??null,
+                    'student_transfer_reason_id' => $param['student_transfer_reason_id']??null,
+                    'comment' => $param['comment']??null,
+                    'all_visible' => 1,
+                    'modified_user_id' => null,
+                    'modified' => null,
+                    'created_user_id' => JWTAuth::user()->id,
+                    'created' => Carbon::now()->toDateTimeString()
+                ];
+
+
+                $storeIST = InstitutionStudentTransfers::insert($entityTransferData);
+
+            } else {
+                $openemis_no = $param['openemis_no']??0;
+
+                $checkStudentExist = SecurityUsers::where('openemis_no', $openemis_no)->first();
+
+                $entityData = [
+                    'openemis_no' => $openemis_no,
+                    'first_name' => $param['first_name'],
+                    'middle_name' => $param['middle_name'],
+                    'third_name' => $param['third_name'],
+                    'last_name' => $param['last_name'],
+                    'preferred_name' => $param['preferred_name'],
+                    'gender_id' => $param['gender_id'],
+                    'date_of_birth' => $param['date_of_birth'],
+                    'nationality_id' => $nationalityId??"",
+                    'preferred_language' => $pref_lang->value??"",
+                    'username' => $param['username']??null,
+                    'password' => Hash::make($param['password']),
+                    'address' => $param['address']??null,
+                    'address_area_id' => $param['address_area_id']??null,
+                    'birthplace_area_id' => $param['birthplace_area_id']??null,
+                    'postal_code' => $param['postal_code']??null,
+                    
+                    'is_student' => 1,
+                    'created_user_id' => JWTAuth::user()->id,
+                    'created' => Carbon::now()->toDateTimeString()
+                ];
+                dd("entityData",$entityData);
+                if($checkStudentExist){
+                    $update = SecurityUsers::where('id', $checkStudentExist->id)->update($entityData);
+                } else {
+                    $store = SecurityUsers::insert($entityData);
+                }
             }
             DB::commit();
             dd("qwqwqww");
