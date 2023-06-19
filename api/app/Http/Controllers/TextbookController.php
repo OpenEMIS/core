@@ -85,9 +85,9 @@ class TextbookController extends Controller
         try {
             $data = $this->textbookService->addTextbooks($request);
             if($data == 1){
-                return $this->sendErrorResponse("Textbook stored successfully.");
+                return $this->sendSuccessResponse("Textbook stored successfully.", $data);
             } else {
-                return $this->sendSuccessResponse("Textbook not stored.", $data);
+                return $this->sendErrorResponse("Textbook not stored.");
             }
 
         }
