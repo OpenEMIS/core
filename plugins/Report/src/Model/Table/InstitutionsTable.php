@@ -1337,6 +1337,30 @@ class InstitutionsTable extends AppTable
         }
     }
 
+ // Start POCOR-7479
+    public function getAllAreaID($areaId){
+
+        $areaTable = TableRegistry::get('areas');
+        $areaList= $areaTable
+            ->find('list')
+            ->select('id')
+            ->where([
+                $areaTable->aliasField('parent_id') => $areaId,
+            ])
+            ->toArray();
+
+        $ids = [];
+        if(!empty($areaList)){
+            foreach($areaList as $key => $val){
+                $ids[$key] = $key;
+            }
+        }
+        return  $ids;
+
+    }
+
+     // END POCOR-7479
+
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
@@ -1406,6 +1430,15 @@ class InstitutionsTable extends AppTable
 
                         $institutionList = $institutionQuery->toArray();
                     } else {
+                        // Start POCOR-7479
+                        $area_level_id = $request->data[$this->alias()]['area_level_id'];
+                        if(in_array($area_level_id, [1,2])){
+                            $areaId = $this->getAllAreaID($areaId);    
+                        }else{
+                            $areaId = [$areaId];    
+                        }
+                        // END POCOR-7479
+
                         $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
@@ -1413,13 +1446,14 @@ class InstitutionsTable extends AppTable
                         ])
                         ->where([
                             $InstitutionsTable->aliasField('institution_type_id') => $institutionTypeId,
-                            $InstitutionsTable->aliasField('area_id') => $areaId
+                            $InstitutionsTable->aliasField('area_id IN') => $areaId    //POCOR-7479
                         ])
                         ->order([
                             $InstitutionsTable->aliasField('code') => 'ASC',
                             $InstitutionsTable->aliasField('name') => 'ASC'
                         ]);
 
+              
                         $superAdmin = $this->Auth->user('super_admin');
                         if (!$superAdmin) { // if user is not super admin, the list will be filtered
                             $userId = $this->Auth->user('id');
