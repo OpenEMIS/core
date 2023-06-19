@@ -87,7 +87,8 @@ class InstitutionRepository extends Controller
     public function getInstitutionData($id)
     {
         try {
-            $institution = Institutions::where('id', $id)->first();
+            $institution = Institutions::with('institutionLocalities', 'institutionOwnerships', 'institutionProviders', 'institutionSectors', 'institutionTypes', 'institutionStatus', 'institutionGender')->where('id', $id)->first();
+            
             
             return $institution;
         } catch (\Exception $e) {
