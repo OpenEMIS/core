@@ -148,8 +148,9 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
             mySubjectTeacherPermissionData = response;
             console.log('MySubjectTeacherPermissionData ctrl==>>>');
             console.log(mySubjectTeacherPermissionData.data);
-            if((userData.super_admin != 1) && ((vm.teacherCommentsRequired == 0) || (mySubjectTeacherPermissionData.data.result <= 0))){
+            if((userData.super_admin != 1) && (mySubjectTeacherPermissionData.data.result <= 0)){
                 vm.mySubjectTeacherCommentsRequired = 0;
+                vm.teacherCommentsRequired = (vm.teacherCommentsRequired == 0) ? 0 : 1; //POCOR-7483
             }else{
                 vm.mySubjectTeacherCommentsRequired = 1;
                 $scope.checkEditAction = 1;
@@ -174,12 +175,13 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 if(vm.teacherCommentsRequired == 1){//POCOR-7137
                    $scope.checkEditAction = 1; 
                 }
-            }else if((userData.super_admin != 1) && ((vm.teacherCommentsRequired == 0) || (allSubjectTeacherPermissionData.data.result <= 0))){
-                vm.teacherCommentsRequired = 0;
+            }else if((userData.super_admin != 1) && (allSubjectTeacherPermissionData.data.result <= 0)){
+                vm.teacherCommentsRequired = (vm.teacherCommentsRequired == 0) ? 0 : 1; //POCOR-7483
             }else{
                 $scope.checkEditAction = 1;//POCOR-6800
             }
             vm.allCommentsEditRequired = $scope.checkEditAction;//POCOR-6800
+            console.log('GET TABS==>>>'+ $scope.reportCardId +' / '+ $scope.classId +' / '+ $scope.institutionId +' / '+ vm.currentUserId +' / '+ vm.principalCommentsRequired +' / '+ vm.homeroomTeacherCommentsRequired +' / '+ vm.teacherCommentsRequired +' / '+ vm.mySubjectTeacherCommentsRequired +' / '+ vm.allCommentsViewRequired +' / '+ vm.allCommentsEditRequired);
             return InstitutionsCommentsSvc.getTabs($scope.reportCardId, $scope.classId, $scope.institutionId, vm.currentUserId, vm.principalCommentsRequired, vm.homeroomTeacherCommentsRequired, vm.teacherCommentsRequired, vm.mySubjectTeacherCommentsRequired, vm.allCommentsViewRequired, vm.allCommentsEditRequired);//POCOR-6800 add vm.allCommentsEditRequired
         }, function(error)
         {
