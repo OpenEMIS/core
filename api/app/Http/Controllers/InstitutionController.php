@@ -920,9 +920,9 @@ class InstitutionController extends Controller
 
             $data = $this->institutionService->addInstitutionTextbooks($request);
             if($data == 1){
-                return $this->sendErrorResponse("Institution Textbook stored successfully.");
+                return $this->sendSuccessResponse("Institution Textbook stored successfully.", $data);
             } else {
-                return $this->sendSuccessResponse("Institution Textbook not stored.", $data);
+                return $this->sendErrorResponse("Institution Textbook not stored.");
             }
         }
         catch(\Exception $e) {
