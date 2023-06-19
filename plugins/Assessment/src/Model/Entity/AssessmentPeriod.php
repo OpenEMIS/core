@@ -6,6 +6,7 @@ use DateTimeInterface;
 use Cake\I18n\Date;
 use Cake\ORM\Entity;
 use Cake\Log\Log;
+use Cake\ORM\TableRegistry;
 
 class AssessmentPeriod extends Entity
 {
@@ -17,8 +18,31 @@ class AssessmentPeriod extends Entity
         $dateEnabled = $this->getOriginal('date_enabled');
         $dateDisabled = $this->getOriginal('date_disabled');
 
+        //POCOR-7400 start
+        $assessment_period_id=$this->getOriginal('id');
+        $user_id=$_SESSION['Auth']['User']['id'];
+        $SecurityGroupUsersTable=TableRegistry::get('security_group_users');
+        $securityGroupUserData=$SecurityGroupUsersTable->
+                               find('all')->where([$SecurityGroupUsersTable->aliasField('security_user_id') => $user_id])
+                               ->first();
+        if($securityGroupUserData){
+           
+            $ExcludedSecurityRoleTable=TableRegistry::get('assessment_period_excluded_security_roles');
+            $ExcludedSecurityRoleEntity=$ExcludedSecurityRoleTable->find('all')
+                                                               ->where([
+                                                                'security_role_id'=>$securityGroupUserData->security_role_id,
+                                                                'assessment_period_id'=> $assessment_period_id
+                                                               ])
+                                                               ->toArray();
+                                                              
+        }
+        if($ExcludedSecurityRoleEntity){
+            return true;
+        }
+        //POCOR-7400 end 
+        
         if ($dateEnabled instanceof DateTimeInterface && $dateDisabled instanceof DateTimeInterface) {
-            return $today->between($dateEnabled, $dateDisabled);
+             return $today->between($dateEnabled, $dateDisabled);
         }
         return false;
     }
