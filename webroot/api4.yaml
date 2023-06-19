@@ -47,6 +47,8 @@ tags:
     description: APIs for Institution Positions
   - name: Locale Content Details
     description: APIs for Locale Content Details
+  - name: Textbook Details
+    description: APIs for Textbooks
 paths:
   /api/v4/login:
     post:
@@ -3100,6 +3102,156 @@ paths:
             description: Invalid status value
 
 # POCOR-7391 ends
+# POCOR-7368 starts
+
+  /api/v4/institutions/{institutionId}/textbooks/{textbookId}:
+      get:
+        tags:
+          - Textbook Details
+        summary: Get one textbook for one Institution
+        description: Multiple grades can be provided with comma separated strings
+        parameters:
+          - name: institutionId
+            in: path
+            description: Add Institution id to filter
+            required: true
+            schema:
+              type: integer
+              format: int  
+          - name: textbookId
+            in: path
+            description: Add textbook id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value
+
+  /api/v4/textbooks/{textbookId}:
+      get:
+        tags:
+          - Textbook Details
+        summary: Get One Textbook from Textbooks
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+          - name: textbookId
+            in: path
+            description: Add Textbook id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value
+  
+  /api/v4/textbooks-statuses:
+      get:
+        tags:
+          - Textbook Details
+        summary: Get All Textbook Status
+        description: Multiple values can be provided with comma separated strings
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value
+
+  /api/v4/textbooks-dimensions:
+      get:
+        tags:
+          - Textbook Details
+        summary: Get All Textbook Dimension
+        description: Multiple values can be provided with comma separated strings
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value
+
+  /api/v4/textbooks-conditions:
+      get:
+        tags:
+          - Textbook Details
+        summary: Get All Textbook Condition
+        description: Multiple values can be provided with comma separated strings
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value
+
+  /api/v4/textbooks:
+      post:
+        tags:
+          - Textbook Details
+        summary: Add Textbooks
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+          - name: institutionId
+            in: query
+            description: Add Institution id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+          - name: academic_period_id
+            in: query
+            description: This is to filter the results based on the academic_period_id
+            required: false
+            schema:
+              type: integer
+          - name: education_grade_id
+            in: query
+            description: This is to filter the results based on the education_grade_id
+            required: false
+            schema:
+              type: integer
+          - name: education_subject_id
+            in: query
+            description: This is to filter the results based on the education_subject_id
+            required: false
+            schema:
+              type: integer
+          - name: textbook_id
+            in: query
+            description: This is to filter the results based on the textbook_id
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid value
+  
+  /api/v4/institutions/{institutionId}/textbooks:
+      post:
+        tags:
+          - Textbook Details
+        summary: Add Textbook For A Institution
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+          - name: institutionId
+            in: path
+            description: Add Institution id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid value
+
+# POCOR-7368 ends
 
 components:
   schemas:
