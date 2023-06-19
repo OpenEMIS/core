@@ -39,7 +39,7 @@ class StudentBehavioursTable extends ControllerActionTable
         
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
-        $this->belongsTo('InstitutionStudents', ['className' => 'InstitutionStudent.InstitutionStudents', 'foreignKey' => 'student_id']);
+       // $this->belongsTo('InstitutionStudents', ['className' => 'InstitutionStudent.InstitutionStudents', 'foreignKey' => 'student_id']);//Remove this link for POCOR-7505
         $this->hasMany('StudentBehaviourAttachments', [
             'className' => 'Institutions.StudentBehaviourAttachments',
             'dependent' => true,
@@ -278,6 +278,7 @@ class StudentBehavioursTable extends ControllerActionTable
         // will need to check for search by name: AdvancedNameSearchBehavior
 
         // POCOR-2547 Adding sortWhiteList to $options
+        $query->contain(['Students']);
         $sortList = ['Students.first_name'];
         if (array_key_exists('sortWhitelist', $options)) {
             $sortList = array_merge($options['sortWhitelist'], $sortList);
