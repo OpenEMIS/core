@@ -1834,7 +1834,7 @@ class InstitutionRepository extends Controller
         DB::beginTransaction();
         try {
             $param = $request->all();
-            dd($param);
+            
             $institutionId = $param['institution_id'];
             $academicPeriodId = $param['academic_period_id'];
             $institutionClassId = $param['institution_class_id'];
