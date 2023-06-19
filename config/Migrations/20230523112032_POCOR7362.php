@@ -105,10 +105,27 @@ class POCOR7362 extends AbstractMigration
             $this->insert('field_options', $data);
 
         //field options ends
+
+        // for changing student_id to security_user_id in institutionTextbooksTable.php (starts)
+
+        $this->execute('CREATE TABLE `zz_7362_institution_textbooks` LIKE `institution_textbooks`');
+        $this->execute('INSERT INTO `zz_7362_institution_textbooks` SELECT * FROM `institution_textbooks`');
+
+        $this->execute("ALTER TABLE `institution_textbooks` RENAME COLUMN `student_id` to `security_user_id`");
+
+
+        // for security users id (ends)
     }
 
     public function down()
     {
+
+        // for security_user_id starts
+
+        $this->execute('DROP TABLE IF EXISTS `institution_textbooks`');
+        $this->execute('RENAME TABLE `zz_7362_institution_textbooks` TO `institution_textbooks`');
+
+        // for security_user_id ends
 
         // field options starts
 
