@@ -1,3 +1,14 @@
+### [3.87.1] - 2023-06-19
+- Implemented: Develop a mechanism for past assessment period grades to be modified and to regenerate impacted report cards
+- Implemented: Develop client id UI for all OpenEMIS Core APIs v4
+- Bug Fixed: Institutions > Behaviour > List page : Status is not showing correctly
+- Bug Fixed: Institutions>Staff>Transfer: Security role is not updated
+- Bug Fixed: Institutions>Report Cards>Comments: The staff is a homeroom teacher and a subject teacher however the staff is not able to see the subject tab
+- Bug Fixed: Registration: The islands and countries are in alphabetical order
+- Bug Fixed: Institutions>Behaviour>Students: Getting duplicate records
+- Bug Fixed: API: User api not showing identity type name
+- Bug Fixed: Institutions > Performance > Assessments : page load is generating thousands of database queries
+
 ### [3.87.0] - 2023-06-14
 - Implemented: Development of JoLearn v4 API - institutions assessment grades
 - Implemented: Develop client id API for all OpenEMIS Core APIs v4
