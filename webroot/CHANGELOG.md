@@ -1,3 +1,6 @@
+### [3.87.2] - 2023-06-20
+- Bug Fixed: Institutions>Performance>Report Cards: Report Card page is not loading or very slow
+
 ### [3.87.1] - 2023-06-19
 - Implemented: Develop a mechanism for past assessment period grades to be modified and to regenerate impacted report cards
 - Implemented: Develop client id UI for all OpenEMIS Core APIs v4
