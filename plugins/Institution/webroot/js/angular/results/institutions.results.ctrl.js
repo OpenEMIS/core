@@ -319,9 +319,9 @@ function InstitutionsResultsController($q,
         }
 
         if (typeof subject === 'undefined') {
-            $scope.subject = undefined;
+            // $scope.subject = undefined;
             $scope.education_subject_id = undefined;
-            return;
+            // return;
         }
 
         $scope.education_subject_id = $scope.subject.id;
