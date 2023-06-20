@@ -9,7 +9,7 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
-/* POCOR-7462 for cases alert rule*/ 
+/* POCOR-7462 for cases alert rule */ 
 class AlertRuleCasesBehavior extends AlertRuleBehavior
 {
     protected $_defaultConfig = [
