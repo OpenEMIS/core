@@ -408,26 +408,54 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
         var outcomeCriteriaId = params.data.outcome_criteria_id;
         var institutionId = params.context.institution_id;
         var academicPeriodId = params.context.academic_period_id;
-        
+        let currentDate = new Date();
+        let formattedDate = currentDate.toISOString().replace(/T/, ' ').replace(/\..+/, '');
+        console.log('saveOutcomeResults');
+        console.log(formattedDate);
+        var $result = null;
         //POCOR-7114[START]
-        if(parseInt(outcomeGradingOptionId) == 0 ){
-            var success = function(response, deferred) {
-                deferred.resolve(response.data.data);
-            };
-            return InstitutionOutcomeResults
-            .find('deleteRecords', {
+        if(parseInt(outcomeGradingOptionId) <= 0 ){
+            // var success = function(response, deferred) {
+            //     deferred.resolve(response.data.data);
+            //     currentDate = new Date();
+            //     formattedDate = currentDate.toISOString().replace(/T/, ' ').replace(/\..+/, '');
+            //     console.log('sucesssucess');
+            //     console.log(formattedDate);
+            //
+            // };
+            // const deleter = InstitutionOutcomeResults
+            // .find('deleteRecords', {
+            //     student_id: studentId,
+            //     outcome_grading_option_id: parseInt(outcomeGradingOptionId),
+            //     outcome_period_id: outcomePeriodId,
+            //     education_grade_id: educationGradeId,
+            //     education_subject_id: educationSubjectId,
+            //     institution_id: institutionId,
+            //     academic_period_id: academicPeriodId,
+            //     outcome_criteria_id: outcomeCriteriaId,
+            //     outcome_template_id: outcomeTemplateId
+            // })
+            // .ajax({success: success, defer:true});
+            var deleteObj = {
+                outcome_grading_option_id: -1,
                 student_id: studentId,
-                outcome_grading_option_id: parseInt(outcomeGradingOptionId),
+                outcome_template_id: outcomeTemplateId,
                 outcome_period_id: outcomePeriodId,
                 education_grade_id: educationGradeId,
                 education_subject_id: educationSubjectId,
-                institution_id: institutionId,
-                academic_period_id: academicPeriodId,
                 outcome_criteria_id: outcomeCriteriaId,
-                outcome_template_id: outcomeTemplateId  
-            })
-            .ajax({success: success, defer:true});
-        }else{
+                institution_id: institutionId,
+                academic_period_id: academicPeriodId
+            }
+            $result = InstitutionOutcomeResults.save(deleteObj);
+            currentDate = new Date();
+            formattedDate = currentDate.toISOString().replace(/T/, ' ').replace(/\..+/, '');
+            console.log('after delete');
+            console.log(formattedDate);
+            return $result;
+            }
+
+        if(parseInt(outcomeGradingOptionId) > 0 ){
             var saveObj = {
                 outcome_grading_option_id: parseInt(outcomeGradingOptionId),
                 student_id: studentId,
@@ -439,7 +467,12 @@ function InstitutionStudentOutcomesSvc($http, $q, $filter, KdDataSvc, AlertSvc) 
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId
             };
-            return InstitutionOutcomeResults.save(saveObj);
+        currentDate = new Date();
+        $result = InstitutionOutcomeResults.save(saveObj);
+        formattedDate = currentDate.toISOString().replace(/T/, ' ').replace(/\..+/, '');
+        console.log('before delete or change');
+        console.log(formattedDate);
+            return $result;
         }
         //POCOR-7114[END]
     }
