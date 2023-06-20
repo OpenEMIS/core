@@ -556,13 +556,6 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         return '';
                     }
                 },
-                // filterParams: {
-                //     cellHeight: 30,
-                //     filterOptions: [
-                //         'inRange',
-                //         'lessThan',
-                //         'greaterThan']
-                // }
             });
 
             if (allowEdit) {
