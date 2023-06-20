@@ -282,7 +282,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
             $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
             if ($selectedassessment != '-1') {
                 $AssessmentPeriodsconditions = [
-                    $AssessmentPeriods->aliasField('assessment_id') => $selectedPeriod
+                    $AssessmentPeriods->aliasField('assessment_id') => $selectedassessment
                 ];
             } else {
                 $AssessmentPeriodsconditions = [];
@@ -360,7 +360,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
     {
         // POCOR-7327 starts
 
-        $institutionID = $this->Session->read('Institution.Institutions.id');
+        $institutionID = $this->Session->read('Institutio$academicPeriodOptionsn.Institutions.id');
 
         if (empty($this->request->query)) {
 
@@ -539,4 +539,35 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    public function getTotalMarksForAssessmentArchived($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId, $assessmentPeriodId, $institutionId)
+    {
+        $query = $this->find();
+        $totalMarks = $query
+            ->select([
+                'calculated_total' => $query->newExpr('SUM(AssessmentItemResultsArchived.marks * AssessmentPeriods.weight)')
+            ])
+            ->matching('Assessments')
+            ->matching('AssessmentPeriods')
+            ->order([
+                $this->aliasField('created') => 'DESC'
+            ])
+            ->where([
+                $this->aliasField('student_id') => $studentId,
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('education_subject_id') => $educationSubjectId,
+                $this->aliasField('education_grade_id') => $educationGradeId,
+                $this->aliasField('education_grade_id') => $educationGradeId,
+                $this->aliasField('institution_id') => $institutionId,
+            ])
+            ->group([
+                $this->aliasField('student_id'),
+                $this->aliasField('assessment_id'),
+                $this->aliasField('education_subject_id')
+            ])
+            ->first();
+
+        return $totalMarks;
+    }
+
 }

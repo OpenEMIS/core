@@ -30,7 +30,7 @@ class CredentialsController extends PageController
     {
         $page = $this->Page;
         $page->exclude(['public_key']);
-        $page->exclude(['client_id']);
+        // $page->exclude(['client_id']); // POCOR-7487
         // $page->get('client_id')->setLabel(__('Client ID')); // POCOR-7312
 
         parent::index();
@@ -42,7 +42,7 @@ class CredentialsController extends PageController
         parent::view($id);
 
         //POCOR-7312[START]
-        $page->exclude(['client_id']);
+        // $page->exclude(['client_id']); // POCOR-7487
         $page->exclude(['public_key']);
         $page->exclude(['api_scopes']);
 
@@ -72,7 +72,7 @@ class CredentialsController extends PageController
         if ($this->request->data('ApiCredentials.client_id')) {
             $clientId = $this->request->data('ApiCredentials.client_id');
         }
-        $page->exclude(['client_id']);
+        // $page->exclude(['client_id']);
         // $page->exclude(['public_key']);
         // $page->addNew('client')
         //     ->setControlType('string')
@@ -81,9 +81,15 @@ class CredentialsController extends PageController
         //     ->setDisabled(true);
 
         // $page->move('client')->first();
+
+        // START POCOR-7487
+
+        // $page->get('client_id')       
+        //     ->setControlType('hidden')
+        //     ->setValue($clientId);
         $page->get('client_id')
-            ->setControlType('hidden')
-            ->setValue($clientId);
+        ->setValue('');  
+        // END POCOR-7487
         $page->get('public_key')
             ->setControlType('hidden')
             ->setValue($clientId);
@@ -97,14 +103,14 @@ class CredentialsController extends PageController
         parent::edit($id);
 
         //POCOR-7312[START]
-        $page->exclude(['client_id']);
+        // $page->exclude(['client_id']);   // POCOR-7487
         // $page->exclude(['name']); 
         $page->exclude(['public_key']);
         $page->exclude(['public_key']);
         //POCOR-7312[END]
 
         $page->get('name')->setDisabled(true);
-        $page->get('client_id')->setDisabled(true);
+        $page->get('client_id')->setDisabled(false);  // POCOR-7487
         $this->addEdit($id);
     }
 

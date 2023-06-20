@@ -198,7 +198,7 @@ class FieldOptionsController extends AppController
     public function LanguageProficiencies()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); } //POCOR-7395
 
     //END:POCOR-6873
-
+    
     //POCOR-6673
     public function CurricularTypes(){
 
@@ -210,19 +210,17 @@ class FieldOptionsController extends AppController
 
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); 
     }
+    //POCOR-7376
+    public function Industries()    { 
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); 
+    }  
 
-
-    
-
-    
     //POCOR-7363 start
-    public function FoodType(){
-
+     public function FoodType(){
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); 
     } 
     public function MealRatings(){
-
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); 
     } 
-     //POCOR-7363 end
+    //POCOR-7363 end
 }
