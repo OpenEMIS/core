@@ -523,6 +523,7 @@ class NavigationComponent extends Component
         $session = $this->request->session();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
+            
         if (isset($uId)) {
             $userInfo = TableRegistry::get('security_users')->get($uId);
             if (!empty($userInfo) && $userInfo->is_guardian == 1) {
@@ -544,7 +545,7 @@ class NavigationComponent extends Component
                     'action' => 'Personal', 0 => 'view', $userId]
             ]
         ];
-        /*POCOR-6267 Ends*/
+        
         $navigation = [
             'Institutions.Institutions.index' => [
                 'title' => 'Institutions',
@@ -565,23 +566,15 @@ class NavigationComponent extends Component
                     'DirectoryHistories.index']
             ],
 
-            'Reports' => [
-                'title' => 'Reports',
-                'icon' => '<span><i class="fa kd-reports"></i></span>',
-                'link' => false,
-            ],
-
-            'Administration' => [
-                'title' => 'Administration',
-                'icon' => '<span><i class="fa fa-cogs"></i></span>',
-                'link' => false
-            ],
+            
         ];
+
+        $navigationToAppends  = $this->getReportAdminstrationNavigation($uId); //POCOR-7527
         /*POCOR-6267 Starts*/
         if (isset($newNavigation)) {
-            $navigation = array_merge($PersonalNavigation, $newNavigation, $navigation);
+            $navigation = array_merge($PersonalNavigation, $newNavigation, $navigation, $navigationToAppends);
         } else {
-            $navigation = array_merge($PersonalNavigation, $navigation);
+            $navigation = array_merge($PersonalNavigation, $navigation, $navigationToAppends);
         }
         /*POCOR-6267 Ends*/
         return $navigation;
@@ -2903,4 +2896,89 @@ class NavigationComponent extends Component
         }
         return $navigation;
     }
+
+    //POCOR-7527
+    private function getReportAdminstrationNavigation($uId)
+    {
+        $users = TableRegistry::get('security_users');
+        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
+                    $users->aliasField('id') => $uId])->first();
+        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
+        $securityFunctions = TableRegistry::get('security_functions');
+        $securityRole = TableRegistry::get('security_roles');
+        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $groupUserRecords = $GroupUsers->find()
+            ->matching('SecurityGroups')
+            ->matching('SecurityRoles')
+            ->where([$GroupUsers->aliasField('security_user_id') => $uId])
+            ->group([
+                $GroupUsers->aliasField('security_group_id'),
+                $GroupUsers->aliasField('security_role_id')
+            ])
+            ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
+            ->all();
+            $rowData = [];
+            $rowId = [];
+            foreach ($groupUserRecords as $obj) {
+                $rowData[] = $obj->role_name;
+                $rowId[] = $obj->id;
+            }
+            if(!empty($rowId)){
+                $SecurityReportFunctions = $SecurityRoleFunctions->find()
+                    ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                            [
+                                $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                            ]
+                        )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
+                        $securityFunctions->aliasField('module') => 'Reports', $SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+                $SecurityAdminFunctions = $SecurityRoleFunctions->find()
+                    ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                            [
+                                $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                            ]
+                        )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
+                        $securityFunctions->aliasField('module') => 'Administration',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+            }
+        
+        $navigationToAppends = [];
+        if(empty($userinfo))
+        {
+            if(!empty($SecurityReportFunctions)){
+                $navigationToAppends = [
+                    'Reports' => [
+                            'title' => 'Reports',
+                            'icon' => '<span><i class="fa kd-reports"></i></span>',
+                            'link' => false,
+                        ],
+                ];
+            
+            }elseif(!empty($SecurityAdminFunctions)){
+                $navigationToAppends = [
+
+                        'Administration' => [
+                            'title' => 'Administration',
+                            'icon' => '<span><i class="fa fa-cogs"></i></span>',
+                            'link' => false
+                        ],
+                ];
+            }
+        }else{
+            $navigationToAppends = [
+                    'Reports' => [
+                            'title' => 'Reports',
+                            'icon' => '<span><i class="fa kd-reports"></i></span>',
+                            'link' => false,
+                        ],
+
+                        'Administration' => [
+                            'title' => 'Administration',
+                            'icon' => '<span><i class="fa fa-cogs"></i></span>',
+                            'link' => false
+                        ],
+                ];
+        }
+        
+        return $navigationToAppends;
+    }
+    
 }
