@@ -1,3 +1,49 @@
+### [3.87.1] - 2023-06-19
+- Implemented: Develop a mechanism for past assessment period grades to be modified and to regenerate impacted report cards
+- Implemented: Develop client id UI for all OpenEMIS Core APIs v4
+- Bug Fixed: Institutions > Behaviour > List page : Status is not showing correctly
+- Bug Fixed: Institutions>Staff>Transfer: Security role is not updated
+- Bug Fixed: Institutions>Report Cards>Comments: The staff is a homeroom teacher and a subject teacher however the staff is not able to see the subject tab
+- Bug Fixed: Registration: The islands and countries are in alphabetical order
+- Bug Fixed: Institutions>Behaviour>Students: Getting duplicate records
+- Bug Fixed: API: User api not showing identity type name
+- Bug Fixed: Institutions > Performance > Assessments : page load is generating thousands of database queries
+
+### [3.87.0] - 2023-06-14
+- Implemented: Development of JoLearn v4 API - institutions assessment grades
+- Implemented: Develop client id API for all OpenEMIS Core APIs v4
+- Bug Fixed: Institutions>Performance>Assessments: The current assessment report is no longer showing the Assessment Period scores
+- Bug Fixed: Institutions > Add Students: Unable to add student via identity number
+- Bug Fixed: Institutions > Staff > Carreer > Leave Tab : System does not show archive button
+- Bug Fixed: Institutions > Students > Academic > Assessments: Marks is not showing the correct marks but showing the total marks
+- Bug Fixed: API: api/v4/users/{userId} is not returning identity_type_name
+- Bug Fixed: Institutions > Performances > Outcomes : Page does not stop loading once user change selection to Default --Select-- value.
+
+### [3.86.1] - 2023-06-12
+- Bug Fixed: Institutions>Performance>Report Cards: Placeholder is not working
+- Bug Fixed: Login: Login is causing high load on the cpu
+
+### [3.86.0] - 2023-06-10
+- Implemented: Develop standard Security Reports
+- Implemented: Develop OpenEMIS Core textbook export
+- Implemented: Create an Out Of School Staff Report
+- Implemented: Develop changes to the student behaviour page
+- Implemented: Add an Industry dropdown to the Employments feature
+- Implemented: Update OpenEMIS Core Swagger API v4 documentation
+- Implemented: Develop changes to the staff behaviour page
+- Bug Fixed: Update the logic of Student Performance Summary Placeholders to fetch data from the transactional table
+- Bug Fixed: Administration>System Configurations>Data Outliers: Maximum Student Number and Minimum student number validation not working
+- Bug Fixed: Institutions>General>Profile>Students: Unable to publish generated student profiles
+- Bug Fixed: Administration>Profile>Institution: Updates to placeholder
+- Bug Fixed: Administration>Examination>Students: Multiple message appear when registering student
+- Bug Fixed: Report>UIS Statistics: Data too long for column
+- Bug Fixed: Report>Institution>Institution Positions Summary: Only staff with the current status of being assigned to the institution with active position should show in the report
+- Bug Fixed: API: Users and subject api are getting error when retrieving
+- Bug Fixed: Institutions>Performance>Report Cards: Placeholder is not working
+- Bug Fixed: Institutions>Behaviour>Students: Existing behaviours are not showing status
+- Bug Fixed: Institutions > Students > Academic > Assessments/Absences : Allow user to retrieve Student Archived data from these pages
+- Bug Fixed: Institutions>Performance>Assessments: 404 error when clicking the assessment tab
+
 ### [3.85.1] - 2023-06-01
 - Implemented: APIs to return the area levels from config items for Address Area and Birthplace Area
 - Bug Fixed: Institutions > Performance > Assessments > Archive : Filters are incomplete

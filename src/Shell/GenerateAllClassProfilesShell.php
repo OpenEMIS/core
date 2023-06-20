@@ -57,9 +57,13 @@ class GenerateAllClassProfilesShell extends Shell
 
                 $excelParams = new ArrayObject([]);
                 $excelParams['className'] = 'CustomExcel.ClassProfiles';
+                //POCOR-7382 starts
+                if(isset($this->args[2]) && !empty($this->args[2])){
+                    $areaId = $this->args[2];
+                    $recordToProcess['area_id'] = $areaId;
+                }//POCOR-7382 ends
                 $excelParams['requestQuery'] = $recordToProcess;
-				
-                try {
+				try {
                     $this->ClassProfiles->renderExcelTemplate($excelParams);
                 } catch (\Exception $e) {
                     $this->out('Error generating Report Card for Class '.$recordToProcess['institution_class_id'].' of Institution ' . $recordToProcess['institution_id']);
