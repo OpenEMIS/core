@@ -182,14 +182,15 @@ class InstitutionStandardsTable extends AppTable
         $report = ($this->request->data[$this->alias()]['feature']);
         if ($report=='Institution.InstitutionStandardMarksEntered') {
             $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
-            $AssesmentTable    = TableRegistry::get('Assessment.Assessments');
-            $assessmentList = $AssesmentTable->find('list', [
+            //POCOR-7474-HINDOL TYPO FIX
+            $AssessmentTable    = TableRegistry::get('Assessment.Assessments');
+            $assessmentList = $AssessmentTable->find('list', [
                                 'keyField' => 'id',
                                 'valueField' => 'name'
                              ])
                             ->select(['id','name'])
-                            ->where([$AssesmentTable->aliasField('academic_period_id') => $academicPeriodId])
-                            ->order($AssesmentTable->aliasField('name'))
+                            ->where([$AssessmentTable->aliasField('academic_period_id') => $academicPeriodId])
+                            ->order($AssessmentTable->aliasField('name'))
                             ->toArray();
             $attr['options'] = $assessmentList;
             $attr['type']           = 'select';
@@ -253,18 +254,19 @@ class InstitutionStandardsTable extends AppTable
             foreach($getyear->toArray() as $val) {
                 $year  = $val['name'];
             }
-            $AssesmentPeriodTable    = TableRegistry::get('Assessment.AssessmentPeriods');
+            //POCOR-7474-HINDOL TYPO FIX
+            $AssessmentPeriodTable    = TableRegistry::get('Assessment.AssessmentPeriods');
             $where = [];
             if($assessmentId != 0) {
-               $where[$AssesmentPeriodTable->aliasField('assessment_id')] = $assessmentId;
+               $where[$AssessmentPeriodTable->aliasField('assessment_id')] = $assessmentId;
             }
-            $assessmentPeriodList = $AssesmentPeriodTable->find('list', [
+            $assessmentPeriodList = $AssessmentPeriodTable->find('list', [
                                 'keyField' => 'id',
                                 'valueField' => 'name'
                              ])
                             ->select(['id','name'])
                             ->where($where)
-                            ->order($AssesmentPeriodTable->aliasField('name'))
+                            ->order($AssessmentPeriodTable->aliasField('name'))
                             ->toArray();
                 $attr['options']        = $assessmentPeriodList;
                 $attr['type']           = 'select';
@@ -385,8 +387,9 @@ class InstitutionStandardsTable extends AppTable
             $selectable['assessment_mark'] = 'AssessmentItemResults.marks';
             $selectable['assessment_education_subject_id'] = 'EducationSubjects.name';
             $selectable['education_programme'] = 'EducationProgrammes.name';
-            $selectable['assesment_code'] = 'AssessmentPeriods.code';
-            $selectable['assesment_name'] = 'AssessmentPeriods.name';
+            //POCOR-7474-HINDOL TYPO FIX
+            $selectable['assessment_code'] = 'AssessmentPeriods.code';
+            $selectable['assessment_name'] = 'AssessmentPeriods.name';
             $group_by = [];
 
             $join['EducationProgrammes'] = [
@@ -542,7 +545,7 @@ class InstitutionStandardsTable extends AppTable
                 } // END : Student tab formating
 
                 else if ( $sheet_tab_name == 'Assessment' ) {
-                    $row['assessment_full_name'] = $row['assesment_code'] . ' ' .  $row['assesment_name'];
+                    $row['assessment_full_name'] = $row['assessment_code'] . ' ' .  $row['assessment_name'];
                 }
 
                 $row['student_full_name'] = $row['first_name'] . ' ' .  $row['last_name'];

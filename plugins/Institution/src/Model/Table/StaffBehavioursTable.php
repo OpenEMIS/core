@@ -11,6 +11,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 
+
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 
@@ -108,10 +109,12 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->field('description', ['visible' => false]);
         $this->field('action', ['visible' => false]);
         $this->field('time_of_behaviour', ['visible' => false]);
+        $this->field('behaviour_classification_id', ['attr' => ['label' => __('Classification')]]); // POCOR-7441
 
         $this->fields['staff_id']['sort'] = ['field' => 'Staff.first_name']; // POCOR-2547 adding sort
 
-        $this->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
+        $this->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'staff_behaviour_category_id','behaviour_classification_id']);
+
         
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Institutions','Behaviour','Staff');       
@@ -133,6 +136,15 @@ class StaffBehavioursTable extends ControllerActionTable
 		}
 		// End POCOR-5188
     }
+
+
+    // Start POCOR-7441
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('behaviour_classification_id', ['attr' => ['label' => __('Classification')]]);
+        // $this->field('action', ['type' => 'text', 'after' => 'description','visible' => true]);
+    }
+    // End POCOR-7441
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -183,6 +195,7 @@ class StaffBehavioursTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('openemis_no', ['entity' => $entity]);
+        $this->field('action', ['visible' => true]); // POCOR-7441
 
         $this->setFieldOrder(['academic_period_id', 'openemis_no', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour']);
     }
@@ -209,6 +222,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->field('date_of_behaviour', ['entity' => $entity]);
         $this->field('staff_behaviour_category_id', ['entity' => $entity]);
         $this->field('behaviour_classification_id', ['entity' => $entity]);
+        $this->fields['action']['attr']['value'] = $entity->action; // POCOR-7441
 
         $this->setFieldOrder(['academic_period_id', 'openemis_no', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour']);
     }
@@ -363,6 +377,7 @@ class StaffBehavioursTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event)
     {
+        $this->field('behaviour_classification_id', ['attr' => ['label' => __('Classification')]]); // POCOR-7441
         $tabElements = $this->getStaffBehaviourTabElements();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
