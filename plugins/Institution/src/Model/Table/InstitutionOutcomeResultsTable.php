@@ -88,17 +88,6 @@ class InstitutionOutcomeResultsTable extends AppTable
 
     }
 
-//    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-//    {
-//        // delete record if user removes result
-//        $delete = false;
-//        $gradingOption = $entity->outcome_grading_option_id;
-//        if(empty($gradingOption)) $delete = true;
-//        if(intval($gradingOption) == -1) $delete = true;
-//        if ($delete) {
-//            $this->delete($entity);
-//        }
-//    }
 
     public function findStudentResults(Query $query, array $options)
     {
