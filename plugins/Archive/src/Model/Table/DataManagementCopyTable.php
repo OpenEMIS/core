@@ -279,7 +279,6 @@ class DataManagementCopyTable extends ControllerActionTable
                 //return false;
             }
         }
-
         // Start POCOR-5337
         $RiskData = TableRegistry::get('Institution.Risks');
         if($entity->features == 'Risks'){
@@ -291,8 +290,78 @@ class DataManagementCopyTable extends ControllerActionTable
                 $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
                 return false;
             }
+        }// End POCOR-5337
+        if($entity->features == "Performance Competencies"){
+            if($entity->from_academic_period == $entity->to_academic_period){
+                $this->Alert->error('CopyData.genralerror', ['reset' => true]);
+                return false;
+            }
+            $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
+            $EducationSystems = TableRegistry::get('Education.EducationSystems');
+            if($entity->to_academic_period){
+                $ToAcademicPeriodsData = $AcademicPeriods
+                ->find()
+                ->select(['start_date', 'start_year','end_date'])
+                ->where(['id' => $entity->to_academic_period])
+                ->first();
+
+                $CompetencyCriteriasTable = TableRegistry::get('Competency.CompetencyCriterias');
+                $CompetencyTemplatesTable = TableRegistry::get('Competency.CompetencyTemplates');
+                $CompetencyItemsTable = TableRegistry::get('Competency.CompetencyItems');
+
+                $CompetencyCriteriasData = $CompetencyCriteriasTable
+                    ->find('all')
+                    ->where(['academic_period_id' => $entity->to_academic_period])
+                    ->toArray();
+
+                $CompetencyTemplatesData = $CompetencyTemplatesTable
+                ->find('all')
+                ->where(['academic_period_id' => $entity->to_academic_period])
+                ->toArray();
+
+                $CompetencyItemsData = $CompetencyItemsTable
+                ->find('all')
+                ->where(['academic_period_id' => $entity->to_academic_period])
+                ->toArray();
+
+                if(!empty($CompetencyCriteriasData) && !empty($CompetencyTemplatesData) && !empty($CompetencyItemsData)){
+                    $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+                    return false;
+                }
+                if(empty($CompetencyCriteriasData)){
+                    $entity->competency_criterias_value = 0;
+                }else{
+                    $entity->competency_criterias_value = 1;
+                }
+                if(empty($CompetencyTemplatesData)){
+                    $entity->competency_templates_value = 0;
+                }else{
+                    $entity->competency_templates_value = 1;
+                }
+                if(empty($CompetencyItemsData)){
+                    $entity->competency_items_value = 0;
+                }else{
+                    $entity->competency_items_value = 1;
+                }
+            }
+            if($entity->to_academic_period){
+                
+                $ToAcademicPeriodsData = $AcademicPeriods
+                ->find()
+                ->select(['start_date', 'start_year','end_date'])
+                ->where(['id' => $entity->to_academic_period])
+                ->first();
+
+                $EducationSystemsdata = $EducationSystems
+                    ->find('all')
+                    ->where(['academic_period_id' => $entity->to_academic_period])
+                    ->toArray();
+                if(empty($EducationSystemsdata)){
+                    $this->Alert->error('CopyData.nodataexisteducationsystem', ['reset' => true]);
+                    return false;
+                }
+            }
         }
-        // End POCOR-5337
     }
 
     /***************POCOR-7326 Start*********************** */
@@ -401,7 +470,7 @@ class DataManagementCopyTable extends ControllerActionTable
                     echo "<pre>";print_r($e);die;
                 }
             }
-
+            //This code is for copy one academic period to onother[Start]
             $from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
             $to_end_date = $ToAcademicPeriodsData['end_date']->format('Y-m-d');
             $to_start_year = $ToAcademicPeriodsData['start_year'];
@@ -697,8 +766,6 @@ class DataManagementCopyTable extends ControllerActionTable
                 $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
                 return false;
             }
-            
-            //**************************POCOR-7326 End************************************** */
 
 
             $this->triggerCopyShell('Infrastructure', $copyFrom, $copyTo);
@@ -713,6 +780,13 @@ class DataManagementCopyTable extends ControllerActionTable
             $this->triggerCopyShell('Risk', $copyFrom, $copyTo);
         }
         // End POCOR-5337
+
+        
+        if($entity->features == "Performance Competencies"){
+            $this->log('=======>Before triggerPerformanceCompetenciesShell', 'debug');
+            $this->triggePerformanceCompetenciesShell('PerformanceCompetencies',$entity->from_academic_period, $entity->to_academic_period, $entity->competency_criterias_value, $entity->competency_templates_value, $entity->competency_items_value);
+            $this->log(' <<<<<<<<<<======== After triggerPerformanceCompetenciesShell', 'debug');
+        }
     }
 
      /*
@@ -724,7 +798,6 @@ class DataManagementCopyTable extends ControllerActionTable
 
     public function triggerCopyShell($shellName, $copyFrom, $copyTo)
     {
-        //echo "sdsd";die;
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$copyFrom.' '.$copyTo;
         $logs = ROOT . DS . 'logs' . DS . $shellName.'_copy.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
@@ -737,8 +810,9 @@ class DataManagementCopyTable extends ControllerActionTable
         $options = [
             'Institution Programmes, Grades and Subjects' => __('Institution Programmes, Grades and Subjects'),
             'Shifts' => __('Shifts'),
-            'Infrastructure' => __('Infrastructure')
-            ,'Risks' => __('Risks') // POCOR-5337
+            'Infrastructure' => __('Infrastructure'),
+            'Risks' => __('Risks'), // POCOR-5337
+            'Performance Competencies' => __('Performance Competencies')
         ];
         return $options;
     }
@@ -778,5 +852,27 @@ class DataManagementCopyTable extends ControllerActionTable
 
         return $entity->generated_by = $result->first_name.' '.$result->last_name;
     }
+    /*
+    * Function to copy competency_criterias, competency_templates and competency_items to new academic period
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return boolean
+    * @ticket POCOR-6424
+    */
+    
+    public function triggePerformanceCompetenciesShell($shellName, $from_academic_period, $to_academic_period = null, $competency_criterias_value = null, $competency_templates_value = null, $competency_items_value = null)
+    {
+        $args = '';
+        $args .= !is_null($from_academic_period) ? ' '.$from_academic_period : '';
+        $args .= !is_null($to_academic_period) ? ' '.$to_academic_period : '';
+        $args .= !is_null($competency_criterias_value) ? ' '.$competency_criterias_value : '';
+        $args .= !is_null($competency_templates_value) ? ' '.$competency_templates_value : '';
+        $args .= !is_null($competency_items_value) ? ' '.$competency_items_value : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
+     }
     
 }
