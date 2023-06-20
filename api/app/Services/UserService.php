@@ -24,6 +24,9 @@ class UserService extends Controller
             //dd('data', $data);
             $resp = [];
             foreach($data['data'] as $k => $d){
+                /*if($d['id'] == 8815){
+                    dd($d);
+                }*/
                 $resp[$k]['id'] = $d['id'];
                 $resp[$k]['username'] = $d['username'];
                 $resp[$k]['password'] = $d['password'];
@@ -43,6 +46,7 @@ class UserService extends Controller
                 $resp[$k]['date_of_death'] = $d['date_of_death'];
                 $resp[$k]['nationality_id'] = $d['nationality_id'];
                 $resp[$k]['identity_type_id'] = $d['identity_type_id'];
+                $resp[$k]['identity_type_name'] = $d['identity_type']['name']??null;
                 $resp[$k]['identity_number'] = $d['identity_number'];
                 $resp[$k]['external_reference'] = $d['external_reference'];
                 $resp[$k]['status'] = $d['status'];
@@ -113,6 +117,7 @@ class UserService extends Controller
                         "date_of_death" => $item['date_of_death'],
                         "nationality_id" => $item['nationality_id'],
                         "identity_type_id" => $item['identity_type_id'],
+                        "identity_type_name" => $item['identityType']['name']??null,
                         "identity_number" => $item['identity_number'],
                         "external_reference" => $item['external_reference'],
                         "super_admin" => $item['super_admin'],

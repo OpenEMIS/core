@@ -807,7 +807,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     scope.goToNextStep = async function() {
         debugger;
         if(scope.step === 'confirmation'){
-            const result = await scope.checkUserExistByIdentityFromConfiguaration();
+            const result = await scope.checkUserExistByIdentityFromConfiguration();
             if(result)return;
          }
         if(scope.isInternalSearchSelected) {
@@ -843,7 +843,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
     scope.confirmUser = async function () {
         if(scope.step === 'confirmation'){
-            const result = await scope.checkUserExistByIdentityFromConfiguaration();
+            const result = await scope.checkUserExistByIdentityFromConfiguration();
             if(result)return;
          }
         scope.message = (scope.selectedUserData && scope.selectedUserData.userType ? scope.selectedUserData.userType.name : 'Student') + ' successfully added.';
@@ -1731,7 +1731,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         scope.externalGridOptions.api.sizeColumnsToFit(); 
     }
 
-    scope.checkUserExistByIdentityFromConfiguaration = async function checkUserExistByIdentityFromConfiguaration()
+    scope.checkUserExistByIdentityFromConfiguration = async function checkUserExistByIdentityFromConfiguration()
     {
         const { identity_type_id, identity_number, nationality_id } = scope.selectedUserData;
         // scope.error.nationality_id = "";
