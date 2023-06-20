@@ -822,6 +822,23 @@ class InstitutionController extends Controller
 
 
 
+    public function getStudentAssessmentItemResult(Request $request, $institutionId, $studentId)
+    {
+        try {
+            $data = $this->institutionService->getStudentAssessmentItemResult($request, $institutionId, $studentId);
+            
+            return $this->sendSuccessResponse("Student Assessment Details Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student assessment data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get student assessment data.');
+        }
+    }
+    
     public function displayAddressAreaLevel(Request $request)
     {
         try {
@@ -856,6 +873,8 @@ class InstitutionController extends Controller
             return $this->sendErrorResponse('Failed to get birthplace area level area.');
         }
     }
+
+    
     public function getSubjectsStaffList(Request $request)
     {
         try {

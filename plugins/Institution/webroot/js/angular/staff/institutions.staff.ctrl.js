@@ -113,7 +113,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.checkConfigForExternalSearch = checkConfigForExternalSearch;
     StaffController.isNextButtonShouldDisable = isNextButtonShouldDisable;
     StaffController.getCSPDSearchData=getCSPDSearchData;
-    StaffController.checkUserExistByIdentityFromConfiguaration=checkUserExistByIdentityFromConfiguaration;
+    StaffController.checkUserExistByIdentityFromConfiguration=checkUserExistByIdentityFromConfiguration;
   
     
     $window.savePhoto = function(event) {
@@ -1221,7 +1221,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     async function goToNextStep()
     {
         if(StaffController.step === 'confirmation'){
-            const result = await StaffController.checkUserExistByIdentityFromConfiguaration();
+            const result = await StaffController.checkUserExistByIdentityFromConfiguration();
             if(result)return;
          }
      
@@ -2565,7 +2565,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     
-    async function checkUserExistByIdentityFromConfiguaration()
+    async function checkUserExistByIdentityFromConfiguration()
     { 
         const { identity_type_id,identity_number } = StaffController.selectedStaffData;
         StaffController.error.nationality_id = "";

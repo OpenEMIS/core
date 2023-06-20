@@ -63,6 +63,7 @@ class User extends Entity {
      * @return string user's fullname with openemis_no and user's role
      */
     protected function _getNameWithIdRole() {
+        if(!$this->id) return;
         $name = $this->name;
         $securityUserId = $this->id;
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
@@ -97,9 +98,8 @@ class User extends Entity {
     //POCOR-5688 ends
 
     protected function _getDefaultIdentityType() {
+        if(!$this->id) return;
         $data = "";
-        $securityUserId = $this->id;
-
         $UserIdentities = TableRegistry::get('User.Identities');
         $IdentityTypes = $UserIdentities->IdentityTypes;
         $default_identity_type = $IdentityTypes->getDefaultValue();
@@ -116,6 +116,7 @@ class User extends Entity {
 
     protected function _getHasSpecialNeeds()
     {
+        if(!$this->id) return;
         if ($this->offsetExists('special_needs')) {
             // If entity already contain SpecialNeeds, skip table registry
             return !empty($this->special_needs);
