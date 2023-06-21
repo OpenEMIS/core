@@ -21,9 +21,82 @@ class InstitutionService extends Controller
     public function getInstitutions($request)
     {
         try {
-            $data = $this->institutionRepository->getInstitutions($request);
+            $list = $this->institutionRepository->getInstitutions($request);
+            $resp = [];
+
+            foreach($list['data'] as $k => $data){
+                $resp[$k]['id'] = $data['id'];
+                $resp[$k]['name'] = $data['name'];
+                $resp[$k]['alternative_name'] = $data['alternative_name'];
+                $resp[$k]['code'] = $data['code'];
+                $resp[$k]['address'] = $data['address'];
+                $resp[$k]['postal_code'] = $data['postal_code'];
+                $resp[$k]['contact_person'] = $data['contact_person'];
+                $resp[$k]['telephone'] = $data['telephone'];
+                $resp[$k]['fax'] = $data['fax'];
+                $resp[$k]['email'] = $data['email'];
+                $resp[$k]['website'] = $data['website'];
+                $resp[$k]['date_opened'] = $data['date_opened'];
+                $resp[$k]['year_opened'] = $data['year_opened'];
+                $resp[$k]['date_closed'] = $data['date_closed'];
+                $resp[$k]['year_closed'] = $data['year_closed'];
+                $resp[$k]['longitude'] = $data['longitude'];
+                $resp[$k]['latitude'] = $data['latitude'];
+                $resp[$k]['logo_name'] = $data['logo_name'];
+                if($data['logo_content']){
+                    $resp[$k]['logo_content'] = base64_encode($data['logo_content']);
+                } else {
+                    $resp[$k]['logo_content'] = $data['logo_content'];
+                }
+                $resp[$k]['shift_type'] = $data['shift_type'];
+                $resp[$k]['classification'] = $data['classification'];
+                $resp[$k]['area_id'] = $data['area_id'];
+                $resp[$k]['area_administrative_id'] = $data['area_administrative_id'];
+
+                $resp[$k]['institution_locality_id'] = $data['institution_locality_id'];
+                $resp[$k]['institution_locality_name'] = $data['institution_localities']['name']??"";
+                $resp[$k]['institution_locality_international_code'] = $data['institution_localities']['international_code']??"";
+                $resp[$k]['institution_locality_national_code'] = $data['institution_localities']['national_code']??"";
+
+                $resp[$k]['institution_ownership_id'] = $data['institution_ownership_id'];
+                $resp[$k]['institution_ownership_name'] = $data['institution_ownerships']['name']??"";
+                $resp[$k]['institution_ownership_international_code'] = $data['institution_ownerships']['international_code']??"";
+                $resp[$k]['institution_ownership_national_code'] = $data['institution_ownerships']['national_code']??"";
+
+                $resp[$k]['institution_provider_id'] = $data['institution_provider_id'];
+                $resp[$k]['institution_provider_name'] = $data['institution_providers']['name']??"";
+                $resp[$k]['institution_provider_international_code'] = $data['institution_providers']['international_code']??"";
+                $resp[$k]['institution_provider_national_code'] = $data['institution_providers']['national_code']??"";
+
+
+                $resp[$k]['institution_sector_id'] = $data['institution_sector_id'];
+                $resp[$k]['institution_sector_name'] = $data['institution_sectors']['name']??"";
+                $resp[$k]['institution_sector_international_code'] = $data['institution_sectors']['international_code']??"";
+                $resp[$k]['institution_sector_national_code'] = $data['institution_sectors']['national_code']??"";
+
+                $resp[$k]['institution_type_id'] = $data['institution_type_id'];
+                $resp[$k]['institution_type_name'] = $data['institution_types']['name']??"";
+                $resp[$k]['institution_type_international_code'] = $data['institution_types']['international_code']??"";
+                $resp[$k]['institution_type_national_code'] = $data['institution_types']['national_code']??"";
+
+
+                $resp[$k]['institution_gender_id'] = $data['institution_gender_id'];
+                $resp[$k]['institution_gender_name'] = $data['institution_gender']['name']??"";
+                $resp[$k]['institution_gender_code'] = $data['institution_gender']['code']??"";
+
+
+                $resp[$k]['institution_status_id'] = $data['institution_status_id'];
+                $resp[$k]['institution_status_name'] = $data['institution_status']['name']??"";
+                $resp[$k]['institution_status_name'] = $data['institution_status']['code']??"";
+
+                $resp[$k]['modified_user_id'] = $data['modified_user_id'];
+                $resp[$k]['modified'] = $data['modified'];
+                $resp[$k]['created_user_id'] = $data['created_user_id'];
+                $resp[$k]['created'] = $data['created'];
+            }
             
-            return $data; 
+            $list['data'] = $resp;
+            return $list; 
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -71,40 +144,40 @@ class InstitutionService extends Controller
                 $resp['area_administrative_id'] = $data['area_administrative_id'];
 
                 $resp['institution_locality_id'] = $data['institution_locality_id'];
-                $resp['institution_locality_name'] = $data['institutionLocalities']['name'];
-                $resp['institution_locality_international_code'] = $data['institutionLocalities']['international_code'];
-                $resp['institution_locality_national_code'] = $data['institutionLocalities']['national_code'];
+                $resp['institution_locality_name'] = $data['institutionLocalities']['name']??"";
+                $resp['institution_locality_international_code'] = $data['institutionLocalities']['international_code']??"";
+                $resp['institution_locality_national_code'] = $data['institutionLocalities']['national_code']??"";
 
                 $resp['institution_ownership_id'] = $data['institution_ownership_id'];
-                $resp['institution_ownership_name'] = $data['institutionOwnerships']['name'];
-                $resp['institution_ownership_international_code'] = $data['institutionOwnerships']['international_code'];
-                $resp['institution_ownership_national_code'] = $data['institutionOwnerships']['national_code'];
+                $resp['institution_ownership_name'] = $data['institutionOwnerships']['name']??"";
+                $resp['institution_ownership_international_code'] = $data['institutionOwnerships']['international_code']??"";
+                $resp['institution_ownership_national_code'] = $data['institutionOwnerships']['national_code']??"";
 
                 $resp['institution_provider_id'] = $data['institution_provider_id'];
-                $resp['institution_provider_name'] = $data['institutionProviders']['name'];
-                $resp['institution_provider_international_code'] = $data['institutionProviders']['international_code'];
-                $resp['institution_provider_national_code'] = $data['institutionProviders']['national_code'];
+                $resp['institution_provider_name'] = $data['institutionProviders']['name']??"";
+                $resp['institution_provider_international_code'] = $data['institutionProviders']['international_code']??"";
+                $resp['institution_provider_national_code'] = $data['institutionProviders']['national_code']??"";
 
 
                 $resp['institution_sector_id'] = $data['institution_sector_id'];
-                $resp['institution_sector_name'] = $data['institutionSectors']['name'];
-                $resp['institution_sector_international_code'] = $data['institutionSectors']['international_code'];
-                $resp['institution_sector_national_code'] = $data['institutionSectors']['national_code'];
+                $resp['institution_sector_name'] = $data['institutionSectors']['name']??"";
+                $resp['institution_sector_international_code'] = $data['institutionSectors']['international_code']??"";
+                $resp['institution_sector_national_code'] = $data['institutionSectors']['national_code']??"";
 
                 $resp['institution_type_id'] = $data['institution_type_id'];
-                $resp['institution_type_name'] = $data['institutionTypes']['name'];
-                $resp['institution_type_international_code'] = $data['institutionTypes']['international_code'];
-                $resp['institution_type_national_code'] = $data['institutionTypes']['national_code'];
+                $resp['institution_type_name'] = $data['institutionTypes']['name']??"";
+                $resp['institution_type_international_code'] = $data['institutionTypes']['international_code']??"";
+                $resp['institution_type_national_code'] = $data['institutionTypes']['national_code']??"";
 
 
                 $resp['institution_gender_id'] = $data['institution_gender_id'];
-                $resp['institution_gender_name'] = $data['institutionGender']['name'];
-                $resp['institution_gender_code'] = $data['institutionGender']['code'];
+                $resp['institution_gender_name'] = $data['institutionGender']['name']??"";
+                $resp['institution_gender_code'] = $data['institutionGender']['code']??"";
 
 
                 $resp['institution_status_id'] = $data['institution_status_id'];
-                $resp['institution_status_name'] = $data['institutionStatus']['name'];
-                $resp['institution_status_name'] = $data['institutionStatus']['code'];
+                $resp['institution_status_name'] = $data['institutionStatus']['name']??"";
+                $resp['institution_status_name'] = $data['institutionStatus']['code']??"";
 
                 $resp['modified_user_id'] = $data['modified_user_id'];
                 $resp['modified'] = $data['modified'];
