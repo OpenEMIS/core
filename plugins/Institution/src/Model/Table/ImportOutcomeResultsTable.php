@@ -150,8 +150,7 @@ class ImportOutcomeResultsTable extends AppTable
                              $OutcomeCriterias->aliasField('education_subject_id = ') . $InstitutionSubjects->aliasField('education_subject_id'),
 
                             ])
-                ->orWhere([$OutcomeCriterias->aliasField('academic_period_id') => $request->data[$this->alias()]['academic_period'],
-                    $OutcomeCriterias->aliasField('outcome_template_id') => $request->data[$this->alias()]['outcome_template']])//POCOR7506
+                ->orWhere($conditions)//POCOR-7506
                 ->group([
                     'EducationSubjects.id',
                 ])->toArray();
@@ -248,7 +247,6 @@ class ImportOutcomeResultsTable extends AppTable
                     $InstitutionClasses->aliasField('id')
                 ])
                 ->toArray();
-//print_r($query->Sql());die;
                 $attr['options'] = $classOptions;
                 // useing onChangeReload to do visible
                 $attr['onChangeReload'] = 'changeClass';
