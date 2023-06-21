@@ -12,10 +12,10 @@ class POCOR7507 extends AbstractMigration
      */
     public function up()
     {
-        $this->execute('UPDATE `config_items` SET `type`="External Data Source Identity" WHERE `code`="external_data_source_type" AND `type`="External Data Source"');
+        $this->execute('UPDATE `config_items` SET `type`="External Data Source - Identity" WHERE `code`="external_data_source_type" AND `type`="External Data Source"');
     }
     public function down()
     {
-        $this->execute('UPDATE `config_items` SET `type`="External Data Source" WHERE `code`="external_data_source_type" AND `type`="External Data Source Identity"');
+        $this->execute('UPDATE `config_items` SET `type`="External Data Source - Identity" WHERE `code`="external_data_source_type" AND `type`="External Data Source Identity"');
     }
 }
