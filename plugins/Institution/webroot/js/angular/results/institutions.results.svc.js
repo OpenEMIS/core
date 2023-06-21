@@ -348,6 +348,13 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             var filterParams = {
                 cellHeight: 30
             };
+            var filterParamsNumbers = {
+                cellHeight: 30,
+                filterOptions: [
+                    'inRange',
+                    'lessThan',
+                    'greaterThan']
+            };
             var columnDefs = [];
 
             var isMobile = document.querySelector("html").classList.contains("mobile") || navigator.userAgent.indexOf("Android") != -1 || navigator.userAgent.indexOf("iOS") != -1;
@@ -499,10 +506,10 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             }, columnDefs);
 
             columnDefs.push({
-                headerName: "Total Mark",
-                field: "total_mark",
+                headerName: 'Total Mark',
+                field: 'total_mark',
                 menuTabs: menuTabs,
-                filter: "number",
+                filter: 'number',
                 valueGetter: function (params) {
                     var value = ResultsSvc.calculateTotal(params.data);
                     params.data[params.colDef.field] = value;
@@ -510,10 +517,10 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     if (!isNaN(parseFloat(value))) {
                         return $filter('number')(value, 2);
                     } else {
-                        return ' ';
+                        return '';
                     }
                 },
-                filterParams: filterParams
+                filterParams: filterParamsNumbers
             });
 
             columnDefs.push({
@@ -548,7 +555,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     } else {
                         return '';
                     }
-                }
+                },
             });
 
             if (allowEdit) {
