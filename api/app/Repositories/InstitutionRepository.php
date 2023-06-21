@@ -48,6 +48,8 @@ use App\Models\StaffPositionTitles;
 use App\Models\SecurityRoles;
 use App\Models\InstitutionStudentAdmission;
 use App\Models\InstitutionClassSubjects;
+use App\Models\InstitutionSubjectStudents;
+use App\Models\StudentCustomFieldValues;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -2046,15 +2048,92 @@ class InstitutionRepository extends Controller
 
 
                     if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id'] && $param['institution_class_id']){
-                        
+                        $instClsSubjects = InstitutionClassSubjects::select(
+                            'institution_class_id',
+                            'institution_subject_id',
+                            'institution_subjects.name',
+                            'institution_subjects.education_grade_id',
+                            'institution_subjects.education_subject_id',
+                            'institution_subjects.academic_period_id'
+                        )
+                        ->leftjoin('institution_subjects', 'institution_subjects.id', '=', 'institution_class_subjects.institution_subject_id')
+                        ->join('education_grades_subjects', function($join){
+                            $join->on('education_grades_subjects.education_grade_id', '=', 'institution_subjects.education_grade_id')
+                                ->('education_grades_subjects.education_subject_id', '=', 'institution_subjects.education_subject_id');
+                        })
+                        ->where('institution_class_subjects.institution_class_id', '=', $param['institution_class_id'])
+                        ->where('institution_subjects.academic_period_id', '=', $param['academic_period_id'])
+                        ->where('education_grades_subjects.auto_allocation', '!=', 0)
+                        ->get()
+                        ->toArray();
+
+                        if(count($instClsSubjects) > 0){
+                            foreach ($instClsSubjects as $skey => $sval) {
+                                $check = InstitutionSubjectStudents::where('student_id', $user_record_id)
+                                    ->where('institution_class_id', $param['institution_class_id'])
+                                    ->where('academic_period_id', $param['academic_period_id'])
+                                    ->where('education_grade_id', $param['education_grade_id'])
+                                    ->where('institution_id', $param['institution_id'])
+                                    ->where('education_subject_id', $sval->education_subject_id)
+                                    ->exists();
+                                if(!$check){
+                                    $entitySubjectsData = [
+                                        'id' => Str::uuid(),
+                                        'student_id' => $user_record_id,
+                                        'institution_subject_id' => $sval->institution_subject_id,
+                                        'institution_class_id' => $param['institution_class_id'],
+                                        'institution_id' => $param['institution_id'],
+                                        'academic_period_id' => $param['academic_period_id'],
+                                        'education_subject_id' => $sval->education_subject_id,
+                                        'education_grade_id' => $param['education_grade_id'],
+                                        'student_status_id' => $studentStatus['CURRENT'],
+                                        'created_user_id' => JWTAuth::user()->id,
+                                        'created' => Carbon::now()->toDateTimeString()
+                                    ];
+
+                                    $store = InstitutionSubjectStudents::insert($entitySubjectsData);
+                                }
+                            }
+                        }
                     }
 
+
+                    if(isset($param['custom']) && count($param['custom']) > 0){
+                        //if student custom field values already exist in student_custom_field_values table the delete the old values and insert the new ones.
+
+                        $stuCustomFieldValCount = StudentCustomFieldValues::where('student_id', $user_record_id)->get();
+                        if(count($stuCustomFieldValCount) > 0){
+                            $del = StudentCustomFieldValues::where('student_id', $user_record_id)->delete();
+                        }
+
+                        foreach ($param['custom'] as $skey => $sval) {
+                            $entityCustomData = [
+                                'id' => Str::uuid(),
+                                'text_value' => $sval['text_value'],
+                                'number_value' => $sval['number_value'],
+                                'decimal_value' => $sval['decimal_value'],
+                                'textarea_value' => $sval['textarea_value'],
+                                'date_value' => $sval['date_value'],
+                                'time_value' => $sval['time_value'],
+                                'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
+                                'student_custom_field_id' => $sval['student_custom_field_id'],
+                                'student_id' => $user_record_id,
+                                'created_user_id' => JWTAuth::user()->id,
+                                'created' => Carbon::now()->toDateTimeString()
+                            ];
+
+                            $store = StudentCustomFieldValues::insert($entityCustomData);
+                        }
+                    }
+
+                }  else {
+                    return false;
                 }
 
 
             }
             DB::commit();
-            dd("qwqwqww");
+            return true;
         } catch (\Exception $e) {
             DB::rollback();
             dd($e);
