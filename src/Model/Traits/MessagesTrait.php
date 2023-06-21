@@ -50,6 +50,7 @@ trait MessagesTrait
             'f' => 'Female'
         ],
         'general' => [
+            'notAccess' => 'You are not authorized to access this page.',//POCOR-7520
             'notExists' => 'The record does not exist.',
             'notEditable' => 'This record is not editable',
             'notConfigured' => 'Not Configured',

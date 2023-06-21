@@ -7,6 +7,7 @@ use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
+use Cake\Network\Session;//POCOR-7520
 
 class ApiSecuritiesController extends PageController
 {
@@ -42,7 +43,15 @@ class ApiSecuritiesController extends PageController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-
+        //POCOR-7520[START]
+        $session = $this->request->session();
+        $superAdmin = $session->read('Auth.User.super_admin');
+        if($superAdmin == 0){
+            $event->stopPropagation();
+            $this->Alert->warning('general.notAccess');
+            return $this->redirect($this->referer());
+        }
+        //POCOR-7520::End
         $page = $this->Page;
         $page->addCrumb('API Securities', [
             'plugin' => false,
