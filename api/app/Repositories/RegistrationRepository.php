@@ -132,7 +132,7 @@ class RegistrationRepository extends Controller
         try {
             /*$areaAdministratives = AreaAdministratives::select('id', 'name', 'parent_id')->with('areaAdministrativesChild:id,name,parent_id')->get();*/
 
-            $areaAdministratives = Areas::select('id', 'name', 'parent_id')->get()->toArray();
+            $areaAdministratives = Areas::select('id', 'name', 'parent_id')->orderBy('name', 'ASC')->get()->toArray();
             
             return $areaAdministratives;
         } catch (\Exception $e) {
@@ -926,7 +926,7 @@ class RegistrationRepository extends Controller
                 $areas = $areas->where('area_level_id', $request['area_level_id']);
             }
 
-            $data = $areas->get();
+            $data = $areas->orderBy('name', 'ASC')->get();
             
             return $data;
         } catch (\Exception $e) {
