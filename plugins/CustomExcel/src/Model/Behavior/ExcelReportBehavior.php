@@ -160,7 +160,7 @@ class ExcelReportBehavior extends Behavior
 			// save Pdf file
 			$StudentsReportCards->updateAll([
 				'file_content_pdf' => $pdfFileContent,
-                'status'=>3
+                'status'=>3//POCOR-7530
 			], $params);
 			
 			$this->deleteFile($pdfFilePath);
