@@ -901,9 +901,11 @@ class InstitutionController extends Controller
         try {
             $data = $this->institutionService->deleteClassAttendance($request);
             if($data == 1){
-                return $this->sendErrorResponse("Student attendance deleted successfully.");
+                return $this->sendSuccessResponse("Student attendance deleted successfully.");
+            } elseif($data == 2){
+                return $this->sendSuccessResponse("Record not found for selected parameters.");
             } else {
-                return $this->sendSuccessResponse("Student attendance not deleted.", $data);
+                return $this->sendErrorResponse("Student attendance not deleted.", $data);
             }
             
         } catch (\Exception $e) {
@@ -922,9 +924,11 @@ class InstitutionController extends Controller
         try {
             $data = $this->institutionService->deleteStudentAttendance($request, $studentId);
             if($data == 1){
-                return $this->sendErrorResponse("Student attendance deleted successfully.");
-            } else {
-                return $this->sendSuccessResponse("Student attendance not deleted.", $data);
+                return $this->sendSuccessResponse("Student attendance deleted successfully.");
+            } elseif($data == 2){
+                return $this->sendSuccessResponse("Record not found for selected parameters.");
+            }else {
+                return $this->sendErrorResponse("Student attendance not deleted.", $data);
             }
             
         } catch (\Exception $e) {
