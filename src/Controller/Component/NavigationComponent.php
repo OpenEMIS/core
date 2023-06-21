@@ -2943,12 +2943,18 @@ class NavigationComponent extends Component
         $navigationToAppends = [];
         if(empty($userinfo))
         {
-            if(!empty($SecurityReportFunctions)){
+            if(!empty($SecurityAdminFunctions) &&  !empty($SecurityReportFunctions)){
                 $navigationToAppends = [
                     'Reports' => [
                             'title' => 'Reports',
                             'icon' => '<span><i class="fa kd-reports"></i></span>',
                             'link' => false,
+                        ],
+
+                        'Administration' => [
+                            'title' => 'Administration',
+                            'icon' => '<span><i class="fa fa-cogs"></i></span>',
+                            'link' => false
                         ],
                 ];
             
@@ -2959,6 +2965,14 @@ class NavigationComponent extends Component
                             'title' => 'Administration',
                             'icon' => '<span><i class="fa fa-cogs"></i></span>',
                             'link' => false
+                        ],
+                ];
+            }elseif(!empty($SecurityReportFunctions)){
+                $navigationToAppends = [
+                    'Reports' => [
+                            'title' => 'Reports',
+                            'icon' => '<span><i class="fa kd-reports"></i></span>',
+                            'link' => false,
                         ],
                 ];
             }
