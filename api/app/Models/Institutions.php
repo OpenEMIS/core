@@ -28,4 +28,46 @@ class Institutions extends Model
     {
         return $this->belongsToMany(EducationGrades::class, 'institution_grades', 'institution_id', 'education_grade_id');
     }
+
+
+    public function institutionLocalities()
+    {
+        return $this->belongsTo(InstitutionLocalities::class, 'institution_locality_id', 'id');
+    }
+
+
+    public function institutionOwnerships()
+    {
+        return $this->belongsTo(InstitutionOwnerships::class, 'institution_ownership_id', 'id');
+    }
+
+
+    public function institutionProviders()
+    {
+        return $this->belongsTo(InstitutionProviders::class, 'institution_provider_id', 'id');
+    }
+
+
+    public function institutionSectors()
+    {
+        return $this->belongsTo(InstitutionSectors::class, 'institution_sector_id', 'id');
+    }
+
+
+    public function institutionTypes()
+    {
+        return $this->belongsTo(InstitutionTypes::class, 'institution_type_id', 'id');
+    }
+
+
+    public function institutionStatus()
+    {
+        return $this->belongsTo(InstitutionStatus::class, 'institution_status_id', 'id');
+    }
+
+
+    public function institutionGender()
+    {
+        return $this->belongsTo(InstitutionGender::class, 'institution_gender_id', 'id');
+    }
 }
