@@ -47,6 +47,7 @@ use App\Models\UserIdentities;
 use App\Models\StaffPositionTitles;
 use App\Models\SecurityRoles;
 use App\Models\InstitutionStudentAdmission;
+use App\Models\InstitutionClassSubjects;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -2041,6 +2042,11 @@ class InstitutionRepository extends Controller
                         ];
 
                         $store = InstitutionClassStudents::insert($entityAdmissionData);
+                    }
+
+
+                    if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id'] && $param['institution_class_id']){
+                        
                     }
 
                 }
