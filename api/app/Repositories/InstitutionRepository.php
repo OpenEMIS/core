@@ -53,7 +53,8 @@ class InstitutionRepository extends Controller
                 $limit = $params['limit'];
             }
             
-            $institutions = new Institutions();
+            //$institutions = new Institutions();
+            $institutions = Institutions::with('institutionLocalities', 'institutionOwnerships', 'institutionProviders', 'institutionSectors', 'institutionTypes', 'institutionStatus', 'institutionGender');
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
@@ -70,7 +71,7 @@ class InstitutionRepository extends Controller
                 }
                 $resp[] = $d;
             }
-
+            
             $list['data'] = $resp;
             return $list;
         } catch (\Exception $e) {
