@@ -41,6 +41,12 @@ use App\Models\Nationalities;
 use App\Models\Workflows;
 use App\Models\InstitutionStudentTransfers;
 use App\Models\SecurityUsers;
+use App\Models\UserNationalities;
+use App\Models\IdentityTypes;
+use App\Models\UserIdentities;
+use App\Models\StaffPositionTitles;
+use App\Models\SecurityRoles;
+use App\Models\InstitutionStudentAdmission;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -1830,8 +1836,8 @@ class InstitutionRepository extends Controller
 
 
             //get Student Status List
-            $studentStatus = StudentStatuses::pluck('code', 'id')->toArray();
-            
+            $studentStatus = StudentStatuses::pluck('id', 'code')->toArray();
+            dd($studentStatus);
 
             //get nationality data
             $nationalities = '';
@@ -1925,10 +1931,121 @@ class InstitutionRepository extends Controller
                 ];
                 dd("entityData",$entityData);
                 if($checkStudentExist){
-                    $update = SecurityUsers::where('id', $checkStudentExist->id)->update($entityData);
+                    $securityUser = $checkStudentExist;
+                    $securityUserResult = SecurityUsers::where('id', $checkStudentExist->id)->update($entityData);
                 } else {
-                    $store = SecurityUsers::insert($entityData);
+                    $securityUserId = SecurityUsers::insertGetId($entityData);
+                    $securityUser = SecurityUsers::where('id', $securityUserId)->first();
                 }
+
+                if($securityUser){
+                    $user_record_id = $securityUser->id;
+                    if($param['nationality_id'] || $param['nationality_name']){
+                        if($nationality->id){
+                            $checkUserNationality = UserNationalities::where('nationality_id', $nationality->id)->where('security_user_id', $user_record_id)->first();
+
+                            if(!$checkUserNationality){
+                                $storeArr['id'] = Str::uuid();
+                                $storeArr['preferred'] = 1;
+                                $storeArr['nationality_id'] = $nationality->id;
+                                $storeArr['security_user_id'] = $user_record_id;
+                                $storeArr['created_user_id'] = JWTAuth::user()->id;
+                                $storeArr['created'] = Carbon::now()->toDateTimeString();
+
+                                $store = UserNationalities::insert($storeArr);
+                            }
+                        }
+                    }
+
+                    if($nationality->id && ($param['identity_type_id'] && $param['identity_type_id'] != '') && ($param['identity_number'] && $param['identity_number'] != '')){
+
+                        $identityTypes = IdentityTypes::where('name', $param['identity_type_name']??"")->first();
+
+                        if($identityTypes){
+                            $userIdentity = UserIdentities::where('nationality_id', $nationality->id)->where('identity_type_id', $param['identity_type_id'])->where('number', $param['identity_number'])->first();
+                            
+                            if(!$userIdentity){
+                                $storeArr['identity_type_id'] = $identityTypes->first();
+                                $storeArr['nationality_id'] = $nationality->id;
+                                $storeArr['number'] = $param['identity_number'];
+                                $storeArr['security_user_id'] = $user_record_id;
+                                $storeArr['created_user_id'] = JWTAuth::user()->id;
+                                $storeArr['created'] = Carbon::now()->toDateTimeString();
+
+                                $store = UserIdentities::insert($storeArr);
+                            }
+                        }
+                    }
+
+
+                    if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id']){
+                        $entityStudentsData = [
+                            'id' => Str::uuid(),
+                            'student_status_id' => $param['student_status_id']??"",
+                            'student_id' => $user_record_id,
+                            'education_grade_id' => $param['education_grade_id'],
+                            'academic_period_id' => $param['academic_period_id'],
+                            'start_date' => $param['start_date']??null,
+                            'start_year' => $start_year??null,
+                            'end_date' => $param['end_date']??null,
+                            'end_year' => $end_year??null,
+                            'institution_id' => $param['institution_id'],
+                            'created_user_id' => JWTAuth::user()->id,
+                            'created' => Carbon::now()->toDateTimeString()
+                        ];
+
+                        $store = InstitutionStudent::insert($entityStudentsData);
+                    }
+
+
+
+                    $workflows = Workflows::join('workflow_steps', 'workflow_steps.workflow_id', '=', 'workflows.id')
+                    ->where('workflow_steps.name', 'Approved')
+                    ->where('workflows.name', 'Student Admission')
+                    ->select('workflow_steps.id as workflowSteps_id')
+                    ->first();
+
+
+
+                    if (!empty($param['education_grade_id']) && !empty($param['institution_id']) && !empty($param['academic_period_id']) && !empty($param['institution_class_id']) && !empty($workflows)) {
+                        $entityAdmissionData = [
+                            'start_date' => $param['start_date']??null,
+                            'end_date' => $param['end_date']??null,
+                            'student_id' => $user_record_id,
+                            'status_id' => $workflows->workflowSteps_id,
+                            'assignee_id' => JWTAuth::user()->id, //POCOR7080
+                            'institution_id' => $param['institution_id']??"",
+                            'academic_period_id' => $param['academic_period_id'],
+                            'education_grade_id' => $param['education_grade_id'],
+                            'institution_class_id' => $param['institution_class_id'],
+                            'created_user_id' => JWTAuth::user()->id,
+                            'created' => Carbon::now()->toDateTimeString()
+                        ];
+
+                        $store = InstitutionStudentAdmission::insert($entityAdmissionData);
+                    }
+
+
+
+                    if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id'] && $param['institution_class_id']){
+                        $entityAdmissionData = [
+                            'id' => Str::uuid(),
+                            'student_id' => $user_record_id,
+                            'institution_class_id' => $param['institution_class_id'],
+                            'education_grade_id' => $param['education_grade_id'],
+                            'academic_period_id' => $param['academic_period_id'],
+                            'institution_id' => $param['institution_id'],
+                            'student_status_id' => $studentStatus['CURRENT'],
+                            'created_user_id' => JWTAuth::user()->id,
+                            'created' => Carbon::now()->toDateTimeString()
+                        ];
+
+                        $store = InstitutionClassStudents::insert($entityAdmissionData);
+                    }
+
+                }
+
+
             }
             DB::commit();
             dd("qwqwqww");
