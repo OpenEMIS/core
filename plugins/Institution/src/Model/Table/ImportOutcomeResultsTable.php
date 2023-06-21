@@ -119,10 +119,11 @@ class ImportOutcomeResultsTable extends AppTable
     public function onUpdateFieldEducationSubject(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            
+            $academicPeriodId = $request->data[$this->alias()]['academic_period'];
             $conditions = [];
             if (!empty($request->data[$this->alias()]['academic_period']) && !empty($request->data[$this->alias()]['outcome_template'])) {
-                $conditions[] = [
+                $conditions[] = 
+                [
                     $this->OutcomeCriterias->aliasField('academic_period_id') => $request->data[$this->alias()]['academic_period'],
                     $this->OutcomeCriterias->aliasField('outcome_template_id') => $request->data[$this->alias()]['outcome_template']
                 ];
@@ -146,14 +147,14 @@ class ImportOutcomeResultsTable extends AppTable
                 })
                 ->innerJoin([$OutcomeCriterias->alias() => $OutcomeCriterias->table()], [
                              $OutcomeCriterias->aliasField('education_grade_id = ') . $InstitutionSubjects->aliasField('education_grade_id'),
-                             $OutcomeCriterias->aliasField('education_subject_id = ') . $InstitutionSubjects->aliasField('education_subject_id')
+                             $OutcomeCriterias->aliasField('education_subject_id = ') . $InstitutionSubjects->aliasField('education_subject_id'),
+
                             ])
-                ->where($conditions)
+                ->orWhere([$OutcomeCriterias->aliasField('academic_period_id') => $request->data[$this->alias()]['academic_period'],
+                    $OutcomeCriterias->aliasField('outcome_template_id') => $request->data[$this->alias()]['outcome_template']])//POCOR7506
                 ->group([
                     'EducationSubjects.id',
-                ])
-                ->toArray();
-
+                ])->toArray();
                 $attr['options'] = $allowedEducationSubjectList;
                 // useing onChangeReload to do visible
                 $attr['onChangeReload'] = 'changeEducationGrade';
@@ -207,6 +208,7 @@ class ImportOutcomeResultsTable extends AppTable
                                     ]
                                 ]);
                         } else {
+
                             $query
                                 ->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
                                     'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id',
@@ -222,9 +224,11 @@ class ImportOutcomeResultsTable extends AppTable
                                     'OR' => [
                                         ['InstitutionClasses.staff_id' => $userId],
                                         ['ClassesSecondaryStaff.secondary_staff_id' => $userId],
-                                        ['InstitutionSubjectStaff.staff_id' => $userId]
+                                        ['InstitutionSubjectStaff.staff_id' => $userId],
+                                        ['InstitutionSubjectStaff.institution_id' => $institutionId] //POCOR-7506
                                     ]
                                 ]);
+
                             }
                             // If only subject permission is available
                             else {
@@ -244,7 +248,7 @@ class ImportOutcomeResultsTable extends AppTable
                     $InstitutionClasses->aliasField('id')
                 ])
                 ->toArray();
-
+//print_r($query->Sql());die;
                 $attr['options'] = $classOptions;
                 // useing onChangeReload to do visible
                 $attr['onChangeReload'] = 'changeClass';
