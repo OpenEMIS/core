@@ -301,11 +301,14 @@ function InstitutionsResultsController($q,
     };
 
     $scope.changeAcademicTerm = function () {
+        // console.log('changeAcademicTerm');
         $scope.onChangeSubject();
     };
 
     $scope.onChangeSubject = function (subject = undefined, editable = undefined) {
-        // console.log('$scope.onChangeSubject');
+        console.log('onChangeSubject');
+
+        console.log($scope.selectedAcademicTerm);
 
         AlertSvc.reset($scope);
         $scope.action = 'view';
@@ -319,27 +322,29 @@ function InstitutionsResultsController($q,
         }
 
         if (typeof subject === 'undefined') {
-            $scope.subject = undefined;
+            // $scope.subject = undefined;
             $scope.education_subject_id = undefined;
-            return;
+            // return;
         }
 
         $scope.education_subject_id = $scope.subject.id;
 
         if ($scope.gridOptions != null) {
-            // console.log('$scope.gridOptions != null')
+            // console.log('$scope.gridOptions != null' + $scope.gridOptions);
             // update value in context
             $scope.gridOptions.context.education_subject_id = $scope.subject.education_subject_id;
             // Always reset
             $scope.gridOptions.api.setRowData([]);
         }
 
+        // console.log('$scope.gridOptions == null' + $scope.gridOptions);
+
         appendLoader();
         // getPeriods
         InstitutionsResultsSvc.getPermissions()
             .then(handleGetPermissions, handleError)
-            .then(handleGetSubjectEditPermission, handleError)
-            .then(handleGetPeriods, handleError)
+            .then(handleGetSubjectEditPermissionSetPeriods, handleError)
+            .then(handleGetPeriodsSetCopyGradingTypes, handleError)
             .then(handleGetGradingTypes, handleError)
             .then(handleResetColumnDefs, handleError)
             // getRowData
@@ -396,24 +401,28 @@ function InstitutionsResultsController($q,
             });
         }
 
-        function handleGetSubjectEditPermission(result) {
-            // console.log('handleGetSubjectEditPermission');
+        function handleGetSubjectEditPermissionSetPeriods(result) {
+            // console.log('handleGetSubjectEditPermissionSetPeriods');
             // console.log(JSON.stringify(result));
             var promise;
             $scope.editPermissionForSelectedSubject = result;
-            promise = InstitutionsResultsSvc.getPeriods($scope.assessment_id, $scope.selectedAcademicTerm)
+            promise = InstitutionsResultsSvc.getPeriods(
+                $scope.assessment_id,
+                $scope.selectedAcademicTerm)
             return promise.then(function (result) {
+
                 return result;
             });
         }
 
-        function handleGetPeriods(result) {
-            // console.log('handleGetPeriods');
+        function handleGetPeriodsSetCopyGradingTypes(result) {
+            // console.log('handleGetPeriodsSetCopyGradingTypes');
             // console.log(JSON.stringify(result));
             var promise;
             $scope.periods = result;
 
-            promise = InstitutionsResultsSvc.getCopyGradingTypes($scope.assessment_id, $scope.subject.education_subject_id);
+            promise = InstitutionsResultsSvc.getCopyGradingTypes($scope.assessment_id,
+                $scope.subject.education_subject_id);
             return promise.then(function (result) {
                 return result;
             });
