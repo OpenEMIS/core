@@ -1855,8 +1855,8 @@ class InstitutionRepository extends Controller
                 $delete1 = $delete1->where('subject_id', $param['subject_id']);
             }
 
-
-            $delete1 = $delete1->delete();
+            $check1 = $delete1->exists();
+                        
 
             $delete2 = StudentAttendanceMarkedRecords::where('institution_id', $institutionId)
                         ->where('academic_period_id', $academicPeriodId)
@@ -1873,12 +1873,18 @@ class InstitutionRepository extends Controller
                 $delete2 = $delete2->where('subject_id', $param['subject_id']);
             }
 
-            $delete2 = $delete2->delete();
-
+            $check2 = $delete2->exists();
             
-            DB::commit();
+            if($check1 && $check2){
+                $delete1 = $delete1->delete();
+                $delete2 = $delete2->delete();
 
-            return 1;
+                DB::commit();
+                return 1;
+            } else {
+                DB::commit();
+                return 2;
+            }
             
         } catch (\Exception $e) {
             DB::rollback();
@@ -1921,13 +1927,17 @@ class InstitutionRepository extends Controller
                 $delete1 = $delete1->where('subject_id', $param['subject_id']);
             }
 
+            $check1 = $delete1->exists();
 
-            $delete1 = $delete1->delete();
+            if($check1){
+                $delete1 = $delete1->delete();
+                DB::commit();
+                return 1;
+            } else {
+                DB::commit();
+                return 2;
+            }
 
-            DB::commit();
-
-            return 1;
-            
         } catch (\Exception $e) {
             DB::rollback();
             Log::error(
