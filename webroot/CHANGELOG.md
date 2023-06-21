@@ -1,3 +1,9 @@
+### [3.87.3] - 2023-06-21
+- Bug Fixed: Institutions > Performances > Report Cards : System should update status of both institution_student_report_cards and report_card_processes tables
+- Bug Fixed: Institutions>Performance>Assessments: When user changes term in the filter, assessment periods and subjects are not filtered
+- Bug Fixed: API: Institution API is not showing some fields
+- Bug Fixed: Administration>System Setup>API: Student user can access api securities page
+
 ### [3.87.2] - 2023-06-20
 - Bug Fixed: Institutions>Performance>Report Cards: Report Card page is not loading or very slow
 
