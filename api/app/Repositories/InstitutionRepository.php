@@ -1746,8 +1746,7 @@ class InstitutionRepository extends Controller
             $configItem = ConfigItem::where('code', 'address_area_level')->first();
             if($configItem){
                 $val = $configItem->value;
-                $areaLevel = AreaAdministratives::where('area_administrative_level_id', $val)->get();
-                
+                $areaLevel = AreaAdministratives::where('area_administrative_level_id', $val)->orderBy('name', 'ASC')->get();
             }
             return $areaLevel;
             
@@ -1772,7 +1771,7 @@ class InstitutionRepository extends Controller
             $configItem = ConfigItem::where('code', 'birthplace_area_level')->first();
             if($configItem){
                 $val = $configItem->value;
-                $areaLevel = AreaAdministratives::where('area_administrative_level_id', $val)->get();
+                $areaLevel = AreaAdministratives::where('area_administrative_level_id', $val)->orderBy('name', 'ASC')->get();
                 
             }
             return $areaLevel;
