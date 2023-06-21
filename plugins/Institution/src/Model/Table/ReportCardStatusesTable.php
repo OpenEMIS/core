@@ -500,6 +500,11 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $entity->status = self::ERROR; //(-1)
                     $entity->modified = $currentTimeZone;//POCOR-6841
                     $ReportCardProcessesTable->save($entity);
+                    $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+			        $StudentsReportCards->updateAll([
+				         'status'=>-1//POCOR-7530
+			        ],['student_id' => $entity->student_id, 'report_card_id'=> $entity->report_card_id]);
+                    
                 }//POCOR-7067 Ends
             }//POCOR-6841 ends
         }
@@ -2267,4 +2272,5 @@ class ReportCardStatusesTable extends ControllerActionTable
                                                           
     }
      //POCOR-7400 end
+
 }
