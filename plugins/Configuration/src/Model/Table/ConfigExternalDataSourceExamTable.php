@@ -27,7 +27,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
 
         $externalDataSourceRecord = $this
             ->find()
-            ->where([$this->aliasField('type') => 'External Data Source Exams'])
+            ->where([$this->aliasField('type') => 'External Data Source - Exams'])
             ->first();
         $id = $externalDataSourceRecord->id;
         $this->id = $id;
@@ -99,7 +99,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         }
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','External Data Source Exams','System Configurations');       
+		$is_manual_exist = $this->getManualUrl('Administration','External Data Source - Exams','System Configurations');       
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
