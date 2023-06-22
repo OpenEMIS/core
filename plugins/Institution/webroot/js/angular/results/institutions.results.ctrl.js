@@ -141,8 +141,8 @@ function InstitutionsResultsController($q,
         }
 
         function handleSuccessGetStudentStatusId(result) {
-            console.log('handleSuccessGetStudentStatusId');
-            console.log(JSON.stringify(result));
+            // console.log('handleSuccessGetStudentStatusId');
+            // console.log(JSON.stringify(result));
             $scope.enrolledStatus = result.data[0].id;
             if (angular.isObject($scope.subjects) && $scope.subjects.length > 0) {
                 var subject = $scope.subjects[0];
