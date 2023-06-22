@@ -22,7 +22,7 @@ class StaffPositionsTable extends AppTable
         
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
-        $this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
+        // $this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Assignees', ['className' => 'Security.Users']);
         $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff']);
@@ -92,7 +92,7 @@ class StaffPositionsTable extends AppTable
                 'assignee_id' => 'Assignees.id',
                 'workflow_steps_name' => 'Statuses.name',
                 'position_no' => $this->aliasField('position_no'),
-                'staff_position_grade_name' => 'StaffPositionGrades.name',
+                // 'staff_position_grade_name' => 'StaffPositionGrades.name',
                 'is_homeroom' => $InstitutionStaff->aliasField('is_homeroom'),//POCOR-7229
                 'openemis_no' => $Staff->aliasField('openemis_no'),
                 'first_name' => $Staff->aliasField('first_name'),
@@ -114,11 +114,11 @@ class StaffPositionsTable extends AppTable
                         'StaffPositionTitles.type'
                     ]
                 ],
-                'StaffPositionGrades' => [
-                    'fields' => [
-                        'StaffPositionGrades.name'
-                    ]
-                ],
+                // 'StaffPositionGrades' => [
+                //     'fields' => [
+                //         'StaffPositionGrades.name'
+                //     ]
+                // ],
                 'Institutions' => [
                     'fields' => [
                         'Institutions.id',
@@ -259,12 +259,12 @@ class StaffPositionsTable extends AppTable
             'label' => __('Title')
         ];
 
-        $newFields[] = [
-            'key' => 'StaffPositionGrades.name',
-            'field' => 'staff_position_grade_name',
-            'type' => 'string',
-            'label' => __('Grade')
-        ];
+        // $newFields[] = [
+        //     'key' => 'StaffPositionGrades.name',
+        //     'field' => 'staff_position_grade_name',
+        //     'type' => 'string',
+        //     'label' => __('Grade')
+        // ];
 
         $newFields[] = [
             'key' => 'is_homeroom',
