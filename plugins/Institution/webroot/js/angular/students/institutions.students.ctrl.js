@@ -12,7 +12,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     var test = $scope;
 
     StudentController.pageSize = 10;
-
     StudentController.step = 'user_details';
     StudentController.selectedStudentData = {};
     StudentController.internalGridOptions = null;
@@ -114,6 +113,22 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.isNextButtonShouldDisable = isNextButtonShouldDisable;
     StudentController.getCSPDSearchData = getCSPDSearchData;
     StudentController.checkUserExistByIdentityFromConfiguration=checkUserExistByIdentityFromConfiguration;
+        //POCOR-6172-HINDOL[START]
+    StudentController.multipleInstitutionsStudentEnrollment=true;
+    StudentController.getMultipleInstitutionsStudentEnrollment=getMultipleInstitutionsStudentEnrollment
+    //POCOR-6172-HINDOL[END]
+    //POCOR-7224-HINDOL[START]
+    StudentController.studentExistInTheSameSchool = studentExistInTheSameSchool;
+    StudentController.nextStepFromStudentExistInTheSameSchool = nextStepFromStudentExistInTheSameSchool;
+    StudentController.studentExistInTheOtherSchool = studentExistInTheOtherSchool;
+    StudentController.nextStepFromStudentExistInTheOtherSchool = nextStepFromStudentExistInTheOtherSchool;
+    StudentController.studentExistInUnfinishedWithdraw = studentExistInUnfinishedWithdraw;
+    StudentController.nextStepFromStudentExistInUnfinishedWithdraw = nextStepFromStudentExistInUnfinishedWithdraw;
+    StudentController.studentExistInUnfinishedTransfer = studentExistInUnfinishedTransfer;
+    StudentController.nextStepFromStudentExistInUnfinishedTransfer = nextStepFromStudentExistInUnfinishedTransfer;
+    StudentController.gotoConfirmStep = gotoConfirmStep;
+    StudentController.gotoAddStudentStep = gotoAddStudentStep;
+    //POCOR-7224-HINDOL[END]
 
     angular.element(document).ready(function () {
         UtilsSvc.isAppendLoader(true);
@@ -177,7 +192,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var nationality_name = '';
         var identity_type_name = '';
         var identity_type_id = '';
-
+     
         first_name = StudentController.selectedStudentData.first_name;
         last_name = StudentController.selectedStudentData.last_name;
         date_of_birth = StudentController.selectedStudentData.date_of_birth;
@@ -320,6 +335,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.getNationalities();
         });
     }
+
+    //POCOR-6172-HINDOL[START]
+    function getMultipleInstitutionsStudentEnrollment(){
+        InstitutionsStudentsSvc.getMultipleInstitutionsStudentEnrollmentConfig()
+            .then(function(resp){
+                const config_value = resp.data[0].value == "1" ? true : false;
+                StudentController.multipleInstitutionsStudentEnrollment = config_value;
+        }, function(error){
+            console.log(error);
+        });
+    }
+    //POCOR-6172-HINDOL[END]
 
     function getNationalities(){
         InstitutionsStudentsSvc.getNationalities().then(function(resp){
@@ -944,82 +971,165 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
     }
 
-    async function goToNextStep()
-    {
-        if(StudentController.step === 'confirmation'){
-           const result = await StudentController.checkUserExistByIdentityFromConfiguration();
-           if (result) return;
+
+            //POCOR-6172-HINDOL[START]
+            //POCOR-7224-HINDOL[START]
+
+    function studentExistInTheSameSchool() {
+        return (StudentController.isInternalSearchSelected
+            && StudentController.studentData
+            && StudentController.studentData.is_same_school)
+    }
+
+    function nextStepFromStudentExistInTheSameSchool() {
+        StudentController.step = 'summary';
+        StudentController.messageClass = 'alert-warning';
+        StudentController.message = 'This student is already allocated to the current institution';
+        StudentController.getRedirectToGuardian();
+        StudentController.isInternalSearchSelected = false;
+    }
+
+    function studentExistInUnfinishedWithdraw() {
+        return (StudentController.isInternalSearchSelected
+            && StudentController.studentData
+            && StudentController.studentData.has_pending_withdraw)
+    }
+
+    function nextStepFromStudentExistInUnfinishedWithdraw() {
+        StudentController.step = 'summary';
+        StudentController.messageClass = 'alert-warning';
+        StudentController.message = `This student has unfinished withdraw from 
+        ${StudentController.studentData.current_enrol_institution_code} 
+        - ${StudentController.studentData.current_enrol_institution_name}`;
+        StudentController.getRedirectToGuardian();
+        StudentController.isInternalSearchSelected = false;
+    }
+
+    function studentExistInUnfinishedTransfer() {
+        return (StudentController.isInternalSearchSelected
+            && StudentController.studentData
+            && StudentController.studentData.has_pending_transfer)
+    }
+
+    function nextStepFromStudentExistInUnfinishedTransfer() {
+        StudentController.step = 'summary';
+        StudentController.messageClass = 'alert-warning';
+        StudentController.message = `This student has unfinished transfer from 
+        ${StudentController.studentData.current_enrol_institution_code} 
+        - ${StudentController.studentData.current_enrol_institution_name}`;
+        StudentController.getRedirectToGuardian();
+        StudentController.isInternalSearchSelected = false;
+    }
+
+    function studentExistInTheOtherSchool() {
+        return (StudentController.isInternalSearchSelected
+            && StudentController.studentData
+            && StudentController.studentData.is_diff_school
+        )
+    }
+
+    function nextStepFromStudentExistInTheOtherSchool() {
+        StudentController.step = 'summary';
+        StudentController.messageClass = 'alert-warning';
+        StudentController.message = `This student is already allocated 
+        to ${StudentController.studentData.current_enrol_institution_code} 
+        - ${StudentController.studentData.current_enrol_institution_name}`;
+        StudentController.getStudentTransferReason();
+        StudentController.isInternalSearchSelected = false;
+    }
+
+    function gotoConfirmStep() {
+        StudentController.step = 'confirmation';
+        StudentController.selectedStudentData.endDate = '31-12-' + StudentController.currentYear;
+        StudentController.generatePassword();
+    }
+
+    function gotoAddStudentStep() {
+        StudentController.step = 'add_student';
+        StudentController.selectedStudentData.endDate = '31-12-' + StudentController.currentYear;
+        StudentController.generatePassword();
+    }
+
+    async function goToNextStep() {
+        StudentController.messageClass = '';
+        StudentController.message = ``;
+        if (StudentController.step === 'confirmation') {
+            const studentExistByIdentityFromConfiguaration = await StudentController.checkUserExistByIdentityFromConfiguaration();
+            if (studentExistByIdentityFromConfiguaration) return;
         }
 
-        if(StudentController.isInternalSearchSelected) {
-            console.log('StudentController.isInternalSearchSelected');
-            if(StudentController.studentData && StudentController.studentData.is_same_school) {
-                StudentController.step = 'summary';
-                StudentController.messageClass = 'alert-warning';
-                StudentController.message = 'This student is already allocated to the current institution';
-                StudentController.getRedirectToGuardian();
-                StudentController.isInternalSearchSelected = false;
-        } else if(StudentController.studentData && StudentController.studentData.is_diff_school) {
-                StudentController.messageClass = 'alert-warning';
-                StudentController.message = `This student is already allocated to ${StudentController.studentData.current_enrol_institution_code} - ${StudentController.studentData.current_enrol_institution_name}`;
-                StudentController.step = 'summary';
-                StudentController.getStudentTransferReason();
-                StudentController.isInternalSearchSelected = false;
-        } else {
-                StudentController.step = 'confirmation';
-                StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
-                StudentController.generatePassword();
-                StudentController.isInternalSearchSelected = false;
+        if (StudentController.studentExistInTheSameSchool()) {
+            StudentController.nextStepFromStudentExistInTheSameSchool();
+            return;
+        }
+        const single_institutions_student_enrollment = !(StudentController.multipleInstitutionsStudentEnrollment);
+        if (single_institutions_student_enrollment) {
+            if (StudentController.studentExistInTheOtherSchool()) {
+                StudentController.nextStepFromStudentExistInTheOtherSchool();
+                return;
             }
-        } else if(StudentController.isExternalSearchSelected) {
-            console.log('StudentController.isExternalSearchSelected');
+        }
 
-            switch (StudentController.step)
-            {
+        if (StudentController.studentExistInUnfinishedWithdraw()) {
+            console.log('studentExistInUnfinishedWithdraw');
+            StudentController.nextStepFromStudentExistInUnfinishedWithdraw();
+            console.log('studentExistInUnfinishedWithdraw');
+            return;
+        }
+
+        if (StudentController.studentExistInUnfinishedTransfer()) {
+            console.log('studentExistInUnfinishedTransfer');
+            StudentController.nextStepFromStudentExistInUnfinishedTransfer();
+            console.log('nextStepFromStudentExistInUnfinishedTransfer');
+            return;
+        }
+
+        if (StudentController.isInternalSearchSelected) {
+            StudentController.gotoConfirmStep();
+            StudentController.isInternalSearchSelected = false;
+            return;
+        }
+
+        if (StudentController.isExternalSearchSelected) {
+            switch (StudentController.step) {
                 case "external_search":
-                    StudentController.step = 'confirmation';
-                    StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
-                    StudentController.generatePassword();
+                    StudentController.gotoConfirmStep();
                     break;
-
                 case "confirmation":
-                    StudentController.step = 'add_student';
-                    StudentController.selectedStudentData.endDate = '31-12-' + new Date().getFullYear();
-                    StudentController.generatePassword();
+                    StudentController.gotoAddStudentStep();
                     break;
             }
-        } else {
-            console.log('goToNextStep else');
-            switch(StudentController.step){
-                case 'user_details':
-                    StudentController.validateDetails();
-                    break;
-                case 'internal_search': {
-                    if (StudentController.isExternalSearchEnable)
-                    {
-                        StudentController.step = 'external_search';
-                        StudentController.externalGridOptions = null;
-                        StudentController.goToExternalSearch();
-                    } else
-                    {
-                        StudentController.step = 'confirmation';
-                        StudentController.getUniqueOpenEmisId();
-                    }
+            return;
+        }
+
+        switch (StudentController.step) {
+            case 'user_details':
+                StudentController.validateDetails();
+                break;
+            case 'internal_search': {
+                if (StudentController.isExternalSearchEnable) {
+                    StudentController.step = 'external_search';
+                    StudentController.externalGridOptions = null;
+                    StudentController.goToExternalSearch();
                     return;
                 }
-                case 'external_search':
-                    StudentController.step = 'confirmation';
-                    StudentController.getUniqueOpenEmisId();
-                    break;
-                case 'confirmation':
-                    StudentController.step = 'add_student';
-                    StudentController.selectedStudentData.endDate = '31-12-' + StudentController.currentYear;
-                    // StudentController.getUniqueOpenEmisId();
-                    StudentController.generatePassword();
-                    break;
+                StudentController.step = 'confirmation';
+                StudentController.getUniqueOpenEmisId();
+                return;
             }
+                break;
+            case 'external_search':
+                StudentController.step = 'confirmation';
+                StudentController.getUniqueOpenEmisId();
+                break;
+            case 'confirmation':
+                StudentController.gotoAddStudentStep();
+                break;
         }
+
     }
+    //POCOR-6172-HINDOL[END]
+    //POCOR-7224-HINDOL[END]
 
     async function validateDetails()
     {
@@ -1079,7 +1189,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         {
             return;
         }
-
+        //POCOR-6172-HINDOL[START]
+        StudentController.getMultipleInstitutionsStudentEnrollment();
+        //POCOR-6172-HINDOL[END]
         StudentController.step = 'internal_search';
         /* StudentController.selectedStudentData.openemis_no = ''; */
         StudentController.internalGridOptions = null;
@@ -1151,6 +1263,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function saveStudentDetails() {
+        if(StudentController.multipleInstitutionsStudentEnrollment){
+            StudentController.studentData.is_diff_school = false;
+        }
         let startDate = StudentController.studentData && StudentController.studentData.is_diff_school > 0 ? $filter('date')(StudentController.selectedStudentData.transferStartDate, 'yyyy-MM-dd') : $filter('date')(StudentController.selectedStudentData.startDate, 'yyyy-MM-dd');
         const addressAreaRef = InstitutionsStudentsSvc.getAddressArea();
         addressAreaRef && (StudentController.selectedStudentData.addressArea = addressAreaRef);
@@ -1252,8 +1367,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         });
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.saveStudentDetails(params).then(function(resp){
+
+
             if(resp) {
-                if(StudentController.studentData && StudentController.studentData.is_diff_school > 0) {
+                //POCOR-6172-HINDOL[START]
+                if(StudentController.studentData &&
+                    //POCOR-6172-HINDOL[END]
+                    StudentController.studentData.is_diff_school > 0
+) {
                     StudentController.message ='Student transfer request is added successfully.';
                     StudentController.messageClass = 'alert-success';
                     UtilsSvc.isAppendLoader(false);
@@ -1450,7 +1571,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var todayDate = new Date();
         StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
         StudentController.isSameSchool = selectedData.is_same_school > 0 ? true : false;
-        StudentController.isDiffSchool = selectedData.is_diff_school > 0 ? true : false;
+        StudentController.isDiffSchool = (selectedData.is_diff_school > 0 && !StudentController.multipleInstitutionsStudentEnrollment) ? true : false;
         StudentController.selectedStudentData.currentlyAllocatedTo = selectedData.current_enrol_institution_code + ' - ' + selectedData.current_enrol_institution_name;
 
         StudentController.selectedStudentData.birthplace_area_id = selectedData.birthplace_area_id === undefined ? null : selectedData.birthplace_area_id;
