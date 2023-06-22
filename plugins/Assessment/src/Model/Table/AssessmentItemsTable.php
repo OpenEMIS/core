@@ -216,10 +216,10 @@ class AssessmentItemsTable extends AppTable
 
     public function findSubjectNewTab(Query $query, array $options)
     {
-        $this->log('findSubjectNewTab', 'debug');
+//        $this->log('findSubjectNewTab', 'debug');
 //        $this->log($options, 'debug');
         $logged_in_user_id = $options['user']['id'];
-        $super_admin = $options['user']['id'];
+        $super_admin = $options['user']['super_admin'];
         $institution_id = $options['institution_id'];
         $academic_period_id = $options['academic_period_id'];
         $assessment_id = $options['assessment_id'];
