@@ -126,7 +126,7 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']);
     }
-    public function StaffLicenses()
+    public function Licenses()//POCOR-7528
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']);
     }
@@ -1019,6 +1019,7 @@ class DirectoriesController extends AppController
         } else {
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
+                'Licenses' => ['text' => __('Licenses')],
             ];
         }
         $tabElements = array_merge($tabElements, $professionalTabElements);
@@ -1026,7 +1027,13 @@ class DirectoriesController extends AppController
         foreach ($professionalTabElements as $key => $tab) {
             if ($key != 'Employments') {
                 $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => 'Staff'.$key, 'index']);
-            } else {
+            }
+            //POCOR-7528 start
+            if($key == 'Licenses'){
+                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => $key, 'index']);
+            }
+            //POCOR-7528 end
+            else {
                 $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => $key, 'index']);
             }
         }

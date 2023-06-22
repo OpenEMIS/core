@@ -88,6 +88,12 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']);
     }
+    //POCOR-7528 start
+    public function Licenses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']);
+    }
+    //POCOR-7528 end
     public function StudentFees()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']);
@@ -727,6 +733,8 @@ class StudentsController extends AppController
         $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
         $professionalTabElements = [
             'Employments' => ['text' => __('Employments')],
+            'Licenses' => ['text' => __('Licenses')], //POCOR-7528
+
         ];
 
         $tabElements = array_merge($tabElements, $professionalTabElements);
