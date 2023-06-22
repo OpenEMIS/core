@@ -2262,383 +2262,20 @@ class NavigationComponent extends Component
         /*for POCOR-5674 */
 
         $queryString = $this->request->query('queryString');
+        //POCOR-7527 start
+        $firstSubMenuAdmin =  $this->getAdminstrationFirstNav();
+        $SecurityNav =  $this->getAdminstrationSecurityNav();
+        $ProfileNav =  $this->getAdminstrationProfileNav();
+        $SurveyNav =  $this->getAdminstrationSurveyNav();
+        $CommunicationsNav =  $this->getAdminstrationCommunicationsNav();
+        $TrainingNav =  $this->getAdminstrationTrainingNav();
+        $PerformanceNav =  $this->getAdminstrationPerformanceNav();
+        $ExaminationNav =  $this->getAdminstrationExaminationNav();
+        $ScholarshipNav =  $this->getAdminstrationScholarshipNav();
+        $MoodleNav =  $this->getAdminstrationMoodleNav();
+        $dataMgtNav =  $this->getAdminstrationdataMgtNav();
+        //POCOR-7527 end
         $navigation = [
-
-            'SystemSetup' => [
-                'title' => 'System Setup',
-                'parent' => 'Administration',
-                'link' => false,
-            ],
-
-            'Areas.Areas' => [
-                'title' => 'Administrative Boundaries',
-                'parent' => 'SystemSetup',
-                'params' => ['plugin' => 'Area'],
-                'selected' => ['Areas.Areas',
-                    'Areas.Levels',
-                    'Areas.AdministrativeLevels',
-                    'Areas.Administratives']
-            ],
-            'AcademicPeriods.Periods' => [
-                'title' => 'Academic Periods',
-                'parent' => 'SystemSetup',
-                'params' => ['plugin' => 'AcademicPeriod'],
-                'selected' => ['AcademicPeriods.Periods',
-                    'AcademicPeriods.Levels']
-            ],
-            'Educations.Systems' => [
-                'title' => 'Education Structure',
-                'parent' => 'SystemSetup',
-                'params' => ['plugin' => 'Education'],
-                'selected' => ['Educations.Systems',
-                    'Educations.Levels',
-                    'Educations.Cycles',
-                    'Educations.Programmes',
-                    'Educations.Grades',
-                    'Educations.Stages',
-                    'Educations.Subjects',
-                    'Educations.GradeSubjects',
-                    'Educations.Certifications',
-                    'Educations.FieldOfStudies',
-                    'Educations.ProgrammeOrientations', 'Educations.CopySystems']
-            ],
-            'Attendances.StudentMarkTypes' => [
-                'title' => 'Attendances',
-                'parent' => 'SystemSetup',
-                'params' => ['plugin' => 'Attendance'],
-                'selected' => ['Attendances.StudentMarkTypeStatuses']
-            ],
-            'FieldOptions.index' => [
-                'title' => 'Field Options',
-                'parent' => 'SystemSetup',
-                'params' => ['plugin' => 'FieldOption'],
-                'selected' => ['FieldOptions.index',
-                    'FieldOptions.add',
-                    'FieldOptions.view',
-                    'FieldOptions.edit',
-                    'FieldOptions.remove']
-            ],
-            'SystemSetup.CustomField' => [
-                'title' => 'Custom Field',
-                'parent' => 'SystemSetup',
-                'link' => false,
-            ],
-            'InstitutionCustomFields.Fields' => [
-                'title' => 'Institution',
-                'parent' => 'SystemSetup.CustomField',
-                'params' => ['plugin' => 'InstitutionCustomField'],
-                'selected' => ['InstitutionCustomFields.Fields',
-                    'InstitutionCustomFields.Pages']
-            ],
-            'StudentCustomFields.Fields' => [
-                'title' => 'Student',
-                'parent' => 'SystemSetup.CustomField',
-                'params' => ['plugin' => 'StudentCustomField'],
-                'selected' => ['StudentCustomFields.Fields',
-                    'StudentCustomFields.Pages']
-            ],
-            'StaffCustomFields.Fields' => [
-                'title' => 'Staff',
-                'parent' => 'SystemSetup.CustomField',
-                'params' => ['plugin' => 'StaffCustomField'],
-                'selected' => ['StaffCustomFields.Fields',
-                    'StaffCustomFields.Pages']
-            ],
-            'Infrastructures.Fields' => [
-                'title' => 'Infrastructure',
-                'parent' => 'SystemSetup.CustomField',
-                'params' => ['plugin' => 'Infrastructure'],
-                'selected' => ['Infrastructures.Fields',
-                    'Infrastructures.LandPages',
-                    'Infrastructures.BuildingPages',
-                    'Infrastructures.FloorPages',
-                    'Infrastructures.RoomPages']
-            ],
-            'Labels.index' => [
-                'title' => 'Labels',
-                'parent' => 'SystemSetup',
-                'selected' => ['Labels.index',
-                    'Labels.view',
-                    'Labels.edit']
-            ],
-            'SystemSetup.Localization' => [
-                'title' => 'Localization',
-                'parent' => 'SystemSetup',
-                'link' => false,
-            ],
-            'Locales.index' => [
-                'title' => 'Languages',
-                'parent' => 'SystemSetup.Localization',
-                'selected' => ['Locales.index',
-                    'Locales.view',
-                    'Locales.edit',
-                    'Locales.add']
-            ],
-            'LocaleContents.index' => [
-                'title' => 'Translations',
-                'parent' => 'SystemSetup.Localization',
-                'selected' => ['LocaleContents.index',
-                    'LocaleContents.view',
-                    'LocaleContents.edit']
-            ],
-            'Configurations.index' => [
-                'title' => 'System Configurations',
-                'parent' => 'SystemSetup',
-                'selected' => ['Configurations.index',
-                    'Configurations.add',
-                    'Configurations.view',
-                    'Configurations.edit',
-                    'Themes.index',
-                    'Themes.view',
-                    'Themes.edit']
-            ],
-            // Start POCOR-5188
-            'Manuals.Institutions' => [
-                'title' => 'Manuals',
-                'parent' => 'SystemSetup',
-                'selected' => ['Manuals.Institutions', 'Manuals.view',
-                    'Manuals.edit',
-                    'Manuals.Directory',
-                    'Manuals.Reports',
-                    'Manuals.Personal',
-                    'Manuals.Administration',
-                    'Manuals.Guardian']
-            ],
-            // End POCOR-5188
-            'API' => [
-                'title' => 'APIs',
-                'parent' => 'SystemSetup',
-                'link' => false
-            ],
-            //POCOR-7312[START]
-            // 'ApiSecurities.index' => [
-            //     'title' => 'Securities',
-            //     'parent' => 'API',
-            //     'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
-            // ],
-            //POCOR-7312[END]
-            'Credentials.index' => [
-                'title' => 'Credentials',
-                'parent' => 'API',
-                'selected' => ['Credentials.view',
-                    'Credentials.add',
-                    'Credentials.edit',
-                    'Credentials.delete']
-            ],
-            'Notices.index' => [
-                'title' => 'Notices',
-                'parent' => 'SystemSetup',
-                'selected' => ['Notices.index',
-                    'Notices.add',
-                    'Notices.view',
-                    'Notices.edit',
-                    'Notices.delete']
-            ],
-            'Risks.Risks' => [
-                'title' => 'Risks',
-                'parent' => 'SystemSetup',
-                'params' => ['plugin' => 'Risk'],
-                'selected' => ['Risks.Risks']
-            ],
-            'Security' => [
-                'title' => 'Security',
-                'parent' => 'Administration',
-                'link' => false,
-            ],
-
-            'Securities.Users' => [
-                'title' => 'Users',
-                'parent' => 'Security',
-                'params' => ['plugin' => 'Security'],
-                'selected' => ['Securities.Users',
-                    'Securities.Accounts']
-            ],
-
-            'Securities.UserGroups' => [
-                'title' => 'Groups',
-                'parent' => 'Security',
-                'params' => ['plugin' => 'Security'],
-                'selected' => ['Securities.UserGroups', 'Securities.SystemGroups', 'Securities.UserGroupsList', 'Securities.SystemGroupsList']
-            ],
-
-            'Securities.Roles' => [
-                'title' => 'Roles',
-                'parent' => 'Security',
-                'params' => ['plugin' => 'Security'],
-                'selected' => ['Securities.Roles',
-                    'Securities.Permissions']
-            ],
-
-            'ProfileTemplates' => [
-                'title' => 'Profiles',
-                'parent' => 'Administration',
-                'link' => false
-            ],
-            'ProfileTemplates.Institutions' => [
-                'title' => 'Institutions',
-                'parent' => 'ProfileTemplates',
-                'selected' => ['ProfileTemplates.InstitutionProfiles',
-                    'ProfileTemplates.view',
-                    'ProfileTemplates.add',
-                    'ProfileTemplates.edit',
-                    'ProfileTemplates.delete']
-            ],//POCOR-6822 Starts Add menu classes
-            'ProfileTemplates.Classes' => [
-                'title' => 'Classes',
-                'parent' => 'ProfileTemplates',
-                'selected' => ['ProfileTemplates.ClassesProfiles',
-                    'Class.view',
-                    'Class.add',
-                    'Class.edit',
-                    'Class.delete']
-            ],//POCOR-6822 Ends
-            'ProfileTemplates.Staff' => [
-                'title' => 'Staff',
-                'parent' => 'ProfileTemplates',
-                'selected' => ['ProfileTemplates.StaffProfiles',
-                    'Staff.view',
-                    'Staff.add',
-                    'Staff.edit',
-                    'Staff.delete']
-            ],
-            'ProfileTemplates.Students' => [
-                'title' => 'Students',
-                'parent' => 'ProfileTemplates',
-                'selected' => ['ProfileTemplates.StudentProfiles',
-                    'Students.view',
-                    'Students.add',
-                    'Students.edit',
-                    'Students.delete']
-            ],
-
-            'Administration.Survey' => [
-                'title' => 'Survey',
-                'parent' => 'Administration',
-                'link' => false,
-            ],
-
-            'Surveys.Questions' => [
-                'title' => 'Forms',
-                'parent' => 'Administration.Survey',
-                'params' => ['plugin' => 'Survey'],
-                'selected' => ['Surveys.Questions',
-                    'Surveys.Forms',
-                    'Surveys.Rules',
-                    'Surveys.Status', 'Surveys.Filters', 'Surveys.Recipients'] //POCOR-7271
-            ],
-
-            'Rubrics.Templates' => [
-                'title' => 'Rubrics',
-                'parent' => 'Administration.Survey',
-                'params' => ['plugin' => 'Rubric'],
-                'selected' => ['Rubrics.Sections',
-                    'Rubrics.Criterias',
-                    'Rubrics.Options',
-                    'Rubrics.Status']
-            ],
-
-            'Administration.Communications' => [
-                'title' => 'Communications',
-                'parent' => 'Administration',
-                'link' => false,
-            ],
-
-            'Alerts.Alerts' => [
-                'title' => 'Alerts',
-                'parent' => 'Administration.Communications',
-                'params' => ['plugin' => 'Alert'],
-                'selected' => ['Alerts.Alerts']
-            ],
-
-            'Alerts.AlertRules' => [
-                'title' => 'Alert Rules',
-                'parent' => 'Administration.Communications',
-                'params' => ['plugin' => 'Alert'],
-                'selected' => ['Alerts.AlertRules']
-            ],
-
-            'Alerts.Logs' => [
-                'title' => 'Logs',
-                'parent' => 'Administration.Communications',
-                'params' => ['plugin' => 'Alert'],
-                'selected' => ['Alerts.Logs']
-            ],
-
-            'Administration.Training' => [
-                'title' => 'Training',
-                'parent' => 'Administration',
-                'link' => false,
-            ],
-
-            'Trainings.Courses' => [
-                'title' => 'Courses',
-                'parent' => 'Administration.Training',
-                'params' => ['plugin' => 'Training'],
-                'selected' => ['Trainings.Courses']
-            ],
-
-            'Trainings.Sessions' => [
-                'title' => 'Sessions',
-                'parent' => 'Administration.Training',
-                'params' => ['plugin' => 'Training'],
-                'selected' => ['Trainings.Sessions',
-                    'Trainings.Applications',
-                    'Trainings.ImportTrainees']
-            ],
-
-            'Trainings.Results' => [
-                'title' => 'Results',
-                'parent' => 'Administration.Training',
-                'params' => ['plugin' => 'Training'],
-                'selected' => ['Trainings.Results',
-                    'Trainings.ImportTrainingSessionTraineeResults']//5695
-            ],
-
-            'Administration.Performance' => [
-                'title' => 'Performance',
-                'parent' => 'Administration',
-                'link' => false
-            ],
-
-            'Competencies.Templates' => [
-                'title' => 'Competencies',
-                'parent' => 'Administration.Performance',
-                'params' => ['plugin' => 'Competency'],
-                'selected' => ['Competencies.Templates',
-                    'Competencies.Items',
-                    'Competencies.Criterias',
-                    'Competencies.Periods',
-                    'Competencies.GradingTypes']
-            ],
-
-            'Outcomes.Templates' => [
-                'title' => 'Outcomes',
-                'parent' => 'Administration.Performance',
-                'params' => ['plugin' => 'Outcome'],
-                'selected' => ['Outcomes.Templates',
-                    'Outcomes.Criterias',
-                    'Outcomes.Periods',
-                    'Outcomes.GradingTypes',
-                    'Outcomes.ImportOutcomeTemplates']
-            ],
-
-            'Assessments.Assessments' => [
-                'title' => 'Assessments',
-                'parent' => 'Administration.Performance',
-                'params' => ['plugin' => 'Assessment'],
-                'selected' => ['Assessments.Assessments',
-                    'Assessments.AssessmentPeriods',
-                    'Assessments.GradingTypes']
-            ],
-
-            'ReportCards.Templates' => [
-                'title' => 'Report Cards',
-                'parent' => 'Administration.Performance',
-                'params' => ['plugin' => 'ReportCard'],
-                'selected' => ['ReportCards.Templates',
-                    'ReportCards.ReportCardEmail',
-                    'ReportCards.Processes']
-            ],
 
             'StaffAppraisals.Criterias.index' => [
                 'title' => 'Appraisals',
@@ -2649,115 +2286,6 @@ class NavigationComponent extends Component
                     'StaffAppraisals.Types',
                     'StaffAppraisals.Periods',
                     'StaffAppraisals.Scores']
-            ],
-
-            'Administration.Examinations' => [
-                'title' => 'Examinations',
-                'parent' => 'Administration',
-                'link' => false,
-            ],
-            'Examinations.Exams' => [
-                'title' => 'Exams',
-                'parent' => 'Administration.Examinations',
-                'params' => ['plugin' => 'Examination'],
-                'selected' => ['Examinations.Exams',
-                    'Examinations.GradingTypes']
-            ],
-            'Examinations.ExamCentres' => [
-                'title' => 'Centres',
-                'parent' => 'Administration.Examinations',
-                'params' => ['plugin' => 'Examination'],
-                'selected' => ['Examinations.ExamCentres',
-                    'Examinations.ExamCentreRooms',
-                    'Examinations.ExamCentreExams',
-                    'Examinations.ExamCentreSubjects',
-                    'Examinations.ExamCentreStudents',
-                    'Examinations.ExamCentreInvigilators',
-                    'Examinations.ExamCentreLinkedInstitutions',
-                    'Examinations.ImportExaminationCentreRooms']
-            ],
-            'Examinations.RegisteredStudents' => [
-                'title' => 'Students',
-                'parent' => 'Administration.Examinations',
-                'params' => ['plugin' => 'Examination'],
-                'selected' => ['Examinations.RegisteredStudents',
-                    'Examinations.RegistrationDirectory',
-                    'Examinations.NotRegisteredStudents']
-            ],
-            'Examinations.ExamResults' => [
-                'title' => 'Results',
-                'parent' => 'Administration.Examinations',
-                'params' => ['plugin' => 'Examination'],
-                'selected' => ['Examinations.ExamResults',
-                    'Examinations.Results',
-                    'Examinations.ImportResults']
-            ],
-
-            'Administration.Scholarships' => [
-                'title' => 'Scholarships',
-                'parent' => 'Administration',
-                'link' => false,
-            ],
-            'Scholarships.Scholarships' => [
-                'title' => 'Details',
-                'parent' => 'Administration.Scholarships',
-                'params' => ['plugin' => 'Scholarship'],
-                'selected' => ['Scholarships.Scholarships',
-                    'ScholarshipAttachmentTypes.index',
-                    'ScholarshipAttachmentTypes.view',
-                    'ScholarshipAttachmentTypes.add',
-                    'ScholarshipAttachmentTypes.edit',
-                    'ScholarshipAttachmentTypes.delete']
-            ],
-            'Scholarships.Applications' => [
-                'title' => 'Applications',
-                'parent' => 'Administration.Scholarships',
-                'params' => ['plugin' => 'Scholarship'],
-                'selected' => ['Scholarships.Applications',
-                    'UsersDirectory.index',
-                    'UsersDirectory.view',
-                    'Scholarships.Identities.index',
-                    'Scholarships.Identities.view',
-                    'Scholarships.Nationalities.index',
-                    'Scholarships.Nationalities.view',
-                    'Scholarships.Contacts.index',
-                    'Scholarships.Contacts.view',
-                    'Scholarships.Guardians.index',
-                    'Scholarships.Guardians.view',
-                    'Scholarships.Histories',
-                    'ScholarshipApplicationInstitutionChoices.index',
-                    'ScholarshipApplicationInstitutionChoices.view',
-                    'ScholarshipApplicationInstitutionChoices.add',
-                    'ScholarshipApplicationInstitutionChoices.edit',
-                    'ScholarshipApplicationInstitutionChoices.delete',
-                    'ScholarshipApplicationAttachments.index',
-                    'ScholarshipApplicationAttachments.view',
-                    'ScholarshipApplicationAttachments.add',
-                    'ScholarshipApplicationAttachments.edit',
-                    'ScholarshipApplicationAttachments.delete']
-            ],
-            'ScholarshipRecipients.index' => [
-                'title' => 'Recipients',
-                'parent' => 'Administration.Scholarships',
-                'params' => ['plugin' => 'Scholarship'],
-                'selected' => ['ScholarshipRecipients.index',
-                    'ScholarshipRecipients.view',
-                    'ScholarshipRecipients.edit',
-                    'ScholarshipRecipientInstitutionChoices.index',
-                    'ScholarshipRecipientInstitutionChoices.view',
-                    'ScholarshipRecipientInstitutionChoices.edit',
-                    'Scholarships.RecipientPaymentStructures',
-                    'Scholarships.RecipientPayments',
-                    'ScholarshipRecipientCollections.index',
-                    'ScholarshipRecipientCollections.view',
-                    'ScholarshipRecipientCollections.add',
-                    'ScholarshipRecipientCollections.edit',
-                    'ScholarshipRecipientCollections.delete',
-                    'ScholarshipRecipientAcademicStandings.index',
-                    'ScholarshipRecipientAcademicStandings.view',
-                    'ScholarshipRecipientAcademicStandings.add',
-                    'ScholarshipRecipientAcademicStandings.edit',
-                    'ScholarshipRecipientAcademicStandings.delete']
             ],
 
             'Textbooks.Textbooks' => [
@@ -2799,56 +2327,12 @@ class NavigationComponent extends Component
                     'Calendars.edit',
                     'Calendars.delete']
             ],
-            'Administration.MoodleApi' => [
-                'title' => 'MoodleApi',
-                'parent' => 'Administration',
-                'link' => false,
-            ],
-            'MoodleApi.log' => [
-                'title' => 'Log',
-                'parent' => 'Administration.MoodleApi',
-                'selected' => ['MoodleApiLog.index'],
-                'params' => ['plugin' => 'MoodleApi',
-                    'controller' => 'MoodleApiLog',
-                    'action' => 'index']
-            ],
-
-            'Administration.Archive' => [
-                'title' => 'Data Management',
-                'parent' => 'Administration',
-                'link' => false,
-            ],
-            'Archive.Copy' => [
-                'title' => 'Copy',
-                'parent' => 'Administration.Archive',
-                'selected' => ['Archives.CopyData'],
-                'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
-                    'action' => 'CopyData'],
-            ],
-            'Archive.Backup' => [
-                'title' => 'Backup',
-                'parent' => 'Administration.Archive',
-                'selected' => ['Archives.BackupLog'],
-                'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
-                    'action' => 'BackupLog'],
-            ],
-            'Archive.Transfer' => [
-                'title' => 'Archive',
-                'parent' => 'Administration.Archive',
-                'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
-                    'action' => 'Transfer'],
-                'selected' => ['Archives.Transfer'],
-            ],
-            //POCOR-7399::Start : Hide this menu
-            // 'Archive.Connection' => [
-            //     'title' => 'Connection',
-            //     'parent' => 'Administration.Archive',
-            //     'params' => ['plugin' => 'Archive','controller' => 'Archives', 'action' => 'Connection', 0 => 'view', $connectionId],
-            //     'selected' => ['Archives.Connection.view','Archives.Connection.edit'],
-            // ],
-            //POCOR-7399::End :Hide this menu
+            
         ];
-        return $navigation;
+
+         $getallNavigation = array_merge($firstSubMenuAdmin, $SecurityNav,  $ProfileNav, $SurveyNav, 
+            $CommunicationsNav,$TrainingNav, $PerformanceNav, $ExaminationNav, $ScholarshipNav,$navigation, $MoodleNav, $dataMgtNav); //POCOR-7527
+        return $getallNavigation;
     }
 
     public function getGuardianNavNavigation()
@@ -2897,7 +2381,11 @@ class NavigationComponent extends Component
         return $navigation;
     }
 
-    //POCOR-7527
+    /**
+     * POCOR-7527
+     * seperate Report, Adminstration menu . creationg issue while provide permission
+     * these two left menu are not having link
+     */
     private function getReportAdminstrationNavigation($uId)
     {
         $users = TableRegistry::get('security_users');
@@ -2994,5 +2482,1641 @@ class NavigationComponent extends Component
         
         return $navigationToAppends;
     }
+
+    /**
+     * POCOR-7527
+     * seperate first Adminstration menu . creationg issue while provide permission
+     * creation issue for dropdowin menu
+     */
+    private function getAdminstrationSubmenuNav()
+    {
+        $session = $this->request->session();
+        $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        $uId = $this->controller->paramsDecode($userId)['id'];
+        $users = TableRegistry::get('security_users');
+        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
+                    $users->aliasField('id') => $uId])->first();
+
+        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
+        $securityFunctions = TableRegistry::get('security_functions');
+        $securityRole = TableRegistry::get('security_roles');
+        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $groupUserRecords = $GroupUsers->find()
+            ->matching('SecurityGroups')
+            ->matching('SecurityRoles')
+            ->where([$GroupUsers->aliasField('security_user_id') => $uId])
+            ->group([
+                $GroupUsers->aliasField('security_group_id'),
+                $GroupUsers->aliasField('security_role_id')
+            ])
+            ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
+            ->all();
+            $rowData = [];
+            $rowId = [];
+            foreach ($groupUserRecords as $obj) {
+                $rowData[] = $obj->role_name;
+                $rowId[] = $obj->id;
+            }
+
+            if(!empty($rowId)){
+                $SecurityCustomFunctions = $SecurityRoleFunctions->find()
+                    ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                            [
+                                $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                            ]
+                        )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
+                        $securityFunctions->aliasField('category') => 'Custom Fields',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+                $SecuritylocalizationFunctions = $SecurityRoleFunctions->find()
+                    ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                            [
+                                $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                            ]
+                        )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
+                        $securityFunctions->aliasField('category') => 'Localization',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+                $SecurityApiFunctions = $SecurityRoleFunctions->find()
+                    ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                            [
+                                $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                            ]
+                        )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
+                        $securityFunctions->aliasField('category') => 'APIs',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+            }
+        
+        $navigationToAppends = [];
+        if(empty($userinfo))
+        {   
+            if(!empty($SecurityCustomFunctions) && !empty($SecuritylocalizationFunctions) && !empty($SecurityApiFunctions))
+            {
+                $navigationToAppends = 
+                    [
+                        'SystemSetup.CustomField' => [
+                            'title' => 'Custom Field',
+                            'parent' => 'SystemSetup',
+                            'link' => false,
+                        ],
+                    
+                    'InstitutionCustomFields.Fields' => [
+                        'title' => 'Institution',
+                        'parent' => 'SystemSetup.CustomField',
+                        'params' => ['plugin' => 'InstitutionCustomField'],
+                        'selected' => ['InstitutionCustomFields.Fields',
+                            'InstitutionCustomFields.Pages']
+                    ],
+                    'StudentCustomFields.Fields' => [
+                        'title' => 'Student',
+                        'parent' => 'SystemSetup.CustomField',
+                        'params' => ['plugin' => 'StudentCustomField'],
+                        'selected' => ['StudentCustomFields.Fields',
+                            'StudentCustomFields.Pages']
+                    ],
+                    'StaffCustomFields.Fields' => [
+                        'title' => 'Staff',
+                        'parent' => 'SystemSetup.CustomField',
+                        'params' => ['plugin' => 'StaffCustomField'],
+                        'selected' => ['StaffCustomFields.Fields',
+                            'StaffCustomFields.Pages']
+                    ],
+                    'Infrastructures.Fields' => [
+                        'title' => 'Infrastructure',
+                        'parent' => 'SystemSetup.CustomField',
+                        'params' => ['plugin' => 'Infrastructure'],
+                        'selected' => ['Infrastructures.Fields',
+                            'Infrastructures.LandPages',
+                            'Infrastructures.BuildingPages',
+                            'Infrastructures.FloorPages',
+                            'Infrastructures.RoomPages']
+                    ],
+                    'SystemSetup.Localization' => [
+                        'title' => 'Localization',
+                        'parent' => 'SystemSetup',
+                        'link' => false,
+                    ],
+                    'Locales.index' => [
+                        'title' => 'Languages',
+                    'parent' => 'SystemSetup.Localization',
+                    'selected' => ['Locales.index',
+                        'Locales.view',
+                        'Locales.edit',
+                        'Locales.add']
+                ],
+                'LocaleContents.index' => [
+                    'title' => 'Translations',
+                    'parent' => 'SystemSetup.Localization',
+                    'selected' => ['LocaleContents.index',
+                        'LocaleContents.view',
+                        'LocaleContents.edit']
+                ],
+
+                 'API' => [
+                    'title' => 'APIs',
+                    'parent' => 'SystemSetup',
+                    'link' => false
+                ],
+                'Credentials.index' => [
+                    'title' => 'Credentials',
+                    'parent' => 'API',
+                    'selected' => ['Credentials.view',
+                        'Credentials.add',
+                        'Credentials.edit',
+                        'Credentials.delete']
+                ],
+            ];
+        }elseif(!empty($SecurityCustomFunctions)){
+            $navigationToAppends = 
+                [
+                        'SystemSetup.CustomField' => [
+                        'title' => 'Custom Field',
+                        'parent' => 'SystemSetup',
+                        'link' => false,
+                    ],
+                    'InstitutionCustomFields.Fields' => [
+                        'title' => 'Institution',
+                        'parent' => 'SystemSetup.CustomField',
+                        'params' => ['plugin' => 'InstitutionCustomField'],
+                        'selected' => ['InstitutionCustomFields.Fields',
+                            'InstitutionCustomFields.Pages']
+                    ],
+                    'StudentCustomFields.Fields' => [
+                        'title' => 'Student',
+                        'parent' => 'SystemSetup.CustomField',
+                        'params' => ['plugin' => 'StudentCustomField'],
+                        'selected' => ['StudentCustomFields.Fields',
+                            'StudentCustomFields.Pages']
+                    ],
+                    'StaffCustomFields.Fields' => [
+                        'title' => 'Staff',
+                        'parent' => 'SystemSetup.CustomField',
+                        'params' => ['plugin' => 'StaffCustomField'],
+                        'selected' => ['StaffCustomFields.Fields',
+                            'StaffCustomFields.Pages']
+                    ],
+                    'Infrastructures.Fields' => [
+                        'title' => 'Infrastructure',
+                        'parent' => 'SystemSetup.CustomField',
+                        'params' => ['plugin' => 'Infrastructure'],
+                        'selected' => ['Infrastructures.Fields',
+                            'Infrastructures.LandPages',
+                            'Infrastructures.BuildingPages',
+                            'Infrastructures.FloorPages',
+                            'Infrastructures.RoomPages']
+                    ],
+                ];
+                
+        }elseif(!empty($SecuritylocalizationFunctions)){
+            $navigationToAppends = 
+            [
+                'SystemSetup.Localization' => [
+                            'title' => 'Localization',
+                            'parent' => 'SystemSetup',
+                            'link' => false,
+                        ],
+                        'Locales.index' => [
+                            'title' => 'Languages',
+                        'parent' => 'SystemSetup.Localization',
+                        'selected' => ['Locales.index',
+                            'Locales.view',
+                            'Locales.edit',
+                            'Locales.add']
+                    ],
+                    'LocaleContents.index' => [
+                        'title' => 'Translations',
+                        'parent' => 'SystemSetup.Localization',
+                        'selected' => ['LocaleContents.index',
+                            'LocaleContents.view',
+                            'LocaleContents.edit']
+                    ],
+            ];
+        }elseif(!empty($SecurityApiFunctions)){
+            $navigationToAppends = [
+                 'API' => [
+                    'title' => 'APIs',
+                    'parent' => 'SystemSetup',
+                    'link' => false
+                ],
+                //POCOR-7312[START]
+                // 'ApiSecurities.index' => [
+                //     'title' => 'Securities',
+                //     'parent' => 'API',
+                //     'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
+                // ],
+                //POCOR-7312[END]
+                'Credentials.index' => [
+                    'title' => 'Credentials',
+                    'parent' => 'API',
+                    'selected' => ['Credentials.view',
+                        'Credentials.add',
+                        'Credentials.edit',
+                        'Credentials.delete']
+                ],
+            ];
+        }
+
+    }else{
+              $navigationToAppends = 
+                [
+                        'SystemSetup.CustomField' => [
+                        'title' => 'Custom Field',
+                        'parent' => 'SystemSetup',
+                        'link' => false,
+                    ],
+                    'InstitutionCustomFields.Fields' => [
+                        'title' => 'Institution',
+                        'parent' => 'SystemSetup.CustomField',
+                        'params' => ['plugin' => 'InstitutionCustomField'],
+                        'selected' => ['InstitutionCustomFields.Fields',
+                            'InstitutionCustomFields.Pages']
+                    ],
+                    'StudentCustomFields.Fields' => [
+                        'title' => 'Student',
+                        'parent' => 'SystemSetup.CustomField',
+                        'params' => ['plugin' => 'StudentCustomField'],
+                        'selected' => ['StudentCustomFields.Fields',
+                            'StudentCustomFields.Pages']
+                    ],
+                    'StaffCustomFields.Fields' => [
+                        'title' => 'Staff',
+                        'parent' => 'SystemSetup.CustomField',
+                        'params' => ['plugin' => 'StaffCustomField'],
+                        'selected' => ['StaffCustomFields.Fields',
+                            'StaffCustomFields.Pages']
+                    ],
+                    'Infrastructures.Fields' => [
+                        'title' => 'Infrastructure',
+                        'parent' => 'SystemSetup.CustomField',
+                        'params' => ['plugin' => 'Infrastructure'],
+                        'selected' => ['Infrastructures.Fields',
+                            'Infrastructures.LandPages',
+                            'Infrastructures.BuildingPages',
+                            'Infrastructures.FloorPages',
+                            'Infrastructures.RoomPages']
+                    ],
+                    'SystemSetup.Localization' => [
+                        'title' => 'Localization',
+                        'parent' => 'SystemSetup',
+                        'link' => false,
+                    ],
+                    'Locales.index' => [
+                        'title' => 'Languages',
+                    'parent' => 'SystemSetup.Localization',
+                    'selected' => ['Locales.index',
+                        'Locales.view',
+                        'Locales.edit',
+                        'Locales.add']
+                ],
+                'LocaleContents.index' => [
+                    'title' => 'Translations',
+                    'parent' => 'SystemSetup.Localization',
+                    'selected' => ['LocaleContents.index',
+                        'LocaleContents.view',
+                        'LocaleContents.edit']
+                ],
+
+                 'API' => [
+                    'title' => 'APIs',
+                    'parent' => 'SystemSetup',
+                    'link' => false
+                ],
+                //POCOR-7312[START]
+                // 'ApiSecurities.index' => [
+                //     'title' => 'Securities',
+                //     'parent' => 'API',
+                //     'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
+                // ],
+                //POCOR-7312[END]
+                'Credentials.index' => [
+                    'title' => 'Credentials',
+                    'parent' => 'API',
+                    'selected' => ['Credentials.view',
+                        'Credentials.add',
+                        'Credentials.edit',
+                        'Credentials.delete']
+                ],
+            ];
+        }
+        return $navigationToAppends;
     
+    }
+
+    /**
+     * POCOR-7527
+     * seperate first Adminstration menu . creationg issue while provide permission
+     * creation issue for dropdowin menu
+     */
+    private function getAdminstrationFirstNav()
+    {
+        $getDropdownMenu = $this->getAdminstrationSubmenuNav();
+        $navigations = [
+            'SystemSetup' => [
+                'title' => 'System Setup',
+                'parent' => 'Administration',
+                'link' => false,
+            ],
+
+            'Areas.Areas' => [
+                'title' => 'Administrative Boundaries',
+                'parent' => 'SystemSetup',
+                'params' => ['plugin' => 'Area'],
+                'selected' => ['Areas.Areas',
+                    'Areas.Levels',
+                    'Areas.AdministrativeLevels',
+                    'Areas.Administratives']
+            ],
+            'AcademicPeriods.Periods' => [
+                'title' => 'Academic Periods',
+                'parent' => 'SystemSetup',
+                'params' => ['plugin' => 'AcademicPeriod'],
+                'selected' => ['AcademicPeriods.Periods',
+                    'AcademicPeriods.Levels']
+            ],
+            'Educations.Systems' => [
+                'title' => 'Education Structure',
+                'parent' => 'SystemSetup',
+                'params' => ['plugin' => 'Education'],
+                'selected' => ['Educations.Systems',
+                    'Educations.Levels',
+                    'Educations.Cycles',
+                    'Educations.Programmes',
+                    'Educations.Grades',
+                    'Educations.Stages',
+                    'Educations.Subjects',
+                    'Educations.GradeSubjects',
+                    'Educations.Certifications',
+                    'Educations.FieldOfStudies',
+                    'Educations.ProgrammeOrientations', 'Educations.CopySystems']
+            ],
+            'Attendances.StudentMarkTypes' => [
+                'title' => 'Attendances',
+                'parent' => 'SystemSetup',
+                'params' => ['plugin' => 'Attendance'],
+                'selected' => ['Attendances.StudentMarkTypeStatuses']
+            ],
+            'FieldOptions.index' => [
+                'title' => 'Field Options',
+                'parent' => 'SystemSetup',
+                'params' => ['plugin' => 'FieldOption'],
+                'selected' => ['FieldOptions.index',
+                    'FieldOptions.add',
+                    'FieldOptions.view',
+                    'FieldOptions.edit',
+                    'FieldOptions.remove']
+            ],
+            
+            'Labels.index' => [
+                'title' => 'Labels',
+                'parent' => 'SystemSetup',
+                'selected' => ['Labels.index',
+                    'Labels.view',
+                    'Labels.edit']
+            ],
+            
+            'Configurations.index' => [
+                'title' => 'System Configurations',
+                'parent' => 'SystemSetup',
+                'selected' => ['Configurations.index',
+                    'Configurations.add',
+                    'Configurations.view',
+                    'Configurations.edit',
+                    'Themes.index',
+                    'Themes.view',
+                    'Themes.edit']
+            ],
+            // Start POCOR-5188
+            'Manuals.Institutions' => [
+                'title' => 'Manuals',
+                'parent' => 'SystemSetup',
+                'selected' => ['Manuals.Institutions', 'Manuals.view',
+                    'Manuals.edit',
+                    'Manuals.Directory',
+                    'Manuals.Reports',
+                    'Manuals.Personal',
+                    'Manuals.Administration',
+                    'Manuals.Guardian']
+            ],
+            // End POCOR-5188
+           
+            'Notices.index' => [
+                'title' => 'Notices',
+                'parent' => 'SystemSetup',
+                'selected' => ['Notices.index',
+                    'Notices.add',
+                    'Notices.view',
+                    'Notices.edit',
+                    'Notices.delete']
+            ],
+            'Risks.Risks' => [
+                'title' => 'Risks',
+                'parent' => 'SystemSetup',
+                'params' => ['plugin' => 'Risk'],
+                'selected' => ['Risks.Risks']
+            ],
+        ];
+        $menuNavigation = array_merge($navigations,$getDropdownMenu);
+        return $menuNavigation;
+    }
+
+    //POCOR-7527
+    private function getAdminstrationSecurityNav()
+    {
+        $session = $this->request->session();
+        $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        $uId = $this->controller->paramsDecode($userId)['id'];
+        $users = TableRegistry::get('security_users');
+        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
+                    $users->aliasField('id') => $uId])->first();
+
+        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
+        $securityFunctions = TableRegistry::get('security_functions');
+        $securityRole = TableRegistry::get('security_roles');
+        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $groupUserRecords = $GroupUsers->find()
+            ->matching('SecurityGroups')
+            ->matching('SecurityRoles')
+            ->where([$GroupUsers->aliasField('security_user_id') => $uId])
+            ->group([
+                $GroupUsers->aliasField('security_group_id'),
+                $GroupUsers->aliasField('security_role_id')
+            ])
+            ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
+            ->all();
+            $rowData = [];
+            $rowId = [];
+        foreach ($groupUserRecords as $obj) {
+            $rowData[] = $obj->role_name;
+            $rowId[] = $obj->id;
+        }
+        if(!empty($rowId)){
+            $SecurityFunctions = $SecurityRoleFunctions->find()
+                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                        [
+                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                        ]
+                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
+                    $securityFunctions->aliasField('category') => 'Security',$securityFunctions->aliasField('module') => 'Administration',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+        }
+        $navOne = [];
+        if(empty($userinfo)){
+            if(!empty($SecurityFunctions))
+            {
+                 $navOne = [
+                'Security' => [
+                    'title' => 'Security',
+                    'parent' => 'Administration',
+                    'link' => false,
+                ],
+
+                'Securities.Users' => [
+                    'title' => 'Users',
+                    'parent' => 'Security',
+                    'params' => ['plugin' => 'Security'],
+                    'selected' => ['Securities.Users',
+                        'Securities.Accounts']
+                ],
+
+                'Securities.UserGroups' => [
+                    'title' => 'Groups',
+                    'parent' => 'Security',
+                    'params' => ['plugin' => 'Security'],
+                    'selected' => ['Securities.UserGroups', 'Securities.SystemGroups', 'Securities.UserGroupsList', 'Securities.SystemGroupsList']
+                ],
+                'Securities.Roles' => [
+                    'title' => 'Roles',
+                    'parent' => 'Security',
+                    'params' => ['plugin' => 'Security'],
+                    'selected' => ['Securities.Roles',
+                        'Securities.Permissions']
+                ],
+            ];
+        }
+
+        }else{
+            $navOne = [
+                'Security' => [
+                    'title' => 'Security',
+                    'parent' => 'Administration',
+                    'link' => false,
+                ],
+
+                'Securities.Users' => [
+                    'title' => 'Users',
+                    'parent' => 'Security',
+                    'params' => ['plugin' => 'Security'],
+                    'selected' => ['Securities.Users',
+                        'Securities.Accounts']
+                ],
+
+                'Securities.UserGroups' => [
+                    'title' => 'Groups',
+                    'parent' => 'Security',
+                    'params' => ['plugin' => 'Security'],
+                    'selected' => ['Securities.UserGroups', 'Securities.SystemGroups', 'Securities.UserGroupsList', 'Securities.SystemGroupsList']
+                ],
+                'Securities.Roles' => [
+                    'title' => 'Roles',
+                    'parent' => 'Security',
+                    'params' => ['plugin' => 'Security'],
+                    'selected' => ['Securities.Roles',
+                        'Securities.Permissions']
+                ],
+            ];
+        }
+        return $navOne;
+    }
+
+    //POCOR-7527
+    private function getAdminstrationProfileNav()
+    {
+        $session = $this->request->session();
+        $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        $uId = $this->controller->paramsDecode($userId)['id'];
+        $users = TableRegistry::get('security_users');
+        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
+                    $users->aliasField('id') => $uId])->first();
+
+        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
+        $securityFunctions = TableRegistry::get('security_functions');
+        $securityRole = TableRegistry::get('security_roles');
+        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $groupUserRecords = $GroupUsers->find()
+            ->matching('SecurityGroups')
+            ->matching('SecurityRoles')
+            ->where([$GroupUsers->aliasField('security_user_id') => $uId])
+            ->group([
+                $GroupUsers->aliasField('security_group_id'),
+                $GroupUsers->aliasField('security_role_id')
+            ])
+            ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
+            ->all();
+            $rowData = [];
+            $rowId = [];
+        foreach ($groupUserRecords as $obj) {
+            $rowData[] = $obj->role_name;
+            $rowId[] = $obj->id;
+        }
+        if(!empty($rowId)){
+            $SecurityProfilesFunctions = $SecurityRoleFunctions->find()
+                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                        [
+                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                        ]
+                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
+                    $securityFunctions->aliasField('category') => 'Profiles',$securityFunctions->aliasField('module') => 'Administration',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+        }
+        $navTwo = [];
+        if(empty($userinfo)){
+            if(!empty($SecurityProfilesFunctions)){
+                $navTwo = [
+                    'ProfileTemplates' => [
+                        'title' => 'Profiles',
+                        'parent' => 'Administration',
+                        'link' => false
+                    ],
+                    'ProfileTemplates.Institutions' => [
+                        'title' => 'Institutions',
+                        'parent' => 'ProfileTemplates',
+                        'selected' => ['ProfileTemplates.InstitutionProfiles',
+                            'ProfileTemplates.view',
+                            'ProfileTemplates.add',
+                            'ProfileTemplates.edit',
+                            'ProfileTemplates.delete']
+                    ],//POCOR-6822 Starts Add menu classes
+                    'ProfileTemplates.Classes' => [
+                        'title' => 'Classes',
+                        'parent' => 'ProfileTemplates',
+                        'selected' => ['ProfileTemplates.ClassesProfiles',
+                            'Class.view',
+                            'Class.add',
+                            'Class.edit',
+                            'Class.delete']
+                    ],//POCOR-6822 Ends
+                    'ProfileTemplates.Staff' => [
+                        'title' => 'Staff',
+                        'parent' => 'ProfileTemplates',
+                        'selected' => ['ProfileTemplates.StaffProfiles',
+                            'Staff.view',
+                            'Staff.add',
+                            'Staff.edit',
+                            'Staff.delete']
+                    ],
+                    'ProfileTemplates.Students' => [
+                        'title' => 'Students',
+                        'parent' => 'ProfileTemplates',
+                        'selected' => ['ProfileTemplates.StudentProfiles',
+                            'Students.view',
+                            'Students.add',
+                            'Students.edit',
+                            'Students.delete']
+                    ],
+                ];
+            }
+        }else{
+            $navTwo = [
+                'ProfileTemplates' => [
+                    'title' => 'Profiles',
+                    'parent' => 'Administration',
+                    'link' => false
+                ],
+                'ProfileTemplates.Institutions' => [
+                    'title' => 'Institutions',
+                    'parent' => 'ProfileTemplates',
+                    'selected' => ['ProfileTemplates.InstitutionProfiles',
+                        'ProfileTemplates.view',
+                        'ProfileTemplates.add',
+                        'ProfileTemplates.edit',
+                        'ProfileTemplates.delete']
+                ],//POCOR-6822 Starts Add menu classes
+                'ProfileTemplates.Classes' => [
+                    'title' => 'Classes',
+                    'parent' => 'ProfileTemplates',
+                    'selected' => ['ProfileTemplates.ClassesProfiles',
+                        'Class.view',
+                        'Class.add',
+                        'Class.edit',
+                        'Class.delete']
+                ],//POCOR-6822 Ends
+                'ProfileTemplates.Staff' => [
+                    'title' => 'Staff',
+                    'parent' => 'ProfileTemplates',
+                    'selected' => ['ProfileTemplates.StaffProfiles',
+                        'Staff.view',
+                        'Staff.add',
+                        'Staff.edit',
+                        'Staff.delete']
+                ],
+                'ProfileTemplates.Students' => [
+                    'title' => 'Students',
+                    'parent' => 'ProfileTemplates',
+                    'selected' => ['ProfileTemplates.StudentProfiles',
+                        'Students.view',
+                        'Students.add',
+                        'Students.edit',
+                        'Students.delete']
+                ],
+            ];
+        }
+        return $navTwo;
+    }
+
+    //POCOR-7527
+    private function getAdminstrationSurveyNav()
+    {
+        $session = $this->request->session();
+        $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        $uId = $this->controller->paramsDecode($userId)['id'];
+        $users = TableRegistry::get('security_users');
+        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
+                    $users->aliasField('id') => $uId])->first();
+
+        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
+        $securityFunctions = TableRegistry::get('security_functions');
+        $securityRole = TableRegistry::get('security_roles');
+        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $groupUserRecords = $GroupUsers->find()
+            ->matching('SecurityGroups')
+            ->matching('SecurityRoles')
+            ->where([$GroupUsers->aliasField('security_user_id') => $uId])
+            ->group([
+                $GroupUsers->aliasField('security_group_id'),
+                $GroupUsers->aliasField('security_role_id')
+            ])
+            ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
+            ->all();
+            $rowData = [];
+            $rowId = [];
+        foreach ($groupUserRecords as $obj) {
+            $rowData[] = $obj->role_name;
+            $rowId[] = $obj->id;
+        }
+        if(!empty($rowId)){
+            $SecuritySurveyFunctions = $SecurityRoleFunctions->find()
+                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                        [
+                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                        ]
+                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
+                    $securityFunctions->aliasField('category') => 'Survey',$securityFunctions->aliasField('module') => 'Administration',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+        }
+        $navthree = [];
+        if(empty($userinfo)){
+            if(!empty($SecuritySurveyFunctions)){
+                $navthree =[
+                'Administration.Survey' => [
+                    'title' => 'Survey',
+                    'parent' => 'Administration',
+                    'link' => false,
+                ],
+
+                'Surveys.Questions' => [
+                    'title' => 'Forms',
+                    'parent' => 'Administration.Survey',
+                    'params' => ['plugin' => 'Survey'],
+                    'selected' => ['Surveys.Questions',
+                        'Surveys.Forms',
+                        'Surveys.Rules',
+                        'Surveys.Status', 'Surveys.Filters', 'Surveys.Recipients'] //POCOR-7271
+                ],
+
+                'Rubrics.Templates' => [
+                    'title' => 'Rubrics',
+                    'parent' => 'Administration.Survey',
+                    'params' => ['plugin' => 'Rubric'],
+                    'selected' => ['Rubrics.Sections',
+                        'Rubrics.Criterias',
+                        'Rubrics.Options',
+                        'Rubrics.Status']
+                ],
+            ];
+        }
+
+        }else{
+            $navthree =[
+                'Administration.Survey' => [
+                    'title' => 'Survey',
+                    'parent' => 'Administration',
+                    'link' => false,
+                ],
+
+                'Surveys.Questions' => [
+                    'title' => 'Forms',
+                    'parent' => 'Administration.Survey',
+                    'params' => ['plugin' => 'Survey'],
+                    'selected' => ['Surveys.Questions',
+                        'Surveys.Forms',
+                        'Surveys.Rules',
+                        'Surveys.Status', 'Surveys.Filters', 'Surveys.Recipients'] //POCOR-7271
+                ],
+
+                'Rubrics.Templates' => [
+                    'title' => 'Rubrics',
+                    'parent' => 'Administration.Survey',
+                    'params' => ['plugin' => 'Rubric'],
+                    'selected' => ['Rubrics.Sections',
+                        'Rubrics.Criterias',
+                        'Rubrics.Options',
+                        'Rubrics.Status']
+                ],
+            ];
+        }
+        return $navthree;
+    }
+
+    //POCOR-7527
+    private function getAdminstrationCommunicationsNav()
+    {
+        $session = $this->request->session();
+        $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        $uId = $this->controller->paramsDecode($userId)['id'];
+        $users = TableRegistry::get('security_users');
+        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
+                    $users->aliasField('id') => $uId])->first();
+
+        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
+        $securityFunctions = TableRegistry::get('security_functions');
+        $securityRole = TableRegistry::get('security_roles');
+        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $groupUserRecords = $GroupUsers->find()
+            ->matching('SecurityGroups')
+            ->matching('SecurityRoles')
+            ->where([$GroupUsers->aliasField('security_user_id') => $uId])
+            ->group([
+                $GroupUsers->aliasField('security_group_id'),
+                $GroupUsers->aliasField('security_role_id')
+            ])
+            ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
+            ->all();
+            $rowData = [];
+            $rowId = [];
+        foreach ($groupUserRecords as $obj) {
+            $rowData[] = $obj->role_name;
+            $rowId[] = $obj->id;
+        }
+        if(!empty($rowId)){
+            $SecurityCommunicationsFunctions = $SecurityRoleFunctions->find()
+                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                        [
+                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                        ]
+                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
+                    $securityFunctions->aliasField('category') => 'Communications',$securityFunctions->aliasField('module') => 'Administration',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+        }
+        $navfour = [];
+        if(empty($userinfo)){
+            if(!empty($SecurityCommunicationsFunctions)){
+                $navfour = [
+                'Administration.Communications' => [
+                    'title' => 'Communications',
+                    'parent' => 'Administration',
+                    'link' => false,
+                ],
+                'Alerts.Alerts' => [
+                    'title' => 'Alerts',
+                    'parent' => 'Administration.Communications',
+                    'params' => ['plugin' => 'Alert'],
+                    'selected' => ['Alerts.Alerts']
+                ],
+
+                'Alerts.AlertRules' => [
+                    'title' => 'Alert Rules',
+                    'parent' => 'Administration.Communications',
+                    'params' => ['plugin' => 'Alert'],
+                    'selected' => ['Alerts.AlertRules']
+                ],
+
+                'Alerts.Logs' => [
+                    'title' => 'Logs',
+                    'parent' => 'Administration.Communications',
+                    'params' => ['plugin' => 'Alert'],
+                    'selected' => ['Alerts.Logs']
+                ],
+            ];
+        }
+        }else{
+            $navfour = [
+                'Administration.Communications' => [
+                    'title' => 'Communications',
+                    'parent' => 'Administration',
+                    'link' => false,
+                ],
+                'Alerts.Alerts' => [
+                    'title' => 'Alerts',
+                    'parent' => 'Administration.Communications',
+                    'params' => ['plugin' => 'Alert'],
+                    'selected' => ['Alerts.Alerts']
+                ],
+
+                'Alerts.AlertRules' => [
+                    'title' => 'Alert Rules',
+                    'parent' => 'Administration.Communications',
+                    'params' => ['plugin' => 'Alert'],
+                    'selected' => ['Alerts.AlertRules']
+                ],
+
+                'Alerts.Logs' => [
+                    'title' => 'Logs',
+                    'parent' => 'Administration.Communications',
+                    'params' => ['plugin' => 'Alert'],
+                    'selected' => ['Alerts.Logs']
+                ],
+            ];
+        }
+        return $navfour;
+    }
+
+    //POCOR-7527
+    private function getAdminstrationTrainingNav()
+    {
+        $session = $this->request->session();
+        $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        $uId = $this->controller->paramsDecode($userId)['id'];
+        $users = TableRegistry::get('security_users');
+        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
+                    $users->aliasField('id') => $uId])->first();
+
+        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
+        $securityFunctions = TableRegistry::get('security_functions');
+        $securityRole = TableRegistry::get('security_roles');
+        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $groupUserRecords = $GroupUsers->find()
+            ->matching('SecurityGroups')
+            ->matching('SecurityRoles')
+            ->where([$GroupUsers->aliasField('security_user_id') => $uId])
+            ->group([
+                $GroupUsers->aliasField('security_group_id'),
+                $GroupUsers->aliasField('security_role_id')
+            ])
+            ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
+            ->all();
+            $rowData = [];
+            $rowId = [];
+        foreach ($groupUserRecords as $obj) {
+            $rowData[] = $obj->role_name;
+            $rowId[] = $obj->id;
+        }
+        if(!empty($rowId)){
+            $SecurityTrainingFunctions = $SecurityRoleFunctions->find()
+                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                        [
+                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                        ]
+                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, $securityFunctions->aliasField('module') => 'Administration',
+                    $securityFunctions->aliasField('category') => 'Training',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+        }
+        $navfive = [];
+        if(empty($userinfo)){
+            if(!empty($SecurityTrainingFunctions)){
+                $navfive = [
+                    'Administration.Training' => [
+                        'title' => 'Training',
+                        'parent' => 'Administration',
+                        'link' => false,
+                    ],
+
+                    'Trainings.Courses' => [
+                        'title' => 'Courses',
+                        'parent' => 'Administration.Training',
+                        'params' => ['plugin' => 'Training'],
+                        'selected' => ['Trainings.Courses']
+                    ],
+
+                    'Trainings.Sessions' => [
+                        'title' => 'Sessions',
+                        'parent' => 'Administration.Training',
+                        'params' => ['plugin' => 'Training'],
+                        'selected' => ['Trainings.Sessions',
+                            'Trainings.Applications',
+                            'Trainings.ImportTrainees']
+                    ],
+
+                    'Trainings.Results' => [
+                        'title' => 'Results',
+                        'parent' => 'Administration.Training',
+                        'params' => ['plugin' => 'Training'],
+                        'selected' => ['Trainings.Results',
+                            'Trainings.ImportTrainingSessionTraineeResults']//5695
+                    ],
+                ];   
+            }
+        }else{
+            $navfive = [
+                'Administration.Training' => [
+                    'title' => 'Training',
+                    'parent' => 'Administration',
+                    'link' => false,
+                ],
+
+                'Trainings.Courses' => [
+                    'title' => 'Courses',
+                    'parent' => 'Administration.Training',
+                    'params' => ['plugin' => 'Training'],
+                    'selected' => ['Trainings.Courses']
+                ],
+
+                'Trainings.Sessions' => [
+                    'title' => 'Sessions',
+                    'parent' => 'Administration.Training',
+                    'params' => ['plugin' => 'Training'],
+                    'selected' => ['Trainings.Sessions',
+                        'Trainings.Applications',
+                        'Trainings.ImportTrainees']
+                ],
+
+                'Trainings.Results' => [
+                    'title' => 'Results',
+                    'parent' => 'Administration.Training',
+                    'params' => ['plugin' => 'Training'],
+                    'selected' => ['Trainings.Results',
+                        'Trainings.ImportTrainingSessionTraineeResults']//5695
+                ],
+
+            ];   
+        }
+        return $navfive;
+    }
+
+    //POCOR-7527
+    private function getAdminstrationPerformanceNav()
+    {
+        $session = $this->request->session();
+        $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        $uId = $this->controller->paramsDecode($userId)['id'];
+        $users = TableRegistry::get('security_users');
+        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
+                    $users->aliasField('id') => $uId])->first();
+
+        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
+        $securityFunctions = TableRegistry::get('security_functions');
+        $securityRole = TableRegistry::get('security_roles');
+        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $groupUserRecords = $GroupUsers->find()
+            ->matching('SecurityGroups')
+            ->matching('SecurityRoles')
+            ->where([$GroupUsers->aliasField('security_user_id') => $uId])
+            ->group([
+                $GroupUsers->aliasField('security_group_id'),
+                $GroupUsers->aliasField('security_role_id')
+            ])
+            ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
+            ->all();
+            $rowData = [];
+            $rowId = [];
+        foreach ($groupUserRecords as $obj) {
+            $rowData[] = $obj->role_name;
+            $rowId[] = $obj->id;
+        }
+        if(!empty($rowId)){
+            $SecurityPerformanceFunctions = $SecurityRoleFunctions->find()
+                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                        [
+                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                        ]
+                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, $securityFunctions->aliasField('module') => 'Administration',
+                    $securityFunctions->aliasField('category') => 'Performance',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+        }
+        $navSix = [];
+        if(empty($userinfo)){
+            if(!empty($SecurityPerformanceFunctions)){
+                $navSix = [
+                    'Administration.Performance' => [
+                    'title' => 'Performance',
+                    'parent' => 'Administration',
+                    'link' => false
+                ],
+
+                'Competencies.Templates' => [
+                    'title' => 'Competencies',
+                    'parent' => 'Administration.Performance',
+                    'params' => ['plugin' => 'Competency'],
+                    'selected' => ['Competencies.Templates',
+                        'Competencies.Items',
+                        'Competencies.Criterias',
+                        'Competencies.Periods',
+                        'Competencies.GradingTypes']
+                ],
+
+                'Outcomes.Templates' => [
+                    'title' => 'Outcomes',
+                    'parent' => 'Administration.Performance',
+                    'params' => ['plugin' => 'Outcome'],
+                    'selected' => ['Outcomes.Templates',
+                        'Outcomes.Criterias',
+                        'Outcomes.Periods',
+                        'Outcomes.GradingTypes',
+                        'Outcomes.ImportOutcomeTemplates']
+                ],
+
+                'Assessments.Assessments' => [
+                    'title' => 'Assessments',
+                    'parent' => 'Administration.Performance',
+                    'params' => ['plugin' => 'Assessment'],
+                    'selected' => ['Assessments.Assessments',
+                        'Assessments.AssessmentPeriods',
+                        'Assessments.GradingTypes']
+                ],
+
+                'ReportCards.Templates' => [
+                    'title' => 'Report Cards',
+                    'parent' => 'Administration.Performance',
+                    'params' => ['plugin' => 'ReportCard'],
+                    'selected' => ['ReportCards.Templates',
+                        'ReportCards.ReportCardEmail',
+                        'ReportCards.Processes']
+                ],
+                ];
+            }
+        }else{
+
+            $navSix = [
+                    'Administration.Performance' => [
+                    'title' => 'Performance',
+                    'parent' => 'Administration',
+                    'link' => false
+                ],
+
+                'Competencies.Templates' => [
+                    'title' => 'Competencies',
+                    'parent' => 'Administration.Performance',
+                    'params' => ['plugin' => 'Competency'],
+                    'selected' => ['Competencies.Templates',
+                        'Competencies.Items',
+                        'Competencies.Criterias',
+                        'Competencies.Periods',
+                        'Competencies.GradingTypes']
+                ],
+
+                'Outcomes.Templates' => [
+                    'title' => 'Outcomes',
+                    'parent' => 'Administration.Performance',
+                    'params' => ['plugin' => 'Outcome'],
+                    'selected' => ['Outcomes.Templates',
+                        'Outcomes.Criterias',
+                        'Outcomes.Periods',
+                        'Outcomes.GradingTypes',
+                        'Outcomes.ImportOutcomeTemplates']
+                ],
+
+                'Assessments.Assessments' => [
+                    'title' => 'Assessments',
+                    'parent' => 'Administration.Performance',
+                    'params' => ['plugin' => 'Assessment'],
+                    'selected' => ['Assessments.Assessments',
+                        'Assessments.AssessmentPeriods',
+                        'Assessments.GradingTypes']
+                ],
+
+                'ReportCards.Templates' => [
+                    'title' => 'Report Cards',
+                    'parent' => 'Administration.Performance',
+                    'params' => ['plugin' => 'ReportCard'],
+                    'selected' => ['ReportCards.Templates',
+                        'ReportCards.ReportCardEmail',
+                        'ReportCards.Processes']
+                ],
+
+            ];
+        }
+        return $navSix;
+    }
+
+    //POCOR-7527
+    private function getAdminstrationExaminationNav()
+    {
+        $session = $this->request->session();
+        $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        $uId = $this->controller->paramsDecode($userId)['id'];
+        $users = TableRegistry::get('security_users');
+        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
+                    $users->aliasField('id') => $uId])->first();
+
+        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
+        $securityFunctions = TableRegistry::get('security_functions');
+        $securityRole = TableRegistry::get('security_roles');
+        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $groupUserRecords = $GroupUsers->find()
+            ->matching('SecurityGroups')
+            ->matching('SecurityRoles')
+            ->where([$GroupUsers->aliasField('security_user_id') => $uId])
+            ->group([
+                $GroupUsers->aliasField('security_group_id'),
+                $GroupUsers->aliasField('security_role_id')
+            ])
+            ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
+            ->all();
+            $rowData = [];
+            $rowId = [];
+        foreach ($groupUserRecords as $obj) {
+            $rowData[] = $obj->role_name;
+            $rowId[] = $obj->id;
+        }
+
+        if(!empty($rowId)){
+            $SecurityExaminationsFunctions = $SecurityRoleFunctions->find()
+                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                        [
+                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                        ]
+                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
+                    $securityFunctions->aliasField('category') => 'Examinations',$securityFunctions->aliasField('module') => 'Administration',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+        }
+        $navseven = [];
+        if(empty($userinfo)){
+            if(!empty($SecurityExaminationsFunctions)){
+                $navseven = [
+                'Administration.Examinations' => [
+                    'title' => 'Examinations',
+                    'parent' => 'Administration',
+                    'link' => false,
+                ],
+                'Examinations.Exams' => [
+                    'title' => 'Exams',
+                    'parent' => 'Administration.Examinations',
+                    'params' => ['plugin' => 'Examination'],
+                    'selected' => ['Examinations.Exams',
+                        'Examinations.GradingTypes']
+                ],
+                'Examinations.ExamCentres' => [
+                    'title' => 'Centres',
+                    'parent' => 'Administration.Examinations',
+                    'params' => ['plugin' => 'Examination'],
+                    'selected' => ['Examinations.ExamCentres',
+                        'Examinations.ExamCentreRooms',
+                        'Examinations.ExamCentreExams',
+                        'Examinations.ExamCentreSubjects',
+                        'Examinations.ExamCentreStudents',
+                        'Examinations.ExamCentreInvigilators',
+                        'Examinations.ExamCentreLinkedInstitutions',
+                        'Examinations.ImportExaminationCentreRooms']
+                ],
+                'Examinations.RegisteredStudents' => [
+                    'title' => 'Students',
+                    'parent' => 'Administration.Examinations',
+                    'params' => ['plugin' => 'Examination'],
+                    'selected' => ['Examinations.RegisteredStudents',
+                        'Examinations.RegistrationDirectory',
+                        'Examinations.NotRegisteredStudents']
+                ],
+                'Examinations.ExamResults' => [
+                    'title' => 'Results',
+                    'parent' => 'Administration.Examinations',
+                    'params' => ['plugin' => 'Examination'],
+                    'selected' => ['Examinations.ExamResults',
+                        'Examinations.Results',
+                        'Examinations.ImportResults']
+                ],
+            ];
+        }
+        }else{
+            $navseven = [
+                'Administration.Examinations' => [
+                    'title' => 'Examinations',
+                    'parent' => 'Administration',
+                    'link' => false,
+                ],
+                'Examinations.Exams' => [
+                    'title' => 'Exams',
+                    'parent' => 'Administration.Examinations',
+                    'params' => ['plugin' => 'Examination'],
+                    'selected' => ['Examinations.Exams',
+                        'Examinations.GradingTypes']
+                ],
+                'Examinations.ExamCentres' => [
+                    'title' => 'Centres',
+                    'parent' => 'Administration.Examinations',
+                    'params' => ['plugin' => 'Examination'],
+                    'selected' => ['Examinations.ExamCentres',
+                        'Examinations.ExamCentreRooms',
+                        'Examinations.ExamCentreExams',
+                        'Examinations.ExamCentreSubjects',
+                        'Examinations.ExamCentreStudents',
+                        'Examinations.ExamCentreInvigilators',
+                        'Examinations.ExamCentreLinkedInstitutions',
+                        'Examinations.ImportExaminationCentreRooms']
+                ],
+                'Examinations.RegisteredStudents' => [
+                    'title' => 'Students',
+                    'parent' => 'Administration.Examinations',
+                    'params' => ['plugin' => 'Examination'],
+                    'selected' => ['Examinations.RegisteredStudents',
+                        'Examinations.RegistrationDirectory',
+                        'Examinations.NotRegisteredStudents']
+                ],
+                'Examinations.ExamResults' => [
+                    'title' => 'Results',
+                    'parent' => 'Administration.Examinations',
+                    'params' => ['plugin' => 'Examination'],
+                    'selected' => ['Examinations.ExamResults',
+                        'Examinations.Results',
+                        'Examinations.ImportResults']
+                ],
+
+            ];
+        }
+        return $navseven;
+    }
+
+    //POCOR-7527
+    private function getAdminstrationScholarshipNav()
+    {
+        $session = $this->request->session();
+        $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        $uId = $this->controller->paramsDecode($userId)['id'];
+        $users = TableRegistry::get('security_users');
+        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
+                    $users->aliasField('id') => $uId])->first();
+
+        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
+        $securityFunctions = TableRegistry::get('security_functions');
+        $securityRole = TableRegistry::get('security_roles');
+        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $groupUserRecords = $GroupUsers->find()
+            ->matching('SecurityGroups')
+            ->matching('SecurityRoles')
+            ->where([$GroupUsers->aliasField('security_user_id') => $uId])
+            ->group([
+                $GroupUsers->aliasField('security_group_id'),
+                $GroupUsers->aliasField('security_role_id')
+            ])
+            ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
+            ->all();
+            $rowData = [];
+            $rowId = [];
+        foreach ($groupUserRecords as $obj) {
+            $rowData[] = $obj->role_name;
+            $rowId[] = $obj->id;
+        }
+        if(!empty($rowId)){
+            $SecurityScholarshipsFunctions = $SecurityRoleFunctions->find()
+                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                        [
+                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                        ]
+                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
+                    $securityFunctions->aliasField('module') => 'Administration',$securityFunctions->aliasField('controller') => 'Scholarships',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+        }
+        $navEight = [];
+        if(empty($userinfo)){
+            if(!empty($SecurityScholarshipsFunctions)){
+                 $navEight = [
+                    'Administration.Scholarships' => [
+                        'title' => 'Scholarships',
+                        'parent' => 'Administration',
+                        'link' => false,
+                    ],
+                    'Scholarships.Scholarships' => [
+                        'title' => 'Details',
+                        'parent' => 'Administration.Scholarships',
+                        'params' => ['plugin' => 'Scholarship'],
+                        'selected' => ['Scholarships.Scholarships',
+                            'ScholarshipAttachmentTypes.index',
+                            'ScholarshipAttachmentTypes.view',
+                            'ScholarshipAttachmentTypes.add',
+                            'ScholarshipAttachmentTypes.edit',
+                            'ScholarshipAttachmentTypes.delete']
+                    ],
+                    'Scholarships.Applications' => [
+                        'title' => 'Applications',
+                        'parent' => 'Administration.Scholarships',
+                        'params' => ['plugin' => 'Scholarship'],
+                        'selected' => ['Scholarships.Applications',
+                            'UsersDirectory.index',
+                            'UsersDirectory.view',
+                            'Scholarships.Identities.index',
+                            'Scholarships.Identities.view',
+                            'Scholarships.Nationalities.index',
+                            'Scholarships.Nationalities.view',
+                            'Scholarships.Contacts.index',
+                            'Scholarships.Contacts.view',
+                            'Scholarships.Guardians.index',
+                            'Scholarships.Guardians.view',
+                            'Scholarships.Histories',
+                            'ScholarshipApplicationInstitutionChoices.index',
+                            'ScholarshipApplicationInstitutionChoices.view',
+                            'ScholarshipApplicationInstitutionChoices.add',
+                            'ScholarshipApplicationInstitutionChoices.edit',
+                            'ScholarshipApplicationInstitutionChoices.delete',
+                            'ScholarshipApplicationAttachments.index',
+                            'ScholarshipApplicationAttachments.view',
+                            'ScholarshipApplicationAttachments.add',
+                            'ScholarshipApplicationAttachments.edit',
+                            'ScholarshipApplicationAttachments.delete']
+                    ],
+                    'ScholarshipRecipients.index' => [
+                        'title' => 'Recipients',
+                        'parent' => 'Administration.Scholarships',
+                        'params' => ['plugin' => 'Scholarship'],
+                        'selected' => ['ScholarshipRecipients.index',
+                            'ScholarshipRecipients.view',
+                            'ScholarshipRecipients.edit',
+                            'ScholarshipRecipientInstitutionChoices.index',
+                            'ScholarshipRecipientInstitutionChoices.view',
+                            'ScholarshipRecipientInstitutionChoices.edit',
+                            'Scholarships.RecipientPaymentStructures',
+                            'Scholarships.RecipientPayments',
+                            'ScholarshipRecipientCollections.index',
+                            'ScholarshipRecipientCollections.view',
+                            'ScholarshipRecipientCollections.add',
+                            'ScholarshipRecipientCollections.edit',
+                            'ScholarshipRecipientCollections.delete',
+                            'ScholarshipRecipientAcademicStandings.index',
+                            'ScholarshipRecipientAcademicStandings.view',
+                            'ScholarshipRecipientAcademicStandings.add',
+                            'ScholarshipRecipientAcademicStandings.edit',
+                            'ScholarshipRecipientAcademicStandings.delete']
+                    ],
+                ];
+            }
+        }else{
+        $navEight = [
+                'Administration.Scholarships' => [
+                    'title' => 'Scholarships',
+                    'parent' => 'Administration',
+                    'link' => false,
+                ],
+                'Scholarships.Scholarships' => [
+                    'title' => 'Details',
+                    'parent' => 'Administration.Scholarships',
+                    'params' => ['plugin' => 'Scholarship'],
+                    'selected' => ['Scholarships.Scholarships',
+                        'ScholarshipAttachmentTypes.index',
+                        'ScholarshipAttachmentTypes.view',
+                        'ScholarshipAttachmentTypes.add',
+                        'ScholarshipAttachmentTypes.edit',
+                        'ScholarshipAttachmentTypes.delete']
+                ],
+                'Scholarships.Applications' => [
+                    'title' => 'Applications',
+                    'parent' => 'Administration.Scholarships',
+                    'params' => ['plugin' => 'Scholarship'],
+                    'selected' => ['Scholarships.Applications',
+                        'UsersDirectory.index',
+                        'UsersDirectory.view',
+                        'Scholarships.Identities.index',
+                        'Scholarships.Identities.view',
+                        'Scholarships.Nationalities.index',
+                        'Scholarships.Nationalities.view',
+                        'Scholarships.Contacts.index',
+                        'Scholarships.Contacts.view',
+                        'Scholarships.Guardians.index',
+                        'Scholarships.Guardians.view',
+                        'Scholarships.Histories',
+                        'ScholarshipApplicationInstitutionChoices.index',
+                        'ScholarshipApplicationInstitutionChoices.view',
+                        'ScholarshipApplicationInstitutionChoices.add',
+                        'ScholarshipApplicationInstitutionChoices.edit',
+                        'ScholarshipApplicationInstitutionChoices.delete',
+                        'ScholarshipApplicationAttachments.index',
+                        'ScholarshipApplicationAttachments.view',
+                        'ScholarshipApplicationAttachments.add',
+                        'ScholarshipApplicationAttachments.edit',
+                        'ScholarshipApplicationAttachments.delete']
+                ],
+                'ScholarshipRecipients.index' => [
+                    'title' => 'Recipients',
+                    'parent' => 'Administration.Scholarships',
+                    'params' => ['plugin' => 'Scholarship'],
+                    'selected' => ['ScholarshipRecipients.index',
+                        'ScholarshipRecipients.view',
+                        'ScholarshipRecipients.edit',
+                        'ScholarshipRecipientInstitutionChoices.index',
+                        'ScholarshipRecipientInstitutionChoices.view',
+                        'ScholarshipRecipientInstitutionChoices.edit',
+                        'Scholarships.RecipientPaymentStructures',
+                        'Scholarships.RecipientPayments',
+                        'ScholarshipRecipientCollections.index',
+                        'ScholarshipRecipientCollections.view',
+                        'ScholarshipRecipientCollections.add',
+                        'ScholarshipRecipientCollections.edit',
+                        'ScholarshipRecipientCollections.delete',
+                        'ScholarshipRecipientAcademicStandings.index',
+                        'ScholarshipRecipientAcademicStandings.view',
+                        'ScholarshipRecipientAcademicStandings.add',
+                        'ScholarshipRecipientAcademicStandings.edit',
+                        'ScholarshipRecipientAcademicStandings.delete']
+                ],
+            ];
+        }
+        return $navEight;
+    }
+
+    //POCOR-7527
+    private function getAdminstrationMoodleNav()
+    {
+        $session = $this->request->session();
+        $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        $uId = $this->controller->paramsDecode($userId)['id'];
+        $users = TableRegistry::get('security_users');
+        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
+                    $users->aliasField('id') => $uId])->first();
+
+        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
+        $securityFunctions = TableRegistry::get('security_functions');
+        $securityRole = TableRegistry::get('security_roles');
+        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $groupUserRecords = $GroupUsers->find()
+            ->matching('SecurityGroups')
+            ->matching('SecurityRoles')
+            ->where([$GroupUsers->aliasField('security_user_id') => $uId])
+            ->group([
+                $GroupUsers->aliasField('security_group_id'),
+                $GroupUsers->aliasField('security_role_id')
+            ])
+            ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
+            ->all();
+            $rowData = [];
+            $rowId = [];
+        foreach ($groupUserRecords as $obj) {
+            $rowData[] = $obj->role_name;
+            $rowId[] = $obj->id;
+        }
+        if(!empty($rowId)){
+            $SecurityMoodleFunctions = $SecurityRoleFunctions->find()
+                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                        [
+                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                        ]
+                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
+                    $securityFunctions->aliasField('category') => 'MoodleApi',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+        }
+        $navMoodle = [];
+        if(empty($userinfo)){
+            if(!empty($SecurityMoodleFunctions)){
+                $navMoodle = [
+                        'Administration.MoodleApi' => [
+                        'title' => 'MoodleApi',
+                        'parent' => 'Administration',
+                        'link' => false,
+                    ],
+                    'MoodleApi.log' => [
+                        'title' => 'Log',
+                        'parent' => 'Administration.MoodleApi',
+                        'selected' => ['MoodleApiLog.index'],
+                        'params' => ['plugin' => 'MoodleApi',
+                            'controller' => 'MoodleApiLog',
+                            'action' => 'index']
+                    ],
+                ];
+            }
+        }else{
+            $navMoodle = [
+                    'Administration.MoodleApi' => [
+                    'title' => 'MoodleApi',
+                    'parent' => 'Administration',
+                    'link' => false,
+                ],
+                'MoodleApi.log' => [
+                    'title' => 'Log',
+                    'parent' => 'Administration.MoodleApi',
+                    'selected' => ['MoodleApiLog.index'],
+                    'params' => ['plugin' => 'MoodleApi',
+                        'controller' => 'MoodleApiLog',
+                        'action' => 'index']
+                ],
+
+            ];
+        }
+        return $navMoodle;
+    }
+
+    //POCOR-7527
+    private function getAdminstrationdataMgtNav()
+    {
+        $session = $this->request->session();
+        $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        $uId = $this->controller->paramsDecode($userId)['id'];
+        $users = TableRegistry::get('security_users');
+        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
+                    $users->aliasField('id') => $uId])->first();
+
+        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
+        $securityFunctions = TableRegistry::get('security_functions');
+        $securityRole = TableRegistry::get('security_roles');
+        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $groupUserRecords = $GroupUsers->find()
+            ->matching('SecurityGroups')
+            ->matching('SecurityRoles')
+            ->where([$GroupUsers->aliasField('security_user_id') => $uId])
+            ->group([
+                $GroupUsers->aliasField('security_group_id'),
+                $GroupUsers->aliasField('security_role_id')
+            ])
+            ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
+            ->all();
+            $rowData = [];
+            $rowId = [];
+        foreach ($groupUserRecords as $obj) {
+            $rowData[] = $obj->role_name;
+            $rowId[] = $obj->id;
+        }
+        if(!empty($rowId)){
+            $SecurityMoodleFunctions = $SecurityRoleFunctions->find()
+                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                        [
+                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
+                        ]
+                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
+                    $securityFunctions->aliasField('category') => 'Archive',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+        }
+        $navdataMgt = [];
+        if(empty($userinfo)){
+            if(!empty($SecurityScholarshipsFunctions)){
+                $navdataMgt = [
+                    'Administration.Archive' => [
+                        'title' => 'Data Management',
+                        'parent' => 'Administration',
+                        'link' => false,
+                    ],
+                    'Archive.Copy' => [
+                        'title' => 'Copy',
+                        'parent' => 'Administration.Archive',
+                        'selected' => ['Archives.CopyData'],
+                        'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
+                            'action' => 'CopyData'],
+                    ],
+                    'Archive.Backup' => [
+                        'title' => 'Backup',
+                        'parent' => 'Administration.Archive',
+                        'selected' => ['Archives.BackupLog'],
+                        'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
+                            'action' => 'BackupLog'],
+                    ],
+                    'Archive.Transfer' => [
+                        'title' => 'Archive',
+                        'parent' => 'Administration.Archive',
+                        'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
+                            'action' => 'Transfer'],
+                        'selected' => ['Archives.Transfer'],
+                    ],
+                ];
+            }
+        }else{
+            $navdataMgt = [
+                'Administration.Archive' => [
+                    'title' => 'Data Management',
+                    'parent' => 'Administration',
+                    'link' => false,
+                ],
+                'Archive.Copy' => [
+                    'title' => 'Copy',
+                    'parent' => 'Administration.Archive',
+                    'selected' => ['Archives.CopyData'],
+                    'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
+                        'action' => 'CopyData'],
+                ],
+                'Archive.Backup' => [
+                    'title' => 'Backup',
+                    'parent' => 'Administration.Archive',
+                    'selected' => ['Archives.BackupLog'],
+                    'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
+                        'action' => 'BackupLog'],
+                ],
+                'Archive.Transfer' => [
+                    'title' => 'Archive',
+                    'parent' => 'Administration.Archive',
+                    'params' => ['plugin' => 'Archive', 'controller' => 'Archives',
+                        'action' => 'Transfer'],
+                    'selected' => ['Archives.Transfer'],
+                ],
+            ];
+        }
+        return $navdataMgt;
+    }
+
 }
