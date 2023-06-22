@@ -6,6 +6,7 @@ use Page\Controller\PageController as BaseController;
 use Cake\ORM\Entity;
 use Page\Model\Entity\PageElement;
 use Cake\Routing\Router;
+use Cake\ORM\TableRegistry;//POCOR-7534
 
 class PageController extends BaseController
 {
@@ -44,6 +45,40 @@ class PageController extends BaseController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
+        //POCOR-7534 Starts
+        $session = $this->request->session();
+        $superAdmin = $session->read('Auth.User.super_admin');
+        if($superAdmin == 0){
+            $UserData = $session->read('Auth.User')['id'];
+            $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+            $userRole = $GroupRoles
+                ->find()
+                ->contain('SecurityRoles')
+                ->order(['SecurityRoles.order'])
+                ->where([
+                    $GroupRoles->aliasField('security_user_id') => $UserData
+                ])
+                ->first();
+            if(!empty($this->request->params['controller'])){
+                $SecurityFunctionsTbl = TableRegistry::get('security_functions');
+                $SecurityFunctionsData = $SecurityFunctionsTbl
+                                ->find()
+                                ->where([
+                                    $SecurityFunctionsTbl->aliasField('controller') => $this->request->params['controller'],
+                                    $SecurityFunctionsTbl->aliasField('module') => 'Administration'
+                                ])->toArray();
+                if(!empty($SecurityFunctionsData)){
+                    foreach ($SecurityFunctionsData as $key => $value) {
+                        $result = $this->checkAuthrizationForRoles($value->id, $userRole->security_role_id);
+                        if($result == 0){
+                            $event->stopPropagation();
+                            $this->Alert->warning('general.notAccess');
+                            return $this->redirect($this->referer());
+                        }
+                    }
+                }
+            }
+        }//POCOR-7534 Ends
 
         $page = $this->Page;
         $request = $this->request;
@@ -62,6 +97,25 @@ class PageController extends BaseController
             }
         }
     }
+    //POCOR-7534 Starts
+    public function checkAuthrizationForRoles($securityFunctionsId, $roleId)
+    {
+        $SecurityRoleFunctionsTbl = TableRegistry::get('security_role_functions');
+        $SecurityRoleFunctionsTblData = $SecurityRoleFunctionsTbl
+                        ->find()
+                        ->where([
+                            $SecurityRoleFunctionsTbl->aliasField('security_role_id') => $roleId,
+                            $SecurityRoleFunctionsTbl->aliasField('security_function_id') => $securityFunctionsId
+                        ])->first();
+        //echo "<pre>"; print_r($SecurityRoleFunctionsTblData); die;
+        $flag = 0;
+        if(!empty($SecurityRoleFunctionsTblData)){
+            if($SecurityRoleFunctionsTblData->_view == 1){
+                $flag = 1;
+            }
+        }
+        return $flag;
+    }//POCOR-7534 Ends
 
     public function beforeRender(Event $event)
     {
