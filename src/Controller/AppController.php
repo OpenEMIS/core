@@ -323,6 +323,7 @@ class AppController extends Controller
                     $result = $this->checkAuthrizationForRoles($SecurityFunctionIds, $RoleIds);
                     if($result == 0){
                         $event->stopPropagation();
+                        $model = 'Dashboard'
                         $this->Alert->warning('general.notAccess');
                         $this->redirect($this->referer());
                     }
@@ -332,6 +333,7 @@ class AppController extends Controller
     }
 
     public function getIdBySecurityFunctionName($actionParam, $controllerParam){
+        $name = '';
         if($actionParam == 'Users' && $controllerParam == 'Securities'){
             $name = 'Users';
         }else if(($actionParam == 'UserGroups' || $actionParam == 'SystemGroups') && $controllerParam == 'Securities'){
@@ -342,10 +344,10 @@ class AppController extends Controller
             $name = 'Accounts';  
         }else if($actionParam == 'UserGroupsList' && $controllerParam == 'Securities'){
             $name = 'User Group List';  
+        }else if($actionParam == 'index' && $controllerParam == 'Credentials'){
+            $name = 'Credentials';  
         }
-
         $module = 'Administration';
-
         $SecurityFunctionsTbl = TableRegistry::get('security_functions');
         $SecurityFunctionsData = $SecurityFunctionsTbl->find()->where([
                                         $SecurityFunctionsTbl->aliasField('name') => $name,
@@ -367,14 +369,12 @@ class AppController extends Controller
                                             $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $securityFunctionsId,
                                             $SecurityRoleFunctionsTbl->aliasField('_view') => 1
                                         ])->toArray();
-        $flag = 0;
+        $dataArray = [];
         if(!empty($SecurityRoleFunctionsTblData)){
-            $dataArray = [];
             foreach ($SecurityRoleFunctionsTblData as $key => $value) {
                 if($value->_view == 1){ $dataArray[] = $value->_view; }
             }
-            $flag = count($dataArray);
         }
-        return $flag;
+        return count($dataArray);
     }//POCOR-7534 ends
 }
