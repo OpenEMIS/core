@@ -48,7 +48,7 @@ class PageController extends BaseController
         //POCOR-7534 Starts comment it only for POCOR-7534 ticket's given urls in task
         $session = $this->request->session();
         $superAdmin = $session->read('Auth.User.super_admin');
-        if($superAdmin == 0){
+        if($superAdmin == 0){ 
             $UserData = $session->read('Auth.User')['id'];
             $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
             $userRole = $GroupRoles->find()
@@ -104,7 +104,7 @@ class PageController extends BaseController
             $name = 'Accounts';  
         }else if($actionParam == 'UserGroupsList' && $controllerParam == 'Securities'){
             $name = 'User Group List';  
-        }else if($actionParam == 'index' && $controllerParam == 'Credentials'){
+        }else if($controllerParam == 'Credentials'){
             $name = 'Credentials';  
         }
 
