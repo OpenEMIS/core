@@ -104,6 +104,8 @@ class PageController extends BaseController
             $name = 'Accounts';  
         }else if($actionParam == 'UserGroupsList' && $controllerParam == 'Securities'){
             $name = 'User Group List';  
+        }else if($actionParam == 'index' && $controllerParam == 'Credentials'){
+            $name = 'Credentials';  
         }
 
         $module = 'Administration';
