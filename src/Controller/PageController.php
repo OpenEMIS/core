@@ -46,7 +46,7 @@ class PageController extends BaseController
     {
         parent::beforeFilter($event);
         //POCOR-7534 Starts comment it only for POCOR-7534 ticket's given urls in task
-        /*$session = $this->request->session();
+        $session = $this->request->session();
         $superAdmin = $session->read('Auth.User.super_admin');
         if($superAdmin == 0){
             $UserData = $session->read('Auth.User')['id'];
@@ -73,7 +73,7 @@ class PageController extends BaseController
                     }
                 }
             }
-        }*///POCOR-7534 Ends
+        }//POCOR-7534 Ends
 
         $page = $this->Page;
         $request = $this->request;
