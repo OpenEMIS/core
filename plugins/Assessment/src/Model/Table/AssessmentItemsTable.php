@@ -264,8 +264,18 @@ class AssessmentItemsTable extends AppTable
             ->order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name']);
         //POCOR-5999 starts
         $query
-            ->formatResults(function (ResultSetInterface $results) use ($InstitutionSubjectStaff, $logged_in_user_id, $super_admin) {
-                return $results->map(function ($row) use ($InstitutionSubjectStaff, $logged_in_user_id, $super_admin) {
+            ->formatResults(function (ResultSetInterface $results) use (
+                $InstitutionSubjectStaff,
+                $logged_in_user_id,
+                $super_admin,
+                $institution_id
+            ) {
+                return $results->map(function ($row) use (
+                    $InstitutionSubjectStaff,
+                    $logged_in_user_id,
+                    $super_admin,
+                    $institution_id
+                ) {
                     $row['education_subject_id'] = $row->education_subject_id;
                     $row['id'] = $row->id;
                     $row['assessment_id'] = $row->assessment_id;
@@ -280,6 +290,10 @@ class AssessmentItemsTable extends AppTable
                         'id' => $row->InstitutionSubjects['id'],
                         'name' => $row->InstitutionSubjects['name']
                     ];
+                    if ($super_admin == 1) {
+                        $row['is_editable'] = 1;
+                        return $row;
+                    }
                     $subjectId = $row->InstitutionSubjects['id'];
                     $data = $InstitutionSubjectStaff->find()
                         ->where([
@@ -287,43 +301,50 @@ class AssessmentItemsTable extends AppTable
                             $InstitutionSubjectStaff->aliasField('institution_subject_id') => $subjectId
                         ])
                         ->toArray();
+                    if (!empty($data)) {
+                        $row['is_editable'] = 1;
+                        return $row;
+                    }
                     //checking whether logged in user is admin or not
                     //POCOR-7432 start
                     $SecurityGroupUsersTable = TableRegistry::get('security_group_users');
+                    $SecurityInstitutionsTable = TableRegistry::get('security_group_institutions');
                     $SecurityRoleFunTable = TableRegistry::get('security_role_functions');
-                    $securityGroupUserData = $SecurityGroupUsersTable->find('all')
-                        ->where([$SecurityGroupUsersTable->aliasField('security_user_id') => $logged_in_user_id])
-                        ->first();
-                    if ($securityGroupUserData) {
-                        $SecurityRoleFunData = $SecurityRoleFunTable->find('all')
-                            ->select(['edit' => $SecurityRoleFunTable->aliasField('_edit')])
-                            ->where(
-                                [
-                                    $SecurityRoleFunTable->aliasField('security_role_id') => $securityGroupUserData->security_role_id,
-                                    $SecurityRoleFunTable->aliasField('security_function_id') => 1015,
+
+                    $securityGroupUserEditAccessCount = $SecurityGroupUsersTable->find('all')
+                            ->select([$SecurityGroupUsersTable->aliasField('security_role_id'),
+                                    'edit' => $SecurityRoleFunTable->aliasField('_edit')
+//                                $SecurityGroupUsersTable->aliasField('id')
                                 ]
                             )
-                            ->first();
-                    }
-                    //POCOR-7432 end
-
-                    if ($super_admin == 1) {
-                        $row['is_editable'] = 1;
-                    } else {
-                        if (!empty($data)) {
-                            $row['is_editable'] = 1;
-                        } else {
-                            //POCOR-7432 start
-                            if ($SecurityRoleFunData->edit == 1) {
+                        -> distinct([$SecurityGroupUsersTable->aliasField('security_role_id'),
+                            'edit'])
+                            ->innerJoin(
+                                [$SecurityInstitutionsTable->alias() => $SecurityInstitutionsTable->table()],
+                                [
+                                    $SecurityInstitutionsTable->aliasField('institution_id = ') . $institution_id,
+                                    $SecurityInstitutionsTable->aliasField('security_group_id = ') . $SecurityGroupUsersTable->aliasField('security_group_id'),
+                                ]
+                            )->where([$SecurityGroupUsersTable->aliasField('security_user_id') => $logged_in_user_id,
+                            ])
+                            ->innerJoin(
+                                [$SecurityRoleFunTable->alias() => $SecurityRoleFunTable->table()],
+                                [
+                                    $SecurityRoleFunTable->aliasField('security_role_id = ') .
+                                    $SecurityGroupUsersTable->aliasField('security_role_id'),
+                                    $SecurityRoleFunTable->aliasField('security_function_id') => 1015,
+                                    $SecurityRoleFunTable->aliasField('_edit') => '1'
+                                ]
+                            )
+                            ->count();
+                    $this->log($securityGroupUserEditAccessCount, 'debug');
+                    if ($securityGroupUserEditAccessCount > 0) {
                                 $row['is_editable'] = 1;
+                                return $row;
                             } else {
                                 $row['is_editable'] = 0;
                             }
-                            //POCOR-7432 end
-
-                        }
-                    }
-
+                    //POCOR-7541 end
                     return $row;
                 });
             });
