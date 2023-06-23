@@ -323,7 +323,6 @@ class AppController extends Controller
                     $result = $this->checkAuthrizationForRoles($SecurityFunctionIds, $RoleIds);
                     if($result == 0){
                         $event->stopPropagation();
-                        $model = 'Dashboard'
                         $this->Alert->warning('general.notAccess');
                         $this->redirect($this->referer());
                     }
