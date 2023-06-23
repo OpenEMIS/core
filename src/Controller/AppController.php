@@ -343,7 +343,7 @@ class AppController extends Controller
             $name = 'Accounts';  
         }else if($actionParam == 'UserGroupsList' && $controllerParam == 'Securities'){
             $name = 'User Group List';  
-        }else if($actionParam == 'index' && $controllerParam == 'Credentials'){
+        }else if($controllerParam == 'Credentials'){
             $name = 'Credentials';  
         }
         $module = 'Administration';
