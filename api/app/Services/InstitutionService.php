@@ -1284,4 +1284,243 @@ class InstitutionService extends Controller
         }
     }
 
+    // POCOR-7394-S starts
+
+    public function getAbsenceReasons()
+    {
+        try {
+            $data = $this->institutionRepository->getAbsenceReasons();
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Absence Reasons List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Absence Reasons List.');
+        }
+    }
+
+    public function getAbsenceTypes()
+    {
+        try {
+            $data = $this->institutionRepository->getAbsenceTypes();
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Absence Types List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Absence Types List.');
+        }
+    }
+
+    public function getAreaAdministratives()
+    {
+        try {
+            $data = $this->institutionRepository->getAreaAdministratives();
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Area Administratives List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Area Administratives List.');
+        }
+    }
+
+    public function getAreaAdministrativesById($areaAdministrativeId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getAreaAdministrativesById($areaAdministrativeId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Area Administrative.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Area Administrative.');
+        }
+    }
+
+    // day 2
+    
+    public function getInstitutionGenders()
+    {
+        try {
+
+            $data = $this->institutionRepository->getInstitutionGenders();
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Genders List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Institution Genders List.');
+        }
+    }
+
+    public function getInstitutionsLocalitiesById($localityId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionsLocalitiesById($localityId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Locality.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Locality.');
+        }
+    }
+
+    public function getInstitutionsOwnershipsById($ownershipId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionsOwnershipsById($ownershipId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Ownership.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Ownership.');
+        }
+    }
+
+    public function getInstitutionSectorsById($sectorId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionSectorsById($sectorId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Sector.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Sector.');
+        }
+    }
+
+    public function getInstitutionProvidersById($providerId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionProvidersById($providerId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Provider.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Provider.');
+        }
+    }
+
+    public function getInstitutionTypesById($typeId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionTypesById($typeId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Type.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Type.');
+        }
+    }
+
+    public function getInstitutionProviderBySectorId($sectorId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionProviderBySectorId($sectorId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Provider By Sector ID.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Provider By Sector ID.');
+        }
+    }
+
+    public function getMealBenefits($request)
+    {
+        try {
+            $data = $this->institutionRepository->getMealBenefits($request);
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Meal Benefits List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Meal Benefits List.');
+        }
+    }
+
+    public function getMealProgrammes($request)
+    {
+        try {
+            $data = $this->institutionRepository->getMealProgrammes($request);
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Meal Programmes List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Meal Programmes List.');
+        }
+    }
+    
+    
+    // public function getStudentAttendances($institutionId)
+    // {
+    //     try {
+    //         $data = $this->institutionRepository->getStudentAttendances($institutionId);
+
+    //         return $data;
+    //     } catch (\Exception $e) {
+    //         Log::error(
+    //             'Failed to get Students Attendance List.',
+    //             ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+    //         );
+
+    //         return $this->sendErrorResponse('Failed to get Students Attendance List.');
+    //     }
+    // }
+
+    // POCOR-7394-S ends
+
 }

@@ -49,6 +49,10 @@ Route::group(
         Route::get('institutions/grades/summaries', 'InstitutionController@getGradeSummariesList');
         Route::get('institutions/{id}/grades/summaries', 'InstitutionController@getInstitutionGradeSummariesList');
 
+        // POCOR-7394 starts
+        Route::get('institutions/genders', 'InstitutionController@getInstitutionGenders');
+        // POCOR-7394 ends
+
         Route::get('institutions/{id}/grades/student-nationality-summaries', 'InstitutionController@getInstitutionGradeStudentNationalitySummariesList');
 
 
@@ -91,6 +95,9 @@ Route::group(
 
 
         Route::get('users', 'UserController@getUsersList');
+         // POCOR-7394 starts
+        // Route::get('users/genders/', 'UserController@getUsersGenders');
+        // POCOR-7394 ends
         Route::get('users/{userId}', 'UserController@getUsersData');
 
 
@@ -164,6 +171,30 @@ Route::group(
         Route::get('area-administrative/display-address-area-level', 'InstitutionController@displayAddressAreaLevel');
 
         Route::get('area-administrative/display-birthplace-area-level', 'InstitutionController@displayBirthplaceAreaLevel');
+
+        // POCOR-7394-S starts
+
+        Route::get('absence-reasons', 'InstitutionController@getAbsenceReasons'); //need more work like _fields, _limit, _order
+        Route::get('absence-types', 'InstitutionController@getAbsenceTypes'); //need more work like _limit, _finder
+        Route::get('area-administratives', 'InstitutionController@getAreaAdministratives'); //need more work like _action, _contain, level, _limit
+        Route::get('area-administratives/{areaadministrativeId}', 'InstitutionController@getAreaAdministrativesById');
+
+        Route::get('institutions/localities/{localitiesId}', 'InstitutionController@getInstitutionsLocalitiesById');
+        Route::get('institutions/ownerships/{ownershipId}', 'InstitutionController@getInstitutionsOwnershipsById');
+        Route::get('institutions/sectors/{sectorId}', 'InstitutionController@getInstitutionSectorsById');
+        Route::get('institutions/providers/{providersId}', 'InstitutionController@getInstitutionProvidersById');
+        Route::get('institutions/types/{typesId}', 'InstitutionController@getInstitutionTypesById');
+        Route::get('institutions/provider/{sectorId}', 'InstitutionController@getInstitutionProviderBySectorId');
+
+        Route::get('meal-benefits', 'InstitutionController@getMealBenefits'); //need more work like _fields, _order, _limit, 
+        Route::get('meal-programmes', 'InstitutionController@getMealProgrammes'); //need more work like _fields, _limit,
+
+        
+
+
+        // Route::get('institutions/{institutionId}/students/attendances', 'InstitutionController@getStudentAttendances');
+
+        // POCOR-7394-S ends
 
     }
 );
