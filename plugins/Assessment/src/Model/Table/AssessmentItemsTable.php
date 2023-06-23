@@ -337,7 +337,7 @@ class AssessmentItemsTable extends AppTable
                                 ]
                             )
                             ->count();
-                    $this->log($securityGroupUserEditAccessCount, 'debug');
+//                    $this->log($securityGroupUserEditAccessCount, 'debug');
                     if ($securityGroupUserEditAccessCount > 0) {
                                 $row['is_editable'] = 1;
                                 return $row;
