@@ -128,7 +128,12 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     var allSubjectsPermission = response[0];
                     var mySubjectsPermission = response[1];
                     var isHomeOrSecondary = response[2];
-
+                    // console.log('allSubjectsPermission');
+                    // console.log(allSubjectsPermission);
+                    // console.log('mySubjectsPermission');
+                    // console.log(mySubjectsPermission);
+                    // console.log('isHomeOrSecondary');
+                    // console.log(isHomeOrSecondary);
                     // Only get assessment items that are available for the class
                     var assessmentSubjects = AssessmentItemsTable
                         .select()
@@ -138,6 +143,8 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                             academic_period_id: academic_period_id,
                             institution_id: institution_id
                         });
+                    // console.log('assessmentSubjects');
+                    // console.log(JSON.stringify(assessmentSubjects));
 
                     // For no subjects
                     var fail = function (response, deferred) {
@@ -146,7 +153,8 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
                     // For returning of results
                     var success = function (response, deferred) {
-
+                        // console.log('success');
+                        // console.log(JSON.stringify(response));
                         var items = response.data.data;
 
                         if (angular.isObject(items) && items.length > 0) {
@@ -183,7 +191,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
                                 } else {
                                     assessmentSubjects = assessmentSubjects
-                                        .find('CopyStaffSubjects', {class_id: classId, staff_id: security_user_id})
+                                        .find('CopyStaffSubjects', {class_id: class_id, staff_id: security_user_id})
                                         .ajax({success: success, defer: true});
 
                                 }
@@ -206,7 +214,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 }, handleError);
 
             function checkAllMyHomeSecondaryPermissions () {
-                console.log('checkAllMyHomeSecondaryPermissions');
+                // console.log('checkAllMyHomeSecondaryPermissions');
                 var promises = [];
 
 
@@ -221,7 +229,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             };
 
             function handleGetPermissions (response) {
-                console.log('handleGetPermissions');
+                // console.log('handleGetPermissions');
                 is_super_admin = response[0];
                 security_user_id = response[1];
                 return true;
