@@ -51,6 +51,9 @@ function InstitutionsResultsController($q,
             .then(
                 handleSuccessGetAssessment,
                 handleError)
+            .then(
+                getAssessmentTerms,
+                handleError)
             // getSubjects
             .then(
                 handleSuccessGetAssessmentTerms,
@@ -69,12 +72,15 @@ function InstitutionsResultsController($q,
         function handleSuccessGetAssessment(result) {
             // console.log('handleSuccessGetAssessment');
             // console.log(JSON.stringify(result));
-            var promise;
             var assessment = result.data;
             $scope.assessment = assessment;
             $scope.academic_period_id = assessment.academic_period_id;
             $scope.education_grade_id = assessment.education_grade_id;
-
+        }
+        function getAssessmentTerms() {
+            // console.log('getAssessmentTerms');
+            // console.log(JSON.stringify(result));
+            var promise;
             promise = InstitutionsResultsSvc.getAssessmentTerms($scope.assessment_id);
             return promise.then(function (result) {
                 return result;
