@@ -96,7 +96,7 @@ Route::group(
 
         Route::get('users', 'UserController@getUsersList');
          // POCOR-7394 starts
-         Route::get('users/genders', 'UserController@getUsersGender'); //need more work like  _limit,
+         Route::get('users/genders', 'UserController@getUsersGender');
          // POCOR-7394 ends
          Route::get('users/{userId}', 'UserController@getUsersData');
 
@@ -174,9 +174,9 @@ Route::group(
 
         // POCOR-7394-S starts
 
-        Route::get('absence-reasons', 'InstitutionController@getAbsenceReasons'); //need more work like _fields, _limit, _order
-        Route::get('absence-types', 'InstitutionController@getAbsenceTypes'); //need more work like _limit, _finder
-        Route::get('area-administratives', 'InstitutionController@getAreaAdministratives'); //need more work like _action, _contain, level, _limit
+        Route::get('absence-reasons', 'InstitutionController@getAbsenceReasons');
+        Route::get('absence-types', 'InstitutionController@getAbsenceTypes');
+        Route::get('area-administratives', 'InstitutionController@getAreaAdministratives');
         Route::get('area-administratives/{areaadministrativeId}', 'InstitutionController@getAreaAdministrativesById');
 
         Route::get('institutions/localities/{localitiesId}', 'InstitutionController@getInstitutionsLocalitiesById');
@@ -186,13 +186,8 @@ Route::group(
         Route::get('institutions/types/{typesId}', 'InstitutionController@getInstitutionTypesById');
         Route::get('institutions/provider/{sectorId}', 'InstitutionController@getInstitutionProviderBySectorId');
 
-        Route::get('meal-benefits', 'InstitutionController@getMealBenefits'); //need more work like _fields, _order, _limit, 
-        Route::get('meal-programmes', 'InstitutionController@getMealProgrammes'); //need more work like _fields, _limit,
-
-        
-
-
-        // Route::get('institutions/{institutionId}/students/attendances', 'InstitutionController@getStudentAttendances');
+        Route::get('meal-benefits', 'InstitutionController@getMealBenefits');
+        Route::get('meal-programmes', 'InstitutionController@getMealProgrammes');
 
         // POCOR-7394-S ends
 
