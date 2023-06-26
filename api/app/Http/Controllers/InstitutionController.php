@@ -896,11 +896,11 @@ class InstitutionController extends Controller
 
     // POCOR-7394-S starts
 
-    public function getAbsenceReasons()
+    public function getAbsenceReasons(Request $request)
     {
         try {
             
-            $data = $this->institutionService->getAbsenceReasons();
+            $data = $this->institutionService->getAbsenceReasons($request);
             return $this->sendSuccessResponse("Absence Reasons List Found", $data);
             
         } catch (\Exception $e) {
@@ -913,11 +913,11 @@ class InstitutionController extends Controller
         }
     }
 
-    public function getAbsenceTypes()
+    public function getAbsenceTypes(Request $request)
     {
         try {
             
-            $data = $this->institutionService->getAbsenceTypes();
+            $data = $this->institutionService->getAbsenceTypes($request);
             return $this->sendSuccessResponse("Absence Types List Found", $data);
             
         } catch (\Exception $e) {
@@ -931,11 +931,11 @@ class InstitutionController extends Controller
     }
 
 
-    public function getAreaAdministratives()
+    public function getAreaAdministratives(Request $request)
     {
         try {
             
-            $data = $this->institutionService->getAreaAdministratives();
+            $data = $this->institutionService->getAreaAdministratives($request);
             return $this->sendSuccessResponse("Area Administratives List Found", $data);
             
         } catch (\Exception $e) {
@@ -971,8 +971,6 @@ class InstitutionController extends Controller
             return $this->sendErrorResponse('Area Administrative Not Found');
         }
     }
-
-    // day 2
     
     public function getInstitutionGenders()
     {
@@ -1163,24 +1161,6 @@ class InstitutionController extends Controller
             return $this->sendErrorResponse('Meal Programmes List Not Found');
         }
     }
-
-
-    // public function getStudentAttendances(int $institutionId)
-    // {
-    //     try {
-            
-    //         $data = $this->institutionService->getStudentAttendances($institutionId);
-    //         return $this->sendSuccessResponse("Students Attendance List Found", $data);
-            
-    //     } catch (\Exception $e) {
-    //         Log::error(
-    //             'Failed to fetch Students Attendance List from DB',
-    //             ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-    //         );
-
-    //         return $this->sendErrorResponse('Students Attendance List Not Found');
-    //     }
-    // }
 
     // POCOR-7394-S ends
 }
