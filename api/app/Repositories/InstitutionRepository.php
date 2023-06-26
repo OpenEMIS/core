@@ -1836,11 +1836,26 @@ class InstitutionRepository extends Controller
 
     // POCOR-7394-S starts
 
-    public function getAbsenceReasons()
+    public function getAbsenceReasons($request)
     {
         try {
-                $absenceReasons = AbsenceReasons::get();
-                return $absenceReasons;
+                $params = $request->all();
+
+
+                $limit = config('constants.defaultPaginateLimit');
+
+                if(isset($params['limit'])){
+                $limit = $params['limit'];
+                }
+
+                $absenceReasons = new AbsenceReasons();
+                if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $absenceReasons = $absenceReasons->orderBy($col, $orderBy);
+                }
+                $list = $absenceReasons->paginate($limit);
+                return $list;
         
             } catch (\Exception $e) {
             Log::error(
@@ -1852,11 +1867,20 @@ class InstitutionRepository extends Controller
         }
     }
 
-    public function getAbsenceTypes()
+    public function getAbsenceTypes($request)
     {
         try {
-                $absenceTypes = AbsenceTypes::get();
-                return $absenceTypes;
+
+            $params = $request->all();
+
+                $limit = config('constants.defaultPaginateLimit');
+
+                if(isset($params['limit'])){
+                $limit = $params['limit'];
+                }
+                $absenceTypes = new AbsenceTypes();
+                $list = $absenceTypes->paginate($limit);
+                return $list;
         
             } catch (\Exception $e) {
             Log::error(
@@ -1868,18 +1892,27 @@ class InstitutionRepository extends Controller
         }
     }
 
-    public function getAreaAdministratives()
+    public function getAreaAdministratives($request)
     {
         try {
-                $areaAdministratives = AreaAdministratives::get();
-                return $areaAdministratives;
+            $params = $request->all();
+
+                $areaAdministratives = AreaAdministratives::with('areaAdministrativeLevels');
+                $limit = config('constants.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $list = $areaAdministratives->paginate($limit);
+            return $list;
         
             } catch (\Exception $e) {
             Log::error(
                 'Failed to get Area Administratives List.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            
             return $this->sendErrorResponse('Failed to get Area Administratives List.');
         }
     }
@@ -1910,8 +1943,6 @@ class InstitutionRepository extends Controller
             return $this->sendErrorResponse('Failed to get Area Administrative.');
         }
     }
-
-    // day 2
 
     public function getInstitutionGenders()
     {
@@ -2095,8 +2126,24 @@ class InstitutionRepository extends Controller
     public function getMealBenefits($request)
     {
         try {
-                $mealBenefits = MealBenefits::get();
-                return $mealBenefits;
+            
+                $params = $request->all();
+
+
+                $limit = config('constants.defaultPaginateLimit');
+
+                if(isset($params['limit'])){
+                $limit = $params['limit'];
+                }
+
+                $mealBenefits = new MealBenefits();
+                if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $mealBenefits = $mealBenefits->orderBy($col, $orderBy);
+                }
+                $list = $mealBenefits->paginate($limit);
+                return $list;
         
             } catch (\Exception $e) {
             Log::error(
@@ -2111,8 +2158,15 @@ class InstitutionRepository extends Controller
     public function getMealProgrammes($request)
     {
         try {
-                $mealProgrammes = MealProgrammes::get();
-                return $mealProgrammes;
+                
+                $limit = config('constants.defaultPaginateLimit');
+
+                if(isset($params['limit'])){
+                $limit = $params['limit'];
+                }
+                $mealProgrammes = new MealProgrammes();
+                $list = $mealProgrammes->paginate($limit);
+                return $list;
         
             } catch (\Exception $e) {
             Log::error(
@@ -2123,25 +2177,6 @@ class InstitutionRepository extends Controller
             return $this->sendErrorResponse('Failed to get Meal Programmes List.');
         }
     }
-
-
-
-    // public function getStudentAttendances($institutionId)
-    // {
-    //     try {
-    //             // $lists = AbsenceTypes::get();
-    //             // return $lists;
-    //             dd("SAM");
-        
-    //         } catch (\Exception $e) {
-    //         Log::error(
-    //             'Failed to get Students Attendance List.',
-    //             ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-    //         );
-
-    //         return $this->sendErrorResponse('Failed to get Students Attendance List.');
-    //     }
-    // }
 
     // POCOR-7394-S ends
 }

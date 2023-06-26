@@ -1286,10 +1286,10 @@ class InstitutionService extends Controller
 
     // POCOR-7394-S starts
 
-    public function getAbsenceReasons()
+    public function getAbsenceReasons($request)
     {
         try {
-            $data = $this->institutionRepository->getAbsenceReasons();
+            $data = $this->institutionRepository->getAbsenceReasons($request);
 
             return $data;
         } catch (\Exception $e) {
@@ -1302,10 +1302,10 @@ class InstitutionService extends Controller
         }
     }
 
-    public function getAbsenceTypes()
+    public function getAbsenceTypes($request)
     {
         try {
-            $data = $this->institutionRepository->getAbsenceTypes();
+            $data = $this->institutionRepository->getAbsenceTypes($request);
 
             return $data;
         } catch (\Exception $e) {
@@ -1318,10 +1318,10 @@ class InstitutionService extends Controller
         }
     }
 
-    public function getAreaAdministratives()
+    public function getAreaAdministratives($request)
     {
         try {
-            $data = $this->institutionRepository->getAreaAdministratives();
+            $data = $this->institutionRepository->getAreaAdministratives($request);
 
             return $data;
         } catch (\Exception $e) {
@@ -1350,8 +1350,6 @@ class InstitutionService extends Controller
             return $this->sendErrorResponse('Failed to get Area Administrative.');
         }
     }
-
-    // day 2
     
     public function getInstitutionGenders()
     {
@@ -1503,23 +1501,6 @@ class InstitutionService extends Controller
             return $this->sendErrorResponse('Failed to get Meal Programmes List.');
         }
     }
-    
-    
-    // public function getStudentAttendances($institutionId)
-    // {
-    //     try {
-    //         $data = $this->institutionRepository->getStudentAttendances($institutionId);
-
-    //         return $data;
-    //     } catch (\Exception $e) {
-    //         Log::error(
-    //             'Failed to get Students Attendance List.',
-    //             ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-    //         );
-
-    //         return $this->sendErrorResponse('Failed to get Students Attendance List.');
-    //     }
-    // }
 
     // POCOR-7394-S ends
 
