@@ -96,9 +96,9 @@ Route::group(
 
         Route::get('users', 'UserController@getUsersList');
          // POCOR-7394 starts
-        // Route::get('users/genders/', 'UserController@getUsersGenders');
-        // POCOR-7394 ends
-        Route::get('users/{userId}', 'UserController@getUsersData');
+         Route::get('users/genders', 'UserController@getUsersGender'); //need more work like  _limit,
+         // POCOR-7394 ends
+         Route::get('users/{userId}', 'UserController@getUsersData');
 
 
         Route::get('institutions/{id}/staff', 'InstitutionController@getInstitutionStaffList');
