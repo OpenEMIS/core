@@ -53,7 +53,8 @@ class InstitutionRepository extends Controller
                 $limit = $params['limit'];
             }
             
-            $institutions = new Institutions();
+            //$institutions = new Institutions();
+            $institutions = Institutions::with('institutionLocalities', 'institutionOwnerships', 'institutionProviders', 'institutionSectors', 'institutionTypes', 'institutionStatus', 'institutionGender');
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
@@ -70,7 +71,7 @@ class InstitutionRepository extends Controller
                 }
                 $resp[] = $d;
             }
-
+            
             $list['data'] = $resp;
             return $list;
         } catch (\Exception $e) {
@@ -87,7 +88,8 @@ class InstitutionRepository extends Controller
     public function getInstitutionData($id)
     {
         try {
-            $institution = Institutions::where('id', $id)->first();
+            $institution = Institutions::with('institutionLocalities', 'institutionOwnerships', 'institutionProviders', 'institutionSectors', 'institutionTypes', 'institutionStatus', 'institutionGender')->where('id', $id)->first();
+            
             
             return $institution;
         } catch (\Exception $e) {
@@ -1745,8 +1747,7 @@ class InstitutionRepository extends Controller
             $configItem = ConfigItem::where('code', 'address_area_level')->first();
             if($configItem){
                 $val = $configItem->value;
-                $areaLevel = AreaAdministratives::where('area_administrative_level_id', $val)->get();
-                
+                $areaLevel = AreaAdministratives::where('area_administrative_level_id', $val)->orderBy('name', 'ASC')->get();
             }
             return $areaLevel;
             
@@ -1771,7 +1772,7 @@ class InstitutionRepository extends Controller
             $configItem = ConfigItem::where('code', 'birthplace_area_level')->first();
             if($configItem){
                 $val = $configItem->value;
-                $areaLevel = AreaAdministratives::where('area_administrative_level_id', $val)->get();
+                $areaLevel = AreaAdministratives::where('area_administrative_level_id', $val)->orderBy('name', 'ASC')->get();
                 
             }
             return $areaLevel;
