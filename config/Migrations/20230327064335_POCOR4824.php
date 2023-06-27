@@ -24,8 +24,8 @@ class POCOR4824 extends AbstractMigration
             ->addColumn('visible', 'integer', array('limit' => 10, 'default' => '1'))
             ->addColumn('editable', 'integer', array('limit' => 10, 'default' => '1'))
             ->addColumn('default', 'integer', array('limit' => 10, 'default' => '0'))
-            ->addColumn('international_code', 'string', array('limit' => 50, 'default' => NULL))
-            ->addColumn('national_code', 'string', array('limit' => 50, 'default' => NULL))
+            ->addColumn('international_code', 'string', array('limit' => 50, 'default' => NULL, 'null' => true))
+            ->addColumn('national_code', 'string', array('limit' => 50, 'default' => NULL, 'null' => true))
 
             ->addColumn('modified', 'datetime', [
                 'default' => null,
