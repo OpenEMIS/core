@@ -318,7 +318,16 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ])
                 ->first();
                 //POCOR-6838: End
-                
+                //POCOR-7400 start
+                $ExcludedSecurityRoleTable=TableRegistry::get('report_card_excluded_security_roles');
+                $ExcludedSecurityRoleEntity=$ExcludedSecurityRoleTable->find('all')
+                                                                      ->where([
+                                                                        'security_role_id'=> $SecurityRoleFunctionsTableGenerateData->security_role_id,
+                                                                        'report_card_id'=>$reportCard->id
+                                                                      ])
+                                                                      ->toArray();
+                                                                      
+                //POCOR-7400 end
                 if ($this->AccessControl->isAdmin()) {
                     if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                         $buttons['generate'] = [
@@ -351,9 +360,21 @@ class ReportCardStatusesTable extends ControllerActionTable
                                     ];
                         } 
                     }
+                  
+                    //POCOR-7400 start
+                    if($ExcludedSecurityRoleEntity){
+                        
+                            $buttons['generate'] = [
+                            'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
+                            'attr' => $indexAttr,
+                            'url' => $generateUrl
+                            ];
+                        
+                    }
+                    //POCOR-7400 end
                 }
             }
-
+        
             // Publish button, status must be generated
             if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'publish']) && $entity->has('report_card_status') 
                     && ( $entity->report_card_status == self::GENERATED 
@@ -479,11 +500,20 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $entity->status = self::ERROR; //(-1)
                     $entity->modified = $currentTimeZone;//POCOR-6841
                     $ReportCardProcessesTable->save($entity);
+                    $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+			        $StudentsReportCards->updateAll([
+				         'status'=>-1//POCOR-7530
+			        ],['student_id' => $entity->student_id, 'report_card_id'=> $entity->report_card_id]);
+                    
                 }//POCOR-7067 Ends
             }//POCOR-6841 ends
         }
-        $stmtNew = $conn->query("UPDATE institution_students_report_cards INNER JOIN report_card_processes ON institution_students_report_cards.report_card_id = report_card_processes.report_card_id AND institution_students_report_cards.student_id = report_card_processes.student_id AND institution_students_report_cards.institution_id = report_card_processes.institution_id AND institution_students_report_cards.academic_period_id = report_card_processes.academic_period_id AND institution_students_report_cards.education_grade_id = report_card_processes.education_grade_id AND institution_students_report_cards.institution_class_id = report_card_processes.institution_class_id SET institution_students_report_cards.status = report_card_processes.status  where institution_students_report_cards.status In (1,2,3)");//POCOR-7383 added where condition for publish reports
-        $successQQ =$stmtNew->execute();
+
+        //POCOR-7496[START]
+        // $stmtNew = $conn->query("UPDATE institution_students_report_cards INNER JOIN report_card_processes ON institution_students_report_cards.report_card_id = report_card_processes.report_card_id AND institution_students_report_cards.student_id = report_card_processes.student_id AND institution_students_report_cards.institution_id = report_card_processes.institution_id AND institution_students_report_cards.academic_period_id = report_card_processes.academic_period_id AND institution_students_report_cards.education_grade_id = report_card_processes.education_grade_id AND institution_students_report_cards.institution_class_id = report_card_processes.institution_class_id SET institution_students_report_cards.status = report_card_processes.status  where institution_students_report_cards.status In (1,2,3)");//POCOR-7383 added where condition for publish reports
+        // $successQQ =$stmtNew->execute();
+        //POCOR-7496[END]
+
         //END:POCOR-6785
         $this->field('report_queue');
         $this->setFieldOrder(['openemis_no', 'student_id', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
@@ -2085,8 +2115,14 @@ class ReportCardStatusesTable extends ControllerActionTable
                 
                  return false;
             } else {
-                
-                 return true;
+                //POCOR-7400 start
+                $res=$this->getExcludedSecurityRolesData($reportCardId);
+                if($res){
+                  return false;
+                }
+                 //POCOR-7400 end
+              
+                return true;
             }
             
         }
@@ -2187,4 +2223,54 @@ class ReportCardStatusesTable extends ControllerActionTable
         }
     }
     /**POCOR-6836 ends*/  
+    //POCOR-7400 start
+    public function getExcludedSecurityRolesData($report_card_id){
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        
+        $securityGroupInstitutions = TableRegistry::get('Security.securityGroupInstitutions');
+        $SecurityGroupInstitutionsData = $securityGroupInstitutions
+                ->find()        
+                ->where([
+                $securityGroupInstitutions->aliasField('institution_id') =>$this->Session->read('Institution.Institutions.id') ])
+                ->toArray();
+
+        $securityGroupIds = [];
+        if (!empty($SecurityGroupInstitutionsData)) {
+                foreach ($SecurityGroupInstitutionsData as $value) {
+                        $securityGroupIds[] = $value->security_group_id;
+                }
+        }
+
+        $SecurityGroupUsersData = $SecurityGroupUsers
+                ->find()        
+                ->innerJoin([$SecurityRoles->alias() => $SecurityRoles->table()], [
+                    $SecurityRoles->aliasField('id = ') . $SecurityGroupUsers->aliasField('security_role_id')
+                ])
+                ->where([
+                    $SecurityGroupUsers->aliasField('security_group_id IN') => $securityGroupIds,
+                    $SecurityGroupUsers->aliasField('security_user_id IN') =>  $this->Auth->user('id')
+                ])
+                ->group([$SecurityGroupUsers->aliasField('security_role_id')])
+                ->order([$SecurityRoles->aliasField('order') => 'ASC'])
+                ->first();
+
+
+        
+        $ExcludedSecurityRoleTable=TableRegistry::get('report_card_excluded_security_roles');
+        $ExcludedSecurityRoleEntity=$ExcludedSecurityRoleTable->find('all')
+                                                              ->where([
+                                                                'security_role_id'=>$SecurityGroupUsersData->security_role_id,
+                                                                'report_card_id'=> $report_card_id
+                                                              ])->count();
+        
+        if (($ExcludedSecurityRoleEntity > 0)) {                                                      
+                 return true;
+            } else {
+                 return false;
+        }                                                            
+                                                          
+    }
+     //POCOR-7400 end
+
 }
