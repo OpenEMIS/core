@@ -165,6 +165,17 @@ Route::group(
 
         Route::get('area-administrative/display-birthplace-area-level', 'InstitutionController@displayBirthplaceAreaLevel');
 
+        // POCOR-7546 starts
+        Route::get('assessments/items', 'AssessmentController@getAssessmentItemList');
+        Route::get('assessments/periods', 'AssessmentController@getAssessmentPeriodList');
+        Route::get('assessments/items/grading-types', 'AssessmentController@getAssessmentItemGradingTypeList');
+        Route::get('assessments/grading-options', 'AssessmentController@getAssessmentGradingOptionList');
+
+
+        // Route::get('assessments/education-grades', 'AssessmentController@getAssessmentList');
+
+        // POCOR-7546 starts
+
     }
 );
 
