@@ -1,3 +1,19 @@
+### [3.87.4] - 2023-06-23
+- Bug Fixed: Administration/Reports: Users are able to see Administration and Report module even when they have no permissions
+- Bug Fixed: Administration: Student and teacher user can access administration module page when there is no permission enabled
+- Bug Fixed: Institutions > Performances > Assessments : Subject teachers are unable to see/edit their subjects
+- Bug Fixed: Institutions>Performance>Assessments: Admin/demo is unable to edit even it has superadmin permission
+- Bug Fixed: Institutions>Performance>Assessments: Homeroom teacher is unable to edit assessment
+
+### [3.87.3] - 2023-06-21
+- Bug Fixed: Institutions > Performances > Report Cards : System should update status of both institution_student_report_cards and report_card_processes tables
+- Bug Fixed: Institutions>Performance>Assessments: When user changes term in the filter, assessment periods and subjects are not filtered
+- Bug Fixed: API: Institution API is not showing some fields
+- Bug Fixed: Administration>System Setup>API: Student user can access api securities page
+
+### [3.87.2] - 2023-06-20
+- Bug Fixed: Institutions>Performance>Report Cards: Report Card page is not loading or very slow
+
 ### [3.87.1] - 2023-06-19
 - Implemented: Develop a mechanism for past assessment period grades to be modified and to regenerate impacted report cards
 - Implemented: Develop client id UI for all OpenEMIS Core APIs v4
