@@ -1344,6 +1344,7 @@ class DirectoriesTable extends ControllerActionTable
         $result = false;
         $securityUserId = $entity->id ?? 0;
 
+     
         // First count child records and after that delete main record if there is no any child record found
         // Records to delete from tables-
         // institution_class_students (student_id),
@@ -1362,6 +1363,14 @@ class DirectoriesTable extends ControllerActionTable
         // user_special_needs_services (security_user_id)
         // institution_cases (assignee_id)
         // institution_staff_shifts (staff_id)
+        // institution_student_admission (student_id)
+        // institution_student_surveys (student_id)
+        // institution_student_survey_answers (institution_student_survey_id)
+        // institution_subject_students (student_id)
+        // security_group_users  (security_user_id)
+        // student_status_updates (security_user_id)
+
+
 
         if($securityUserId) {
             // count all institution_class_students
@@ -1448,6 +1457,37 @@ class DirectoriesTable extends ControllerActionTable
                 ->find()->where(['security_user_id' => $securityUserId])->count();
             // POCOR-7179[END]
 
+            //POCOR-7540 start
+            // count all institution_student_admission
+            $institutionStudentAdmission = TableRegistry::get('institution_student_admission')
+                ->find()->where(['student_id' => $securityUserId])->count();
+            
+            // count all institution_student_surveys and institution_student_survey_answers
+            $institutionStudentSurveys = TableRegistry::get('institution_student_surveys')
+             ->find()->where(['student_id' => $securityUserId])->toArray();
+
+          
+            $institutionStudentSurveysIds = [];
+            foreach ($institutionStudentSurveys as $s) {
+                $institutionStudentSurveysIds[] = $s->id;
+            }
+
+            $institutionStudentSurveyAnswers = 0;
+            if(count($institutionStudentSurveysIds)) {
+                $institutionStudentSurveyAnswers = TableRegistry::get('institution_student_survey_answers')
+                    ->find()->where(['institution_student_survey_id IN' => $institutionStudentSurveysIds])->count();
+            }
+
+            //count all security_group_users
+            $securityGroupUsers = TableRegistry::get('security_group_users')
+              ->find()->where(['security_user_id' => $securityUserId])->count();
+
+            //count all student_status_updates
+            $studentStatusUpdates = TableRegistry::get(' student_status_updates')
+              ->find()->where(['security_user_id' => $securityUserId])->count();
+            
+            //POCOR-7540 end
+
             if($institutionClassStudents ||
                 $userActivities ||
                 $studentCustomFieldValues ||
@@ -1465,7 +1505,13 @@ class DirectoriesTable extends ControllerActionTable
                 $userSpecialNeedsServices ||
                 $userSpecialNeedsAssessments ||
                 $institutionCases ||
-                $institutionStaffShifts || $userNationalities) {
+                $institutionStaffShifts || $userNationalities ||
+                $institutionStudentAdmission||//POCOR-7540 
+                count($institutionStudentSurveys)||//POCOR-7540
+                $institutionStudentSurveyAnswers||//POCOR-7540
+                $securityGroupUsers||//POCOR-7540
+                $studentStatusUpdates//POCOR-7540
+                ) {
                 $result = true;
             }
         }
