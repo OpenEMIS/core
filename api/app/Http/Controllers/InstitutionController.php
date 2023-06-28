@@ -10,6 +10,7 @@ use App\Http\Requests\ReportCardCommentHomeroomAdd;
 use App\Http\Requests\CompetencyResultsAddRequest;
 use App\Http\Requests\CompetencyCommentAddRequest;
 use App\Http\Requests\CompetencyPeriodCommentAddRequest;
+use App\Http\Requests\DeleteClassAttendanceRequest;
 
 class InstitutionController extends Controller
 {
@@ -1163,4 +1164,49 @@ class InstitutionController extends Controller
     }
 
     // POCOR-7394-S ends
+
+    public function deleteClassAttendance(DeleteClassAttendanceRequest $request)
+    {
+        try {
+            $data = $this->institutionService->deleteClassAttendance($request);
+            if($data == 1){
+                return $this->sendSuccessResponse("Student attendance deleted successfully.");
+            } elseif($data == 2){
+                return $this->sendSuccessResponse("Record not found for selected parameters.");
+            } else {
+                return $this->sendErrorResponse("Student attendance not deleted.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to delete student attendance.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to delete student attendance.');
+        }
+    }
+
+
+    public function deleteStudentAttendance(DeleteClassAttendanceRequest $request, $studentId)
+    {
+        try {
+            $data = $this->institutionService->deleteStudentAttendance($request, $studentId);
+            if($data == 1){
+                return $this->sendSuccessResponse("Student attendance deleted successfully.");
+            } elseif($data == 2){
+                return $this->sendSuccessResponse("Record not found for selected parameters.");
+            }else {
+                return $this->sendErrorResponse("Student attendance not deleted.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to delete student attendance.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to delete student attendance.');
+        }
+    }
 }
