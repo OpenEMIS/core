@@ -10,6 +10,8 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
+use DateTime; // POCOR-7479
+
 // report change in POCOR-7267
 
 class StudentAbsencesTable extends AppTable
@@ -72,6 +74,42 @@ class StudentAbsencesTable extends AppTable
         $securityUsers = TableRegistry::get('security_users');
         $selectedArea = $requestData->area_education_id;
         $conditions = [];
+
+        // POCOR-7479
+        $institutionTypeId = $requestData->institution_type_id;
+        $educationGradeId = $requestData->education_grade_id;
+        $reportStartDate = new DateTime($requestData->report_start_date);
+        $reportEndDate = new DateTime($requestData->report_end_date);
+        $startDate = $reportStartDate->format('Y-m-d');
+        $endDate = $reportEndDate->format('Y-m-d');
+
+
+        $conditions = [];
+        $institutions = TableRegistry::get('Institution.Institutions');
+        $institutionIds = $institutions->find('list', [
+                                                    'keyField' => 'id',
+                                                    'valueField' => 'id'
+                                                ])
+                        ->where(['institution_type_id' => $institutionTypeId])
+                        ->toArray();
+        if ($institutionId > 0) {
+            $conditions[$this->aliasField('institution_id')] = $institutionId;
+        }
+
+        if ($educationGradeId != -1) {
+            $conditions[$this->aliasField('education_grade_id')] = $educationGradeId;
+        }
+
+        if (!empty($startDate)) {
+            $conditions[$this->aliasField('date >=')] = $startDate;
+        }
+
+        if (!empty($startDate)) {
+            $conditions[$this->aliasField('date <=')] = $endDate;
+        }
+
+         // END POCOR-7479
+
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
@@ -90,6 +128,7 @@ class StudentAbsencesTable extends AppTable
             }
                 $conditions['Institutions.area_id IN'] = $allselectedAreas;
         }
+
 
         $join = []; 
         $query
@@ -216,8 +255,7 @@ class StudentAbsencesTable extends AppTable
             ];
             $query->where($conditions)
             ->order(['Institutions.name','education_grades.name','InstitutionClasses.name']);
-            $query->join($join);
-        
+            $query->join($join);      
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)

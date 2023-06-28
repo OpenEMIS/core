@@ -279,6 +279,7 @@ class InstitutionStaffTable extends AppTable
 	     
 	        $AcademicData = $AcademicTable->find()->where(['id'=> $entity->academic_period_id])->first();
             $startDateYear = $AcademicData->start_year;
+            $endDateYear = $AcademicData->end_year; // POCOR-7544
             $edGrade = [];
             if($entity->end_date == null){
                 $subStaffData = $subStaffTable->find()->where(['staff_id'=>$staffId,'institution_id'=>$entity->institution_id,'start_date >' => "$startDateYear-01-01",'start_date <' => "$startDateYear-12-31"])->toArray();
