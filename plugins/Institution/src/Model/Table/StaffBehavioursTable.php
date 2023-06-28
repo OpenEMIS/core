@@ -23,6 +23,10 @@ class StaffBehavioursTable extends ControllerActionTable
     use OptionsTrait;
     use EncodingTrait;
     use MessagesTrait;
+    // Workflow Steps - category
+    const TO_DO = 1; //POCOR-6670
+    const IN_PROGRESS = 2; //POCOR-6670
+    const DONE = 3; //POCOR-6670
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -37,10 +41,13 @@ class StaffBehavioursTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
+        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']); //POCOR-6670
+        $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);//POCOR-6670
+
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Institution.Case');
-
+        $this->addBehavior('Workflow.Workflow');//POCOR-6670
         // POCOR-4047 to get staff profile data
         $this->addBehavior('Institution.StaffProfile');
 
@@ -110,6 +117,9 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->field('action', ['visible' => false]);
         $this->field('time_of_behaviour', ['visible' => false]);
         $this->field('behaviour_classification_id', ['attr' => ['label' => __('Classification')]]); // POCOR-7441
+        $this->field('category_id', ['visible' => false]);//POCOR-6670
+        $this->field('assignee_id', ['visible' => false]);//POCOR-6670
+        $this->field('status_id', ['visible' => true]);//POCOR-6670
 
         $this->fields['staff_id']['sort'] = ['field' => 'Staff.first_name']; // POCOR-2547 adding sort
 
@@ -135,6 +145,8 @@ class StaffBehavioursTable extends ControllerActionTable
 			$extra['toolbarButtons']['help'] = $helpBtn;
 		}
 		// End POCOR-5188
+        $this->setFieldOrder(['status','openemis_no', 'staff_id', 'date_of_behaviour', 'title', 'staff_behaviour_category_id']);//POCOR-6670
+        $this->fields['assignee_id']['sort'] = ['field' => 'Assignees.first_name'];//POCOR-6670
     }
 
 
@@ -149,9 +161,6 @@ class StaffBehavioursTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $extra['elements']['controls'] = ['name' => 'Institution.Behaviours/controls', 'data' => [], 'options' => [], 'order' => 1];
-
-        // Setup period options
-        // $periodOptions = ['0' => __('All Periods')];
         $periodOptions = $this->AcademicPeriods->getYearList();
         if (empty($this->request->query['academic_period_id'])) {
             $this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
@@ -174,7 +183,7 @@ class StaffBehavioursTable extends ControllerActionTable
             $query->find('inPeriod', ['field' => 'date_of_behaviour', 'academic_period_id' => $selectedPeriod]);
         }
 
-        $this->controller->set(compact('periodOptions'));
+        //$this->controller->set(compact('periodOptions'));
 
         // will need to check for search by name: AdvancedNameSearchBehavior
 
@@ -184,12 +193,27 @@ class StaffBehavioursTable extends ControllerActionTable
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
         $extra['options']['sortWhitelist'] = $sortList;
-
+        //POCOR-6670:start
+        $query->contain(['Statuses']);
+        if(!empty($this->request->query('category_id')))
+        {
+            $query->where(['Statuses.category' => $this->request->query('category_id') ]);
+        }
+        //POCOR-6670:end
         // POCOR-2547 sort list of staff and student by name
         if (!isset($this->request->query['sort'])) {
             $query->order([$this->Staff->aliasField('first_name'), $this->Staff->aliasField('last_name')]);
         }
         // end POCOR-2547
+        //POCOR-6670:start
+        if (!empty($selectedPeriod)) {
+            $categories = ['0' => __('All Categories'),'1' => 'To Do','2'=>'In Progress','3'=>'Done'];
+            $query->find('inPeriod', ['field' => 'date_of_behaviour', 'academic_period_id' => $selectedPeriod]);
+        }
+        $selectedCategories = $this->queryString('category_id', $categories);
+        $this->advancedSelectOptions($categories, $selectedCategories);
+        $this->controller->set(compact('periodOptions', 'categories'));
+        //POCOR-6670:end
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -205,9 +229,10 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->field('academic_period_id', ['entity' => $entity]);
         $this->field('staff_id', ['entity' => $entity]);
         $this->field('date_of_behaviour', ['entity' => $entity]);
+        $this->field('assignee_id', ['entity' => $entity]);
         $this->field('staff_behaviour_category_id', ['type' => 'select']);
         $this->field('behaviour_classification_id', ['type' => 'select']);
-        $this->setFieldOrder(['academic_period_id', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour']);
+        $this->setFieldOrder(['academic_period_id', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour','description','action','assignee_id']);//POCOR-6670
     }
 
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -224,7 +249,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->field('behaviour_classification_id', ['entity' => $entity]);
         $this->fields['action']['attr']['value'] = $entity->action; // POCOR-7441
 
-        $this->setFieldOrder(['academic_period_id', 'openemis_no', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour']);
+        $this->setFieldOrder(['academic_period_id', 'openemis_no', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour','description','action','assignee_id']);//POCOR-6670
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
@@ -570,6 +595,107 @@ class StaffBehavioursTable extends ControllerActionTable
         });
         // POCOR-6155 ends
     }
+
+    /**
+     * POCOR-6670 Assignee id
+    */
+    public function onGetAssigneeId(Event $event, Entity $entity)
+    {
+        if ($this->action == 'view') {
+            return $entity->assignee->name;
+        } 
+    }
+
+    /**
+     * POCOR-6670 Assignee id
+     *add assignee dropdown in edit and view page
+    */
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $workflowModel = 'Institutions > Behaviour > Staff';
+            $workflowModelsTable = TableRegistry::get('workflow_models');
+            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workModelId = $Workflows
+                            ->find()
+                            ->select(['id'=>$workflowModelsTable->aliasField('id'),
+                            'workflow_id'=>$Workflows->aliasField('id'),
+                            'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
+                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                                [
+                                    $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
+                                ])
+                            ->where([$workflowModelsTable->aliasField('name')=>$workflowModel])->first();
+            $workflowId = $workModelId->workflow_id;
+            $isSchoolBased = $workModelId->is_school_based;
+            $workflowStepsOptions = $workflowStepsTable
+                            ->find()
+                            ->select([
+                                'stepId'=>$workflowStepsTable->aliasField('id'),
+                            ])
+                            ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
+                            ->first();
+            $stepId = $workflowStepsOptions->stepId;
+            $session = $request->session();
+            if ($session->check('Institution.Institutions.id')) {
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+            $institutionId = $institutionId;
+            $assigneeOptions = [];
+            if (!is_null($stepId)) {
+                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
+                if (!empty($stepRoles)) {
+                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                    $Areas = TableRegistry::get('Area.Areas');
+                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    if ($isSchoolBased) {
+                        if (is_null($institutionId)) {                        
+                            Log::write('debug', 'Institution Id not found.');
+                        } else {
+                            $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
+                            $securityGroupId = $institutionObj->security_group_id;
+                            $areaObj = $institutionObj->area;
+                            // School based assignee
+                            $where = [
+                                'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
+                                        ['Institutions.id' => $institutionId]],
+                                $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
+                            ];
+                            $schoolBasedAssigneeQuery = $SecurityGroupUsers
+                                    ->find('userList', ['where' => $where])
+                                    ->leftJoinWith('SecurityGroups.Institutions');
+                            $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
+                            
+                            // Region based assignee
+                            $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                            $regionBasedAssigneeQuery = $SecurityGroupUsers
+                                        ->find('UserList', ['where' => $where, 'area' => $areaObj]);
+                            
+                            $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
+                            // End
+                            $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
+                        }
+                    } else {
+                        $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                        $assigneeQuery = $SecurityGroupUsers
+                                ->find('userList', ['where' => $where])
+                                ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
+                        $assigneeOptions = $assigneeQuery->toArray();
+                    }
+                }
+            }
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = false;
+            $attr['options'] = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
+            $attr['onChangeReload'] = 'changeStatus';
+            return $attr;
+        }
+    }
+
+
     /*POCOR-5177 starts*/
     private function checkIfCanEditOrDelete($entity) {
         $isEditable = true;
