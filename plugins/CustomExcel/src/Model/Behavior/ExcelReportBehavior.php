@@ -113,6 +113,7 @@ class ExcelReportBehavior extends Behavior
 
 
         $extra['params'] = $params;
+        $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateBeforeGenerate', [$params, $extra], $this); // POCOR-7443
         $extra['vars'] = $this->getVars($params, $extra);
 
 
@@ -158,7 +159,8 @@ class ExcelReportBehavior extends Behavior
 			$StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
 			// save Pdf file
 			$StudentsReportCards->updateAll([
-				'file_content_pdf' => $pdfFileContent
+				'file_content_pdf' => $pdfFileContent,
+                'status'=>3//POCOR-7530
 			], $params);
 			
 			$this->deleteFile($pdfFilePath);
@@ -201,7 +203,6 @@ class ExcelReportBehavior extends Behavior
 
             if ($entity->has('excel_template_name')) {
                 $file = $this->getFile($entity->excel_template);
-
                 // Create a temporary file
                 $filepath = tempnam($extra['path'], $this->config('filename') . '_Template_');
                 $extra['tmp_file_path'] = $filepath;

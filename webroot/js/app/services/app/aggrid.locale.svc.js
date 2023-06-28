@@ -54,6 +54,7 @@ angular.module('aggrid.locale.svc', ['kd.orm.svc'])
         resetColumns: 'Reset Those Columns',
         expandAll: 'Expand All',
         colpseAll: 'Colapse All',
+        colapseAll: 'Colapse All',
         toolPanel: 'Tool Panel',
         // enterprise menu pinning
         pinLeft: 'Pin <<',

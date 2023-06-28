@@ -495,6 +495,7 @@ class AssessmentItemResultsTable extends AppTable
         return $totalMarks;
     }
 
+
     /** 
     * API to get student's subject assessment results data
     * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>

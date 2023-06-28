@@ -1,4 +1,5 @@
 <?php
+
 namespace Assessment\Model\Table;
 
 use ArrayObject;
@@ -79,7 +80,7 @@ class AssessmentItemsTable extends AppTable
                 'rule' => ['decimal', null],
             ])
             ->add('weight', 'ruleWeightRange', [
-                'rule'  => ['range', 0, 2],
+                'rule' => ['range', 0, 2],
                 'last' => true
             ]);
         return $validator;
@@ -114,18 +115,18 @@ class AssessmentItemsTable extends AppTable
             $classId = $options['class_id'];
             $staffId = $options['staff_id'];
             $query->where([
-                    // For subject teachers
-                    'EXISTS (
+                // For subject teachers
+                'EXISTS (
                         SELECT 1
                         FROM institution_subjects InstitutionSubjects
                         INNER JOIN institution_class_subjects InstitutionClassSubjects
-                            ON InstitutionClassSubjects.institution_class_id = '.$classId.'
+                            ON InstitutionClassSubjects.institution_class_id = ' . $classId . '
                             AND InstitutionClassSubjects.institution_subject_id = InstitutionSubjects.id
                         INNER JOIN institution_subject_staff InstitutionSubjectStaff
                             ON InstitutionSubjectStaff.institution_subject_id = InstitutionSubjects.id
-                            AND InstitutionSubjectStaff.staff_id = '.$staffId.'
-                        WHERE InstitutionSubjects.education_subject_id = ' . $this->aliasField('education_subject_id') .')'
-                ]);
+                            AND InstitutionSubjectStaff.staff_id = ' . $staffId . '
+                        WHERE InstitutionSubjects.education_subject_id = ' . $this->aliasField('education_subject_id') . ')'
+            ]);
 
             return $query;
         }
@@ -142,7 +143,7 @@ class AssessmentItemsTable extends AppTable
         $variable = substr($test, 0, strpos($test, "}"));
         $newVaridable = $variable . "}";
         $data = json_decode($newVaridable);
-        $institutionId =  $data->institution_id;
+        $institutionId = $data->institution_id;
         $academinPeriod = $data->academic_period_id;
         $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
         $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
@@ -150,44 +151,44 @@ class AssessmentItemsTable extends AppTable
         $assessmentId = $options['assessment_id'];
         $classId = $options['class_id'];
         $staffSubject = TableRegistry::get('Institution.InstitutionSubjectStaff');
-        
+
         if (isset($options['class_id']) && isset($options['staff_id'])) {
             $classId = $options['class_id'];
             $staffId = $options['staff_id'];
             $query
-                    //->contain('EducationSubjects.InstitutionSubjects')
-                    ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
-                        $ClassSubjects->aliasField('institution_class_id') => $classId
+                //->contain('EducationSubjects.InstitutionSubjects')
+                ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
+                    $ClassSubjects->aliasField('institution_class_id') => $classId
+                ])
+                ->leftJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                    $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
+                    $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
+                ])
+                ->leftJoin(
+                    [$staffSubject->alias() => $staffSubject->table()],
+                    [
+                        $staffSubject->aliasField('institution_subject_id = ') . $ClassSubjects->aliasField('institution_subject_id'),
                     ])
-                    ->leftJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
-                        $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
-                        $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
-                    ])
-                    ->leftJoin(
-                        [$staffSubject->alias() => $staffSubject->table()],
-                        [
-                            $staffSubject->aliasField('institution_subject_id = ') . $ClassSubjects->aliasField('institution_subject_id'),
-                        ])
-                    ->select([
-                        $this->aliasField('education_subject_id'),
-                        $this->aliasField('id'),
-                        $this->aliasField('assessment_id'),
-                        $this->aliasField('weight'),
-                        $this->aliasField('classification'),
-                        $InstitutionSubjects->aliasField('education_subject_id'),
-                        $InstitutionSubjects->aliasField('id'),
-                        $InstitutionSubjects->aliasField('name'),
-                        $educationSubject->aliasField('id'),
-                    ])
-                    ->where([
-                        $this->aliasField('assessment_id') => $assessmentId,
-                        $InstitutionSubjects->aliasField('institution_id') => $institutionId,
-                        $InstitutionSubjects->aliasField('academic_period_id') => $academinPeriod,
-                        $staffSubject->aliasField('staff_id') => $staffId,
-                    ]);
-                
-                return $query;
-            
+                ->select([
+                    $this->aliasField('education_subject_id'),
+                    $this->aliasField('id'),
+                    $this->aliasField('assessment_id'),
+                    $this->aliasField('weight'),
+                    $this->aliasField('classification'),
+                    $InstitutionSubjects->aliasField('education_subject_id'),
+                    $InstitutionSubjects->aliasField('id'),
+                    $InstitutionSubjects->aliasField('name'),
+                    $educationSubject->aliasField('id'),
+                ])
+                ->where([
+                    $this->aliasField('assessment_id') => $assessmentId,
+                    $InstitutionSubjects->aliasField('institution_id') => $institutionId,
+                    $InstitutionSubjects->aliasField('academic_period_id') => $academinPeriod,
+                    $staffSubject->aliasField('staff_id') => $staffId,
+                ]);
+
+            return $query;
+
         }
     }
 
@@ -214,113 +215,136 @@ class AssessmentItemsTable extends AppTable
     }
 
     public function findSubjectNewTab(Query $query, array $options)
-    {   
-        $loggedInUserId = $options['user']['id'];
-        $institutionId =  $options['institution_id'];
-        $academinPeriod = $options['academic_period_id'];
+    {
+//        $this->log('findSubjectNewTab', 'debug');
+//        $this->log($options, 'debug');
+        $logged_in_user_id = $options['user']['id'];
+        $super_admin = $options['user']['super_admin'];
+        $institution_id = $options['institution_id'];
+        $academic_period_id = $options['academic_period_id'];
+        $assessment_id = $options['assessment_id'];
+        $class_id = $options['class_id'];
         $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
         $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-        $educationSubject = TableRegistry::get('Education.EducationSubjects');
+        $EducationSubject = TableRegistry::get('Education.EducationSubjects');
         $Assessments = TableRegistry::get('Assessment.Assessments');
-        $assessmentId = $options['assessment_id'];
-        $classId = $options['class_id'];
-        $staffSubject = TableRegistry::get('Institution.InstitutionSubjectStaff');
-                
-        $query
-                    ->contain('EducationSubjects')
-                    /*POCOR-6183 Starts*/
-                    ->leftJoin([$Assessments->alias() => $Assessments->table()], [
-                        $Assessments->aliasField('id = ') . $this->aliasField('assessment_id')
-                    ])
-                    /*POCOR-6183 Ends*/
-                    ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
-                        $ClassSubjects->aliasField('institution_class_id') => $classId
-                    ])
-                    ->leftJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
-                        $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
-                        $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
-                        $InstitutionSubjects->aliasField('education_grade_id = ') . $Assessments->aliasField('education_grade_id') //POCOR-6183
-                    ])
-                    ->select([
-                        $this->aliasField('education_subject_id'),
-                        $this->aliasField('id'),
-                        $this->aliasField('assessment_id'),
-                        $this->aliasField('weight'),
-                        $this->aliasField('classification'),
-                        $InstitutionSubjects->aliasField('education_subject_id'),
-                        $InstitutionSubjects->aliasField('id'),
-                        $InstitutionSubjects->aliasField('name'),
-                        $educationSubject->aliasField('id')
-                    ])
-                    ->where([
-                        $this->aliasField('assessment_id') => $assessmentId,
-                        $InstitutionSubjects->aliasField('institution_id') => $institutionId,
-                        $InstitutionSubjects->aliasField('academic_period_id') => $academinPeriod,
-                    ])
-                   ->order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name']);
-            //POCOR-5999 starts
-            $query
-                ->formatResults(function (ResultSetInterface $results) use($staffSubject, $loggedInUserId) {
-                    return $results->map(function ($row) use($staffSubject, $loggedInUserId) {
-                        $row['education_subject_id'] = $row->education_subject_id;
-                        $row['id'] = $row->id;
-                        $row['assessment_id'] = $row->assessment_id;
-                        $row['weight'] = $row->weight;
-                        $row['classification'] = $row->classification;
-                        $row['education_subject'] = [
-                            'id' => $row->education_subject->id,
-                            'code_name' => " - "
-                        ];
-                        $row['InstitutionSubjects'] = [
-                            'education_subject_id' => $row->InstitutionSubjects['education_subject_id'],
-                            'id' => $row->InstitutionSubjects['id'],
-                            'name' => $row->InstitutionSubjects['name']
-                        ];
-                    $subjectId = $row->InstitutionSubjects['id'];
-                    $data = $staffSubject->find()
-                            ->where([
-                                $staffSubject->aliasField('staff_id') => $loggedInUserId,
-                                $staffSubject->aliasField('institution_subject_id') => $subjectId
-                            ])
-                            ->toArray();
-                    //checking whether logged in user is admin or not
-                    $UsersTable = TableRegistry::get('User.Users');
-                    $users = $UsersTable->find()->where([$UsersTable->aliasField('id') => $loggedInUserId])->first();
-                    //POCOR-7432 start
-                    $SecurityGroupUsersTable=TableRegistry::get('security_group_users');
-                    $SecurityRoleFunTable=TableRegistry::get('security_role_functions');
-                    $securityGroupUserData=$SecurityGroupUsersTable->find('all')->where([$SecurityGroupUsersTable->aliasField('security_user_id') => $users->id])->first();
-                    if($securityGroupUserData){
-                    $SecurityRoleFunData=$SecurityRoleFunTable->find('all')
-                                                         ->select(['edit'=>$SecurityRoleFunTable->aliasField('_edit')])
-                                                         ->where(
-                                                                [
-                                                                    $SecurityRoleFunTable->aliasField('security_role_id')=>$securityGroupUserData->security_role_id,
-                                                                    $SecurityRoleFunTable->aliasField('security_function_id')=>1015,
-                                                                ]
-                                                          )
-                                                         ->first();
-                                                                }
-                    //POCOR-7432 end
+        $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
 
-                    if (!empty($users) && $users->super_admin == 1) {
+        $query
+            ->select([
+                $this->aliasField('education_subject_id'),
+                $this->aliasField('id'),
+                $this->aliasField('assessment_id'),
+                $this->aliasField('weight'),
+                $this->aliasField('classification'),
+                $InstitutionSubjects->aliasField('education_subject_id'),
+                $InstitutionSubjects->aliasField('id'),
+                $InstitutionSubjects->aliasField('name'),
+                $EducationSubject->aliasField('id')
+            ])
+            ->contain('EducationSubjects')
+            /*POCOR-6183 Starts*/
+            ->leftJoin([$Assessments->alias() => $Assessments->table()], [
+                $Assessments->aliasField('id = ') . $this->aliasField('assessment_id')
+            ])
+            /*POCOR-6183 Ends*/
+            ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
+                $ClassSubjects->aliasField('institution_class_id') => $class_id
+            ])
+            ->leftJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
+                $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
+                $InstitutionSubjects->aliasField('education_grade_id = ') . $Assessments->aliasField('education_grade_id') //POCOR-6183
+            ])
+            ->where([
+                $this->aliasField('assessment_id') => $assessment_id,
+                $InstitutionSubjects->aliasField('institution_id') => $institution_id,
+                $InstitutionSubjects->aliasField('academic_period_id') => $academic_period_id,
+            ])
+            ->order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name']);
+        //POCOR-5999 starts
+        $query
+            ->formatResults(function (ResultSetInterface $results) use (
+                $InstitutionSubjectStaff,
+                $logged_in_user_id,
+                $super_admin,
+                $institution_id
+            ) {
+                return $results->map(function ($row) use (
+                    $InstitutionSubjectStaff,
+                    $logged_in_user_id,
+                    $super_admin,
+                    $institution_id
+                ) {
+                    $row['education_subject_id'] = $row->education_subject_id;
+                    $row['id'] = $row->id;
+                    $row['assessment_id'] = $row->assessment_id;
+                    $row['weight'] = $row->weight;
+                    $row['classification'] = $row->classification;
+                    $row['education_subject'] = [
+                        'id' => $row->education_subject->id,
+                        'code_name' => " - "
+                    ];
+                    $row['InstitutionSubjects'] = [
+                        'education_subject_id' => $row->InstitutionSubjects['education_subject_id'],
+                        'id' => $row->InstitutionSubjects['id'],
+                        'name' => $row->InstitutionSubjects['name']
+                    ];
+                    if ($super_admin == 1) {
                         $row['is_editable'] = 1;
-                    } else {
-                        if (!empty($data)) {
-                            $row['is_editable'] = 1;
-                        } else {
-                            //POCOR-7432 start
-                            if($SecurityRoleFunData->edit==1){
+                        return $row;
+                    }
+                    $subjectId = $row->InstitutionSubjects['id'];
+                    $data = $InstitutionSubjectStaff->find()
+                        ->where([
+                            $InstitutionSubjectStaff->aliasField('staff_id') => $logged_in_user_id,
+                            $InstitutionSubjectStaff->aliasField('institution_subject_id') => $subjectId
+                        ])
+                        ->toArray();
+                    if (!empty($data)) {
+                        $row['is_editable'] = 1;
+                        return $row;
+                    }
+                    //checking whether logged in user is admin or not
+                    //POCOR-7432 start
+                    $SecurityGroupUsersTable = TableRegistry::get('security_group_users');
+                    $SecurityInstitutionsTable = TableRegistry::get('security_group_institutions');
+                    $SecurityRoleFunTable = TableRegistry::get('security_role_functions');
+
+                    $securityGroupUserEditAccessCount = $SecurityGroupUsersTable->find('all')
+                            ->select([$SecurityGroupUsersTable->aliasField('security_role_id'),
+                                    'edit' => $SecurityRoleFunTable->aliasField('_edit')
+//                                $SecurityGroupUsersTable->aliasField('id')
+                                ]
+                            )
+                        -> distinct([$SecurityGroupUsersTable->aliasField('security_role_id'),
+                            'edit'])
+                            ->innerJoin(
+                                [$SecurityInstitutionsTable->alias() => $SecurityInstitutionsTable->table()],
+                                [
+                                    $SecurityInstitutionsTable->aliasField('institution_id = ') . $institution_id,
+                                    $SecurityInstitutionsTable->aliasField('security_group_id = ') . $SecurityGroupUsersTable->aliasField('security_group_id'),
+                                ]
+                            )->where([$SecurityGroupUsersTable->aliasField('security_user_id') => $logged_in_user_id,
+                            ])
+                            ->innerJoin(
+                                [$SecurityRoleFunTable->alias() => $SecurityRoleFunTable->table()],
+                                [
+                                    $SecurityRoleFunTable->aliasField('security_role_id = ') .
+                                    $SecurityGroupUsersTable->aliasField('security_role_id'),
+                                    $SecurityRoleFunTable->aliasField('security_function_id') => 1015,
+                                    $SecurityRoleFunTable->aliasField('_edit') => '1'
+                                ]
+                            )
+                            ->count();
+//                    $this->log($securityGroupUserEditAccessCount, 'debug');
+                    if ($securityGroupUserEditAccessCount > 0) {
                                 $row['is_editable'] = 1;
-                            }
-                            else{
+                                return $row;
+                            } else {
                                 $row['is_editable'] = 0;
                             }
-                             //POCOR-7432 end
-                           
-                        }
-                    }
-
+                    //POCOR-7541 end
                     return $row;
                 });
             });
@@ -374,11 +398,12 @@ class AssessmentItemsTable extends AppTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-       $entity['assessment_items'] = array();
+        $entity['assessment_items'] = array();
     }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-       $entity['assessment_items'] = array();
+        $entity['assessment_items'] = array();
     }
-    
+
 }
