@@ -46,6 +46,10 @@ use App\Models\InstitutionSubjectStaff;
 use App\Models\InstitutionTypes;
 use App\Models\MealBenefits;
 use App\Models\MealProgrammes;
+use App\Models\StudentAttendanceMarkedRecords;
+use App\Models\InstitutionStudentAbsences;
+use App\Models\InstitutionStudentAbsenceDays;
+use App\Models\InstitutionStudentAbsenceDetails;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -2179,5 +2183,127 @@ class InstitutionRepository extends Controller
     }
 
     // POCOR-7394-S ends
+
+    public function deleteClassAttendance($request)
+    {
+        DB::beginTransaction();
+        try {
+            $param = $request->all();
+            
+            $institutionId = $param['institution_id'];
+            $academicPeriodId = $param['academic_period_id'];
+            $institutionClassId = $param['institution_class_id'];
+            $educationGradeId = $param['education_grade_id'];
+            $date = $param['date'];
+            
+            $delete1 = InstitutionStudentAbsenceDetails::where('institution_id', $institutionId)
+                        ->where('academic_period_id', $academicPeriodId)
+                        ->where('institution_class_id', $institutionClassId)
+                        ->where('education_grade_id', $educationGradeId)
+                        ->where('date', $date);
+            if(isset($param['period'])){
+                $delete1 = $delete1->where('period', $param['period']);
+            }
+
+
+            if(isset($param['subject_id'])){
+                $delete1 = $delete1->where('subject_id', $param['subject_id']);
+            }
+
+            $check1 = $delete1->exists();
+                        
+
+            $delete2 = StudentAttendanceMarkedRecords::where('institution_id', $institutionId)
+                        ->where('academic_period_id', $academicPeriodId)
+                        ->where('institution_class_id', $institutionClassId)
+                        ->where('education_grade_id', $educationGradeId)
+                        ->where('date', $date);
+
+            if(isset($param['period'])){
+                $delete2 = $delete2->where('period', $param['period']);
+            }
+
+
+            if(isset($param['subject_id'])){
+                $delete2 = $delete2->where('subject_id', $param['subject_id']);
+            }
+
+            $check2 = $delete2->exists();
+            
+            if($check1 && $check2){
+                $delete1 = $delete1->delete();
+                $delete2 = $delete2->delete();
+
+                DB::commit();
+                return 1;
+            } else {
+                DB::commit();
+                return 2;
+            }
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'Failed to delete student attendance.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to delete student attendance.');
+        }
+    }
+
+
+
+    public function deleteStudentAttendance($request, $studentId)
+    {
+        DB::beginTransaction();
+        try {
+            $param = $request->all();
+
+            $institutionId = $param['institution_id'];
+            $academicPeriodId = $param['academic_period_id'];
+            $institutionClassId = $param['institution_class_id'];
+            $educationGradeId = $param['education_grade_id'];
+            $date = $param['date'];
+            
+
+            $delete1 = InstitutionStudentAbsenceDetails::where('institution_id', $institutionId)
+                        ->where('student_id', $studentId)
+                        ->where('academic_period_id', $academicPeriodId)
+                        ->where('institution_class_id', $institutionClassId)
+                        ->where('education_grade_id', $educationGradeId)
+                        ->where('date', $date);
+
+            if(isset($param['period'])){
+                $delete1 = $delete1->where('period', $param['period']);
+            }
+
+            if(isset($param['subject_id'])){
+                $delete1 = $delete1->where('subject_id', $param['subject_id']);
+            }
+
+            $check1 = $delete1->exists();
+
+            if($check1){
+                $delete1 = $delete1->delete();
+                DB::commit();
+                return 1;
+            } else {
+                DB::commit();
+                return 2;
+            }
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'Failed to delete student attendance.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to delete student attendance.');
+        }
+    }
+
+
 }
 
