@@ -500,11 +500,20 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $entity->status = self::ERROR; //(-1)
                     $entity->modified = $currentTimeZone;//POCOR-6841
                     $ReportCardProcessesTable->save($entity);
+                    $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+			        $StudentsReportCards->updateAll([
+				         'status'=>-1//POCOR-7530
+			        ],['student_id' => $entity->student_id, 'report_card_id'=> $entity->report_card_id]);
+                    
                 }//POCOR-7067 Ends
             }//POCOR-6841 ends
         }
-        $stmtNew = $conn->query("UPDATE institution_students_report_cards INNER JOIN report_card_processes ON institution_students_report_cards.report_card_id = report_card_processes.report_card_id AND institution_students_report_cards.student_id = report_card_processes.student_id AND institution_students_report_cards.institution_id = report_card_processes.institution_id AND institution_students_report_cards.academic_period_id = report_card_processes.academic_period_id AND institution_students_report_cards.education_grade_id = report_card_processes.education_grade_id AND institution_students_report_cards.institution_class_id = report_card_processes.institution_class_id SET institution_students_report_cards.status = report_card_processes.status  where institution_students_report_cards.status In (1,2,3)");//POCOR-7383 added where condition for publish reports
-        $successQQ =$stmtNew->execute();
+
+        //POCOR-7496[START]
+        // $stmtNew = $conn->query("UPDATE institution_students_report_cards INNER JOIN report_card_processes ON institution_students_report_cards.report_card_id = report_card_processes.report_card_id AND institution_students_report_cards.student_id = report_card_processes.student_id AND institution_students_report_cards.institution_id = report_card_processes.institution_id AND institution_students_report_cards.academic_period_id = report_card_processes.academic_period_id AND institution_students_report_cards.education_grade_id = report_card_processes.education_grade_id AND institution_students_report_cards.institution_class_id = report_card_processes.institution_class_id SET institution_students_report_cards.status = report_card_processes.status  where institution_students_report_cards.status In (1,2,3)");//POCOR-7383 added where condition for publish reports
+        // $successQQ =$stmtNew->execute();
+        //POCOR-7496[END]
+
         //END:POCOR-6785
         $this->field('report_queue');
         $this->setFieldOrder(['openemis_no', 'student_id', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
@@ -2263,4 +2272,5 @@ class ReportCardStatusesTable extends ControllerActionTable
                                                           
     }
      //POCOR-7400 end
+
 }
