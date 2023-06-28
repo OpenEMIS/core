@@ -349,7 +349,7 @@ class StaffTable extends AppTable
         $staffTabElements = [
             'Employments' => ['text' => __('Employments')],
             'Qualifications' => ['text' => __('Qualifications')],
-            'Extracurriculars' => ['text' => __('Extracurriculars')],
+            //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7513
             'Memberships' => ['text' => __('Memberships')],
             'Licenses' => ['text' => __('Licenses')],
             'Awards' => ['text' => __('Awards')],
