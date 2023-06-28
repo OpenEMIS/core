@@ -16,6 +16,7 @@ use App\Model\Table\AppTable;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 
+
 class ConfigItemsTable extends AppTable
 {
     use OptionsTrait;
@@ -195,7 +196,53 @@ class ConfigItemsTable extends AppTable
                 $data[$this->alias()]['value'] = $value;
             }
         }
+        // Start POCOR-7446
+        if ($entity->code == 'report_outlier_min_student') {
+            $val = $data[$this->alias()]['value'];
+            $this->validator()->add('value', 'custom', [
+                'rule' => function ($value, $context) use ($val) {
+                    $max_record_student_number = $this->find()
+                    ->where([
+                        $this->aliasField('code') => 'report_outlier_max_student',
+                        $this->aliasField('type') => 'Data Outliers'
+                    ])
+                    ->first();
+
+                    if(!empty($max_record_student_number)){
+                        if($max_record_student_number['value'] < $val){
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+                'message' => 'Please enter number less than maximum student number'
+            ]);
+        }
+
+        if ($entity->code == 'report_outlier_max_student') {
+            $val = $data[$this->alias()]['value'];
+            $this->validator()->add('value', 'custom', [
+                'rule' => function ($value, $context) use ($val) {
+                    $max_record_student_number = $this->find()
+                    ->where([
+                        $this->aliasField('code') => 'report_outlier_min_student',
+                        $this->aliasField('type') => 'Data Outliers'
+                    ])
+                    ->first();
+
+                    if(!empty($max_record_student_number)){
+                        if($max_record_student_number['value'] > $val){
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+                'message' => 'Please enter number greater than minimum student number'
+            ]);
+        }
+        // End POCOR-7446
     }
+
 
 
 /******************************************************************************************************************
@@ -335,13 +382,19 @@ class ConfigItemsTable extends AppTable
                     }
                     else if ($entity->code == 'date_time_format') {
                         $attr['type'] = 'date';
+                    } else if ($entity->type == 'Maximum Student Number') { //POCOR-7211
+                        $attr['type'] = 'integer';
+                        $attr['attr'] = ['min' => 1, 'max' => 100];
+                    } else if ($entity->type == 'Minimum Student Number') { //POCOR-7211
+                        $attr['type'] = 'integer';
+                        $attr['attr'] = ['min' => 1, 'max' => 100];
                     }
                 }
             }
         }
         return $attr;
     }
-
+ 
     public function onGetValue(Event $event, Entity $entity)
     {
         if ($entity->type == 'Custom Validation') {
@@ -441,7 +494,7 @@ class ConfigItemsTable extends AppTable
             /**
              * options list is from ConfigItemOptions table
              */
-            }else if ($entity->type == 'Institution Completeness') {
+            }else if ($entity->type == 'Institution Data Completeness') {//POCOR 6022
                 if ($entity->{$valueField} == 0) {
                  return __('Disabled');
                 } else {
@@ -480,7 +533,7 @@ class ConfigItemsTable extends AppTable
                 } else {
                  return __('Enabled');
                 }   //POCOR-6248 end            
-            } else if ($entity->type == 'User Completeness') {
+            } else if ($entity->type == 'User Data Completeness') {//POCOR-6022
                 if ($entity->{$valueField} == 0) {
                  return __('Disabled');
                 } else {

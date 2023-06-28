@@ -144,7 +144,8 @@ class ReportsController extends AppController
                 'Report.StaffExtracurriculars' => __('Staff Extracurricular'),
                 'Report.InstitutionStaffDetailed' => __('Detailed Staff Data'), //POCOR-6662
                 'Report.StaffSubjects' => __('Staff Subjects'), //POCOR-6688
-
+                'Report.StaffRequirements' => __('Staff Requirements'), // POCOR-5185
+                'Report.StaffOutOfSchool' => __('Staff Out of School') //POCOR-4827
             ];
         } elseif ($module == 'Textbooks') {
             $options = [
@@ -191,13 +192,17 @@ class ReportsController extends AppController
             $options = [
                 'Report.PotentialStudentDuplicates' => __('Potential Student Duplicates'),
                 'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates'),
-                'Report.PotentialWrongBirthdates' => __('Potential Wrong Birthdates')
+                'Report.PotentialWrongBirthdates' => __('Potential Wrong Birthdates'),
+                'Report.EnrollmentOutliers' => __('Enrollment Outliers'),//POCOR-7211
+                'Report.AgeOutliers' => __('Age Outliers'),//POCOR-7211
             ];
         } elseif ($module == 'Audits') {
             $options = [
                 'Report.AuditLogins' => __('Logins'),
                 'Report.AuditInstitutions' => __('Institutions'),
                 'Report.AuditUsers' => __('Users')
+                ,'Report.AuditSecuritiesRolesPermissions' => __('Security Roles and Permissions') // POCOR-499
+                ,'Report.AuditSecuritiesGroupUserRoles' => __('Security Group User Roles') // POCOR-499
             ];
         } elseif ($module == 'Examinations') {
             $options = [

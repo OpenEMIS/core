@@ -1,10 +1,13 @@
 angular
     .module('institutions.results.archive.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.results.archive.svc'])
-    .controller('InstitutionsAssessmentArchiveCtrl', InstitutionsResultsController);
+    .controller('InstitutionsAssessmentArchiveCtrl', InstitutionsResultsArchiveController);
 
-InstitutionsResultsController.$inject = ['$q', '$scope', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsAssessmentArchiveSvc'];
+InstitutionsResultsArchiveController.$inject = ['$q', '$scope', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsAssessmentArchiveSvc'];
 
-function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsAssessmentArchiveSvc) {
+function InstitutionsResultsArchiveController($q, $scope, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsAssessmentArchiveSvc) {
+    var vm = this;
+    vm.exportexcel = '';
+    vm.excelExportAUrl = '';
     $scope.action = 'view';
     $scope.message = null;
     $scope.gradingTypes = null;
@@ -49,6 +52,7 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
         // getSubjects
         .then(function(promises) {
             $scope.academicTermOptions = promises[1];
+
             if ($scope.academicTermOptions.length > 0) {
                 $scope.selectedAcademicTerm = $scope.academicTermOptions[0]['name'];
             }
@@ -57,7 +61,8 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
             if ($scope.academicPeriodOptions.length > 0) {
                 $scope.selectedAcademicPeriod = $scope.academicPeriodOptions[0]['name'];
             }
-            
+
+
             $scope.editPermission=promises[0][0].is_editable;
             
              $scope.subjects = promises[0];
@@ -353,6 +358,7 @@ function InstitutionsResultsController($q, $scope, $filter, UtilsSvc, AlertSvc, 
         })
         // getRowData
         .then(function(rows) {
+            return;
             $scope.gridOptions.api.setRowData(rows);
         }, function(error) {
             // No Students

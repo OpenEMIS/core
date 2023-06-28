@@ -1,14 +1,17 @@
 <?php
+
 namespace Institution\Model\Table;
 
 use ArrayObject;
 
+use Cake\Controller\Component;
 use Cake\I18n\Date;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 
 use App\Model\Traits\OptionsTrait;
@@ -16,13 +19,14 @@ use App\Model\Table\ControllerActionTable;
 
 use Page\Traits\EncodingTrait;
 
-class AssessmentItemResultsArchivedTable extends ControllerActionTable 
+class AssessmentItemResultsArchivedTable extends ControllerActionTable
 {
     private $allDayOptions = [];
+
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->belongsTo('Users',       ['className' => 'User.Users', 'foreignKey'=>'student_id']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
@@ -52,7 +56,8 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
         $this->field('assessment_grading_option_id', ['visible' => false]);
         $this->field('education_grade_id', ['visible' => false]);
         $this->field('student_id', ['visible' => false]);
@@ -62,25 +67,9 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         $this->field('class');
         $this->field('name');
 
-        $this->setFieldOrder(['institution_id', 'academic_period_id', 'assessment_id', 'assessment_period_id','class','education_subject_id','openemis_no','name', 'marks']);
+        $this->setFieldOrder(['institution_id', 'academic_period_id', 'assessment_id', 'assessment_period_id', 'class', 'education_subject_id', 'openemis_no', 'name', 'marks']);
         $toolbarButtons = $extra['toolbarButtons'];
-        // $extra['toolbarButtons']['back'] = [
-        //     'url' => [
-        //         'plugin' => 'Student',
-        //         'controller' => 'Students',
-        //         'action' => 'Results',
-        //         '0' => 'index',
-        //     ],
-        //     'type' => 'button',
-        //     'label' => '<i class="fa kd-back"></i>',
-        //     'attr' => [
-        //         'class' => 'btn btn-xs btn-default',
-        //         'data-toggle' => 'tooltip',
-        //         'data-placement' => 'bottom',
-        //         'escape' => false,
-        //         'title' => __('Back')
-        //     ]
-        // ];
+
     }
 
     public function findStudentResultsArchived(Query $query, array $options)
@@ -98,67 +87,74 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         $StudentStatuses = $this->StudentStatuses;
         $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');//POCOR-6468 starts
         return $query
-        ->select([
-            $this->aliasField('id'),
-            $this->aliasField('marks'),
-            $this->aliasField('assessment_grading_option_id'),
-            $this->aliasField('assessment_period_id'),
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('marks'),
+                $this->aliasField('assessment_grading_option_id'),
+                $this->aliasField('assessment_period_id'),
 
-            $this->aliasField('student_id'),
-            $this->aliasField('institution_id'),
-            $this->aliasField('academic_period_id'),
-            $this->aliasField('education_grade_id'),
-            $this->aliasField('education_subject_id'),//POCOR-6479 
-            // $this->aliasField('student_status_id'),
-            $InstitutionSubjectStudents->aliasField('total_mark'),
+                $this->aliasField('student_id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('academic_period_id'),
+                $this->aliasField('education_grade_id'),
+                $this->aliasField('education_subject_id'),//POCOR-6479
+                // $this->aliasField('student_status_id'),
+                $InstitutionSubjectStudents->aliasField('total_mark'),
 
-            $Users->aliasField('openemis_no'),
-            $Users->aliasField('first_name'),
-            $Users->aliasField('middle_name'),
-            $Users->aliasField('third_name'),
-            $Users->aliasField('last_name'),
-            $Users->aliasField('preferred_name'),
-            $StudentStatuses->aliasField('code'),
-            $StudentStatuses->aliasField('name')
-        ])
-        ->matching('Users')
-        // ->contain('StudentStatuses')
-        ->leftJoin(
-            [$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()],
-            [
-                $this->aliasField('student_id = ') . $InstitutionSubjectStudents->aliasField('student_id')
-            ]
-        )
-        ->leftJoin(
-            [$StudentStatuses->alias() => $StudentStatuses->table()],
-            [
-                $InstitutionSubjectStudents->aliasField('student_status_id = ') . $StudentStatuses->aliasField('id')
-            ]
-        )//POCOR-6468 starts
-        ->where([
-            $this->aliasField('education_subject_id') => $educationSubjectId
-        ])
-        ->group([
-            $InstitutionSubjectStudents->aliasField('student_id'),
-            //Added for POCOR-6558[START]
-            $this->aliasField('assessment_period_id')
-            //Added for POCOR-6558[END]
-        ])
-        ->order([
-            $InstitutionSubjectStudents->aliasField('student_id')
-        ]) 
-        ->formatResults(function ($results) {
-            $arrResults = is_array($results) ? $results : $results->toArray();
-            foreach ($arrResults as &$result) {
-                $result['student_status']['name'] = __($result['student_status']['name']);
-            }
-            return $arrResults;
-        })
-        ->formatResults(function ($results1) {
-            $arrResults1 = is_array($results1) ? $results1 : $results1->toArray();
-            foreach ($arrResults1 as &$result) {
-                $assessmentItemResults = TableRegistry::get('assessment_item_results_archived');
-                $assessmentItemResultsData = $this->find()
+                $Users->aliasField('openemis_no'),
+                $Users->aliasField('first_name'),
+                $Users->aliasField('middle_name'),
+                $Users->aliasField('third_name'),
+                $Users->aliasField('last_name'),
+                $Users->aliasField('preferred_name'),
+                $StudentStatuses->aliasField('code'),
+                $StudentStatuses->aliasField('name')
+            ])
+            ->matching('Users')
+            // ->contain('StudentStatuses')
+            ->leftJoin(
+                [$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()],
+                [
+                    $this->aliasField('student_id = ') . $InstitutionSubjectStudents->aliasField('student_id')
+                ]
+            )
+            ->leftJoin(
+                [$StudentStatuses->alias() => $StudentStatuses->table()],
+                [
+                    $InstitutionSubjectStudents->aliasField('student_status_id = ') . $StudentStatuses->aliasField('id')
+                ]
+            )
+            //POCOR-6468 starts
+            //POCOR-7339-HINDOL starts
+            //Where is not applied becouse wrong data is send from svc
+            ->where([
+                $this->aliasField('education_subject_id') => $educationSubjectId,
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('institution_classes_id') => $classId,
+                $this->aliasField('academic_period_id') => $periodId,
+                $this->aliasField('assessment_id') => $assessmentId,
+            ])
+            ->group([
+                $InstitutionSubjectStudents->aliasField('student_id'),
+                //Added for POCOR-6558[START]
+                $this->aliasField('assessment_period_id')
+                //Added for POCOR-6558[END]
+            ])
+            ->order([
+                $InstitutionSubjectStudents->aliasField('student_id')
+            ])
+            ->formatResults(function ($results) {
+                $arrResults = is_array($results) ? $results : $results->toArray();
+                foreach ($arrResults as &$result) {
+                    $result['student_status']['name'] = __($result['student_status']['name']);
+                }
+                return $arrResults;
+            })
+            ->formatResults(function ($results1) {
+                $arrResults1 = is_array($results1) ? $results1 : $results1->toArray();
+                foreach ($arrResults1 as &$result) {
+                    $assessmentItemResults = TableRegistry::get('assessment_item_results_archived');
+                    $assessmentItemResultsData = $this->find()
                         ->select([
                             $this->aliasField('marks')
                         ])
@@ -175,9 +171,9 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
                         ])
                         ->first();
                     $result['AssessmentItemResults']['marks'] = $assessmentItemResultsData->marks;
-            }
-            return $arrResults1;
-        }); //POCOR-6573 ends;
+                }
+                return $arrResults1;
+            }); //POCOR-6573 ends;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -186,7 +182,6 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-
         $institutionId = $this->Session->read('Institution.Institutions.id');
         if ($this->request->query('user_id') !== null) {
             $staffId = $this->request->query('user_id');
@@ -194,18 +189,18 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         } else {
             $staffId = $this->Session->read('Staff.Staff.id');
         }
-        
+
         $academic_period_result = $this->find('all', array(
-            'fields'=>'academic_period_id',
+            'fields' => 'academic_period_id',
             'group' => 'academic_period_id'
         ));
-        if(!empty($academic_period_result)){
-            foreach($academic_period_result AS $academic_period_data){
+        if (!empty($academic_period_result)) {
+            foreach ($academic_period_result AS $academic_period_data) {
                 $archived_academic_period_arr[] = $academic_period_data['academic_period_id'];
             }
         }
         //POCOR-6799[START]
-        if(!empty($archived_academic_period_arr)){
+        if (!empty($archived_academic_period_arr)) {
             $periodOptions = $AcademicPeriod->getArchivedYearList($archived_academic_period_arr);
         }
         //POCOR-6799[END]
@@ -220,58 +215,58 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         if ($selectedPeriod != 0) {
             $this->controller->set(compact('periodOptions', 'selectedPeriod'));
             // POCOR-7327 starts
-            if( (!empty($selectedassessment) && ($selectedassessment > 0)) && (!empty($selectedAssessmentPeriods) && ($selectedAssessmentPeriods > 0)) && (!empty($selectedClassId) && ($selectedClassId > 0)) ){
+            if ((!empty($selectedassessment) && ($selectedassessment > 0)) && (!empty($selectedAssessmentPeriods) && ($selectedAssessmentPeriods > 0)) && (!empty($selectedClassId) && ($selectedClassId > 0))) {
                 $conditions = [
-                                $this->aliasField('academic_period_id') => $selectedPeriod,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('assessment_id') => $selectedassessment,
-                                $this->aliasField('assessment_period_id') => $selectedAssessmentPeriods,
-                                $this->aliasField('institution_classes_id') => $selectedClassId,
-                            ];
-            }else if( (empty($selectedassessment) || ($selectedassessment == '-1')) && (empty($selectedAssessmentPeriods) || ($selectedAssessmentPeriods == '-1')) && (!empty($selectedClassId) && ($selectedClassId > 0)) ){
+                    $this->aliasField('academic_period_id') => $selectedPeriod,
+                    $this->aliasField('institution_id') => $institutionId,
+                    $this->aliasField('assessment_id') => $selectedassessment,
+                    $this->aliasField('assessment_period_id') => $selectedAssessmentPeriods,
+                    $this->aliasField('institution_classes_id') => $selectedClassId,
+                ];
+            } else if ((empty($selectedassessment) || ($selectedassessment == '-1')) && (empty($selectedAssessmentPeriods) || ($selectedAssessmentPeriods == '-1')) && (!empty($selectedClassId) && ($selectedClassId > 0))) {
                 $conditions = [
-                                $this->aliasField('academic_period_id') => $selectedPeriod,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('institution_classes_id') => $selectedClassId,
-                            ];
-            }else if( (empty($selectedassessment) || ($selectedassessment == '-1')) && (!empty($selectedAssessmentPeriods) && ($selectedAssessmentPeriods  > 0)) && (empty($selectedClassId) || ($selectedClassId == '-1')) ){
+                    $this->aliasField('academic_period_id') => $selectedPeriod,
+                    $this->aliasField('institution_id') => $institutionId,
+                    $this->aliasField('institution_classes_id') => $selectedClassId,
+                ];
+            } else if ((empty($selectedassessment) || ($selectedassessment == '-1')) && (!empty($selectedAssessmentPeriods) && ($selectedAssessmentPeriods > 0)) && (empty($selectedClassId) || ($selectedClassId == '-1'))) {
                 $conditions = [
-                                $this->aliasField('academic_period_id') => $selectedPeriod,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('assessment_period_id') => $selectedAssessmentPeriods,
-                            ];
-            }else if( (!empty($selectedassessment) && ($selectedassessment > 0)) && (empty($selectedAssessmentPeriods) || ($selectedAssessmentPeriods == '-1')) && (empty($selectedClassId) || ($selectedClassId == '-1')) ){
+                    $this->aliasField('academic_period_id') => $selectedPeriod,
+                    $this->aliasField('institution_id') => $institutionId,
+                    $this->aliasField('assessment_period_id') => $selectedAssessmentPeriods,
+                ];
+            } else if ((!empty($selectedassessment) && ($selectedassessment > 0)) && (empty($selectedAssessmentPeriods) || ($selectedAssessmentPeriods == '-1')) && (empty($selectedClassId) || ($selectedClassId == '-1'))) {
                 $conditions = [
-                                $this->aliasField('academic_period_id') => $selectedPeriod,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('assessment_id') => $selectedassessment,
-                            ];
-            }else if( (!empty($selectedassessment) && ($selectedassessment > 0)) && (!empty($selectedAssessmentPeriods) && ($selectedAssessmentPeriods > 0)) && (empty($selectedClassId) || ($selectedClassId == '-1')) ){
+                    $this->aliasField('academic_period_id') => $selectedPeriod,
+                    $this->aliasField('institution_id') => $institutionId,
+                    $this->aliasField('assessment_id') => $selectedassessment,
+                ];
+            } else if ((!empty($selectedassessment) && ($selectedassessment > 0)) && (!empty($selectedAssessmentPeriods) && ($selectedAssessmentPeriods > 0)) && (empty($selectedClassId) || ($selectedClassId == '-1'))) {
                 $conditions = [
-                                $this->aliasField('academic_period_id') => $selectedPeriod,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('assessment_id') => $selectedassessment,
-                                $this->aliasField('assessment_period_id') => $selectedAssessmentPeriods,
-                            ];
-            }else if( (empty($selectedassessment) || ($selectedassessment == '-1')) && (!empty($selectedAssessmentPeriods) && ($selectedAssessmentPeriods > 0)) && (!empty($selectedClassId) && ($selectedClassId > 0)) ){
+                    $this->aliasField('academic_period_id') => $selectedPeriod,
+                    $this->aliasField('institution_id') => $institutionId,
+                    $this->aliasField('assessment_id') => $selectedassessment,
+                    $this->aliasField('assessment_period_id') => $selectedAssessmentPeriods,
+                ];
+            } else if ((empty($selectedassessment) || ($selectedassessment == '-1')) && (!empty($selectedAssessmentPeriods) && ($selectedAssessmentPeriods > 0)) && (!empty($selectedClassId) && ($selectedClassId > 0))) {
                 $conditions = [
-                                $this->aliasField('academic_period_id') => $selectedPeriod,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('assessment_period_id') => $selectedAssessmentPeriods,
-                                $this->aliasField('institution_classes_id') => $selectedClassId,
-                            ];
-            }else if( (!empty($selectedassessment) && ($selectedassessment > 0)) && (empty($selectedAssessmentPeriods) || ($selectedAssessmentPeriods == '-1')) && (!empty($selectedClassId) && ($selectedClassId > 0)) ){
+                    $this->aliasField('academic_period_id') => $selectedPeriod,
+                    $this->aliasField('institution_id') => $institutionId,
+                    $this->aliasField('assessment_period_id') => $selectedAssessmentPeriods,
+                    $this->aliasField('institution_classes_id') => $selectedClassId,
+                ];
+            } else if ((!empty($selectedassessment) && ($selectedassessment > 0)) && (empty($selectedAssessmentPeriods) || ($selectedAssessmentPeriods == '-1')) && (!empty($selectedClassId) && ($selectedClassId > 0))) {
                 $conditions = [
-                                $this->aliasField('academic_period_id') => $selectedPeriod,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('assessment_id') => $selectedassessment,
-                                $this->aliasField('institution_classes_id') => $selectedClassId,
-                            ];
-            }else if( (empty($selectedassessment) || ($selectedassessment == '-1')) && (empty($selectedAssessmentPeriods) || ($selectedAssessmentPeriods == '-1')) && (empty($selectedAssessmentPeriods) || ($selectedAssessmentPeriods == '-1')) ){
+                    $this->aliasField('academic_period_id') => $selectedPeriod,
+                    $this->aliasField('institution_id') => $institutionId,
+                    $this->aliasField('assessment_id') => $selectedassessment,
+                    $this->aliasField('institution_classes_id') => $selectedClassId,
+                ];
+            } else if ((empty($selectedassessment) || ($selectedassessment == '-1')) && (empty($selectedAssessmentPeriods) || ($selectedAssessmentPeriods == '-1')) && (empty($selectedAssessmentPeriods) || ($selectedAssessmentPeriods == '-1'))) {
                 $conditions = [
-                                $this->aliasField('academic_period_id') => $selectedPeriod,
-                                $this->aliasField('institution_id') => $institutionId,
-                            ];
+                    $this->aliasField('academic_period_id') => $selectedPeriod,
+                    $this->aliasField('institution_id') => $institutionId,
+                ];
             }// POCOR-7327 ends
             //toolbar filter
             //Assessment[Start]
@@ -285,11 +280,11 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
             $this->controller->set(compact('assessmentOptions', 'selectedAssessment'));
             //Assessment[End]
             $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
-            if($selectedassessment != '-1'){
+            if ($selectedassessment != '-1') {
                 $AssessmentPeriodsconditions = [
-                    $AssessmentPeriods->aliasField('assessment_id') => $selectedPeriod
+                    $AssessmentPeriods->aliasField('assessment_id') => $selectedassessment
                 ];
-            }else{
+            } else {
                 $AssessmentPeriodsconditions = [];
             }
             $AssessmentPeriodsOptions = $AssessmentPeriods
@@ -322,23 +317,23 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
             $selectedClassId = $this->queryString('institution_class_id', $classOptions);
             $this->advancedSelectOptions($classOptions, $selectedClassId);
             $this->controller->set(compact('classOptions', 'selectedClassId'));
-            
+
             $ArchivedUser = TableRegistry::get('User.Users');
             $query
-            ->select([
-                'academic_period_id' => $this->aliasField('academic_period_id'),
-                'assessment_id' => $this->aliasField('assessment_id'),
-                'assessment_period_id' => $this->aliasField('assessment_period_id'),
-                'education_subject_id' => $this->aliasField('education_subject_id'),
-                'institution_class_id' => $InstitutionClassStudents->aliasField('institution_class_id'),
-                'marks' => $this->aliasField('marks'),
-                'class' => $InstitutionClasses->aliasField('name'),
-                'name' => $ArchivedUser->find()->func()->concat([
-                    'Users.first_name' => 'literal',
-                    " ",
-                    'Users.last_name' => 'literal'
-                ]),
-                'openemis_no' => $ArchivedUser->aliasField('openemis_no')
+                ->select([
+                    'academic_period_id' => $this->aliasField('academic_period_id'),
+                    'assessment_id' => $this->aliasField('assessment_id'),
+                    'assessment_period_id' => $this->aliasField('assessment_period_id'),
+                    'education_subject_id' => $this->aliasField('education_subject_id'),
+                    'institution_class_id' => $InstitutionClassStudents->aliasField('institution_class_id'),
+                    'marks' => $this->aliasField('marks'),
+                    'class' => $InstitutionClasses->aliasField('name'),
+                    'name' => $ArchivedUser->find()->func()->concat([
+                        'Users.first_name' => 'literal',
+                        " ",
+                        'Users.last_name' => 'literal'
+                    ]),
+                    'openemis_no' => $ArchivedUser->aliasField('openemis_no')
                 ])
                 ->innerJoin(
                     [$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()], [
@@ -364,102 +359,85 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         // POCOR-7327 starts
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-        $academic_period_result = $this->find('all', array(
-            'fields'=>'academic_period_id',
-            'group' => 'academic_period_id'
-        ));
-        if(!empty($academic_period_result)){
-            foreach($academic_period_result AS $academic_period_data){
-                $archived_academic_period_arr[] = $academic_period_data['academic_period_id'];
-            }
-        }
-        if(empty($this->request->query)){
-            $academic_period_id = $archived_academic_period_arr[0];
-            $query->where([
-                $this->aliasField('academic_period_id') => $academic_period_id,
-                $this->aliasField('institution_id') => $institutionId
-            ]);
-        }else{
-            $selectedPeriod = $this->request->query['academic_period_id'];
-            $selectedassessment = $this->request->query['assessment_id'];
-            $selectedAssessmentPeriods = $this->request->query['assessment_period_id'];
-            $selectedClassId = $this->request->query['institution_class_id'];
-            $conditions = [];
-            if( (!empty($selectedassessment) && ($selectedassessment > 0)) && (!empty($selectedAssessmentPeriods) && ($selectedAssessmentPeriods > 0)) && (!empty($selectedClassId) && ($selectedClassId > 0)) ){
-                $conditions = [
-                                $this->aliasField('academic_period_id') => $selectedPeriod,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('assessment_id') => $selectedassessment,
-                                $this->aliasField('assessment_period_id') => $selectedAssessmentPeriods,
-                                $this->aliasField('institution_classes_id') => $selectedClassId,
-                              ];
-            }else if( (empty($selectedassessment) || ($selectedassessment == '-1')) && (empty($selectedAssessmentPeriods) || ($selectedAssessmentPeriods == '-1')) && (!empty($selectedClassId) && ($selectedClassId > 0)) ){
-                $conditions = [
-                                $this->aliasField('academic_period_id') => $selectedPeriod,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('institution_classes_id') => $selectedClassId,
-                              ];
-            }else if( (empty($selectedassessment) || ($selectedassessment == '-1')) && (!empty($selectedAssessmentPeriods) && ($selectedAssessmentPeriods  > 0)) && (empty($selectedClassId) || ($selectedClassId == '-1')) ){
-                $conditions = [
-                                $this->aliasField('academic_period_id') => $selectedPeriod,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('assessment_period_id') => $selectedAssessmentPeriods,
-                              ];
-            }else if( (!empty($selectedassessment) && ($selectedassessment > 0)) && (empty($selectedAssessmentPeriods) || ($selectedAssessmentPeriods == '-1')) && (empty($selectedClassId) || ($selectedClassId == '-1')) ){
-                $conditions = [
-                                $this->aliasField('academic_period_id') => $selectedPeriod,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('assessment_id') => $selectedassessment,
-                              ];
-            }else if( (!empty($selectedassessment) && ($selectedassessment > 0)) && (!empty($selectedAssessmentPeriods) && ($selectedAssessmentPeriods > 0)) && (empty($selectedClassId) || ($selectedClassId == '-1')) ){
-                $conditions = [
-                                $this->aliasField('academic_period_id') => $selectedPeriod,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('assessment_id') => $selectedassessment,
-                                $this->aliasField('assessment_period_id') => $selectedAssessmentPeriods,
-                              ];
-            }else if( (empty($selectedassessment) || ($selectedassessment == '-1')) && (!empty($selectedAssessmentPeriods) && ($selectedAssessmentPeriods > 0)) && (!empty($selectedClassId) && ($selectedClassId > 0)) ){
-                $conditions = [
-                                $this->aliasField('academic_period_id') => $selectedPeriod,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('assessment_period_id') => $selectedAssessmentPeriods,
-                                $this->aliasField('institution_classes_id') => $selectedClassId,
-                              ];
-            }else if( (!empty($selectedassessment) && ($selectedassessment > 0)) && (empty($selectedAssessmentPeriods) || ($selectedAssessmentPeriods == '-1')) && (!empty($selectedClassId) && ($selectedClassId > 0)) ){
-                $conditions = [
-                                $this->aliasField('academic_period_id') => $selectedPeriod,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('assessment_id') => $selectedassessment,
-                                $this->aliasField('institution_classes_id') => $selectedClassId,
-                              ];
-            }
 
-            else if( (empty($selectedassessment) || ($selectedassessment == '-1')) && (empty($selectedAssessmentPeriods) || ($selectedAssessmentPeriods == '-1')) && (empty($selectedAssessmentPeriods) || ($selectedAssessmentPeriods == '-1')) ){
-                $conditions = [
-                                $this->aliasField('academic_period_id') => $selectedPeriod,
-                                $this->aliasField('institution_id') => $institutionId,
-                            ];
+        $institutionID = $this->Session->read('Institutio$academicPeriodOptionsn.Institutions.id');
+
+        if (empty($this->request->query)) {
+
+        } else {
+//            $classID = $this->ControllerAction->getQueryString('class_id');
+            $assessmentID = $this->ControllerAction->getQueryString('assessment_id');
+            $academicPeriodID = $this->ControllerAction->getQueryString('academic_period_id');
+            $institutionID = $this->ControllerAction->getQueryString('institution_id');
+            $classID = $this->ControllerAction->getQueryString('class_id');
+            $conditions = [$this->aliasField('institution_id') => $institutionID];
+            if (!empty($assessmentID) && ($assessmentID > 0)) {
+                $conditions[$this->aliasField('assessment_id')] = $assessmentID;
+            }
+            if (!empty($classID) && ($classID > 0)) {
+                $conditions[$this->aliasField('institution_classes_id')] = $classID;
+            }
+            if (!empty($academicPeriodID) && ($academicPeriodID > 0)) {
+                $conditions[$this->aliasField('academic_period_id')] = $academicPeriodID;
             }
             $query->where([$conditions]);
         }// POCOR-7327 ends
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
-                
-                $UserData = TableRegistry::get('User.Users');
-                $UserDataRow = $UserData
-                            ->find()
-                            ->where([$UserData->alias('id')=>$row->student_id])
-                            ->first();
+        $Students = TableRegistry::get('User.Users');
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+        $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+        $query->select([
+            'academic_period_id' => $this->aliasField('academic_period_id'),
+            'assessment_id' => $this->aliasField('assessment_id'),
+            'assessment_period_id' => $this->aliasField('assessment_period_id'),
+            'education_subject_id' => $this->aliasField('education_subject_id'),
+            'institution_class_id' => $this->aliasField('institution_classes_id'),
+            'assessment_name' => $Assessments->aliasField('name'),
+            'academic_period_name' => $AcademicPeriods->aliasField('name'),
+            'assessment_period_name' => $AssessmentPeriods->aliasField('name'),
+            'education_subject_name' => $EducationSubjects->aliasField('name'),
+            'marks' => $this->aliasField('marks'),
+            'class' => $InstitutionClasses->aliasField('name'),
+            'name' => $Students->find()->func()->concat([
+                'Users.first_name' => 'literal',
+                " ",
+                'Users.last_name' => 'literal'
+            ]),
+            'openemis_no' => $Students->aliasField('openemis_no')
+        ])
+            ->innerJoin(
+                [$Students->alias() => $Students->table()], [
+                    $this->aliasField('student_id = ') . $Students->aliasField('id')
+                ]
+            )
+            ->innerJoin(
+                [$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+                    $this->aliasField('institution_classes_id = ') . $InstitutionClasses->aliasField('id'),
+                ]
+            )->innerJoin(
+                [$Assessments->alias() => $Assessments->table()], [
+                    $this->aliasField('assessment_id = ') . $Assessments->aliasField('id')
+                ]
+            )
+            ->innerJoin(
+                [$AssessmentPeriods->alias() => $AssessmentPeriods->table()], [
+                    $this->aliasField('assessment_period_id = ') . $AssessmentPeriods->aliasField('id')
+                ]
+            )
+            ->innerJoin(
+                [$AcademicPeriods->alias() => $AcademicPeriods->table()], [
+                    $this->aliasField('academic_period_id = ') . $AcademicPeriods->aliasField('id')
+                ]
+            )
+            ->innerJoin(
+                [$EducationSubjects->alias() => $EducationSubjects->table()], [
+                    $this->aliasField('education_subject_id = ') . $EducationSubjects->aliasField('id')
+                ]
+            )
 
-                $firstName = $this->Auth->user('first_name');
-                $lastName = $this->Auth->user('last_name');
-                $name = $UserDataRow->first_name . " " . $UserDataRow->last_name;
-                $row['name'] = $name;
-                $row['openemis_no'] = $UserDataRow->openemis_no;
-                return $row;
-            });
-        });
+        ;
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -468,28 +446,35 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
 
         $newFields[] = [
             'key' => '',
-            'field' => 'academic_period_id',
+            'field' => 'class',
+            'type' => 'string',
+            'label' => 'Class Name',
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'academic_period_name',
             'type' => 'integer',
             'label' => 'Academic Period',
         ];
 
         $newFields[] = [
             'key' => '',
-            'field' => 'assessment_id',
+            'field' => 'assessment_name',
             'type' => 'integer',
             'label' => 'Assessment',
         ];
 
         $newFields[] = [
             'key' => '',
-            'field' => 'assessment_period_id',
+            'field' => 'assessment_period_name',
             'type' => 'integer',
             'label' => 'Assessment Period',
         ];
 
         $newFields[] = [
             'key' => '',
-            'field' => 'education_subject_id',
+            'field' => 'education_subject_name',
             'type' => 'integer',
             'label' => 'Subject',
         ];
@@ -504,8 +489,8 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         $newFields[] = [
             'key' => '',
             'field' => 'name',
-            'type' => 'integer',
-            'label' => 'Name',
+            'type' => 'string',
+            'label' => 'Student Name',
         ];
 
         $newFields[] = [
@@ -544,14 +529,45 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         return $entity->user->openemis_no;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'education_subject_id') {
             return __('Subject');
         } else if ($field == 'name') {
-            return  __('Name');
+            return __('Name');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    public function getTotalMarksForAssessmentArchived($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId, $assessmentPeriodId, $institutionId)
+    {
+        $query = $this->find();
+        $totalMarks = $query
+            ->select([
+                'calculated_total' => $query->newExpr('SUM(AssessmentItemResultsArchived.marks * AssessmentPeriods.weight)')
+            ])
+            ->matching('Assessments')
+            ->matching('AssessmentPeriods')
+            ->order([
+                $this->aliasField('created') => 'DESC'
+            ])
+            ->where([
+                $this->aliasField('student_id') => $studentId,
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('education_subject_id') => $educationSubjectId,
+                $this->aliasField('education_grade_id') => $educationGradeId,
+                $this->aliasField('education_grade_id') => $educationGradeId,
+                $this->aliasField('institution_id') => $institutionId,
+            ])
+            ->group([
+                $this->aliasField('student_id'),
+                $this->aliasField('assessment_id'),
+                $this->aliasField('education_subject_id')
+            ])
+            ->first();
+
+        return $totalMarks;
+    }
+
 }
