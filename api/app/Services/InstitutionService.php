@@ -21,9 +21,82 @@ class InstitutionService extends Controller
     public function getInstitutions($request)
     {
         try {
-            $data = $this->institutionRepository->getInstitutions($request);
+            $list = $this->institutionRepository->getInstitutions($request);
+            $resp = [];
+
+            foreach($list['data'] as $k => $data){
+                $resp[$k]['id'] = $data['id'];
+                $resp[$k]['name'] = $data['name'];
+                $resp[$k]['alternative_name'] = $data['alternative_name'];
+                $resp[$k]['code'] = $data['code'];
+                $resp[$k]['address'] = $data['address'];
+                $resp[$k]['postal_code'] = $data['postal_code'];
+                $resp[$k]['contact_person'] = $data['contact_person'];
+                $resp[$k]['telephone'] = $data['telephone'];
+                $resp[$k]['fax'] = $data['fax'];
+                $resp[$k]['email'] = $data['email'];
+                $resp[$k]['website'] = $data['website'];
+                $resp[$k]['date_opened'] = $data['date_opened'];
+                $resp[$k]['year_opened'] = $data['year_opened'];
+                $resp[$k]['date_closed'] = $data['date_closed'];
+                $resp[$k]['year_closed'] = $data['year_closed'];
+                $resp[$k]['longitude'] = $data['longitude'];
+                $resp[$k]['latitude'] = $data['latitude'];
+                $resp[$k]['logo_name'] = $data['logo_name'];
+                if($data['logo_content']){
+                    $resp[$k]['logo_content'] = base64_encode($data['logo_content']);
+                } else {
+                    $resp[$k]['logo_content'] = $data['logo_content'];
+                }
+                $resp[$k]['shift_type'] = $data['shift_type'];
+                $resp[$k]['classification'] = $data['classification'];
+                $resp[$k]['area_id'] = $data['area_id'];
+                $resp[$k]['area_administrative_id'] = $data['area_administrative_id'];
+
+                $resp[$k]['institution_locality_id'] = $data['institution_locality_id'];
+                $resp[$k]['institution_locality_name'] = $data['institution_localities']['name']??"";
+                $resp[$k]['institution_locality_international_code'] = $data['institution_localities']['international_code']??"";
+                $resp[$k]['institution_locality_national_code'] = $data['institution_localities']['national_code']??"";
+
+                $resp[$k]['institution_ownership_id'] = $data['institution_ownership_id'];
+                $resp[$k]['institution_ownership_name'] = $data['institution_ownerships']['name']??"";
+                $resp[$k]['institution_ownership_international_code'] = $data['institution_ownerships']['international_code']??"";
+                $resp[$k]['institution_ownership_national_code'] = $data['institution_ownerships']['national_code']??"";
+
+                $resp[$k]['institution_provider_id'] = $data['institution_provider_id'];
+                $resp[$k]['institution_provider_name'] = $data['institution_providers']['name']??"";
+                $resp[$k]['institution_provider_international_code'] = $data['institution_providers']['international_code']??"";
+                $resp[$k]['institution_provider_national_code'] = $data['institution_providers']['national_code']??"";
+
+
+                $resp[$k]['institution_sector_id'] = $data['institution_sector_id'];
+                $resp[$k]['institution_sector_name'] = $data['institution_sectors']['name']??"";
+                $resp[$k]['institution_sector_international_code'] = $data['institution_sectors']['international_code']??"";
+                $resp[$k]['institution_sector_national_code'] = $data['institution_sectors']['national_code']??"";
+
+                $resp[$k]['institution_type_id'] = $data['institution_type_id'];
+                $resp[$k]['institution_type_name'] = $data['institution_types']['name']??"";
+                $resp[$k]['institution_type_international_code'] = $data['institution_types']['international_code']??"";
+                $resp[$k]['institution_type_national_code'] = $data['institution_types']['national_code']??"";
+
+
+                $resp[$k]['institution_gender_id'] = $data['institution_gender_id'];
+                $resp[$k]['institution_gender_name'] = $data['institution_gender']['name']??"";
+                $resp[$k]['institution_gender_code'] = $data['institution_gender']['code']??"";
+
+
+                $resp[$k]['institution_status_id'] = $data['institution_status_id'];
+                $resp[$k]['institution_status_name'] = $data['institution_status']['name']??"";
+                $resp[$k]['institution_status_name'] = $data['institution_status']['code']??"";
+
+                $resp[$k]['modified_user_id'] = $data['modified_user_id'];
+                $resp[$k]['modified'] = $data['modified'];
+                $resp[$k]['created_user_id'] = $data['created_user_id'];
+                $resp[$k]['created'] = $data['created'];
+            }
             
-            return $data; 
+            $list['data'] = $resp;
+            return $list; 
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -39,8 +112,80 @@ class InstitutionService extends Controller
     {
         try {
             $data = $this->institutionRepository->getInstitutionData($id);
+
+            $resp = [];
+            if($data){
+                $resp['id'] = $data['id'];
+                $resp['name'] = $data['name'];
+                $resp['alternative_name'] = $data['alternative_name'];
+                $resp['code'] = $data['code'];
+                $resp['address'] = $data['address'];
+                $resp['postal_code'] = $data['postal_code'];
+                $resp['contact_person'] = $data['contact_person'];
+                $resp['telephone'] = $data['telephone'];
+                $resp['fax'] = $data['fax'];
+                $resp['email'] = $data['email'];
+                $resp['website'] = $data['website'];
+                $resp['date_opened'] = $data['date_opened'];
+                $resp['year_opened'] = $data['year_opened'];
+                $resp['date_closed'] = $data['date_closed'];
+                $resp['year_closed'] = $data['year_closed'];
+                $resp['longitude'] = $data['longitude'];
+                $resp['latitude'] = $data['latitude'];
+                $resp['logo_name'] = $data['logo_name'];
+                if($data['logo_content']){
+                    $resp['logo_content'] = base64_encode($data['logo_content']);
+                } else {
+                    $resp['logo_content'] = $data['logo_content'];
+                }
+                $resp['shift_type'] = $data['shift_type'];
+                $resp['classification'] = $data['classification'];
+                $resp['area_id'] = $data['area_id'];
+                $resp['area_administrative_id'] = $data['area_administrative_id'];
+
+                $resp['institution_locality_id'] = $data['institution_locality_id'];
+                $resp['institution_locality_name'] = $data['institutionLocalities']['name']??"";
+                $resp['institution_locality_international_code'] = $data['institutionLocalities']['international_code']??"";
+                $resp['institution_locality_national_code'] = $data['institutionLocalities']['national_code']??"";
+
+                $resp['institution_ownership_id'] = $data['institution_ownership_id'];
+                $resp['institution_ownership_name'] = $data['institutionOwnerships']['name']??"";
+                $resp['institution_ownership_international_code'] = $data['institutionOwnerships']['international_code']??"";
+                $resp['institution_ownership_national_code'] = $data['institutionOwnerships']['national_code']??"";
+
+                $resp['institution_provider_id'] = $data['institution_provider_id'];
+                $resp['institution_provider_name'] = $data['institutionProviders']['name']??"";
+                $resp['institution_provider_international_code'] = $data['institutionProviders']['international_code']??"";
+                $resp['institution_provider_national_code'] = $data['institutionProviders']['national_code']??"";
+
+
+                $resp['institution_sector_id'] = $data['institution_sector_id'];
+                $resp['institution_sector_name'] = $data['institutionSectors']['name']??"";
+                $resp['institution_sector_international_code'] = $data['institutionSectors']['international_code']??"";
+                $resp['institution_sector_national_code'] = $data['institutionSectors']['national_code']??"";
+
+                $resp['institution_type_id'] = $data['institution_type_id'];
+                $resp['institution_type_name'] = $data['institutionTypes']['name']??"";
+                $resp['institution_type_international_code'] = $data['institutionTypes']['international_code']??"";
+                $resp['institution_type_national_code'] = $data['institutionTypes']['national_code']??"";
+
+
+                $resp['institution_gender_id'] = $data['institution_gender_id'];
+                $resp['institution_gender_name'] = $data['institutionGender']['name']??"";
+                $resp['institution_gender_code'] = $data['institutionGender']['code']??"";
+
+
+                $resp['institution_status_id'] = $data['institution_status_id'];
+                $resp['institution_status_name'] = $data['institutionStatus']['name']??"";
+                $resp['institution_status_name'] = $data['institutionStatus']['code']??"";
+
+                $resp['modified_user_id'] = $data['modified_user_id'];
+                $resp['modified'] = $data['modified'];
+                $resp['created_user_id'] = $data['created_user_id'];
+                $resp['created'] = $data['created'];
+            }
             
-            return $data; 
+            return $resp; 
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch data from DB',
@@ -578,7 +723,7 @@ class InstitutionService extends Controller
     {
         try {
             $data = $this->institutionRepository->getInstitutionStaffData($institutionId, $staffId);
-            //dd($data);
+            
             $list = [];
             if($data){
                 $list['id'] = $data['id'];
@@ -992,6 +1137,150 @@ class InstitutionService extends Controller
             );
 
             return $this->sendErrorResponse('Failed to add competency comments.');
+        }
+    }
+
+
+    public function getStudentAssessmentItemResult($request, $institutionId, $studentId)
+    {
+        try {
+            $lists = $this->institutionRepository->getStudentAssessmentItemResult($request, $institutionId, $studentId);
+            $resp = [];
+
+            if(count($lists) > 0){
+                foreach($lists as $k => $l){
+                    $resp[$k]['academic_period_id'] = $l['academic_period_id'];
+                    $resp[$k]['assessment_grading_option_id'] = $l['assessment_grading_option_id'];
+                    $resp[$k]['assessment_id'] = $l['assessment_id'];
+                    $resp[$k]['assessment_period_id'] = $l['assessment_period_id'];
+                    $resp[$k]['education_grade_id'] = $l['education_grade_id'];
+                    $resp[$k]['education_subject_id'] = $l['education_subject_id'];
+                    $resp[$k]['institution_id'] = $l['institution_id'];
+                    $resp[$k]['marks'] = $l['marks'];
+                    $resp[$k]['student_id'] = $l['student_id'];
+                }
+            }
+
+            return $resp;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student assessment data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get student assessment data.');
+        }
+    }
+
+    public function displayAddressAreaLevel($request)
+    {
+        try {
+            $data = $this->institutionRepository->displayAddressAreaLevel($request)->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->name,
+                    ];
+                }
+            );
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get address area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get address area level area.');
+        }
+    }
+
+
+    public function displayBirthplaceAreaLevel($request)
+    {
+        try {
+            $data = $this->institutionRepository->displayBirthplaceAreaLevel($request)->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->name,
+                    ];
+                }
+            );
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get birthplace area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get birthplace area level area.');
+        }
+    }
+
+    
+    public function getSubjectsStaffList($request)
+    {
+        try {
+            $data = $this->institutionRepository->getSubjectsStaffList($request);
+            
+            //dd($data);
+
+            $resp = [];
+            if($data){
+                foreach($data as $k => $d){
+                    
+                    $resp[$k]['education_systems_name'] = $d['institutionSubject']['educationGrades']['educationProgramme']['educationCycle']['educationLevel']['educationSystem']['name'];
+
+                    $resp[$k]['education_levels_name'] = $d['institutionSubject']['educationGrades']['educationProgramme']['educationCycle']['educationLevel']['name'];
+
+                    $resp[$k]['education_cycles_name'] = $d['institutionSubject']['educationGrades']['educationProgramme']['educationCycle']['name'];
+
+                    $resp[$k]['education_programmes_code'] = $d['institutionSubject']['educationGrades']['educationProgramme']['code'];
+
+                    $resp[$k]['education_programmes_name'] = $d['institutionSubject']['educationGrades']['educationProgramme']['name'];
+
+                    $resp[$k]['education_grades_code'] = $d['institutionSubject']['educationGrades']['code'];
+                    $resp[$k]['education_grades_name'] = $d['institutionSubject']['educationGrades']['name'];
+                    $resp[$k]['education_subjects_code'] = $d['institutionSubject']['educationSubjects']['code'];
+                    $resp[$k]['education_subjects_name'] = $d['institutionSubject']['educationSubjects']['name'];
+                    $resp[$k]['institutions_id'] = $d['institution']['id'];
+                    $resp[$k]['institutions_code'] = $d['institution']['code'];
+                    $resp[$k]['institutions_name'] = $d['institution']['name'];
+
+                    $resp[$k]['institution_classes_name'] = $d['institutionSubject']['classes'][0]['institutionClass']['name']??"";
+
+                    $resp[$k]['academic_periods_code'] = $d['institutionSubject']['academicPeriod']['code'];
+                    $resp[$k]['academic_periods_name'] = $d['institutionSubject']['academicPeriod']['name'];
+                    $resp[$k]['institution_subjects_id'] = $d['institutionSubject']['id'];
+                    $resp[$k]['institution_subjects_name'] = $d['institutionSubject']['name'];
+
+                    $resp[$k]['security_users_openemis_no_subject_teachers'] = $d['staff']['openemis_no'];
+
+                    $openEmisNo = [];
+
+                    if(count($d['institutionSubject']['students']) > 0){
+                        $students = $d['institutionSubject']['students'];
+
+                        foreach($students as $s){
+                            $openEmisNo[] = $s['securityUser']['openemis_no'];
+                        }
+                    }
+
+                    $resp[$k]['security_users_openemis_no_students'] = $openEmisNo;
+                }
+                
+            }
+            return $resp;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Subjects Staff List Not Found');
         }
     }
 

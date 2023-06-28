@@ -1,3 +1,91 @@
+### [3.87.4] - 2023-06-23
+- Bug Fixed: Administration/Reports: Users are able to see Administration and Report module even when they have no permissions
+- Bug Fixed: Administration: Student and teacher user can access administration module page when there is no permission enabled
+- Bug Fixed: Institutions > Performances > Assessments : Subject teachers are unable to see/edit their subjects
+- Bug Fixed: Institutions>Performance>Assessments: Admin/demo is unable to edit even it has superadmin permission
+- Bug Fixed: Institutions>Performance>Assessments: Homeroom teacher is unable to edit assessment
+
+### [3.87.3] - 2023-06-21
+- Bug Fixed: Institutions > Performances > Report Cards : System should update status of both institution_student_report_cards and report_card_processes tables
+- Bug Fixed: Institutions>Performance>Assessments: When user changes term in the filter, assessment periods and subjects are not filtered
+- Bug Fixed: API: Institution API is not showing some fields
+- Bug Fixed: Administration>System Setup>API: Student user can access api securities page
+
+### [3.87.2] - 2023-06-20
+- Bug Fixed: Institutions>Performance>Report Cards: Report Card page is not loading or very slow
+
+### [3.87.1] - 2023-06-19
+- Implemented: Develop a mechanism for past assessment period grades to be modified and to regenerate impacted report cards
+- Implemented: Develop client id UI for all OpenEMIS Core APIs v4
+- Bug Fixed: Institutions > Behaviour > List page : Status is not showing correctly
+- Bug Fixed: Institutions>Staff>Transfer: Security role is not updated
+- Bug Fixed: Institutions>Report Cards>Comments: The staff is a homeroom teacher and a subject teacher however the staff is not able to see the subject tab
+- Bug Fixed: Registration: The islands and countries are in alphabetical order
+- Bug Fixed: Institutions>Behaviour>Students: Getting duplicate records
+- Bug Fixed: API: User api not showing identity type name
+- Bug Fixed: Institutions > Performance > Assessments : page load is generating thousands of database queries
+
+### [3.87.0] - 2023-06-14
+- Implemented: Development of JoLearn v4 API - institutions assessment grades
+- Implemented: Develop client id API for all OpenEMIS Core APIs v4
+- Bug Fixed: Institutions>Performance>Assessments: The current assessment report is no longer showing the Assessment Period scores
+- Bug Fixed: Institutions > Add Students: Unable to add student via identity number
+- Bug Fixed: Institutions > Staff > Carreer > Leave Tab : System does not show archive button
+- Bug Fixed: Institutions > Students > Academic > Assessments: Marks is not showing the correct marks but showing the total marks
+- Bug Fixed: API: api/v4/users/{userId} is not returning identity_type_name
+- Bug Fixed: Institutions > Performances > Outcomes : Page does not stop loading once user change selection to Default --Select-- value.
+
+### [3.86.1] - 2023-06-12
+- Bug Fixed: Institutions>Performance>Report Cards: Placeholder is not working
+- Bug Fixed: Login: Login is causing high load on the cpu
+
+### [3.86.0] - 2023-06-10
+- Implemented: Develop standard Security Reports
+- Implemented: Develop OpenEMIS Core textbook export
+- Implemented: Create an Out Of School Staff Report
+- Implemented: Develop changes to the student behaviour page
+- Implemented: Add an Industry dropdown to the Employments feature
+- Implemented: Update OpenEMIS Core Swagger API v4 documentation
+- Implemented: Develop changes to the staff behaviour page
+- Bug Fixed: Update the logic of Student Performance Summary Placeholders to fetch data from the transactional table
+- Bug Fixed: Administration>System Configurations>Data Outliers: Maximum Student Number and Minimum student number validation not working
+- Bug Fixed: Institutions>General>Profile>Students: Unable to publish generated student profiles
+- Bug Fixed: Administration>Profile>Institution: Updates to placeholder
+- Bug Fixed: Administration>Examination>Students: Multiple message appear when registering student
+- Bug Fixed: Report>UIS Statistics: Data too long for column
+- Bug Fixed: Report>Institution>Institution Positions Summary: Only staff with the current status of being assigned to the institution with active position should show in the report
+- Bug Fixed: API: Users and subject api are getting error when retrieving
+- Bug Fixed: Institutions>Performance>Report Cards: Placeholder is not working
+- Bug Fixed: Institutions>Behaviour>Students: Existing behaviours are not showing status
+- Bug Fixed: Institutions > Students > Academic > Assessments/Absences : Allow user to retrieve Student Archived data from these pages
+- Bug Fixed: Institutions>Performance>Assessments: 404 error when clicking the assessment tab
+
+### [3.85.1] - 2023-06-01
+- Implemented: APIs to return the area levels from config items for Address Area and Birthplace Area
+- Bug Fixed: Institutions > Performance > Assessments > Archive : Filters are incomplete
+- Bug Fixed: API: When report_card_comment_code_id is not in the params, the API failed to add the comment
+- Bug Fixed: Institutions>Performance>Report Cards: Report card start and completed column does not show the date and time when report cards are generated
+
+### [3.85.0] - 2023-05-30
+- Implemented: 2.10 Reports > Staff > Requirements Report
+- Implemented: Develop a function to copy risks from one academic period to another
+- Implemented: 1.29 Devlop a function to show percentage of data completion v2
+- Implemented: Develop a function to copy Institution > Performance > Assessments from one academic period to another
+- Implemented: Develop changes to Field Options to store in a database table
+- Implemented: Development of JoLearn v4 API - institutions subjects staff
+- Bug Fixed: Report>Data Quality: Data Quality should include Data Outliers Report
+- Bug Fixed: Workbench : The system does not display Pending Issues (Open/Pending Approval) that are assigned to the user in Workbench
+- Bug Fixed: Institutions>Appointment>Positions: User is unable to import positions
+- Bug Fixed: Administration>Profile>Institution: Updates to placeholder
+- Bug Fixed: Administration > Performance > Report Cards: Placeholder not updated
+- Bug Fixed: Institutions>Performance>Assessments: Getting 404 error when editing assessment period and viewing assessment period
+- Bug Fixed: Report>Workflow: Report should not get stuck in progress
+- Bug Fixed: Reports > Surveys : Survey reports no longer work
+- Bug Fixed: Institutions>Staff>General>Account: The page is not showing any security roles even when there positions assigned to users
+- Bug Fixed: Institutions Positions Summaries: Report is also counting for unassigned staff for the active positions
+- Bug Fixed: Registration: Institution api is not working
+- Bug Fixed: Institutions>Performance>Report Cards: The status should change when the user click generate all button
+
 ### [3.84.1] - 2023-05-25
 - Implemented: Develop a config items to specify the area level for Address Area and Birthplace Area
 - Bug Fixed: Institution > Attendance > Students: When marking attendance to absence or late, the page roll all the way to the top

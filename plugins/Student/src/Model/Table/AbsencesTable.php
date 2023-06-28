@@ -2,6 +2,8 @@
 namespace Student\Model\Table;
 
 use ArrayObject;
+use Cake\Database\Schema\Table;
+use Cake\Datasource\ConnectionManager;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
@@ -13,6 +15,8 @@ use App\Model\Table\ControllerActionTable;
 
 class AbsencesTable extends ControllerActionTable
 {
+    private $institutionId = null;
+    private $studentId = null;
     public function initialize(array $config)
     {
         /*POCOR-6313 changed main table as per client requirement*/
@@ -43,23 +47,6 @@ class AbsencesTable extends ControllerActionTable
         return $events;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-        switch ($action) {
-			case 'index':
-                    $toolbarButtons['edit'] = $buttons['index'];
-                    $toolbarButtons['edit']['url'][0] = 'index';
-                    $toolbarButtons['edit']['action'] = 'abc';
-                    $toolbarButtons['edit']['type'] = 'button';
-                    $toolbarButtons['edit']['label'] = '<i class="fa fa-folder"></i>';
-                    $toolbarButtons['edit']['attr'] = $attr;
-                    $toolbarButtons['edit']['attr']['title'] = __('Archive');
-                    if($toolbarButtons['edit']['url']['action'] == 'Absences'){
-                        $toolbarButtons['edit']['url']['action'] = 'InstitutionStudentAbsencesArchived';
-                    }
-				break;
-		}
-	}
-
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         // $this->fields['student_absence_reason_id']['type'] = 'select';
@@ -86,7 +73,13 @@ class AbsencesTable extends ControllerActionTable
                 return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Absences','index']);
             }
         }
-
+        $session = $this->controller->request->session();
+        if ($session->check('Institution.Institutions.id')) {
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+        $studentId = $this->Session->read('Student.Students.id');
+        $this->institutionId = $institutionId;
+        $this->studentId = $studentId;
 		// Start POCOR-5188
 		if($this->request->params['controller'] == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Personal','Absences','Students - Academic');       
@@ -127,6 +120,29 @@ class AbsencesTable extends ControllerActionTable
 
 		}
 		// End POCOR-5188
+        $toolbarButtons = $extra['toolbarButtons'];
+        if ($toolbarButtons->offsetExists('back')) {
+            $encodedParams = $this->request->params['pass'][1];
+            if ($this->controller->name == 'Directories') {
+                $backUrl = [
+                    'plugin' => 'Directory',
+                    'controller' => 'Directories',
+                    'action' => 'Absences',
+                    'index',
+                    $encodedParams
+                ];
+            } else {
+                $backUrl = [
+                    'plugin' => 'Student',
+                    'controller' => 'Students',
+                    'action' => 'Absences',
+                    'index',
+                    $encodedParams
+                ];
+            }
+
+            $toolbarButtons['back']['url'] = $backUrl;
+        }
     }
     /*POCOR-6313 starts*/
     public function indexBeforeAction(Event $event, ArrayObject $settings)
@@ -147,6 +163,7 @@ class AbsencesTable extends ControllerActionTable
         if ($this->controller->name == 'Profiles') {
             unset($settings['indexButtons']['view']);
         }
+        $this->addExtraButtons($settings);
     }
 
     public function onGetDate(Event $event, Entity $entity)
@@ -368,7 +385,7 @@ class AbsencesTable extends ControllerActionTable
         $options['type'] = 'student';
         $tabElements = $this->controller->getAcademicTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', 'Absences');
     }
 
     public function indexAfterAction(Event $event, $data)
@@ -496,4 +513,148 @@ class AbsencesTable extends ControllerActionTable
             ->first();
         return $this->academicPeriod = $result->name;
     }
+
+    private function addExtraButtons(ArrayObject $extra)
+    {
+        $toolbarButtons = $extra['toolbarButtons'];
+        $this->addArchiveButton($toolbarButtons);
+    }
+
+
+
+    /**
+     * @param $toolbarButtons
+     */
+    private function addArchiveButton($toolbarButtons)
+    {
+        $is_archive_exists = $this->isArchiveExists();
+        if ($is_archive_exists) {
+            $customButtonName = 'archive';
+            $customButtonUrl = [
+                'plugin' => 'Student',
+                'controller' => 'Students',
+                'action' => 'ArchivedAbsences'
+            ];
+            $customButtonLabel = '<i class="fa fa-folder"></i>';
+            $customButtonTitle = __('Archive');
+            $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl);
+        }
+    }
+
+    private function isArchiveExists()
+    {
+        $is_archive_exists = false;
+        $targetTableExists = $this->hasArchiveTable($this);
+        if (!$targetTableExists) {
+            return $is_archive_exists;
+        }
+        $institutionId = $this->institutionId;
+        $studentId = $this->studentId;
+        $AssessmentItemResultsArchived = TableRegistry::get('institution_student_absence_details_archived');
+        $count = $AssessmentItemResultsArchived->find()
+//            ->distinct([$AssessmentItemResultsArchived->aliasField('student_id')])// POCOR-7339-HINDOL
+            ->select([$AssessmentItemResultsArchived->aliasField('student_id')])// POCOR-7339-HINDOL
+            ->where([
+                $AssessmentItemResultsArchived->aliasField('institution_id') => $institutionId,
+                $AssessmentItemResultsArchived->aliasField('student_id') => $studentId,
+            ])->first();
+        if($count) {
+            $is_archive_exists = true;
+        }
+        if(!$count) {
+            $is_archive_exists = false;
+        }
+        return $is_archive_exists;
+    }
+
+    public function hasArchiveTable($sourceTable)
+    {
+        $sourceTableName = $sourceTable->table();
+        $targetTableName = $sourceTableName . '_archived';
+        $connection = ConnectionManager::get('default');
+        $schemaCollection = new \Cake\Database\Schema\Collection($connection);
+        $existingTables = $schemaCollection->listTables();
+        $tableExists = in_array($targetTableName, $existingTables);
+
+        if ($tableExists) {
+            return true;
+        }
+
+        $sourceTableSchema = $schemaCollection->describe($sourceTableName);
+
+        // Create a new table schema for the target table
+        $targetTableSchema = new Table($targetTableName);
+
+        // Copy the columns from the source table to the target table
+        foreach ($sourceTableSchema->columns() as $column) {
+            $columnDefinition = $sourceTableSchema->column($column);
+            $targetTableSchema->addColumn($column, $columnDefinition);
+        }
+        $randomString = $this->generateRandomString();
+        // Copy the indexes from the source table to the target table
+        foreach ($sourceTableSchema->indexes() as $index) {
+            $indexDefinition = $sourceTableSchema->index($index);
+            $targetTableSchema->addIndex($index . $randomString, $indexDefinition);
+        }
+
+        // Copy the constraints from the source table to the target table
+        // FIX for random FK name
+
+        foreach ($sourceTableSchema->constraints() as $constraint) {
+            $constraintDefinition = $sourceTableSchema->constraint($constraint);
+            $targetTableSchema->addConstraint($constraint . $randomString, $constraintDefinition);
+        }
+
+
+
+        // Generate the SQL statement to create the target table
+        $createTableSql = $targetTableSchema->createSql($connection);
+
+        // Execute the SQL statement to create the target table
+        foreach ($createTableSql as $sql) {
+            $connection->execute($sql);
+        }
+
+        // Check if the target table was created successfully
+        $existingTables = $schemaCollection->listTables();
+        $tableExists = in_array($targetTableName, $existingTables);
+        if ($tableExists) {
+            return true;
+        }
+
+        return false; // Return false if the table couldn't be created
+    }
+
+    private function generateRandomString($length = 4) {
+        $bytes = random_bytes($length);
+        return substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $length);
+    }
+
+    private function generateButton(ArrayObject $toolbarButtons, $name, $title, $label, $url, $btnAttr = null)
+    {
+        if (!$btnAttr) {
+            $btnAttr = $this->getButtonAttr();
+        }
+        $customButton = [];
+        if (array_key_exists('_ext', $url)) {
+            unset($customButton['url']['_ext']);
+        }
+        if (array_key_exists('pass', $url)) {
+            unset($customButton['url']['pass']);
+        }
+        if (array_key_exists('paging', $url)) {
+            unset($customButton['url']['paging']);
+        }
+        if (array_key_exists('filter', $url)) {
+            unset($customButton['url']['filter']);
+        }
+        $customButton['type'] = 'button';
+        $customButton['attr'] = $btnAttr;
+        $customButton['attr']['title'] = $title;
+        $customButton['label'] = $label;
+        $customButton['url'] = $url;
+        $name = 'archive';
+        $toolbarButtons[$name] = $customButton;
+    }
+
 }

@@ -17,4 +17,10 @@ class EducationGrades extends Model
     {
         return $this->belongsToMany(EducationSubjects::class, 'education_grades_subjects', 'education_grade_id', 'education_subject_id')->withPivot('hours_required', 'auto_allocation');
     }
+
+
+    public function educationProgramme()
+    {
+        return $this->belongsTo(EducationProgramme::class, 'education_programme_id', 'id');
+    }
 }

@@ -460,9 +460,19 @@ class InstitutionPositionsTable extends ControllerActionTable
             $latestPositionNumber = $latestPositionEntity->position_no;
             $list = explode('-', $latestPositionNumber);
 
-            // if position number is auto generated, index 0 will be the institution code
-            if ($list[0] == $latestInstitutionCode) {
-                $latestTimestamp = $list[1];
+            if(count($list) == 3){ //POCOR-7417
+                // if position number is auto generated, index 0,1 will be the institution code
+                    if ($list[0]."-".$list[1] == $latestInstitutionCode) {
+                        $latestTimestamp = $list[2];
+                    }
+                }else{
+                // if position number is auto generated, index 0 will be the institution code
+                if ($list[0] == $latestInstitutionCode) {
+                    $latestTimestamp = $list[1];
+                    if ($list[0] == $latestInstitutionCode) {
+                        $latestTimestamp = $list[1];
+                    }
+                }
             }
         }
         
@@ -915,7 +925,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 $this->aliasField('created'),
                 $this->Statuses->aliasField('name'),
                 $this->StaffPositionTitles->aliasField('name'),
-                $this->StaffPositionGrades->aliasField('name'),
+                // $this->StaffPositionGrades->aliasField('name'),//POCOR-7412
                 $this->Institutions->aliasField('code'),
                 $this->Institutions->aliasField('name'),
                 $this->CreatedUser->aliasField('openemis_no'),
@@ -925,7 +935,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->StaffPositionTitles->alias(), $this->StaffPositionGrades->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
+            ->contain([$this->StaffPositionTitles->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
             ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
@@ -952,7 +962,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                     $row['url'] = $url;
                     $row['status'] = __($row->_matchingData['Statuses']->name);
                     $positionWithTitle = $row->position_no.' - '.__($row->staff_position_title->name);
-                    $row['request_title'] = sprintf(__('%s with %s'), $positionWithTitle, $row->staff_position_grade->name);
+                    $row['request_title'] = sprintf(__('%s'), $positionWithTitle);//POCOR-7412
                     $row['institution'] = $row->institution->code_name;
                     $row['received_date'] = $receivedDate;
                     $row['requester'] = $row->created_user->name_with_id;

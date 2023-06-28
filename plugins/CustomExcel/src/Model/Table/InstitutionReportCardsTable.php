@@ -105,10 +105,28 @@ class InstitutionReportCardsTable extends AppTable
                 'InstitutionRoomsArea', //POCOR-6691
                 'InstitutionOwnerOccupier', //POCOR-7328
                 'InstitutionStudentPromoted', //POCOR-7328
-                'InstitutionEducationProgramme', //POCOR-7378
+                //'InstitutionEducationProgramme', //POCOR-7378
                 'StaffFromEducationProgramme', //POCOR-7378
                 'JordonSchoolShifts', //POCOR-7411
                 'TotalNonTeachingStaffs', //POCOR-7411
+                'InfrastructureLandCustomFields',//POCOR-7421
+                'InstitutionClassroomArea',//POCOR-7421
+                'SchoolStudentsTotalAbsenceDays',//POCOR-7421
+                'SchoolStaffTotalAbsenceDays',//POCOR-7421
+                'AreaStudentsTotalAbsenceDays',//POCOR-7421
+                'AreaStaffTotalAbsenceDays',//POCOR-7421
+                //'LastYearEducationGrade',//POCOR-7421
+                'LastYearInstitutionStudentEnrolled',//POCOR-7421
+                'LastYearInstitutionStudentPromoted',//POCOR-7421
+                'LastYearInstitutionStudentWithdrawn',//POCOR-7421
+                'LastYearInstitutionStudentRepeated',//POCOR-7421
+                'LastYearInstitutionEducationGrade',//POCOR-7421*
+                'LastYearStudentEnrolledByArea',//POCOR-7421
+                'LastYearStudentPromotedByArea',//POCOR-7421
+                'LastYearStudentWithdrawnByArea',//POCOR-7421
+                'LastYearStudentRepeatedByArea',//POCOR-7421
+                'TeachingStaffTotalAbsences',//POCOR-7449
+                'AreaTeachingStaffTotalAbsenceDays',//POCOR-7449
             ]
         ]);
     }
@@ -194,10 +212,29 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionRoomsArea'] = 'onExcelTemplateInitialiseInstitutionRoomsArea';//POCOR-6691
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionOwnerOccupier'] = 'onExcelTemplateInitialiseInstitutionOwnerOccupier';//POCOR-7328
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentPromoted'] = 'onExcelTemplateInitialiseInstitutionStudentPromoted';//POCOR-7328
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionEducationProgramme'] = 'onExcelTemplateInitialiseInstitutionEducationProgramme';//POCOR-7378
+        //$events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionEducationProgramme'] = 'onExcelTemplateInitialiseInstitutionEducationProgramme';//POCOR-7378
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffFromEducationProgramme'] = 'onExcelTemplateInitialiseStaffFromEducationProgramme';//POCOR-7378
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseJordonSchoolShifts'] = 'onExcelTemplateInitialiseJordonSchoolShifts';//POCOR-7411
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseTotalNonTeachingStaffs'] = 'onExcelTemplateInitialiseTotalNonTeachingStaffs';//POCOR-7411
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInfrastructureLandCustomFields'] = 'onExcelTemplateInitialiseInfrastructureLandCustomFields';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClassroomArea'] = 'onExcelTemplateInitialiseInstitutionClassroomArea';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseSchoolStudentsTotalAbsenceDays'] = 'onExcelTemplateInitialiseSchoolStudentsTotalAbsenceDays';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseSchoolStaffTotalAbsenceDays'] = 'onExcelTemplateInitialiseSchoolStaffTotalAbsenceDays';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAreaStudentsTotalAbsenceDays'] = 'onExcelTemplateInitialiseAreaStudentsTotalAbsenceDays';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAreaStaffTotalAbsenceDays'] = 'onExcelTemplateInitialiseAreaStaffTotalAbsenceDays';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionStudentEnrolled'] = 'onExcelTemplateInitialiseLastYearInstitutionStudentEnrolled';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionStudentPromoted'] = 'onExcelTemplateInitialiseLastYearInstitutionStudentPromoted';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionStudentWithdrawn'] = 'onExcelTemplateInitialiseLastYearInstitutionStudentWithdrawn';//POCOR-7421
+        //$events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearEducationGrade'] = 'onExcelTemplateInitialiseLastYearEducationGrade';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionStudentRepeated'] = 'onExcelTemplateInitialiseLastYearInstitutionStudentRepeated';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearInstitutionEducationGrade'] = 'onExcelTemplateInitialiseLastYearInstitutionEducationGrade';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearStudentEnrolledByArea'] = 'onExcelTemplateInitialiseLastYearStudentEnrolledByArea';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearStudentPromotedByArea'] = 'onExcelTemplateInitialiseLastYearStudentPromotedByArea';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearStudentWithdrawnByArea'] = 'onExcelTemplateInitialiseLastYearStudentWithdrawnByArea';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearStudentRepeatedByArea'] = 'onExcelTemplateInitialiseLastYearStudentRepeatedByArea';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseTeachingStaffTotalAbsences'] = 'onExcelTemplateInitialiseTeachingStaffTotalAbsences';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAreaTeachingStaffTotalAbsenceDays'] = 'onExcelTemplateInitialiseAreaTeachingStaffTotalAbsenceDays';//POCOR-7421
+
         return $events;
     }
 
@@ -971,52 +1008,32 @@ class InstitutionReportCardsTable extends AppTable
             return $entity;
         }
     }
-
+    //POCOR-7449 Starts
     public function onExcelTemplateInitialiseStudentTotalAbsences(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionStudentAbsences = TableRegistry::get('institution_student_absences');
-
-            $entity = $InstitutionStudentAbsences
-                ->find()
-                ->where([
-                    $InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
-                ])
-                ->where([
-                    $InstitutionStudentAbsences->aliasField('absence_type_id IN') => [1,2,3],
-                ])
-                ->count();
-
-            return $entity;
+            $connection = ConnectionManager::get('default');
+            $absenceDaysData = $connection->execute("SELECT SUM(subq.absence_days) absence_days FROM ( SELECT COUNT(DISTINCT(institution_student_absence_details.date)) absence_days FROM institution_student_absence_details WHERE institution_student_absence_details.academic_period_id = ". $params['academic_period_id'] ." AND institution_student_absence_details.institution_id = ". $params['institution_id'] ." AND institution_student_absence_details.absence_type_id != 3 GROUP BY institution_student_absence_details.student_id ) subq")->fetch();
+            $absenceDays = " 0";
+            if(!empty($absenceDaysData)){
+                $absenceDays = $absenceDaysData[0];
+            }
+            return $absenceDays;
         }
     }
-
+    
     public function onExcelTemplateInitialiseStaffTotalAbsences(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionStaff = TableRegistry::get('Institution.Staff');
-            $InstitutionStaffAttendances = TableRegistry::get('institution_staff_attendances');
-
-            $totalStaff = $InstitutionStaff
-                ->find()
-                ->where([
-                    $InstitutionStaff->aliasField('institution_id') => $params['institution_id'],
-                ])
-                ->count();
-
-            $staffPresent = $InstitutionStaffAttendances
-                ->find()
-                ->where([
-                    $InstitutionStaffAttendances->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $InstitutionStaffAttendances->aliasField('institution_id') => $params['institution_id'],
-                ])
-                ->count();
-            $entity = $totalStaff - $staffPresent;
-
-            return $entity;
+            $connection = ConnectionManager::get('default');
+            $schoolStaffAbsentDaysData = $connection->execute("SELECT ROUND(IFNULL(SUM(institution_staff_leave.number_of_days), 0), 0) school_staff_absent_days FROM institution_staff_leave WHERE institution_staff_leave.academic_period_id = ". $params['academic_period_id'] ." AND institution_staff_leave.institution_id = ". $params['institution_id'] ."")->fetch();
+            $schoolStaffAbsentDays = " 0";
+            if(!empty($schoolStaffAbsentDaysData)){
+                $schoolStaffAbsentDays = $schoolStaffAbsentDaysData[0];
+            }
+            return $schoolStaffAbsentDays;
         }
-    }
+    }//POCOR-7449 Ends
 
     public function onExcelTemplateInitialiseSpecialNeedMaleStudents(Event $event, array $params, ArrayObject $extra)
     {
@@ -1184,16 +1201,32 @@ class InstitutionReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseRoomTypes(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $RoomTypes = TableRegistry::get('room_types');
-            $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
-
-            $entity = $RoomTypes->find()
-                ->select([
-                    $RoomTypes->aliasField('id'),
-                    $RoomTypes->aliasField('name')
-                ])
-                ->toArray()
-            ;
+            $connection = ConnectionManager::get('default');
+            $RoomTypesData = $connection->execute("SELECT room_area.room_type_name, room_area.room_count
+                                FROM institution_shifts
+                                LEFT JOIN
+                                (
+                                    SELECT institution_rooms.room_type_id, institution_rooms.institution_id, room_types.name room_type_name, COUNT(DISTINCT(institution_rooms.id)) room_count
+                                    FROM institution_rooms
+                                    INNER JOIN room_types
+                                    ON room_types.id = institution_rooms.room_type_id
+                                    WHERE institution_rooms.academic_period_id = ". $params['academic_period_id'] ." AND institution_rooms.room_status_id = 1
+                                    GROUP BY institution_rooms.institution_id, institution_rooms.room_type_id
+                                ) room_area
+                                ON room_area.institution_id = institution_shifts.institution_id
+                                WHERE institution_shifts.academic_period_id = ". $params['academic_period_id'] ." AND institution_shifts.location_institution_id = ". $params['institution_id'] ."
+                                GROUP BY institution_shifts.institution_id, institution_shifts.location_institution_id, room_area.room_type_id")->fetchAll(\PDO::FETCH_ASSOC);
+            $entity = $result = [];
+            if (!empty($RoomTypesData)) {
+               foreach ($RoomTypesData as $key => $data) {
+                    $result = [
+                        'id' => $key,
+                        'room_type_name' => !empty($data['room_type_name']) ? $data['room_type_name'] : '',
+                        'room_count' => !empty($data['room_count']) ? $data['room_count'] : '',
+                    ];
+                    $entity[] = $result;
+               }
+            }
             return $entity;
         }
     }
@@ -1288,60 +1321,53 @@ class InstitutionReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseEducationGradeClasses(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionClasses = TableRegistry::get('institution_classes');
-            $InstitutionGrades = TableRegistry::get('institution_grades');
-
-            $EducationGradesData = $InstitutionGrades->find()
-                ->select([
-                    'id' => 'EducationGrades.id'
-                ])
-                ->innerJoin(
-                ['EducationGrades' => 'education_grades'],
-                [
-                    'EducationGrades.id = '. $InstitutionGrades->aliasField('education_grade_id')
-                ]
-                )
-                ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])
-                ->hydrate(false)
-                ->toArray()
-            ;
-            $total_count = 0;
-            foreach ($EducationGradesData as $value) {
-                $InstitutionClassesData = $InstitutionClasses->find()
-                    ->select([
-                        'count' => 'count(institutionClassGrades.id)'
-                    ])
-                    ->innerJoin(
-                    ['institutionClassGrades' => 'institution_class_grades'],
-                    [
-                        'institutionClassGrades.institution_class_id = '. $InstitutionClasses->aliasField('id')
-                    ]
-                    )
-                    ->where(['institutionClassGrades.education_grade_id' => $value['id']])
-                    ->where([$InstitutionClasses->aliasField('institution_id') => $params['institution_id']])
-                    ->where([$InstitutionClasses->aliasField('academic_period_id') => $params['academic_period_id']])
-                    ->hydrate(false)
-                    ->toArray()
-                ;
-
-                $result = [];
-                $total_student_count = 0;
-                foreach ($InstitutionClassesData as $data) {
-                    $total_student_count = $data['count'];
+            $connection = ConnectionManager::get('default');
+            $EducationGradeClassesData = $connection->execute("SELECT grades_info.education_programme_name, grades_info.education_grade_name,IFNULL(students_info.count_students, 0) count_students, IFNULL(classes_info.count_classes, 0) count_classes
+                FROM 
+                (
+                    SELECT education_programmes.name education_programme_name, education_grades.name education_grade_name, education_grades.id education_grade_id
+                    FROM institution_grades
+                    INNER JOIN education_grades
+                    ON education_grades.id = institution_grades.education_grade_id
+                    INNER JOIN education_programmes
+                    ON education_programmes.id = education_grades.education_programme_id
+                    WHERE institution_grades.academic_period_id = ". $params['academic_period_id'] ." AND institution_grades.institution_id = ". $params['institution_id'] ."
+                ) grades_info
+                LEFT JOIN 
+                (
+                    SELECT institution_students.education_grade_id, COUNT(DISTINCT(institution_students.student_id)) count_students
+                    FROM institution_students
+                    INNER JOIN academic_periods
+                    ON academic_periods.id = institution_students.academic_period_id
+                    WHERE institution_students.academic_period_id = ". $params['academic_period_id'] ." AND institution_students.institution_id = ". $params['institution_id'] ."
+                    AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_students.student_status_id = 1, institution_students.student_status_id IN (1, 7, 6, 8)) 
+                    GROUP BY institution_students.education_grade_id 
+                ) students_info
+                ON students_info.education_grade_id = grades_info.education_grade_id
+                LEFT JOIN 
+                (
+                    SELECT institution_class_grades.education_grade_id, COUNT(DISTINCT(institution_classes.id)) count_classes
+                    FROM institution_class_grades
+                    INNER JOIN institution_classes
+                    ON institution_classes.id = institution_class_grades.institution_class_id
+                    WHERE institution_classes.academic_period_id = ". $params['academic_period_id'] ." AND institution_classes.institution_id = ". $params['institution_id'] ."
+                    GROUP BY institution_class_grades.education_grade_id
+                ) classes_info 
+                ON classes_info.education_grade_id = grades_info.education_grade_id")->fetchAll(\PDO::FETCH_ASSOC);
+            
+            $entity = $result = [];
+            if (!empty($EducationGradeClassesData)) {
+               foreach ($EducationGradeClassesData as $key => $data) {
                     $result = [
-                        'education_grade_id' => $value['id'],
-                        'count' => $data['count'],
+                        'id' => $key,
+                        'programme_name' => !empty($data['education_programme_name']) ? $data['education_programme_name'] : '',
+                        'grade_name' => !empty($data['education_grade_name']) ? $data['education_grade_name'] : '',
+                        'count_students' => !empty($data['count_students']) ? $data['count_students'] : 0,
+                        'count_classes' => !empty($data['count_classes']) ? $data['count_classes'] : 0
                     ];
-                }
-                $total_count = $total_count + $total_student_count;
-                $entity[] = $result;
+                    $entity[] = $result;
+               }
             }
-            $totalArray = [];
-            $totalArray = [
-                'education_grade_id' => (!empty($value['id']) ? $value['id'] : 0) + 1,
-                'count' => $total_count,
-            ];
-            $entity[] = $totalArray;
             return $entity;
         }
     }
@@ -2033,7 +2059,7 @@ class InstitutionReportCardsTable extends AppTable
                 ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])
                 ->hydrate(false)
                 ->toArray()
-            ;
+            ; 
             //POCOR-6330 starts
             $enrolledStudentsData = 0;
             if(empty($EducationGradesData)){
@@ -2220,29 +2246,6 @@ class InstitutionReportCardsTable extends AppTable
                 ->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
                 ->count()
                 ;
-                $syrianStudents = $InstitutionStudents
-                ->find()
-                ->innerJoin(
-                ['Users' => 'security_users'],
-                [
-                    'Users.id = '. $InstitutionStudents->aliasField('student_id')
-                ]
-                )
-                ->innerJoin(
-                ['Nationalities' => 'nationalities'],
-                [
-                    'Nationalities.id = Users.nationality_id'
-                ]
-                )
-                ->group([
-                    'Users.id'
-                ])
-                ->where([$InstitutionStudents->aliasField('education_grade_id') => $value['id']])
-                ->where(['Nationalities.national_code' => 'syria'])
-                ->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
-                ->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
-                ->count()
-                ;
                 //POCOR-6328 starts
                 /*Subject Staff Temporary*/
                 $InstitutionSubjectStaff = TableRegistry::get('institution_subject_staff');
@@ -2366,28 +2369,28 @@ class InstitutionReportCardsTable extends AppTable
                 ;
                 $temporary_staff = $secondaryStaffData + $homeroomStaffData;
 
-                //POCOR-7272 Jordan Student Start
+                //POCOR-7421  Jordian/Syrian Student Start
                 $connection = ConnectionManager::get('default');
-                $query="SELECT count(student_nationalities.security_user_id) as jordanian_students
-                           FROM `institution_students`
-                           LEFT JOIN(
-                                     SELECT  user_nationalities.security_user_id,
-                                             nationalities.name  as nationality_name
-                                             FROM user_nationalities
-                                     INNER JOIN nationalities
-                                             ON  nationalities.id = user_nationalities.nationality_id
-                                     WHERE user_nationalities.preferred = 1
-                                             AND nationalities.international_code = 'Jordan'
-                                     GROUP BY  user_nationalities.security_user_id
-                           ) AS student_nationalities
-                           ON student_nationalities.security_user_id = institution_students.student_id
-                           INNER JOIN academic_periods
-                           ON academic_periods.id = institution_students.academic_period_id
-                           WHERE academic_periods.id = ".$params['academic_period_id']." AND institution_students.institution_id = ".$params['institution_id']." And  institution_students.education_grade_id= ".$value['id']." And
-                           IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_students.student_status_id = 1, institution_students.student_status_id IN (1, 7, 6, 8))";
+                $query = "SELECT institution_students.education_grade_id, IFNULL(COUNT(DISTINCT(student_nationalities.jordanian_students)), 0) jordanian_students, IFNULL(COUNT(DISTINCT(student_nationalities.syrian_students)), 0) syrian_students
+                    FROM institution_students
+                    LEFT JOIN
+                    (
+                        SELECT  user_nationalities.security_user_id, nationalities.name nationality_name, CASE WHEN nationalities.international_code = 'Jordan' THEN user_nationalities.security_user_id END jordanian_students, CASE WHEN nationalities.international_code = 'Syria' THEN user_nationalities.security_user_id END syrian_students
+                        FROM user_nationalities
+                        INNER JOIN nationalities
+                            ON nationalities.id = user_nationalities.nationality_id
+                        WHERE user_nationalities.preferred = 1 AND nationalities.international_code IN ('Jordan', 'Syria')
+                        GROUP BY  user_nationalities.security_user_id
+                    ) AS student_nationalities
+                        ON student_nationalities.security_user_id = institution_students.student_id
+                    INNER JOIN academic_periods
+                        ON academic_periods.id = institution_students.academic_period_id
+                    WHERE academic_periods.id = ". $params['academic_period_id']. " AND institution_students.institution_id = ". $params['institution_id'] ."  AND institution_students.education_grade_id = ". $value['id'] ." AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_students.student_status_id = 1, institution_students.student_status_id IN (1, 7, 6, 8))
+                    GROUP BY institution_students.education_grade_id";
                 $result=$connection->execute($query)->fetch('assoc');
-                $jordanian_students= $result['jordanian_students'];
-                // POCOR-7272  Jordian Student End
+                $jordanian_students= isset($result['jordanian_students']) ? $result['jordanian_students'] : 0;
+                $syrian_students= isset($result['syrian_students']) ? $result['syrian_students'] : 0;
+                // POCOR-7421  Jordian/Syrian Student End
                 //POCOR-7272 Male/Female/Total Student Promotion Rate Start
                 $maleStudentPromoted = $InstitutionStudents->find()
                     ->contain('Users')
@@ -2433,8 +2436,8 @@ class InstitutionReportCardsTable extends AppTable
                     'female_student_special_need' => $femaleSpecialNeedData,
                     'total_student_special_need' => $maleSpecialNeedData + $femaleSpecialNeedData,
                     'staff_type_temporary' => $temporary_staff,//POCOR-6328
-                    'syrian_students' => $syrianStudents,
-                    'jordanian_students'=>$jordanian_students,//POCOR-7272
+                    'syrian_students' => $syrian_students,//POCOR-7421
+                    'jordanian_students'=>$jordanian_students,//POCOR-7421
                     'male_student_promotion'=>$maleStudentPromoted,//POCOR-7272
                     'female_student_promotion'=>$femaleStudentPromoted,//POCOR-7272
                     'total_student_promotion'=>$totalStudentPromoted//POCOR-7272
@@ -2444,6 +2447,82 @@ class InstitutionReportCardsTable extends AppTable
             return $entity;
         }
     }
+    //POCOR-7421 starts
+    /*public function getLastYearStudentStatus($institutionId, $education_grade_id, $status){
+        $LastYearConnection = ConnectionManager::get('default');
+        $query = "SELECT education_grades.name education_grade_name, COUNT(DISTINCT(institution_students.student_id)) last_year_students_status
+                FROM institution_students
+                INNER JOIN institutions
+                    ON institutions.id = institution_students.institution_id
+                INNER JOIN education_grades
+                    ON education_grades.id = institution_students.education_grade_id
+                INNER JOIN academic_periods
+                    ON academic_periods.id = institution_students.academic_period_id
+                INNER JOIN 
+                (
+                    SELECT @previous_year_id := previous_current_join.academic_period_id previous_academic_period_id
+                        ,@current_year_id
+                    FROM
+                    (
+                        SELECT operational_academic_periods_1.academic_period_id, @previous_start_year := MAX(academic_periods.start_date) previous_start_year
+                        FROM 
+                        (
+                            SELECT institution_students.academic_period_id
+                            FROM institution_students
+                            GROUP BY institution_students.academic_period_id
+                        ) operational_academic_periods_1
+                        INNER JOIN academic_periods
+                            ON academic_periods.id = operational_academic_periods_1.academic_period_id
+                        LEFT JOIN 
+                        (
+                            SELECT @current_year_id := academic_periods.id current_academic_periods_id, @current_start_year := academic_periods.start_date curent_start_date
+                            FROM 
+                            (
+                                SELECT institution_students.academic_period_id
+                                FROM institution_students
+                                GROUP BY institution_students.academic_period_id
+                            ) operational_academic_periods
+                            INNER JOIN academic_periods
+                                ON academic_periods.id = operational_academic_periods.academic_period_id
+                            WHERE academic_periods.current = 1
+                        ) t
+                            ON t.current_academic_periods_id = @current_year_id
+                        WHERE academic_periods.start_date < @current_start_year
+                    ) subq
+                    INNER JOIN
+                    (
+                        SELECT operational_academic_periods_1.academic_period_id, academic_periods.start_date start_year
+                        FROM 
+                        (
+                            SELECT institution_students.academic_period_id
+                            FROM institution_students
+                            GROUP BY institution_students.academic_period_id
+                        ) operational_academic_periods_1
+                        INNER JOIN academic_periods
+                            ON academic_periods.id = operational_academic_periods_1.academic_period_id
+                        LEFT JOIN 
+                        (
+                            SELECT @current_year_id := academic_periods.id current_academic_periods_id, @current_start_year := academic_periods.start_date curent_start_date
+                            FROM 
+                            (
+                                SELECT institution_students.academic_period_id
+                                FROM institution_students
+                                GROUP BY institution_students.academic_period_id
+                            ) operational_academic_periods
+                            INNER JOIN academic_periods
+                                ON academic_periods.id = operational_academic_periods.academic_period_id
+                            WHERE academic_periods.current = 1
+                        ) t
+                            ON t.current_academic_periods_id = @current_year_id
+                        WHERE academic_periods.start_date < @current_start_year
+                    ) previous_current_join
+                        ON previous_current_join.start_year = @previous_start_year
+                ) academic_period_info
+                WHERE academic_periods.id = @previous_year_id AND institutions.id = ". $institutionId ." AND institution_students.education_grade_id = ". $education_grade_id ."  AND institution_students.student_status_id IN (".$status.") GROUP BY education_grades.id";
+        $result=$LastYearConnection->execute($query)->fetch('assoc');
+        $lastYearStudentStatus= !empty($result) ? $result['last_year_students_status'] : 0;
+        return $lastYearStudentStatus;
+    }*/ //POCOR-7421 ends
     
     //POCOR-6426 starts
     public function onExcelTemplateInitialiseInstitutionEducationGrade(Event $event, array $params, ArrayObject $extra)
@@ -2627,9 +2706,24 @@ class InstitutionReportCardsTable extends AppTable
                                 ])
                                 ->where([$areasTbl->aliasField('parent_id') => $areas1->area_id])
                                 ->toArray();
+
                             if(!empty($areas2)){
                                 foreach ($areas2 as $ar2) {
-                                    $distArr[$j][] = $ar2->area_id;//district array
+                                    $areas5 = $areasTbl->find()
+                                            ->select([
+                                                'area_id' => $areasTbl->aliasField('id'),
+                                                'area_name' => $areasTbl->aliasField('name'),
+                                                'area_parent_id' => $areasTbl->aliasField('parent_id')
+                                            ])
+                                            ->where([$areasTbl->aliasField('parent_id') => $ar2->area_id])
+                                            ->toArray();
+                                    if(!empty($areas5)){
+                                        foreach ($areas5 as $ar5) {
+                                            $distArr[$j][] = $ar5->area_id;//district array
+                                        }
+                                    }else{
+                                        $distArr[$j][] = $ar2->area_id;//district array
+                                    }
                                 }
                             }
                         } else {
@@ -2648,7 +2742,6 @@ class InstitutionReportCardsTable extends AppTable
                                 foreach ($areas3 as $ar3) {
                                     $reg [] = $ar3->area_id;
                                 }
-
                                 if(!empty($reg)){
                                     $areas4 = $areasTbl->find()
                                             ->select([
@@ -2660,7 +2753,21 @@ class InstitutionReportCardsTable extends AppTable
                                             ->toArray();
                                     if(!empty($areas4)){
                                         foreach ($areas4 as $ar4) {
-                                            $distArr[$j][] = $ar4->area_id;//district array
+                                            $areas6 = $areasTbl->find()
+                                                    ->select([
+                                                        'area_id' => $areasTbl->aliasField('id'),
+                                                        'area_name' => $areasTbl->aliasField('name'),
+                                                        'area_parent_id' => $areasTbl->aliasField('parent_id')
+                                                    ])
+                                                    ->where([$areasTbl->aliasField('parent_id') => $ar4->area_id])
+                                                    ->toArray();
+                                            if(!empty($areas6)){
+                                                foreach ($areas6 as $ar6) {
+                                                    $distArr[$j][] = $ar6->area_id;//district array
+                                                }
+                                            }else{
+                                                $distArr[$j][] = $ar4->area_id;//district array
+                                            }
                                         }
                                     }
                                 }
@@ -2681,7 +2788,6 @@ class InstitutionReportCardsTable extends AppTable
                     foreach ($institutionsResult as $instit) {
                         $insArr[$i][] = $instit->id;//district array
                     }
-
                     $i++;
                 }
             }
@@ -2826,9 +2932,24 @@ class InstitutionReportCardsTable extends AppTable
                                 ])
                                 ->where([$areasTbl->aliasField('parent_id') => $areas1->area_id])
                                 ->toArray();
+
                             if(!empty($areas2)){
                                 foreach ($areas2 as $ar2) {
-                                    $distArr[$j][] = $ar2->area_id;//district array
+                                    $areas5 = $areasTbl->find()
+                                            ->select([
+                                                'area_id' => $areasTbl->aliasField('id'),
+                                                'area_name' => $areasTbl->aliasField('name'),
+                                                'area_parent_id' => $areasTbl->aliasField('parent_id')
+                                            ])
+                                            ->where([$areasTbl->aliasField('parent_id') => $ar2->area_id])
+                                            ->toArray();
+                                    if(!empty($areas5)){
+                                        foreach ($areas5 as $ar5) {
+                                            $distArr[$j][] = $ar5->area_id;//district array
+                                        }
+                                    }else{
+                                        $distArr[$j][] = $ar2->area_id;//district array
+                                    }
                                 }
                             }
                         } else {
@@ -2847,7 +2968,6 @@ class InstitutionReportCardsTable extends AppTable
                                 foreach ($areas3 as $ar3) {
                                     $reg [] = $ar3->area_id;
                                 }
-
                                 if(!empty($reg)){
                                     $areas4 = $areasTbl->find()
                                             ->select([
@@ -2859,7 +2979,21 @@ class InstitutionReportCardsTable extends AppTable
                                             ->toArray();
                                     if(!empty($areas4)){
                                         foreach ($areas4 as $ar4) {
-                                            $distArr[$j][] = $ar4->area_id;//district array
+                                            $areas6 = $areasTbl->find()
+                                                    ->select([
+                                                        'area_id' => $areasTbl->aliasField('id'),
+                                                        'area_name' => $areasTbl->aliasField('name'),
+                                                        'area_parent_id' => $areasTbl->aliasField('parent_id')
+                                                    ])
+                                                    ->where([$areasTbl->aliasField('parent_id') => $ar4->area_id])
+                                                    ->toArray();
+                                            if(!empty($areas6)){
+                                                foreach ($areas6 as $ar6) {
+                                                    $distArr[$j][] = $ar6->area_id;//district array
+                                                }
+                                            }else{
+                                                $distArr[$j][] = $ar4->area_id;//district array
+                                            }
                                         }
                                     }
                                 }
@@ -2880,7 +3014,6 @@ class InstitutionReportCardsTable extends AppTable
                     foreach ($institutionsResult as $instit) {
                         $insArr[$i][] = $instit->id;//district array
                     }
-
                     $i++;
                 }
             }
@@ -5164,8 +5297,8 @@ class InstitutionReportCardsTable extends AppTable
             return $entity;
         }
     }
-    //POCOR-7378 starts
-    public function onExcelTemplateInitialiseInstitutionEducationProgramme(Event $event, array $params, ArrayObject $extra)
+    //POCOR-7378 starts  Note: this function is not for use now becuase of POCOR-7421
+    /*public function onExcelTemplateInitialiseInstitutionEducationProgramme(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $connection = ConnectionManager::get('default');
@@ -5189,67 +5322,67 @@ class InstitutionReportCardsTable extends AppTable
             }
             return $entity;
         }
-    }
-
+    }*/
+    //POCOR-7449 Starts
     public function onExcelTemplateInitialiseStaffFromEducationProgramme(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
             $connection = ConnectionManager::get('default');
-            $EducationProgrameData = $connection->execute("SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.id programme_id, education_programmes.name programme_name FROM education_grades
-                INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
-                INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
-                INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
-                INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
-                INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
-                WHERE academic_periods.id = ".$params['academic_period_id']." GROUP BY `education_programmes`.`id`
-                ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC")->fetchAll(\PDO::FETCH_ASSOC);
-            $entity = $result = [];
-            if (!empty($EducationProgrameData)) {
-                foreach ($EducationProgrameData as $data) {
-                    $connectionInner = ConnectionManager::get('default');
-                    $EducationProgrameData = $connectionInner->execute("SELECT education_grades.education_programme_id
-                    ,COUNT(DISTINCT(CASE WHEN security_users.gender_id = 1 THEN institution_subject_staff.staff_id END)) male_teaching_staff
-                    ,COUNT(DISTINCT(CASE WHEN security_users.gender_id = 2 THEN institution_subject_staff.staff_id END)) female_teaching_staff
-                    ,COUNT(DISTINCT(CASE WHEN security_users.gender_id IN (1, 2) THEN institution_subject_staff.staff_id END)) total_teaching_staff
-                    ,COUNT(DISTINCT(CASE WHEN fulltime_staff.staff_id IS NOT NULL AND fulltime_staff.position_type_checker < 1 THEN institution_subject_staff.staff_id END)) temp_teaching_staff
-                    FROM institution_subject_staff
-                    INNER JOIN institution_subjects
+            $StaffFromEducationProgrammeData = $connection->execute("SELECT education_grades.education_programme_id, education_programmes.name programme_name, COUNT(DISTINCT(CASE WHEN security_users.gender_id = 1 THEN institution_subject_staff.staff_id END)) male_teaching_staff, COUNT(DISTINCT(CASE WHEN security_users.gender_id = 2 THEN institution_subject_staff.staff_id END)) female_teaching_staff, COUNT(DISTINCT(CASE WHEN security_users.gender_id IN (1, 2) THEN institution_subject_staff.staff_id END)) total_teaching_staff, COUNT(DISTINCT(CASE WHEN fulltime_staff.staff_id IS NOT NULL AND fulltime_staff.full_staff_positions < 1 AND fulltime_staff.temp_staff_positions > 0 THEN institution_subject_staff.staff_id END)) temp_teaching_staff
+                FROM institution_subject_staff
+                INNER JOIN institution_subjects
                     ON institution_subjects.id = institution_subject_staff.institution_subject_id
-                    INNER JOIN education_grades
+                INNER JOIN education_grades
                     ON education_grades.id = institution_subjects.education_grade_id
-                    INNER JOIN security_users
+                INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                INNER JOIN security_users
                     ON security_users.id = institution_subject_staff.staff_id
-                    LEFT JOIN 
-                    (
-                        SELECT institution_staff.staff_id
-                            ,MAX(institution_staff.FTE) position_type_checker
-                        FROM institution_staff
-                        INNER JOIN academic_periods
+                INNER JOIN 
+                (
+                    SELECT institution_staff.staff_id
+                    FROM institution_staff
+                    INNER JOIN institution_positions
+                        ON institution_positions.id = institution_staff.institution_position_id
+                    INNER JOIN staff_position_titles 
+                        ON staff_position_titles.id = institution_positions.staff_position_title_id
+                    INNER JOIN academic_periods
                         ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
-                        WHERE institution_staff.institution_id = ". $params['institution_id'] ."
-                        AND academic_periods.id = ". $params['academic_period_id'] ."
-                        AND institution_staff.staff_status_id = 1
-                        GROUP BY institution_staff.staff_id
-                    ) fulltime_staff
+                    WHERE institution_staff.institution_id = ". $params['institution_id'] ." AND staff_position_titles.type = 1 AND academic_periods.id = ". $params['academic_period_id'] ." AND institution_staff.staff_status_id = 1
+                    GROUP BY institution_staff.staff_id
+                ) teaching_staff_info
+                    ON teaching_staff_info.staff_id = institution_subject_staff.staff_id
+                LEFT JOIN 
+                (
+                    SELECT institution_staff.staff_id, SUM(CASE WHEN staff_types.international_code = 'temporary' THEN 1 ELSE 0 END) temp_staff_positions, SUM(CASE WHEN staff_types.international_code != 'temporary' OR staff_types.international_code IS NULL THEN 1 ELSE 0 END) full_staff_positions, staff_types.international_code
+                    FROM institution_staff
+                    INNER JOIN staff_types
+                        ON staff_types.id = institution_staff.staff_type_id
+                    INNER JOIN academic_periods
+                        ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
+                    WHERE institution_staff.institution_id = ". $params['institution_id'] ." AND academic_periods.id = ". $params['academic_period_id'] ." AND institution_staff.staff_status_id = 1
+                    GROUP BY institution_staff.staff_id
+                ) fulltime_staff
                     ON fulltime_staff.staff_id = institution_subject_staff.staff_id
-                    WHERE institution_subject_staff.institution_id = ". $params['institution_id'] ."
-                    AND institution_subjects.academic_period_id = ". $params['academic_period_id'] ."
-                    AND education_grades.education_programme_id = ". $data['programme_id'] ."
-                    GROUP BY education_grades.education_programme_id")->fetch('assoc');
+                WHERE institution_subject_staff.institution_id = ". $params['institution_id'] ." AND institution_subjects.academic_period_id = ". $params['academic_period_id'] ." 
+                GROUP BY education_grades.education_programme_id")->fetchAll(\PDO::FETCH_ASSOC);
+            $entity = $result = [];
+            if (!empty($StaffFromEducationProgrammeData)) {
+                foreach ($StaffFromEducationProgrammeData as $key => $data) {
                     $result = [
-                        'programme_id' => !empty($data['programme_id']) ? $data['programme_id'] : '',
-                        'subject_staff' => !empty($EducationProgrameData) ? $EducationProgrameData['total_teaching_staff'] : 0,
-                        'male_subject_staff' => !empty($EducationProgrameData) ? $EducationProgrameData['male_teaching_staff'] : 0,
-                        'female_subject_staff' => !empty($EducationProgrameData) ? $EducationProgrameData['female_teaching_staff'] : 0,
-                        'subject_staff_type_temporary' => !empty($EducationProgrameData) ? $EducationProgrameData['temp_teaching_staff'] : 0,
+                        'id' => $key,
+                        'programme_id' => !empty($data['education_programme_id']) ? $data['education_programme_id'] : '',
+                        'programme_name' => !empty($data['programme_name']) ? $data['programme_name'] : '',
+                        'subject_staff' => !empty($data['total_teaching_staff']) ? $data['total_teaching_staff'] : 0,
+                        'male_subject_staff' => !empty($data['male_teaching_staff']) ? $data['male_teaching_staff'] : 0,
+                        'female_subject_staff' => !empty($data['female_teaching_staff']) ? $data['female_teaching_staff'] : 0,
+                        'subject_staff_type_temporary' => !empty($data['temp_teaching_staff']) ? $data['temp_teaching_staff'] : 0,
                     ];
                     $entity[] = $result;
                 }
             }
-            return $entity;
+            return $entity;                                                                                                             
         }
-    }//POCOR-7378 ends
+    }//POCOR-7449 ends
     //POCOR-7411 Starts
     public function onExcelTemplateInitialiseJordonSchoolShifts(Event $event, array $params, ArrayObject $extra)
     {
@@ -5319,7 +5452,1128 @@ class InstitutionReportCardsTable extends AppTable
                                 GROUP BY institution_staff.staff_id
                             ) subq
                             WHERE subq.teaching_count = 0 AND subq.non_teaching_count > 0")->fetch();
-            return !empty($entity) ? $entity[0] : 0; 
+            return !empty($entity[0]) ? $entity[0] : " 0"; 
         }
     }//POCOR-7411 ends
+    //POCOR-7421 Starts
+    public function onExcelTemplateInitialiseInfrastructureLandCustomFields(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $connection = ConnectionManager::get('default');
+            $InfrastructureLandCustomFieldsData = $connection->execute("SELECT MAX(land_info.institution_land_code) institution_land_code, MAX(land_info.institution_land_name) institution_land_name, MAX(land_info.land_area) land_area, MAX(land_info.land_type_name) land_type_name, MAX(land_info.infrastructure_custom_field_name) infrastructure_custom_field_name, MAX(land_info.custom_field_values) custom_field_values
+                    FROM institution_shifts
+                    LEFT JOIN
+                    (
+                        SELECT institution_lands.code institution_land_code, institution_lands.name institution_land_name, institution_lands.area land_area, land_types.name land_type_name, infrastructure_custom_fields.name infrastructure_custom_field_name
+                            ,IFNULL(CASE 
+                                WHEN infrastructure_custom_fields.field_type = 'CHECKBOX' THEN IF(land_custom_field_values.text_value IS NULL,GROUP_CONCAT(DISTINCT(infrastructure_custom_field_options.name)),GROUP_CONCAT(DISTINCT(land_custom_field_values.text_value)))
+                                WHEN infrastructure_custom_fields.field_type = 'DATE' THEN land_custom_field_values.date_value
+                                WHEN infrastructure_custom_fields.field_type = 'DECIMAL' THEN land_custom_field_values.decimal_value
+                                WHEN infrastructure_custom_fields.field_type = 'DROPDOWN' THEN IF(land_custom_field_values.text_value IS NULL,infrastructure_custom_field_options.name,land_custom_field_values.text_value)
+                                WHEN infrastructure_custom_fields.field_type = 'FILE' THEN land_custom_field_values.text_value
+                                WHEN infrastructure_custom_fields.field_type = 'NUMBER' THEN IF(land_custom_field_values.text_value IS NULL, land_custom_field_values.number_value, IF(land_custom_field_values.number_value IS NULL, land_custom_field_values.text_value, GREATEST(land_custom_field_values.text_value, land_custom_field_values.number_value)))
+                                WHEN infrastructure_custom_fields.field_type = 'TEXT' THEN land_custom_field_values.text_value
+                                WHEN infrastructure_custom_fields.field_type = 'TEXTAREA' THEN land_custom_field_values.textarea_value
+                                END, '') custom_field_values, institution_lands.institution_id, land_custom_field_values.infrastructure_custom_field_id, land_custom_field_values.institution_land_id
+                        FROM land_custom_field_values
+                        LEFT JOIN infrastructure_custom_field_options
+                            ON infrastructure_custom_field_options.infrastructure_custom_field_id = land_custom_field_values.infrastructure_custom_field_id AND infrastructure_custom_field_options.id = land_custom_field_values.number_value
+                        INNER JOIN infrastructure_custom_fields
+                            ON infrastructure_custom_fields.id = land_custom_field_values.infrastructure_custom_field_id
+                        INNER JOIN institution_lands
+                            ON institution_lands.id = land_custom_field_values.institution_land_id
+                        INNER JOIN land_types
+                            ON land_types.id = institution_lands.land_type_id
+                        WHERE institution_lands.academic_period_id = ". $params['academic_period_id'] ." AND institution_lands.land_status_id = 1
+                        GROUP BY  land_custom_field_values.infrastructure_custom_field_id, land_custom_field_values.institution_land_id
+                    ) land_info
+                    ON land_info.institution_id = institution_shifts.institution_id
+                    WHERE institution_shifts.academic_period_id = ". $params['academic_period_id'] ." AND institution_shifts.location_institution_id = ". $params['institution_id'] ."
+                    GROUP BY institution_shifts.institution_id, institution_shifts.location_institution_id, land_info.infrastructure_custom_field_id, land_info.institution_land_id")->fetchAll(\PDO::FETCH_ASSOC);
+            $entity = $result = [];
+            if (!empty($InfrastructureLandCustomFieldsData)) {
+               foreach ($InfrastructureLandCustomFieldsData as $key => $data) {
+                    $result = [
+                        'id' => $key,
+                        'institution_land_code' => !empty($data['institution_land_code']) ? $data['institution_land_code'] : '',
+                        'institution_land_name' => !empty($data['institution_land_name']) ? $data['institution_land_name'] : '',
+                        'land_area' => !empty($data['land_area']) ? $data['land_area'] : '',
+                        'land_type_name' => !empty($data['land_type_name']) ? $data['land_type_name'] : '',
+                        'infrastructure_custom_field_name' => !empty($data['infrastructure_custom_field_name']) ? $data['infrastructure_custom_field_name'] : '',
+                        'custom_field_values' => !empty($data['custom_field_values']) ? $data['custom_field_values'] : '',
+                    ];
+                    $entity[] = $result;
+               }
+            }
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseInstitutionClassroomArea(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $connection = ConnectionManager::get('default');
+            $entity = $connection->execute("SELECT SUM(subq.area_size) area_size
+                        FROM 
+                        (
+                            SELECT land_area.area_size
+                            FROM institution_shifts
+                            LEFT JOIN
+                            (
+                                SELECT institution_rooms.institution_id, SUM(institution_rooms.area) area_size
+                                FROM institution_rooms
+                                INNER JOIN room_types
+                                    ON room_types.id = institution_rooms.room_type_id
+                                WHERE institution_rooms.academic_period_id = ". $params['academic_period_id'] ." AND institution_rooms.room_status_id = 1 AND room_types.classification = 1
+                                GROUP BY institution_rooms.institution_id
+                            ) land_area
+                                ON land_area.institution_id = institution_shifts.institution_id
+                            WHERE institution_shifts.academic_period_id = ". $params['academic_period_id'] ." AND institution_shifts.location_institution_id = ". $params['institution_id'] ." 
+                            GROUP BY institution_shifts.institution_id, institution_shifts.location_institution_id
+                        ) subq")->fetch('assoc');
+            if(!empty($entity)){
+                $entity['area_size'] = $entity['area_size'];
+            }
+            return !empty($entity) ? $entity : " 0"; 
+        }
+    }
+
+    public function onExcelTemplateInitialiseSchoolStudentsTotalAbsenceDays(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $connection = ConnectionManager::get('default');
+            $entity = $connection->execute("SELECT SUM(institution_student_absence_days.absent_days) school_absence_days
+                                            FROM institution_student_absence_days
+                                            INNER JOIN institutions
+                                                ON institutions.id = institution_student_absence_days.institution_id
+                                            INNER JOIN academic_periods
+                                                ON (((institutions.date_closed IS NOT NULL AND institutions.date_opened <= academic_periods.start_date AND institutions.date_closed >= academic_periods.start_date) OR (institutions.date_closed IS NOT NULL AND institutions.date_opened <= academic_periods.end_date AND institutions.date_closed >= academic_periods.end_date) OR (institutions.date_closed IS NOT NULL AND institutions.date_opened >= academic_periods.start_date AND institutions.date_closed <= academic_periods.end_date)) OR (institutions.date_closed IS NULL AND institutions.date_opened <= academic_periods.end_date))
+                                            WHERE academic_periods.id = ". $params['academic_period_id'] ." AND institutions.id = ". $params['institution_id'] ." AND institution_student_absence_days.start_date BETWEEN academic_periods.start_date AND academic_periods.end_date")->fetch();
+            return !empty($entity[0]) ? $entity[0] : " 0"; 
+        }
+    }
+
+    public function onExcelTemplateInitialiseSchoolStaffTotalAbsenceDays(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $connection = ConnectionManager::get('default');
+            $entity = $connection->execute("SELECT ROUND(IFNULL(SUM(institution_staff_leave.number_of_days), 0), 0) school_staff_absent_days
+                                            FROM institution_staff_leave
+                                            WHERE institution_staff_leave.academic_period_id = ". $params['academic_period_id'] ." AND institution_staff_leave.institution_id = ". $params['institution_id'] ."")->fetch();
+            return !empty($entity[0]) ? $entity[0] : " 0"; 
+        }
+    }
+        
+    public function onExcelTemplateInitialiseAreaStudentsTotalAbsenceDays(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $AreaId = $this->getAreaIdByInstitutionId($params['institution_id']);
+            $connection = ConnectionManager::get('default');
+            $entity = $connection->execute("SELECT SUM(institution_student_absence_days.absent_days) area_absence_days
+                                            FROM institution_student_absence_days
+                                            INNER JOIN institutions
+                                                ON institutions.id = institution_student_absence_days.institution_id
+                                            INNER JOIN academic_periods
+                                                ON (((institutions.date_closed IS NOT NULL AND institutions.date_opened <= academic_periods.start_date AND institutions.date_closed >= academic_periods.start_date) OR (institutions.date_closed IS NOT NULL AND institutions.date_opened <= academic_periods.end_date AND institutions.date_closed >= academic_periods.end_date) OR (institutions.date_closed IS NOT NULL AND institutions.date_opened >= academic_periods.start_date AND institutions.date_closed <= academic_periods.end_date)) OR (institutions.date_closed IS NULL AND institutions.date_opened <= academic_periods.end_date))
+                                            WHERE academic_periods.id = ". $params['academic_period_id'] ."
+                                            AND institutions.area_id = ".$AreaId."
+                                            AND institution_student_absence_days.start_date BETWEEN academic_periods.start_date AND academic_periods.end_date")->fetch();
+            return !empty($entity[0]) ? $entity[0] : " 0"; 
+        }
+    }
+
+    public function onExcelTemplateInitialiseAreaStaffTotalAbsenceDays(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $AreaId = $this->getAreaIdByInstitutionId($params['institution_id']);
+            $connection = ConnectionManager::get('default');
+            $entity = $connection->execute("SELECT ROUND(IFNULL(SUM(institution_staff_leave.number_of_days), 0), 0) area_staff_absent_days
+                                            FROM institution_staff_leave
+                                            INNER JOIN institutions
+                                                ON institutions.id = institution_staff_leave.institution_id
+                                            WHERE institution_staff_leave.academic_period_id = ". $params['academic_period_id'] ." AND institutions.area_id = ".$AreaId."")->fetch();
+            return !empty($entity[0]) ? $entity[0] : " 0"; 
+        }
+    }
+
+    private function getAreaIdByInstitutionId($institutionId){
+        $InstitutionTbl = TableRegistry::get('institutions');
+        $getInstData = $InstitutionTbl->find()->where([$InstitutionTbl->aliasField('id') => $institutionId])->first();
+        if (!empty($getInstData)) {
+            $AreaId = $getInstData->area_id;
+        }
+        return $AreaId;
+    }
+
+    public function onExcelTemplateInitialiseLastYearInstitutionEducationGrade(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $LastYearPeriodId = $this->getLastYearId();
+            $entity = $InstitutionGrades->find()
+                ->select([
+                    'id' => 'EducationGrades.id',
+                    'name' => 'EducationGrades.name'
+                ])
+                ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                ->where([
+                    'EducationSystems.academic_period_id' => $LastYearPeriodId
+                ])
+                ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])
+                ->group([
+                    'EducationGrades.id'
+                ])
+                ->hydrate(false)
+                ->toArray()
+            ;
+
+            $addEducationheading[] = [
+                'id' =>0,
+                'name' => 'Education Grade'
+            ];
+
+            $entity = array_merge($addEducationheading, $entity);
+
+            $totalArray = [];
+            $totalArray = [
+                'id' => count($entity) + 1,
+                'name' => '',
+            ];
+            $entity[] = $totalArray;
+            return $entity;
+        }
+    }
+
+    private function getLastYearId(){
+        $connection = ConnectionManager::get('default');
+        $entity = $connection->execute("SELECT @previous_year_id := previous_current_join.academic_period_id previous_academic_period_id
+                                            ,@current_year_id
+                                        FROM
+                                        (
+                                            SELECT operational_academic_periods_1.academic_period_id, @previous_start_year := MAX(academic_periods.start_date) previous_start_year
+                                            FROM 
+                                            (
+                                                SELECT institution_students.academic_period_id
+                                                FROM institution_students
+                                                GROUP BY institution_students.academic_period_id
+                                            ) operational_academic_periods_1
+                                            INNER JOIN academic_periods
+                                                ON academic_periods.id = operational_academic_periods_1.academic_period_id
+                                            LEFT JOIN 
+                                            (
+                                                SELECT @current_year_id := academic_periods.id current_academic_periods_id, @current_start_year := academic_periods.start_date curent_start_date
+                                                FROM 
+                                                (
+                                                    SELECT institution_students.academic_period_id
+                                                    FROM institution_students
+                                                    GROUP BY institution_students.academic_period_id
+                                                ) operational_academic_periods
+                                                INNER JOIN academic_periods
+                                                    ON academic_periods.id = operational_academic_periods.academic_period_id
+                                                WHERE academic_periods.current = 1
+                                            ) t
+                                                ON t.current_academic_periods_id = @current_year_id
+                                            WHERE academic_periods.start_date < @current_start_year
+                                        ) subq
+                                        INNER JOIN
+                                        (
+                                            SELECT operational_academic_periods_1.academic_period_id, academic_periods.start_date start_year
+                                            FROM 
+                                            (
+                                                SELECT institution_students.academic_period_id
+                                                FROM institution_students
+                                                GROUP BY institution_students.academic_period_id
+                                            ) operational_academic_periods_1
+                                            INNER JOIN academic_periods
+                                                ON academic_periods.id = operational_academic_periods_1.academic_period_id
+                                            LEFT JOIN 
+                                            (
+                                                SELECT @current_year_id := academic_periods.id current_academic_periods_id, @current_start_year := academic_periods.start_date curent_start_date
+                                                FROM 
+                                                (
+                                                    SELECT institution_students.academic_period_id
+                                                    FROM institution_students
+                                                    GROUP BY institution_students.academic_period_id
+                                                ) operational_academic_periods
+                                                INNER JOIN academic_periods
+                                                    ON academic_periods.id = operational_academic_periods.academic_period_id
+                                                WHERE academic_periods.current = 1
+                                            ) t
+                                                ON t.current_academic_periods_id = @current_year_id
+                                            WHERE academic_periods.start_date < @current_start_year
+                                        ) previous_current_join
+                                            ON previous_current_join.start_year = @previous_start_year")->fetch();
+        return !empty($entity) ? $entity[0] : 0;
+    }
+
+    public function onExcelTemplateInitialiseLastYearInstitutionStudentEnrolled(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $EnrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;// for enrolled status
+            $EnrolledData = $this->lastYearCurrentInstitutionStudentStatus($params['institution_id'], $EnrolledStatus);
+            $entity = $result = [];
+            if (!empty($EnrolledData)) {
+               foreach ($EnrolledData as $key => $data) {
+                    $result = [
+                        'id' => $key,
+                        'education_grade_name' => !empty($data['education_grade_name']) ? $data['education_grade_name'] : '',
+                        'last_year_enrolled_students' => !empty($data['last_year_status_students']) ? $data['last_year_status_students'] : '',
+                    ];
+                    $entity[] = $result;
+               }
+            }
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseLastYearInstitutionStudentPromoted(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $PromotedStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('PROMOTED')->first()->id;// for Promoted status
+            $GraduatedStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('GRADUATED')->first()->id;// for Graduated status
+            $CombinedStatus = '"'.$PromotedStatus.",".$GraduatedStatus.'"';
+            $PromotedData = $this->lastYearCurrentInstitutionStudentStatus($params['institution_id'], $CombinedStatus);
+            $entity = $result = [];
+            if (!empty($PromotedData)) {
+               foreach ($PromotedData as $key => $data) {
+                    $result = [
+                        'id' => $key,
+                        'education_grade_name' => !empty($data['education_grade_name']) ? $data['education_grade_name'] : '',
+                        'last_year_promoted_students' => !empty($data['last_year_status_students']) ? $data['last_year_status_students'] : '',
+                    ];
+                    $entity[] = $result;
+               }
+            }
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseLastYearInstitutionStudentWithdrawn(Event $event, array $params, ArrayObject $extra)
+    {
+       if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $WithdrawnStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('WITHDRAWN')->first()->id; // for Withdrawn status
+            $WithdrawnData = $this->lastYearCurrentInstitutionStudentStatus($params['institution_id'], $WithdrawnStatus);
+            $entity = $result = [];
+            if (!empty($WithdrawnData)) {
+               foreach ($WithdrawnData as $key => $data) {
+                    $result = [
+                        'id' => $key,
+                        'education_grade_name' => !empty($data['education_grade_name']) ? $data['education_grade_name'] : '',
+                        'last_year_withdrawn_students' => !empty($data['last_year_status_students']) ? $data['last_year_status_students'] : '',
+                    ];
+                    $entity[] = $result;
+               }
+            }
+            return $entity;
+        } 
+    }
+
+    public function onExcelTemplateInitialiseLastYearInstitutionStudentRepeated(Event $event, array $params, ArrayObject $extra)
+    {
+       if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $RepeatedStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('REPEATED')->first()->id;// for Repeated status
+            $RepeatedData = $this->lastYearCurrentInstitutionStudentStatus($params['institution_id'], $RepeatedStatus);
+            $entity = $result = [];
+            if (!empty($RepeatedData)) {
+               foreach ($RepeatedData as $key => $data) {
+                    $result = [
+                        'id' => $key,
+                        'education_grade_name' => !empty($data['education_grade_name']) ? $data['education_grade_name'] : '',
+                        'last_year_repeated_students' => !empty($data['last_year_status_students']) ? $data['last_year_status_students'] : '',
+                    ];
+                    $entity[] = $result;
+               }
+            }
+            return $entity;
+        } 
+    }
+
+    public function lastYearCurrentInstitutionStudentStatus($institutionId, $studentStatus)
+    {
+        $connection = ConnectionManager::get('default');
+        $StudentData = $connection->execute("SELECT education_grades.name education_grade_name, COUNT(DISTINCT(institution_students.student_id)) last_year_status_students
+                        FROM institution_students
+                        INNER JOIN institutions
+                            ON institutions.id = institution_students.institution_id
+                        INNER JOIN education_grades
+                            ON education_grades.id = institution_students.education_grade_id
+                        INNER JOIN academic_periods
+                            ON academic_periods.id = institution_students.academic_period_id
+                        INNER JOIN 
+                        (
+                            SELECT @previous_year_id := previous_current_join.academic_period_id previous_academic_period_id
+                                ,@current_year_id
+                            FROM
+                            (
+                                SELECT operational_academic_periods_1.academic_period_id
+                                    ,@previous_start_year := MAX(academic_periods.start_date) previous_start_year
+                                FROM 
+                                (
+                                    SELECT institution_students.academic_period_id
+                                    FROM institution_students
+                                    GROUP BY institution_students.academic_period_id
+                                ) operational_academic_periods_1
+                                INNER JOIN academic_periods
+                                    ON academic_periods.id = operational_academic_periods_1.academic_period_id
+                                LEFT JOIN 
+                                (
+                                    SELECT @current_year_id := academic_periods.id current_academic_periods_id
+                                        ,@current_start_year := academic_periods.start_date curent_start_date
+                                    FROM 
+                                    (
+                                        SELECT institution_students.academic_period_id
+                                        FROM institution_students
+                                        GROUP BY institution_students.academic_period_id
+                                    ) operational_academic_periods
+                                    INNER JOIN academic_periods
+                                        ON academic_periods.id = operational_academic_periods.academic_period_id
+                                    WHERE academic_periods.current = 1
+                                ) t
+                                ON t.current_academic_periods_id = @current_year_id
+                                WHERE academic_periods.start_date < @current_start_year
+                            ) subq
+                            INNER JOIN
+                            (
+                                SELECT operational_academic_periods_1.academic_period_id, academic_periods.start_date start_year
+                                FROM 
+                                (
+                                    SELECT institution_students.academic_period_id
+                                    FROM institution_students
+                                    GROUP BY institution_students.academic_period_id
+                                ) operational_academic_periods_1
+                                INNER JOIN academic_periods
+                                    ON academic_periods.id = operational_academic_periods_1.academic_period_id
+                                LEFT JOIN 
+                                (
+                                    SELECT @current_year_id := academic_periods.id current_academic_periods_id
+                                        ,@current_start_year := academic_periods.start_date curent_start_date
+                                    FROM 
+                                    (
+                                        SELECT institution_students.academic_period_id
+                                        FROM institution_students
+                                        GROUP BY institution_students.academic_period_id
+                                    ) operational_academic_periods
+                                    INNER JOIN academic_periods
+                                        ON academic_periods.id = operational_academic_periods.academic_period_id
+                                    WHERE academic_periods.current = 1
+                                ) t
+                                    ON t.current_academic_periods_id = @current_year_id
+                                WHERE academic_periods.start_date < @current_start_year
+                            ) previous_current_join
+                            ON previous_current_join.start_year = @previous_start_year
+                        ) academic_period_info
+                        WHERE academic_periods.id = @previous_year_id AND institutions.id = ". $institutionId ." AND institution_students.student_status_id IN (". $studentStatus .")
+                        GROUP BY education_grades.id")->fetchAll(\PDO::FETCH_ASSOC);
+        return $StudentData;
+    }
+
+    /*public function onExcelTemplateInitialiseLastYearEducationGrade(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $LastYearPeriodId = $this->getLastYearId();
+            $EducationGradesData = $InstitutionGrades->find()
+                ->select([
+                    'id' => 'EducationGrades.id',
+                    'name' => 'EducationGrades.name'
+                ])
+                ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                ->where([
+                    'EducationSystems.academic_period_id' => $LastYearPeriodId
+                ])
+                ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])
+                ->hydrate(false)
+                ->toArray()
+            ; 
+            $enrolledStudentsData = 0;
+            if(empty($EducationGradesData)){
+                $entity[] = [
+                    'education_grade_name' =>  '',
+                    'education_grade_id' =>  0,
+                    'total_student_enrolment_last_year'=> 0,
+                    'total_student_promoted_last_year'=> 0,
+                    'total_student_withdrawn_last_year'=> 0
+                ];
+                return $entity;
+            }
+            $enrolledStudentsData = 0;
+            if(empty($EducationGradesData)){
+                $entity = [];
+                return $entity;
+            }
+            foreach ($EducationGradesData as $value) {
+                $forEnrolledStatus = "1, 6, 7, 8";
+                $lastYearEnrolledStudents= $this->getLastYearStudentStatus($params['institution_id'], $value['id'], $forEnrolledStatus);
+
+                $forPromotedStatus = 7;
+                $lastYearPromotedStudents= $this->getLastYearStudentStatus($params['institution_id'], $value['id'], $forPromotedStatus);
+
+                $forWithdrawnStatus = 4;
+                $lastYearWithdrawnStudents= $this->getLastYearStudentStatus($params['institution_id'], $value['id'], $forWithdrawnStatus);
+
+                $entity[] = [
+                    'education_grade_id' => (!empty($value['id']) ? $value['id'] : 0),
+                    'education_grade_name' => (!empty($value['name']) ? $value['name'] : ''),
+                    'total_student_enrolment_last_year' => $lastYearEnrolledStudents,
+                    'total_student_promoted_last_year' => $lastYearPromotedStudents,
+                    'total_student_withdrawn_last_year' => $lastYearWithdrawnStudents
+                ];
+            }
+            return $entity;
+        }
+    }*/
+
+    public function onExcelTemplateInitialiseLastYearStudentEnrolledByArea(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;// for enrolled status
+            $distArr = $this->getAllAreaList($params['institution_id']);
+            if(!empty($distArr)){
+                $insArr = [];
+                $i=0;
+                $institutionsTbl = TableRegistry::get('institutions');
+                foreach ($distArr as $dis_key => $dis_val) {
+                    $institutionsResult = $institutionsTbl->find()->where([$institutionsTbl->aliasField('area_id IN')=> $dis_val])->toArray();
+                    foreach ($institutionsResult as $instit) {
+                        $insArr[$i][] = $instit->id;//district array
+                    }
+                    $i++;
+                }
+            }
+            $LastYearPeriodId = $this->getLastYearId();
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $EducationGradesData = $InstitutionGrades->find()
+                ->select([
+                    'id' => 'EducationGrades.id',
+                    'name' => 'EducationGrades.name'
+                ])
+                ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                ->where([
+                    'EducationSystems.academic_period_id' => $LastYearPeriodId
+                ])
+                ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])
+                ->group([
+                    'EducationGrades.id'
+                ])
+                ->order(['EducationGrades.id ASC'])
+                ->hydrate(false)
+                ->toArray();
+
+            $addEducationheading[] = ['id' =>0,'name' => 'Grade'];
+            $EducationGradesData = array_merge($addEducationheading, $EducationGradesData);
+            foreach ($EducationGradesData as $edu_key => $edu_val) {
+                $area_level_1 = $area_level_2 = $area_level_3 = $area_level_4 = $area_level_5 = $area_level_6 = $area_level_7 ='';
+                foreach ($insArr as $insKey => $insVal) {
+                    if($edu_key == 0){
+                        if($insKey == 0){
+                            $area_level_1 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 1){
+                            $area_level_2 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 2){
+                            $area_level_3 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 3){
+                            $area_level_4 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 4){
+                            $area_level_5 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 5){
+                            $area_level_6 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else{
+                            $area_level_7 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }
+                    }else{
+                        if($insKey == 0){
+                           $area_level_1 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $enrolledStatus);
+                        }else if($insKey == 1){
+                            $area_level_2 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $enrolledStatus);
+                        }else if($insKey == 2){
+                            $area_level_3 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $enrolledStatus);
+                        }else if($insKey == 3){
+                            $area_level_4 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $enrolledStatus);
+                        }else if($insKey == 4){
+                            $area_level_5 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $enrolledStatus);
+                        }else if($insKey == 5){
+                            $area_level_6 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $enrolledStatus);
+                        }else{
+                            $area_level_7 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $enrolledStatus);
+                        }
+                    }
+                }
+
+                $entity[] = [
+                        'id' => $edu_val['id'],
+                        'name' => $edu_val['name'],
+                        'area_level:1' =>$area_level_1,
+                        'area_level:2' =>$area_level_2,
+                        'area_level:3' =>$area_level_3,
+                        'area_level:4' =>$area_level_4,
+                        'area_level:5' =>$area_level_5,
+                        'area_level:6' =>$area_level_6,
+                        'area_level:7' =>$area_level_7
+                    ];
+            }
+            
+            $totalArray = [];
+            $totalArray = ['id' => count($entity) + 1];
+            $entity[] = $totalArray;
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseLastYearStudentPromotedByArea(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $PromotedStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('PROMOTED')->first()->id;// for Promoted status
+            $GraduatedStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('GRADUATED')->first()->id;// for Graduated status
+            $combArr[] = $PromotedStatus;
+            $combArr[] = $GraduatedStatus;
+            $CombinedStatus = implode(',', $combArr);
+            $distArr = $this->getAllAreaList($params['institution_id']);
+            if(!empty($distArr)){
+                $insArr = [];
+                $i=0;
+                $institutionsTbl = TableRegistry::get('institutions');
+                foreach ($distArr as $dis_key => $dis_val) {
+                    $institutionsResult = $institutionsTbl->find()->where([$institutionsTbl->aliasField('area_id IN')=> $dis_val])->toArray();
+                    foreach ($institutionsResult as $instit) {
+                        $insArr[$i][] = $instit->id;//district array
+                    }
+                    $i++;
+                }
+            }
+            $LastYearPeriodId = $this->getLastYearId();
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $EducationGradesData = $InstitutionGrades->find()
+                ->select([
+                    'id' => 'EducationGrades.id',
+                    'name' => 'EducationGrades.name'
+                ])
+                ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                ->where([
+                    'EducationSystems.academic_period_id' => $LastYearPeriodId
+                ])
+                ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])
+                ->group([
+                    'EducationGrades.id'
+                ])
+                ->order(['EducationGrades.id ASC'])
+                ->hydrate(false)
+                ->toArray();
+
+            $addEducationheading[] = ['id' =>0,'name' => 'Grade'];
+            $EducationGradesData = array_merge($addEducationheading, $EducationGradesData);
+            foreach ($EducationGradesData as $edu_key => $edu_val) {
+                $area_level_1 = $area_level_2 = $area_level_3 = $area_level_4 = $area_level_5 = $area_level_6 = $area_level_7 ='';
+                foreach ($insArr as $insKey => $insVal) {
+                    if($edu_key == 0){
+                        if($insKey == 0){
+                            $area_level_1 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 1){
+                            $area_level_2 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 2){
+                            $area_level_3 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 3){
+                            $area_level_4 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 4){
+                            $area_level_5 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 5){
+                            $area_level_6 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else{
+                            $area_level_7 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }
+                    }else{
+                        if($insKey == 0){
+                            $area_level_1 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $CombinedStatus);
+                        }else if($insKey == 1){
+                            $area_level_2 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $CombinedStatus);
+                        }else if($insKey == 2){
+                            $area_level_3 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $CombinedStatus);
+                        }else if($insKey == 3){
+                            $area_level_4 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $CombinedStatus);
+                        }else if($insKey == 4){
+                            $area_level_5 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $CombinedStatus);
+                        }else if($insKey == 5){
+                            $area_level_6 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $CombinedStatus);
+                        }else{
+                            $area_level_7 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $CombinedStatus);
+                        }
+                    }
+                }
+
+                $entity[] = [
+                        'id' => $edu_val['id'],
+                        'name' => $edu_val['name'],
+                        'area_level:1' =>$area_level_1,
+                        'area_level:2' =>$area_level_2,
+                        'area_level:3' =>$area_level_3,
+                        'area_level:4' =>$area_level_4,
+                        'area_level:5' =>$area_level_5,
+                        'area_level:6' =>$area_level_6,
+                        'area_level:7' =>$area_level_7
+                    ];
+            }
+            $totalArray = [];
+            $totalArray = ['id' => count($entity) + 1];
+            $entity[] = $totalArray;
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseLastYearStudentWithdrawnByArea(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $WithdrawnStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('WITHDRAWN')->first()->id;// for Withdrawn status
+            $distArr = $this->getAllAreaList($params['institution_id']);
+            if(!empty($distArr)){
+                $insArr = [];
+                $i=0;
+                $institutionsTbl = TableRegistry::get('institutions');
+                foreach ($distArr as $dis_key => $dis_val) {
+                    $institutionsResult = $institutionsTbl->find()->where([$institutionsTbl->aliasField('area_id IN')=> $dis_val])->toArray();
+                    foreach ($institutionsResult as $instit) {
+                        $insArr[$i][] = $instit->id;//district array
+                    }
+                    $i++;
+                }
+            }
+            $LastYearPeriodId = $this->getLastYearId();
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $EducationGradesData = $InstitutionGrades->find()
+                ->select([
+                    'id' => 'EducationGrades.id',
+                    'name' => 'EducationGrades.name'
+                ])
+                ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                ->where([
+                    'EducationSystems.academic_period_id' => $LastYearPeriodId
+                ])
+                ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])
+                ->group([
+                    'EducationGrades.id'
+                ])
+                ->order(['EducationGrades.id ASC'])
+                ->hydrate(false)
+                ->toArray();
+
+            $addEducationheading[] = ['id' =>0,'name' => 'Grade'];
+            $EducationGradesData = array_merge($addEducationheading, $EducationGradesData);
+            foreach ($EducationGradesData as $edu_key => $edu_val) {
+                $area_level_1 = $area_level_2 = $area_level_3 = $area_level_4 = $area_level_5 = $area_level_6 = $area_level_7 ='';
+                foreach ($insArr as $insKey => $insVal) {
+                    if($edu_key == 0){
+                        if($insKey == 0){
+                            $area_level_1 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 1){
+                            $area_level_2 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 2){
+                            $area_level_3 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 3){
+                            $area_level_4 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 4){
+                            $area_level_5 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 5){
+                            $area_level_6 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else{
+                            $area_level_7 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }
+                    }else{
+                        if($insKey == 0){
+                           $area_level_1 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $WithdrawnStatus);
+                        }else if($insKey == 1){
+                            $area_level_2 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $WithdrawnStatus);
+                        }else if($insKey == 2){
+                            $area_level_3 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $WithdrawnStatus);
+                        }else if($insKey == 3){
+                            $area_level_4 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $WithdrawnStatus);
+                        }else if($insKey == 4){
+                            $area_level_5 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $WithdrawnStatus);
+                        }else if($insKey == 5){
+                            $area_level_6 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $WithdrawnStatus);
+                        }else{
+                            $area_level_7 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $WithdrawnStatus);
+                        }
+                    }
+                }
+
+                $entity[] = [
+                        'id' => $edu_val['id'],
+                        'name' => $edu_val['name'],
+                        'area_level:1' =>$area_level_1,
+                        'area_level:2' =>$area_level_2,
+                        'area_level:3' =>$area_level_3,
+                        'area_level:4' =>$area_level_4,
+                        'area_level:5' =>$area_level_5,
+                        'area_level:6' =>$area_level_6,
+                        'area_level:7' =>$area_level_7
+                    ];
+            }
+            
+            $totalArray = [];
+            $totalArray = ['id' => count($entity) + 1];
+            $entity[] = $totalArray;
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseLastYearStudentRepeatedByArea(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $RepeatedStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('REPEATED')->first()->id;// for Repeated status
+            $distArr = $this->getAllAreaList($params['institution_id']);
+            if(!empty($distArr)){
+                $insArr = [];
+                $i=0;
+                $institutionsTbl = TableRegistry::get('institutions');
+                foreach ($distArr as $dis_key => $dis_val) {
+                    $institutionsResult = $institutionsTbl->find()->where([$institutionsTbl->aliasField('area_id IN')=> $dis_val])->toArray();
+                    foreach ($institutionsResult as $instit) {
+                        $insArr[$i][] = $instit->id;//district array
+                    }
+                    $i++;
+                }
+            }
+            $LastYearPeriodId = $this->getLastYearId();
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $EducationGradesData = $InstitutionGrades->find()
+                ->select([
+                    'id' => 'EducationGrades.id',
+                    'name' => 'EducationGrades.name'
+                ])
+                ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                ->where([
+                    'EducationSystems.academic_period_id' => $LastYearPeriodId
+                ])
+                ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])
+                ->group([
+                    'EducationGrades.id'
+                ])
+                ->order(['EducationGrades.id ASC'])
+                ->hydrate(false)
+                ->toArray();
+
+            $addEducationheading[] = ['id' =>0,'name' => 'Grade'];
+            $EducationGradesData = array_merge($addEducationheading, $EducationGradesData);
+            foreach ($EducationGradesData as $edu_key => $edu_val) {
+                $area_level_1 = $area_level_2 = $area_level_3 = $area_level_4 = $area_level_5 = $area_level_6 = $area_level_7 ='';
+                foreach ($insArr as $insKey => $insVal) {
+                    if($edu_key == 0){
+                        if($insKey == 0){
+                            $area_level_1 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 1){
+                            $area_level_2 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 2){
+                            $area_level_3 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 3){
+                            $area_level_4 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 4){
+                            $area_level_5 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else if($insKey == 5){
+                            $area_level_6 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }else{
+                            $area_level_7 = $this->getAreaNameByInstitution($insKey, $insVal);
+                        }
+                    }else{
+                        if($insKey == 0){
+                            $area_level_1 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $RepeatedStatus);
+                        }else if($insKey == 1){
+                            $area_level_2 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $RepeatedStatus);
+                        }else if($insKey == 2){
+                            $area_level_3 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $RepeatedStatus);
+                        }else if($insKey == 3){
+                            $area_level_4 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $RepeatedStatus);
+                        }else if($insKey == 4){
+                            $area_level_5 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $RepeatedStatus);
+                        }else if($insKey == 5){
+                            $area_level_6 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $RepeatedStatus);
+                        }else{
+                            $area_level_7 = $this->getStudentCountStatusByArea($edu_val['id'], $insVal, $RepeatedStatus);
+                        }
+                    }
+                }
+
+                $entity[] = [
+                        'id' => $edu_val['id'],
+                        'name' => $edu_val['name'],
+                        'area_level:1' =>$area_level_1,
+                        'area_level:2' =>$area_level_2,
+                        'area_level:3' =>$area_level_3,
+                        'area_level:4' =>$area_level_4,
+                        'area_level:5' =>$area_level_5,
+                        'area_level:6' =>$area_level_6,
+                        'area_level:7' =>$area_level_7
+                    ];
+            }
+            
+            $totalArray = [];
+            $totalArray = ['id' => count($entity) + 1];
+            $entity[] = $totalArray;
+            return $entity;
+        }
+    }
+
+    public function getAllAreaList($institutionId)
+    {
+        $institutionsTbl = TableRegistry::get('institutions');
+        $institutions = $institutionsTbl->find()
+                    ->where([ $institutionsTbl->aliasField('id') => $institutionId ])
+                    ->first();
+
+        $areasTbl = TableRegistry::get('areas');
+        $areaLevelsTbl = TableRegistry::get('area_levels');
+        $areaLevels = $areaLevelsTbl->find()->count();
+
+        $areas = $areasTbl->find()
+                ->select([
+                    'area_id' => $areasTbl->aliasField('id'),
+                    'area_name' => $areasTbl->aliasField('name'),
+                    'area_parent_id' => $areasTbl->aliasField('parent_id')
+                ])
+                ->where([$areasTbl->aliasField('id') => $institutions->area_id])
+                ->first();
+
+        $distArr = [];
+        if($areas->area_parent_id > 0){
+            $distArr[0][] = $institutions->area_id; //first time we get area_id
+            $k = $areas->area_parent_id;
+            for($i=$areas->area_parent_id; $i>=1; $i--){
+                if($k == ''){
+                    break;
+                }
+                for($j=1; $j<$areaLevels; $j++){
+                    //get district's regions
+                    $areas1 = $areasTbl->find()
+                        ->select([
+                            'area_id' => $areasTbl->aliasField('id'),
+                            'area_name' => $areasTbl->aliasField('name'),
+                            'area_parent_id' => $areasTbl->aliasField('parent_id')
+                        ])
+                        ->where([$areasTbl->aliasField('id') => $k])
+                        ->first();
+                    if($areas1->area_parent_id > 0){
+                        $areas2 = $areasTbl->find()
+                            ->select([
+                                'area_id' => $areasTbl->aliasField('id'),
+                                'area_name' => $areasTbl->aliasField('name'),
+                                'area_parent_id' => $areasTbl->aliasField('parent_id')
+                            ])
+                            ->where([$areasTbl->aliasField('parent_id') => $areas1->area_id])
+                            ->toArray();
+
+                        if(!empty($areas2)){
+                            foreach ($areas2 as $ar2) {
+                                $areas5 = $areasTbl->find()
+                                        ->select([
+                                            'area_id' => $areasTbl->aliasField('id'),
+                                            'area_name' => $areasTbl->aliasField('name'),
+                                            'area_parent_id' => $areasTbl->aliasField('parent_id')
+                                        ])
+                                        ->where([$areasTbl->aliasField('parent_id') => $ar2->area_id])
+                                        ->toArray();
+                                if(!empty($areas5)){
+                                    foreach ($areas5 as $ar5) {
+                                        $distArr[$j][] = $ar5->area_id;//district array
+                                    }
+                                }else{
+                                    $distArr[$j][] = $ar2->area_id;//district array
+                                }
+                            }
+                        }
+                    } else {
+                        //get country's regions
+                        $areas3 = $areasTbl->find()
+                                ->select([
+                                    'area_id' => $areasTbl->aliasField('id'),
+                                    'area_name' => $areasTbl->aliasField('name'),
+                                    'area_parent_id' => $areasTbl->aliasField('parent_id')
+                                ])
+                                ->where([$areasTbl->aliasField('parent_id') => $k])
+                                ->toArray();
+
+                        if(!empty($areas3)){
+                            $reg = [];
+                            foreach ($areas3 as $ar3) {
+                                $reg [] = $ar3->area_id;
+                            }
+                            if(!empty($reg)){
+                                $areas4 = $areasTbl->find()
+                                        ->select([
+                                            'area_id' => $areasTbl->aliasField('id'),
+                                            'area_name' => $areasTbl->aliasField('name'),
+                                            'area_parent_id' => $areasTbl->aliasField('parent_id')
+                                        ])
+                                        ->where([$areasTbl->aliasField('parent_id IN') => $reg])
+                                        ->toArray();
+                                if(!empty($areas4)){
+                                    foreach ($areas4 as $ar4) {
+                                        $areas6 = $areasTbl->find()
+                                                ->select([
+                                                    'area_id' => $areasTbl->aliasField('id'),
+                                                    'area_name' => $areasTbl->aliasField('name'),
+                                                    'area_parent_id' => $areasTbl->aliasField('parent_id')
+                                                ])
+                                                ->where([$areasTbl->aliasField('parent_id') => $ar4->area_id])
+                                                ->toArray();
+                                        if(!empty($areas6)){
+                                            foreach ($areas6 as $ar6) {
+                                                $distArr[$j][] = $ar6->area_id;//district array
+                                            }
+                                        }else{
+                                            $distArr[$j][] = $ar4->area_id;//district array
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    $k = $areas1->area_parent_id;
+                }
+            }
+        }
+        return $distArr;
+    }
+
+    public function getStudentCountStatusByArea($educationGradeId, $institutionIds=[], $studentStatus)
+    {
+        $connection = ConnectionManager::get('default');
+        $StudentData = $connection->execute("SELECT institution_students.education_grade_id, COUNT(DISTINCT(institution_students.student_id)) result
+                FROM institution_students
+                INNER JOIN institutions
+                ON institutions.id = institution_students.institution_id
+                INNER JOIN areas
+                ON areas.id = institutions.area_id
+                INNER JOIN 
+                (
+                    SELECT @previous_year_id := previous_current_join.academic_period_id previous_academic_period_id
+                    ,@current_year_id
+                    FROM
+                    (
+                        SELECT operational_academic_periods_1.academic_period_id
+                            ,@previous_start_year := MAX(academic_periods.start_date) previous_start_year
+                        FROM 
+                        (
+                            SELECT institution_students.academic_period_id
+                            FROM institution_students
+                            GROUP BY institution_students.academic_period_id
+                        ) operational_academic_periods_1
+                        INNER JOIN academic_periods
+                        ON academic_periods.id = operational_academic_periods_1.academic_period_id
+                        LEFT JOIN 
+                        (
+                            SELECT @current_year_id := academic_periods.id current_academic_periods_id
+                                ,@current_start_year := academic_periods.start_date curent_start_date
+                            FROM 
+                            (
+                                SELECT institution_students.academic_period_id
+                                FROM institution_students
+                                GROUP BY institution_students.academic_period_id
+                            ) operational_academic_periods
+                            INNER JOIN academic_periods
+                            ON academic_periods.id = operational_academic_periods.academic_period_id
+                            WHERE academic_periods.current = 1
+                        ) t
+                        ON t.current_academic_periods_id = @current_year_id
+                        WHERE academic_periods.start_date < @current_start_year
+                    ) subq
+                    INNER JOIN
+                    (
+                        SELECT operational_academic_periods_1.academic_period_id
+                            ,academic_periods.start_date start_year
+                        FROM 
+                        (
+                            SELECT institution_students.academic_period_id
+                            FROM institution_students
+                            GROUP BY institution_students.academic_period_id
+                        ) operational_academic_periods_1
+                        INNER JOIN academic_periods
+                        ON academic_periods.id = operational_academic_periods_1.academic_period_id
+                        LEFT JOIN 
+                        (
+                            SELECT @current_year_id := academic_periods.id current_academic_periods_id
+                                ,@current_start_year := academic_periods.start_date curent_start_date
+                            FROM 
+                            (
+                                SELECT institution_students.academic_period_id
+                                FROM institution_students
+                                GROUP BY institution_students.academic_period_id
+                            ) operational_academic_periods
+                            INNER JOIN academic_periods
+                            ON academic_periods.id = operational_academic_periods.academic_period_id
+                            WHERE academic_periods.current = 1
+                        ) t
+                        ON t.current_academic_periods_id = @current_year_id
+                        WHERE academic_periods.start_date < @current_start_year
+                    ) previous_current_join
+                    ON previous_current_join.start_year = @previous_start_year
+                ) academic_period_info
+                WHERE institution_students.institution_id IN (".implode(",",$institutionIds).") AND institution_students.academic_period_id = @previous_year_id AND institution_students.education_grade_id = ".$educationGradeId." AND institution_students.student_status_id IN (".$studentStatus.")
+                GROUP BY institution_students.education_grade_id")->fetch('assoc');
+        $data = 0;
+        if(!empty($StudentData)){
+            $data = $StudentData['result'];
+        }
+        return $data;
+    }
+    //POCOR-7421 Ends
+    //POCOR-7449 Starts
+    public function onExcelTemplateInitialiseTeachingStaffTotalAbsences(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $connection = ConnectionManager::get('default');
+            $StaffLeaveData = $connection->execute("SELECT ROUND(IFNULL(SUM(institution_staff_leave.number_of_days), 0), 0) school_staff_absent_days
+                            FROM institution_staff_leave
+                            INNER JOIN 
+                            (
+                                SELECT institution_staff.staff_id
+                                FROM institution_staff
+                                INNER JOIN institution_positions
+                                    ON institution_positions.id = institution_staff.institution_position_id
+                                INNER JOIN staff_position_titles 
+                                    ON staff_position_titles.id = institution_positions.staff_position_title_id
+                                INNER JOIN academic_periods
+                                    ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
+                                WHERE institution_staff.institution_id = ". $params['institution_id'] ." AND staff_position_titles.type = 1 AND academic_periods.id = ". $params['academic_period_id'] ." AND institution_staff.staff_status_id = 1
+                                GROUP BY institution_staff.staff_id
+                            ) teaching_staff_info
+                                ON teaching_staff_info.staff_id = institution_staff_leave.staff_id
+                            WHERE institution_staff_leave.academic_period_id = ". $params['academic_period_id'] ." AND institution_staff_leave.institution_id = ". $params['institution_id'] ."")->fetch('assoc');
+            $data = " 0";
+            if(!empty($StaffLeaveData)){
+                $data = !empty($StaffLeaveData['school_staff_absent_days']) ? $StaffLeaveData['school_staff_absent_days'] : " 0";
+            }
+            return $data;
+        }
+    }
+
+    public function onExcelTemplateInitialiseAreaTeachingStaffTotalAbsenceDays(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $AreaId = $this->getAreaIdByInstitutionId($params['institution_id']);
+            $connection = ConnectionManager::get('default');
+            $AreaStaffAbsentDaysData = $connection->execute("SELECT ROUND(IFNULL(SUM(institution_staff_leave.number_of_days), 0), 0) area_staff_absent_days
+                                FROM institution_staff_leave
+                                INNER JOIN institutions
+                                    ON institutions.id = institution_staff_leave.institution_id
+                                INNER JOIN 
+                                (
+                                    SELECT institution_staff.staff_id
+                                    FROM institution_staff
+                                    INNER JOIN institutions
+                                        ON institutions.id = institution_staff.institution_id
+                                    INNER JOIN institution_positions
+                                        ON institution_positions.id = institution_staff.institution_position_id
+                                    INNER JOIN staff_position_titles 
+                                        ON staff_position_titles.id = institution_positions.staff_position_title_id
+                                    INNER JOIN academic_periods
+                                        ON (((institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.start_date AND institution_staff.end_date >= academic_periods.start_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date <= academic_periods.end_date AND institution_staff.end_date >= academic_periods.end_date) OR (institution_staff.end_date IS NOT NULL AND institution_staff.start_date >= academic_periods.start_date AND institution_staff.end_date <= academic_periods.end_date)) OR (institution_staff.end_date IS NULL AND institution_staff.start_date <= academic_periods.end_date))
+                                    WHERE institutions.area_id = ".$AreaId." AND staff_position_titles.type = 1 AND academic_periods.id = ". $params['academic_period_id'] ." AND institution_staff.staff_status_id = 1
+                                    GROUP BY institution_staff.staff_id
+                                ) teaching_staff_info
+                                    ON teaching_staff_info.staff_id = institution_staff_leave.staff_id
+                                WHERE institution_staff_leave.academic_period_id = ". $params['academic_period_id'] ." AND institutions.area_id = ".$AreaId."")->fetch('assoc');
+            $data = " 0";
+            if(!empty($AreaStaffAbsentDaysData)){
+                $data = !empty($AreaStaffAbsentDaysData['area_staff_absent_days']) ? $AreaStaffAbsentDaysData['area_staff_absent_days'] : " 0";
+            }
+            return $data;
+        }
+    }//POCOR-7449 Ends
 }

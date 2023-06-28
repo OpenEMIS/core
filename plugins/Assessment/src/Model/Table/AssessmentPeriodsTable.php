@@ -43,7 +43,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
-
+        $this->hasMany('AssessmentPeriodExcludedSecurityRoles', ['className' => 'Assessments.AssessmentPeriodExcludedSecurityRoles', 'foreignKey' => 'assessment_period_id']); //POCOR-7400
         $this->addBehavior('Restful.RestfulAccessControl', [
         'Results' => ['index']
         ]);
@@ -359,6 +359,21 @@ class AssessmentPeriodsTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
          $query->contain(['EducationSubjects']);
+         //POCOR-7400 start
+         $query->contain(['AssessmentPeriodExcludedSecurityRoles']);
+         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $arr =[];
+                foreach($row->assessment_period_excluded_security_roles as $key=> $role){
+                    $arr[$key] = ['id'=>$role['security_role_id']];
+                }
+                $row['excluded_security_roles'] = $arr;
+                
+                return $row;
+            });
+        });
+        //POCOR-7400 end
+ 
     }
 
     public function editAfterAction(Event $event, Entity $entity)
@@ -388,7 +403,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
                 'label' => $this->getMessage('Assessments.subjects')
             ]
         ]);
-
+        $this->field('excluded_security_roles');//POCOR-7400
         $this->field('weight', [
             'attr' => [
                 'label' => $this->getMessage('Assessments.periodWeight')
@@ -398,7 +413,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $this->controller->set('assessmentGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
 
         $this->setFieldOrder([
-             'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'weight', 'education_subjects'
+             'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled','excluded_security_roles', 'weight', 'education_subjects'
         ]);
 
         //this is to sort array based on certain value on subarray, in this case based on education order value
@@ -716,7 +731,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         ]);
 
         $this->setFieldOrder([
-             'academic_period_id', 'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'weight', 'education_subjects'
+             'academic_period_id', 'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled','excluded_security_roles', 'weight', 'education_subjects'
         ]);
     }
 
@@ -785,4 +800,70 @@ class AssessmentPeriodsTable extends ControllerActionTable
             }
         }
     }
+    //POCOR-7400 start
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $SecurityRoles = TableRegistry::get('security_roles');
+        $SecurityRoleOptions = $SecurityRoles->find('list',['keyField' => 'id', 'valueField' => 'name']);
+        $tooltipMessage="The security roles chosen here will not be affected by the date enabled and date disabled.";
+        $this->field('excluded_security_roles', [
+            'type' => 'chosenSelect',
+            'attr' => [
+                 'label' => [
+                    'text' => __('Excluded Security Roles') . ' <i class="fa fa-info-circle fa-lg fa-right icon-blue"  tooltip-placement="bottom" uib-tooltip="' .$tooltipMessage . '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>',
+                    'escape' => false,
+                    'class' => 'tooltip-desc'
+                ]
+        ]]);
+        $this->fields['excluded_security_roles']['options'] =  $SecurityRoleOptions;
+    }
+     
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+       
+        $table=TableRegistry::get('assessment_periods');
+        $entityData=$table->find()->where([$table->aliasField('code')=>$entity->code,
+                                           $table->aliasField('assessment_id')=>$entity->assessment_id,
+                                           $table->aliasField('academic_term')=>$entity->academic_term,
+        ])->first();
+      
+        $AssessmentPeriodExcludedSecurityRolesTable = TableRegistry::get('assessment_period_excluded_security_roles');
+  
+        if($this->request->params['pass'][0] == 'edit'){
+           
+        $ExcludedSecurityRoleData =  $AssessmentPeriodExcludedSecurityRolesTable->find()->where(['assessment_period_id'=>$entityData->id])->toArray();
+        if($ExcludedSecurityRoleData){
+           foreach($ExcludedSecurityRoleData as $ExcludedSecurityRoleEntity){
+               $deleteEntity =  $AssessmentPeriodExcludedSecurityRolesTable->delete($ExcludedSecurityRoleEntity);
+           }}
+        }
+   
+        foreach($entity->excluded_security_roles['_ids'] as $one){
+            
+            $ExcludedSecurityRoleEntity = [ 'assessment_period_id' => $entityData->id,
+                                            'security_role_id'=> $one
+                                          ];
+            $ExcludedSecurityRoles = $AssessmentPeriodExcludedSecurityRolesTable ->newEntity($ExcludedSecurityRoleEntity);
+            $ExcludedSecurityRoleResult = $AssessmentPeriodExcludedSecurityRolesTable->save($ExcludedSecurityRoles);
+   
+        }    
+    }
+
+    public function onGetExcludedSecurityRoles(Event $event, Entity $entity)
+    {
+        $table=TableRegistry::get('security_roles');
+        $obj = [];
+        if ($entity->has('excluded_security_roles')) {
+           
+            foreach ($entity->excluded_security_roles as $role) {
+               $res= $table->find('list')->where(['id'=>$role['id']])->first();
+               $obj[] = $res;
+            }
+        }
+          
+        $values = !empty($obj) ? implode(', ', $obj) : __('No Excluded Security Roles ');
+        return $values;
+    }
+
+     //POCOR-7400 end
 }

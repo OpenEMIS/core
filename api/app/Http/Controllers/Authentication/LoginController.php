@@ -34,10 +34,9 @@ class LoginController extends Controller
                 if (!$token = JWTAuth::attempt($input)) {
                     return $this->sendErrorResponse('Invalid Email or Password');
                 }
-                $api_key = $request->api_key??"";
-
                 
-                return $this->sendSuccessResponse('Logged In successfully', ['token' => $token]); 
+
+                return $this->sendSuccessResponse('Logged In successfully', ['token' => $token, 'client_id' => $apiCredentials->client_id??""]); 
             } else {
                 return $this->sendErrorResponse("You Are Not Authorized To Access This Page");
             }

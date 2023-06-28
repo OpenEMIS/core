@@ -22,7 +22,7 @@ class UserRepository extends Controller
                 $limit = $params['limit'];
             }
             
-            $users = SecurityUsers::with('nationalities', 'identities');
+            $users = SecurityUsers::with('identityType', 'nationalities', 'identities');
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
@@ -55,7 +55,8 @@ class UserRepository extends Controller
                     'institutionStudent.educationGrade',
                     'institutionStudent.studentStatus',
                     'identities',
-                    'nationality'
+                    'nationality',
+                    'identityType'
                 )
                     ->where('id', $userId)
                     ->get();
