@@ -882,11 +882,13 @@ class InstitutionController extends Controller
     {
         try {
             $data = $this->institutionService->saveStudentData($request);
-            dd($data);
+            
             if($data == 1){
-                return $this->sendErrorResponse("Student data stored successfully.");
-            } else {
-                return $this->sendSuccessResponse("Student data not stored.", $data);
+                return $this->sendSuccessResponse("Student data stored successfully.");
+            } elseif($data == 2) {
+                return $this->sendErrorResponse("Invalid academic period.");
+            }else {
+                return $this->sendErrorResponse("Student data not stored.", $data);
             }
             
         } catch (\Exception $e) {
