@@ -642,7 +642,6 @@ class StudentReportCardsTable extends AppTable
                 ->find()
                 ->select([
 					'id' => $StudentBehaviours->aliasField('id'),
-					'title' => $StudentBehaviours->aliasField('title'),
 					'description' => $StudentBehaviours->aliasField('description'),
 					'action' => $StudentBehaviours->aliasField('action'),
 					'date_of_behaviour' => $StudentBehaviours->aliasField('date_of_behaviour'),
