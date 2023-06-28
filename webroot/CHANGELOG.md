@@ -1,3 +1,22 @@
+### [3.88.0] - 2023-06-28
+- Implemented: Convert language proficiency to field options
+- Implemented: Develop changes to the student behaviour page
+- Implemented: Develop an API to delete student attendance
+- Implemented: Rename Associations to Houses
+- Implemented: Develop "External Data Source - Exams" page
+- Bug Fixed: Institutions > Students > Special Needs : Issues on Special needs feature
+- Bug Fixed: Report>Institutions>Student Absences: Add type, education grade, report start date and report end date filters
+- Bug Fixed: PHP fatal error: Out of memory allocation
+- Bug Fixed: Institution > Student > Academic > Behaviour: User is not able to see behaviour page
+- Bug Fixed: Reports > Staff: Staff Positions Report: Report is stuck in progress
+- Bug Fixed: Institutions > Academic > Subjects > Add page: When education subject is set to NO, student that was once withdrawn or transferred from the current Institution and was enrolled back
+- Bug Fixed: Institutions>Students>Academic: Hide extracurricular tab
+- Bug Fixed: Institutions>Performance>Assessments: 404 error when clicking the assessment tab
+- Bug Fixed: Institutions > Performances > Report Cards : System should update error status of both institution_student_report_cards and report_card_processes tables
+- Bug Fixed: Reports > Institutions: Institutions: Staff is stuck in progress
+- Bug Fixed: Institutions>Survey>Forms: The view page does not match the Filter tab page
+- Bug Fixed: Institutions>Survey>Forms: The survey created should be showing
+
 ### [3.87.4] - 2023-06-23
 - Bug Fixed: Administration/Reports: Users are able to see Administration and Report module even when they have no permissions
 - Bug Fixed: Administration: Student and teacher user can access administration module page when there is no permission enabled
