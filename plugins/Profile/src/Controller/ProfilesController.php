@@ -690,7 +690,7 @@ class ProfilesController extends AppController
             'ExaminationResults' => ['text' => __('Examinations')],
             'ReportCards' => ['text' => __('Report Cards')],
             'Awards' => ['text' => __('Awards')],
-            'Extracurriculars' => ['text' => __('Extracurriculars')],
+            //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7413
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
             'Associations' => ['text' => __('Associations')],
@@ -773,7 +773,7 @@ class ProfilesController extends AppController
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
                 'Qualifications' => ['text' => __('Qualifications')],
-                'Extracurriculars' => ['text' => __('Extracurriculars')],
+                //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7513
                 'Memberships' => ['text' => __('Memberships')],
                 'Licenses' => ['text' => __('Licenses')],
                 'Awards' => ['text' => __('Awards')],

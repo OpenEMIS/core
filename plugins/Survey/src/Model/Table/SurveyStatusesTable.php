@@ -291,6 +291,7 @@ class SurveyStatusesTable extends ControllerActionTable
        //echo "<pre>"; print_r($entity);die;
         $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
         $Institutions = TableRegistry::get('Institution.Institutions');
+        $Areas = TableRegistry::get('Area.Areas');// POCOR-7549
         $InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
         $surveyfilterAreas = TableRegistry::get('survey_filter_areas');
         $filterInstitutionProviders = TableRegistry::get('survey_filter_institution_providers');
@@ -338,6 +339,15 @@ class SurveyStatusesTable extends ControllerActionTable
                 $institutionAreaId = $value['area_education_id'];
                 if($institutionAreaId != -1){
                     $areaId[] = $value['area_education_id'];
+                    //POCOR-7549 start
+                    $areaEntity=$Areas->find()
+                                     ->select([$Areas->aliasField('id')])
+                                     ->where([$Areas->aliasField('parent_id')=>$value['area_education_id']])
+                                     ->toArray();
+                    foreach($areaEntity as $key=>$value){
+                        $areaId[]=$value['id'];
+                    }
+                    // POCOR-7549 end
                 }
             }
 
