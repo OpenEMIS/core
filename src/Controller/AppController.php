@@ -297,4 +297,83 @@ class AppController extends Controller
         $UsersTable = TableRegistry::get('User.Users');
         $UsersTable->dispatchEvent('Model.Users.updateLoginLanguage', [$user, $lang], $this);
     }
+    //POCOR-7534 Starts
+    public function beforeFilter(Event $event)
+    {
+        parent::beforeFilter($event);
+        $session = $this->request->session();
+        $superAdmin = $session->read('Auth.User.super_admin');
+        if($superAdmin == 0){
+            $UserData = $session->read('Auth.User')['id'];
+            $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+            $userRole = $GroupRoles->find()
+                        ->contain('SecurityRoles')
+                        ->order(['SecurityRoles.order'])
+                        ->where([
+                            $GroupRoles->aliasField('security_user_id') => $UserData
+                        ])
+                        ->group([$GroupRoles->aliasField('security_role_id')])
+                        ->toArray();
+            
+            if(!empty($this->request->params['controller']) && !empty($userRole)){
+                $RoleIds = [];
+                foreach ($userRole as $Role_key => $Role_val) {  $RoleIds[] = $Role_val->security_role_id; }
+                $SecurityFunctionIds = $this->getIdBySecurityFunctionName($this->request->params['action'], $this->request->params['controller']);
+                if(!empty($SecurityFunctionIds)){
+                    $result = $this->checkAuthrizationForRoles($SecurityFunctionIds, $RoleIds);
+                    if($result == 0){
+                        $event->stopPropagation();
+                        $this->Alert->warning('general.notAccess');
+                        $this->redirect($this->referer());
+                    }
+                }
+            }
+        }
+    }
+
+    public function getIdBySecurityFunctionName($actionParam, $controllerParam){
+        $name = '';
+        if($actionParam == 'Users' && $controllerParam == 'Securities'){
+            $name = 'Users';
+        }else if(($actionParam == 'UserGroups' || $actionParam == 'SystemGroups') && $controllerParam == 'Securities'){
+            $name = 'Groups';  
+        }else if($actionParam == 'Roles' && $controllerParam == 'Securities'){
+            $name = ($this->request->query['type'] == 'system') ? 'System Roles' : 'User Roles';
+        }else if($actionParam == 'Accounts' && $controllerParam == 'Securities'){
+            $name = 'Accounts';  
+        }else if($actionParam == 'UserGroupsList' && $controllerParam == 'Securities'){
+            $name = 'User Group List';  
+        }else if($controllerParam == 'Credentials'){
+            $name = 'Credentials';  
+        }
+        $module = 'Administration';
+        $SecurityFunctionsTbl = TableRegistry::get('security_functions');
+        $SecurityFunctionsData = $SecurityFunctionsTbl->find()->where([
+                                        $SecurityFunctionsTbl->aliasField('name') => $name,
+                                        $SecurityFunctionsTbl->aliasField('controller') => $controllerParam,
+                                        $SecurityFunctionsTbl->aliasField('module') => $module
+                                    ])->toArray();
+        $SecurityFunctionIds = [];
+        if(!empty($SecurityFunctionsData)){
+            foreach ($SecurityFunctionsData as $Function_key => $Function_val) { $SecurityFunctionIds[] = $Function_val->id; }
+        }
+        return $SecurityFunctionIds;
+    }
+
+    public function checkAuthrizationForRoles($securityFunctionsId, $roleId)
+    {
+        $SecurityRoleFunctionsTbl = TableRegistry::get('security_role_functions');
+        $SecurityRoleFunctionsTblData = $SecurityRoleFunctionsTbl->find()->where([
+                                            $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $roleId,
+                                            $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $securityFunctionsId,
+                                            $SecurityRoleFunctionsTbl->aliasField('_view') => 1
+                                        ])->toArray();
+        $dataArray = [];
+        if(!empty($SecurityRoleFunctionsTblData)){
+            foreach ($SecurityRoleFunctionsTblData as $key => $value) {
+                if($value->_view == 1){ $dataArray[] = $value->_view; }
+            }
+        }
+        return count($dataArray);
+    }//POCOR-7534 ends
 }
