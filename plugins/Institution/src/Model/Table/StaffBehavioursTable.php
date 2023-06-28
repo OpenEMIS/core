@@ -219,7 +219,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->field('assignee_id', ['entity' => $entity]);
         $this->field('staff_behaviour_category_id', ['type' => 'select']);
         $this->field('behaviour_classification_id', ['type' => 'select']);
-        $this->setFieldOrder(['academic_period_id', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour','description','assignee_id']);//POCOR-6670
+        $this->setFieldOrder(['academic_period_id', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour','description','action','assignee_id']);//POCOR-6670
     }
 
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -235,7 +235,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->field('staff_behaviour_category_id', ['entity' => $entity]);
         $this->field('behaviour_classification_id', ['entity' => $entity]);
 
-        $this->setFieldOrder(['academic_period_id', 'openemis_no', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour','description','assignee_id']);//POCOR-6670
+        $this->setFieldOrder(['academic_period_id', 'openemis_no', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour','description','action','assignee_id']);//POCOR-6670
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
