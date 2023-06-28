@@ -452,7 +452,7 @@ class SurveyFiltersTable extends ControllerActionTable
     {
         $type = $entity->institution_type_id[0]['institution_type_id'];
         $provider = $entity->institution_provider_id[0]['institution_provider_id'];
-        $areaEducation = $entity->institution_provider_id[0]['institution_provider_id'];
+        $areaEducation = $entity->area_education_id[0]['area_education_id'];//POCOR-7549
         $filterId = $entity->id;
         $institutionProvider = TableRegistry::get('survey_filter_institution_providers');
         $institutionType = TableRegistry::get('survey_filter_institution_types');
