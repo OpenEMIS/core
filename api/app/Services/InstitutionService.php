@@ -1291,7 +1291,16 @@ class InstitutionService extends Controller
         try {
             $data = $this->institutionRepository->getAbsenceReasons($request);
 
-            return $data;
+            $list = [];
+            if(count($data) > 0){
+                foreach($data as $k => $d){
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['name'] = $d['name'];
+                }
+            }
+            
+            return $list;
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to get Absence Reasons List.',
