@@ -163,8 +163,8 @@ class SpecialNeedsPlansTable extends ControllerActionTable
 
     private function setupFields($entity = null)
     {
-        $condition = [$this->AcademicPeriods->aliasField('current').' <> ' => "1"];
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
+        // $condition = [$this->AcademicPeriods->aliasField('current').' <> ' => "1"]; // // POCOR-7467
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(); //['conditions' => $condition]  // POCOR-7467
         $specialNeedsPlanTypesOptions = $this->SpecialNeedsPlanTypes->getPlanTypeList();
         $this->field('academic_period_id', ['type' => 'select', 'options' => $academicPeriodOptions]);
         $this->field('special_needs_plan_types_id', ['type' => 'select', 'options' => $specialNeedsPlanTypesOptions]);
@@ -196,4 +196,24 @@ class SpecialNeedsPlansTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    // Start POCOR-7467
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        // Academic Periods Filter
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : '-1';
+
+        $academicPeriodOptions = ['-1' => 'All Academic Period'] + $academicPeriodOptions;
+        if ($selectedAcademicPeriod != '-1') {
+            $query->where([
+                $this->aliasField('academic_period_id') => $selectedAcademicPeriod
+            ]);
+        }
+
+        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
+        $extra['elements']['controls'] = ['name' => 'SpecialNeeds.Plans/controls', 'data' => [], 'options' => [], 'order' => 1];
+        // Academic Periods Filter - END
+    }
+    // End POCOR-7467
 }
