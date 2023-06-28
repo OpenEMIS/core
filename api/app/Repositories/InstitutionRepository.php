@@ -1828,7 +1828,7 @@ class InstitutionRepository extends Controller
             $academicPeriod = AcademicPeriod::where('id', $param['academic_period_id'])->first();
 
             if(!$academicPeriod){
-                return 1;
+                return 2;
             }
 
             $start_year = $academicPeriod->start_year;
@@ -1840,7 +1840,7 @@ class InstitutionRepository extends Controller
 
             //get Student Status List
             $studentStatus = StudentStatuses::pluck('id', 'code')->toArray();
-            dd($studentStatus);
+            
 
             //get nationality data
             $nationalities = '';
@@ -1932,7 +1932,7 @@ class InstitutionRepository extends Controller
                     'created_user_id' => JWTAuth::user()->id,
                     'created' => Carbon::now()->toDateTimeString()
                 ];
-                dd("entityData",$entityData);
+                
                 if($checkStudentExist){
                     $securityUser = $checkStudentExist;
                     $securityUserResult = SecurityUsers::where('id', $checkStudentExist->id)->update($entityData);
@@ -2059,7 +2059,7 @@ class InstitutionRepository extends Controller
                         ->leftjoin('institution_subjects', 'institution_subjects.id', '=', 'institution_class_subjects.institution_subject_id')
                         ->join('education_grades_subjects', function($join){
                             $join->on('education_grades_subjects.education_grade_id', '=', 'institution_subjects.education_grade_id')
-                                ->('education_grades_subjects.education_subject_id', '=', 'institution_subjects.education_subject_id');
+                                ->on('education_grades_subjects.education_subject_id', '=', 'institution_subjects.education_subject_id');
                         })
                         ->where('institution_class_subjects.institution_class_id', '=', $param['institution_class_id'])
                         ->where('institution_subjects.academic_period_id', '=', $param['academic_period_id'])
@@ -2127,16 +2127,17 @@ class InstitutionRepository extends Controller
                     }
 
                 }  else {
-                    return false;
+                    DB::commit();
+                    return 0;
                 }
 
 
             }
             DB::commit();
-            return true;
+            return 1;
         } catch (\Exception $e) {
             DB::rollback();
-            dd($e);
+            
             Log::error(
                 'Failed to store student data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
