@@ -79,6 +79,7 @@ class StudentsTable extends AppTable
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('report_for', ['type' => 'hidden']);   //POCOR-7467
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('institution_type_id', ['type' => 'hidden']);
@@ -204,6 +205,32 @@ class StudentsTable extends AppTable
             }
         }
     }
+
+    // START POCOR-7467
+    public function onUpdateFieldReportFor(Event $event, array $attr, $action, Request $request){
+        if (isset($request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+
+            if ((in_array($feature, ['Report.SpecialNeeds']))
+                ) {
+                $healthReportTypeOptions = [
+                    'referral' => __('All Student Special Needs Referrals'),
+                    'assessments' => __('All Student Special Needs Assessments'),
+                    'services' => __('All Student Special Needs Services'),
+                    'devices' => __('All Student Special Needs Devices'),
+                    'plans' => __('All Student Special Needs Plans'),
+                    'diagnostics' => __('all Student Special Needs Diagnostics'),
+                ];
+                $attr['options'] = $healthReportTypeOptions;
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['onChangeReload'] = true;
+
+                return $attr;
+            }
+        }
+    }
+    // END POCOR-7467
 
     public function onUpdateFieldHealthReportType(Event $event, array $attr, $action, Request $request){
         if (isset($request->data[$this->alias()]['feature'])) {
