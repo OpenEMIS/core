@@ -7599,7 +7599,7 @@ class InstitutionsController extends AppController
         $configItemsResult = $configItems
             ->find()
             ->select(['id', 'value'])
-            ->where(['code' => 'external_data_source_type', 'type' => 'External Data Source', 'name' => 'Type'])
+            ->where(['code' => 'external_data_source_type', 'type' => 'External Data Source Identity', 'name' => 'Type'])
             ->toArray();
         foreach ($configItemsResult AS $result) {
             if ($result['value'] == "None") {
@@ -8153,7 +8153,7 @@ class InstitutionsController extends AppController
         $configItemsTbl = TableRegistry::get('config_items');
         $configItemsResult = $configItemsTbl
             ->find()
-            ->where(['visible' => 1, 'code' => 'external_data_source_type', 'type' => 'External Data Source'])
+            ->where(['visible' => 1, 'code' => 'external_data_source_type', 'type' => 'External Data Source Identity'])
             ->hydrate(false)
             ->toArray();
 
