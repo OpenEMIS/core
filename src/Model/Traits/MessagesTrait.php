@@ -2307,6 +2307,13 @@ trait MessagesTrait
                     'ruleCheckPositionGrades' => 'You are not allowed to remove the following in-use grades: %s',
                ]
             ]
+            // Start POCOR-4824
+            ,'LanguageProficiencies' => [
+               'name' => [
+                    'ruleUnique' => 'This name already exists in the system',
+                ]
+            ]
+            // End POCOR-4824
         ],
         'Configuration' => [
             'ConfigProductLists' => [
