@@ -141,14 +141,14 @@ class SurveyFiltersTable extends ControllerActionTable
         $this->fields['institution_type_id']['options'] = [-1 => __('All Institution Type')] + $typeOptions;
         $this->field('institution_type_id', [
             'type' => 'chosenSelect',
-            'attr' => ['label' => __('Institution Type')],
+            'attr' => ['label' => __('Institution Type'),'required'=>true], //POCOR-7548
             'visible' => ['index' => true, 'view' => true, 'edit' => true, 'add' => true]
         ]);
         $institutionProvider = $this->getInstitutionProvider();
         $this->fields['institution_provider_id']['options'] =  [-1 => __('All Institution Provider')] + $institutionProvider;
         $this->field('institution_provider_id', [
             'type' => 'chosenSelect',
-            'attr' => ['label' => __('Institution Provider')],
+            'attr' => ['label' => __('Institution Provider'),'required'=>true], //POCOR-7548
             'visible' => ['index' => true, 'view' => true, 'edit' => true, 'add' => true]
         ]);
 
@@ -156,7 +156,7 @@ class SurveyFiltersTable extends ControllerActionTable
         $this->fields['area_education_id']['options'] = [-1 => __('All Areas Education')] + $areaEducationId;
         $this->field('area_education_id', [
             'type' => 'chosenSelect',
-            'attr' => ['label' => __('Area Education')],
+            'attr' => ['label' => __('Area Education'),'required'=>true], //POCOR-7548
             'visible' => ['index' => true, 'view' => true, 'edit' => true, 'add' => true]
         ]);
         
@@ -164,9 +164,17 @@ class SurveyFiltersTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('institution_provider_id', ['visible' => true]);	//POCOR-7548
+        $this->field('institution_type_id', ['visible' => true]);	//POCOR-7548
+        $this->field('area_education_id', ['visible' => true]);  //POCOR-7548
         $filterId = $entity->id;
         session_start();
         $_SESSION["surveyFilterId"] = $filterId;
+        //POCOR-7548
+        $this->setFieldOrder([	
+            'custom_module_id', 'survey_form_id', 'name', 'date_disabled', 'institution_provider_id', 'institution_type_id','area_education_id'	
+        ]);
+        //POCOR-7548
     }
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
@@ -452,7 +460,7 @@ class SurveyFiltersTable extends ControllerActionTable
     {
         $type = $entity->institution_type_id[0]['institution_type_id'];
         $provider = $entity->institution_provider_id[0]['institution_provider_id'];
-        $areaEducation = $entity->area_education_id[0]['area_education_id'];//POCOR-7549
+        $areaEducation = $entity->area_education_id[0]['area_education_id']; //POCOR-7548
         $filterId = $entity->id;
         $institutionProvider = TableRegistry::get('survey_filter_institution_providers');
         $institutionType = TableRegistry::get('survey_filter_institution_types');
