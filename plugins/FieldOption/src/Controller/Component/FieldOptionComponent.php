@@ -26,7 +26,6 @@ use Cake\ORM\TableRegistry;
 class FieldOptionComponent extends Component
 {
     private $controller;
-    
     private $fieldOptions = [];
 
     

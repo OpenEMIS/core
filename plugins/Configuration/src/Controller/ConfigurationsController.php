@@ -164,4 +164,13 @@ class ConfigurationsController extends AppController
             $this->Alert->$alertType($alertMessage);
         }
     }
+
+    // Start POCOR-7508
+
+    public function ExternalDataSourceExams()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataSourceExam']);
+    }
+
+    // End POCOR-7508
 }
