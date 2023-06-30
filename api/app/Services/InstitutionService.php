@@ -1284,4 +1284,40 @@ class InstitutionService extends Controller
         }
     }
 
+
+
+    public function deleteClassAttendance($request)
+    {
+        try {
+            $data = $this->institutionRepository->deleteClassAttendance($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to delete student attendance.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to delete student attendance.');
+        }
+    }
+
+
+
+    public function deleteStudentAttendance($request, $studentId)
+    {
+        try {
+            $data = $this->institutionRepository->deleteStudentAttendance($request, $studentId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to delete student attendance.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to delete student attendance.');
+        }
+    }
+
 }

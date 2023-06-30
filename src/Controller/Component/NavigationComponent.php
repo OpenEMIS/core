@@ -760,7 +760,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution']
             ],
             'Institutions.Associations' => [
-                'title' => 'Associations',
+                'title' => 'Houses',
                 'parent' => 'Institution.Academic',
                 'selected' => ['Institutions.Associations'],
                 'params' => ['plugin' => 'Institution']
