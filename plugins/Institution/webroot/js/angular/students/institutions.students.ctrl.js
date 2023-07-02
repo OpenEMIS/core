@@ -1054,8 +1054,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.messageClass = '';
         StudentController.message = ``;
         if (StudentController.step === 'confirmation') {
-            const studentExistByIdentityFromConfiguaration = await StudentController.checkUserExistByIdentityFromConfiguaration();
-            if (studentExistByIdentityFromConfiguaration) return;
+            const studentExistByIdentityFromConfiguration = await StudentController.checkUserExistByIdentityFromConfiguration();
+            if (studentExistByIdentityFromConfiguration) return;
         }
 
         if (StudentController.studentExistInTheSameSchool()) {
@@ -1264,9 +1264,19 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function saveStudentDetails() {
         if(StudentController.multipleInstitutionsStudentEnrollment){
-            StudentController.studentData.is_diff_school = false;
+            if(typeof StudentController.studentData != "undefined"){
+                if(typeof StudentController.studentData.is_diff_school != "undefined") {
+                    StudentController.studentData.is_diff_school = 0;
+                }
+            }
+            if(typeof StudentController.selectedStudentData != "undefined"){
+                if(typeof StudentController.selectedStudentData.is_diff_school != "undefined") {
+                    StudentController.selectedStudentData.is_diff_school = 0;
+                }
+            }
         }
-        let startDate = StudentController.studentData && StudentController.studentData.is_diff_school > 0 ? $filter('date')(StudentController.selectedStudentData.transferStartDate, 'yyyy-MM-dd') : $filter('date')(StudentController.selectedStudentData.startDate, 'yyyy-MM-dd');
+        let startDate = StudentController.studentData
+        && StudentController.studentData.is_diff_school > 0 ? $filter('date')(StudentController.selectedStudentData.transferStartDate, 'yyyy-MM-dd') : $filter('date')(StudentController.selectedStudentData.startDate, 'yyyy-MM-dd');
         const addressAreaRef = InstitutionsStudentsSvc.getAddressArea();
         addressAreaRef && (StudentController.selectedStudentData.addressArea = addressAreaRef);
         const birthplaceAreaRef = InstitutionsStudentsSvc.getBirthplaceArea();
