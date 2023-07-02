@@ -493,10 +493,13 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $m_timestap = strtotime($modifiedDate);
                 $interval  = abs($c_timestap - $m_timestap);
                 $diff_mins   = round($interval / 60);
-                if($diff_mins > 5 && $diff_mins < 30){
-                    $entity->status = 1;
-                    $ReportCardProcessesTable->save($entity);
-                }elseif($diff_mins > 30){
+                //POCOR-7535 start
+                // if($diff_mins > 5 && $diff_mins < 30){
+                //     $entity->status = 1;
+                //     $ReportCardProcessesTable->save($entity);
+                // }
+                //POCOR-7535 end 
+                 if($diff_mins > 30){
                     $entity->status = self::ERROR; //(-1)
                     $entity->modified = $currentTimeZone;//POCOR-6841
                     $ReportCardProcessesTable->save($entity);
