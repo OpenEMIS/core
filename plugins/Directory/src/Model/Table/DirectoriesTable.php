@@ -1514,7 +1514,7 @@ class DirectoriesTable extends ControllerActionTable
      * @param $security_user_id
      * @return mixed
      */
-    private static function getPendingWithdraw(Table $institutions, $security_user_id)
+    private static function getPendingWithdraw($security_user_id)
     {
         $institutions = TableRegistry::get('institutions');
         $withdraws = TableRegistry::get('Institution.StudentWithdraw');
