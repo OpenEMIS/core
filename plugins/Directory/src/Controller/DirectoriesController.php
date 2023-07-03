@@ -299,11 +299,17 @@ class DirectoriesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
     }
     // Special Needs - End
-
+    //POCOR-7366 start
+    public function Counsellings()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.Counsellings']);
+    }
+    //POCOR-7366 end
     public function Employments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']);
     }
+
 
     // Historical Data - End
     public function HistoricalStaffPositions()
@@ -701,7 +707,7 @@ class DirectoriesController extends AppController
 
                     $exists = false;
 
-                    if (in_array($model->alias(), ['Guardians', 'StudentReportCards'])) {
+                    if (in_array($model->alias(), ['Guardians', 'StudentReportCards','Counsellings'])) {//POCOR-7366
                         $params[$model->aliasField('student_id')] = $session->read('Directory.Directories.id');
                         $exists = $model->exists($params);
                     } elseif (in_array($model->alias(), ['Students'])) {
@@ -998,8 +1004,10 @@ class DirectoriesController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
+    
     public function getProfessionalTabElements($options = [])
     {
+       
         $session = $this->request->session();
         $isStudent = $session->read('Directory.Directories.is_student');
         $isStaff = $session->read('Directory.Directories.is_staff');
@@ -2049,7 +2057,10 @@ class DirectoriesController extends AppController
     public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.StudentProfiles']); }
     /*POCOR-6286 ends*/
 
-    /*POCOR-6700 start - registering function*/
+    
+   
+
+   /*POCOR-6700 start - registering function*/
     public function StudentExtracurriculars() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Extracurriculars']); }
     /*POCOR-6700 ends*/
 }
