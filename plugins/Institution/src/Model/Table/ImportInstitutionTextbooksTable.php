@@ -183,15 +183,15 @@ class ImportInstitutionTextbooksTable extends AppTable
         
          // POCOR-7362 starts
 
-        // In institutionTextbooksTable staff is also added to studentoptions and hence in temprow['student_id'] staff Ids also populate, following methods checks if student or staff id are enrolled/assigned 
+        // In institutionTextbooksTable staff is also added to studentoptions and hence in temprow['security_user_id'] staff Ids also populate, following methods checks if student or staff id are enrolled/assigned 
 
         $enrolledStudent = $this->getEnrolledStudentId();
         $assignedStaff = $this->getAssignedStaffId();
 
         $users = array_merge($enrolledStudent, $assignedStaff);
         
-        if(!in_array($tempRow['student_id'], $users)){
-            $rowInvalidCodeCols['student_id'] = __('Not a enrolled/assigned user');
+        if(!in_array($tempRow['security_user_id'], $users)){
+            $rowInvalidCodeCols['security_user_id'] = __('Not a enrolled/assigned user');
             return false;
         }
 
@@ -229,11 +229,11 @@ class ImportInstitutionTextbooksTable extends AppTable
                     $tempRow['code'] = $textbookEntity->code . '-' . ($InstitutionTextbookData->id + 1);
                 }
 
-                if ($tempRow->offsetExists('student_id')) {
-                    if (!empty($tempRow['student_id'])) {
+                if ($tempRow->offsetExists('security_user_id')) {
+                    if (!empty($tempRow['security_user_id'])) {
                         $query = $InstitutionTextbooks->find()
                                 ->where([
-                                    $InstitutionTextbooks->aliasField('student_id') => $tempRow['student_id'],
+                                    $InstitutionTextbooks->aliasField('security_user_id') => $tempRow['security_user_id'],
                                     $InstitutionTextbooks->aliasField('textbook_id') => $tempRow['textbook_id'],
                                     $InstitutionTextbooks->aliasField('institution_id') => $tempRow['institution_id'],
                                     $InstitutionTextbooks->aliasField('academic_period_id') => $tempRow['academic_period_id'],
@@ -242,7 +242,7 @@ class ImportInstitutionTextbooksTable extends AppTable
                                 ])
                                 ->count();
                         if ($query > 0) { //student assigned to same book before
-                            $rowInvalidCodeCols['student_id'] = __('Textbook already assigned to the same student before.');
+                            $rowInvalidCodeCols['security_user_id'] = __('Textbook already assigned to the same student before.');
                             return false;
                         }
                     }
