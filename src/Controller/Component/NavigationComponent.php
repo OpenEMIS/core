@@ -1794,6 +1794,7 @@ class NavigationComponent extends Component
                     'Directories.StaffLicenses',
                     'Directories.StaffAwards']
             ],
+           
             'Directories.SpecialNeedsReferrals' => [
                 'title' => 'Special Needs',
                 'parent' => 'Directories.Directories.index',
@@ -1805,7 +1806,18 @@ class NavigationComponent extends Component
                     'Directories.SpecialNeedsPlans']
             ]
         ];
-
+        //POCOR-7366 start
+        if($session->read('Directory.Directories.is_student')==1){
+            $newNavigation=['Directories.Counsellings' => [
+                                'title' => 'Counsellings',
+                                'parent' => 'Directories.Directories.index',
+                                'params' => ['plugin' => 'Directory'],
+                                'selected' => ['Directories.Counsellings']
+                            ]];
+            $i = array_search('Directories.Employments', array_keys($navigation));
+            $navigation = array_merge(array_slice($navigation, 0, $i+1),$newNavigation, array_slice($navigation, $i+1));
+        }
+        //POCOR-7366 end
         $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
         $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
         if (!empty($studentToGuardian) || !empty($guardianToStudent)) {
@@ -2095,8 +2107,9 @@ class NavigationComponent extends Component
                 'parent' => 'Directories.Student',
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.StudentProfile']
-            ]
-        ];
+            ],
+
+    ];
 
         $session = $this->request->session();
         $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
