@@ -951,7 +951,7 @@ class StudentReportCardsTable extends AppTable
                 ])
                 ->first();
 				
-				if(!empty($entity->health_insurance) && ($entity->health_insurance == 0)) {
+				if(!empty($entity) && ($entity->health_insurance == 0)) {
 					$entity['health_insurance'] = 'No';
 				}
 				if(!empty($entity->health_insurance) && ($entity->health_insurance == 1)) {
