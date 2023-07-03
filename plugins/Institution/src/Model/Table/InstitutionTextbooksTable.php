@@ -418,7 +418,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         if ($entity->security_user_id) { //retrieve student and staff POCOR-7362 
 
             $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudent($entity->academic_period_id, $entity->education_subject_id); 
-            $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId);
+            $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId, $entity->education_subject_id, $entity->education_grade_id);
             $studentOptions = $studentOptions + $staffOptions;
             $entity->institution_class_id = $studentOptions;
             // pr($entity);
@@ -467,7 +467,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
             $textbookId = $entity->textbook_id;
             $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudent($entity->academic_period_id, $entity->education_subject_id);
 
-            $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId); //POCOR-7362
+            $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId, $entity->education_subject_id, $entity->education_grade_id); //POCOR-7362
             $studentOptions = $studentOptions + $staffOptions; //POCOR-7362
             
             $this->studentOptions = $studentOptions;
@@ -490,8 +490,10 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     // POCOR-7362 starts
 
-    public function getAssignedStaffForInstitution($institutionId){
+    public function getAssignedStaffForInstitution($institutionId, $educationSubjectId, $educationGradeId){
 
+        // echo $educationGradesId;
+        // exit;
         $staff = TableRegistry::get('institution_staff');
         $query = $staff->find()
                 ->select([
@@ -514,13 +516,31 @@ class InstitutionTextbooksTable extends ControllerActionTable
                     'type' => 'INNER',
                     'conditions' => 'institution_staff.staff_status_id = ss.id'
                 ])
+                ->join([
+                    'table' => 'institution_subject_staff',
+                    'alias' => 'iss',
+                    'type' => 'INNER',
+                    'conditions' => 'institution_staff.staff_id = iss.staff_id'
+                ])
+                ->join([
+                    'table' => 'institution_subjects',
+                    // 'alias' => 'iss',
+                    'type' => 'INNER',
+                    'conditions' => 'iss.institution_subject_id = institution_subjects.id'
+                ])
                 ->where([
                     'institution_staff.institution_id' => $institutionId,
-                    'ss.id' => 1
+                    'ss.id' => 1,
+                    'institution_subjects.education_subject_id' => $educationSubjectId,
+                    'institution_subjects.education_grade_id' => $educationGradeId
                 ])
                 ->hydrate(false);
 
         $result = $query->toArray();
+
+        // echo "<pre>";
+        // print_r($result);
+        // exit;
 
         $staffList =[];
 
@@ -981,6 +1001,8 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
             $selectedPeriod= $attr['entity']->academic_period_id;
             $selectedSubject = $attr['entity']->education_subject_id;
+            $selectedGrade = $attr['entity']->education_grade_id;
+            // $selectedGrade = $request->data($this->aliasField('education_grade_id'));
 
             $selectedClass = $attr['entity']->institution_class_id;
 
@@ -1003,7 +1025,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
             $studentOptions = [];
             if ($selectedPeriod && $selectedClass && $selectedSubject) {
                 $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudent($selectedPeriod, $selectedSubject);
-                $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId); //POCOR-7362
+                $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId, $selectedSubject, $selectedGrade); //POCOR-7362
                 $studentOptions = $studentOptions + $staffOptions; //POCOR-7362
                 $studentOptions = array_diff_key($studentOptions, $textbookStudents->toArray());
             }
