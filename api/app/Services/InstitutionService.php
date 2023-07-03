@@ -1290,16 +1290,18 @@ class InstitutionService extends Controller
     {
         try {
             $data = $this->institutionRepository->getAbsenceReasons($request);
-
             $list = [];
-            if(count($data) > 0){
-                foreach($data as $k => $d){
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
                     $list[$k]['id'] = $d['id'];
-                    $list[$k]['name'] = $d['name'];
+                    $list[$k]['name'] = $d['name']; 
                 }
             }
-            
-            return $list;
+
+            $data['data'] = $list;
+
+            return $data;
+                   
 
         } catch (\Exception $e) {
             Log::error(
@@ -1441,11 +1443,10 @@ class InstitutionService extends Controller
                     $list['default'] = $data['default'];
                     $list['international_code'] = $data['international_code'];
                     $list['national_code'] = $data['national_code'];
-                    $list['modified_by'] = $data['modified_by'];
+                    $list['modified_user_id'] = $data['modified_user_id'];
                     $list['modified'] = $data['modified'];
-                    $list['created_by'] = $data['created_by'];
+                    $list['created_user_id'] = $data['created_user_id'];
                     $list['created'] = $data['created'];
-                    $list['sam'] = $data['sam']; // remove this
 
             }
             
@@ -1476,9 +1477,9 @@ class InstitutionService extends Controller
                     $list['default'] = $data['default'];
                     $list['international_code'] = $data['international_code'];
                     $list['national_code'] = $data['national_code'];
-                    $list['modified_by'] = $data['modified_by'];
+                    $list['modified_user_id'] = $data['modified_user_id'];
                     $list['modified'] = $data['modified'];
-                    $list['created_by'] = $data['created_by'];
+                    $list['created_user_id'] = $data['created_user_id'];
                     $list['created'] = $data['created'];
             }
             
@@ -1509,9 +1510,9 @@ class InstitutionService extends Controller
                     $list['default'] = $data['default'];
                     $list['international_code'] = $data['international_code'];
                     $list['national_code'] = $data['national_code'];
-                    $list['modified_by'] = $data['modified_by'];
+                    $list['modified_user_id'] = $data['modified_user_id'];
                     $list['modified'] = $data['modified'];
-                    $list['created_by'] = $data['created_by'];
+                    $list['created_user_id'] = $data['created_user_id'];
                     $list['created'] = $data['created'];
             }
             
@@ -1540,11 +1541,12 @@ class InstitutionService extends Controller
                     $list['visible'] = $data['visible'];
                     $list['editable'] = $data['editable'];
                     $list['default'] = $data['default'];
+                    $list['institution_sector_id'] = $data['institution_sector_id'];
                     $list['international_code'] = $data['international_code'];
                     $list['national_code'] = $data['national_code'];
-                    $list['modified_by'] = $data['modified_by'];
+                    $list['modified_user_id'] = $data['modified_user_id'];
                     $list['modified'] = $data['modified'];
-                    $list['created_by'] = $data['created_by'];
+                    $list['created_user_id'] = $data['created_user_id'];
                     $list['created'] = $data['created'];
             }
             
@@ -1575,9 +1577,9 @@ class InstitutionService extends Controller
                     $list['default'] = $data['default'];
                     $list['international_code'] = $data['international_code'];
                     $list['national_code'] = $data['national_code'];
-                    $list['modified_by'] = $data['modified_by'];
+                    $list['modified_user_id'] = $data['modified_user_id'];
                     $list['modified'] = $data['modified'];
-                    $list['created_by'] = $data['created_by'];
+                    $list['created_user_id'] = $data['created_user_id'];
                     $list['created'] = $data['created'];
             }
             
@@ -1598,23 +1600,7 @@ class InstitutionService extends Controller
         try {
             
             $data = $this->institutionRepository->getInstitutionProviderBySectorId($sectorId);
-            $list = [];
-            if($data){
-                    $list['id'] = $data['id'];
-                    $list['name'] = $data['name'];
-                    $list['order'] = $data['order'];
-                    $list['visible'] = $data['visible'];
-                    $list['editable'] = $data['editable'];
-                    $list['default'] = $data['default'];
-                    $list['international_code'] = $data['international_code'];
-                    $list['national_code'] = $data['national_code'];
-                    $list['modified_by'] = $data['modified_by'];
-                    $list['modified'] = $data['modified'];
-                    $list['created_by'] = $data['created_by'];
-                    $list['created'] = $data['created'];
-            }
-            
-            return $list;
+            return $data;
             
         } catch (\Exception $e) {
             Log::error(
