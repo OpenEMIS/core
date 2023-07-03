@@ -1877,14 +1877,32 @@ class InstitutionRepository extends Controller
 
             $params = $request->all();
 
-                $limit = config('constants.defaultPaginateLimit');
+                // $limit = config('constants.defaultPaginateLimit');
 
-                if(isset($params['limit'])){
-                $limit = $params['limit'];
-                }
+                // if(isset($params['limit'])){
+                // $limit = $params['limit'];
+                // }
+                // $absenceTypes = new AbsenceTypes();
+                // $list = $absenceTypes->paginate($limit);
+                // return $list;
+
                 $absenceTypes = new AbsenceTypes();
-                $list = $absenceTypes->paginate($limit);
-                return $list;
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $absenceTypes = $absenceTypes->orderBy($col, $orderBy);
+            }
+
+
+            $limit = config('constants.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $list = $absenceTypes->paginate($limit)->toArray();
+            return $list;
         
             } catch (\Exception $e) {
             Log::error(
@@ -1899,17 +1917,38 @@ class InstitutionRepository extends Controller
     public function getAreaAdministratives($request)
     {
         try {
-            $params = $request->all();
+            // $params = $request->all();
 
-                $areaAdministratives = AreaAdministratives::with('areaAdministrativeLevels');
-                $limit = config('constants.defaultPaginateLimit');
+            //     $areaAdministratives = AreaAdministratives::with('areaAdministrativeLevels');
+            //     $limit = config('constants.defaultPaginateLimit');
+
+            // if(isset($params['limit'])){
+            //     $limit = $params['limit'];
+            // }
+
+            // $list = $areaAdministratives->paginate($limit);
+            // return $list;
+
+            $params = $request->all();
+            $areaAdministratives = AreaAdministratives::with('areaAdministrativeLevels');
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $areaAdministratives = $areaAdministratives->orderBy($col, $orderBy);
+            }
+
+
+            $limit = config('constants.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
             }
 
-            $list = $areaAdministratives->paginate($limit);
+            $list = $areaAdministratives->paginate($limit)->toArray();
+            
             return $list;
+            
         
             } catch (\Exception $e) {
             Log::error(
@@ -2163,14 +2202,34 @@ class InstitutionRepository extends Controller
     {
         try {
                 
-                $limit = config('constants.defaultPaginateLimit');
+                // $limit = config('constants.defaultPaginateLimit');
 
-                if(isset($params['limit'])){
-                $limit = $params['limit'];
-                }
+                // if(isset($params['limit'])){
+                // $limit = $params['limit'];
+                // }
+                // $mealProgrammes = new MealProgrammes();
+                // $list = $mealProgrammes->paginate($limit);
+                // return $list;
+
+                $params = $request->all();
+
                 $mealProgrammes = new MealProgrammes();
-                $list = $mealProgrammes->paginate($limit);
-                return $list;
+
+            // if(isset($params['order'])){
+            //     $orderBy = $params['order_by']??"ASC";
+            //     $col = $params['order'];
+            //     $mealProgrammes = $mealProgrammes->orderBy($col, $orderBy);
+            // }
+
+
+            $limit = config('constants.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $list = $mealProgrammes->paginate($limit)->toArray();
+            return $list;
         
             } catch (\Exception $e) {
             Log::error(
