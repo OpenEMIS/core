@@ -1845,21 +1845,23 @@ class InstitutionRepository extends Controller
         try {
                 $params = $request->all();
 
+                $AbsenceReasons = new AbsenceReasons();
 
-                $limit = config('constants.defaultPaginateLimit');
-
-                if(isset($params['limit'])){
-                $limit = $params['limit'];
-                }
-
-                $absenceReasons = new AbsenceReasons();
-                if(isset($params['order'])){
+            if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $absenceReasons = $absenceReasons->orderBy($col, $orderBy);
-                }
-                $list = $absenceReasons->paginate($limit);
-                return $list;
+                $AbsenceReasons = $AbsenceReasons->orderBy($col, $orderBy);
+            }
+
+
+            $limit = config('constants.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $list = $AbsenceReasons->paginate($limit)->toArray();
+            return $list;
         
             } catch (\Exception $e) {
             Log::error(
@@ -1876,16 +1878,6 @@ class InstitutionRepository extends Controller
         try {
 
             $params = $request->all();
-
-                // $limit = config('constants.defaultPaginateLimit');
-
-                // if(isset($params['limit'])){
-                // $limit = $params['limit'];
-                // }
-                // $absenceTypes = new AbsenceTypes();
-                // $list = $absenceTypes->paginate($limit);
-                // return $list;
-
                 $absenceTypes = new AbsenceTypes();
 
             if(isset($params['order'])){
@@ -1917,18 +1909,7 @@ class InstitutionRepository extends Controller
     public function getAreaAdministratives($request)
     {
         try {
-            // $params = $request->all();
-
-            //     $areaAdministratives = AreaAdministratives::with('areaAdministrativeLevels');
-            //     $limit = config('constants.defaultPaginateLimit');
-
-            // if(isset($params['limit'])){
-            //     $limit = $params['limit'];
-            // }
-
-            // $list = $areaAdministratives->paginate($limit);
-            // return $list;
-
+          
             $params = $request->all();
             $areaAdministratives = AreaAdministratives::with('areaAdministrativeLevels');
 
@@ -2149,7 +2130,7 @@ class InstitutionRepository extends Controller
             ->first();
 
             if($isExists){
-                $institutionProviders = InstitutionProviders::where('institution_sector_id', $sectorId)->first();
+                $institutionProviders = InstitutionProviders::where('institution_sector_id', $sectorId)->get();
                 return $institutionProviders;
             }
             else{
@@ -2201,26 +2182,10 @@ class InstitutionRepository extends Controller
     public function getMealProgrammes($request)
     {
         try {
-                
-                // $limit = config('constants.defaultPaginateLimit');
-
-                // if(isset($params['limit'])){
-                // $limit = $params['limit'];
-                // }
-                // $mealProgrammes = new MealProgrammes();
-                // $list = $mealProgrammes->paginate($limit);
-                // return $list;
 
                 $params = $request->all();
 
                 $mealProgrammes = new MealProgrammes();
-
-            // if(isset($params['order'])){
-            //     $orderBy = $params['order_by']??"ASC";
-            //     $col = $params['order'];
-            //     $mealProgrammes = $mealProgrammes->orderBy($col, $orderBy);
-            // }
-
 
             $limit = config('constants.defaultPaginateLimit');
 
