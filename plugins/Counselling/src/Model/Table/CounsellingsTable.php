@@ -15,7 +15,8 @@ class CounsellingsTable extends AppTable
 
     public function initialize(array $config)
     {
-        $this->table('institution_counsellings');
+       
+        $this->table('counsellings');
         parent::initialize($config);
 
         $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
