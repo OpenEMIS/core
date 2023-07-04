@@ -463,4 +463,19 @@ class AlertRulesTable extends ControllerActionTable
             }
         }
     }
+    public function getLastRunDate(){
+        $systemProcess=TableRegistry::get('system_processes');
+        $data=$systemProcess->find()->select([
+             'name'=> $systemProcess->aliasField('name'),
+             'end_date'=> $systemProcess->aliasField('end_date'),
+        ])->group([$systemProcess->aliasField('name')])
+          ->order([$systemProcess->aliasField('end_date') => 'DESC'])
+          ->toArray();
+        
+        $result=[];
+        foreach($data as $key=>$value){
+            $result[$value['name']]= $value['end_date'];
+        }
+        return $result;
+    }
 }

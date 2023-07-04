@@ -8,7 +8,7 @@ use Cake\Utility\Inflector;
 use Cake\ORM\Table;
 use App\Controller\AppController;
 use Cake\Log\Log;
-
+use Cake\I18n\Time;
 class DashboardController extends AppController
 {
     public function initialize()
@@ -27,7 +27,7 @@ class DashboardController extends AppController
         //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
      
-        
+        $this->callAlerts();
 		
     }
 
@@ -524,6 +524,51 @@ class DashboardController extends AppController
 //        Log::write('debug', $nohup); 
 //    }
     
-}
+
 ////bin/cake/InstitutionClassSubjects 123
 //bin/cake AutomatedStudentWithdrawalShell migrate
+
+
+
+private function callAlerts(){
+    $AlertsData=TableRegistry::get('Alert.Alerts')->find('all')->toArray();
+    $lastRunDates=TableRegistry::get('Alert.AlertRules')->getLastRunDate();
+    $mainAlerts=[];
+    foreach($AlertsData as $key=>$value){
+        $currentDate = Time::now()->format('Y-m-d');
+        $otherDate = (new Time($lastRunDates[$value['name']]));
+        $finalDate=null;
+        if($value['frequency']=="Weekly"){
+            $finalDate=$otherDate->modify('+1 week')->format('Y-m-d');
+        }
+        else if($value['frequency']=="Weekly"){
+            $finalDate=$otherDate->modify('+1 month')->format('Y-m-d');
+        }
+        else if($value['frequency']=="Monthly"){
+            $finalDate=$otherDate->modify('+1 year')->format('Y-m-d');
+        }
+        else{
+            $finalDate=$otherDate;
+        }
+      
+        
+        if($currentDate>$finalDate){
+            $AlertRulesTable=TableRegistry::get('Alert.AlertRules');
+            $AlertRules= $AlertRulesTable->find('all')->where([
+                $AlertRulesTable->aliasField['name']=$value['name'],
+                $AlertRulesTable->aliasField['enabled']=1,
+            ]);
+        
+            echo "<pre>";
+            print_r($AlertRules);
+        exit;
+            $mainAlerts=array_merge($mainAlerts,$AlertRules);
+        }
+       
+    }
+    echo "<pre>";
+    print_r($mainAlerts);
+    exit;
+}
+}
+
