@@ -1825,7 +1825,7 @@ class InstitutionsController extends AppController
     // Assosiation feature
     public function Associations($subaction = 'index', $associationId = null)
     {
-        if ($subaction == 'add') {
+        if ($subaction == 'add') { 
             $session = $this->request->session();
             $roles = [];
             $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
@@ -1852,13 +1852,22 @@ class InstitutionsController extends AppController
             $academicPeriodOptions = TableRegistry::get('AcademicPeriod.AcademicPeriods')
                 ->getYearList();
 
-
             $this->set('alertUrl', $alertUrl);
             $this->set('viewUrl', $viewUrl);
             $this->set('indexUrl', $indexUrl);
             $this->set('academicPeriodId', $academicPeriodId);
             $this->set('academicPeriodName', $academicPeriodOptions[$academicPeriodId]);
             $this->set('institutionId', $institutionId);
+            
+            // Start POCOR-7466
+            $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+            $institutionName = $session->read('Institution.Institutions.name');
+            $this->Navigation->addCrumb('Houses', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Associations', 'view']);
+            $header = __($institutionName);
+            $this->set('contentHeader', $header.' - Houses');
+            // END POCOR-7466
+
+
             $this->render('institution_associations');
         } else if ($subaction == 'edit') {
             $session = $this->request->session();
@@ -1888,6 +1897,15 @@ class InstitutionsController extends AppController
             $this->set('indexUrl', $indexUrl);
             $this->set('classId', $associationId['id']);
             $this->set('institutionId', $institutionId);
+
+            // Start POCOR-7466
+            $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+            $institutionName = $session->read('Institution.Institutions.name');
+            $this->Navigation->addCrumb('Houses', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Associations', 'view']);
+            $header = __($institutionName);
+            $this->set('contentHeader', $header.' - Houses');
+            // END POCOR-7466
+
             $this->render('institution_associations_edit');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAssociations']);
@@ -2640,6 +2658,14 @@ class InstitutionsController extends AppController
                 $header = __($institutionName);
                 $this->set('contentHeader', $header);
             } //End: POCOR-7048
+            // Start POCOR-7466
+            elseif ($model->alias() == 'InstitutionAssociations') {
+                $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+                $institutionName = $session->read('Institution.Institutions.name');
+                $this->Navigation->addCrumb('Houses', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Associations', 'view']);
+                $header = __($institutionName);
+                $this->set('contentHeader', $header);
+            } // End POCOR-7466
             else {
                 $this->Navigation->addCrumb($crumbTitle, $crumbOptions);
                 $header = $this->activeObj->name;
@@ -2685,7 +2711,13 @@ class InstitutionsController extends AppController
                 $header .= ' - ' . __('Statistics');
             } elseif ($model->alias() == 'StudentCurriculars') { //POCOR-6673
                 $header .= ' - ' . __('Curriculars');
-            } else {
+            } 
+           // Start POCOR-7466
+            elseif ($model->alias() == 'InstitutionAssociations') {
+                $header .= ' - ' . __('Houses');
+            }    
+            // END POCOR-7466       
+            else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
 
@@ -3812,7 +3844,7 @@ class InstitutionsController extends AppController
             'ExaminationResults' => ['text' => __('Examinations')],
             'ReportCards' => ['text' => __('Report Cards')],
             'Awards' => ['text' => __('Awards')],
-            'Extracurriculars' => ['text' => __('Extracurriculars')],
+            //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7513
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
             'Associations' => ['text' => __('Associations')],

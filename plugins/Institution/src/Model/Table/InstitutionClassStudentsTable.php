@@ -674,9 +674,15 @@ class InstitutionClassStudentsTable extends AppTable
             })
             ->where([
                 $this->aliasField('institution_class_id').' IN ' => $institutionClassIds,
-                //$this->aliasField('education_grade_id') => $educationGradeId,//POCOR-6463
-                //'SubjectStudents.education_subject_id' => $educationSubjectId['education_subject_id'],
-                'SubjectStudents.student_id IS NULL'
+                //POCOR-7503 start
+                'OR' => [
+                    ['SubjectStudents.student_id IS NULL'],
+                    ['SubjectStudents.student_status_id IN' => [3,4]]
+                ]
+                //POCOR-7503 end
+                // //$this->aliasField('education_grade_id') => $educationGradeId,//POCOR-6463
+                // //'SubjectStudents.education_subject_id' => $educationSubjectId['education_subject_id'],
+                
             ])
             ->order(['Users.first_name', 'Users.last_name'])// POCOR-2547 sort list of staff and student by name
             ->formatResults(function ($results) {
