@@ -1792,6 +1792,7 @@ class NavigationComponent extends Component
                     'Directories.StaffExtracurriculars',
                     'Directories.StaffMemberships',
                     'Directories.StaffLicenses',
+                    'Directories.StudentLicenses',//POCOR-7528
                     'Directories.StaffAwards']
             ],
             'Directories.SpecialNeedsReferrals' => [
