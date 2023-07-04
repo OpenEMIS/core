@@ -7,6 +7,8 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
 
+use Cake\Datasource\ConnectionManager;
+
 class UserLanguagesTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -36,11 +38,25 @@ class UserLanguagesTable extends ControllerActionTable {
 	}
 
 	public function getGradeOptions() {
-		$gradeOptions = array();
-		for ($i = 0; $i < 6; $i++) {
-			$gradeOptions[$i] = $i;
+		// Start POCOR-4824
+
+		// $gradeOptions = array();
+		// for ($i = 0; $i < 8; $i++) {
+		// 	$gradeOptions[$i] = $i;
+		// }
+		// return $gradeOptions;
+
+		$connection = ConnectionManager::get('default');
+		$res= $connection->execute('Select * from language_proficiencies order by name ASC');
+		$rows = $res->fetchAll('assoc');
+		$lp = [];
+		if(!empty($rows)){
+			foreach($rows as $key => $value){
+				$lp[$value['name']] =  $value['name'];
+			}
 		}
-		return $gradeOptions;
+		return $lp;
+		// END POCOR-4824
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -48,16 +64,16 @@ class UserLanguagesTable extends ControllerActionTable {
 
 		return $validator
 			->add('listening', 'ruleRange', [
-				'rule' => ['range', -1, 6]
+				'rule' => ['range', -1, 100]	// POCOR-4824
 			])
 			->add('speaking', 'ruleRange', [
-				'rule' => ['range', -1, 6]
+				'rule' => ['range', -1, 100]	// POCOR-4824
 			])
 			->add('reading', 'ruleRange', [
-				'rule' => ['range', -1, 6]
+				'rule' => ['range', -1, 100]	// POCOR-4824
 			])
 			->add('writing', 'ruleRange', [
-				'rule' => ['range', -1, 6]
+				'rule' => ['range', -1, 100]	// POCOR-4824
 			])
 		;
 	}
