@@ -35,6 +35,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     
     public function initialize(array $config)
     {
+      
         parent::initialize($config);
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -468,7 +469,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
         $institutionAreaId = $this->Institutions->get($institutionId)->area_education_id;
         $institutionProviderId = $this->Institutions->get($institutionId)->institution_provider_id;
-        $type  = [0,$institutionTypeId];
+        $type  = [0,-1,$institutionTypeId];//POCOR-7549
         $area  = [0,$institutionAreaId];
         $providers  = [0,$institutionProviderId];
         
@@ -541,7 +542,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                             $this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>$type,
                             $this->aliasField('SurveyFilterInstitutionProviders.institution_provider_id IN')=>$providers,
                             $this->aliasField('SurveyFilterAreas.area_education_id IN')=>$area,
-                            $this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>-1,
+                            //$this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>-1,//POCOR-7549
                             $this->aliasField('SurveyFilterInstitutionProviders.institution_provider_id IN')=>-1,
                             $this->aliasField('SurveyFilterAreas.area_education_id IN')=>-1,
                         ]
@@ -618,7 +619,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                             $this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>$type,
                             $this->aliasField('SurveyFilterInstitutionProviders.institution_provider_id IN')=>$providers,
                             $this->aliasField('SurveyFilterAreas.area_education_id IN')=>$area,
-                            $this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>-1,
+                            // $this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>-1, //POCOR-7549
                             $this->aliasField('SurveyFilterInstitutionProviders.institution_provider_id IN')=>-1,
                             $this->aliasField('SurveyFilterAreas.area_education_id IN')=>-1,
                         ]
@@ -697,7 +698,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                                 $this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>$type,
                                 $this->aliasField('SurveyFilterInstitutionProviders.institution_provider_id IN')=>$providers,
                                 $this->aliasField('SurveyFilterAreas.area_education_id IN')=>$area,
-                                $this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>-1,
+                                // $this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>-1, //POCOR-7549
                                 $this->aliasField('SurveyFilterInstitutionProviders.institution_provider_id IN')=>-1,
                                 $this->aliasField('SurveyFilterAreas.area_education_id IN')=>-1,
                             ]
