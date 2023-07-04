@@ -829,7 +829,7 @@ class InstitutionSubjectStudentsTable extends AppTable
     }
 
     // POCOR-7362 starts
-    public function getEnrolledStudent($period, $subject)
+    public function getEnrolledStudent($period, $subject, $educationGradeId)
     {
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
@@ -846,7 +846,8 @@ class InstitutionSubjectStudentsTable extends AppTable
             })
             ->where([
                 $this->aliasField('academic_period_id') => $period,
-                $this->aliasField('education_subject_id') => $subject
+                $this->aliasField('education_subject_id') => $subject,
+                $this->aliasField('education_grade_id') => $educationGradeId
             ])
             ->select([
                 $this->aliasField('student_id'),
