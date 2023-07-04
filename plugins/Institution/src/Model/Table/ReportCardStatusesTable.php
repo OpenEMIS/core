@@ -1872,7 +1872,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                     'completed_on' => NULL,
                     'file_name' => NULL,
                     'file_content' => NULL,
-                    'institution_class_id' => $studentsReportCardEntity->institution_class_id
+                    'institution_class_id' => $studentsReportCardEntity->institution_class_id,
+                    'gpa' => $getGpa,
                 ];
                 $newEntity = $this->StudentsReportCards->patchEntity($studentsReportCardEntity, $newData);
 
