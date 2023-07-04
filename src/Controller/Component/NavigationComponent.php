@@ -815,7 +815,7 @@ class NavigationComponent extends Component
                     'Institutions.ImportStudentGuardians',
                     'Institutions.StudentStatusUpdates', 'Institutions.ImportStudentExtracurriculars',
                     'Institutions.BulkStudentTransferIn',
-                    'Institutions.BulkStudentTransferOut', 'Institutions.StudentCurriculars'],
+                    'Institutions.BulkStudentTransferOut'], // POCOR-7555
                 'params' => ['plugin' => 'Institution']
             ],
 
