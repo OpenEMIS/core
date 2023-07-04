@@ -465,7 +465,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
                 ->hydrate(false)
                 ->toArray();
             $textbookId = $entity->textbook_id;
-            $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudent($entity->academic_period_id, $entity->education_subject_id);
+            $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudent($entity->academic_period_id, $entity->education_subject_id, $entity->education_grade_id);
 
             $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId, $entity->education_subject_id, $entity->education_grade_id); //POCOR-7362
             $studentOptions = $studentOptions + $staffOptions; //POCOR-7362
