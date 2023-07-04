@@ -183,15 +183,15 @@ class ImportInstitutionTextbooksTable extends AppTable
         
          // POCOR-7362 starts
 
-        // In institutionTextbooksTable staff is also added to studentoptions and hence in temprow['security_user_id'] staff Ids also populate, following methods checks if student or staff id are enrolled/assigned 
+        // In institutionTextbooksTable staff is also added to studentoptions and hence in temprow['student_id'] staff Ids also populate, following methods checks if student or staff id are enrolled/assigned 
 
         $enrolledStudent = $this->getEnrolledStudentId();
         $assignedStaff = $this->getAssignedStaffId();
 
         $users = array_merge($enrolledStudent, $assignedStaff);
         
-        if(!in_array($tempRow['security_user_id'], $users)){
-            $rowInvalidCodeCols['security_user_id'] = __('Not a enrolled/assigned user');
+        if(!in_array($tempRow['student_id'], $users)){
+            $rowInvalidCodeCols['student_id'] = __('Not a enrolled/assigned user');
             return false;
         }
 
