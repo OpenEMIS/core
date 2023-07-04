@@ -1860,7 +1860,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'academic_period_id' => $student->academic_period_id,
                 'education_grade_id' => $student->education_grade_id,
                 'institution_class_id' => $student->institution_class_id,
-                'gpa' => $getGpa,
             ];
             if ($this->StudentsReportCards->exists($recordIdKeys)) {
                 $studentsReportCardEntity = $this->StudentsReportCards->find()
@@ -1886,17 +1885,18 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
                 $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
                 if (!$StudentsReportCards->exists($recordIdKeys)) {
-
                     // insert student report card record if it does not exist
                     $recordIdKeys['status'] = $StudentsReportCards::IN_PROGRESS;
                     $recordIdKeys['started_on'] = date('Y-m-d H:i:s');
+                    $recordIdKeys['gpa'] = $getGpa;
                     $newEntity = $StudentsReportCards->newEntity($recordIdKeys);
                     $StudentsReportCards->save($newEntity);
                 } else {
                     // update status to in progress if record exists
                     $StudentsReportCards->updateAll([
                         'status' => $StudentsReportCards::IN_PROGRESS,
-                        'started_on' => date('Y-m-d H:i:s')
+                        'started_on' => date('Y-m-d H:i:s'),
+                        'gpa' => $getGpa,
                     ], $recordIdKeys);
                 }
                 //POCOR-6431[END]
@@ -2281,6 +2281,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     //POCOR-7318
     private function addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId,$educationGradeId)
     {
+
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods'); 
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriodId =  $this->AcademicPeriods->getCurrent();
@@ -2306,12 +2307,14 @@ class ReportCardStatusesTable extends ControllerActionTable
                     GROUP BY subq.student_id");
         $statement->execute();
         $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+    
         if(!empty($result)){
            foreach($result as $val){
-            $gpa = $val->gpa_per_student;
+            $gpa = $val['gpa_per_student'];
+
            }
         }
-        return $gpa;
+         return number_format((float)$gpa, 2, '.', '');
         
     }
 
