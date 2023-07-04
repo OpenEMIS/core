@@ -99,8 +99,14 @@ class ConfigItemsBehavior extends Behavior
             $url = $this->model->controller->ControllerAction->url('index');
             $action = $this->model->action;
         }
+
+        if($typeValue == 'ExternalDataSource-Exams'){
+            $typeValue = 'ExternalDataSourceExams';
+        }
+        
         if (method_exists($this->model->controller, $typeValue) && $action != $typeValue) {
             $url['action'] = $typeValue;
+            $url['type_value'] = $typeValue; // POCOR-7508
             $this->model->controller->redirect($url);
         } elseif ($action != $typeValue && $action != 'index') {
             $this->model->controller->redirect([
