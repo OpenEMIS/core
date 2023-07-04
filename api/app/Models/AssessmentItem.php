@@ -12,4 +12,9 @@ class AssessmentItem extends Model
     public $incrementing = false;
     public $timestamps = false;
     protected $table = "assessment_items";
+
+    public function educationSubjects()
+    {
+        return $this->hasOne(EducationSubjects::class, 'id', 'education_subject_id');
+    }
 }
