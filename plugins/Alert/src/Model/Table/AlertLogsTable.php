@@ -172,11 +172,28 @@ class AlertLogsTable extends ControllerActionTable
             ]);
             //POCOR-6023 starts
             $saveData = $this->save($entity);
+
             if(!empty($saveData)){
                 $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['id' => $saveData->id])->first();
                 $this->triggerSendingAlertShell('SendingAlert', $result->feature, $result->id);
             }//POCOR-6023 ends
+            //POCOR-7558 start(saving alert data in system processes to get last run date)
+            $Alerts = TableRegistry::get('Alert.Alerts');
+            $process_name = $Alerts->find('list')->select([
+                $Alerts->aliasField('process_name')
+            ])->where([ $Alerts->aliasField('name')=>$feature])->first();
+            $systemProcesses=TableRegistry::get('SystemProcesses');
+            $systemProcessEntity= $systemProcesses->newEntity([
+                'name'=>$feature,
+                'status'=>1,
+                'start_date'=>Time::now(),
+                'model'=>"Alert.".$process_name,
+                'end_date'=>Time::now()
+            ]);
+            $saveSystemProcessData = $systemProcesses->save($systemProcessEntity);
+            //POCOR-7558 end
         }
+
     }
 
     public function replaceMessage($feature, $message, $vars, $workflow = false)
