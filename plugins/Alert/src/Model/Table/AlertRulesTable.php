@@ -114,7 +114,9 @@ class AlertRulesTable extends ControllerActionTable
         $this->field('security_roles', ['after' => 'method']);
 
         // element control
-        $featureOptions = $this->getFeatureOptions();
+        $logsTable=TableRegistry::get('Alert.AlertLogs');
+        $featureOptions=$logsTable->getFeatureOptions();
+        array_shift($featureOptions);
         if (!empty($featureOptions)) {
             $featureOptions = ['-1' => __('All Features')] + $featureOptions;
         }

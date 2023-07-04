@@ -26,6 +26,8 @@ class DashboardController extends AppController
         }
         //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
+     
+        
 		
     }
 
@@ -499,7 +501,7 @@ class DashboardController extends AppController
         // end config
         return $data;
     }
-
+   
    /* private function triggerAutomatedStudentWithdrawalShell()
    {
        $script = 'AutomatedStudentWithdrawal';

@@ -27,7 +27,7 @@ class AlertsTable extends ControllerActionTable
         $this->statusTypes = $this->getSelectOptions('Alert.status_types');
 
         $this->toggle('add', false);
-        $this->toggle('edit', false);
+        $this->toggle('edit', true);
         $this->toggle('remove', false);
     }
 
@@ -43,7 +43,9 @@ class AlertsTable extends ControllerActionTable
         $this->field('name', ['sort' => false]);
         $this->field('process_name', ['visible' => false]);
         $this->field('process_id', ['visible' => false]);
-        $this->field('status', ['after' => 'name']);
+        $this->field('frequency',['sort'=>false,'after'=>'process_name']);
+        $this->field('last_run_date');
+        // // $this->field('status', ['after' => 'name']);
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Administration','Alerts','Communications');       
 		if(!empty($is_manual_exist)){
@@ -111,31 +113,31 @@ class AlertsTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $shellName = $entity->process_name;
 
-        if (array_key_exists('view', $buttons)) {
-            if ($this->AccessControl->check(['Alerts', 'Alerts', 'process'])) { // to check execute permission
-                if ($this->isShellStopExist($shellName)) {
-                    $icon = '<i class="fa fa-play"></i>';
-                    $label = 'Start'; // if have the file, process not running
-                } else {
-                    $icon = '<i class="fa fa-stop"></i>';
-                    $label = 'Stop';
-                }
+        // if (array_key_exists('view', $buttons)) {
+        //     if ($this->AccessControl->check(['Alerts', 'Alerts', 'process'])) { // to check execute permission
+        //         // if ($this->isShellStopExist($shellName)) {
+        //         //     $icon = '<i class="fa fa-play"></i>';
+        //         //     $label = 'Start'; // if have the file, process not running
+        //         // } else {
+        //         //     $icon = '<i class="fa fa-stop"></i>';
+        //         //     $label = 'Stop';
+        //         // }
 
-                $url = [
-                    'plugin' => 'Alert',
-                    'controller' => 'Alerts',
-                    'action' => 'Alerts',
-                    'process'
-                ];
+        //         $url = [
+        //             'plugin' => 'Alert',
+        //             'controller' => 'Alerts',
+        //             'action' => 'Alerts',
+        //             'process'
+        //         ];
 
-                $buttons['process'] = $buttons['view'];
-                $buttons['process']['label'] = $icon . __($label);
-                $buttons['process']['url'] = $this->setQueryString($url, [
-                    'shell_name' => $shellName,
-                    'action' => 'index'
-                ]);
-            }
-        }
+        //         $buttons['process'] = $buttons['view'];
+        //         $buttons['process']['label'] = $icon . __($label);
+        //         $buttons['process']['url'] = $this->setQueryString($url, [
+        //             'shell_name' => $shellName,
+        //             'action' => 'index'
+        //         ]);
+        //     }
+        // }
 
         return $buttons;
     }
@@ -206,5 +208,35 @@ class AlertsTable extends ControllerActionTable
         $shellCmd = $cmd . ' >> ' . $logs;
         exec($shellCmd);
         Log::write('debug', $shellCmd);
+    }
+   
+     
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'last_run_date':
+                return __('Last Run');
+        
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    
+    public function onUpdateFieldFrequency(Event $event, array $attr, $action)
+    {
+        $freqOptions=["Daily"=>"Daily",
+                         "Weekly"=>"Weekly",
+                         "Monthly"=>"Monthly",
+                         "Yearly"=>"Yearly"];
+        $attr['type'] = 'select';
+        $attr['attr']['options'] = $freqOptions;
+	    $attr['onChangeReload'] = true;
+        return $attr;
+    }
+    public function editBeforeAction(Event $event)
+    {   
+        $this->field('name',['type' => 'readonly']);
+        $this->field('frequency',['after' => 'name']);
+        $this->field('last_run_date', ['visible' => false]);
     }
 }
