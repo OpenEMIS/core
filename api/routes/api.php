@@ -177,6 +177,9 @@ Route::group(
         Route::get('assessments/items/grading-types', 'AssessmentController@getAssessmentItemGradingTypeList');
         Route::get('assessments/grading-options', 'AssessmentController@getAssessmentGradingOptionList');
 
+        Route::get('behaviours/categories', 'InstitutionController@getBehaviourCategories');
+        Route::get('institutions/{institutionsId}/students/{studentId}/behaviours', 'InstitutionController@getInstitutionStudentBehaviour');
+
 
         // Route::get('assessments/education-grades', 'AssessmentController@getAssessmentList');
 
