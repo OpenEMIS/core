@@ -114,9 +114,11 @@ class AlertRulesTable extends ControllerActionTable
         $this->field('security_roles', ['after' => 'method']);
 
         // element control
+        //POCOR-7558 start
         $logsTable=TableRegistry::get('Alert.AlertLogs');
         $featureOptions=$logsTable->getFeatureOptions();
         array_shift($featureOptions);
+         //POCOR-7558 end
         if (!empty($featureOptions)) {
             $featureOptions = ['-1' => __('All Features')] + $featureOptions;
         }
@@ -463,6 +465,7 @@ class AlertRulesTable extends ControllerActionTable
             }
         }
     }
+     //POCOR-7558 start
     public function getLastRunDate(){
         $systemProcess=TableRegistry::get('system_processes');
         $data=$systemProcess->find()->select([
@@ -478,4 +481,5 @@ class AlertRulesTable extends ControllerActionTable
         }
         return $result;
     }
+     //POCOR-7558 start
 }

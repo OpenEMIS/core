@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
+use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
 
@@ -27,7 +28,7 @@ class AlertsTable extends ControllerActionTable
         $this->statusTypes = $this->getSelectOptions('Alert.status_types');
 
         $this->toggle('add', false);
-        $this->toggle('edit', true);
+        $this->toggle('edit', true); //POCOR-7558 
         $this->toggle('remove', false);
     }
 
@@ -43,9 +44,9 @@ class AlertsTable extends ControllerActionTable
         $this->field('name', ['sort' => false]);
         $this->field('process_name', ['visible' => false]);
         $this->field('process_id', ['visible' => false]);
-        $this->field('frequency',['sort'=>false,'after'=>'process_name']);
-        $this->field('last_run_date');
-        // // $this->field('status', ['after' => 'name']);
+        $this->field('frequency',['sort'=>false,'after'=>'process_name']); //POCOR-7558 
+        $this->field('last_run_date'); //POCOR-7558 
+        // // $this->field('status', ['after' => 'name']); //POCOR-7558 
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Administration','Alerts','Communications');       
 		if(!empty($is_manual_exist)){
@@ -69,7 +70,26 @@ class AlertsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->order('name');
+         //POCOR-7558 start
+        $systemProcess=TableRegistry::get('system_processes');
+        $query->select([
+            $this->aliasField('id'),
+            $this->aliasField('name'),
+            $this->aliasField('process_name'),
+            $this->aliasField('process_id'),
+            $this->aliasField('frequency'),
+            $this->aliasField('modified_user_id'),
+            $this->aliasField('modified'),
+            $this->aliasField('created_user_id'),
+            $this->aliasField('created'),
+            "last_run_date"=>$systemProcess->aliasField('end_date'),]) 
+        ->leftJoin(
+            [ $systemProcess->alias() => $systemProcess->table()],
+            [
+                $systemProcess->aliasField('name = ') . $this->aliasField('name'),
+            ])
+        ->order($this->aliasField('name'));
+         //POCOR-7558 start
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -112,7 +132,7 @@ class AlertsTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $shellName = $entity->process_name;
-
+         //POCOR-7558 start
         // if (array_key_exists('view', $buttons)) {
         //     if ($this->AccessControl->check(['Alerts', 'Alerts', 'process'])) { // to check execute permission
         //         // if ($this->isShellStopExist($shellName)) {
@@ -138,7 +158,7 @@ class AlertsTable extends ControllerActionTable
         //         ]);
         //     }
         // }
-
+         //POCOR-7558 end
         return $buttons;
     }
 
@@ -209,16 +229,15 @@ class AlertsTable extends ControllerActionTable
         exec($shellCmd);
         Log::write('debug', $shellCmd);
     }
-   
-     
+    
+   //POCOR-7558 start
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'last_run_date':
                 return __('Last Run');
-        
-            default:
-                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+       default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
     
@@ -239,4 +258,5 @@ class AlertsTable extends ControllerActionTable
         $this->field('frequency',['after' => 'name']);
         $this->field('last_run_date', ['visible' => false]);
     }
+     //POCOR-7558 end
 }
