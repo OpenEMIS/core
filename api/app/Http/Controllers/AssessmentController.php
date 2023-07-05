@@ -65,4 +65,38 @@ class AssessmentController extends Controller
             return $this->sendErrorResponse('Assessment Period List Not Found');
         }
     }
+
+    public function getAssessmentItemGradingTypeList(Request $request)
+    {
+        try {
+            
+            $data = $this->assessmentService->getAssessmentItemGradingTypeList($request);
+            return $this->sendSuccessResponse("Assessment Item Grading Type List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Assessment Item Grading Type List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+             dd($e);
+            return $this->sendErrorResponse('Assessment Item Grading Type List Not Found');
+        }
+    }
+
+    public function getAssessmentGradingOptionList(Request $request)
+    {
+        try {
+            
+            $data = $this->assessmentService->getAssessmentGradingOptionList($request);
+            return $this->sendSuccessResponse("Assessment Grading Option List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Assessment Grading Option List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+             dd($e);
+            return $this->sendErrorResponse('Assessment Grading Option List Not Found');
+        }
+    }
 }

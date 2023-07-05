@@ -121,4 +121,72 @@ class AssessmentService extends Controller
         }
     }
 
+    public function getAssessmentItemGradingTypeList($request)
+    {
+        try {
+            $data = $this->assessmentRepository->getAssessmentItemGradingTypeList($request);
+            $list = [];
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['code'] = $d['code'];
+                    $list[$k]['name'] = $d['name'];
+                    $list[$k]['pass_mark'] = $d['pass_mark'];
+                    $list[$k]['max'] = $d['max'];
+                    $list[$k]['result_type'] = $d['result_type'];
+                    // $list[$k]['date_disabled'] = $d['date_disabled'];
+                    $list[$k]['assessment_grading_options'] = $d['assessment_grading_options'];
+                    $list[$k]['modified_user_id'] = $d['modified_user_id'];
+                    $list[$k]['modified'] = $d['modified'];
+                    $list[$k]['created_user_id'] = $d['created_user_id'];
+                    $list[$k]['created'] = $d['created'];
+                }
+            }
+
+            $data['data'] = $list;
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Assessment Item Grading Type List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Assessment Item Grading Type List.');
+        }
+    }
+
+    public function getAssessmentGradingOptionList($request)
+    {
+        try {
+            $data = $this->assessmentRepository->getAssessmentGradingOptionList($request);
+            $list = [];
+            if(count($data) > 0){
+                foreach($data as $k => $d){
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['code'] = $d['code'];
+                    $list[$k]['name'] = $d['name'];
+                    $list[$k]['min'] = $d['min'];
+                    $list[$k]['max'] = $d['max'];
+                    $list[$k]['order'] = $d['order'];
+                    $list[$k]['visible'] = $d['visible'];
+                    $list[$k]['modified_user_id'] = $d['modified_user_id'];
+                    $list[$k]['modified'] = $d['modified'];
+                    $list[$k]['created_user_id'] = $d['created_user_id'];
+                    $list[$k]['created'] = $d['created'];
+                }
+            }
+
+            return $list;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Assessment Grading Option List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Assessment Grading Option List.');
+        }
+    }
+    
+
 }
