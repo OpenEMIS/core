@@ -417,7 +417,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
     {
         if ($entity->security_user_id) { //retrieve student and staff POCOR-7362 
 
-            $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudent($entity->academic_period_id, $entity->education_subject_id); 
+            $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudent($entity->academic_period_id, $entity->education_subject_id, $entity->education_grade_id); 
             $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId, $entity->education_subject_id, $entity->education_grade_id);
             $studentOptions = $studentOptions + $staffOptions;
             $entity->institution_class_id = $studentOptions;
@@ -1024,7 +1024,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
             $studentOptions = [];
             if ($selectedPeriod && $selectedClass && $selectedSubject) {
-                $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudent($selectedPeriod, $selectedSubject);
+                $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudent($selectedPeriod, $selectedSubject, $selectedGrade);
                 $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId, $selectedSubject, $selectedGrade); //POCOR-7362
                 $studentOptions = $studentOptions + $staffOptions; //POCOR-7362
                 $studentOptions = array_diff_key($studentOptions, $textbookStudents->toArray());
