@@ -3,6 +3,8 @@
 namespace App\Repositories;
 
 use App\Http\Controllers\Controller;
+use App\Models\AssessmentGradingOptions;
+use App\Models\AssessmentGradingTypes;
 use App\Models\AssessmentItem;
 use App\Models\AssessmentPeriod;
 use App\Models\Assessments;
@@ -98,11 +100,68 @@ class AssessmentRepository extends Controller
 
             } catch (\Exception $e) {
             Log::error(
-                'Failed to get Assessment Item List.',
+                'Failed to get Assessment Period List.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('Failed to get Assessment Item List.');
+            return $this->sendErrorResponse('Failed to get Assessment Period List.');
+        }
+    }
+
+    public function getAssessmentItemGradingTypeList($request)
+    {
+        try {
+
+            $params = $request->all();
+            $assessmentGradingTypes = AssessmentGradingTypes::with('assessmentGradingOptions');
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $assessmentGradingTypes = $assessmentGradingTypes->orderBy($col, $orderBy);
+            }
+            $limit = config('constants.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $list = $assessmentGradingTypes->paginate($limit)->toArray();
+            
+            return $list;
+
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Assessment Item Grading Type List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Assessment Item Grading Type List.');
+        }
+    }
+
+    public function getAssessmentGradingOptionList($request)
+    {
+        try {
+
+            $params = $request->all();
+
+            $assessmentGradingOptions = new AssessmentGradingOptions();
+            $limit = config('constants.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+            $list = $assessmentGradingOptions->paginate($limit);
+            
+            return $list;
+            
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Assessment Grading Option List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Assessment Grading Option List.');
         }
     }
 
