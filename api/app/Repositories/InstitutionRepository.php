@@ -40,6 +40,8 @@ use App\Models\StudentAttendanceMarkedRecords;
 use App\Models\InstitutionStudentAbsences;
 use App\Models\InstitutionStudentAbsenceDays;
 use App\Models\InstitutionStudentAbsenceDetails;
+use App\Models\StaffBehaviourCategories;
+use App\Models\StudentBehaviours;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -1947,6 +1949,57 @@ class InstitutionRepository extends Controller
             );
 
             return $this->sendErrorResponse('Failed to delete student attendance.');
+        }
+    }
+
+    public function getBehaviourCategories($request)
+    {
+        try {
+            $params = $request->all();
+            $staffBehaviourCategories = new StaffBehaviourCategories();
+            
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $staffBehaviourCategories = $staffBehaviourCategories->orderBy($col, $orderBy);
+            }
+
+
+            $limit = config('constants.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $list = $staffBehaviourCategories->paginate($limit)->toArray();
+            
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Room Type Summaries List Not Found');
+        }
+    }
+
+    public function getInstitutionStudentBehaviour($institutionId, $studentId)
+    {
+        try {
+
+            $studentBehaviours = StudentBehaviours::where('institution_id', $institutionId)->where('student_id', $studentId)->get()->toArray();
+            return $studentBehaviours;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Student Behaviour from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution Student Behaviour Not Found');
         }
     }
 }

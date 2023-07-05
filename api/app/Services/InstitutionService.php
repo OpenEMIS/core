@@ -1320,4 +1320,40 @@ class InstitutionService extends Controller
         }
     }
 
+    public function getBehaviourCategories($request)
+    {
+        try {
+            $data = $this->institutionRepository->getBehaviourCategories($request);
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Behaviour Categories Option List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Behaviour Categories List.');
+        }
+    }
+
+    public function getInstitutionStudentBehaviour($institutionId, $studentId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionStudentBehaviour($institutionId, $studentId);
+            if($data){
+                return $data; 
+            }
+            return null;
+
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Student Behaviour.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Student Behaviour.');
+        }
+    }
+
 }
