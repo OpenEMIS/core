@@ -1423,7 +1423,8 @@ class NavigationComponent extends Component
                 'title' => 'Professional',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.Employments']
+                'selected' => ['Students.Employments',
+                'Students.Licenses']//POCOR-7528
             ],
             'Counsellings.index' => [
                 'title' => 'Counselling',
