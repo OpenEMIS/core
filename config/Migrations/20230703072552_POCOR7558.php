@@ -13,14 +13,13 @@ class POCOR7558 extends AbstractMigration
     public function up()
     {
         // Backup table
-        // $this->execute('CREATE TABLE `zz_7558_alerts` LIKE `alerts`');
-        // $this->execute('INSERT INTO `zz_7558_alerts` SELECT * FROM `alerts`');
+        $this->execute('CREATE TABLE `zz_7558_alerts` LIKE `alerts`');
+        $this->execute('INSERT INTO `zz_7558_alerts` SELECT * FROM `alerts`');
         $this->execute("ALTER TABLE `alerts` ADD COLUMN frequency VARCHAR(255) NOT NULL AFTER process_id ");
+        $this->execute("UPDATE alerts SET frequency='Daily'");
     }
-
-    // rollback
     public function down()
-    {
+    { 
         // Restore table
         $this->execute('DROP TABLE IF EXISTS `alerts`');
         $this->execute('RENAME TABLE `zz_7558_alerts` TO `alerts`');
