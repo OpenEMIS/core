@@ -531,12 +531,15 @@ class DashboardController extends AppController
 
 
 private function callAlerts(){
+  
     $AlertsData=TableRegistry::get('Alert.Alerts')->find('all')->toArray();
     $lastRunDates=TableRegistry::get('Alert.AlertRules')->getLastRunDate();
     $mainAlerts=[];
+    echo "heu";
+    exit;
     foreach($AlertsData as $key=>$value){
         $currentDate = Time::now()->format('Y-m-d');
-        $otherDate = (new Time($lastRunDates[$value['name']]));
+        $otherDate = $lastRunDates[$key];
         $finalDate=null;
         if($value['frequency']=="Weekly"){
             $finalDate=$otherDate->modify('+1 week')->format('Y-m-d');
@@ -550,22 +553,19 @@ private function callAlerts(){
         else{
             $finalDate=$otherDate;
         }
-      
-        
         if($currentDate>$finalDate){
             $AlertRulesTable=TableRegistry::get('Alert.AlertRules');
             $AlertRules= $AlertRulesTable->find('all')->where([
-                $AlertRulesTable->aliasField['name']=$value['name'],
-                $AlertRulesTable->aliasField['enabled']=1,
-            ]);
-        
-            echo "<pre>";
-            print_r($AlertRules);
-        exit;
-            $mainAlerts=array_merge($mainAlerts,$AlertRules);
+                $AlertRulesTable->aliasField('name')=$value['name'],
+                $AlertRulesTable->aliasField('enabled')=1
+            ])->toArray();
+            if(!empty($AlertRules)){
+            $mainAlerts[]= $AlertRules;
+            }
+            // $mainAlerts=array_merge($mainAlerts,$AlertRules);
         }
-       
     }
+    echo "hiii";
     echo "<pre>";
     print_r($mainAlerts);
     exit;
