@@ -940,4 +940,44 @@ class InstitutionController extends Controller
             return $this->sendErrorResponse('Failed to delete student attendance.');
         }
     }
+
+    public function getBehaviourCategories(Request $request)
+    {
+        try {
+            
+            $data = $this->institutionService->getBehaviourCategories($request);
+            return $this->sendSuccessResponse("Behaviour Categories List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Behaviour Categories List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+             dd($e);
+            return $this->sendErrorResponse('Behaviour Categories List Not Found');
+        }
+    }
+
+    public function getInstitutionStudentBehaviour(int $institutionId, $studentId)
+    {
+        try {
+            
+            $data = $this->institutionService->getInstitutionStudentBehaviour($institutionId, $studentId);
+
+            if($data){
+            return $this->sendSuccessResponse("Institution Student Behaviour Found", $data);
+            }
+            
+            return $this->sendErrorResponse('Institution Student Behaviour Not Found');
+            
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Student Behaviour from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+             dd($e);
+            return $this->sendErrorResponse('Institution Student Behaviour Not Found');
+        }
+    }
 }
