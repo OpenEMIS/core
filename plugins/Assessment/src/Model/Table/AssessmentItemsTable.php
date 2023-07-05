@@ -344,12 +344,13 @@ class AssessmentItemsTable extends AppTable
                             ->toArray();
                     
                             //for checking role order
-                            $min_val = $securityGroupUserData[0]['role_order'];
-                            foreach($securityGroupUserData as $key => $val) {
-                              if ($val['role_order'] < $min_val) {
-                                $min_val = $val['role_order'];
-                                $securityGroupUserEditAccessCount=$val['edit'];
-                              }
+                            $securityGroupUserEditAccessCount=0;
+                            $min_val =$securityGroupUserData[0]['role_order']; 
+                            foreach($securityGroupUserData as $val) {
+                               if ($min_val<$val['role_order']) {
+                                  $min_val = $val['role_order'];
+                                  $securityGroupUserEditAccessCount=$val['edit'];
+                               }
                             }
                     //POCOR-7551 end
 //                    $this->log($securityGroupUserEditAccessCount, 'debug');
