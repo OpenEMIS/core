@@ -2002,5 +2002,77 @@ class InstitutionRepository extends Controller
             return $this->sendErrorResponse('Institution Student Behaviour Not Found');
         }
     }
+
+    public function addStudentAssessmentItemResult($request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+
+            $store['id'] = Str::uuid();
+            $store['marks'] = $data['marks']??Null;
+            $store['assessment_grading_option_id'] = $data['assessment_grading_option_id']??Null;
+            $store['student_id'] = $data['student_id'];
+            $store['assessment_id'] = $data['assessment_id'];
+            $store['education_subject_id'] = $data['education_subject_id'];
+            $store['education_grade_id'] = $data['education_grade_id'];
+            $store['academic_period_id'] = $data['academic_period_id'];
+            $store['assessment_period_id'] = $data['assessment_period_id'];
+            $store['institution_id'] = $data['institution_id'];
+            $store['institution_classes_id'] = $data['institution_classes_id'];
+            $store['created_user_id'] = JWTAuth::user()->id;
+            $store['created'] = Carbon::now()->toDateTimeString();
+
+            $insert = AssessmentItemResults::insert($store);
+            DB::commit();
+            return 1;
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'The update of student assessment mark could not be completed successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('The update of student assessment mark could not be completed successfully.');
+        }
+    }
+
+    public function addStudentBehaviour($request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+
+            $store['description'] = $data['description'];
+            $store['action'] = $data['action'];
+            $store['date_of_behaviour'] = $data['date_of_behaviour'];
+            $store['time_of_behaviour'] = $data['time_of_behaviour'];
+            $store['academic_period_id'] = $data['academic_period_id'];
+            $store['student_id'] = $data['student_id'];
+            $store['institution_id'] = $data['institution_id'];
+            $store['status_id'] = $data['status_id'];
+            $store['student_behaviour_category_id'] = $data['student_behaviour_category_id'];
+            $store['assignee_id'] = $data['assignee_id']??Null;
+            $store['created_user_id'] = JWTAuth::user()->id;
+            $store['created'] = Carbon::now()->toDateTimeString();
+            $store['student_behaviour_classification_id'] = $data['student_behaviour_classification_id']??Null;
+
+            $insert = StudentBehaviours::insert($store);
+            DB::commit();
+            return 1;
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'The update of student behaviour could not be completed successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('The update of student behaviour could not be completed successfully.');
+        }
+    }
+
+
 }
 

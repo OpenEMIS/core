@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AssessmentItemResultRequest;
 use Illuminate\Http\Request;
 use App\Services\InstitutionService;
 use Illuminate\Support\Facades\Log;
@@ -11,6 +12,7 @@ use App\Http\Requests\CompetencyResultsAddRequest;
 use App\Http\Requests\CompetencyCommentAddRequest;
 use App\Http\Requests\CompetencyPeriodCommentAddRequest;
 use App\Http\Requests\DeleteClassAttendanceRequest;
+use App\Http\Requests\StudentBehavioursRequest;
 
 class InstitutionController extends Controller
 {
@@ -980,4 +982,48 @@ class InstitutionController extends Controller
             return $this->sendErrorResponse('Institution Student Behaviour Not Found');
         }
     }
+
+    public function addStudentAssessmentItemResult(AssessmentItemResultRequest $request)
+    {
+        try {
+            $data = $this->institutionService->addStudentAssessmentItemResult($request);
+            
+            if($data == 1){
+                return $this->sendErrorResponse("Student assessment mark is added/updated successfully.");
+            } else {
+                return $this->sendSuccessResponse("The update of student assessment mark could not be completed successfully.");
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'The update of student assessment mark could not be completed successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('The update of student assessment mark could not be completed successfully.');
+        }
+    }
+
+    public function addStudentBehaviour(StudentBehavioursRequest $request)
+    {
+        try {
+            $data = $this->institutionService->addStudentBehaviour($request);
+            
+            if($data == 1){
+                return $this->sendErrorResponse("Student Behaviour is added/updated successfully..");
+            } else {
+                return $this->sendSuccessResponse("The update of student behaviour could not be completed successfully.");
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'The update of student behaviour could not be completed successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('The update of student behaviour could not be completed successfully.');
+        }
+    }
+
+
 }
