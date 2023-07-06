@@ -310,10 +310,10 @@ class PerformanceCompetenciesShell extends Shell
                     'code' => $CompetencyCriteriasValue["code"],
                     'name' => $CompetencyCriteriasValue["name"],
                     'academic_period_id' => $toAcademicPeriod,
-                    //'competency_item_id' => $CompetencyCriteriasValue["competency_item_id"],
-                    'competency_item_id' => $arr1[$key],
-                   // 'competency_template_id' => $CompetencyCriteriasValue["competency_template_id"],
-                    'competency_template_id' => $arr[$key],
+                    'competency_item_id' => $CompetencyCriteriasValue["competency_item_id"],
+                    //'competency_item_id' => $arr1[$key],
+                    'competency_template_id' => $CompetencyCriteriasValue["competency_template_id"],
+                  //  'competency_template_id' => $arr[$key],
                     'competency_grading_type_id' => $CompetencyCriteriasValue["competency_grading_type_id"],
                     'modified_user_id' => $CompetencyCriteriasValue["modified_user_id"],
                     'modified' => $modified,
@@ -325,6 +325,27 @@ class PerformanceCompetenciesShell extends Shell
                     
                 }
             }
+
+            $templateId = $CompetencyTemplatesTable
+                ->find('all')
+                ->where(['academic_period_id' => $toAcademicPeriod])
+                ->first()->id;
+            $updateCriterias =  $CompetencyCriteriasTable->updateAll(
+                                ['competency_template_id' => $templateId,],    //field
+                                [
+                                 'academic_period_id' => $toAcademicPeriod, 
+                                ] //condition
+                                );
+             $itemId = $CompetencyItemsTable
+                ->find('all')
+                ->where(['academic_period_id' => $toAcademicPeriod])
+                ->first()->id;
+            $updateCriterias =  $CompetencyCriteriasTable->updateAll(
+                                ['competency_item_id' => $itemId,],    //field
+                                [
+                                 'academic_period_id' => $toAcademicPeriod, 
+                                ] //condition
+                                );
         }
         
        
