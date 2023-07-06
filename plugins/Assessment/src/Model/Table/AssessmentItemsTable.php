@@ -347,7 +347,7 @@ class AssessmentItemsTable extends AppTable
                             $securityGroupUserEditAccessCount=0;
                             $min_val =$securityGroupUserData[0]['role_order']; 
                             foreach($securityGroupUserData as $val) {
-                               if ($min_val<$val['role_order']) {
+                               if ($min_val>$val['role_order']) {
                                   $min_val = $val['role_order'];
                                   $securityGroupUserEditAccessCount=$val['edit'];
                                }
