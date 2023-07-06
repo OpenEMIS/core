@@ -1356,4 +1356,38 @@ class InstitutionService extends Controller
         }
     }
 
+    public function addStudentAssessmentItemResult($request)
+    {
+        try {
+            $data = $this->institutionRepository->addStudentAssessmentItemResult($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'The update of student assessment mark could not be completed successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('The update of student assessment mark could not be completed successfully.');
+        }
+    }
+
+    public function addStudentBehaviour($request)
+    {
+        try {
+            $data = $this->institutionRepository->addStudentBehaviour($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'The update of student behaviour could not be completed successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('The update of student behaviour could not be completed successfully.');
+        }
+    }
+
 }

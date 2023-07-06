@@ -180,8 +180,9 @@ Route::group(
         Route::get('behaviours/categories', 'InstitutionController@getBehaviourCategories');
         Route::get('institutions/{institutionsId}/students/{studentId}/behaviours', 'InstitutionController@getInstitutionStudentBehaviour');
 
-
-        // Route::get('assessments/education-grades', 'AssessmentController@getAssessmentList');
+        
+        Route::post('institutions/students/assessment-item-results', 'InstitutionController@addStudentAssessmentItemResult');
+        Route::post('institutions/students/behaviours', 'InstitutionController@addStudentBehaviour');
 
         // POCOR-7546 starts
 
