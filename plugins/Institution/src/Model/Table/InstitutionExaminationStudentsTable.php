@@ -395,6 +395,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->field('institution_class_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]);
         $this->field('auto_assign_to_rooms', ['type' => 'select', 'options' => $this->getSelectOptions('general.yesno')]);
         $this->field('student_id', ['entity' => $entity]);
+        $this->field('subject_id');
         $this->field('education_grade_id', ['type' => 'hidden']);
         $this->field('registration_number', ['visible' => false]);
 
@@ -637,6 +638,23 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
         return $attr;
     }
+    public function onUpdateFieldSubjectId(Event $event, array $attr, $action, $request){
+        $subjects = [];
+        if ($action == 'add') {
+            if (!empty($request->data[$this->alias()]['examination_id']) && !empty($request->data[$this->alias()]['institution_class_id'])) {
+                $ExaminationItems=TableRegistry::get('Examination.ExaminationItems');
+                $subjects=$ExaminationItems->find()->where([
+                                 $ExaminationItems->aliasField('examination_id')=>$request->data[$this->alias()]['examination_id']   
+                          ])->toArray();
+                }
+        $attr['type'] = 'element';
+        $attr['element'] = 'Examination.institution_examination_subjects';
+        $attr['data'] = $subjects;
+        return $attr;
+    }}
+
+  
+
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
