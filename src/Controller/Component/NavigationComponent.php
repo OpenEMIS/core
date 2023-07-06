@@ -3512,58 +3512,59 @@ class NavigationComponent extends Component
                     $securityFunctions->aliasField('category') => 'Performance',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
         }
         $navSix = [];
-        if(empty($userinfo)){
-            if(!empty($SecurityPerformanceFunctions)){
-                $navSix = [
-                    'Administration.Performance' => [
-                    'title' => 'Performance',
-                    'parent' => 'Administration',
-                    'link' => false
-                ],
+        //POCOR-7569 start
+        // if(empty($userinfo)){
+        //     if(!empty($SecurityPerformanceFunctions)){
+        //         $navSix = [
+        //             'Administration.Performance' => [
+        //             'title' => 'Performance',
+        //             'parent' => 'Administration',
+        //             'link' => false
+        //         ],
 
-                'Competencies.Templates' => [
-                    'title' => 'Competencies',
-                    'parent' => 'Administration.Performance',
-                    'params' => ['plugin' => 'Competency'],
-                    'selected' => ['Competencies.Templates',
-                        'Competencies.Items',
-                        'Competencies.Criterias',
-                        'Competencies.Periods',
-                        'Competencies.GradingTypes']
-                ],
+        //         'Competencies.Templates' => [
+        //             'title' => 'Competencies',
+        //             'parent' => 'Administration.Performance',
+        //             'params' => ['plugin' => 'Competency'],
+        //             'selected' => ['Competencies.Templates',
+        //                 'Competencies.Items',
+        //                 'Competencies.Criterias',
+        //                 'Competencies.Periods',
+        //                 'Competencies.GradingTypes']
+        //         ],
 
-                'Outcomes.Templates' => [
-                    'title' => 'Outcomes',
-                    'parent' => 'Administration.Performance',
-                    'params' => ['plugin' => 'Outcome'],
-                    'selected' => ['Outcomes.Templates',
-                        'Outcomes.Criterias',
-                        'Outcomes.Periods',
-                        'Outcomes.GradingTypes',
-                        'Outcomes.ImportOutcomeTemplates']
-                ],
+        //         'Outcomes.Templates' => [
+        //             'title' => 'Outcomes',
+        //             'parent' => 'Administration.Performance',
+        //             'params' => ['plugin' => 'Outcome'],
+        //             'selected' => ['Outcomes.Templates',
+        //                 'Outcomes.Criterias',
+        //                 'Outcomes.Periods',
+        //                 'Outcomes.GradingTypes',
+        //                 'Outcomes.ImportOutcomeTemplates']
+        //         ],
 
-                'Assessments.Assessments' => [
-                    'title' => 'Assessments',
-                    'parent' => 'Administration.Performance',
-                    'params' => ['plugin' => 'Assessment'],
-                    'selected' => ['Assessments.Assessments',
-                        'Assessments.AssessmentPeriods',
-                        'Assessments.GradingTypes']
-                ],
+        //         'Assessments.Assessments' => [
+        //             'title' => 'Assessments',
+        //             'parent' => 'Administration.Performance',
+        //             'params' => ['plugin' => 'Assessment'],
+        //             'selected' => ['Assessments.Assessments',
+        //                 'Assessments.AssessmentPeriods',
+        //                 'Assessments.GradingTypes']
+        //         ],
 
-                'ReportCards.Templates' => [
-                    'title' => 'Report Cards',
-                    'parent' => 'Administration.Performance',
-                    'params' => ['plugin' => 'ReportCard'],
-                    'selected' => ['ReportCards.Templates',
-                        'ReportCards.ReportCardEmail',
-                        'ReportCards.Processes']
-                ],
-                ];
-            }
-        }else{
-
+        //         'ReportCards.Templates' => [
+        //             'title' => 'Report Cards',
+        //             'parent' => 'Administration.Performance',
+        //             'params' => ['plugin' => 'ReportCard'],
+        //             'selected' => ['ReportCards.Templates',
+        //                 'ReportCards.ReportCardEmail',
+        //                 'ReportCards.Processes']
+        //         ],
+        //         ];
+        //     }
+        // }else{
+        //POCOR-7569 end
             $navSix = [
                     'Administration.Performance' => [
                     'title' => 'Performance',
@@ -3612,7 +3613,7 @@ class NavigationComponent extends Component
                 ],
 
             ];
-        }
+        // }
         return $navSix;
     }
 
