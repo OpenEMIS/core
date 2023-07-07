@@ -1026,4 +1026,39 @@ class InstitutionController extends Controller
     }
 
 
+    public function getInstitutionClassEducationGradeStudents(int $institutionId, int $institutionClassId, int $educationGradeId)
+    {
+        try {
+            $data = $this->institutionService->getInstitutionClassEducationGradeStudents($institutionId, $institutionClassId, $educationGradeId);
+            
+            return $this->sendSuccessResponse("Students List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Students List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Students List.');
+        }
+    }
+
+    public function getInstitutionEducationSubjectStudents(int $institutionId, int $educationGradeId)
+    {
+        try {
+            $data = $this->institutionService->getInstitutionEducationSubjectStudents($institutionId, $educationGradeId);
+            
+            return $this->sendSuccessResponse("Students List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Students List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Students List.');
+        }
+    }
+
+
 }
