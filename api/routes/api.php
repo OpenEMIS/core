@@ -187,7 +187,7 @@ Route::group(
         Route::post('institutions/students/assessment-item-results', 'InstitutionController@addStudentAssessmentItemResult');
         Route::post('institutions/students/behaviours', 'InstitutionController@addStudentBehaviour');
 
-        // Route::delete('institutions/{institutionID}/students/{studentID}/behaviours/{behaviourID}', 'InstitutionController@deleteStudentBehaviour');
+        Route::delete('institutions/{institutionId}/students/{studentId}/behaviours/{behaviourId}', 'InstitutionController@deleteStudentBehaviour');
 
         // POCOR-7546 starts
 

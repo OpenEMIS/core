@@ -1060,5 +1060,27 @@ class InstitutionController extends Controller
         }
     }
 
+    public function deleteStudentBehaviour(int $institutionId, int $studentId, int $behaviourId)
+    {
+        try {
+            $data = $this->institutionService->deleteStudentBehaviour($institutionId, $studentId, $behaviourId);
+            if($data == 1){
+                return $this->sendSuccessResponse("Student Behaviour is deleted successfully.");
+            } elseif($data == 2){
+                return $this->sendSuccessResponse("Record not found for selected Id(s).");
+            }else {
+                return $this->sendErrorResponse("The deletion of student behaviour could not be completed successfully.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'The deletion of student behaviour could not be completed successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('The deletion of student behaviour could not be completed successfully.');
+        }
+    }
+
 
 }
