@@ -36,7 +36,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable
             'className' => 'Examination.ExaminationCentresExaminationsSubjects',
             'joinTable' => 'examination_centres_examinations_subjects_students',
             'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
-            'targetForeignKey' => ['examination_centre_id', 'examination_item_id'],
+            'targetForeignKey' => ['examination_centre_id', 'examination_subject_id'],
             'through' => 'Examination.ExaminationCentresExaminationsSubjectsStudents',
             'dependent' => true,
             'cascadeCallbacks' => true
@@ -384,10 +384,10 @@ class BulkStudentRegistrationTable extends ControllerActionTable
                         foreach($examCentreSubjects as $examItemId => $subjectId) {
                             $obj['examination_centres_examinations_subjects'][] = [
                                 'examination_centre_id' => $selectedExaminationCentre,
-                                'examination_item_id' => $examItemId,
+                                'examination_subject_id' => $examItemId,
                                 '_joinData' => [
                                     'education_subject_id' => $subjectId,
-                                    'examination_item_id' => $examItemId,
+                                    'examination_subject_id' => $examItemId,
                                     'examination_centre_id' => $selectedExaminationCentre,
                                     'student_id' => $student['student_id'],
                                     'examination_id' => $selectedExamination
