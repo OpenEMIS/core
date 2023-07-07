@@ -27,7 +27,7 @@ class LicensesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);//POCOR-7528
         $this->belongsTo('LicenseTypes', ['className' => 'FieldOption.LicenseTypes']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
 
@@ -88,7 +88,8 @@ class LicensesTable extends ControllerActionTable
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
 		}elseif($this->request->params['controller'] == 'Directories'){ 
-			$is_manual_exist = $this->getManualUrl('Directory','Licenses','Staff - Professional');       
+            $is_manual_exist = $this->getManualUrl('Directory','Licenses','Professional');   //POCOR-7528
+          
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -171,7 +172,7 @@ class LicensesTable extends ControllerActionTable
                             $StaffLicensesTable->aliasField('status_id = ') . $WorkflowSteps->aliasField('id')
                         ])
                         ->where([
-                            $StaffLicensesTable->aliasField('staff_id') => $staffId,
+                            $StaffLicensesTable->aliasField('security_user_id') => $staffId,//POCOR-7528
                             $StaffLicensesTable->aliasField('license_type_id') => $licenseTypeId
                         ])->first();
             $selectedModel = $getData->WorkflowSteps['workflow_id'];
@@ -235,14 +236,14 @@ class LicensesTable extends ControllerActionTable
         $staffTableInnerJoinQuery = $StaffTableQuery->select([$table->aliasField('staff_id')]);
         $staffTable = TableRegistry::get('Institution.Staff');
         $innerJoinArray = [
-            'StaffUser.Staff__staff_id = '. $this->aliasField('staff_id'),
+            'StaffUser.Staff__staff_id = '. $this->aliasField('security_user_id'),//POCOR-7528
             ];
         $licenseRecord = $this->find();
         $licenseCount = $licenseRecord
             ->contain(['Users', 'LicenseTypes'])
             ->select([
                 'license' => 'LicenseTypes.name',
-                'count' => $licenseRecord->func()->count($this->aliasField('staff_id'))
+                'count' => $licenseRecord->func()->count($this->aliasField('security_user_id'))//POCOR-7528
             ])
             ->join([
                 'StaffUser' => [
@@ -299,7 +300,7 @@ class LicensesTable extends ControllerActionTable
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('status_id'),
-                $this->aliasField('staff_id'),
+                $this->aliasField('security_user_id'),//POCOR-7528
                 $this->aliasField('license_number'),
                 $this->aliasField('license_type_id'),
                 $this->aliasField('modified'),
@@ -334,7 +335,7 @@ class LicensesTable extends ControllerActionTable
                         'action' => 'StaffLicenses',
                         'view',
                         $this->paramsEncode(['id' => $row->id]),
-                        'user_id' => $row->staff_id
+                        'user_id' => $row->security_user_id //POCOR-7528
                     ];
 
                     if (is_null($row->modified)) {
