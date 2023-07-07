@@ -126,7 +126,11 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']);
     }
-    public function StaffLicenses()
+    public function StaffLicenses()//POCOR-7528
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']);
+    }
+    public function StudentLicenses()//POCOR-7528
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']);
     }
@@ -1014,8 +1018,9 @@ class DirectoriesController extends AppController
 
         $tabElements = [];
         $directoryUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
-
+        $user=0;//POCOR-7528 
         if ($isStaff) {
+            $user=1;//POCOR-7528 
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
                 'Qualifications' => ['text' => __('Qualifications')],
@@ -1025,16 +1030,30 @@ class DirectoriesController extends AppController
                 'Awards' => ['text' => __('Awards')],
             ];
         } else {
+            $user=0;//POCOR-7528 
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
+                'Licenses' => ['text' => __('Licenses')],
             ];
         }
         $tabElements = array_merge($tabElements, $professionalTabElements);
 
         foreach ($professionalTabElements as $key => $tab) {
-            if ($key != 'Employments') {
+            //POCOR-7528 start
+            if($key == 'Licenses'){
+                if($user==1){
+                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' =>'Staff'.$key, 'index']);
+                }
+                else if($user==0){
+                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' =>'Student'.$key, 'index']);
+                }
+            }
+            //POCOR-7528 end
+            else if ($key != 'Employments') {
                 $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => 'Staff'.$key, 'index']);
-            } else {
+            }
+         
+            else {
                 $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => $key, 'index']);
             }
         }
