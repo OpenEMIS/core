@@ -2073,6 +2073,70 @@ class InstitutionRepository extends Controller
         }
     }
 
+    public function getInstitutionClassEducationGradeStudents($institutionId, $institutionClassId, $educationGradeId)
+    {
+        try {
+
+            $studentsId = InstitutionClasses::with([
+                'students' => function ($q) use ($institutionId, $institutionClassId, $educationGradeId) {
+                    $q->where('institution_id', $institutionId)
+                        ->where('institution_class_id', $institutionClassId)
+                        ->where('education_grade_id', $educationGradeId);
+                        // ->pluck('student_id');
+                }
+            ])
+            ->where('institution_id', $institutionId)
+                    ->where('id', $institutionClassId);
+
+
+            $list = $studentsId->get();
+
+            return $list;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Students List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            dd($e);
+
+            return $this->sendErrorResponse('Failed to get Students List.');
+        }
+    }
+
+    public function getInstitutionEducationSubjectStudents($institutionId, $educationGradeId)
+    {
+        try {
+
+            $studentsId = InstitutionSubjects::with([
+                'educationSubjects',
+                'students' => function ($q) use ($institutionId, $educationGradeId) {
+                    $q->where('institution_id', $institutionId)
+                        ->where('education_grade_id', $educationGradeId);
+                        // ->pluck('student_id');
+                }
+
+            ])
+            ->where('institution_id', $institutionId)
+            ->where('education_grade_id', $educationGradeId);
+            
+            $list = $studentsId->get()->toArray();
+            // dd(count($list));
+           
+
+            return $list;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Students List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            dd($e);
+
+            return $this->sendErrorResponse('Failed to get Students List.');
+        }
+    }
+
 
 }
 

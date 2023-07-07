@@ -1390,4 +1390,89 @@ class InstitutionService extends Controller
         }
     }
 
+    public function getInstitutionClassEducationGradeStudents($institutionId, $institutionClassId, $educationGradeId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionClassEducationGradeStudents($institutionId, $institutionClassId, $educationGradeId);
+
+            $resp = [];
+
+            if(count($data) > 0){
+                foreach($data as $k => $l){
+                    $resp[$k]['institution_class_id'] = $l['id'];
+                    $resp[$k]['institution_class_name'] = $l['name'];
+                    $resp[$k]['institution_id'] = $l['institution_id'];
+                    $resp[$k]['student_id'] = $l['students'];
+
+                    $studentIds = [];
+
+                    if(count($resp[$k]['student_id']) > 0){
+                        $students = $resp[$k]['student_id'];
+
+                        foreach($students as $s){
+                            $studentIds[] = $s['student_id'];
+                        }
+                    }
+
+                    $resp[$k]['student_id'] = $studentIds;
+                }
+            }
+
+            return $resp;
+            
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Students List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            dd($e);
+            return $this->sendErrorResponse('Failed to get Students List.');
+        }
+    }
+
+    public function getInstitutionEducationSubjectStudents($institutionId, $educationGradeId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionEducationSubjectStudents($institutionId, $educationGradeId);
+            // return $data;
+
+            $resp = [];
+
+            if(count($data) > 0){
+                foreach($data as $k => $l){
+                    $resp[$k]['institution_subject_id'] = $l['id'];
+                    $resp[$k]['institution_subject_name'] = $l['name'];
+                    $resp[$k]['education_subject_code'] = $l['education_subjects']['code'];
+                    $resp[$k]['education_subject_name'] = $l['education_subjects']['name'];
+                    $resp[$k]['institution_id'] = $l['institution_id'];
+                    $resp[$k]['student_id'] = $l['students'];
+
+                    $studentIds = [];
+
+                    if(count($resp[$k]['student_id']) > 0){
+                        $students = $resp[$k]['student_id'];
+
+                        foreach($students as $s){
+                            $studentIds[] = $s['student_id'];
+                        }
+                    }
+
+                    $resp[$k]['student_id'] = $studentIds;
+                }
+            }
+
+            return $resp;
+            
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Students List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            dd($e);
+            return $this->sendErrorResponse('Failed to get Students List.');
+        }
+    }
+
 }
