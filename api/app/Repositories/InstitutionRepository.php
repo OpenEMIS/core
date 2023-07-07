@@ -2138,5 +2138,43 @@ class InstitutionRepository extends Controller
     }
 
 
+    public function deleteStudentBehaviour($institutionId, $studentId, $behaviourId)
+    {
+        DB::beginTransaction();
+        try {
+            
+            $isExists = StudentBehaviours::where([
+                'institution_id' => $institutionId,
+                'student_id' => $studentId,
+                'id' => $behaviourId
+            ])
+            ->first();
+
+            if($isExists){
+                $studentBehaviours = StudentBehaviours::where([
+                    'institution_id' => $institutionId,
+                    'student_id' => $studentId,
+                    'id' => $behaviourId
+                ])->delete();
+                DB::commit();
+                return 1;
+            }
+            else{
+                DB::commit();
+                return 2;
+            }
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'Failed to delete student attendance.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            dd($e);
+            return $this->sendErrorResponse('Failed to delete student attendance.');
+        }
+    }
+
+
 }
 

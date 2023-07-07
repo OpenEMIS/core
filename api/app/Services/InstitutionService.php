@@ -1475,4 +1475,20 @@ class InstitutionService extends Controller
         }
     }
 
+    public function deleteStudentBehaviour($institutionId, $studentId, $behaviourId)
+    {
+        try {
+            $data = $this->institutionRepository->deleteStudentBehaviour($institutionId, $studentId, $behaviourId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'The deletion of student behaviour could not be completed successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('The deletion of student behaviour could not be completed successfully.');
+        }
+    }
+
 }
