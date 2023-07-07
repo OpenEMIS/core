@@ -172,11 +172,14 @@ class AlertLogsTable extends ControllerActionTable
             ]);
             //POCOR-6023 starts
             $saveData = $this->save($entity);
+
             if(!empty($saveData)){
                 $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['id' => $saveData->id])->first();
                 $this->triggerSendingAlertShell('SendingAlert', $result->feature, $result->id);
             }//POCOR-6023 ends
+           
         }
+
     }
 
     public function replaceMessage($feature, $message, $vars, $workflow = false)
