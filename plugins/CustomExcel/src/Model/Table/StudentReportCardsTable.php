@@ -545,10 +545,11 @@ class StudentReportCardsTable extends AppTable
 				)
 				->where([
                     $InstitutionClassStudents->aliasField('student_id') => $params['student_id'],
-                    $InstitutionClassStudents->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $InstitutionClassStudents->aliasField('education_grade_id') => $params['education_grade_id'],
+                    //$InstitutionClassStudents->aliasField('academic_period_id') => $params['academic_period_id'],//POCOR-5191
+                    //$InstitutionClassStudents->aliasField('education_grade_id') => $params['education_grade_id'],//POCOR-5191
                     $InstitutionClassStudents->aliasField('institution_id') => $params['institution_id'],
                 ])
+                ->order(['InstitutionStudents.end_date'=>'DESC'])
                 ->toArray();
 				
             return $entity;
@@ -636,18 +637,28 @@ class StudentReportCardsTable extends AppTable
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('student_id', $params)) {
             $StudentBehaviours = TableRegistry::get('student_behaviours');
-
+            $StaffUser = TableRegistry::get('User.Users'); //POCOR-5191
             $entity = $StudentBehaviours
                 ->find()
                 ->select([
 					'id' => $StudentBehaviours->aliasField('id'),
-					'title' => $StudentBehaviours->aliasField('title'),
 					'description' => $StudentBehaviours->aliasField('description'),
 					'action' => $StudentBehaviours->aliasField('action'),
 					'date_of_behaviour' => $StudentBehaviours->aliasField('date_of_behaviour'),
 					'time_of_behaviour' => $StudentBehaviours->aliasField('time_of_behaviour'),
 					'category_name' => 'StudentBehaviourCategories.name',
+                    'action_taken_by' => $StaffUser->find()->func()->concat([
+                        'Users.first_name' => 'literal',
+                        " ",
+                        'Users.last_name' => 'literal'
+                    ]),
                 ])
+                ->LeftJoin(
+                    [$StaffUser->alias() => $StaffUser->table()], [
+                        $StaffUser->aliasField('id = ') . $StudentBehaviours->aliasField('modified_user_id')
+                    ]
+                    
+                    )
 				->innerJoin(
 				['StudentBehaviourCategories' => 'student_behaviour_categories'],
 				[
@@ -656,9 +667,10 @@ class StudentReportCardsTable extends AppTable
 				)
 				->where([
                     $StudentBehaviours->aliasField('student_id') => $params['student_id'],
-                    $StudentBehaviours->aliasField('academic_period_id') => $params['academic_period_id'],
+                    //$StudentBehaviours->aliasField('academic_period_id') => $params['academic_period_id'],//POCOR-5191
                     $StudentBehaviours->aliasField('institution_id') => $params['institution_id'],
                 ])
+                ->order([$StudentBehaviours->aliasField('date_of_behaviour') => 'DESC']) //POCOR-5191
                 ->toArray();
             return $entity;
         }
@@ -775,6 +787,113 @@ class StudentReportCardsTable extends AppTable
                     $InstitutionStudentAbsences->aliasField('absence_type_id') => 3,
                 ])
 				->count();
+                //POCOR-5191::Start ----    cases table
+                $Cases = TableRegistry::get('institution_cases');
+                $CasesRecords = TableRegistry::get('institution_case_records');
+                $studentAbsences = $InstitutionStudentAbsences->find()->where([
+                    $InstitutionStudentAbsences->aliasField('student_id') => $params['student_id'],
+                    $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
+                ])->toArray();
+                $studentAbsencesIdss =[];
+                foreach($studentAbsences as $k =>$student){
+                    $studentAbsencesIdss[$k] = $student->id;
+                }
+                
+                if(!empty($studentAbsencesIdss)){
+                    $CasesRecordsData =$CasesRecords->find()->where([
+                        $CasesRecords->aliasField('record_id in') => $studentAbsencesIdss
+                    ])
+                    ->group(['institution_case_id'])
+                    ->toArray();
+
+                $CasesRecordsIds =[];
+                foreach($CasesRecordsData as $ki =>$CasesRecordsData1){
+                    $CasesRecordsIds[$ki] = $CasesRecordsData1->institution_case_id;
+                }
+                
+                $StaffUser = TableRegistry::get('User.Users');
+                
+                $caseData = $Cases
+                    ->find()
+                    ->select([
+                        'id' => $Cases->aliasField('id'),
+                        'title' => $Cases->aliasField('title'),
+                        'status' => 'WorkflowSteps.name',
+                        
+                        'assignee' => $StaffUser->find()->func()->concat([
+                            'Users.first_name' => 'literal',
+                            " ",
+                            'Users.last_name' => 'literal'
+                        ]),
+                        'created' => $Cases->aliasField('created'),
+                        
+                    ])
+                    ->LeftJoin(
+                        ['WorkflowSteps' => 'workflow_steps'],
+                        [
+                            'WorkflowSteps.id ='. $Cases->aliasField('status_id'),
+                        ]
+                        )
+                    ->LeftJoin(
+                        [$StaffUser->alias() => $StaffUser->table()], [
+                            $StaffUser->aliasField('id = ') . $Cases->aliasField('assignee_id')
+                        ]
+                        
+                        )
+                    ->where([
+                        $Cases->aliasField('id in') => $CasesRecordsIds,
+                    ])
+                    ->toArray();
+                    foreach($caseData as $ky => $caseData1){
+                        $comments = $Cases->find()->select([
+                            'institution_id'=>$Cases->aliasField('institution_id'),
+                            'id' =>$Cases->aliasField('id'),
+                            'case_number' =>$Cases->aliasField('case_number'),
+                            'title'=>$Cases->aliasField('title'),
+                            'comment'=>'WorkflowTransitions.comment'
+                        ])
+                        ->InnerJoin(
+                            ['WorkflowSteps' => 'workflow_steps'],
+                            [
+                                'WorkflowSteps.id ='. $Cases->aliasField('status_id'),
+                            ]
+                            )
+                        ->InnerJoin(
+                            ['Workflows' => 'workflows'],
+                            [
+                                'Workflows.id = WorkflowSteps.workflow_id'
+                            ]
+                            )
+                        ->InnerJoin(
+                            ['WorkflowModels' => 'workflow_models'],
+                            [
+                                'WorkflowModels.id = Workflows.workflow_model_id'
+                            ]
+                            )
+                        ->InnerJoin(
+                            ['WorkflowTransitions' => 'workflow_transitions'],
+                            [
+                                'WorkflowTransitions.workflow_model_id = WorkflowModels.id'
+                            ]
+                            )
+                        ->where([
+                            'institution_id' => $params['institution_id'],
+                            $Cases->aliasField('id') => $caseData1['id'],
+                        ])
+                        ->toArray();
+                        $comm='';
+                        foreach($comments as $kyu => $comment){
+                            $comm .= $comment->comment.",";
+                        }
+                        $comm1 = rtrim($comm,',');
+                        $caseData[$ky]['action_taken'] = $comm1;
+                    }	
+                }
+                
+               
+                
+
+                //POCOR-5191 :: End
 				
 			$entity = [
 				'total_excused_absences' => $totalExcusedAbsences,
@@ -782,7 +901,9 @@ class StudentReportCardsTable extends AppTable
 				'total_late' => $totalLate,
 				'total_number_of_absences' => ($totalExcusedAbsences +$totalUnxcusedAbsences),
 			];
-				
+            foreach($caseData as $ky => $caseData1){
+                $entity[$ky] = $caseData1;
+            }	
             return $entity;
         }
     }
@@ -830,7 +951,7 @@ class StudentReportCardsTable extends AppTable
                 ])
                 ->first();
 				
-				if(!empty($entity->health_insurance) && ($entity->health_insurance == 0)) {
+				if(!empty($entity) && ($entity->health_insurance == 0)) {
 					$entity['health_insurance'] = 'No';
 				}
 				if(!empty($entity->health_insurance) && ($entity->health_insurance == 1)) {
