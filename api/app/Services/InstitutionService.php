@@ -1321,7 +1321,7 @@ class InstitutionService extends Controller
     }
 
     // POCOR-7546 starts
-    
+
     public function getBehaviourCategories($request)
     {
         try {
@@ -1428,7 +1428,6 @@ class InstitutionService extends Controller
                 'Failed to get Students List.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
             return $this->sendErrorResponse('Failed to get Students List.');
         }
     }
@@ -1472,7 +1471,7 @@ class InstitutionService extends Controller
                 'Failed to get Students List.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
+        
             return $this->sendErrorResponse('Failed to get Students List.');
         }
     }

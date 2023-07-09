@@ -957,7 +957,7 @@ class InstitutionController extends Controller
                 'Failed to fetch Behaviour Categories List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-             dd($e);
+        
             return $this->sendErrorResponse('Behaviour Categories List Not Found');
         }
     }
@@ -980,7 +980,6 @@ class InstitutionController extends Controller
                 'Failed to fetch Institution Student Behaviour from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-             dd($e);
             return $this->sendErrorResponse('Institution Student Behaviour Not Found');
         }
     }
