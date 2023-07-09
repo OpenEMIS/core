@@ -65,7 +65,9 @@ class AssessmentService extends Controller
                     $list[$k]['modified'] = $d['modified'];
                     $list[$k]['created_user_id'] = $d['created_user_id'];
                     $list[$k]['created'] = $d['created'];
-                    $list[$k]['education_subject_name'] = $d['education_subjects']['name'];
+                    $code = $d['education_subjects']['code'];
+                    $name = $d['education_subjects']['name'];
+                    $list[$k]['education_subject_name'] = $code."-".$name;
                 }
             }
 
