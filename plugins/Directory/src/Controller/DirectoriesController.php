@@ -126,7 +126,11 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']);
     }
-    public function StaffLicenses()
+    public function StaffLicenses()//POCOR-7528
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']);
+    }
+    public function StudentLicenses()//POCOR-7528
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']);
     }
@@ -299,11 +303,17 @@ class DirectoriesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
     }
     // Special Needs - End
-
+    //POCOR-7366 start
+    public function Counsellings()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.Counsellings']);
+    }
+    //POCOR-7366 end
     public function Employments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']);
     }
+
 
     // Historical Data - End
     public function HistoricalStaffPositions()
@@ -701,7 +711,7 @@ class DirectoriesController extends AppController
 
                     $exists = false;
 
-                    if (in_array($model->alias(), ['Guardians', 'StudentReportCards'])) {
+                    if (in_array($model->alias(), ['Guardians', 'StudentReportCards','Counsellings'])) {//POCOR-7366
                         $params[$model->aliasField('student_id')] = $session->read('Directory.Directories.id');
                         $exists = $model->exists($params);
                     } elseif (in_array($model->alias(), ['Students'])) {
@@ -998,16 +1008,19 @@ class DirectoriesController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
+    
     public function getProfessionalTabElements($options = [])
     {
+       
         $session = $this->request->session();
         $isStudent = $session->read('Directory.Directories.is_student');
         $isStaff = $session->read('Directory.Directories.is_staff');
 
         $tabElements = [];
         $directoryUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
-
+        $user=0;//POCOR-7528 
         if ($isStaff) {
+            $user=1;//POCOR-7528 
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
                 'Qualifications' => ['text' => __('Qualifications')],
@@ -1017,16 +1030,30 @@ class DirectoriesController extends AppController
                 'Awards' => ['text' => __('Awards')],
             ];
         } else {
+            $user=0;//POCOR-7528 
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
+                'Licenses' => ['text' => __('Licenses')],
             ];
         }
         $tabElements = array_merge($tabElements, $professionalTabElements);
 
         foreach ($professionalTabElements as $key => $tab) {
-            if ($key != 'Employments') {
+            //POCOR-7528 start
+            if($key == 'Licenses'){
+                if($user==1){
+                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' =>'Staff'.$key, 'index']);
+                }
+                else if($user==0){
+                $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' =>'Student'.$key, 'index']);
+                }
+            }
+            //POCOR-7528 end
+            else if ($key != 'Employments') {
                 $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => 'Staff'.$key, 'index']);
-            } else {
+            }
+         
+            else {
                 $tabElements[$key]['url'] = array_merge($directoryUrl, ['action' => $key, 'index']);
             }
         }
@@ -2049,7 +2076,10 @@ class DirectoriesController extends AppController
     public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.StudentProfiles']); }
     /*POCOR-6286 ends*/
 
-    /*POCOR-6700 start - registering function*/
+    
+   
+
+   /*POCOR-6700 start - registering function*/
     public function StudentExtracurriculars() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Extracurriculars']); }
     /*POCOR-6700 ends*/
 }

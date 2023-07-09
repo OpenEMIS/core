@@ -1,3 +1,21 @@
+### [3.89.0] - 2023-07-07
+- Implemented: 2.16 Reports > Student Case Report
+- Implemented: Develop a function to copy Institution > Performance > Competencies from one academic period to another
+- Implemented: 2.11 Add workflow for staff behavior
+- Implemented: Changes to the Meals feature
+- Implemented: Add the Counselling feature to the Directory module
+- Implemented: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 1
+- Implemented: Rename "External Data Source" to "External Data Source - Identity"
+- Implemented: Develop permissions to allow the License and Qualifications tabs under the Professional menu for all users
+- Implemented: Develop changes to the Communication Alerts and Alert Rules pages
+- Bug Fixed: Directory>Students: User is unable to delete students
+- Bug Fixed: Administration: Student and teacher user can access other administration module page when there is no permission enabled
+- Bug Fixed: Reports > Students > Special Needs : Changes to Special Needs report
+- Bug Fixed: Institutions>Student>Academic>Curriculars: Side menu is hidden
+- Bug Fixed: Institutions > General > Shifts: Shifts for the new academic period are not showing:
+- Bug Fixed: Institution > Student > Academic > Behaviour: User is not able to see behaviour page
+- Bug Fixed: Administration > Security > Roles: Permission is given to access the tab Administration > Performance > Assessments however user is not seeing the Assessments tab
+
 ### [3.88.0] - 2023-06-28
 - Implemented: Convert language proficiency to field options
 - Implemented: Develop changes to the student behaviour page
