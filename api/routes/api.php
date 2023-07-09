@@ -204,7 +204,7 @@ Route::group(
         Route::get('assessments/grading-options', 'AssessmentController@getAssessmentGradingOptionList');
 
         Route::get('behaviours/categories', 'InstitutionController@getBehaviourCategories');
-        Route::get('institutions/{institutionsId}/students/{studentId}/behaviours', 'InstitutionController@getInstitutionStudentBehaviour');
+        Route::get('institutions/{institutionId}/students/{studentId}/behaviours', 'InstitutionController@getInstitutionStudentBehaviour');
 
 
         Route::get('institutions/{institutionId}/institution-classes/{institutionClassId}/education-grades/{educationGradeId}/students', 'InstitutionController@getInstitutionClassEducationGradeStudents');
