@@ -1953,7 +1953,7 @@ class InstitutionRepository extends Controller
     }
 
     // POCOR-7546 starts
-    
+
     public function getBehaviourCategories($request)
     {
         try {
@@ -2100,7 +2100,6 @@ class InstitutionRepository extends Controller
                 'Failed to get Students List.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
 
             return $this->sendErrorResponse('Failed to get Students List.');
         }
@@ -2133,7 +2132,6 @@ class InstitutionRepository extends Controller
                 'Failed to get Students List.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
 
             return $this->sendErrorResponse('Failed to get Students List.');
         }
@@ -2172,7 +2170,7 @@ class InstitutionRepository extends Controller
                 'Failed to delete student attendance.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
+
             return $this->sendErrorResponse('Failed to delete student attendance.');
         }
     }
