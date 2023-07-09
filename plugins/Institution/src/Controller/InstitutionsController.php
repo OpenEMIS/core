@@ -156,143 +156,6 @@ class InstitutionsController extends AppController
         // 'CourseCatalogue',
     ];
 
-    /**
-     * @param $student_id
-     * @param $security_group_id
-     * @param $previous_security_group_id
-     * @param $student_role_id
-     */
-    private static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
-    {
-        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
-        $securityGroupUsersTbl->updateAll(
-            [
-                'security_group_id' => $security_group_id,
-                'created' => new Time('NOW')
-            ],
-            [
-                'security_group_id' => $previous_security_group_id,
-                'security_user_id' => $student_id,
-                'security_role_id' => $student_role_id
-            ]
-        );
-    }
-
-    /**
-     * @param $institution_id
-     * @param $student_id
-     * @param $institutionTbl
-     * @return mixed
-     */
-    private static function getPreviousSecurityGroupId($institution_id, $student_id)
-    {
-        $previous_security_group_id = 0;
-        $institutionTbl = TableRegistry::get('institutions');
-        $InstitutionStudentsTbl = TableRegistry::get('institution_students');
-        $TransfersTbl = TableRegistry::get('institution_student_transfers');
-        $StudentTransfers = $InstitutionStudentsTbl
-            ->find()
-            ->select([
-                $InstitutionStudentsTbl->aliasField('student_id'),
-                $TransfersTbl->aliasField('institution_id'),
-                $TransfersTbl->aliasField('previous_institution_id')
-            ])
-            ->leftJoin([$TransfersTbl->alias() => $TransfersTbl->table()],
-                [
-                    $TransfersTbl->aliasField('student_id') . '=' . $student_id,
-                    $TransfersTbl->aliasField('institution_id') => $institution_id
-                ]
-            )
-            ->where([
-                $InstitutionStudentsTbl->aliasField('student_id') => $student_id,
-                $InstitutionStudentsTbl->aliasField('institution_id') => $institution_id,
-                $InstitutionStudentsTbl->aliasField('student_status_id') => 1//for enrolled status
-            ])
-            ->first();
-        if (!empty($StudentTransfers)) {
-            if (!empty($StudentTransfers->institution_student_transfers['previous_institution_id'])) {
-                $PreviousInstitutions = $institutionTbl->find()
-                    ->where([
-                        $institutionTbl->aliasField('id') => $StudentTransfers->institution_student_transfers['previous_institution_id']
-                    ])
-                    ->first();
-                $previous_security_group_id = $PreviousInstitutions->security_group_id;
-            }
-        }
-        return $previous_security_group_id;
-    }
-
-    /**
-     * @param $student_id
-     * @param $student_role_id
-     * @return array
-     */
-    private static function getStudentSecurityGroups($student_id, $student_role_id)
-    {
-        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
-        $countSecurityGroupStudent = $securityGroupUsersTbl->find('all')
-            ->select('security_group_id')
-            ->where([
-                $securityGroupUsersTbl->aliasField('security_user_id') => $student_id,
-                $securityGroupUsersTbl->aliasField('security_role_id') => $student_role_id
-            ])
-            ->extract('security_group_id')
-            ->toArray();
-        return $countSecurityGroupStudent;
-    }
-
-    /**
-     * @return int
-     */
-    private static function getStudentSecurityRoleId()
-    {
-        $securityRolesTbl = TableRegistry::get('security_roles');
-        $securityRoles = $securityRolesTbl->find()
-            ->where([
-                $securityRolesTbl->aliasField('code') => 'STUDENT',
-            ])->first();
-        $student_role_id = $securityRoles->id;
-        return $student_role_id;
-    }
-
-    /**
-     * @param $institutionId
-     * @return integer
-     */
-    private static function getInstitutionSecurityGroupId($institutionId)
-    {
-        $institutionTbl = TableRegistry::get('institutions');
-        $security_group_id = null;
-        $institutions = $institutionTbl->find()
-            ->where([
-                $institutionTbl->aliasField('id') => $institutionId
-            ])->first();
-        if (!empty($institutions)) {
-            $security_group_id = $institutions->security_group_id;
-        }
-        if ($security_group_id != null) {
-            $securityGroupInstitutionsTbl = TableRegistry::get('security_group_institutions');
-            $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
-                ->where([
-                    $securityGroupInstitutionsTbl->aliasField('security_group_id') => $security_group_id,
-                    $securityGroupInstitutionsTbl->aliasField('institution_id') => $institutions->id
-                ])
-                ->first();
-            //save security group for institution
-            if (empty($securityGroupInstitutions)) {
-                $security_group_ins_data = [
-                    'security_group_id' => $security_group_id,
-                    'institution_id' => $institutionId,
-                    'created_user_id' => 1,
-                    'created' => new Time('NOW')
-                ];
-                $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
-                $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
-            }
-        }
-        return $security_group_id;
-    }
-
     public function initialize()
     {
         // Start: remove this logic after upgrading to v3.4.x
@@ -8005,6 +7868,7 @@ class InstitutionsController extends AppController
     /**
      * POCOR-7146
      * POCOR-7224 refactored
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
      * assign Role and group to student while creating student
      **/
     private function assignStudentRoleGroup($institution_id, $student_id)
@@ -8013,26 +7877,171 @@ class InstitutionsController extends AppController
         $security_group_id = self::getInstitutionSecurityGroupId($institution_id);
         //check student already exist
         $student_security_groups = self::getStudentSecurityGroups($student_id, $student_role_id);
-        //check user_id with role is available or not in `security_group_users` group
+        //check that the student is not in other groups
         if (sizeof($student_security_groups) == 0) {
             self::createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
             return;
         }
-            //update user's security_group_id in security_group_users table
+        //update user's security_group_id in security_group_users table
         $previous_security_group_id = self::getPreviousSecurityGroupId($institution_id, $student_id);
+        //check that the student is should be transferred
         if (in_array($previous_security_group_id, $student_security_groups)) {
             self::makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id);
             return;
         }
+        //if he/she is not transferred - create new security group
         $this->createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
         return;
 
     }
 
     /**
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @param $student_id
+     * @param $security_group_id
+     * @param $previous_security_group_id
+     * @param $student_role_id
+     */
+    private static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
+    {
+        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $securityGroupUsersTbl->updateAll(
+            [
+                'security_group_id' => $security_group_id,
+                'created' => new Time('NOW')
+            ],
+            [
+                'security_group_id' => $previous_security_group_id,
+                'security_user_id' => $student_id,
+                'security_role_id' => $student_role_id
+            ]
+        );
+    }
+
+    /**
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @param $institution_id
+     * @param $student_id
+     * @param $institutionTbl
+     * @return mixed
+     */
+    private static function getPreviousSecurityGroupId($institution_id, $student_id)
+    {
+        $previous_security_group_id = 0;
+        $institutionTbl = TableRegistry::get('institutions');
+        $InstitutionStudentsTbl = TableRegistry::get('institution_students');
+        $TransfersTbl = TableRegistry::get('institution_student_transfers');
+        $StudentTransfers = $InstitutionStudentsTbl
+            ->find()
+            ->select([
+                $InstitutionStudentsTbl->aliasField('student_id'),
+                $TransfersTbl->aliasField('institution_id'),
+                $TransfersTbl->aliasField('previous_institution_id')
+            ])
+            ->leftJoin([$TransfersTbl->alias() => $TransfersTbl->table()],
+                [
+                    $TransfersTbl->aliasField('student_id') . '=' . $student_id,
+                    $TransfersTbl->aliasField('institution_id') => $institution_id
+                ]
+            )
+            ->where([
+                $InstitutionStudentsTbl->aliasField('student_id') => $student_id,
+                $InstitutionStudentsTbl->aliasField('institution_id') => $institution_id,
+                $InstitutionStudentsTbl->aliasField('student_status_id') => 1//for enrolled status
+            ])
+            ->first();
+        if (!empty($StudentTransfers)) {
+            if (!empty($StudentTransfers->institution_student_transfers['previous_institution_id'])) {
+                $PreviousInstitutions = $institutionTbl->find()
+                    ->where([
+                        $institutionTbl->aliasField('id') => $StudentTransfers->institution_student_transfers['previous_institution_id']
+                    ])
+                    ->first();
+                $previous_security_group_id = $PreviousInstitutions->security_group_id;
+            }
+        }
+        return $previous_security_group_id;
+    }
+
+    /**
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @param $student_id
+     * @param $student_role_id
+     * @return array
+     */
+    private static function getStudentSecurityGroups($student_id, $student_role_id)
+    {
+        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $countSecurityGroupStudent = $securityGroupUsersTbl->find('all')
+            ->select('security_group_id')
+            ->where([
+                $securityGroupUsersTbl->aliasField('security_user_id') => $student_id,
+                $securityGroupUsersTbl->aliasField('security_role_id') => $student_role_id
+            ])
+            ->extract('security_group_id')
+            ->toArray();
+        return $countSecurityGroupStudent;
+    }
+
+    /**
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @return int
+     */
+    private static function getStudentSecurityRoleId()
+    {
+        $securityRolesTbl = TableRegistry::get('security_roles');
+        $securityRoles = $securityRolesTbl->find()
+            ->where([
+                $securityRolesTbl->aliasField('code') => 'STUDENT',
+            ])->first();
+        $student_role_id = $securityRoles->id;
+        return $student_role_id;
+    }
+
+    /**
+     * @param $institutionId
+     * @return integer
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getInstitutionSecurityGroupId($institutionId)
+    {
+        $institutionTbl = TableRegistry::get('institutions');
+        $security_group_id = null;
+        $institutions = $institutionTbl->find()
+            ->where([
+                $institutionTbl->aliasField('id') => $institutionId
+            ])->first();
+        if (!empty($institutions)) {
+            $security_group_id = $institutions->security_group_id;
+        }
+        if ($security_group_id != null) {
+            $securityGroupInstitutionsTbl = TableRegistry::get('security_group_institutions');
+            $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
+                ->where([
+                    $securityGroupInstitutionsTbl->aliasField('security_group_id') => $security_group_id,
+                    $securityGroupInstitutionsTbl->aliasField('institution_id') => $institutions->id
+                ])
+                ->first();
+            //save security group for institution
+            if (empty($securityGroupInstitutions)) {
+                $security_group_ins_data = [
+                    'security_group_id' => $security_group_id,
+                    'institution_id' => $institutionId,
+                    'created_user_id' => 1,
+                    'created' => new Time('NOW')
+                ];
+                $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
+                $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
+            }
+        }
+        return $security_group_id;
+    }
+
+    /**
      * @param $student_id
      * @param $security_group_id
      * @param $student_role_id
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private static function createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id)
     {
@@ -8048,7 +8057,7 @@ class InstitutionsController extends AppController
         ];
         $securityGroupUsersEntity = $securityGroupUsersTbl->newEntity($security_group_data);
         $newEntity = $securityGroupUsersTbl->save($securityGroupUsersEntity);
-
+        return $newEntity;
     }
 
     /**
