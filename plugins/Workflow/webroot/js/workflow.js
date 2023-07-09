@@ -22,7 +22,7 @@ var Workflow = {
 		Workflow.hideError();
 	},
 
-	copy: function(jsonObj, actionType = 'transition') {
+	copy: function(jsonObj, actionType = 'transition') { 
 		if (actionType == 'transition') {
 			$('.workflowtransition-assignee-id').val('');
 			$('.workflowtransition-comment').val('');
@@ -44,6 +44,13 @@ var Workflow = {
 			var reassignAssigneeUrl = $('.workflow-reassign-new-assignee').attr('assignee-url');
 			Workflow.getReassigneeOptions(reassignAssigneeUrl, jsonObj.is_school_based, jsonObj.step_id, jsonObj.auto_assign_assignee);
 			Workflow.toggleAssignee(1, 'reassign');
+		
+
+		} else if (actionType == 'caselinks') {
+			
+			var reassignAssigneeUrl = $('.workflow-case-link').attr('link-url');
+			Workflow.getCaseOptions(reassignAssigneeUrl, jsonObj.is_school_based, jsonObj.step_id, jsonObj.auto_assign_assignee, jsonObj.case_id);
+			Workflow.toggleAssignee(1, 'caselinks');
 		}
 		
 	},
@@ -142,7 +149,24 @@ var Workflow = {
 			}
 
 			return !error;
+		} else if (actionType == 'caselink') {
+			var caseId = $('.workflow-case-link').val();
+			console.log(caseId);
+			Workflow.resetError(actionType);
+
+			var error = false;
+			if (caseId == '') {
+				$('.workflow-reassign-new-assignee').addClass('form-error');
+				$('.workflow-reassign-new-assignee').closest('.input-select-wrapper').after('<div class="assignee-error error-message">' + $('.workflow-reassign-assignee-error').html() + '</div>');
+				error = true;
+			
+			} else {
+				$('.workflow-case-link').removeClass('form-error');
+			}
+
+			return !error;
 		}
+
 	},
 
 	getTransitionAssigneeOptions: function(assigneeUrl, isSchoolBased, nextStepId, autoAssignAssignee) {
@@ -230,6 +254,55 @@ var Workflow = {
 				console.log(error);
 				$('.workflow-reassign-new-assignee').empty();
 				$('.workflow-reassign-new-assignee').append($('<option>').text($('.workflowtransition-assignee-no_options').html()).attr('value', ''));
+
+				if (typeof error.responseJSON != 'undefined' && typeof error.responseJSON.message != 'undefined') {
+					$('.workflow-reassign-assignee-sql-error').show();
+				}
+			}
+		});
+	},
+
+
+	getCaseOptions: function(assigneeUrl, isSchoolBased, stepId, autoAssignAssignee,caseId) {
+		var url = assigneeUrl;
+		console.log(url);
+		$.ajax({
+			url: url,
+			dataType: "json",
+			data: {
+				is_school_based: isSchoolBased,
+				next_step_id: stepId,
+				auto_assign_assignee: autoAssignAssignee,
+				case_id: caseId
+			},
+			beforeSend: function(xhr) {
+				// always show loading when user click on submit button
+				$('.workflow-case-link').empty();
+				$('.workflow-case-link').append($('<option>').text($('.workflow-caselink-loading').html() + '...').attr('value', ''));
+			},
+			success: function(response) {
+				var defaultKey = response.default_key;
+				var cases = response.cases;
+
+				$('.workflow-case-link').empty();
+				if (jQuery.isEmptyObject(cases)) {
+					// show No options if assignees is empty
+					$('.workflow-case-link').append($('<option>').text(defaultKey).attr('value', ''));
+				} else {
+					if (defaultKey.length != 0) {
+						$('.workflow-case-link').append($('<option>').text(defaultKey).attr('value', ''));
+					}
+					$.each(cases, function(i, value) {
+						$('.workflow-case-link').append($('<option>').text(value).attr('value', i));
+					});
+				}
+
+			},
+			error: function(error) {
+				console.log('Workflow.CaseLinkOptions() error callback:');
+				console.log(error);
+				$('.workflow-case-link').empty();
+				$('.workflow-case-link').append($('<option>').text($('.workflowtransition-assignee-no_options').html()).attr('value', ''));
 
 				if (typeof error.responseJSON != 'undefined' && typeof error.responseJSON.message != 'undefined') {
 					$('.workflow-reassign-assignee-sql-error').show();
