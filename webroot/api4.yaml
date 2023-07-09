@@ -3520,6 +3520,17 @@ paths:
         responses:
           '200':
             description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Meal-Benefits'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Meal-Benefits'
           '400':
             description: Invalid status value
   
@@ -3551,6 +3562,17 @@ paths:
         responses:
           '200':
             description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Meal-Programmes'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Meal-Programmes'
           '400':
             description: Invalid status value
 
@@ -5743,4 +5765,116 @@ components:
           example: "2023-01-01 12:00:00"
     
     #POCOR-7394-S ends
+
+    #POCOR-7566 starts
+
+    Meal-Benefits:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        name:
+          type: string
+          format: varchar
+          example: "100%"
+        order:
+          type: integer
+          format: int11
+          example: 1
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        default:
+          type: integer
+          format: int11
+          example: 1
+        international_code:
+          type: string
+          format: varchar
+          example:
+        national_code:
+          type: string
+          format: varchar
+          example:
+        modified_user_id:
+          type: integer
+          format: int
+          example:
+        modified:
+          type: object
+          format: timestamp
+          example:
+        created_user_id:
+          type: integer
+          format: int
+          example: 2
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+
+    Meal-Programmes:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        academic_peroid_id:
+          type: integer
+          format: int11
+          example: 30
+        name:
+          type: string
+          format: varchar
+          example: National Meal Programme
+        code:
+          type: string
+          format: varchar
+          example: NMP
+        type:
+          type: integer
+          format: int11
+          example: 1
+        targetting:
+          type: integer
+          format: int11
+          example: 1
+        start_date:
+          type: object
+          format: timestamp
+          example: "2023-01-01"
+        end_date:
+          type: object
+          format: timestamp
+          example: "2023-12-31"
+        amount:
+          type: integer
+          format: int11
+          example: 10
+        implementer:
+          type: integer
+          format: int11
+          example: 1
+        modified_user_id:
+          type: integer
+          format: int
+          example:
+        modified:
+          type: object
+          format: timestamp
+          example:
+        created_user_id:
+          type: integer
+          format: int
+          example: 2
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+
+    #POCOR-7566 ends
     
