@@ -242,7 +242,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function processInternalGridUserRecord(userRecords, params, totalRowCount) {
-        console.log(userRecords);
+        // console.log(userRecords);
         if (userRecords.length === 0)
         {
             params.failCallback([], totalRowCount);
@@ -299,7 +299,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function processExternalGridUserRecord(userRecords, params, totalRowCount) {
-        console.log(userRecords);
+        // console.log(userRecords);
         if (userRecords.length === 0)
         {
             params.failCallback([], totalRowCount);
@@ -429,7 +429,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         let fileReader = new FileReader();
         fileReader.readAsDataURL(photo);
         fileReader.onload = () => {
-            console.log(fileReader.result);
+            // console.log(fileReader.result);
             StudentController.selectedStudentData.photo_base_64 = fileReader.result;
         }
     }
@@ -992,32 +992,36 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function studentExistInUnfinishedWithdraw() {
         return (StudentController.isInternalSearchSelected
             && StudentController.studentData
-            && StudentController.studentData.has_pending_withdraw)
+            && StudentController.studentData.is_pending_withdraw)
     }
 
     function nextStepFromStudentExistInUnfinishedWithdraw() {
         StudentController.step = 'summary';
         StudentController.messageClass = 'alert-warning';
-        StudentController.message = `This student has unfinished withdraw from 
-        ${StudentController.studentData.current_enrol_institution_code} 
-        - ${StudentController.studentData.current_enrol_institution_name}`;
-        StudentController.getRedirectToGuardian();
+        StudentController.message = `This student has an unfinished withdraw from 
+        ${StudentController.studentData.pending_withdraw_institution_code} 
+        - ${StudentController.studentData.pending_withdraw_institution_name}.
+        Please connect responsible person to finish this operation`;
+        // StudentController.getRedirectToGuardian();
         StudentController.isInternalSearchSelected = false;
     }
 
     function studentExistInUnfinishedTransfer() {
         return (StudentController.isInternalSearchSelected
             && StudentController.studentData
-            && StudentController.studentData.has_pending_transfer)
+            && StudentController.studentData.is_pending_transfer);
     }
 
     function nextStepFromStudentExistInUnfinishedTransfer() {
         StudentController.step = 'summary';
         StudentController.messageClass = 'alert-warning';
-        StudentController.message = `This student has unfinished transfer from 
-        ${StudentController.studentData.current_enrol_institution_code} 
-        - ${StudentController.studentData.current_enrol_institution_name}`;
-        StudentController.getRedirectToGuardian();
+        StudentController.message = `This student has unfinished tranfer from 
+        ${StudentController.studentData.pending_transfer_prev_institution_code} 
+        - ${StudentController.studentData.pending_transfer_prev_institution_name}
+        to ${StudentController.studentData.pending_transfer_institution_code} 
+        - ${StudentController.studentData.pending_transfer_institution_name}.
+        Please connect responsible person to finish this operation`;
+        // StudentController.getRedirectToGuardian();
         StudentController.isInternalSearchSelected = false;
     }
 
@@ -1051,6 +1055,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     async function goToNextStep() {
+
         StudentController.messageClass = '';
         StudentController.message = ``;
         if (StudentController.step === 'confirmation') {
@@ -1058,11 +1063,26 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             if (studentExistByIdentityFromConfiguration) return;
         }
 
+        if (StudentController.studentExistInUnfinishedWithdraw()) {
+            // console.log('studentExistInUnfinishedWithdraw');
+            StudentController.nextStepFromStudentExistInUnfinishedWithdraw();
+            // console.log('studentExistInUnfinishedWithdraw');
+            return;
+        }
+
+        if (StudentController.studentExistInUnfinishedTransfer()) {
+            // console.log('studentExistInUnfinishedTransfer');
+            StudentController.nextStepFromStudentExistInUnfinishedTransfer();
+            // console.log('nextStepFromStudentExistInUnfinishedTransfer');
+            return;
+        }
+
         if (StudentController.studentExistInTheSameSchool()) {
             StudentController.nextStepFromStudentExistInTheSameSchool();
             return;
         }
-        const single_institutions_student_enrollment = !(StudentController.multipleInstitutionsStudentEnrollment);
+        const single_institutions_student_enrollment =
+            !(StudentController.multipleInstitutionsStudentEnrollment);
         if (single_institutions_student_enrollment) {
             if (StudentController.studentExistInTheOtherSchool()) {
                 StudentController.nextStepFromStudentExistInTheOtherSchool();
@@ -1070,19 +1090,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
         }
 
-        if (StudentController.studentExistInUnfinishedWithdraw()) {
-            console.log('studentExistInUnfinishedWithdraw');
-            StudentController.nextStepFromStudentExistInUnfinishedWithdraw();
-            console.log('studentExistInUnfinishedWithdraw');
-            return;
-        }
-
-        if (StudentController.studentExistInUnfinishedTransfer()) {
-            console.log('studentExistInUnfinishedTransfer');
-            StudentController.nextStepFromStudentExistInUnfinishedTransfer();
-            console.log('nextStepFromStudentExistInUnfinishedTransfer');
-            return;
-        }
 
         if (StudentController.isInternalSearchSelected) {
             StudentController.gotoConfirmStep();
@@ -1213,8 +1220,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if(!StudentController.selectedStudentData.education_grade_id){
             StudentController.error.education_grade_id = 'This field cannot be left empty';
         }
-        console.log("StudentController.selectedStudentData here");
-        console.log(StudentController.selectedStudentData);
+        // console.log("StudentController.selectedStudentData here");
+        // console.log(StudentController.selectedStudentData);
         var res = InstitutionsStudentsSvc.getEducationGradeAddStudent(StudentController.selectedStudentData.education_grade_id, StudentController.selectedStudentData.first_name, StudentController.selectedStudentData.last_name,  StudentController.selectedStudentData.openemis_no); //POCOR-7386
         var res1 = $window.localStorage.getItem('repeater_validation');
           timer = setTimeout(()=>{
@@ -1408,7 +1415,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if (!StudentController.selectedStudentData.education_grade_id) {
           StudentController.error.education_grade_id = 'This field cannot be left empty';
         }
-        console.log(StudentController.selectedStudentData);
+        // console.log(StudentController.selectedStudentData);
         var res = InstitutionsStudentsSvc.getEducationGrade(StudentController.selectedStudentData.education_grade_id, StudentController.selectedStudentData.openemis_no);
         // $validation = JSON.parse(res.data);
 
@@ -1581,7 +1588,16 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var todayDate = new Date();
         StudentController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
         StudentController.isSameSchool = selectedData.is_same_school > 0 ? true : false;
-        StudentController.isDiffSchool = (selectedData.is_diff_school > 0 && !StudentController.multipleInstitutionsStudentEnrollment) ? true : false;
+        StudentController.isDiffSchool = selectedData.is_diff_school ? true : false;
+        if(StudentController.multipleInstitutionsStudentEnrollment){
+            StudentController.isDiffSchool = false;
+        }
+        if(selectedData.is_pending_withdraw){
+            StudentController.isDiffSchool = false;
+        }
+        if(selectedData.is_pending_transfer){
+            StudentController.isDiffSchool = false;
+        }
         StudentController.selectedStudentData.currentlyAllocatedTo = selectedData.current_enrol_institution_code + ' - ' + selectedData.current_enrol_institution_name;
 
         StudentController.selectedStudentData.birthplace_area_id = selectedData.birthplace_area_id === undefined ? null : selectedData.birthplace_area_id;
@@ -2070,7 +2086,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     async function checkUserExistByIdentityFromConfiguration()
     {
-        console.log('checkUserExistByIdentityFromConfiguration');
+        // console.log('checkUserExistByIdentityFromConfiguration');
         //POCOR-7481-HINDOL
         const user_id =  studentId = StudentController.studentData && StudentController.studentData.id ? StudentController.studentData.id : null;
 
