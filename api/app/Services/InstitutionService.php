@@ -1320,6 +1320,8 @@ class InstitutionService extends Controller
         }
     }
 
+    // POCOR-7546 starts
+    
     public function getBehaviourCategories($request)
     {
         try {
@@ -1490,5 +1492,7 @@ class InstitutionService extends Controller
             return $this->sendErrorResponse('The deletion of student behaviour could not be completed successfully.');
         }
     }
+
+// POCOR-7546 ends
 
 }

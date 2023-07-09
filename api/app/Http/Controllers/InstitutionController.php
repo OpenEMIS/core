@@ -943,6 +943,8 @@ class InstitutionController extends Controller
         }
     }
 
+    // POCOR-7546 starts
+
     public function getBehaviourCategories(Request $request)
     {
         try {
@@ -1082,5 +1084,6 @@ class InstitutionController extends Controller
         }
     }
 
+    // POCOR-7546 ends
 
 }

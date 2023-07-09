@@ -1952,6 +1952,8 @@ class InstitutionRepository extends Controller
         }
     }
 
+    // POCOR-7546 starts
+    
     public function getBehaviourCategories($request)
     {
         try {
@@ -2174,7 +2176,7 @@ class InstitutionRepository extends Controller
             return $this->sendErrorResponse('Failed to delete student attendance.');
         }
     }
-
+    // POCOR-7546 ends
 
 }
 
