@@ -23,4 +23,9 @@ class AreaAdministratives extends Model
     {
         return $this->children()->with('areaAdministrativesChild');
     }
+
+    public function areaAdministrativelevels()
+    {
+        return $this->belongsTo(AreaAdministrativeLevels::class, 'area_administrative_level_id', 'id');
+    }
 }

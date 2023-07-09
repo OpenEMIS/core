@@ -815,7 +815,7 @@ class NavigationComponent extends Component
                     'Institutions.ImportStudentGuardians',
                     'Institutions.StudentStatusUpdates', 'Institutions.ImportStudentExtracurriculars',
                     'Institutions.BulkStudentTransferIn',
-                    'Institutions.BulkStudentTransferOut', 'Institutions.StudentCurriculars'],
+                    'Institutions.BulkStudentTransferOut'], // POCOR-7555
                 'params' => ['plugin' => 'Institution']
             ],
 
@@ -1423,7 +1423,8 @@ class NavigationComponent extends Component
                 'title' => 'Professional',
                 'parent' => 'Institutions.Students.index',
                 'params' => ['plugin' => 'Student'],
-                'selected' => ['Students.Employments']
+                'selected' => ['Students.Employments',
+                'Students.Licenses']//POCOR-7528
             ],
             'Counsellings.index' => [
                 'title' => 'Counselling',
@@ -1792,8 +1793,10 @@ class NavigationComponent extends Component
                     'Directories.StaffExtracurriculars',
                     'Directories.StaffMemberships',
                     'Directories.StaffLicenses',
+                    'Directories.StudentLicenses',//POCOR-7528
                     'Directories.StaffAwards']
             ],
+           
             'Directories.SpecialNeedsReferrals' => [
                 'title' => 'Special Needs',
                 'parent' => 'Directories.Directories.index',
@@ -1805,7 +1808,18 @@ class NavigationComponent extends Component
                     'Directories.SpecialNeedsPlans']
             ]
         ];
-
+        //POCOR-7366 start
+        if($session->read('Directory.Directories.is_student')==1){
+            $newNavigation=['Directories.Counsellings' => [
+                                'title' => 'Counsellings',
+                                'parent' => 'Directories.Directories.index',
+                                'params' => ['plugin' => 'Directory'],
+                                'selected' => ['Directories.Counsellings']
+                            ]];
+            $i = array_search('Directories.Employments', array_keys($navigation));
+            $navigation = array_merge(array_slice($navigation, 0, $i+1),$newNavigation, array_slice($navigation, $i+1));
+        }
+        //POCOR-7366 end
         $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
         $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
         if (!empty($studentToGuardian) || !empty($guardianToStudent)) {
@@ -2095,8 +2109,9 @@ class NavigationComponent extends Component
                 'parent' => 'Directories.Student',
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.StudentProfile']
-            ]
-        ];
+            ],
+
+    ];
 
         $session = $this->request->session();
         $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
@@ -3512,58 +3527,59 @@ class NavigationComponent extends Component
                     $securityFunctions->aliasField('category') => 'Performance',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
         }
         $navSix = [];
-        if(empty($userinfo)){
-            if(!empty($SecurityPerformanceFunctions)){
-                $navSix = [
-                    'Administration.Performance' => [
-                    'title' => 'Performance',
-                    'parent' => 'Administration',
-                    'link' => false
-                ],
+        //POCOR-7569 start
+        // if(empty($userinfo)){
+        //     if(!empty($SecurityPerformanceFunctions)){
+        //         $navSix = [
+        //             'Administration.Performance' => [
+        //             'title' => 'Performance',
+        //             'parent' => 'Administration',
+        //             'link' => false
+        //         ],
 
-                'Competencies.Templates' => [
-                    'title' => 'Competencies',
-                    'parent' => 'Administration.Performance',
-                    'params' => ['plugin' => 'Competency'],
-                    'selected' => ['Competencies.Templates',
-                        'Competencies.Items',
-                        'Competencies.Criterias',
-                        'Competencies.Periods',
-                        'Competencies.GradingTypes']
-                ],
+        //         'Competencies.Templates' => [
+        //             'title' => 'Competencies',
+        //             'parent' => 'Administration.Performance',
+        //             'params' => ['plugin' => 'Competency'],
+        //             'selected' => ['Competencies.Templates',
+        //                 'Competencies.Items',
+        //                 'Competencies.Criterias',
+        //                 'Competencies.Periods',
+        //                 'Competencies.GradingTypes']
+        //         ],
 
-                'Outcomes.Templates' => [
-                    'title' => 'Outcomes',
-                    'parent' => 'Administration.Performance',
-                    'params' => ['plugin' => 'Outcome'],
-                    'selected' => ['Outcomes.Templates',
-                        'Outcomes.Criterias',
-                        'Outcomes.Periods',
-                        'Outcomes.GradingTypes',
-                        'Outcomes.ImportOutcomeTemplates']
-                ],
+        //         'Outcomes.Templates' => [
+        //             'title' => 'Outcomes',
+        //             'parent' => 'Administration.Performance',
+        //             'params' => ['plugin' => 'Outcome'],
+        //             'selected' => ['Outcomes.Templates',
+        //                 'Outcomes.Criterias',
+        //                 'Outcomes.Periods',
+        //                 'Outcomes.GradingTypes',
+        //                 'Outcomes.ImportOutcomeTemplates']
+        //         ],
 
-                'Assessments.Assessments' => [
-                    'title' => 'Assessments',
-                    'parent' => 'Administration.Performance',
-                    'params' => ['plugin' => 'Assessment'],
-                    'selected' => ['Assessments.Assessments',
-                        'Assessments.AssessmentPeriods',
-                        'Assessments.GradingTypes']
-                ],
+        //         'Assessments.Assessments' => [
+        //             'title' => 'Assessments',
+        //             'parent' => 'Administration.Performance',
+        //             'params' => ['plugin' => 'Assessment'],
+        //             'selected' => ['Assessments.Assessments',
+        //                 'Assessments.AssessmentPeriods',
+        //                 'Assessments.GradingTypes']
+        //         ],
 
-                'ReportCards.Templates' => [
-                    'title' => 'Report Cards',
-                    'parent' => 'Administration.Performance',
-                    'params' => ['plugin' => 'ReportCard'],
-                    'selected' => ['ReportCards.Templates',
-                        'ReportCards.ReportCardEmail',
-                        'ReportCards.Processes']
-                ],
-                ];
-            }
-        }else{
-
+        //         'ReportCards.Templates' => [
+        //             'title' => 'Report Cards',
+        //             'parent' => 'Administration.Performance',
+        //             'params' => ['plugin' => 'ReportCard'],
+        //             'selected' => ['ReportCards.Templates',
+        //                 'ReportCards.ReportCardEmail',
+        //                 'ReportCards.Processes']
+        //         ],
+        //         ];
+        //     }
+        // }else{
+        //POCOR-7569 end
             $navSix = [
                     'Administration.Performance' => [
                     'title' => 'Performance',
@@ -3612,7 +3628,7 @@ class NavigationComponent extends Component
                 ],
 
             ];
-        }
+        // }
         return $navSix;
     }
 
