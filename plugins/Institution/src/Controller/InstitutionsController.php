@@ -156,6 +156,143 @@ class InstitutionsController extends AppController
         // 'CourseCatalogue',
     ];
 
+    /**
+     * @param $student_id
+     * @param $security_group_id
+     * @param $previous_security_group_id
+     * @param $student_role_id
+     */
+    private static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
+    {
+        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $securityGroupUsersTbl->updateAll(
+            [
+                'security_group_id' => $security_group_id,
+                'created' => new Time('NOW')
+            ],
+            [
+                'security_group_id' => $previous_security_group_id,
+                'security_user_id' => $student_id,
+                'security_role_id' => $student_role_id
+            ]
+        );
+    }
+
+    /**
+     * @param $institution_id
+     * @param $student_id
+     * @param $institutionTbl
+     * @return mixed
+     */
+    private static function getPreviousSecurityGroupId($institution_id, $student_id)
+    {
+        $previous_security_group_id = 0;
+        $institutionTbl = TableRegistry::get('institutions');
+        $InstitutionStudentsTbl = TableRegistry::get('institution_students');
+        $TransfersTbl = TableRegistry::get('institution_student_transfers');
+        $StudentTransfers = $InstitutionStudentsTbl
+            ->find()
+            ->select([
+                $InstitutionStudentsTbl->aliasField('student_id'),
+                $TransfersTbl->aliasField('institution_id'),
+                $TransfersTbl->aliasField('previous_institution_id')
+            ])
+            ->leftJoin([$TransfersTbl->alias() => $TransfersTbl->table()],
+                [
+                    $TransfersTbl->aliasField('student_id') . '=' . $student_id,
+                    $TransfersTbl->aliasField('institution_id') => $institution_id
+                ]
+            )
+            ->where([
+                $InstitutionStudentsTbl->aliasField('student_id') => $student_id,
+                $InstitutionStudentsTbl->aliasField('institution_id') => $institution_id,
+                $InstitutionStudentsTbl->aliasField('student_status_id') => 1//for enrolled status
+            ])
+            ->first();
+        if (!empty($StudentTransfers)) {
+            if (!empty($StudentTransfers->institution_student_transfers['previous_institution_id'])) {
+                $PreviousInstitutions = $institutionTbl->find()
+                    ->where([
+                        $institutionTbl->aliasField('id') => $StudentTransfers->institution_student_transfers['previous_institution_id']
+                    ])
+                    ->first();
+                $previous_security_group_id = $PreviousInstitutions->security_group_id;
+            }
+        }
+        return $previous_security_group_id;
+    }
+
+    /**
+     * @param $student_id
+     * @param $student_role_id
+     * @return array
+     */
+    private static function getStudentSecurityGroups($student_id, $student_role_id)
+    {
+        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $countSecurityGroupStudent = $securityGroupUsersTbl->find('all')
+            ->select('security_group_id')
+            ->where([
+                $securityGroupUsersTbl->aliasField('security_user_id') => $student_id,
+                $securityGroupUsersTbl->aliasField('security_role_id') => $student_role_id
+            ])
+            ->extract('security_group_id')
+            ->toArray();
+        return $countSecurityGroupStudent;
+    }
+
+    /**
+     * @return int
+     */
+    private static function getStudentSecurityRoleId()
+    {
+        $securityRolesTbl = TableRegistry::get('security_roles');
+        $securityRoles = $securityRolesTbl->find()
+            ->where([
+                $securityRolesTbl->aliasField('code') => 'STUDENT',
+            ])->first();
+        $student_role_id = $securityRoles->id;
+        return $student_role_id;
+    }
+
+    /**
+     * @param $institutionId
+     * @return integer
+     */
+    private static function getInstitutionSecurityGroupId($institutionId)
+    {
+        $institutionTbl = TableRegistry::get('institutions');
+        $security_group_id = null;
+        $institutions = $institutionTbl->find()
+            ->where([
+                $institutionTbl->aliasField('id') => $institutionId
+            ])->first();
+        if (!empty($institutions)) {
+            $security_group_id = $institutions->security_group_id;
+        }
+        if ($security_group_id != null) {
+            $securityGroupInstitutionsTbl = TableRegistry::get('security_group_institutions');
+            $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
+                ->where([
+                    $securityGroupInstitutionsTbl->aliasField('security_group_id') => $security_group_id,
+                    $securityGroupInstitutionsTbl->aliasField('institution_id') => $institutions->id
+                ])
+                ->first();
+            //save security group for institution
+            if (empty($securityGroupInstitutions)) {
+                $security_group_ins_data = [
+                    'security_group_id' => $security_group_id,
+                    'institution_id' => $institutionId,
+                    'created_user_id' => 1,
+                    'created' => new Time('NOW')
+                ];
+                $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
+                $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
+            }
+        }
+        return $security_group_id;
+    }
+
     public function initialize()
     {
         // Start: remove this logic after upgrading to v3.4.x
@@ -1825,7 +1962,7 @@ class InstitutionsController extends AppController
     // Assosiation feature
     public function Associations($subaction = 'index', $associationId = null)
     {
-        if ($subaction == 'add') { 
+        if ($subaction == 'add') {
             $session = $this->request->session();
             $roles = [];
             $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
@@ -1858,13 +1995,13 @@ class InstitutionsController extends AppController
             $this->set('academicPeriodId', $academicPeriodId);
             $this->set('academicPeriodName', $academicPeriodOptions[$academicPeriodId]);
             $this->set('institutionId', $institutionId);
-            
+
             // Start POCOR-7466
             $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
             $institutionName = $session->read('Institution.Institutions.name');
             $this->Navigation->addCrumb('Houses', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Associations', 'view']);
             $header = __($institutionName);
-            $this->set('contentHeader', $header.' - Houses');
+            $this->set('contentHeader', $header . ' - Houses');
             // END POCOR-7466
 
 
@@ -1903,7 +2040,7 @@ class InstitutionsController extends AppController
             $institutionName = $session->read('Institution.Institutions.name');
             $this->Navigation->addCrumb('Houses', ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Associations', 'view']);
             $header = __($institutionName);
-            $this->set('contentHeader', $header.' - Houses');
+            $this->set('contentHeader', $header . ' - Houses');
             // END POCOR-7466
 
             $this->render('institution_associations_edit');
@@ -2387,8 +2524,8 @@ class InstitutionsController extends AppController
         if ($action == 'dashboard') {
             $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($this->Auth->user('id'), $id);
             $havePermission = $this->AccessControl->check(['Institutions', 'InstitutionProfileCompletness', 'view'], $roles);
-            if($havePermission) {
-                 $header = $name .' - '.__('Institution Data Completeness');//POCOR-6022
+            if ($havePermission) {
+                $header = $name . ' - ' . __('Institution Data Completeness');//POCOR-6022
             } else {
                 $header = $name . ' - ' . __('Dashboard');
             }
@@ -2711,12 +2848,10 @@ class InstitutionsController extends AppController
                 $header .= ' - ' . __('Statistics');
             } elseif ($model->alias() == 'StudentCurriculars') { //POCOR-6673
                 $header .= ' - ' . __('Curriculars');
-            } 
-           // Start POCOR-7466
+            } // Start POCOR-7466
             elseif ($model->alias() == 'InstitutionAssociations') {
                 $header .= ' - ' . __('Houses');
-            }    
-            // END POCOR-7466       
+            } // END POCOR-7466
             else {
                 $header .= ' - ' . $model->getHeader($alias);
             }
@@ -3639,7 +3774,6 @@ class InstitutionsController extends AppController
                 'valueField' => 'name'
             ])
             ->order('type')
-
             ->where([
                 $ConfigItem->aliasField('visible') => 1,
                 $ConfigItem->aliasField('value') => 1,
@@ -3655,7 +3789,6 @@ class InstitutionsController extends AppController
                 'valueField' => 'name'
             ])
             ->order('type')
-
             ->where([
                 $ConfigItem->aliasField('visible') => 1,
                 $ConfigItem->aliasField('value') => 0,
@@ -4416,66 +4549,66 @@ class InstitutionsController extends AppController
         //Institution Fees
         $institutionInstitutionFees = TableRegistry::get('institution_fees');
 
-		$institutionInstitutionFeesData = $institutionInstitutionFees->find()
-				->select([
-					'created' => 'institution_fees.created',
-					'modified' => 'institution_fees.modified',
-				])
-				->where([$institutionInstitutionFees->aliasField('institution_id') => $institutionId])
-                ->order(['institution_fees.modified'=>'desc'])
-				->limit(1)
-				->first();
+        $institutionInstitutionFeesData = $institutionInstitutionFees->find()
+            ->select([
+                'created' => 'institution_fees.created',
+                'modified' => 'institution_fees.modified',
+            ])
+            ->where([$institutionInstitutionFees->aliasField('institution_id') => $institutionId])
+            ->order(['institution_fees.modified' => 'desc'])
+            ->limit(1)
+            ->first();
 
         //Infrastructures Overview
         //POCOR-6022 start
         //Land
-        $institutionLand  = TableRegistry::get('institution_lands');
-		$institutionLandData = $institutionLand->find()
-				->select([
-					'created' => 'institution_lands.created',
-					'modified' => 'institution_lands.modified',
-				])
-				->where([$institutionLand->aliasField('institution_id') => $institutionId])
-                ->order(['institution_lands.modified'=>'desc'])
-				->limit(1)
-				->first();
+        $institutionLand = TableRegistry::get('institution_lands');
+        $institutionLandData = $institutionLand->find()
+            ->select([
+                'created' => 'institution_lands.created',
+                'modified' => 'institution_lands.modified',
+            ])
+            ->where([$institutionLand->aliasField('institution_id') => $institutionId])
+            ->order(['institution_lands.modified' => 'desc'])
+            ->limit(1)
+            ->first();
 
         //Room
-        $institutionRoom  = TableRegistry::get('institution_rooms');
-		$institutionRoomData = $institutionRoom->find()
-				->select([
-					'created' => 'institution_rooms.created',
-					'modified' => 'institution_rooms.modified',
-				])
-				->where([$institutionRoom->aliasField('institution_id') => $institutionId])
-                ->order(['institution_rooms.modified'=>'desc'])
-				->limit(1)
-				->first();
+        $institutionRoom = TableRegistry::get('institution_rooms');
+        $institutionRoomData = $institutionRoom->find()
+            ->select([
+                'created' => 'institution_rooms.created',
+                'modified' => 'institution_rooms.modified',
+            ])
+            ->where([$institutionRoom->aliasField('institution_id') => $institutionId])
+            ->order(['institution_rooms.modified' => 'desc'])
+            ->limit(1)
+            ->first();
 
         //Building
-        $institutionBuilding  = TableRegistry::get('institution_buildings');
+        $institutionBuilding = TableRegistry::get('institution_buildings');
         $institutionBuildingData = $institutionBuilding->find()
-                ->select([
-                      'created' => 'institution_buildings.created',
-                      'modified' => 'institution_buildings.modified',
-                ])
-                ->where([$institutionBuilding->aliasField('institution_id') => $institutionId])
-                ->order(['institution_buildings.modified'=>'desc'])
-                ->limit(1)
-                ->first();
+            ->select([
+                'created' => 'institution_buildings.created',
+                'modified' => 'institution_buildings.modified',
+            ])
+            ->where([$institutionBuilding->aliasField('institution_id') => $institutionId])
+            ->order(['institution_buildings.modified' => 'desc'])
+            ->limit(1)
+            ->first();
 
         //Floor
-        $institutionFloor  = TableRegistry::get('institution_floors');
+        $institutionFloor = TableRegistry::get('institution_floors');
         $institutionFloorData = $institutionFloor->find()
-                ->select([
-                      'created' => 'institution_floors.created',
-                      'modified' => 'institution_floors.modified',
-                ])
-                ->where([$institutionFloor->aliasField('institution_id') => $institutionId])
-                ->order(['institution_floors.modified'=>'desc'])
-                ->limit(1)
-                ->first();
-		 //POCOR-6022 ends
+            ->select([
+                'created' => 'institution_floors.created',
+                'modified' => 'institution_floors.modified',
+            ])
+            ->where([$institutionFloor->aliasField('institution_id') => $institutionId])
+            ->order(['institution_floors.modified' => 'desc'])
+            ->limit(1)
+            ->first();
+        //POCOR-6022 ends
         $data[16]['feature'] = 'Infrastructures Overview';
 
         // Infrastructures Needs
@@ -4769,21 +4902,20 @@ class InstitutionsController extends AppController
                     $data[$key]['modifiedDate'] = 'Not updated';
                 }
                 if ($enabled->name == 'Infrastructures Overview') {
-                    if(!empty($institutionLandData && $institutionBuildingData && $institutionFloorData  && $institutionRoomData)) {
+                    if (!empty($institutionLandData && $institutionBuildingData && $institutionFloorData && $institutionRoomData)) {
                         $profileComplete = $profileComplete + 1;
                         $data[$key]['complete'] = 'yes';
                         //POCOR-6022 start
-                        $modifiedDate1=($institutionLandData->modified)?date("F j,Y",strtotime($institutionLandData->modified)):date("F j,Y",strtotime($institutionLandData->created));
-                        $modifiedDate2=($institutionBuildingData->modified)?date("F j,Y",strtotime($institutionBuildingData->modified)):date("F j,Y",strtotime($institutionBuildingData->created));
-                        $modifiedDate3=($institutionFloorData->modified)?date("F j,Y",strtotime($institutionFloorData->modified)):date("F j,Y",strtotime($institutionFloorData->created));
-                        $modifiedDate4=($institutionRoomData->modified)?date("F j,Y",strtotime($institutionRoomData->modified)):date("F j,Y",strtotime($institutionRoomData->created));
-                        $date1=($modifiedDate1 > $modifiedDate2 ? $modifiedDate1 :$modifiedDate2);
-                        $date2=($date1 > $modifiedDate3 ? $date1 :$modifiedDate3);
-                        $modifiedDate=($date2 > $modifiedDate4 ? $date2 :$modifiedDate4);
-                        $data[$key]['modifiedDate'] =$modifiedDate;
+                        $modifiedDate1 = ($institutionLandData->modified) ? date("F j,Y", strtotime($institutionLandData->modified)) : date("F j,Y", strtotime($institutionLandData->created));
+                        $modifiedDate2 = ($institutionBuildingData->modified) ? date("F j,Y", strtotime($institutionBuildingData->modified)) : date("F j,Y", strtotime($institutionBuildingData->created));
+                        $modifiedDate3 = ($institutionFloorData->modified) ? date("F j,Y", strtotime($institutionFloorData->modified)) : date("F j,Y", strtotime($institutionFloorData->created));
+                        $modifiedDate4 = ($institutionRoomData->modified) ? date("F j,Y", strtotime($institutionRoomData->modified)) : date("F j,Y", strtotime($institutionRoomData->created));
+                        $date1 = ($modifiedDate1 > $modifiedDate2 ? $modifiedDate1 : $modifiedDate2);
+                        $date2 = ($date1 > $modifiedDate3 ? $date1 : $modifiedDate3);
+                        $modifiedDate = ($date2 > $modifiedDate4 ? $date2 : $modifiedDate4);
+                        $data[$key]['modifiedDate'] = $modifiedDate;
                         //POCOR-6022 ends
-                        }
-                        else {
+                    } else {
                         $data[$key]['complete'] = 'no';
                         $data[$key]['modifiedDate'] = 'Not updated';
                     }
@@ -7872,128 +8004,59 @@ class InstitutionsController extends AppController
 
     /**
      * POCOR-7146
+     * POCOR-7224 refactored
      * assign Role and group to student while creating student
      **/
-    private function assignStudentRoleGroup($institutionId, $user_id)
+    private function assignStudentRoleGroup($institution_id, $student_id)
     {
-        $securityRolesTbl = TableRegistry::get('security_roles');
-        $securityRoles = $securityRolesTbl->find()
-            ->where([
-                $securityRolesTbl->aliasField('code') => 'STUDENT',
-            ])->first();
-        //get student institution
-        $institutionTbl = TableRegistry::get('institutions');
-        $institutions = $institutionTbl->find()
-            ->where([
-                $institutionTbl->aliasField('id') => $institutionId
-            ])->first();
-        if (!empty($institutions) && $institutions->security_group_id != '') {
-            $securityGroupInstitutionsTbl = TableRegistry::get('security_group_institutions');
-            $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
-                ->where([
-                    $securityGroupInstitutionsTbl->aliasField('security_group_id') => $institutions->security_group_id,
-                    $securityGroupInstitutionsTbl->aliasField('institution_id') => $institutions->id
-                ])
-                ->first();
-            //save security group for institution
-            if (empty($securityGroupInstitutions)) {
-                $security_group_ins_data = [
-                    'security_group_id' => $institutions->security_group_id,
-                    'institution_id' => $institutionId,
-                    'created_user_id' => 1,
-                    'created' => new Time('NOW')
-                ];
-                $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
-                $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
-            }
-            //check user already exist or not
-            $securityGroupUsersTbl = TableRegistry::get('security_group_users');
-            $checkSecurityGroupUser = $securityGroupUsersTbl->find()
-                ->where([
-                    $securityGroupUsersTbl->aliasField('security_user_id') => $user_id,
-                    $securityGroupUsersTbl->aliasField('security_role_id') => $securityRoles->id
-                ])
-                ->first();
-            //check user_id with role is available or not in `security_group_users` group
-            if (empty($checkSecurityGroupUser)) {
-                $securityGroupUsers = $securityGroupUsersTbl->find()
-                    ->where([
-                        $securityGroupUsersTbl->aliasField('security_group_id') => $institutions->security_group_id,
-                        $securityGroupUsersTbl->aliasField('security_user_id') => $user_id,
-                        $securityGroupUsersTbl->aliasField('security_role_id') => $securityRoles->id,
-                    ])
-                    ->first();
-                if (empty($securityGroupUsers)) {
-                    //save user in security_group_users table first time
-                    $id = Text::uuid();
-                    $security_group_data = [
-                        'id' => $id,
-                        'security_group_id' => $institutions->security_group_id,
-                        'security_user_id' => $user_id,
-                        'security_role_id' => $securityRoles->id,
-                        'created_user_id' => 1,
-                        'created' => new Time('NOW')
-                    ];
-                    $securityGroupUsersEntity = $securityGroupUsersTbl->newEntity($security_group_data);
-                    $securityGroupUsersTbl->save($securityGroupUsersEntity);
-                }
-            } else {
-                //update user's security_group_id in security_group_users table
-                $InstitutionStudentsTbl = TableRegistry::get('institution_students');
-                $InstitutionStudentTransfersTbl = TableRegistry::get('institution_student_transfers');
-                $InstitutionStudents = $InstitutionStudentsTbl
-                    ->find()
-                    ->select([
-                        $InstitutionStudentsTbl->aliasField('student_id'),
-                        $InstitutionStudentTransfersTbl->aliasField('institution_id'),
-                        $InstitutionStudentTransfersTbl->aliasField('previous_institution_id')
-                    ])
-                    ->leftJoin([$InstitutionStudentTransfersTbl->alias() => $InstitutionStudentTransfersTbl->table()],
-                        [
-                            $InstitutionStudentTransfersTbl->aliasField('student_id') . '=' . $InstitutionStudentsTbl->aliasField('student_id'),
-                            $InstitutionStudentTransfersTbl->aliasField('institution_id') => $institutions->id
-                        ]
-                    )
-                    ->where([
-                        $InstitutionStudentsTbl->aliasField('student_id') => $checkSecurityGroupUser->security_user_id,
-                        $InstitutionStudentsTbl->aliasField('institution_id') => $institutions->id,
-                        $InstitutionStudentsTbl->aliasField('student_status_id') => 1//for enrolled status
-                    ])
-                    ->first();
-
-                if (!empty($InstitutionStudents)) {
-                    if (!empty($InstitutionStudents->institution_student_transfers['previous_institution_id'])) {
-                        $PreviousInstitutions = $institutionTbl->find()
-                            ->where([
-                                $institutionTbl->aliasField('id') => $InstitutionStudents->institution_student_transfers['previous_institution_id']
-                            ])
-                            ->first();
-
-                        if ($PreviousInstitutions->security_group_id == $checkSecurityGroupUser->security_group_id) {
-                            $securityGroupUsersTbl->updateAll(
-                                [
-                                    'security_group_id' => $institutions->security_group_id,
-                                    'created' => new Time('NOW')
-                                ],
-                                [
-                                    'security_group_id' => $PreviousInstitutions->security_group_id,
-                                    'security_user_id' => $checkSecurityGroupUser->security_user_id,
-                                    'security_role_id' => $checkSecurityGroupUser->security_role_id
-                                ]
-                            );
-                        }
-                    }
-                }
-            }
+        $student_role_id = self::getStudentSecurityRoleId();
+        $security_group_id = self::getInstitutionSecurityGroupId($institution_id);
+        //check student already exist
+        $student_security_groups = self::getStudentSecurityGroups($student_id, $student_role_id);
+        //check user_id with role is available or not in `security_group_users` group
+        if (sizeof($student_security_groups) == 0) {
+            self::createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
+            return;
         }
+            //update user's security_group_id in security_group_users table
+        $previous_security_group_id = self::getPreviousSecurityGroupId($institution_id, $student_id);
+        if (in_array($previous_security_group_id, $student_security_groups)) {
+            self::makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id);
+            return;
+        }
+        $this->createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
+        return;
+
+    }
+
+    /**
+     * @param $student_id
+     * @param $security_group_id
+     * @param $student_role_id
+     */
+    private static function createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id)
+    {
+        $id = Text::uuid();
+        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $security_group_data = [
+            'id' => $id,
+            'security_group_id' => $security_group_id,
+            'security_user_id' => $student_id,
+            'security_role_id' => $student_role_id,
+            'created_user_id' => 1,
+            'created' => new Time('NOW')
+        ];
+        $securityGroupUsersEntity = $securityGroupUsersTbl->newEntity($security_group_data);
+        $newEntity = $securityGroupUsersTbl->save($securityGroupUsersEntity);
+
     }
 
     /**
      * POCOR-7224
      * Changes to Behaviour for Withdraw.
      * Stop the behavior in add student page. If Student in pending cancellation for withdraw
-    **/
-    public function checkStudentStatus($studentId,$academicPeriodId)
+     **/
+    public function checkStudentStatus($studentId, $academicPeriodId)
     {
         $institutionStudents = TableRegistry::get('institution_students');
         $studentWithdraw = TableRegistry::get('institution_student_withdraw');
@@ -8003,31 +8066,31 @@ class InstitutionsController extends AppController
         $withdrawnId = TableRegistry::get('student_statuses')->findByCode('WITHDRAWN')->first()->id;
 
         $stepStatusId = $WorkflowStepsTable
-                            ->find()
-                            ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
-                                [ $WorkflowsTable->aliasField('id').'='.$WorkflowStepsTable->aliasField('workflow_id') ]
-                            )->where([
-                                $WorkflowsTable->aliasField('code') =>'STUDENT-WITHDRAW-001',
-                                $WorkflowStepsTable->aliasField('name') => 'Withdrawn'
-                            ])->first()->id;
+            ->find()
+            ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
+                [$WorkflowsTable->aliasField('id') . '=' . $WorkflowStepsTable->aliasField('workflow_id')]
+            )->where([
+                $WorkflowsTable->aliasField('code') => 'STUDENT-WITHDRAW-001',
+                $WorkflowStepsTable->aliasField('name') => 'Withdrawn'
+            ])->first()->id;
         $PendingStepStatusId = $WorkflowStepsTable
-                            ->find()
-                            ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
-                                [ $WorkflowsTable->aliasField('id').'='.$WorkflowStepsTable->aliasField('workflow_id') ]
-                            )->where([
-                                $WorkflowsTable->aliasField('code') =>'STUDENT-WITHDRAW-001',
-                                $WorkflowStepsTable->aliasField('name') => 'Pending for Cancellation'
-                            ])->first()->id;
+            ->find()
+            ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
+                [$WorkflowsTable->aliasField('id') . '=' . $WorkflowStepsTable->aliasField('workflow_id')]
+            )->where([
+                $WorkflowsTable->aliasField('code') => 'STUDENT-WITHDRAW-001',
+                $WorkflowStepsTable->aliasField('name') => 'Pending for Cancellation'
+            ])->first()->id;
 
-        $studentdata = $institutionStudents->find()->where(['student_status_id'=>$withdrawnId, 'student_id'=>$studentId, 'academic_period_id'=>$academicPeriodId])->first();
+        $studentdata = $institutionStudents->find()->where(['student_status_id' => $withdrawnId, 'student_id' => $studentId, 'academic_period_id' => $academicPeriodId])->first();
 
-        if($PendingStepStatusId != null){
-            $pendingStudentwithdraw = $studentWithdraw->find()->where(['status_id'=>$PendingStepStatusId, 'student_id'=>$studentId, 'academic_period_id'=>$entity->academic_period_id])->first();
+        if ($PendingStepStatusId != null) {
+            $pendingStudentwithdraw = $studentWithdraw->find()->where(['status_id' => $PendingStepStatusId, 'student_id' => $studentId, 'academic_period_id' => $entity->academic_period_id])->first();
         }
 
-        if(!empty($studentdata) && !empty($pendingStudentwithdraw)){
+        if (!empty($studentdata) && !empty($pendingStudentwithdraw)) {
             return false; // show message here . can not proceed
-        }else{
+        } else {
             return true;
         }
 
