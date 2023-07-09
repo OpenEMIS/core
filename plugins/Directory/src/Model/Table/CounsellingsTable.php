@@ -1,74 +1,79 @@
 <?php
-namespace Institution\Model\Table;
+namespace Directory\Model\Table;
 
-use Cake\ORM\Table;
-use Cake\ORM\TableRegistry;
+use ArrayObject;
+use stdClass;
 use Cake\ORM\Query;
-use Cake\Validation\Validator;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Network\Request;
+use Cake\Utility\Inflector;
+use Cake\Utility\Text;
+use Cake\Validation\Validator;
+use Cake\Collection\Collection;
+use Cake\I18n\Date;
+use Cake\Log\Log;
+use Cake\Routing\Router;
+use App\Model\Table\ControllerActionTable;
+use App\Model\Traits\MessagesTrait;
+use Cake\Datasource\ResultSetInterface;
+use Cake\Network\Session;
+use Cake\I18n\Time;
 
-use App\Model\Table\AppTable;
-
-class CounsellingsTable extends AppTable
+class CounsellingsTable extends ControllerActionTable
 {
     const ASSIGNED = 1;
-
     public function initialize(array $config)
     {
         $this->table('counsellings');
         parent::initialize($config);
-
         $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
         $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
         $this->belongsTo('Requesters', ['className' => 'Security.Users', 'foreign_key' => 'requester_id']);
-        $this->addBehavior('Page.FileUpload', [
-            'fieldMap' => ['file_name' => 'file_content'],
-            'size' => '2MB'
+        $this->addBehavior('ControllerAction.FileUpload', [
+            'name' => 'file_name',
+            'content' => 'file_content',
+            'size' => '2MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'all',
+            'useDefaultName' => true
         ]);
+        $this->toggle('view', true);
+        $this->toggle('edit', true);
+      
     }
-
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
-        return $events;
-    }
-
-    public function isAuthorized(Event $event, $scope, $action, $extra)
-    {
-        if ($action == 'download' || $action == 'image') {
-            // check for the user permission to download here
-            $event->stopPropagation();
-            return true;
-        }
-    }
-
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
 
         return $validator->allowEmpty('file_content');
     }
-
-    public function getDefaultConfig()
-    {
-        return $this->defaultConfig;
+    public function addEditBeforeAction(Event $event, ArrayObject $extra){
+        $session = $this->request->session();
+        $StudentId = $session->read('Student.Students.id');
+        $table=TableRegistry::get('institution_students');
+        $institutionStudent=$table->find('all')->select('institution_id')->where([
+            $table->aliasField('student_id')=>$StudentId,
+            $table->aliasField('student_status_id')=>1
+        ])->first();
+        $institutionId=$institutionStudent->institution_id;
+        $requestorOptions=$this->getRequesterOptions($institutionId);
+        $counselorOptions=$this->getCounselorOptions($institutionId);
+        $this->fields['requester_id']['type'] = 'select';
+        $this->fields['requester_id']['options'] = $requestorOptions;
+        $this->fields['guidance_type_id']['type'] = 'select';
+        $this->fields['counselor_id']['type'] = 'select';
+        $this->fields['counselor_id']['options'] = $counselorOptions;
+        $this->fields['date']['type'] = 'date';
+        $this->fields['date']['value'] = Time::now()->format('d-m-Y');
+        $this->setFieldOrder(['date','counselor_id','guidance_type_id','requester_id', 'guidance_utilized', 'description', 'intervention', 'comment', 'attachment']);
+        
     }
-
-    public function getGuidanceTypesOptions($institutionId)
-    {
-        // should be auto, if auto the reorder and visible not working
-        $guidanceTypesOptions = $this->GuidanceTypes
-            ->find('list')
-            ->find('visible')
-            ->find('order')
-            ->toArray();
-
-        return $guidanceTypesOptions;
-    }
-
+    
     public function getCounselorOptions($institutionId)
     {
+      
         // get the staff that assigned from the institution from security user
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
 
@@ -90,19 +95,20 @@ class CounsellingsTable extends AppTable
                 $this->Counselors->aliasField('last_name')
             ])
             ->toArray();
-
+           
+   
         return $counselorOptions;
     }
 
-    //POCOR-7054 change dropdown query
     public function getRequesterOptions($institutionId)
     {        
+       
         $InstitutionStaff = TableRegistry::get('institution_staff');
         $InstitutionStudents = TableRegistry::get('institution_students');
         $Institutions = TableRegistry::get('Institution.Institutions');
         $UserData = TableRegistry::get('User.Users');
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $academicPeriodId = $this->AcademicPeriods->getCurrent();
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodId = $AcademicPeriods->getCurrent();
         $join = [];
         $join[''] = [
         'type' => 'inner',
@@ -145,4 +151,52 @@ class CounsellingsTable extends AppTable
           $data =   $requestorOptions->join($join)->toArray();
             return $data;
     }
-}
+
+    public function getGuidanceTypesOptions($institutionId)
+        {
+            // should be auto, if auto the reorder and visible not working
+            $guidanceTypesOptions = $this->GuidanceTypes
+                ->find('list')
+                ->find('visible')
+                ->find('order')
+                ->toArray();
+                
+            return $guidanceTypesOptions;
+    
+        }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'file_content':
+                return __('Attachment');
+            case 'modified_user_id';
+                return __('Modified By');
+            case 'modified';
+                return __('Modified On');
+            case 'created_user_id';
+                return __('Created By');
+            case 'created';
+                return __('Created On');
+            
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+      
+    }
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('file_content', ['visible' => false]);
+        $this->field('file_name', ['visible' => false]);
+        $this->field('comment', ['visible' => false]);
+        $this->field('guidance_utilized', ['visible' => false]);
+        
+        $this->setFieldOrder(['date', 'description', 'intervention', 'counselor_id', 'guidance_type_id', 'requester_id',  'Actions']);
+    }
+    }

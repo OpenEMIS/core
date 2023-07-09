@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use JWTAuth;
+use App\Models\AbsenceReasons;
+use App\Models\AbsenceTypes;
 use App\Models\Institutions;
 use App\Models\InstitutionGrades;
 use App\Models\EducationGrades;
@@ -35,7 +37,15 @@ use App\Models\InstitutionCompetencyPeriodComments;
 use App\Models\StaffTypes;
 use App\Models\AssessmentItemResults;
 use App\Models\ConfigItem;
+use App\Models\InstitutionGender;
+use App\Models\InstitutionLocalities;
+use App\Models\InstitutionOwnerships;
+use App\Models\InstitutionProviders;
+use App\Models\InstitutionSectors;
 use App\Models\InstitutionSubjectStaff;
+use App\Models\InstitutionTypes;
+use App\Models\MealBenefits;
+use App\Models\MealProgrammes;
 use App\Models\StudentAttendanceMarkedRecords;
 use App\Models\InstitutionStudentAbsences;
 use App\Models\InstitutionStudentAbsenceDays;
@@ -1828,7 +1838,375 @@ class InstitutionRepository extends Controller
         }
     }
 
+    // POCOR-7394-S starts
 
+    public function getAbsenceReasons($request)
+    {
+        try {
+                $params = $request->all();
+
+                $AbsenceReasons = new AbsenceReasons();
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $AbsenceReasons = $AbsenceReasons->orderBy($col, $orderBy);
+            }
+
+
+            $limit = config('constants.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $list = $AbsenceReasons->paginate($limit)->toArray();
+            return $list;
+        
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Absence Reasons List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Absence Reasons List.');
+        }
+    }
+
+    public function getAbsenceTypes($request)
+    {
+        try {
+
+            $params = $request->all();
+                $absenceTypes = new AbsenceTypes();
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $absenceTypes = $absenceTypes->orderBy($col, $orderBy);
+            }
+
+
+            $limit = config('constants.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $list = $absenceTypes->paginate($limit)->toArray();
+            return $list;
+        
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Absence Types List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Absence Types List.');
+        }
+    }
+
+    public function getAreaAdministratives($request)
+    {
+        try {
+          
+            $params = $request->all();
+            $areaAdministratives = AreaAdministratives::with('areaAdministrativeLevels');
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $areaAdministratives = $areaAdministratives->orderBy($col, $orderBy);
+            }
+
+
+            $limit = config('constants.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $list = $areaAdministratives->paginate($limit)->toArray();
+            
+            return $list;
+            
+        
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Area Administratives List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Area Administratives List.');
+        }
+    }
+
+    public function getAreaAdministrativesById($areaAdministrativeId)
+    {
+        try {
+
+            $isExists = AreaAdministratives::where([
+                'id' => $areaAdministrativeId,
+            ])
+            ->first();
+
+            if($isExists){
+                $areaAdministratives = AreaAdministratives::where('id', $areaAdministrativeId)->first();
+                return $areaAdministratives;
+            }
+            else{
+                return false;
+            }
+        
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Area Administrative.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Area Administrative.');
+        }
+    }
+
+    public function getInstitutionGenders()
+    {
+
+        try {
+                $institutionGender = InstitutionGender::get();
+                return $institutionGender;
+
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Genders List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Institution Genders List.');
+        }
+    }
+
+    public function getInstitutionsLocalitiesById($localityId)
+    {
+        try {
+
+            $isExists = InstitutionLocalities::where([
+                'id' => $localityId,
+            ])
+            ->first();
+
+            if($isExists){
+                $institutionLocalities = InstitutionLocalities::where('id', $localityId)->first();
+                return $institutionLocalities;
+            }
+            else{
+                return false;
+            }
+        
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Locality.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Institution Locality.');
+        }
+    }
+
+    public function getInstitutionsOwnershipsById($ownershipId)
+    {
+        try {
+
+            $isExists = InstitutionOwnerships::where([
+                'id' => $ownershipId,
+            ])
+            ->first();
+
+            if($isExists){
+                $institutionOwnerships = InstitutionOwnerships::where('id', $ownershipId)->first();
+                return $institutionOwnerships;
+            }
+            else{
+                return false;
+            }
+        
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Ownership.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Institution Ownership.');
+        }
+    }
+
+    public function getInstitutionSectorsById($sectorId)
+    {
+        try {
+
+            $isExists = InstitutionSectors::where([
+                'id' => $sectorId,
+            ])
+            ->first();
+
+            if($isExists){
+                $institutionSectors = InstitutionSectors::where('id', $sectorId)->first();
+                return $institutionSectors;
+            }
+            else{
+                return false;
+            }
+        
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Sector.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Institution Sector.');
+        }
+    }
+
+    public function getInstitutionProvidersById($providerId)
+    {
+        try {
+
+            $isExists = InstitutionProviders::where([
+                'id' => $providerId,
+            ])
+            ->first();
+
+            if($isExists){
+                $institutionProviders = InstitutionProviders::where('id', $providerId)->first();
+                return $institutionProviders;
+            }
+            else{
+                return false;
+            }
+        
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Provider.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Institution Provider.');
+        }
+    }
+
+    public function getInstitutionTypesById($typeId)
+    {
+        try {
+
+            $isExists = InstitutionTypes::where([
+                'id' => $typeId,
+            ])
+            ->first();
+
+            if($isExists){
+                $institutionTypes = InstitutionTypes::where('id', $typeId)->first();
+                return $institutionTypes;
+            }
+            else{
+                return false;
+            }
+        
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Type.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Institution Type.');
+        }
+    }
+
+    public function getInstitutionProviderBySectorId($sectorId)
+    {
+        try {
+
+            $isExists = InstitutionProviders::where([
+                'institution_sector_id' => $sectorId,
+            ])
+            ->first();
+
+            if($isExists){
+                $institutionProviders = InstitutionProviders::where('institution_sector_id', $sectorId)->get();
+                return $institutionProviders;
+            }
+            else{
+                return false;
+            }
+        
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Provider By Sector ID.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Institution Provider By Sector ID.');
+        }
+    }
+
+    public function getMealBenefits($request)
+    {
+        try {
+            
+                $params = $request->all();
+
+
+                $limit = config('constants.defaultPaginateLimit');
+
+                if(isset($params['limit'])){
+                $limit = $params['limit'];
+                }
+
+                $mealBenefits = new MealBenefits();
+                if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $mealBenefits = $mealBenefits->orderBy($col, $orderBy);
+                }
+                $list = $mealBenefits->paginate($limit);
+                return $list;
+        
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Meal Benefits List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Meal Benefits List.');
+        }
+    }
+
+    public function getMealProgrammes($request)
+    {
+        try {
+
+                $params = $request->all();
+
+                $mealProgrammes = new MealProgrammes();
+
+            $limit = config('constants.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $list = $mealProgrammes->paginate($limit)->toArray();
+            return $list;
+        
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Meal Programmes List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Meal Programmes List.');
+        }
+    }
+
+    // POCOR-7394-S ends
 
     public function deleteClassAttendance($request)
     {
@@ -1949,5 +2327,7 @@ class InstitutionRepository extends Controller
             return $this->sendErrorResponse('Failed to delete student attendance.');
         }
     }
+
+
 }
 
