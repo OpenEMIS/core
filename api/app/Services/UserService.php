@@ -173,4 +173,21 @@ class UserService extends Controller
         }
     }
 
+    public function getUsersGender($request)
+    {
+        try {
+            $data = $this->userRepository->getUsersGender($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Users Gender list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Users Gender List Not Found');
+        }
+    }
+
 }
