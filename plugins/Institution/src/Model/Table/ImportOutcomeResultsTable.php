@@ -151,7 +151,7 @@ class ImportOutcomeResultsTable extends AppTable
                              $OutcomeCriterias->aliasField('education_subject_id = ') . $InstitutionSubjects->aliasField('education_subject_id'),
 
                             ])
-                ->orWhere($conditions)//POCOR-7506
+                ->where($conditions)//POCOR-7506
                 ->group([
                     'EducationSubjects.id',
                 ])->toArray();
