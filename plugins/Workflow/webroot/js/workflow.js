@@ -302,7 +302,7 @@ var Workflow = {
 				console.log('Workflow.CaseLinkOptions() error callback:');
 				console.log(error);
 				$('.workflow-case-link').empty();
-				$('.workflow-case-link').append($('<option>').text($('.workflowtransition-assignee-no_options').html()).attr('value', ''));
+				$('.workflow-case-link').append($('<option>').text($('.workflow-case-link-no_options').html()).attr('value', ''));
 
 				if (typeof error.responseJSON != 'undefined' && typeof error.responseJSON.message != 'undefined') {
 					$('.workflow-reassign-assignee-sql-error').show();

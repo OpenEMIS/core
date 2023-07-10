@@ -1748,15 +1748,6 @@ class WorkflowCaseBehavior extends Behavior
 
         $caseUrl = Router::url(['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'ajaxGetCases']);
 
-        // if ($entity->has('assignee_id') && $entity->assignee_id != 0) {
-        //     $assigneeEntity = $this->getAssigneeEntity($entity->assignee_id);
-        //     $assigneeName = $assigneeEntity->name_with_id;
-        //     $assigneeId = $assigneeEntity->id;
-        // } else {
-        //     $assigneeName = '<'.__('Unassigned').'>';
-        //     $assigneeId = 0;
-        // }
-
         if (!is_null($step)) {
             $workflow = $step->_matchingData['Workflows'];
 
@@ -1784,8 +1775,8 @@ class WorkflowCaseBehavior extends Behavior
             $content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
             $content .= '<div class="input string"><span class="button-label"></span>';
                 $content .= '<div class="workflow-caselink-loading">' . __('Loading') . '</div>';
-                $content .= '<div class="workflow-reassign-assignee-no_options">' . __('No options') . '</div>';
-                $content .= '<div class="workflow-reassign-assignee-error">' . __('This field cannot be left empty') . '</div>';
+                $content .= '<div class="workflow-case-link-no_options">' . __('No options') . '</div>';
+                $content .= '<div class="workflow-case-link-error">' . __('This field cannot be left empty') . '</div>';
                 $content .= '<div class="workflow-reassign-assignee-same-error">' . __('New Assignee cannot be the same as Current Assignee') . '</div>';
             $content .= '</div>';
             $content .= '<div class="input string"><span class="button-label"></span><div class="workflow-reassign-assignee-sql-error error-message">' .$model->getMessage('general.error'). '</div></div>';
@@ -2729,7 +2720,8 @@ class WorkflowCaseBehavior extends Behavior
             $caselinksTable = TableRegistry::get('institution_case_links');
             $newEntity = $caselinksTable->newEntity([
                 'parent_case_id'=>$pcaseId,
-                'child_case_id' => $caseId
+                'child_case_id' => $caseId,
+                'created' => date('Y-m-d H:i:s')
             ]);
             $caselinksTable->save($newEntity);
             $url = $model->url('view');

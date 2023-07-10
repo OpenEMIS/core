@@ -271,59 +271,23 @@ class WorkflowsController extends AppController
     public function ajaxUpdateComment()
     {
         $this->viewBuilder()->layout('ajax');
-        /*
-         - missing institution_id is profile->staff->carrer    
-         -Start POCOR-6619
-        */
-        echo "heeere";die;
+        
         $url = $_SERVER['HTTP_REFERER'];
         $queryString = parse_url($url);
-        $urlInstitutionId = $queryString['query'];
-        $getInstitutionId = explode("=",$urlInstitutionId);
-        //End POCOR-6619
-        
-        $isSchoolBased = $this->request->query('is_school_based');
-        $nextStepId = $this->request->query('next_step_id');
-        $autoAssignAssignee = $this->request->query('auto_assign_assignee');
-        $case_id = $this->request->query('case_id');
+       
+        $comment = $this->request->query('name');
+        $case_id = $this->request->query('caseId');
 
+        $workflow_transitions_table = TableRegistry::get('workflow_transitions');
       
-            $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-            $params = [
-                'is_school_based' => $isSchoolBased,
-                'workflow_step_id' => $nextStepId,
-                'url_institution_id' => $getInstitutionId[1]  //POCOR-6619
-            ];
-            if ($isSchoolBased) {
-                $session = $this->request->session();
-                if ($session->check('Institution.Institutions.id')) {
-                    $institutionId = $session->read('Institution.Institutions.id');
-                    $params['institution_id'] = $institutionId;
-                }
-            }
-            $institutionCasesT = TableRegistry::get('institution_cases');
-            $caseOptions  = $institutionCasesT->find('list',['keyField' => 'id', 'valueField' => 'case_number'])->where(['id !=' => $case_id])->toArray();
+        $dataRecord = $workflow_transitions_table->get($case_id);
+        $dataRecord->comment = $comment;
+        $workflow_transitions_table->save($dataRecord);
 
-
-            // $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
-            // echo "<pre>"; print_r($caseOptions);die;
-
-            Log::write('debug', 'CaseLink:');
-            Log::write('debug', $caseOptions);
-
-            $defaultKey = empty($caseOptions) ? __('No options') : '-- '.__('Select').' --';
-            $options = $caseOptions;
-
-        // } else {
-        //     Log::write('debug', 'Auto Assign Assignee');
-
-        //     $defaultKey = '';
-        //     $options = [$this->Auth->user('id') => __('Auto Assign')]; //POCOR-7080
-        // }
+        Log::write('debug', 'Update case comment:');
 
         $responseData = [
-            'default_key' => $defaultKey,
-            'cases' => $options
+            'default_key' => 'success'
         ];
 
         $this->response->body(json_encode($responseData, JSON_UNESCAPED_UNICODE));
@@ -335,59 +299,21 @@ class WorkflowsController extends AppController
     public function ajaxGetComment()
     {
         $this->viewBuilder()->layout('ajax');
-        /*
-         - missing institution_id is profile->staff->carrer    
-         -Start POCOR-6619
-        */
-        echo "heeere ajaxGetComment";die;
+        
         $url = $_SERVER['HTTP_REFERER'];
         $queryString = parse_url($url);
-        $urlInstitutionId = $queryString['query'];
-        $getInstitutionId = explode("=",$urlInstitutionId);
-        //End POCOR-6619
-        
-        $isSchoolBased = $this->request->query('is_school_based');
-        $nextStepId = $this->request->query('next_step_id');
-        $autoAssignAssignee = $this->request->query('auto_assign_assignee');
-        $case_id = $this->request->query('case_id');
+       
+        $case_id = $this->request->query('caseId');
+        $workflow_transitions_table = TableRegistry::get('workflow_transitions');
+        $data = $workflow_transitions_table->find()->where(['id'=>$case_id])->first();
+        $comment = $data->comment;  
 
-      
-            $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-            $params = [
-                'is_school_based' => $isSchoolBased,
-                'workflow_step_id' => $nextStepId,
-                'url_institution_id' => $getInstitutionId[1]  //POCOR-6619
-            ];
-            if ($isSchoolBased) {
-                $session = $this->request->session();
-                if ($session->check('Institution.Institutions.id')) {
-                    $institutionId = $session->read('Institution.Institutions.id');
-                    $params['institution_id'] = $institutionId;
-                }
-            }
-            $institutionCasesT = TableRegistry::get('institution_cases');
-            $caseOptions  = $institutionCasesT->find('list',['keyField' => 'id', 'valueField' => 'case_number'])->where(['id !=' => $case_id])->toArray();
-
-
-            // $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
-            // echo "<pre>"; print_r($caseOptions);die;
-
-            Log::write('debug', 'CaseLink:');
-            Log::write('debug', $caseOptions);
-
-            $defaultKey = empty($caseOptions) ? __('No options') : '-- '.__('Select').' --';
-            $options = $caseOptions;
-
-        // } else {
-        //     Log::write('debug', 'Auto Assign Assignee');
-
-        //     $defaultKey = '';
-        //     $options = [$this->Auth->user('id') => __('Auto Assign')]; //POCOR-7080
-        // }
+        Log::write('debug', 'CaseLink:');
+        Log::write('debug', $caseOptions);
 
         $responseData = [
-            'default_key' => $defaultKey,
-            'cases' => $options
+            'default_key' => 'Success',
+            'comment' => $comment
         ];
 
         $this->response->body(json_encode($responseData, JSON_UNESCAPED_UNICODE));
@@ -399,17 +325,8 @@ class WorkflowsController extends AppController
     public function ajaxDelCase()
     {
         $this->viewBuilder()->layout('ajax');
-        /*
-         - missing institution_id is profile->staff->carrer    
-         -Start POCOR-6619
-        */
-        
         $url = $_SERVER['HTTP_REFERER'];
         $queryString = parse_url($url);
-        // $urlInstitutionId = $queryString['query'];
-        // $getInstitutionId = explode("=",$urlInstitutionId);
-        //End POCOR-6619
-       
         
         $case_id = $this->request->query('caseId');
         $workflow_transitions_table = TableRegistry::get('workflow_transitions');
@@ -422,7 +339,7 @@ class WorkflowsController extends AppController
         }
        
         Log::write('debug', 'Delete case comment:');
-        Log::write('debug', $caseOptions);
+        
 
         $responseData = [
             'default_key' => 'success'
