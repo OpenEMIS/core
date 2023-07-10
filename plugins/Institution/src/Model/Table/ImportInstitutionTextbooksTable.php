@@ -180,7 +180,7 @@ class ImportInstitutionTextbooksTable extends AppTable
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-        
+        $tempRow['security_user_id'] = $tempRow['student_id'];
          // POCOR-7362 starts
 
         // In institutionTextbooksTable staff is also added to studentoptions and hence in temprow['student_id'] staff Ids also populate, following methods checks if student or staff id are enrolled/assigned 
@@ -190,7 +190,7 @@ class ImportInstitutionTextbooksTable extends AppTable
 
         $users = array_merge($enrolledStudent, $assignedStaff);
         
-        if(!in_array($tempRow['student_id'], $users)){
+        if(!in_array($tempRow['security_user_id'], $users)){
             $rowInvalidCodeCols['student_id'] = __('Not a enrolled/assigned user');
             return false;
         }
@@ -242,7 +242,7 @@ class ImportInstitutionTextbooksTable extends AppTable
                                 ])
                                 ->count();
                         if ($query > 0) { //student assigned to same book before
-                            $rowInvalidCodeCols['security_user_id'] = __('Textbook already assigned to the same student before.');
+                            $rowInvalidCodeCols['student_id'] = __('Textbook already assigned to the same student before.');
                             return false;
                         }
                     }
