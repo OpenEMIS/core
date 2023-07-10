@@ -98,10 +98,10 @@
           </div>
 		  <div class="modal-body">
 			<form name="frm" method="POST" action="">
-				<!-- <input type="hidden" name="WorkflowTransitions[comment_required]" class="workflowtransition-comment-required" id="workflowtransitions-comment-required" value="0"> -->
+				<input type="hidden" name="caseId" class="workflowtransition-comment-required" id="workflowtransitions_case_id" value="0">
 				<div class="input textarea">
 					<label for="workflowtransitions-comment">Comment</label>
-					<textarea name="WorkflowTransitions[comment]" class="workflowtransition-comment" name="name" id="name" rows="5"></textarea>
+					<textarea name="WorkflowTransitions[comment]" class="workflowtransition-comment" name="comment" id="name" rows="5"></textarea>
 				</div>
 				<div class="modal-footer">
 					
@@ -189,6 +189,7 @@
 	function EditComment(caseId){
 		//alert("edit here");
 		$('#largeModal').modal('show');
+		$('#workflowtransitions_case_id').val(caseId);
 		var url = '/Workflows/ajaxGetComment';
 		$.ajax({
 			url: url,
@@ -203,20 +204,12 @@
 			},
 			success: function(response) {
 				var defaultKey = response.default_key;
-				var assignees = response.assignees;
+				var comment = response.comment;
+				if (defaultKey == 'Success') {
+					$('#name').append(comment);
+				} 
 
-				$('.workflowtransition-assignee-id').empty();
-				if (jQuery.isEmptyObject(assignees)) {
-					// show No options if assignees is empty
-					$('.workflowtransition-assignee-id').append($('<option>').text(defaultKey).attr('value', ''));
-				} else {
-					if (defaultKey.length != 0) {
-						$('.workflowtransition-assignee-id').append($('<option>').text(defaultKey).attr('value', ''));
-					}
-					$.each(assignees, function(i, value) {
-						$('.workflowtransition-assignee-id').append($('<option>').text(value).attr('value', i));
-					});
-				}
+				
 			},
 			error: function(error) {
 				console.log('Workflow.getAssigneeOptions() error callback:');
@@ -235,14 +228,14 @@
 		e.preventDefault();
 		var url = '/Workflows/ajaxUpdateComment';
 		var name = $("#name").val(); 
-		var last_name = $("#last_name").val();
-		var dataString = 'name='+name+'&last_name='+last_name;
+		var last_name = $("#workflowtransitions_case_id").val();
+		
 		$.ajax({
 			url: url,
 			dataType: "json",
 			data: {
 				name: name,
-				last_name: last_name
+				caseId: last_name
 			},
 			beforeSend: function(xhr) {
 				// always show loading when user click on submit button
@@ -251,20 +244,10 @@
 			},
 			success: function(response) {
 				var defaultKey = response.default_key;
-				var assignees = response.assignees;
-
-				$('.workflowtransition-assignee-id').empty();
-				if (jQuery.isEmptyObject(assignees)) {
-					// show No options if assignees is empty
-					$('.workflowtransition-assignee-id').append($('<option>').text(defaultKey).attr('value', ''));
-				} else {
-					if (defaultKey.length != 0) {
-						$('.workflowtransition-assignee-id').append($('<option>').text(defaultKey).attr('value', ''));
-					}
-					$.each(assignees, function(i, value) {
-						$('.workflowtransition-assignee-id').append($('<option>').text(value).attr('value', i));
-					});
-				}
+				//alert(defaultKey);
+				if (defaultKey == 'success') {
+					location.reload();
+				} 
 			},
 			error: function(error) {
 				console.log('Workflow.getAssigneeOptions() error callback:');
