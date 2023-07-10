@@ -898,7 +898,7 @@ class WorkflowCaseBehavior extends Behavior
 
                 // Workflow Transitions Comments - extra field
                 $tableHeaderComments[0] = __('Comments');
-                $tableHeaderComments[1] = __('creator');
+                $tableHeaderComments[1] = __('Creator');
                 $tableHeaderComments[2] = __('Created');
                 $tableHeaderComments[3] = __('Action');
 
