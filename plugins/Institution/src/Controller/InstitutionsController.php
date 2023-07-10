@@ -6079,7 +6079,7 @@ class InstitutionsController extends AppController
                                 $endDate = $value->end_date;
                             }
 
-                            $securityGroupUsers = $this->assignStudentRoleGroup($institutionId, $user_id);//POCOR-7146
+                            $securityGroupUsers = self::assignStudentRoleGroup($institutionId, $user_id);//POCOR-7146
                         }
                         $bodys = array();
                         $bodys = [
@@ -7871,7 +7871,7 @@ class InstitutionsController extends AppController
      * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
      * assign Role and group to student while creating student
      **/
-    private function assignStudentRoleGroup($institution_id, $student_id)
+    private static function assignStudentRoleGroup($institution_id, $student_id)
     {
         $student_role_id = self::getStudentSecurityRoleId();
         $security_group_id = self::getInstitutionSecurityGroupId($institution_id);
@@ -7890,7 +7890,7 @@ class InstitutionsController extends AppController
             return;
         }
         //if he/she is not transferred - create new security group
-        $this->createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
+        self::createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
         return;
 
     }
