@@ -339,7 +339,7 @@ class DataManagementCopyTable extends ControllerActionTable
             $to_academic_period = $entity->to_academic_period;
             $FromAcademicPeriodsData = $AcademicPeriods
                         ->find()
-                        ->select(['start_date', 'start_year'])
+                        ->select(['start_date', 'start_year','id'])
                         ->where(['id' => $from_academic_period])
                         ->first();
 
@@ -349,57 +349,80 @@ class DataManagementCopyTable extends ControllerActionTable
             ->where(['id' => $to_academic_period])
             ->first();
 
-            $InstitutionGradesdataToInsert = $InstitutionGrades
-            ->find('all')
-            ->where(['start_year' => $FromAcademicPeriodsData['start_year']])
-            ->toArray();
-        
-            foreach($InstitutionGradesdataToInsert AS $InstitutionGradesdataValue){
-            
-                try{
-                    $statement = $connection->prepare('INSERT INTO institution_grades 
-                    (
-                    education_grade_id, 
-                    academic_period_id,
-                    start_date,
-                    start_year,
-                    end_date,
-                    end_year,
-                    institution_id,
-                    modified_user_id,
-                    modified,
-                    created_user_id,
-                    created)
-                    
-                    VALUES (:education_grade_id,
-                    :academic_period_id,
-                    :start_date, 
-                    :start_year,
-                    :end_date,
-                    :end_year,
-                    :institution_id,
-                    :modified_user_id,
-                    :modified,
-                    :created_user_id,
-                    :created)');
+            // $InstitutionGradesdataToInsert = $InstitutionGrades
+            // ->find('all')
+            // ->where(['start_year' => $FromAcademicPeriodsData['start_year']])
+            // ->toArray();
 
-                    $statement->execute([
-                    'education_grade_id' => $InstitutionGradesdataValue->education_grade_id,
-                    'academic_period_id' => $to_academic_period,
-                    'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
-                    'start_year' => $ToAcademicPeriodsData['start_year'],
-                    'end_date' => null,
-                    'end_year' => null,
-                    'institution_id' => $InstitutionGradesdataValue->institution_id,
-                    'modified_user_id' => 2,
-                    'modified' => date('Y-m-d H:i:s'),
-                    'created_user_id' => 2,
-                    'created' => date('Y-m-d H:i:s')
-                    ]);
-                
-                }catch (PDOException $e) {
-                    echo "<pre>";print_r($e);die;
-                }
+            $InstitutionGradesdatasToInsert = $InstitutionGrades
+            ->find('all')
+            ->where(['academic_period_id' =>  $to_academic_period])
+            ->toArray();
+
+            $InsIds = [];
+            foreach($InstitutionGradesdatasToInsert as $ke => $ig_data){
+                $InsIds[] = $ig_data->institution_id;
+            }
+
+            $Unmatched =[];
+            $Matched = [];
+
+            $institutions = $Institutions->find('all')->toArray();        
+            // foreach($InstitutionGradesdataToInsert AS $InstitutionGradesdataValue){
+                foreach($institutions as $k => $Insti){ 
+                    if (!in_array($Insti->id, $InsIds)) {
+                        $InstitutionGradesdataValue = $InstitutionGrades
+                        ->find('all')
+                        ->where(['academic_period_id' => $from_academic_period,'institution_id'=> $Insti->id])
+                        ->first();
+                        if(!empty($InstitutionGradesdataValue)){
+                            try{
+                                $statement = $connection->prepare('INSERT INTO institution_grades 
+                                (
+                                education_grade_id, 
+                                academic_period_id,
+                                start_date,
+                                start_year,
+                                end_date,
+                                end_year,
+                                institution_id,
+                                modified_user_id,
+                                modified,
+                                created_user_id,
+                                created)
+                                
+                                VALUES (:education_grade_id,
+                                :academic_period_id,
+                                :start_date, 
+                                :start_year,
+                                :end_date,
+                                :end_year,
+                                :institution_id,
+                                :modified_user_id,
+                                :modified,
+                                :created_user_id,
+                                :created)');
+            
+                                $statement->execute([
+                                'education_grade_id' => $InstitutionGradesdataValue->education_grade_id,
+                                'academic_period_id' => $to_academic_period,
+                                'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
+                                'start_year' => $ToAcademicPeriodsData['start_year'],
+                                'end_date' => null,
+                                'end_year' => null,
+                                'institution_id' => $InstitutionGradesdataValue->institution_id,
+                                'modified_user_id' => 2,
+                                'modified' => date('Y-m-d H:i:s'),
+                                'created_user_id' => 2,
+                                'created' => date('Y-m-d H:i:s')
+                                ]);
+                            
+                            }catch (PDOException $e) {
+                                echo "<pre>";print_r($e);die;
+                            }
+                        }
+
+                    }
             }
 
             $from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
