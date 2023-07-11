@@ -533,7 +533,7 @@ class AssessmentResultsTable extends AppTable
                     $AssessmentItemResults->aliasField('assessment_period_id'),
                     'subject_classification',
                     'academic_term_value'
-                ])
+                ]) // here should be added orderby created/modified desk
                 ->hydrate(false)
                 ->toArray();
 
