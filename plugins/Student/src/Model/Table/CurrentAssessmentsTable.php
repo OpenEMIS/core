@@ -125,7 +125,8 @@ class CurrentAssessmentsTable extends ControllerActionTable
                 : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
-        $where[$this->aliasField('institution_id')] = $institutionId;  // POCOR-7201
+//        $where[$this->aliasField('institution_id')] = $institutionId;  // POCOR-7201
+        // removed for the quickfix POCOR-7536-KHINDOL
         //End
         //Assessment Period filter
         if (!empty($selectedAcademicPeriod)) {

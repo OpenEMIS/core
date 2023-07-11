@@ -131,7 +131,14 @@ class StudentAdmissionTable extends ControllerActionTable
                 ],
                 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
                     'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', []],
-                    'on' => function ($context) { 
+                    'on' => function ($context) {
+                        //POCOR-6172-HINDOL[START]
+                        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+                        $multipleInstitutions = $ConfigItems->value('multiple_institutions_student_enrollment');
+                        $multipleInstitutions = ($multipleInstitutions == "1") ? true : false ;
+//                        $this->log($multipleInstitutions);
+                        if ($multipleInstitutions) return false;
+                        //POCOR-6172-HINDOL[END]
                         if (array_key_exists('institution_id', $context['data']) && !empty($context['data']['institution_id']) && array_key_exists('education_grade_id', $context['data']) && !empty($context['data']['education_grade_id'])) {
                             $Institutions = TableRegistry::get('Institution.Institutions');
                             $institutionExists = $Institutions->exists([$Institutions->primaryKey() => $context['data']['institution_id']]);
@@ -361,7 +368,11 @@ class StudentAdmissionTable extends ControllerActionTable
         $Promoted = $statusList['PROMOTED'];
         $Graduated = $statusList['GRADUATED'];
         $Withdraw = $statusList['WITHDRAWN'];
-        //POCOR-6500 starts 
+        $institution_id = $student->institution_id;
+        $student_id = $student->student_id;
+        $this->log('studentsAfterSave', 'debug');
+        $this->log($student, 'debug');
+        //POCOR-6500 starts
         //get student role
         $securityRolesTbl = TableRegistry::get('security_roles');
         $securityRoles = $securityRolesTbl->find()
@@ -370,118 +381,16 @@ class StudentAdmissionTable extends ControllerActionTable
                                 ])
                                 ->first();
         //get student institution
-        $institutionTbl = TableRegistry::get('institutions');
-        $institutions = $institutionTbl->find()
-                                ->where([
-                                    $institutionTbl->aliasField('id') => $student->institution_id
-                                ])
-                                ->first();
-        //POCOR-6500 ends                         
+        //POCOR-6500 ends
         if ($student->isNew()) { // add
             // close other pending admission applications (in same education system) if the student is successfully enrolled in one school
             if ($student->student_status_id == $Enrolled) {
                 $educationSystemId = $this->EducationGrades->getEducationSystemId($student->education_grade_id);
                 $educationGradesToUpdate = $this->EducationGrades->getEducationGradesBySystem($educationSystemId);
                 //POCOR-6500 starts
-                if(!empty($institutions) && $institutions->security_group_id !=''){
-                    $securityGroupInstitutionsTbl = TableRegistry::get('security_group_institutions');
-                    $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
-                                            ->where([
-                                                $securityGroupInstitutionsTbl->aliasField('security_group_id') => $institutions->security_group_id,
-                                                $securityGroupInstitutionsTbl->aliasField('institution_id') => $institutions->id
-                                            ])
-                                            ->first();
-                    //save security group for institution
-                    if(empty($securityGroupInstitutions)){
-                        $security_group_ins_data = [
-                                    'security_group_id' => $institutions->security_group_id,
-                                    'institution_id' => $institutions->id,
-                                    'created_user_id' => 1,
-                                    'created' => new Time('NOW')
-                            ];
-                        $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
-                        $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
-                    }
-                    //check user already exist or not
-                    $securityGroupUsersTbl = TableRegistry::get('security_group_users');
-                    $checkSecurityGroupUser = $securityGroupUsersTbl->find()
-                                            ->where([
-                                                $securityGroupUsersTbl->aliasField('security_user_id') => $student->student_id,
-                                                $securityGroupUsersTbl->aliasField('security_role_id') => $securityRoles->id
-                                            ])
-                                            ->first();
-                    //check user_id with role is available or not in `security_group_users` group                       
-                    if(empty($checkSecurityGroupUser)){
-                        $securityGroupUsers = $securityGroupUsersTbl->find()
-                                                ->where([
-                                                    $securityGroupUsersTbl->aliasField('security_group_id') => $institutions->security_group_id,
-                                                    $securityGroupUsersTbl->aliasField('security_user_id') => $student->student_id,
-                                                    $securityGroupUsersTbl->aliasField('security_role_id') => $securityRoles->id,
-                                                ])
-                                                ->first();
-                        if(empty($securityGroupUsers)){
-                            //save user in security_group_users table first time 
-                            $id = Text::uuid();
-                            $security_group_data = [
-                                        'id' => $id,
-                                        'security_group_id' => $institutions->security_group_id,
-                                        'security_user_id' => $student->student_id,
-                                        'security_role_id' => $securityRoles->id,
-                                        'created_user_id' => 1,
-                                        'created' => new Time('NOW')
-                                ];
-                            $securityGroupUsersEntity = $securityGroupUsersTbl->newEntity($security_group_data);
-                            $securityGroupUsersTbl->save($securityGroupUsersEntity);
-                        }                        
-                    }else{
-                        //update user's security_group_id in security_group_users table 
-                        $InstitutionStudentsTbl = TableRegistry::get('institution_students');
-                        $InstitutionStudentTransfersTbl = TableRegistry::get('institution_student_transfers');
-                        $InstitutionStudents = $InstitutionStudentsTbl
-                                                ->find()
-                                                ->select([
-                                                    $InstitutionStudentsTbl->aliasField('student_id'),
-                                                    $InstitutionStudentTransfersTbl->aliasField('institution_id'),
-                                                    $InstitutionStudentTransfersTbl->aliasField('previous_institution_id')
-                                                ])
-                                                ->leftJoin([$InstitutionStudentTransfersTbl->alias() => $InstitutionStudentTransfersTbl->table()],
-                                                    [
-                                                        $InstitutionStudentTransfersTbl->aliasField('student_id').'='.$InstitutionStudentsTbl->aliasField('student_id'),
-                                                        $InstitutionStudentTransfersTbl->aliasField('institution_id')=>$institutions->id
-                                                    ]
-                                                )
-                                                ->where([
-                                                    $InstitutionStudentsTbl->aliasField('student_id') => $checkSecurityGroupUser->security_user_id,
-                                                    $InstitutionStudentsTbl->aliasField('institution_id') => $institutions->id,
-                                                    $InstitutionStudentsTbl->aliasField('student_status_id') => 1//for enrolled status
-                                                ])
-                                                ->first();
-                        
-                        if(!empty($InstitutionStudents)){
-                            if(!empty($InstitutionStudents->institution_student_transfers['previous_institution_id'])){
-                                $PreviousInstitutions = $institutionTbl->find()
-                                        ->where([
-                                            $institutionTbl->aliasField('id') => $InstitutionStudents->institution_student_transfers['previous_institution_id']
-                                        ])
-                                        ->first();
-                                       
-                                if($PreviousInstitutions->security_group_id == $checkSecurityGroupUser->security_group_id){
-                                    $securityGroupUsersTbl->updateAll(
-                                        [
-                                            'security_group_id' => $institutions->security_group_id,
-                                            'created' => new Time('NOW')
-                                        ],
-                                        [
-                                            'security_group_id' => $PreviousInstitutions->security_group_id,
-                                            'security_user_id' => $checkSecurityGroupUser->security_user_id,
-                                            'security_role_id' => $checkSecurityGroupUser->security_role_id
-                                        ]
-                                    );
-                                }
-                            }
-                        }
-                    }
-                }
+
+                $securityGroupUsers = self::assignStudentRoleGroup($institution_id, $student_id);//POCOR-7146
+
                 //POCOR-6500 ends
                 // get the first step in 'REJECTED' workflow statuses
                 $workflowEntity = $this->getWorkflow($this->registryAlias());
@@ -1033,4 +942,208 @@ class StudentAdmissionTable extends ControllerActionTable
             return $attr;
         }
     }
+
+    /**
+     * POCOR-7146
+     * POCOR-7224 refactored
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     * assign Role and group to student while creating student
+     **/
+    private static function assignStudentRoleGroup($institution_id, $student_id)
+    {
+        Log::write('debug', 'assignStudentRoleGroup');
+        $student_role_id = self::getStudentSecurityRoleId();
+        $security_group_id = self::getInstitutionSecurityGroupId($institution_id);
+        Log::write('debug', $institution_id);
+        Log::write('debug', $student_id);
+        Log::write('debug', $security_group_id);
+        //check student already exist
+        $student_security_groups = self::getStudentSecurityGroups($student_id, $student_role_id);
+        Log::write('debug', $student_security_groups);
+        //check that the student is not in other groups
+        if (sizeof($student_security_groups) == 0) {
+            Log::write('debug', $student_id);
+            Log::write('debug', $security_group_id);
+            Log::write('debug', $student_role_id);
+            self::createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
+            return;
+        }
+        //update user's security_group_id in security_group_users table
+        $previous_security_group_id = self::getPreviousSecurityGroupId($institution_id, $student_id);
+        Log::write('debug', $previous_security_group_id);
+        //check that the student is should be transferred
+        if (in_array($previous_security_group_id, $student_security_groups)) {
+            self::makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id);
+            return;
+        }
+        //if he/she is not transferred - create new security group
+        self::createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
+        return;
+    }
+
+    /**
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @param $student_id
+     * @param $security_group_id
+     * @param $previous_security_group_id
+     * @param $student_role_id
+     */
+    private static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
+    {
+        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $securityGroupUsersTbl->updateAll(
+            [
+                'security_group_id' => $security_group_id,
+                'created' => new Time('NOW')
+            ],
+            [
+                'security_group_id' => $previous_security_group_id,
+                'security_user_id' => $student_id,
+                'security_role_id' => $student_role_id
+            ]
+        );
+    }
+
+    /**
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @param $institution_id
+     * @param $student_id
+     * @param $institutionTbl
+     * @return mixed
+     */
+    private static function getPreviousSecurityGroupId($institution_id, $student_id)
+    {
+        $previous_security_group_id = 0;
+        $institutionTbl = TableRegistry::get('institutions');
+        $InstitutionStudentsTbl = TableRegistry::get('institution_students');
+        $TransfersTbl = TableRegistry::get('institution_student_transfers');
+        $StudentTransfers = $InstitutionStudentsTbl
+            ->find()
+            ->select([
+                $InstitutionStudentsTbl->aliasField('student_id'),
+                $TransfersTbl->aliasField('institution_id'),
+                $TransfersTbl->aliasField('previous_institution_id')
+            ])
+            ->leftJoin([$TransfersTbl->alias() => $TransfersTbl->table()],
+                [
+                    $TransfersTbl->aliasField('student_id') . '=' . $student_id,
+                    $TransfersTbl->aliasField('institution_id') => $institution_id
+                ]
+            )
+            ->where([
+                $InstitutionStudentsTbl->aliasField('student_id') => $student_id,
+                $InstitutionStudentsTbl->aliasField('institution_id') => $institution_id,
+                $InstitutionStudentsTbl->aliasField('student_status_id') => 1//for enrolled status
+            ])
+            ->first();
+        if (!empty($StudentTransfers)) {
+            if (!empty($StudentTransfers->institution_student_transfers['previous_institution_id'])) {
+                $PreviousInstitutions = $institutionTbl->find()
+                    ->where([
+                        $institutionTbl->aliasField('id') => $StudentTransfers->institution_student_transfers['previous_institution_id']
+                    ])
+                    ->first();
+                $previous_security_group_id = $PreviousInstitutions->security_group_id;
+            }
+        }
+        return $previous_security_group_id;
+    }
+
+    /**
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @param $student_id
+     * @param $student_role_id
+     * @return array
+     */
+    private static function getStudentSecurityGroups($student_id, $student_role_id)
+    {
+        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $countSecurityGroupStudent = $securityGroupUsersTbl->find('all')
+            ->select('security_group_id')
+            ->where([
+                $securityGroupUsersTbl->aliasField('security_user_id') => $student_id,
+                $securityGroupUsersTbl->aliasField('security_role_id') => $student_role_id
+            ])
+            ->extract('security_group_id')
+            ->toArray();
+        return $countSecurityGroupStudent;
+    }
+
+    /**
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @return int
+     */
+    private static function getStudentSecurityRoleId()
+    {
+        $securityRolesTbl = TableRegistry::get('security_roles');
+        $securityRoles = $securityRolesTbl->find()
+            ->where([
+                $securityRolesTbl->aliasField('code') => 'STUDENT',
+            ])->first();
+        $student_role_id = $securityRoles->id;
+        return $student_role_id;
+    }
+
+    /**
+     * @param $institution_id
+     * @return integer
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getInstitutionSecurityGroupId($institution_id)
+    {
+        $institutionTbl = TableRegistry::get('institutions');
+        $security_group_id = null;
+        $institutions = $institutionTbl->find()
+            ->where([
+                $institutionTbl->aliasField('id') => $institution_id
+            ])->first();
+        if (!empty($institutions)) {
+            $security_group_id = $institutions->security_group_id;
+        }
+        if ($security_group_id != null) {
+            $securityGroupInstitutionsTbl = TableRegistry::get('security_group_institutions');
+            $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
+                ->where([
+                    $securityGroupInstitutionsTbl->aliasField('security_group_id') => $security_group_id,
+                    $securityGroupInstitutionsTbl->aliasField('institution_id') => $institutions->id
+                ])
+                ->first();
+            //save security group for institution
+            if (empty($securityGroupInstitutions)) {
+                $security_group_ins_data = [
+                    'security_group_id' => $security_group_id,
+                    'institution_id' => $institution_id,
+                    'created_user_id' => 1,
+                    'created' => new Time('NOW')
+                ];
+                $securityGroupInstitutionsEntity = $securityGroupInstitutionsTbl->newEntity($security_group_ins_data);
+                $securityGroupInstitutionsTbl->save($securityGroupInstitutionsEntity);
+            }
+        }
+        return $security_group_id;
+    }
+
+    /**
+     * @param $student_id
+     * @param $security_group_id
+     * @param $student_role_id
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id)
+    {
+        $id = Text::uuid();
+        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $security_group_data = [
+            'id' => $id,
+            'security_group_id' => $security_group_id,
+            'security_user_id' => $student_id,
+            'security_role_id' => $student_role_id,
+            'created_user_id' => 1,
+            'created' => new Time('NOW')
+        ];
+        $securityGroupUsersEntity = $securityGroupUsersTbl->newEntity($security_group_data);
+        $newEntity = $securityGroupUsersTbl->save($securityGroupUsersEntity);
+        return $newEntity;
+    }
+
 }
