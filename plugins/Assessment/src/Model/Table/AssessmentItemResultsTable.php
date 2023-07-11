@@ -71,7 +71,13 @@ class AssessmentItemResultsTable extends AppTable
         $institutionId = $entity->institution_id;
         $InstitutionClassId = $entity->institution_classes_id;
         $institutionClass = TableRegistry::get('institution_classes');
-        $findclass = $institutionClass->find()->select(['id' => $institutionClass->aliasField('id')])->where([$institutionClass->aliasField('institution_id') => $institutionId, $institutionClass->aliasField('id') => $InstitutionClassId])->first();
+        $findclass =
+            $institutionClass->find()->select([
+                'id' => $institutionClass->aliasField('id')
+            ])->where([
+                $institutionClass->aliasField('institution_id') => $institutionId,
+                $institutionClass->aliasField('id') => $InstitutionClassId
+            ])->first();
         if ($findclass == null && $findclass['id'] != $InstitutionClassId) {
             $response[] = "No Institution class Id record Exist";
             $entity->errors($response);
@@ -110,14 +116,17 @@ class AssessmentItemResultsTable extends AppTable
                         $id = $previousAssessment->id;
                         $marks = $entity->marks;
                         $institution_classes_id = $entity->institution_classes_id;
+                        $institution_id = $entity->institution_id;
                         $modified_user_id = $entity->created_user_id;
                         $modified = date('Y-m-d H:i:s');
                         $connection = ConnectionManager::get('default');
                         $sql = "UPDATE assessment_item_results SET 
                                    marks=$marks, 
                                    institution_classes_id=$institution_classes_id,
+                                   institution_id=$institution_id,
                                    modified_user_id = $modified_user_id,
-                                   modified = '$modified' where id='$id'";
+                                   modified = '$modified'
+                                   where id='$id'";
                         $connection->execute($sql);
                         $previousAssessment = $assessmentItemResults->find()
                             ->where([
