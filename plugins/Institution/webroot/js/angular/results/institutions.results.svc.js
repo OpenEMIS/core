@@ -463,7 +463,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         };
                     }
 
-                    columnDef = ResultsSvc.renderMarks(allowEdit, columnDef, extra, _results);
+                    columnDef = ResultsSvc.renderMarks(allowEdit, columnDef, extra,period, _results);  //POCOR-7550
                 } else if (isGradesType) {
                     if (subject.grading_type != null) {
                         var gradingOptions = {
@@ -540,7 +540,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             return {data: columnDefs};
         },
 
-        renderMarks: function (allowEdit, cols, extra, _results) {
+        renderMarks: function (allowEdit, cols, extra,period, _results) {  //POCOR-7550 start
             var minMark = extra.minMark;
             var passMark = extra.passMark;
             var maxMark = extra.maxMark;
@@ -571,7 +571,14 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     cellClassRules: {
                         'oe-cell-highlight': function (params) {
                             var studentStatusId = params.data.student_status_id;
-                            return (studentStatusId == enrolledStatus);
+                              //POCOR-7550 start
+                            if(period.editable_student_statuses==0){                               
+                            return studentStatusId == enrolledStatus
+                            }
+                            else{
+                                return 1;
+                            };
+                            //POCOR-7550 end
                         },
                         'oe-cell-error': function (params) {
                             return params.data.save_error[params.colDef.field];
@@ -580,7 +587,14 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     editable: function (params) {
                         // only enrolled student is editable
                         studentStatusId = params.node.data.student_status_id;
-                        return (studentStatusId == enrolledStatus);
+                        //POCOR-7550 start
+                        if(period.editable_student_statuses==0){                               
+                            return studentStatusId == enrolledStatus
+                            }
+                            else{
+                                return 1;
+                            }
+                        //POCOR-7550 end
                     },
                     newValueHandler: function (params) {
                         var valueAsFloat = parseFloat(params.newValue);
@@ -1021,6 +1035,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
         },
 
         getNewRowData: function (options) {
+            // alert("next fun");
             // console.log('handleGetPermissions');
             // console.log(JSON.stringify(options));
             var grading_types = options.grading_types;
