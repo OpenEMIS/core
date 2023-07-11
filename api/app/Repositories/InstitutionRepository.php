@@ -1824,6 +1824,15 @@ class InstitutionRepository extends Controller
         DB::beginTransaction();
         try {
             $param = $request->all();
+            $start_date = Null;
+            if(isset($param['start_date'])){
+                $start_date = date("Y-m-d", strtotime($param['start_date']));
+            }
+
+            $end_date = Null;
+            if(isset($param['end_date'])){
+                $end_date = date("Y-m-d", strtotime($param['end_date']));
+            }
             
             $academicPeriod = AcademicPeriod::where('id', $param['academic_period_id'])->first();
 
@@ -1880,8 +1889,8 @@ class InstitutionRepository extends Controller
 
 
                 $entityTransferData = [
-                    'start_date' => $param['start_date']??null,
-                    'end_date' => $param['end_date']??null,
+                    'start_date' => $start_date??null,
+                    'end_date' => $end_date??null,
                     'requested_date' => null,
                     'student_id' => $param['student_id']??null,
                     'status_id' => $workflows->workflowSteps_id,
@@ -1944,7 +1953,7 @@ class InstitutionRepository extends Controller
                 if($securityUser){
                     $user_record_id = $securityUser->id;
                     if($param['nationality_id'] || $param['nationality_name']){
-                        if($nationality->id){
+                        if(isset($nationality->id)){
                             $checkUserNationality = UserNationalities::where('nationality_id', $nationality->id)->where('security_user_id', $user_record_id)->first();
 
                             if(!$checkUserNationality){
@@ -1960,7 +1969,7 @@ class InstitutionRepository extends Controller
                         }
                     }
 
-                    if($nationality->id && ($param['identity_type_id'] && $param['identity_type_id'] != '') && ($param['identity_number'] && $param['identity_number'] != '')){
+                    if(isset($nationality->id) && ($param['identity_type_id'] && $param['identity_type_id'] != '') && ($param['identity_number'] && $param['identity_number'] != '')){
 
                         $identityTypes = IdentityTypes::where('name', $param['identity_type_name']??"")->first();
 
@@ -1988,9 +1997,9 @@ class InstitutionRepository extends Controller
                             'student_id' => $user_record_id,
                             'education_grade_id' => $param['education_grade_id'],
                             'academic_period_id' => $param['academic_period_id'],
-                            'start_date' => $param['start_date']??null,
+                            'start_date' => $start_date??null,
                             'start_year' => $start_year??null,
-                            'end_date' => $param['end_date']??null,
+                            'end_date' => $end_date??null,
                             'end_year' => $end_year??null,
                             'institution_id' => $param['institution_id'],
                             'created_user_id' => JWTAuth::user()->id,
@@ -2012,8 +2021,8 @@ class InstitutionRepository extends Controller
 
                     if (!empty($param['education_grade_id']) && !empty($param['institution_id']) && !empty($param['academic_period_id']) && !empty($param['institution_class_id']) && !empty($workflows)) {
                         $entityAdmissionData = [
-                            'start_date' => $param['start_date']??null,
-                            'end_date' => $param['end_date']??null,
+                            'start_date' => $start_date??null,
+                            'end_date' => $end_date??null,
                             'student_id' => $user_record_id,
                             'status_id' => $workflows->workflowSteps_id,
                             'assignee_id' => JWTAuth::user()->id, //POCOR7080
@@ -2069,22 +2078,23 @@ class InstitutionRepository extends Controller
 
                         if(count($instClsSubjects) > 0){
                             foreach ($instClsSubjects as $skey => $sval) {
+
                                 $check = InstitutionSubjectStudents::where('student_id', $user_record_id)
                                     ->where('institution_class_id', $param['institution_class_id'])
                                     ->where('academic_period_id', $param['academic_period_id'])
                                     ->where('education_grade_id', $param['education_grade_id'])
                                     ->where('institution_id', $param['institution_id'])
-                                    ->where('education_subject_id', $sval->education_subject_id)
+                                    ->where('education_subject_id', $sval['education_subject_id'])
                                     ->exists();
                                 if(!$check){
                                     $entitySubjectsData = [
                                         'id' => Str::uuid(),
                                         'student_id' => $user_record_id,
-                                        'institution_subject_id' => $sval->institution_subject_id,
+                                        'institution_subject_id' => $sval['institution_subject_id'],
                                         'institution_class_id' => $param['institution_class_id'],
                                         'institution_id' => $param['institution_id'],
                                         'academic_period_id' => $param['academic_period_id'],
-                                        'education_subject_id' => $sval->education_subject_id,
+                                        'education_subject_id' => $sval['education_subject_id'],
                                         'education_grade_id' => $param['education_grade_id'],
                                         'student_status_id' => $studentStatus['CURRENT'],
                                         'created_user_id' => JWTAuth::user()->id,
@@ -2109,14 +2119,14 @@ class InstitutionRepository extends Controller
                         foreach ($param['custom'] as $skey => $sval) {
                             $entityCustomData = [
                                 'id' => Str::uuid(),
-                                'text_value' => $sval['text_value'],
-                                'number_value' => $sval['number_value'],
-                                'decimal_value' => $sval['decimal_value'],
-                                'textarea_value' => $sval['textarea_value'],
-                                'date_value' => $sval['date_value'],
-                                'time_value' => $sval['time_value'],
+                                'text_value' => $sval['text_value']??Null,
+                                'number_value' => $sval['number_value']??Null,
+                                'decimal_value' => $sval['decimal_value']??Null,
+                                'textarea_value' => $sval['textarea_value']??Null,
+                                'date_value' => $sval['date_value']??Null,
+                                'time_value' => $sval['time_value']??Null,
                                 'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
-                                'student_custom_field_id' => $sval['student_custom_field_id'],
+                                'student_custom_field_id' => $sval['student_custom_field_id']??Null,
                                 'student_id' => $user_record_id,
                                 'created_user_id' => JWTAuth::user()->id,
                                 'created' => Carbon::now()->toDateTimeString()
