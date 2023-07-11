@@ -892,7 +892,6 @@ class InstitutionController extends Controller
             }
             
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to store student data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
