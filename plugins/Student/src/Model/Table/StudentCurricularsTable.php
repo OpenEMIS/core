@@ -84,6 +84,8 @@ class StudentCurricularsTable extends ControllerActionTable
             }
 
         $this->field('student_id', ['visible' => false]);
+        $this->field('student_name', ['visible' => true]);
+        $this->field('openemis_no', ['visible' => true]);
         $this->field('institution_curricular_id', ['visible' => true]);
         $this->field('curricular_position_id', ['visible' => true]);
         $this->field('start_date', ['visible' => true]);
@@ -94,18 +96,51 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->field('comments', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => true]);
         $this->field('type', ['visible' => ['index'=>true,'view' => true,'edit' => false,'add'=>false]]);
+        $this->field('curricular_type', ['visible' => ['index'=>true,'view' => true,'edit' => false,'add'=>false]]);
         $this->field('category',  ['visible' => ['index'=>false,'view' => true,'edit' => false,'add'=>false]]);
 
         $this->field('education_grade', ['visible' => true]);
         $this->field('institution_class', ['visible' => true]);
         $this->field('curricular_category', ['visible' => true]);
         $this->setFieldOrder([
-        'academic_period_id','education_grade','institution_class', 'curricular_category','institution_curricular_id','type', 'curricular_position_id','start_date','end_date']);
+        'academic_period_id','student_name','openemis_no','education_grade','institution_class', 'curricular_category','curricular_type','institution_curricular_id', 'curricular_position_id','start_date','end_date']);
         if ($this->controller->name == 'Profiles') {
             unset($settings['indexButtons']['view']);
         }
 
 	}
+
+    public function onGetCurricularType(Event $event, Entity $entity)
+    {  
+        if($entity->type != ''){
+            return $entity->type;
+        }else{
+            $ic_id = $entity->institution_curricular_id;
+            $connection = ConnectionManager::get('default');
+            $ctype_rec = $connection->query("SELECT institution_curriculars.curricular_type_id,curricular_types.name  FROM institution_curriculars LEFT JOIN curricular_types ON curricular_types.id=institution_curriculars.curricular_type_id WHERE institution_curriculars.id=".$ic_id);
+            $ctype_data = $ctype_rec->fetch();
+            return (!empty( $ctype_data)) ?  $ctype_data[1] : '--';   
+        }
+    }
+    public function onGetOpenemisNo(Event $event, Entity $entity)
+    {    
+        $session = $this->request->session();
+        $sId = $session->read('Student.Students.id');
+        $connection = ConnectionManager::get('default');
+        $student_rec = $connection->query("SELECT openemis_no FROM security_users WHERE security_users.id=".$sId);
+        $student_data = $student_rec->fetch();
+        return (!empty( $student_data)) ?  $student_data[0] : '--';
+    }
+    public function onGetStudentName(Event $event, Entity $entity)
+    {    
+        $session = $this->request->session();
+        $sId = $session->read('Student.Students.id');
+        $connection = ConnectionManager::get('default');
+        $student_rec = $connection->query("SELECT first_name,last_name FROM security_users WHERE security_users.id=".$sId);
+        $student_data = $student_rec->fetch();
+        return (!empty( $student_data)) ?  $student_data[0].' '.$student_data[1] : '--';
+    }
+
 
     public function onGetEducationGrade(Event $event, Entity $entity)
     {    
@@ -176,12 +211,13 @@ class StudentCurricularsTable extends ControllerActionTable
     {
         
         $this->field('academic_period_id', ['visible' => true]);
-        // $this->field('category', ['visible' => true]);
+        $this->field('category', ['visible' => true]);
         $this->field('education_grade', ['visible' => true]);
         $this->field('institution_class', ['visible' => true]);
         $this->field('student_id', ['visible' => true]);
         $this->field('curricular_category', ['visible' => true]);
-        $this->field('type', ['visible' => true]);
+        $this->field('institution_curricular_id', ['visible' => true]);
+        $this->field('curricular_type', ['visible' => true]);
 
         $this->field('curricular_position_id', ['visible' => true]);
     }

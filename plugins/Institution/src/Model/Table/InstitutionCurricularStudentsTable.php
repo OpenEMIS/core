@@ -178,7 +178,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $query = $this->request->query;
         $this->field('academic_period_id', ['visible' => true]);
         $this->field('student_id', ['visible' => false]);
-        $this->field('student_name', ['visible' => true]);
+        $this->field('student_name', ['visible' => false]);
         $this->field('curricular_category', ['visible' => true]);
         $this->field('curricular_position_id', ['visible' => true]);
         $this->field('type', ['visible' => ['index'=>true,'view' => true,'edit' => false,'add'=>false]]);
@@ -195,7 +195,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $this->field('openemis_no', ['visible' => ['index'=>false,'view' => false]]);
         
         $this->setFieldOrder([
-        'academic_period_id','student_name', 'openemis_no','education_grade','institution_class', 'institution_curricular_id', 'curricular_position_id']);
+        'academic_period_id','education_grade','institution_class','curricular_category', 'institution_curricular_id', 'openemis_no', 'curricular_position_id']);
                
     }
 
@@ -380,15 +380,32 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     }
 
+    public function onGetCurricularType(Event $event, Entity $entity)
+    {  
+        if($entity->type != ''){
+            return $entity->type;
+        }else{
+            $ic_id = $entity->institution_curricular_id;
+            $connection = ConnectionManager::get('default');
+            $ctype_rec = $connection->query("SELECT institution_curriculars.curricular_type_id,curricular_types.name  FROM institution_curriculars LEFT JOIN curricular_types ON curricular_types.id=institution_curriculars.curricular_type_id WHERE institution_curriculars.id=".$ic_id);
+            $ctype_data = $ctype_rec->fetch();
+            return (!empty( $ctype_data)) ?  $ctype_data[1] : '--';   
+        }
+    }
+
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['visible' => true]);
+        $this->field('student_id', ['visible' => false]);
+        $this->field('student_name', ['visible' => true]);
+        $this->field('openemis_no', ['visible' => true]);
         $this->field('education_grade', ['visible' => true]);
         $this->field('institution_class', ['visible' => true]);
         $this->field('curricular_category', ['visible' => true]);
         // $this->field('curricular_type_id', ['visible' => true]);
-        $this->field('type', ['visible' => true]);
-        $this->field('openemis_no', ['visible' => true]);
+        $this->field('curricular_type', ['visible' => true]);
+        $this->field('institution_curricular_id', ['visible' => true]);
+        $this->field('curricular_position_id', ['visible' => true]);
     }
 
     public function onGetCategory(Event $event, Entity $entity)
