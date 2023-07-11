@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Http\Controllers\Controller;
+use App\Models\Gender;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -70,6 +71,24 @@ class UserRepository extends Controller
             );
 
             return $this->sendErrorResponse('Users Data Not Found');
+        }
+    }
+
+    public function getUsersGender($request)
+    {
+        try {
+            
+            $usersGender = Gender::get();
+            
+            return $usersGender;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Users Gender list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Users Gender Data Not Found');
         }
     }
 }

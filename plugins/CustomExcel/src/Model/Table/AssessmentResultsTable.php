@@ -162,6 +162,8 @@ class AssessmentResultsTable extends AppTable
 
     public function onExcelTemplateInitialiseAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
     {
+        $this->log('onExcelTemplateInitialiseAssessmentItemResults', 'debug');
+        $this->log($params, 'debug');
         if (array_key_exists('class_id', $params) && array_key_exists('assessment_id', $params) && array_key_exists('institution_id', $params)) {
             $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
             $results = $AssessmentItemResults->find()
@@ -459,7 +461,11 @@ class AssessmentResultsTable extends AppTable
 
     public function onExcelTemplateInitialiseGroupAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('class_id', $params) && array_key_exists('assessment_id', $params) && array_key_exists('institution_id', $params)) {
+        $this->log('onExcelTemplateInitialiseGroupAssessmentItemResults', 'debug');
+        $this->log($params, 'debug');
+        if (array_key_exists('class_id', $params)
+            && array_key_exists('assessment_id', $params)
+            && array_key_exists('institution_id', $params)) {
             $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
             $AssessmentGradingOptions = TableRegistry::get('Assessment.AssessmentGradingOptions');
             $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
@@ -474,6 +480,7 @@ class AssessmentResultsTable extends AppTable
                 $AssessmentItemResults->aliasField('education_grade_id') => $params['grade_id']
             ])
             ->group([$AssessmentItemResults->aliasField('assessment_period_id')]);
+
             //With Term
             $withTerm = $AssessmentItemResults->find()
                 ->select([
@@ -502,8 +509,9 @@ class AssessmentResultsTable extends AppTable
                     [
                         $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
                         $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id'),
-                        $this->aliasField('institution_class_id = ') . $AssessmentItemResults->aliasField('institution_classes_id'), //POCOR-7201
-                        $this->aliasField('institution_class_id') => $params['class_id']
+//                        $this->aliasField('institution_class_id = ') . $AssessmentItemResults->aliasField('institution_classes_id'), //POCOR-7201
+//                        $this->aliasField('institution_class_id') => $params['class_id']
+                    //quick fix for POCOR-7536-KHINDOL
                     ]
                 )
                 ->leftJoin(
@@ -525,7 +533,7 @@ class AssessmentResultsTable extends AppTable
                     $AssessmentItemResults->aliasField('assessment_period_id'),
                     'subject_classification',
                     'academic_term_value'
-                ])
+                ]) // here should be added orderby created/modified desk
                 ->hydrate(false)
                 ->toArray();
 
@@ -632,7 +640,7 @@ class AssessmentResultsTable extends AppTable
                         [
                             $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
                             $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id'),
-                            $this->aliasField('institution_class_id') => $params['class_id']
+//                            $this->aliasField('institution_class_id') => $params['class_id']
                         ]
                     )
                     ->leftJoin(
@@ -782,7 +790,8 @@ class AssessmentResultsTable extends AppTable
                 $studentId = $record['student_id'];
                 $subjectClassification = Inflector::slug($record['subject_classification']);
                 $academicTermTotalWeightedMarks = $record['academic_term_total_weighted_marks'];
-                if (array_key_exists($studentId, $averageStudentSubjectResults) && array_key_exists($subjectClassification, $averageStudentSubjectResults[$studentId])) {
+                if (array_key_exists($studentId, $averageStudentSubjectResults)
+                    && array_key_exists($subjectClassification, $averageStudentSubjectResults[$studentId])) {
                     $averageStudentSubjectResults[$studentId][$subjectClassification]['group_academic_term_total_weighted_marks'] += $academicTermTotalWeightedMarks;
                 } else {
                     $averageStudentSubjectResults[$studentId][$subjectClassification] = [
@@ -813,13 +822,18 @@ class AssessmentResultsTable extends AppTable
             }
             
             // $studentSubjectResults = array_merge($withoutTerm->toArray(), $withTerm->toArray(), $averageRecords);
+            $this->log($withoutTerm, 'debug');
+            $this->log($withTerm, 'debug');
+            $this->log($averageRecords, 'debug');
             $studentSubjectResults = array_merge($withoutTerm, $withTerm, $averageRecords);
             return $studentSubjectResults;
         }
     }
 
     public function onExcelTemplateInitialiseClassStudents(Event $event, array $params, ArrayObject $extra)
-    { 
+    {
+        $this->log('onExcelTemplateInitialiseClassStudents', 'debug');
+        $this->log($params, 'debug');
         $where = [];
         $ids = [];
         if ($params['students'] != 0) {

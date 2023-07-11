@@ -10,6 +10,7 @@ use Cake\Validation\Validator;
 use PHPExcel_Worksheet;
 
 use App\Model\Table\AppTable;
+use Cake\Datasource\ConnectionManager;
 
 class ImportOutcomeResultsTable extends AppTable
 {
@@ -119,10 +120,11 @@ class ImportOutcomeResultsTable extends AppTable
     public function onUpdateFieldEducationSubject(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            
+            $academicPeriodId = $request->data[$this->alias()]['academic_period'];
             $conditions = [];
             if (!empty($request->data[$this->alias()]['academic_period']) && !empty($request->data[$this->alias()]['outcome_template'])) {
-                $conditions[] = [
+                $conditions[] = 
+                [
                     $this->OutcomeCriterias->aliasField('academic_period_id') => $request->data[$this->alias()]['academic_period'],
                     $this->OutcomeCriterias->aliasField('outcome_template_id') => $request->data[$this->alias()]['outcome_template']
                 ];
@@ -146,14 +148,13 @@ class ImportOutcomeResultsTable extends AppTable
                 })
                 ->innerJoin([$OutcomeCriterias->alias() => $OutcomeCriterias->table()], [
                              $OutcomeCriterias->aliasField('education_grade_id = ') . $InstitutionSubjects->aliasField('education_grade_id'),
-                             $OutcomeCriterias->aliasField('education_subject_id = ') . $InstitutionSubjects->aliasField('education_subject_id')
+                             $OutcomeCriterias->aliasField('education_subject_id = ') . $InstitutionSubjects->aliasField('education_subject_id'),
+
                             ])
-                ->where($conditions)
+                ->where($conditions)//POCOR-7506
                 ->group([
                     'EducationSubjects.id',
-                ])
-                ->toArray();
-
+                ])->toArray();
                 $attr['options'] = $allowedEducationSubjectList;
                 // useing onChangeReload to do visible
                 $attr['onChangeReload'] = 'changeEducationGrade';
@@ -174,6 +175,111 @@ class ImportOutcomeResultsTable extends AppTable
     }
 
     public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $academicPeriodId = !is_null($request->data('ImportOutcomeResults')['academic_period']) ? $request->data('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
+            $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
+
+            $userId = $this->Auth->user('id');
+            $AccessControl = $this->AccessControl;
+            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $roles = $Institutions->getInstitutionRoles($userId, $institutionId);
+            $query = $InstitutionClasses->find();
+            if (!$AccessControl->isAdmin()) {
+                if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles) && !$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles))
+                 {
+                    $classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
+                    $subjectPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
+                    if (!$classPermission && !$subjectPermission) {
+                        $query->where(['1 = 0'], [], true);
+                    } else {
+                        //POCOR-7506 start
+                        $connection = ConnectionManager::get('default');
+                        $statement = $connection->prepare("SELECT subq.institution_classes_id
+                                            ,subq.institution_classes_name
+                                        FROM 
+                                        (  
+                                            SELECT institution_classes.id institution_classes_id
+                                                ,institution_classes.name institution_classes_name
+                                            FROM institution_classes
+                                            WHERE institution_classes.academic_period_id = $academicPeriodId
+                                            AND institution_classes.staff_id = $userId
+                                            AND institution_classes.institution_id = $institutionId
+
+                                            UNION ALL
+
+                                            SELECT class_info.institution_classes_id
+                                                ,class_info.institution_classes_name
+                                            FROM institution_classes_secondary_staff
+                                            INNER JOIN 
+                                            (
+                                                SELECT institution_classes.id institution_classes_id
+                                                    ,institution_classes.name institution_classes_name
+                                                FROM institution_classes
+                                                WHERE institution_classes.academic_period_id = $academicPeriodId
+                                                AND institution_classes.institution_id = $institutionId   
+                                            ) class_info
+                                            ON class_info.institution_classes_id = institution_classes_secondary_staff.institution_class_id
+                                            WHERE institution_classes_secondary_staff.secondary_staff_id = $userId
+
+                                            UNION ALL 
+
+                                            SELECT subject_info.institution_classes_id
+                                                ,subject_info.institution_classes_name
+                                            FROM institution_subject_staff
+                                            INNER JOIN 
+                                            (
+                                                SELECT institution_subjects.id institution_subject_id
+                                                    ,institution_classes.id institution_classes_id
+                                                    ,institution_classes.name institution_classes_name
+                                                FROM institution_subjects
+                                                INNER JOIN institution_class_subjects
+                                                ON institution_class_subjects.institution_subject_id = institution_subjects.id
+                                                INNER JOIN institution_classes
+                                                ON institution_classes.id = institution_class_subjects.institution_class_id
+                                                WHERE institution_subjects.academic_period_id = $academicPeriodId  
+                                                AND institution_classes.institution_id = $institutionId
+                                            ) subject_info
+                                            ON subject_info.institution_subject_id = institution_subject_staff.institution_subject_id
+                                            WHERE institution_subject_staff.staff_id = $userId
+                                        ) subq
+
+                                            ");
+                        $statement->execute();
+                        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+                        $classlist = [];
+                        if(!empty($result)){
+                           foreach($result as $val){
+                            $classlist[$val['institution_classes_id']] = $val['institution_classes_name'];
+                           }
+                        }
+                        $attr['options'] = $classlist;
+                        $attr['onChangeReload'] = 'changeClass';
+                    }
+                    //POCOR-7506 end
+                }
+         
+            }else{    
+                $classOptions = $query
+                ->find('list')
+                ->where([
+                    $InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId,
+                    $InstitutionClasses->aliasField('institution_id') => $institutionId])
+                ->group([
+                    $InstitutionClasses->aliasField('id')
+                ])
+                ->toArray();
+                $attr['options'] = $classOptions;
+                $attr['onChangeReload'] = 'changeClass';
+            }
+        }
+
+        return $attr;
+    }
+
+
+    public function onUpdateFieldClassBkp(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
             $academicPeriodId = !is_null($request->data('ImportOutcomeResults')['academic_period']) ? $request->data('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
@@ -207,6 +313,7 @@ class ImportOutcomeResultsTable extends AppTable
                                     ]
                                 ]);
                         } else {
+
                             $query
                                 ->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
                                     'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id',
@@ -222,9 +329,11 @@ class ImportOutcomeResultsTable extends AppTable
                                     'OR' => [
                                         ['InstitutionClasses.staff_id' => $userId],
                                         ['ClassesSecondaryStaff.secondary_staff_id' => $userId],
-                                        ['InstitutionSubjectStaff.staff_id' => $userId]
+                                        ['InstitutionSubjectStaff.staff_id' => $userId],
+                                        ['InstitutionSubjectStaff.institution_id' => $institutionId] //POCOR-7506
                                     ]
                                 ]);
+
                             }
                             // If only subject permission is available
                             else {
@@ -244,7 +353,6 @@ class ImportOutcomeResultsTable extends AppTable
                     $InstitutionClasses->aliasField('id')
                 ])
                 ->toArray();
-
                 $attr['options'] = $classOptions;
                 // useing onChangeReload to do visible
                 $attr['onChangeReload'] = 'changeClass';

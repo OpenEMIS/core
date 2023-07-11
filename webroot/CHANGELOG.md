@@ -1,3 +1,63 @@
+### [3.89.1] - 2023-07-11
+- Bug Fixed: Institutions > Students > Undo: Changes to Behaviour for WIthdraw and Transfer for Pending Cancellation
+- Bug Fixed: Institutions > Performance > Outcomes > Import page: The user is not seeing any option to import outcomes
+- Bug Fixed: Institutions>Performance>Assessments/Students > Academic > Assessments: Page is not showing latest assessment marks
+- Bug Fixed: Institutions> Students > Profiles: Profile view permission is not working
+- Bug Fixed: Administrations > System Setup > System Configurations > Student Settings : Allow users to enroll students to multiple institutions for import
+
+### [3.89.0] - 2023-07-07
+- Implemented: 2.16 Reports > Student Case Report
+- Implemented: Develop a function to copy Institution > Performance > Competencies from one academic period to another
+- Implemented: 2.11 Add workflow for staff behavior
+- Implemented: Changes to the Meals feature
+- Implemented: Add the Counselling feature to the Directory module
+- Implemented: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 1
+- Implemented: Rename "External Data Source" to "External Data Source - Identity"
+- Implemented: Develop permissions to allow the License and Qualifications tabs under the Professional menu for all users
+- Implemented: Develop changes to the Communication Alerts and Alert Rules pages
+- Bug Fixed: Directory>Students: User is unable to delete students
+- Bug Fixed: Administration: Student and teacher user can access other administration module page when there is no permission enabled
+- Bug Fixed: Reports > Students > Special Needs : Changes to Special Needs report
+- Bug Fixed: Institutions>Student>Academic>Curriculars: Side menu is hidden
+- Bug Fixed: Institutions > General > Shifts: Shifts for the new academic period are not showing:
+- Bug Fixed: Institution > Student > Academic > Behaviour: User is not able to see behaviour page
+- Bug Fixed: Administration > Security > Roles: Permission is given to access the tab Administration > Performance > Assessments however user is not seeing the Assessments tab
+
+### [3.88.0] - 2023-06-28
+- Implemented: Convert language proficiency to field options
+- Implemented: Develop changes to the student behaviour page
+- Implemented: Develop an API to delete student attendance
+- Implemented: Rename Associations to Houses
+- Implemented: Develop "External Data Source - Exams" page
+- Bug Fixed: Institutions > Students > Special Needs : Issues on Special needs feature
+- Bug Fixed: Report>Institutions>Student Absences: Add type, education grade, report start date and report end date filters
+- Bug Fixed: PHP fatal error: Out of memory allocation
+- Bug Fixed: Institution > Student > Academic > Behaviour: User is not able to see behaviour page
+- Bug Fixed: Reports > Staff: Staff Positions Report: Report is stuck in progress
+- Bug Fixed: Institutions > Academic > Subjects > Add page: When education subject is set to NO, student that was once withdrawn or transferred from the current Institution and was enrolled back
+- Bug Fixed: Institutions>Students>Academic: Hide extracurricular tab
+- Bug Fixed: Institutions>Performance>Assessments: 404 error when clicking the assessment tab
+- Bug Fixed: Institutions > Performances > Report Cards : System should update error status of both institution_student_report_cards and report_card_processes tables
+- Bug Fixed: Reports > Institutions: Institutions: Staff is stuck in progress
+- Bug Fixed: Institutions>Survey>Forms: The view page does not match the Filter tab page
+- Bug Fixed: Institutions>Survey>Forms: The survey created should be showing
+
+### [3.87.4] - 2023-06-23
+- Bug Fixed: Administration/Reports: Users are able to see Administration and Report module even when they have no permissions
+- Bug Fixed: Administration: Student and teacher user can access administration module page when there is no permission enabled
+- Bug Fixed: Institutions > Performances > Assessments : Subject teachers are unable to see/edit their subjects
+- Bug Fixed: Institutions>Performance>Assessments: Admin/demo is unable to edit even it has superadmin permission
+- Bug Fixed: Institutions>Performance>Assessments: Homeroom teacher is unable to edit assessment
+
+### [3.87.3] - 2023-06-21
+- Bug Fixed: Institutions > Performances > Report Cards : System should update status of both institution_student_report_cards and report_card_processes tables
+- Bug Fixed: Institutions>Performance>Assessments: When user changes term in the filter, assessment periods and subjects are not filtered
+- Bug Fixed: API: Institution API is not showing some fields
+- Bug Fixed: Administration>System Setup>API: Student user can access api securities page
+
+### [3.87.2] - 2023-06-20
+- Bug Fixed: Institutions>Performance>Report Cards: Report Card page is not loading or very slow
+
 ### [3.87.1] - 2023-06-19
 - Implemented: Develop a mechanism for past assessment period grades to be modified and to regenerate impacted report cards
 - Implemented: Develop client id UI for all OpenEMIS Core APIs v4
