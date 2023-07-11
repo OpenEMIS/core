@@ -93,6 +93,8 @@ class AssessmentItemResultsTable extends AppTable
                 return false;
             } else {
                 if ($entity->isNew()) {
+                    //POCOR-7536-KHINDOL
+                    //AS the ID is not the KEY do shadow save and delete new entity
                     $assessmentItemResults = TableRegistry::get('assessment_item_results');
                     $previousAssessment = $assessmentItemResults->find()
                         ->where([
@@ -124,12 +126,12 @@ class AssessmentItemResultsTable extends AppTable
                             ->first();
                         //POCOR-7536-KHINDOL
                         $this->getAssessmentGrading($previousAssessment);
-                        $this->log('saved_old_entity', 'debug');
-                        $this->log($entity, 'debug');
+//                        $this->log('saved_old_entity', 'debug');
+//                        $this->log($entity, 'debug');
                         $event->stopPropagation();
                     } else {
-                        $this->log('created_new_entity', 'debug');
-                        $this->log($entity, 'debug');
+//                        $this->log('created_new_entity', 'debug');
+//                        $this->log($entity, 'debug');
                         $entity->id = Text::uuid();
                     }
                 }
