@@ -9,6 +9,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
+use Cake\Datasource\ConnectionManager;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -124,7 +125,8 @@ class CurrentAssessmentsTable extends ControllerActionTable
                 : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
-        $where[$this->aliasField('institution_id')] = $institutionId;  // POCOR-7201
+//        $where[$this->aliasField('institution_id')] = $institutionId;  // POCOR-7201
+        // removed for the quickfix POCOR-7536-KHINDOL
         //End
         //Assessment Period filter
         if (!empty($selectedAcademicPeriod)) {
@@ -311,20 +313,28 @@ class CurrentAssessmentsTable extends ControllerActionTable
         $is_archive_exists = false;
         $institutionId = $this->institutionId;
         $studentId = $this->studentId;
-        $AssessmentItemResultsArchived = TableRegistry::get('Institution.AssessmentItemResultsArchived');
-        $count = $AssessmentItemResultsArchived->find()
-//            ->distinct([$AssessmentItemResultsArchived->aliasField('student_id')])// POCOR-7339-HINDOL
-            ->select([$AssessmentItemResultsArchived->aliasField('student_id')])// POCOR-7339-HINDOL
-            ->where([
-                $AssessmentItemResultsArchived->aliasField('institution_id') => $institutionId,
-                $AssessmentItemResultsArchived->aliasField('student_id') => $studentId,
-            ])->first();
-        if($count) {
-            $is_archive_exists = true;
+        //POCOR-7526::Start
+        $connection = ConnectionManager::get('default');
+        $getArchiveData = $connection->query("SHOW TABLES LIKE 'assessment_item_results_archived' ");
+        $archiveDataArr = $getArchiveData->fetch();
+        if(!empty($archiveDataArr))
+        {
+            $AssessmentItemResultsArchived = TableRegistry::get('Institution.AssessmentItemResultsArchived');
+            $count = $AssessmentItemResultsArchived->find()
+    //            ->distinct([$AssessmentItemResultsArchived->aliasField('student_id')])// POCOR-7339-HINDOL
+                ->select([$AssessmentItemResultsArchived->aliasField('student_id')])// POCOR-7339-HINDOL
+                ->where([
+                    $AssessmentItemResultsArchived->aliasField('institution_id') => $institutionId,
+                    $AssessmentItemResultsArchived->aliasField('student_id') => $studentId,
+                ])->first();
+            if($count) {
+                $is_archive_exists = true;
+            }
+            if(!$count) {
+                $is_archive_exists = false;
+            }
         }
-        if(!$count) {
-            $is_archive_exists = false;
-        }
+        //POCOR-7526::End
         return $is_archive_exists;
     }
 

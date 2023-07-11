@@ -48,4 +48,22 @@ class UserController extends Controller
             return $this->sendErrorResponse('Users Data Not Found');
         }
     }
+
+    //Day 2
+
+    public function getUsersGender(Request $request)
+    {
+        try {
+            $data = $this->userService->getUsersGender($request);
+            return $this->sendSuccessResponse("Users Gender List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Users Gender List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Users Gender List Not Found');
+        }
+    }
 }
