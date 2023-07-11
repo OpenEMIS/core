@@ -332,6 +332,7 @@ class AppController extends Controller
     }
 
     public function getIdBySecurityFunctionName($actionParam, $controllerParam){
+        //print_r($controllerParam);die;
         $name = '';
         if($controllerParam == 'Securities'){
             if($actionParam == 'Users'){
@@ -455,6 +456,10 @@ class AppController extends Controller
             }else if($actionParam == 'Status'){
                 $name = 'Status';  
             }else if($actionParam == 'Rules'){
+                $name = 'Rules';  
+            }else if($actionParam == 'Filters'){
+                $name = 'Rules';  
+            }else if($actionParam == 'Recipients'){
                 $name = 'Rules';  
             }
         }else if($controllerParam == 'Rubrics'){
@@ -640,6 +645,13 @@ class AppController extends Controller
         }else if($controllerParam == 'Archives'){
             if($actionParam == 'add' || $actionParam == 'index' || $actionParam == 'view' || $actionParam == 'edit' ||  $actionParam == 'delete'){
                 $name = 'Archive';
+            }
+            if($actionParam == 'CopyData'){
+                $name = 'CopyData';
+            }else if($actionParam == 'BackupLog'){
+                 $name = 'BackupLog';
+            }else if($actionParam == 'Transfer'){
+                 $name = 'Transfer';
             }
         }
         $module = 'Administration';
