@@ -14,7 +14,8 @@ class POCOR7462 extends AbstractMigration
             'name' => 'Cases',
             'process_name' => 'AlertCases',
             'created_user_id' => 1,
-            'created' => $today
+            'created' => $today,
+            'frequency'=>'Daily'
         ];
 
         $this->insert('alerts', $alertData);
