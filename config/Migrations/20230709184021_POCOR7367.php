@@ -75,6 +75,5 @@ class POCOR7367 extends AbstractMigration
         $this->execute('RENAME TABLE `zz_7367_absence_types` TO `absence_types`');
 
         $this->execute('DROP TABLE IF EXISTS `institution_case_links`');
-        $this->execute('RENAME TABLE `zz_7367_institution_case_links` TO `institution_case_links`');
     }
 }
