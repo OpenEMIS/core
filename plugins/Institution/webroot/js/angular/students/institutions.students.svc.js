@@ -43,6 +43,9 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
         getAddNewStudentConfig: getAddNewStudentConfig,
+        //start POCOR-6172-HINDOL
+        getMultipleInstitutionsStudentEnrollmentConfig: getMultipleInstitutionsStudentEnrollmentConfig,
+        //end POCOR-6172-HINDOL
         getUserContactTypes: getUserContactTypes,
         getIdentityTypes: getIdentityTypes,
         getIdentityTypesExternalSave: getIdentityTypesExternalSave,
@@ -1016,6 +1019,15 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
             .ajax({defer: true});
     }
 
+    //POCOR-6172-HINDOL[START]
+    function getMultipleInstitutionsStudentEnrollmentConfig() {
+        return ConfigItems
+            .select()
+            .where({code: 'multiple_institutions_student_enrollment'})
+            .ajax({defer: true});
+    }
+    //POCOR-6172-HINDOL[END]
+
     function getUserContactTypes() {
         return ContactTypes
             .select()
@@ -1093,7 +1105,6 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
      * If staff exist then user_exist will be 1 otherwise 0 & show the message as warning
      * @required {identity_type_id} identity_type_id
      * @required {identity_number} identity_number
-     * @required {nationality_id} nationality_id
      * @returns {[{"user_exist":1,"status_code":2,"message":"User already exist with this nationality, identity type & identity type. Kindly select user from below list."}]}
      */
     function checkUserAlreadyExistByIdentity(params)

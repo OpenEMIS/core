@@ -42,7 +42,8 @@ class MealProgrammesTable extends ControllerActionTable
             'through' => 'Meal.MealNutritionalRecords',
             'dependent' => true
         ]);
-
+       $this->hasMany('MealFoodRecords', ['className' => 'Meal.MealFoodRecords', 'foreignKey' => 'meal_programmes_id']); //POCOR-7363
+        
         // $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         // $this->addBehavior('Area.Areapicker');
         // $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -81,6 +82,7 @@ class MealProgrammesTable extends ControllerActionTable
         $this->field('end_date');
         $this->field('amount');
         $this->field('meal_nutritions',['visible' => false]);
+        $this->field('food_type_id',['visible' => false]);//POCOR-7363
         $this->field('implementer',['visible' => false]);
 
         // Start POCOR-5188
@@ -216,12 +218,33 @@ class MealProgrammesTable extends ControllerActionTable
             }
         }
         //END : POCOR-6608
+        //POCOR-7363 start
+        $MealFoodRecordsTable = TableRegistry::get('meal_food_records');
+        if($this->request->params['pass'][0] == 'edit'){
+            $MealFoodData = $MealFoodRecordsTable->find()->where(['meal_programmes_id'=>$record_id])->toArray();
+            foreach($MealFoodData as $MealFoodDataEntity){
+                $deleteEntity = $MealFoodRecordsTable->delete($MealFoodDataEntity);
+            }
+        }
+        foreach($entity->food_type_id['_ids'] as $one){
+            $MealFoodRecordsEntity = [
+                'meal_programmes_id' => $record_id,
+                'food_type_id'=> $one
+            ];
+            $MealFood = $MealFoodRecordsTable->newEntity($MealFoodRecordsEntity);
+            if($MealFoodResult =  $MealFoodRecordsTable ->save($MealFood)){
+               
+            }
+        }
+         //POCOR-7363 end
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $typeOptions = $this->MealNutritions->find('list')->toArray();
         $institutionsOptions = $this->Institutions->find('list')->toArray();
+        $foodTable= TableRegistry::get('food_types');//POCOR_7363
+        $foodTypeOptions = $foodTable->find('list')->toArray();//POCOR-7363
         // $AreaLevelsOptions = $this->AreaLevels->find('list')->toArray(); //POCOR-6920
         $this->field('academic_period_id',['select' => false]);
         $this->field('code');
@@ -247,7 +270,15 @@ class MealProgrammesTable extends ControllerActionTable
             ],
             'options' => $typeOptions
         ]);
-
+        //POCOR-7363 start
+        $this->field('food_type_id', [
+            'type' => 'chosenSelect',
+            'attr' => [
+                'label' => __('Food Type')
+            ],
+            'options' =>  $foodTypeOptions
+        ]);
+          //POCOR-7363 end
         $this->field('implementer');
         // $this->field('institution_id', [
         //     'attr' => [
@@ -358,9 +389,24 @@ class MealProgrammesTable extends ControllerActionTable
         }
         return $attr;
     }
-
+    
      public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+       //POCOR-7363 start
+        $query->contain(['MealFoodRecords']);
+         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $arr =[];
+                foreach($row->meal_food_records as $key=> $food){
+                    $arr[$key] = ['id'=>$food['food_type_id']];
+                }
+                $row['food_type_id'] = $arr;
+                
+                return $row;
+            });
+        });
+     
+        //POCOR-7363 end
         $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
         $MealsProgrammeId = $this->paramsDecode($this->request->params['pass'][1]);
         $MealInstitutionProgrammesData = $MealInstitutionProgrammes
@@ -574,7 +620,16 @@ class MealProgrammesTable extends ControllerActionTable
             ],
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
         ]);
-
+        //POCOR-7363 start
+        $this->field('food_type_id', [
+            'type' => 'chosenSelect',
+            'attr' => [
+                'label' => __('Food Type')
+            ],
+            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+            
+        ]);
+        //POCOR-7363 end
         $this->field('implementer');
      
     }
@@ -1302,5 +1357,35 @@ class MealProgrammesTable extends ControllerActionTable
                 $MealInstitutionProgrammes->delete($Programmes);
             }
         }
+        //POCOR-7363 start
+        $MealFoodTable = TableRegistry::get('meal_food_records');
+        $MealFoodRecords =  $MealFoodTable 
+                ->find('all')->select(['id'])
+                ->where([
+                    $MealFoodTable->aliasField('meal_programmes_id') => $entity->id
+                ])->toArray();
+        if(!empty($MealFoodRecords)){
+            foreach ($MealFoodRecords as $key => $mealFood) { 
+                $MealFoodTable->delete($mealFood);
+            }
+        }
     }
+    public function onGetFoodTypeId(Event $event, Entity $entity)
+    {
+        $table=TableRegistry::get('food_types');
+        $obj = [];
+        if ($entity->has('food_type_id')) {
+           
+            foreach ($entity->food_type_id as $role) {
+               $res= $table->find('list')->where(['id'=>$role['id']])->first();
+               $obj[] = $res;
+            }
+        }
+          
+        $values = !empty($obj) ? implode(', ', $obj) : __('No Excluded Security Roles ');
+        return $values;
+       
+    }
+    //POCOR-7363 end
+
 }

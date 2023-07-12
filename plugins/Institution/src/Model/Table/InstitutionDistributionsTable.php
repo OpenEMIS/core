@@ -32,7 +32,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
         $this->belongsTo('MealProgrammes', ['className' => 'Meal.MealProgrammes','foreignKey' => 'meal_programmes_id']);
         $this->belongsTo('MealStatus', ['className' => 'Meal.MealStatusTypes','foreignKey' => 'delivery_status_id']);
-
+        $this->belongsTo('MealRatings', ['className' => 'Meal.MealRatings', 'foreignKey' => 'meal_rating_id']);//POCOR-7363
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
 
         $this->MealProgrammes = TableRegistry::get('Meal.MealProgrammes');
@@ -131,6 +131,9 @@ class InstitutionDistributionsTable extends ControllerActionTable
         switch ($field) {
             case 'date_received':
                 return __('Date');
+            //POCOR-7363
+            case 'meal_rating_id':
+                return __('Rating');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -209,6 +212,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
         $this->field('date_received');
         $this->field('quantity_received');
         $this->field('comment',['visible' => false]);
+        $this->field('meal_rating_id',['visible' => false]);//POCOR-7363
         $this->setFieldOrder(['meal_programmes_id','date_received','quantity_received','delivery_status']);
 
 
@@ -499,4 +503,12 @@ class InstitutionDistributionsTable extends ControllerActionTable
             $this->aliasField('institution_id') => $institutionId
         ]);
     }
+    //POCOR-7363 start
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+		$this->field('meal_rating_id',["type"=>"select"]);
+        $this->setFieldOrder(['academic_period_id', 'meal_programmes_id','quantity_received','delivery_status_id','date_received', 'meal_rating_id','comment']);
+
+    }  
+    //POCOR-7363 end
 }

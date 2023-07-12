@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Http\Controllers\Controller;
+use App\Models\Gender;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -67,7 +68,7 @@ class UserRepository extends Controller
                 $limit = $params['limit'];
             }
             
-            $users = SecurityUsers::with('nationalities', 'identities');
+            $users = SecurityUsers::with('identityType', 'nationalities', 'identities');
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
@@ -100,7 +101,8 @@ class UserRepository extends Controller
                     'institutionStudent.educationGrade',
                     'institutionStudent.studentStatus',
                     'identities',
-                    'nationality'
+                    'nationality',
+                    'identityType'
                 )
                     ->where('id', $userId)
                     ->get();
@@ -455,6 +457,26 @@ class UserRepository extends Controller
             );
 
             return $this->sendErrorResponse('Failed to store student data.');
+        }
+    }
+
+
+    
+    public function getUsersGender($request)
+    {
+        try {
+            
+            $usersGender = Gender::get();
+            
+            return $usersGender;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Users Gender list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Users Gender Data Not Found');
         }
     }
 }

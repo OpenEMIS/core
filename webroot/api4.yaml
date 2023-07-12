@@ -47,6 +47,12 @@ tags:
     description: APIs for Institution Positions
   - name: Locale Content Details
     description: APIs for Locale Content Details
+  #POCOR-7394-S starts
+  - name: Institution students
+    description: APIs for Institution students Details
+  - name: Meals
+    description: APIs for Meals Details
+  #POCOR-7394-S ends
 paths:
   /api/v4/login:
     post:
@@ -2336,36 +2342,73 @@ paths:
             description: Invalid status value        
         
   /api/v4/locale-contents/{localeId}:
-      get:
-        tags:
-          - Locale Content Details
-        summary: Get All Translations for one Language
-        description: Multiple values can be provided with comma separated strings
-        parameters:
-          - name: localeId
-            in: path
-            description: Add Institution id to filter
-            required: true
-            schema:
-              type: integer
-              format: int
-        responses:
-          '200':
-            description: successful operation
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Locale-Content-Details'         
-              application/xml:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Locale-Content-Details'
-          '400':
-            description: Invalid status value 
+    get:
+      tags:
+        - Locale Content Details
+      summary: Get All Translations for one Language
+      description: Multiple values can be provided with comma separated strings
+      parameters:
+        - name: localeId
+          in: path
+          description: Add Institution id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Locale-Content-Details'         
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Locale-Content-Details'
+        '400':
+          description: Invalid status value    
 
+  /api/v4/institutions/{institutionId}/students/{studentId}/assessment-item-results:
+    get:
+      tags:
+        - Institutions
+      summary: Get All Assessment Item Results
+      description: Get All Assessment Item Results
+      parameters:
+        - name: institutionId
+          in: path
+          description: Add Institution id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+        - name: studentId
+          in: path
+          description: Add Student id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Assessment-Item-Results'         
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Assessment-Item-Results'
+        '400':
+          description: Invalid status value
 
   /api/v4/institutions/subjects/staff:
       get:
@@ -3063,6 +3106,455 @@ paths:
             description: Invalid status value
 
 # POCOR-7391 ends
+
+# POCOR-7394-S starts
+
+  /api/v4/users/genders:
+      get:
+        tags:
+          - User Details
+        summary: Get User Gender
+        description: Multiple user will be provided with comma separated strings
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/User-Genders'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/User-Genders'
+          '400':
+            description: Invalid status value
+
+  /api/v4/institutions/genders:
+      get:
+        tags:
+          - Institutions
+        summary: Get Institution Gender
+        description: Multiple Institution will be provided with comma separated strings
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Institutions-Genders'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Institutions-Genders'
+          '400':
+            description: Invalid status value
+
+  /api/v4/absence-reasons:
+      get:
+        tags:
+          - Institution students
+        summary: Get Institution Student Absence Reasons
+        description: Multiple Absence Reasons will be provided with comma separated strings
+        parameters:
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Absence-Reasons'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Absence-Reasons'
+          '400':
+            description: Invalid status value
+
+  /api/v4/absence-types:
+      get:
+        tags:
+          - Institution students
+        summary: Get Institution Absence Types
+        description: Multiple Absence Types will be provided with comma separated strings
+        parameters:
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Absence-Types'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Absence-Types'
+          '400':
+            description: Invalid status value
+
+  /api/v4/area-administratives:
+      get:
+        tags:
+          - Institution Areas
+        summary: Get Area Administratives
+        description: Multiple Area Administratives will be provided with comma separated strings
+        parameters:
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Area-Administratives'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Area-Administratives'
+          '400':
+            description: Invalid status value
+
+  /api/v4/area-administratives/{areaadministrativeId}:
+      get:
+        tags:
+          - Institution Areas
+        summary: Get Area Administratives By Area Administrative Id
+        description: Multiple Area Administrative will be provided with comma separated strings
+        parameters:
+          - name: areaadministrativeId
+            in: path
+            description: Add Administrative id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Area-Administratives-Id'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Area-Administratives-Id'
+          '400':
+            description: Invalid status value
+    
+  /api/v4/institutions/localities/{localitiesId}:
+    get:
+      tags:
+        - Institutions
+      summary: Get Institution Localities By Its Id.
+      description: Multiple Localities will be provided with comma separated strings
+      parameters:
+        - name: localitiesId
+          in: path
+          description: Add localities id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Localities'         
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Localities'
+        '400':
+          description: Invalid status value
+  
+  /api/v4/institutions/ownerships/{ownershipId}:
+    get:
+      tags:
+        - Institutions
+      summary: Get Institution Ownerships By Its Id.
+      description: Multiple Ownerships will be provided with comma separated strings
+      parameters:
+        - name: ownershipId
+          in: path
+          description: Add Ownerships id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Ownerships'         
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Ownerships'
+        '400':
+          description: Invalid status value
+
+  /api/v4/institutions/sectors/{sectorId}:
+    get:
+      tags:
+        - Institutions
+      summary: Get Institution Sectors By Its Id.
+      description: Multiple Sectors will be provided with comma separated strings
+      parameters:
+        - name: sectorId
+          in: path
+          description: Add Sectors id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Sectors'         
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Sectors'
+        '400':
+          description: Invalid status value
+  
+  /api/v4/institutions/providers/{providersId}:
+    get:
+      tags:
+        - Institutions
+      summary: Get Institution Providers By Its Id.
+      description: Multiple Providers will be provided with comma separated strings
+      parameters:
+        - name: providersId
+          in: path
+          description: Add Providers id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Providers'         
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Providers'
+        '400':
+          description: Invalid status value
+  
+  /api/v4/institutions/provider/{sectorId}:
+    get:
+      tags:
+        - Institutions
+      summary: Get Institution Providers By Its Sector Id.
+      description: Multiple Providers will be provided with comma separated strings
+      parameters:
+        - name: sectorId
+          in: path
+          description: Add Providers id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Providers'         
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Providers'
+        '400':
+          description: Invalid status value
+  
+  /api/v4/institutions/types/{typesId}:
+    get:
+      tags:
+        - Institutions
+      summary: Get Institution Types By Its Sector Id.
+      description: Multiple Types will be provided with comma separated strings
+      parameters:
+        - name: typesId
+          in: path
+          description: Add Types id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Types'         
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Types'
+        '400':
+          description: Invalid status value
+
+  /api/v4/meal-benefits:
+      get:
+        tags:
+          - Meals
+        summary: Benefit Type Option
+        description: Multiple Meal Benefits can be provided with comma separated strings
+        parameters:
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value
+  
+  /api/v4/meal-programmes:
+      get:
+        tags:
+          - Meals
+        summary: Meal Programme Option	
+        description: Multiple Meal Programme can be provided with comma separated strings
+        parameters:
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value
+
+# POCOR-7394-S Ends
 
 components:
   schemas:
@@ -4635,6 +5127,69 @@ components:
           type: object
           format: timestamp
           example: "2000-01-01 12:00:00"
+
+    Assessment-Item-Results:
+      type: object
+      properties:
+        academic_period_id: 
+          type: integer
+          format: int
+          example: 27
+        assessment_grading_option_id: 
+          type: integer
+          format: int
+          example: 5
+        assessment_id: 
+          type: integer
+          format: int
+          example: 20
+        assessment_period_id: 
+          type: integer
+          format: int
+          example: 11
+        education_grade_id: 
+          type: integer
+          format: int
+          example: 139
+        education_subject_id: 
+          type: integer
+          format: int
+          example: 37
+        institution_id: 
+          type: integer
+          format: int
+          example: 6
+        marks: 
+          type: integer
+          format: int
+          example: 59.00
+        student_id: 
+          type: integer
+          format: int
+          example: 1130
+
+    Address-Area-Level:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int
+          example: 13
+        name:
+          type: string
+          format: varchar
+          example: "North"
+        tags:
+          type: array
+          xml:
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/Institution-Grades'
+        complete:
+          type: boolean
+      xml:
+        name: order
+
     login:
       type: object
       properties:
@@ -4646,6 +5201,7 @@ components:
           type: object
           format: varchar
           example: "{token:heyJoeXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9kZW1vLm9wZW5lbWlzLm9yZ1wvY29yZVwvYXBpXC92NFwvbG9naW4iLCJpYXQiOjE2NzQ3MDQ1NjUsImV4cCI6MTY3NDcwODE2NSwibmJmIjoxNjc0NzA0NTY1LCJqdGkiOiJBUElEaGtWak9FUHdzUXc2Iiwic3ViIjoyLCJwcnYiOiJlMjE0OWY2ZjU0YWJlZjFjN2Q2NjMzYTUzYzkyMmM1NzgxODA1ZThjIn0.7Qcz1wiCG9LDxxVOUgGAgkTyOCHqfQ5861QGg6xuPOI}"
+    
     Institution-Subjects-Staff:
       type: object
       properties:
@@ -4735,3 +5291,456 @@ components:
           type: boolean
       xml:
         name: order
+    #POCOR-7394-S starts
+    User-Genders:
+      type: "object"
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        name:
+          type: string
+          format: varchar
+          example: Male
+        code:
+          type: string
+          format: varchar
+          example: M
+        order:
+          type: integer
+          format: int11
+          example: 1
+        created_user_id:
+          type: integer
+          format: int
+          example: 1
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    Institutions-Genders:
+      type: "object"
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        name:
+          type: string
+          format: varchar
+          example: Mixed
+        code:
+          type: string
+          format: varchar
+          example: X
+        order:
+          type: integer
+          format: int11
+          example: 1
+        created_user_id:
+          type: integer
+          format: int
+          example: 1
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    Absence-Reasons:
+      type: "object"
+      properties:
+        data:
+          type: "array"
+          items:
+            example: " { 'id': 1, 'name': 'Illness' }, { 'id': 3, 'name': 'Emergency' }, { 'id': 4, 'name': 'Weather' }, { 'id': 5, 'name': 'Family Matter' }, { 'id': 7, 'name': 'Personal Reasons' }, { 'id': 8, 'name': 'Transportation' }"
+    Absence-Types:
+      type: "object"
+      properties:
+        data:
+          type: "array"
+          items:
+            example: "{ 'id': 0, 'name': 'Present', 'code': 'PRESENT'}, { 'id': 1, 'name': 'Absence - Excused', 'code': 'EXCUSED'}, { 'id': 2, 'name': 'Absence - Unexcused', 'code': 'UNEXCUSED'}, { 'id': 3, 'name': 'Late', 'code': 'LATE'}"
+    Area-Administratives:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        code:
+          type: string
+          format: varchar
+          example: world
+        name:
+          type: string
+          format: varchar
+          example: world
+        is_main_country:
+          type: integer
+          format: int11
+          example: 0
+        parent_id:
+          type: integer
+          format: int11
+          example: 
+        lft:
+          type: integer
+          format: int11
+          example: 1
+        rght:
+          type: integer
+          format: int11
+          example: 450
+        area_administrative_level_id:
+          type: integer
+          format: int11
+          example: 6
+        order:
+          type: integer
+          format: int11
+          example: 1
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        modified_user_id:
+          type: integer
+          format: int
+          example: 0
+        modified:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+        created_user_id:
+          type: integer
+          format: int
+          example: 1
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+        area_administrative_level:
+          type: object
+          format: varchar
+          example: "{...}"
+    Area-Administratives-Id:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        code:
+          type: string
+          format: varchar
+          example: world
+        name:
+          type: string
+          format: varchar
+          example: world
+        is_main_country:
+          type: integer
+          format: int11
+          example: 0
+        parent_id:
+          type: integer
+          format: int11
+          example: 
+        lft:
+          type: integer
+          format: int11
+          example: 1
+        rght:
+          type: integer
+          format: int11
+          example: 450
+        area_administrative_level_id:
+          type: integer
+          format: int11
+          example: 6
+        order:
+          type: integer
+          format: int11
+          example: 1
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        modified_user_id:
+          type: integer
+          format: int
+          example: 0
+        modified:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+        created_user_id:
+          type: integer
+          format: int
+          example: 1
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    Institution-Localities:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        name:
+          type: string
+          format: varchar
+          example: urban
+        order:
+          type: integer
+          format: int11
+          example: 2
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        editable:
+          type: integer
+          format: int11
+          example: 1
+        default:
+          type: integer
+          format: int11
+          example: 0
+        international_code:
+          type: string
+          format: varchar
+          example:
+        national_code:
+          type: string
+          format: varchar
+          example:
+        modified_user_id:
+          type: integer
+          format: int
+          example: 0
+        modified:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+        created_user_id:
+          type: integer
+          format: int
+          example: 1
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    Institution-Ownerships:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        name:
+          type: string
+          format: varchar
+          example: Customary (Disputed)
+        order:
+          type: integer
+          format: int11
+          example: 3
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        editable:
+          type: integer
+          format: int11
+          example: 1
+        default:
+          type: integer
+          format: int11
+          example: 0
+        international_code:
+          type: string
+          format: varchar
+          example:
+        national_code:
+          type: string
+          format: varchar
+          example:
+        modified_user_id:
+          type: integer
+          format: int
+          example:
+        modified:
+          type: object
+          format: timestamp
+          example:
+        created_user_id:
+          type: integer
+          format: int
+          example: 1
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    Institution-Sectors:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        name:
+          type: string
+          format: varchar
+          example: Public
+        order:
+          type: integer
+          format: int11
+          example: 1
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        editable:
+          type: integer
+          format: int11
+          example: 1
+        default:
+          type: integer
+          format: int11
+          example: 0
+        international_code:
+          type: string
+          format: varchar
+          example:
+        national_code:
+          type: string
+          format: varchar
+          example:
+        modified_user_id:
+          type: integer
+          format: int
+          example: 2
+        modified:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+        created_user_id:
+          type: integer
+          format: int
+          example: 1
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    Institution-Providers:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        name:
+          type: string
+          format: varchar
+          example: Religious
+        order:
+          type: integer
+          format: int11
+          example: 2
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        editable:
+          type: integer
+          format: int11
+          example: 1
+        default:
+          type: integer
+          format: int11
+          example: 0
+        institution_sector_id:
+          type: integer
+          format: int11
+          example: 2
+        international_code:
+          type: string
+          format: varchar
+          example:
+        national_code:
+          type: string
+          format: varchar
+          example:
+        modified_user_id:
+          type: integer
+          format: int
+          example: 2
+        modified:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+        created_user_id:
+          type: integer
+          format: int
+          example: 1
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    Institution-Types:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        name:
+          type: string
+          format: varchar
+          example: Pre-primary
+        order:
+          type: integer
+          format: int11
+          example: 1
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        editable:
+          type: integer
+          format: int11
+          example: 1
+        default:
+          type: integer
+          format: int11
+          example: 0
+        international_code:
+          type: string
+          format: varchar
+          example:
+        national_code:
+          type: string
+          format: varchar
+          example:
+        modified_user_id:
+          type: integer
+          format: int
+          example:
+        modified:
+          type: object
+          format: timestamp
+          example:
+        created_user_id:
+          type: integer
+          format: int
+          example: 2
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    
+    #POCOR-7394-S ends
+    

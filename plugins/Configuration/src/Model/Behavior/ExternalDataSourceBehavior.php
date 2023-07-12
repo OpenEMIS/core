@@ -45,7 +45,7 @@ class ExternalDataSourceBehavior extends Behavior
             $key = $this->_table->id;
             if (!empty($key)) {
                 $configItem = $this->_table->get($key);
-                if ($configItem->type == 'External Data Source' && $configItem->code == 'external_data_source_type') {
+                if ($configItem->type == 'External Data Source Identity' && $configItem->code == 'external_data_source_type') {
                     if (isset($toolbarButtons['back'])) {
                         unset($toolbarButtons['back']);
                     }
@@ -63,11 +63,11 @@ class ExternalDataSourceBehavior extends Behavior
 
     public function indexBeforeAction(Event $event)
     {
-        if ($this->_table->request->query['type_value'] == 'External Data Source') {
+        if ($this->_table->request->query['type_value'] == 'External Data Source Identity') {
             $urlParams = $this->_table->url('view');
             $externalDataSourceId = $this->_table->find()
                 ->where([
-                    $this->_table->aliasField('type') => 'External Data Source',
+                    $this->_table->aliasField('type') => 'External Data Source Identity',
                     $this->_table->aliasField('code') => 'external_data_source_type'])
                 ->first()
                 ->id;
@@ -85,7 +85,7 @@ class ExternalDataSourceBehavior extends Behavior
             $key = $this->_table->id;
             if (!empty($key)) {
                 $configItem = $this->_table->get($key);
-                if ($configItem->type == 'External Data Source' && $configItem->code == 'external_data_source_type') {
+                if ($configItem->type == 'External Data Source Identity' && $configItem->code == 'external_data_source_type') {
                     if (isset($this->_table->request->data[$this->alias]['value']) && !empty($this->_table->request->data[$this->alias]['value'])) {
                         $value = $this->_table->request->data[$this->alias]['value'];
                     } else {
@@ -106,7 +106,7 @@ class ExternalDataSourceBehavior extends Behavior
             $key = $this->_table->id;
             if (!empty($key)) {
                 $configItem = $this->_table->get($key);
-                if ($configItem->type == 'External Data Source' && $configItem->code == 'external_data_source_type') {
+                if ($configItem->type == 'External Data Source Identity' && $configItem->code == 'external_data_source_type') {
                     $this->_table->field('default_value', ['visible' => false]);
                     $value = $this->_table->request->data[$this->alias]['value'];
                     if ($value != 'None') {
@@ -127,7 +127,7 @@ class ExternalDataSourceBehavior extends Behavior
         if (isset($extra['toolbarButtons']['back'])) {
             unset($extra['toolbarButtons']['back']);
         }
-        if (isset($this->_table->request->query['type_value']) && $this->_table->request->query['type_value'] == 'External Data Source') {
+        if (isset($this->_table->request->query['type_value']) && $this->_table->request->query['type_value'] == 'External Data Source Identity') {
             $this->_table->buildSystemConfigFilters();
         }
     }
@@ -156,7 +156,7 @@ class ExternalDataSourceBehavior extends Behavior
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $configItem = $data[$this->alias];
-        if ($configItem['type'] == 'External Data Source') {
+        if ($configItem['type'] == 'External Data Source Identity') {
             $configItem['value'] = lcfirst(Inflector::camelize($configItem['value'], ' '));
 
             $methodName = $configItem['value'].'Validation';
@@ -171,7 +171,7 @@ class ExternalDataSourceBehavior extends Behavior
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $ExternalDataSourceAttributesTable = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
-        if ($data[$this->alias]['value'] != 'None' && $data[$this->alias]['type'] == 'External Data Source' && empty($entity->errors())) {
+        if ($data[$this->alias]['value'] != 'None' && $data[$this->alias]['type'] == 'External Data Source Identity' && empty($entity->errors())) {
             $externalDataSourceType = $data[$this->alias]['value'];
             $ExternalDataSourceAttributesTable->deleteAll(
                 ['external_data_source_type' => $externalDataSourceType]
