@@ -43,15 +43,33 @@ class ShiftShell extends Shell
     {
         try {
             $connection = ConnectionManager::get('default');
-            $connection->query("SET FOREIGN_KEY_CHECKS=0"); // POCOR-7556
-            $connection->query("INSERT INTO `institution_shifts` (
-                                `start_time`, `end_time`, `academic_period_id`, `institution_id`, `location_institution_id`, `shift_option_id`,
-                                `previous_shift_id`, `created_user_id`, `created`)
-                                SELECT `start_time`, `end_time`, $copyTo, `institution_id`, `location_institution_id`, `shift_option_id`,
-                                `id`, `created_user_id`, NOW()
-                                FROM `institution_shifts`
-                                WHERE `academic_period_id` = $copyFrom");
-            $connection->query("SET FOREIGN_KEY_CHECKS=1"); // POCOR-7556
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+            $institutions = $Institutions->find('all')->toArray();
+
+            $ins_shift = $InstitutionShifts
+            ->find('all')
+            ->where(['academic_period_id' =>  $copyTo])
+            ->toArray();
+
+            $InsIds = [];
+            foreach($ins_shift as $ke => $ins_data){
+                $InsIds[] = $ins_data->institution_id;
+            }
+            $connection->query("SET FOREIGN_KEY_CHECKS=0");
+            foreach($institutions as $k => $Insti){ 
+                if (!in_array($Insti->id, $InsIds)) {
+                    $connection->query("INSERT INTO `institution_shifts` (
+                        `start_time`, `end_time`, `academic_period_id`, `institution_id`, `location_institution_id`, `shift_option_id`,
+                        `previous_shift_id`, `created_user_id`, `created`)
+                        SELECT `start_time`, `end_time`, $copyTo, `institution_id`, `location_institution_id`, `shift_option_id`,
+                        `id`, `created_user_id`, NOW()
+                        FROM `institution_shifts`
+                        WHERE `academic_period_id` = $copyFrom `institution_id` = $Insti->id");
+                }
+            }
+            $connection->query("SET FOREIGN_KEY_CHECKS=1");
+
         } catch (Exception $e) {
             pr($e->getMessage());
         }
