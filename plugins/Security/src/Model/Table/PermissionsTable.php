@@ -136,6 +136,7 @@ class PermissionsTable extends ControllerActionTable
         ];
 
         foreach ($data as $obj) {
+            if($obj->name == 'Securities' && $obj->controller == 'ApiSecurities'){ continue; } //POCOR-7520 remove Securities option from Adminsitration tab roles permission list in API section. 
             if (!array_key_exists($obj->category, $list)) {
                 $list[$obj->category] = [];
             }

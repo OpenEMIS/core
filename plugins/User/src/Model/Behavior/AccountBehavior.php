@@ -227,7 +227,7 @@ class AccountBehavior extends Behavior
                         ]
                     )
                     ->where([$InstitutionStaff->aliasField('staff_id') => $entity->id, $InstitutionStaff->aliasField('staff_status_id') => 1])//POCOR-7444
-                    ->group([$GroupUsers->aliasField('security_role_id')])
+                    ->group([$GroupUsers->aliasField('security_role_id'),$SecurityGroupInstitutions->aliasField('institution_id')]) //POCOR-7477
                     ->all();
             }else{//POCOR-7309 ends
                 $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');

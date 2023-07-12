@@ -104,13 +104,15 @@ class ProfilesTable extends ControllerActionTable
 	
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        //echo "<pre>";print_r($extra);die;
+        //echo "Institutions> Students > Profiles";die;
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 
 		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$StudentTemplates = TableRegistry::get('ProfileTemplate.StudentTemplates');
 		
-		$where[$this->aliasField('status')] = self::PUBLISHED;
 		$where[$this->aliasField('institution_id')] = $institutionId;
+		$where[$this->aliasField('status')] = self::PUBLISHED;
 
         $query
             ->select([
@@ -212,7 +214,37 @@ class ProfilesTable extends ControllerActionTable
 			'attr' => $indexAttr,
 			'url' => $downloadUrl
 		];
+        //POCOR-5191::Start
+        $student_profile_security_roles_table = TableRegistry::get('student_profile_security_roles');
+        $instituttionnTable = TableRegistry::get('institutions');
+        $securitygroupusersTable = TableRegistry::get('security_group_users');
+        $insData = $instituttionnTable->get($this->Session->read('Institution.Institutions.id'));
+        $security_group_id = $insData->security_group_id;
+        $user_id = $this->Session->read('Auth.User.id');
+        $roles = $student_profile_security_roles_table->find()->where(['student_profile_template_id'=> $this->request->query('student_profile_template_id')])->toArray();
+        $curr_u_roles = $securitygroupusersTable->find()->where(['security_group_id'=> $security_group_id, 'security_user_id'=>$user_id])->toArray();
+        $rolArr = [];
+        $rolArrrr = [];
+        foreach($roles as $rol){
+            $rolArr[] = $rol->security_role_id;
+        }
 
+        foreach($curr_u_roles as $curr_uu_roles){
+            $rolArrrr[] = $curr_uu_roles->security_role_id;
+        }
+        $result = array_intersect($rolArrrr, $rolArr);
+        $nResult = reset($result);
+
+        if($this->Session->read('Auth.User.super_admin') != 1){
+            if(!empty($nResult)){
+                if(!in_array($nResult, $rolArr)){
+                    unset($buttons);
+                }
+            }else{
+                unset($buttons);
+            }    
+        }
+        //POCOR-5191::end
         return $buttons;
     }
 	

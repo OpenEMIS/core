@@ -315,7 +315,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 console.log(error);
             })
             .then(function(response) {
-                if (teacherCommentsRequired) {
+                if ((allCommentsViewRequired == 1) && (teacherCommentsRequired)) {
                     subjects = response.data;
                     if (angular.isObject(subjects) && subjects.length > 0) {
                         angular.forEach(subjects, function(subject, key) {
