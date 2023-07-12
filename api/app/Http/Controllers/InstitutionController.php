@@ -10,7 +10,7 @@ use App\Http\Requests\ReportCardCommentHomeroomAdd;
 use App\Http\Requests\CompetencyResultsAddRequest;
 use App\Http\Requests\CompetencyCommentAddRequest;
 use App\Http\Requests\CompetencyPeriodCommentAddRequest;
-use App\Http\Requests\SaveStudentDataRequest;
+
 
 class InstitutionController extends Controller
 {
@@ -876,28 +876,4 @@ class InstitutionController extends Controller
         }
     }
 
-
-
-    public function saveStudentData(SaveStudentDataRequest $request)
-    {
-        try {
-            $data = $this->institutionService->saveStudentData($request);
-            
-            if($data == 1){
-                return $this->sendSuccessResponse("Student data stored successfully.");
-            } elseif($data == 2) {
-                return $this->sendErrorResponse("Invalid academic period.");
-            }else {
-                return $this->sendErrorResponse("Student data not stored.", $data);
-            }
-            
-        } catch (\Exception $e) {
-            Log::error(
-                'Failed to store student data.',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Failed to store student data.');
-        }
-    }
 }
