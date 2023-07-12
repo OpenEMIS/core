@@ -210,4 +210,23 @@ class UserService extends Controller
         }
     }
 
+
+
+    public function saveStaffData($request)
+    {
+        try {
+            $data = $this->userRepository->saveStaffData($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to store staff data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to store staff data.');
+        }
+    }
+
 }

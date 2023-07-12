@@ -450,7 +450,6 @@ class UserRepository extends Controller
             return 1;
         } catch (\Exception $e) {
             DB::rollback();
-            dd($e);
             Log::error(
                 'Failed to store student data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -477,6 +476,201 @@ class UserRepository extends Controller
             );
 
             return $this->sendErrorResponse('Users Gender Data Not Found');
+        }
+    }
+
+
+
+    public function saveStaffData($request)
+    {
+        try {
+            $requestData = $request->all();
+            $openemisNo = (array_key_exists('openemis_no', $requestData)) ? $requestData['openemis_no'] : null;
+            $firstName = (array_key_exists('first_name', $requestData)) ? $requestData['first_name'] : null;
+            $middleName = (array_key_exists('middle_name', $requestData)) ? $requestData['middle_name'] : null;
+            $thirdName = (array_key_exists('third_name', $requestData)) ? $requestData['third_name'] : null;
+            $lastName = (array_key_exists('last_name', $requestData)) ? $requestData['last_name'] : null;
+            $preferredName = (array_key_exists('preferred_name', $requestData)) ? $requestData['preferred_name'] : null;
+            $genderId = (array_key_exists('gender_id', $requestData)) ? $requestData['gender_id'] : null;
+            $dateOfBirth = (array_key_exists('date_of_birth', $requestData)) ? date('Y-m-d', strtotime($requestData['date_of_birth'])) : null;
+            $identityNumber = (array_key_exists('identity_number', $requestData)) ? $requestData['identity_number'] : null;
+            $nationality_id = (array_key_exists('nationality_id', $requestData)) ? $requestData['nationality_id'] : null;
+            $nationalityName = (array_key_exists('nationality_name', $requestData)) ? $requestData['nationality_name'] : null;
+            $username = (array_key_exists('username', $requestData)) ? $requestData['username'] : null;
+            $password = (array_key_exists('password', $requestData)) ? password_hash($requestData['password'], PASSWORD_DEFAULT) : null;
+            $address = (array_key_exists('address', $requestData)) ? $requestData['address'] : null;
+            $postalCode = (array_key_exists('postal_code', $requestData)) ? $requestData['postal_code'] : null;
+            $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData)) ? $requestData['birthplace_area_id'] : null;
+            $addressAreaId = (array_key_exists('address_area_id', $requestData)) ? $requestData['address_area_id'] : null;
+            $identityTypeId = (array_key_exists('identity_type_id', $requestData)) ? $requestData['identity_type_id'] : null;
+            $identityTypeName = (array_key_exists('identity_type_name', $requestData)) ? $requestData['identity_type_name'] : null;
+
+            $institutionPositionId = (array_key_exists('institution_position_id', $requestData)) ? $requestData['institution_position_id'] : null;
+            $fte = (array_key_exists('fte', $requestData)) ? $requestData['fte'] : null;
+            $startDate = (array_key_exists('start_date', $requestData)) ? date('Y-m-d', strtotime($requestData['start_date'])) : NULL;
+            $endDate = (array_key_exists('end_date', $requestData) && !empty($requestData['end_date'])) ? date('Y-m-d', strtotime($requestData['end_date'])) : '';
+
+            $is_homeroom = (array_key_exists('is_homeroom', $requestData)) ? $requestData['is_homeroom'] : 0; //POCOR-5070
+            //$institutionId = $this->request->session()->read('Institution.Institutions.id');
+            $institutionId = (array_key_exists('institution_id', $requestData)) ? $requestData['institution_id'] : null;
+            $staffTypeId = (array_key_exists('staff_type_id', $requestData)) ? $requestData['staff_type_id'] : null;
+            $userId =  JWTAuth::user()->id??1;
+            $photoContent = (array_key_exists('photo_base_64', $requestData)) ? $requestData['photo_base_64'] : null;
+            $photoName = (array_key_exists('photo_name', $requestData)) ? $requestData['photo_name'] : null;
+            $custom = (array_key_exists('custom', $requestData)) ? $requestData['custom'] : "";
+            $shiftIds = (array_key_exists('shift_ids', $requestData)) ? $requestData['shift_ids'] : "";
+
+            //when staff transfer in other institution starts
+            $isSameSchool = (array_key_exists('is_same_school', $requestData)) ? $requestData['is_same_school'] : 0;
+            $isDiffSchool = (array_key_exists('is_diff_school', $requestData)) ? $requestData['is_diff_school'] : 0;
+            $staffId = (array_key_exists('staff_id', $requestData)) ? $requestData['staff_id'] : 0;
+            $previousInstitutionId = (array_key_exists('previous_institution_id', $requestData)) ? $requestData['previous_institution_id'] : 0;
+            $comment = (array_key_exists('comment', $requestData)) ? $requestData['comment'] : '';
+            $staff_position_grade_id = (array_key_exists('staff_position_grade_id', $requestData)) ? $requestData['staff_position_grade_id'] : '';
+            //when staff transfer in other institution end
+
+
+            //get academic period data
+            $periods = AcademicPeriod::where('current', 1)->first();
+            
+
+            $startYear = $endYear = '';
+            if (!empty($periods)) {
+                $startYear = $periods->start_year;
+                if ($endDate == NULL || $endDate == '') {
+                    $endYear = NULL;
+                } else {
+                    $endYear = $periods->end_year;
+                }
+            }
+
+
+            //get prefered language
+            $pref_lang = ConfigItem::where(['code' => 'language','type' => 'System'
+                ])->first();
+
+
+            //get Student Status List
+            $statuses = StudentStatuses::pluck('id', 'code')->toArray();
+            
+
+            //get nationality data
+            $nationalities = '';
+            if (!empty($nationalityName)) {
+                $nationalities = Nationalities::where([
+                        'name' => $nationalityName,
+                    ])->first();
+
+                if (empty($nationalities)) {
+                    //Adding new nationality...
+                    $orderNationalities = Nationalities::orderBy('order', 'DESC')->first();
+
+                    $entityNationality = [
+                        'name' => $nationalityName,
+                        'order' => !empty($orderNationalities->order) ? $orderNationalities->order + 1 : 0,
+                        'visible' => 1,
+                        'editable' => 1,
+                        'identity_type_id' => null,
+                        'default' => 0,
+                        'international_code' => '',
+                        'national_code' => '',
+                        'external_validation' => 0,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+
+                    $nationalityId = Nationalities::insertGetId($entityNationality);
+                } else {
+                    $nationalityId = $nationalities->id;
+                }
+            }
+
+
+            if ($isSameSchool == 1) {
+                $CheckStaffExist = SecurityUsers::where(['openemis_no' => $openemisNo
+                    ])->first();
+
+                if (!empty($CheckStaffExist)) {
+                    $existStaffId = $CheckStaffExist->id;
+                    $entityData = [
+                        'id' => $existStaffId,
+                        'openemis_no' => $openemisNo,
+                        'first_name' => $firstName,
+                        'middle_name' => $middleName,
+                        'third_name' => $thirdName,
+                        'last_name' => $lastName,
+                        'preferred_name' => $preferredName,
+                        'gender_id' => $genderId,
+                        'date_of_birth' => $dateOfBirth,
+                        'nationality_id' => !empty($nationalityId) ? $nationalityId : '',
+                        'preferred_language' => $pref_lang->value,
+                        'username' => $username,
+                        'password' => $password,
+                        'address' => $address,
+                        'address_area_id' => $addressAreaId,
+                        'birthplace_area_id' => $birthplaceAreaId,
+                        'postal_code' => $postalCode,
+                        'photo_name' => $photoName,
+                        'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                        'is_staff' => 1,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s'),
+                    ];
+
+
+                    if($CheckStaffExist){
+                        $SecurityUserResult = $CheckStaffExist;
+                        $securityUserUpdate = SecurityUsers::where('id', $CheckStaffExist->id)->update($entityData);
+                    } else {
+                        $securityUserId = SecurityUsers::insertGetId($entityData);
+                        $SecurityUserResult = SecurityUsers::where('id', $securityUserId)->first();
+                    }
+
+
+                    if ($SecurityUserResult) {
+                        $user_record_id = $SecurityUserResult->id;
+                        if (!empty($nationality_id) || !empty($nationalityName)) {
+                            
+                            if (!empty($nationalityId)) {
+                                $checkexistingNationalities = UserNationalities::where('nationality_id', $nationalityId)
+                                    ->where('security_user_id', $user_record_id)
+                                    ->first();
+
+                                if (empty($checkexistingNationalities)) {
+                                    $entityNationalData = [
+                                        'id' => Str::uuid(),
+                                        'preferred' => 1,
+                                        'nationality_id' => $nationalityId,
+                                        'security_user_id' => $user_record_id,
+                                        'created_user_id' => $userId,
+                                        'created' => date('Y-m-d H:i:s')
+                                    ];
+
+                                    $UserNationalitiesResult = UserNationalities::insert($entityNationalData);
+                                }
+                            }
+                        }
+
+
+
+                        if (!empty($nationalityId) && !empty($identityTypeId) && !empty($identityNumber)) {
+                            //Code goes here...
+                        }
+
+                    }
+                }
+            }
+
+
+            dd("sfdss");
+        } catch(\Exception $e) {
+            dd($e);
+            Log::error(
+                'Failed to store staff data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to store staff data.');
         }
     }
 }
