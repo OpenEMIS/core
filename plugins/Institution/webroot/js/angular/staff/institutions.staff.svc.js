@@ -1066,6 +1066,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
      */
     function checkUserAlreadyExistByIdentity(params)
     {
+        console.log('checkUserAlreadyExistByIdentity')
+        console.log(params)
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institutions/checkUserAlreadyExistByIdentity';
         $http.post(url, { params: params })

@@ -43,6 +43,7 @@ class ShiftShell extends Shell
     {
         try {
             $connection = ConnectionManager::get('default');
+            $connection->query("SET FOREIGN_KEY_CHECKS=0"); // POCOR-7556
             $connection->query("INSERT INTO `institution_shifts` (
                                 `start_time`, `end_time`, `academic_period_id`, `institution_id`, `location_institution_id`, `shift_option_id`,
                                 `previous_shift_id`, `created_user_id`, `created`)
@@ -50,6 +51,7 @@ class ShiftShell extends Shell
                                 `id`, `created_user_id`, NOW()
                                 FROM `institution_shifts`
                                 WHERE `academic_period_id` = $copyFrom");
+            $connection->query("SET FOREIGN_KEY_CHECKS=1"); // POCOR-7556
         } catch (Exception $e) {
             pr($e->getMessage());
         }

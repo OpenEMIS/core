@@ -164,4 +164,11 @@ class ConfigurationsController extends AppController
             $this->Alert->$alertType($alertMessage);
         }
     }
+
+    // Start POCOR-7507
+    public function ExternalDataSourceIdentity()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataSource']);
+    }
+    // End POCOR-7507
 }
