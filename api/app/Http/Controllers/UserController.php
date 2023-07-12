@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Services\UserService;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\SaveStudentDataRequest;
+use App\Http\Requests\SaveStaffDataRequest;
 
 class UserController extends Controller
 {
@@ -76,17 +77,17 @@ class UserController extends Controller
     }
 
 
-    public function saveStaffData(SaveStudentDataRequest $request)
+    public function saveStaffData(SaveStaffDataRequest $request)
     {
         try {
             $data = $this->userService->saveStaffData($request);
             
             if($data == 1){
-                return $this->sendSuccessResponse("Student data stored successfully.");
+                return $this->sendSuccessResponse("Staff data stored successfully.");
             } elseif($data == 2) {
                 return $this->sendErrorResponse("Invalid academic period.");
             }else {
-                return $this->sendErrorResponse("Student data not stored.", $data);
+                return $this->sendErrorResponse("Staff data not stored.", $data);
             }
             
         } catch (\Exception $e) {
