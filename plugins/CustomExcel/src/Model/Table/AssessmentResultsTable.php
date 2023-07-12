@@ -461,8 +461,8 @@ class AssessmentResultsTable extends AppTable
 
     public function onExcelTemplateInitialiseGroupAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
     {
-        $this->log('onExcelTemplateInitialiseGroupAssessmentItemResults', 'debug');
-        $this->log($params, 'debug');
+//        $this->log('onExcelTemplateInitialiseGroupAssessmentItemResults', 'debug');
+//        $this->log($params, 'debug');
         if (array_key_exists('class_id', $params)
             && array_key_exists('assessment_id', $params)
             && array_key_exists('institution_id', $params)) {
@@ -822,9 +822,9 @@ class AssessmentResultsTable extends AppTable
             }
             
             // $studentSubjectResults = array_merge($withoutTerm->toArray(), $withTerm->toArray(), $averageRecords);
-            $this->log($withoutTerm, 'debug');
-            $this->log($withTerm, 'debug');
-            $this->log($averageRecords, 'debug');
+//            $this->log($withoutTerm, 'debug');
+//            $this->log($withTerm, 'debug');
+//            $this->log($averageRecords, 'debug');
             $studentSubjectResults = array_merge($withoutTerm, $withTerm, $averageRecords);
             return $studentSubjectResults;
         }
