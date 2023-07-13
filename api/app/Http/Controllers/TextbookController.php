@@ -6,6 +6,7 @@ use App\Http\Requests\TextbookAddRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Services\TextbookService;
+use App\Http\Requests\InstitutionTextbookAddRequest;
 
 class TextbookController extends Controller
 {
@@ -85,9 +86,9 @@ class TextbookController extends Controller
         try {
             $data = $this->textbookService->addTextbooks($request);
             if($data == 1){
-                return $this->sendSuccessResponse("Textbook stored successfully.", $data);
+                return $this->sendSuccessResponse("Textbook Added successfully.");
             } else {
-                return $this->sendErrorResponse("Textbook not stored.");
+                return $this->sendErrorResponse("Textbook not Added successfully.");
             }
 
         }
@@ -98,6 +99,45 @@ class TextbookController extends Controller
             );
 
             return $this->sendErrorResponse('Failed to add Textbook.');
+
+        }
+    }
+
+    public function getInstitutionTextbookdata(int $institutionId, int $textbookId)
+    {
+        try {
+            $data = $this->textbookService->getInstitutionTextbookdata($institutionId, $textbookId);
+            
+            return $this->sendSuccessResponse("Institution Textbook Data Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution Textbook Data Not Found');
+        }
+    }
+
+    public function addInstitutionTextbooks(InstitutionTextbookAddRequest $request, int $institutionId)
+    {
+        try {
+
+            $data = $this->textbookService->addInstitutionTextbooks($request, $institutionId);
+            if($data == 1){
+                return $this->sendSuccessResponse("Institution Textbook added successfully.");
+            } else {
+                return $this->sendErrorResponse("Institution Textbook not added successfully.");
+            }
+        }
+        catch(\Exception $e) {
+            Log::error(
+                'Failed to add Institution Textbook',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add Institution Textbook.');
 
         }
     }

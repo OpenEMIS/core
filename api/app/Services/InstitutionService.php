@@ -1139,41 +1139,4 @@ class InstitutionService extends Controller
         }
     }
 
-    // POCOR 7368 starts
-    public function getInstitutionTextbookdata(int $institutionId, int $textbookId)
-    {
-        try {
-            $data = $this->institutionRepository->getInstitutionTextbookdata($institutionId, $textbookId);
-            
-            return $data;
-            
-        } catch (\Exception $e) {
-            Log::error(
-                'Failed to fetch list from DB',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Institution Textbook Data Not Found');
-        }
-    }
-
-    public function addInstitutionTextbooks($request)
-    {
-        try {
-            $data = $this->institutionRepository->addInstitutionTextbooks($request);
-
-            return $data;
-            
-        } catch (\Exception $e) {
-            Log::error(
-                'Failed to add Institution Textbook.',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Failed to add Institution Textbook.');
-        }
-    }
-
-    // POCOR 7368 starts
-
 }
