@@ -54,7 +54,7 @@ class POCOR7511 extends AbstractMigration
         $this->execute('RENAME TABLE  `zz_7511_examination_centres_examinations_subjects` TO `examination_centres_examinations_subjects`');
         //examination_student_subject_results
         $this->execute('DROP TABLE IF EXISTS `examination_student_subject_results`');
-        $this->execute('RENAME TABLE  `zz_7511_examination_student_subject_results` TO `examination_item_results`');
+        $this->execute('RENAME TABLE  `zz_7511_examination_item_results` TO `examination_item_results`');
         //examination_subjects
         $this->execute('RENAME TABLE  `examination_subjects` TO `examination_items`');
       
