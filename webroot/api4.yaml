@@ -3134,6 +3134,17 @@ paths:
         responses:
           '200':
             description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/InstitutionTextbooks'
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/InstitutionTextbooks'
           '400':
             description: Invalid status value
 
@@ -3154,6 +3165,17 @@ paths:
         responses:
           '200':
             description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Textbooks'
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Textbooks'
           '400':
             description: Invalid status value
   
@@ -3166,6 +3188,17 @@ paths:
         responses:
           '200':
             description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TextbookStatuses'
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TextbookStatuses'
           '400':
             description: Invalid status value
 
@@ -3178,6 +3211,17 @@ paths:
         responses:
           '200':
             description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TextbookDimensions'
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TextbookDimensions'
           '400':
             description: Invalid status value
 
@@ -3190,6 +3234,17 @@ paths:
         responses:
           '200':
             description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TextbookConditions'
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TextbookConditions'
           '400':
             description: Invalid status value
 
@@ -5895,3 +5950,293 @@ components:
           example: "2023-01-01 12:00:00"
     
     #POCOR-7394-S ends
+    #POCOR-7368 starts
+    InstitutionTextbooks:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        code:
+          type: string
+          format: varchar
+          example: MA001-1
+        comment:
+          type: string
+          format: varchar
+          example: ""
+        textbook_status_id:
+          type: integer
+          format: int11
+          example: 1
+        textbook_condition_id:
+          type: integer
+          format: int11
+          example: 1
+        institution_id:
+          type: integer
+          format: int11
+          example: 6
+        academic_period_id:
+          type: integer
+          format: int11
+          example: 28
+        education_grade_id:
+          type: integer
+          format: int11
+          example: 121
+        education_subject_id:
+          type: integer
+          format: int11
+          example: 91
+        security_user_id:
+          type: integer
+          format: int11
+          example: 10551
+        textbook_id:
+          type: integer
+          format: int11
+          example: 19
+        modified_user_id:
+          type: integer
+          format: int
+          example:
+        modified:
+          type: object
+          format: timestamp
+          example:
+        created_user_id:
+          type: integer
+          format: int
+          example: 2
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    Textbooks:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        code:
+          type: string
+          format: varchar
+          example: MA001-1
+        title:
+          type: string
+          format: varchar
+          example: "Large Print Language Arts Textbook"
+        author:
+          type: string
+          format: varchar
+          example: "Steven Janson"
+        publisher:
+          type: string
+          format: varchar
+          example: "Khan"
+        year_published:
+          type: integer
+          format: int11
+          example: 2000
+        ISBN:
+          type: string
+          format: varchar
+          example: "15345645"
+        expiry_date:
+          type: integer
+          format: int11
+          example: 
+        academic_period_id:
+          type: integer
+          format: int11
+          example: 27
+        education_grade_id:
+          type: integer
+          format: int11
+          example: 76
+        education_subject_id:
+          type: integer
+          format: int11
+          example: 6
+        textbook_dimension_id:
+          type: integer
+          format: int11
+          example: 1
+        modified_user_id:
+          type: integer
+          format: int
+          example:
+        modified:
+          type: object
+          format: timestamp
+          example:
+        created_user_id:
+          type: integer
+          format: int
+          example: 2
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    TextbookDimensions:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        name:
+          type: string
+          format: varchar
+          example: "50mmx76mm"
+        order:
+          type: integer
+          format: int11
+          example: 1
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        editable:
+          type: integer
+          format: int11
+          example: 1
+        default:
+          type: integer
+          format: int11
+          example: 0
+        international_code:
+          type: string
+          format: varchar
+          example:
+        national_code:
+          type: string
+          format: varchar
+          example:
+        modified_user_id:
+          type: integer
+          format: int
+          example:
+        modified:
+          type: object
+          format: timestamp
+          example:
+        created_user_id:
+          type: integer
+          format: int
+          example: 2
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    TextbookConditions:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        name:
+          type: string
+          format: varchar
+          example: new
+        order:
+          type: integer
+          format: int11
+          example: 1
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        editable:
+          type: integer
+          format: int11
+          example: 1
+        default:
+          type: integer
+          format: int11
+          example: 0
+        international_code:
+          type: string
+          format: varchar
+          example:
+        national_code:
+          type: string
+          format: varchar
+          example:
+        modified_user_id:
+          type: integer
+          format: int
+          example:
+        modified:
+          type: object
+          format: timestamp
+          example:
+        created_user_id:
+          type: integer
+          format: int
+          example: 2
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    TextbookStatuses:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        code:
+          type: string
+          format: varchar
+          example: AVAILABLE
+        name:
+          type: string
+          format: varchar
+          example: Available
+        order:
+          type: integer
+          format: int11
+          example: 1
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        editable:
+          type: integer
+          format: int11
+          example: 1
+        default:
+          type: integer
+          format: int11
+          example: 0
+        international_code:
+          type: string
+          format: varchar
+          example:
+        national_code:
+          type: string
+          format: varchar
+          example:
+        modified_user_id:
+          type: integer
+          format: int
+          example:
+        modified:
+          type: object
+          format: timestamp
+          example:
+        created_user_id:
+          type: integer
+          format: int
+          example: 2
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+
+    #POCOR-7368 ends
