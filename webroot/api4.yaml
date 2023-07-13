@@ -49,6 +49,12 @@ tags:
     description: APIs for Locale Content Details
   - name: Textbook Details
     description: APIs for Textbooks
+  #POCOR-7394-S starts
+  - name: Institution students
+    description: APIs for Institution students Details
+  - name: Meals
+    description: APIs for Meals Details
+  #POCOR-7394-S ends
 paths:
   /api/v4/login:
     post:
@@ -3252,6 +3258,455 @@ paths:
             description: Invalid value
 
 # POCOR-7368 ends
+
+# POCOR-7394-S starts
+
+  /api/v4/users/genders:
+      get:
+        tags:
+          - User Details
+        summary: Get User Gender
+        description: Multiple user will be provided with comma separated strings
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/User-Genders'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/User-Genders'
+          '400':
+            description: Invalid status value
+
+  /api/v4/institutions/genders:
+      get:
+        tags:
+          - Institutions
+        summary: Get Institution Gender
+        description: Multiple Institution will be provided with comma separated strings
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Institutions-Genders'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Institutions-Genders'
+          '400':
+            description: Invalid status value
+
+  /api/v4/absence-reasons:
+      get:
+        tags:
+          - Institution students
+        summary: Get Institution Student Absence Reasons
+        description: Multiple Absence Reasons will be provided with comma separated strings
+        parameters:
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Absence-Reasons'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Absence-Reasons'
+          '400':
+            description: Invalid status value
+
+  /api/v4/absence-types:
+      get:
+        tags:
+          - Institution students
+        summary: Get Institution Absence Types
+        description: Multiple Absence Types will be provided with comma separated strings
+        parameters:
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Absence-Types'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Absence-Types'
+          '400':
+            description: Invalid status value
+
+  /api/v4/area-administratives:
+      get:
+        tags:
+          - Institution Areas
+        summary: Get Area Administratives
+        description: Multiple Area Administratives will be provided with comma separated strings
+        parameters:
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Area-Administratives'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Area-Administratives'
+          '400':
+            description: Invalid status value
+
+  /api/v4/area-administratives/{areaadministrativeId}:
+      get:
+        tags:
+          - Institution Areas
+        summary: Get Area Administratives By Area Administrative Id
+        description: Multiple Area Administrative will be provided with comma separated strings
+        parameters:
+          - name: areaadministrativeId
+            in: path
+            description: Add Administrative id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Area-Administratives-Id'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Area-Administratives-Id'
+          '400':
+            description: Invalid status value
+    
+  /api/v4/institutions/localities/{localitiesId}:
+    get:
+      tags:
+        - Institutions
+      summary: Get Institution Localities By Its Id.
+      description: Multiple Localities will be provided with comma separated strings
+      parameters:
+        - name: localitiesId
+          in: path
+          description: Add localities id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Localities'         
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Localities'
+        '400':
+          description: Invalid status value
+  
+  /api/v4/institutions/ownerships/{ownershipId}:
+    get:
+      tags:
+        - Institutions
+      summary: Get Institution Ownerships By Its Id.
+      description: Multiple Ownerships will be provided with comma separated strings
+      parameters:
+        - name: ownershipId
+          in: path
+          description: Add Ownerships id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Ownerships'         
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Ownerships'
+        '400':
+          description: Invalid status value
+
+  /api/v4/institutions/sectors/{sectorId}:
+    get:
+      tags:
+        - Institutions
+      summary: Get Institution Sectors By Its Id.
+      description: Multiple Sectors will be provided with comma separated strings
+      parameters:
+        - name: sectorId
+          in: path
+          description: Add Sectors id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Sectors'         
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Sectors'
+        '400':
+          description: Invalid status value
+  
+  /api/v4/institutions/providers/{providersId}:
+    get:
+      tags:
+        - Institutions
+      summary: Get Institution Providers By Its Id.
+      description: Multiple Providers will be provided with comma separated strings
+      parameters:
+        - name: providersId
+          in: path
+          description: Add Providers id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Providers'         
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Providers'
+        '400':
+          description: Invalid status value
+  
+  /api/v4/institutions/provider/{sectorId}:
+    get:
+      tags:
+        - Institutions
+      summary: Get Institution Providers By Its Sector Id.
+      description: Multiple Providers will be provided with comma separated strings
+      parameters:
+        - name: sectorId
+          in: path
+          description: Add Providers id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Providers'         
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Providers'
+        '400':
+          description: Invalid status value
+  
+  /api/v4/institutions/types/{typesId}:
+    get:
+      tags:
+        - Institutions
+      summary: Get Institution Types By Its Sector Id.
+      description: Multiple Types will be provided with comma separated strings
+      parameters:
+        - name: typesId
+          in: path
+          description: Add Types id to filter
+          required: true
+          schema:
+            type: integer
+            format: int
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Types'         
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institution-Types'
+        '400':
+          description: Invalid status value
+
+  /api/v4/meal-benefits:
+      get:
+        tags:
+          - Meals
+        summary: Benefit Type Option
+        description: Multiple Meal Benefits can be provided with comma separated strings
+        parameters:
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value
+  
+  /api/v4/meal-programmes:
+      get:
+        tags:
+          - Meals
+        summary: Meal Programme Option	
+        description: Multiple Meal Programme can be provided with comma separated strings
+        parameters:
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value
+
+# POCOR-7394-S Ends
 
 components:
   schemas:

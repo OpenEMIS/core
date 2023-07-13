@@ -214,4 +214,16 @@ class FieldOptionsController extends AppController
     public function Industries()    { 
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); 
     }  
+
+      //POCOR-7223
+      public function StudentBehaviourClassifications()    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); }
+   
+    //POCOR-7363 start
+     public function FoodTypes(){
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); 
+    } 
+    public function MealRatings(){
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); 
+    } 
+    //POCOR-7363 end
 }
