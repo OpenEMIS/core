@@ -29,8 +29,7 @@ class TextbookAddRequest extends FormRequest
     {
         return [
             'title' => 'required',
-            'year_published' => 'required',
-            
+            'year_published' => 'required',   
             'academic_period_id' => 'required',
             'education_grade_id' => 'required',
             'education_subject_id' => 'required',

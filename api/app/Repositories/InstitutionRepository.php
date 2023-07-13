@@ -36,7 +36,6 @@ use App\Models\StaffTypes;
 use App\Models\AssessmentItemResults;
 use App\Models\ConfigItem;
 use App\Models\InstitutionSubjectStaff;
-use App\Models\InstitutionTextbooks;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -1822,70 +1821,6 @@ class InstitutionRepository extends Controller
             return $this->sendErrorResponse('Subjects Staff List Not Found');
         }
     }
-
-    // POCOR-7368 starts
-    public function getInstitutionTextbookdata(int $institutionId, int $textbookId)
-    {
-        try {
-            $institutionTextbook = InstitutionTextbooks::where([
-                'institution_id'=> $institutionId,
-                 'textbook_id' => $textbookId
-                 ])
-                 ->first();
-
-            return $institutionTextbook;
-            
-        } catch (\Exception $e) {
-            Log::error(
-                'Failed to fetch list from DB',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Institution Textbook Data Not Found');
-        }
-    }
-
-    public function addInstitutionTextbooks($request){
-        
-        DB::beginTransaction();
-
-        try {
-            $data = $request->all();
-
-            $store['code'] = $data['code'];
-            $store['comment'] = $data['comment'];
-            $store['textbook_status_id'] = $data['textbook_status_id'];
-            $store['textbook_condition_id'] = $data['textbook_condition_id'];
-            $store['institution_id'] = $data['institution_id'];
-            $store['academic_period_id'] = $data['academic_period_id'];
-            $store['education_grade_id'] = $data['education_grade_id'];
-            $store['education_subject_id'] = $data['education_subject_id'];
-            // $store['security_user_id'] = $data['security_user_id'];
-            $store['student_id'] = $data['student_id'];
-            $store['textbook_id'] = $data['textbook_id'];
-            $store['modified_user_id'] = $data['modified_user_id'];
-            $store['modified'] = $data['modified'];
-            $store['created_user_id'] = JWTAuth::user()->id;
-            $store['created'] = Carbon::now()->toDateTimeString();
-
-            // dd($store);
-            $insert = InstitutionTextbooks::insert($store);
-            DB::commit();
-            return 1;
-
-        }
-        catch(\Exception $e) {
-            DB::rollback();
-            Log::error(
-                'Failed to add Institution Textbook.',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Failed to add Institution Textbook.');
-        }
-    }
-
-    // POCOR-7368 ends
 
 }
 
