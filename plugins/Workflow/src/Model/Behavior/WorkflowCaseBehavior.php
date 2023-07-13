@@ -145,6 +145,7 @@ class WorkflowCaseBehavior extends Behavior
             $events['ControllerAction.Model.processWorkflow']       = ['callable' => 'processWorkflow', 'priority' => 5];
             $events['ControllerAction.Model.processReassign']       = ['callable' => 'processReassign', 'priority' => 5];
             $events['ControllerAction.Model.processCaseLink']       = ['callable' => 'processCaseLink', 'priority' => 5];
+            $events['ControllerAction.Model.processComment']       = ['callable' => 'processComment', 'priority' => 5];
         } else {
             $events['ControllerAction.Model.index.beforePaginate']  = ['callable' => 'indexBeforePaginate', 'priority' => 1];
         }
@@ -384,7 +385,7 @@ class WorkflowCaseBehavior extends Behavior
         $this->model = $this->isCAv4() ? $this->_table : $this->controller->ControllerAction->model();
         $this->currentAction = $this->isCAv4() ? $this->_table->action : $this->controller->ControllerAction->action();
 
-        if (!is_null($this->model) && in_array($this->currentAction, ['index', 'view', 'remove', 'processWorkflow', 'processReassign','processCaseLink'])) {
+        if (!is_null($this->model) && in_array($this->currentAction, ['index', 'view', 'remove', 'processWorkflow', 'processReassign','processCaseLink','processComment'])) {
             $this->attachWorkflow = true;
             $this->controller->Workflow->attachWorkflow = $this->attachWorkflow;
         }
@@ -1642,6 +1643,7 @@ class WorkflowCaseBehavior extends Behavior
 
     public function getCommentModalOptions(Entity $entity)
     {
+        //echo "<pre>";print_r($_SESSION['Auth']['User']['id']);die;
         $model = $this->_table;
         $step = $this->getWorkflowStep($entity);
 
@@ -1692,8 +1694,8 @@ class WorkflowCaseBehavior extends Behavior
                     'label' => __('New Assignee'),
                     'type' => 'hidden',
                     'class'=> 'workflow-reassign-new-assignee',
-                    'assignee-url' => $assigneeUrl,
-                    'value' => 2
+                    //'assignee-url' => $assigneeUrl,
+                    'value' => $_SESSION['Auth']['User']['id']
                 ],
                 'comment' => [
                     'label' => __('Comment'),
@@ -1726,7 +1728,7 @@ class WorkflowCaseBehavior extends Behavior
                     'model' => $model,
                     'formOptions' => [
                         'class' => 'form-horizontal',
-                        'url' => $this->isCAv4() ? $model->url('processReassign') : $model->ControllerAction->url('processReassign'),
+                        'url' => $this->isCAv4() ? $model->url('processComment') : $model->ControllerAction->url('processComment'),
                         'onSubmit' => 'document.getElementById("reassign-submit").disabled=true;'
                     ],
                     'fields' => $fields
@@ -2730,7 +2732,7 @@ class WorkflowCaseBehavior extends Behavior
     }
 
     public function processReassign()
-    {
+    { 
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
         $request = $model->controller->request;
 
@@ -2752,6 +2754,38 @@ class WorkflowCaseBehavior extends Behavior
                 $requestDataComment = $requestData['comment'];
             }
             $this->WorkflowTransitions->trackChanges($workflowModelEntity, $entity, $assigneeId, $requestDataComment);
+
+            $entity->assignee_id = $assigneeId;
+            $model->save($entity);
+
+            $url = $model->url('view');
+            return $this->_table->controller->redirect($url);
+        }
+    }
+
+    public function processComment()
+    { 
+        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+        $request = $model->controller->request;
+
+        if ($request->is(['post', 'put'])) {
+            $requestData = $request->data;
+
+            $workflowModelEntity = $this->getWorkflowSetup($this->config('model'));
+
+            $assigneeId = $requestData['assignee_id'];
+            $entity = $model
+                ->find()
+                ->contain(['Assignees', 'Statuses'])
+                ->where([
+                    $model->aliasField('id') => $requestData['id']
+                ])
+                ->first();
+            $requestDataComment = null;
+            if (isset($requestData['comment'])) {
+                $requestDataComment = $requestData['comment'];
+            }
+            $this->WorkflowTransitions->trackCommentChanges($workflowModelEntity, $entity, $assigneeId, $requestDataComment);
 
             $entity->assignee_id = $assigneeId;
             $model->save($entity);

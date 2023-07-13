@@ -46,21 +46,18 @@
 										</button>
 										<ul class="dropdown-menu action-dropdown" role="menu" aria-labelledby="action-menu">
 											<div class="dropdown-arrow"><i class="fa fa-caret-up"></i></div>
-
 											<li role="presentation">
 												<a href="" role="menuitem" tabindex="-1" onclick="EditComment(<?= $trans->id ?>)" ><i class="fa fa-eye"></i>Edit</a>			
 											</li>
 											<li role="presentation">
-												<a href="#"  onclick="DeleteCase(<?= $trans->id ?>)"><i class="fa fa-trash"></i>Delete</a>			
+												<a href="#" data-href="delete.php?id=23" data-toggle="modal" data-target="#confirm-delete" onclick="GetCaseID(<?= $trans->id ?>)"><i class="fa fa-trash"></i>Delete</a>
 											</li>
-											
 										</ul>
 									</div>
 								</td>
 							</tr>
 						<?php } ?>
 
-				
 				</tbody>
 			</table>
 		</div>
@@ -88,6 +85,23 @@
 </div>
 <?php endif ?>
 
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+			<h4 class="modal-title" id="myModalLabel">Comments</h4>
+            </div>
+            <div class="modal-body">
+                Are you sure want to delete this comment?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
+				<button type="submit" name="Update" id="update" value="Update" class="btn btn-primary" onclick="DeleteCase()">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <div class="modal fade" id="largeModal" tabindex="-1" role="dialog" aria-labelledby="largeModal" aria-hidden="true">
       <div class="modal-dialog modal-lg">
@@ -100,13 +114,13 @@
 			<form name="frm" method="POST" action="">
 				<input type="hidden" name="caseId" class="workflowtransition-comment-required" id="workflowtransitions_case_id" value="0">
 				<div class="input textarea">
-					<label for="workflowtransitions-comment">Comment</label>
+					<label for="comment">Comment</label>
 					<textarea name="WorkflowTransitions[comment]" class="workflowtransition-comment" name="comment" id="name" rows="5"></textarea>
 				</div>
 				<div class="modal-footer">
 					
 					<button type="submit" name="Update" id="update" value="Update" class="btn btn-primary">Update</button>
-					<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					<button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
 				</div>
 			</form>
 						</div>
@@ -154,11 +168,12 @@
 
 	function DeleteCase(caseId){
 		var url = '/Workflows/ajaxDelCase';
+		var last_name = $("#workflowtransitions_case_id").val();
 		$.ajax({
 			url: url,
 			dataType: "json",
 			data: {
-				caseId: caseId
+				caseId: last_name
 			},
 			beforeSend: function(xhr) {
 				// always show loading when user click on submit button
@@ -185,6 +200,9 @@
 		});
 	}
 
+	function GetCaseID(caseId){
+		$('#workflowtransitions_case_id').val(caseId);
+	}
 
 	function EditComment(caseId){
 		//alert("edit here");
@@ -208,8 +226,6 @@
 				if (defaultKey == 'Success') {
 					$('#name').append(comment);
 				} 
-
-				
 			},
 			error: function(error) {
 				console.log('Workflow.getAssigneeOptions() error callback:');
