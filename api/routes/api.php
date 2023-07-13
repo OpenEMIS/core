@@ -49,6 +49,10 @@ Route::group(
         Route::get('institutions/grades/summaries', 'InstitutionController@getGradeSummariesList');
         Route::get('institutions/{id}/grades/summaries', 'InstitutionController@getInstitutionGradeSummariesList');
 
+        // POCOR-7394 starts
+        Route::get('institutions/genders', 'InstitutionController@getInstitutionGenders');
+        // POCOR-7394 ends
+
         Route::get('institutions/{id}/grades/student-nationality-summaries', 'InstitutionController@getInstitutionGradeStudentNationalitySummariesList');
 
 
@@ -91,7 +95,10 @@ Route::group(
 
 
         Route::get('users', 'UserController@getUsersList');
-        Route::get('users/{userId}', 'UserController@getUsersData');
+         // POCOR-7394 starts
+         Route::get('users/genders', 'UserController@getUsersGender');
+         // POCOR-7394 ends
+         Route::get('users/{userId}', 'UserController@getUsersData');
 
 
         Route::get('institutions/{id}/staff', 'InstitutionController@getInstitutionStaffList');
@@ -160,10 +167,34 @@ Route::group(
         Route::post('institutions/students/competencies/periods/comments', 'InstitutionController@addCompetencyPeriodComments');
 
 
+        Route::delete('institutions/institution-classes/education-grades/class-attendance', 'InstitutionController@deleteClassAttendance');
+
+        Route::delete('institutions/student/{studentId}/absence', 'InstitutionController@deleteStudentAttendance');
+
+
         Route::get('institutions/{institutionId}/students/{studentId}/assessment-item-results', 'InstitutionController@getStudentAssessmentItemResult');
         Route::get('area-administrative/display-address-area-level', 'InstitutionController@displayAddressAreaLevel');
 
         Route::get('area-administrative/display-birthplace-area-level', 'InstitutionController@displayBirthplaceAreaLevel');
+
+        // POCOR-7394-S starts
+
+        Route::get('absence-reasons', 'InstitutionController@getAbsenceReasons');
+        Route::get('absence-types', 'InstitutionController@getAbsenceTypes');
+        Route::get('area-administratives', 'InstitutionController@getAreaAdministratives');
+        Route::get('area-administratives/{areaadministrativeId}', 'InstitutionController@getAreaAdministrativesById');
+
+        Route::get('institutions/localities/{localitiesId}', 'InstitutionController@getInstitutionsLocalitiesById');
+        Route::get('institutions/ownerships/{ownershipId}', 'InstitutionController@getInstitutionsOwnershipsById');
+        Route::get('institutions/sectors/{sectorId}', 'InstitutionController@getInstitutionSectorsById');
+        Route::get('institutions/providers/{providersId}', 'InstitutionController@getInstitutionProvidersById');
+        Route::get('institutions/types/{typesId}', 'InstitutionController@getInstitutionTypesById');
+        Route::get('institutions/provider/{sectorId}', 'InstitutionController@getInstitutionProviderBySectorId');
+
+        Route::get('meal-benefits', 'InstitutionController@getMealBenefits');
+        Route::get('meal-programmes', 'InstitutionController@getMealProgrammes');
+
+        // POCOR-7394-S ends
 
         // POCOR-7368 starts
         Route::get('textbooks-statuses', 'TextbookController@getTextbookStatuses');

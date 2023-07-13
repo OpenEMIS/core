@@ -10,6 +10,7 @@ use App\Http\Requests\ReportCardCommentHomeroomAdd;
 use App\Http\Requests\CompetencyResultsAddRequest;
 use App\Http\Requests\CompetencyCommentAddRequest;
 use App\Http\Requests\CompetencyPeriodCommentAddRequest;
+use App\Http\Requests\DeleteClassAttendanceRequest;
 use Exception;
 
 class InstitutionController extends Controller
@@ -895,4 +896,318 @@ class InstitutionController extends Controller
         }
     }
 
+    // POCOR-7394-S starts
+
+    public function getAbsenceReasons(Request $request)
+    {
+        try {
+            
+            $data = $this->institutionService->getAbsenceReasons($request);
+            return $this->sendSuccessResponse("Absence Reasons List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Absence Reasons List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Absence Reasons List Not Found');
+        }
+    }
+
+    public function getAbsenceTypes(Request $request)
+    {
+        try {
+            
+            $data = $this->institutionService->getAbsenceTypes($request);
+            return $this->sendSuccessResponse("Absence Types List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Absence Types List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Absence Types List Not Found');
+        }
+    }
+
+
+    public function getAreaAdministratives(Request $request)
+    {
+        try {
+            
+            $data = $this->institutionService->getAreaAdministratives($request);
+            return $this->sendSuccessResponse("Area Administratives List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Area Administratives List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Administratives List Not Found');
+        }
+    }
+
+
+    public function getAreaAdministrativesById(int $areaAdministrativeId)
+    {
+        try {
+            
+            $data = $this->institutionService->getAreaAdministrativesById($areaAdministrativeId);
+
+            if($data){
+            return $this->sendSuccessResponse("Area Administrative Found", $data);
+            }
+            else {
+                return $this->sendErrorResponse('Area Administrative Not Found');
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Area Administrative from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Administrative Not Found');
+        }
+    }
+    
+    public function getInstitutionGenders()
+    {
+        try {
+            
+            $data = $this->institutionService->getInstitutionGenders();
+            return $this->sendSuccessResponse("Institution Genders List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Genders List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution Genders List Not Found');
+        }
+    }
+
+
+    public function getInstitutionsLocalitiesById(int $localityId)
+    {
+        try {
+            
+            $data = $this->institutionService->getInstitutionsLocalitiesById($localityId);
+
+            if($data){
+            return $this->sendSuccessResponse("Institution Locality Found", $data);
+            }
+            else {
+                return $this->sendErrorResponse('Institution Locality Not Found');
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Locality from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution Locality Not Found');
+        }
+    }
+
+    public function getInstitutionsOwnershipsById(int $ownershipId)
+    {
+        try {
+            
+            $data = $this->institutionService->getInstitutionsOwnershipsById($ownershipId);
+
+            if($data){
+            return $this->sendSuccessResponse("Institution Ownership Found", $data);
+            }
+            else {
+                return $this->sendErrorResponse('Institution Ownership Not Found');
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Ownership from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution Ownership Not Found');
+        }
+    }
+
+    public function getInstitutionSectorsById(int $sectorId)
+    {
+        try {
+            
+            $data = $this->institutionService->getInstitutionSectorsById($sectorId);
+
+            if($data){
+            return $this->sendSuccessResponse("Institution Sector Found", $data);
+            }
+            else {
+                return $this->sendErrorResponse('Institution Sector Not Found');
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Sector from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution Sector Not Found');
+        }
+    }
+
+    public function getInstitutionProvidersById(int $providerId)
+    {
+        try {
+            
+            $data = $this->institutionService->getInstitutionProvidersById($providerId);
+
+            if($data){
+            return $this->sendSuccessResponse("Institution Provider Found", $data);
+            }
+            else {
+                return $this->sendErrorResponse('Institution Provider Not Found');
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Provider from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution Provider Not Found');
+        }
+    }
+
+    public function getInstitutionTypesById(int $typeId)
+    {
+        try {
+            
+            $data = $this->institutionService->getInstitutionTypesById($typeId);
+
+            if($data){
+            return $this->sendSuccessResponse("Institution Type Found", $data);
+            }
+            else {
+                return $this->sendErrorResponse('Institution Type Not Found');
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Type from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution Type Not Found');
+        }
+    }
+
+    public function getInstitutionProviderBySectorId(int $sectorId)
+    {
+        try {
+            
+            $data = $this->institutionService->getInstitutionProviderBySectorId($sectorId);
+
+            if($data){
+            return $this->sendSuccessResponse("Institution Provider By Sector ID Found", $data);
+            }
+            else {
+                return $this->sendErrorResponse('Institution Provider By Sector ID Not Found');
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Provider By Sector ID from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution Provider By Sector ID Not Found');
+        }
+    }
+
+    public function getMealBenefits(Request $request)
+    {
+        try {
+            
+            $data = $this->institutionService->getMealBenefits($request);
+            return $this->sendSuccessResponse("Meal Benefits List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Benefits List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Benefits List Not Found');
+        }
+    }
+
+    public function getMealProgrammes(Request $request)
+    {
+        try {
+            
+            $data = $this->institutionService->getMealProgrammes($request);
+            return $this->sendSuccessResponse("Meal Programmes List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Meal Programmes List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Programmes List Not Found');
+        }
+    }
+
+    // POCOR-7394-S ends
+
+    public function deleteClassAttendance(DeleteClassAttendanceRequest $request)
+    {
+        try {
+            $data = $this->institutionService->deleteClassAttendance($request);
+            if($data == 1){
+                return $this->sendSuccessResponse("Student attendance deleted successfully.");
+            } elseif($data == 2){
+                return $this->sendSuccessResponse("Record not found for selected parameters.");
+            } else {
+                return $this->sendErrorResponse("Student attendance not deleted.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to delete student attendance.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to delete student attendance.');
+        }
+    }
+
+
+    public function deleteStudentAttendance(DeleteClassAttendanceRequest $request, $studentId)
+    {
+        try {
+            $data = $this->institutionService->deleteStudentAttendance($request, $studentId);
+            if($data == 1){
+                return $this->sendSuccessResponse("Student attendance deleted successfully.");
+            } elseif($data == 2){
+                return $this->sendSuccessResponse("Record not found for selected parameters.");
+            }else {
+                return $this->sendErrorResponse("Student attendance not deleted.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to delete student attendance.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to delete student attendance.');
+        }
+    }
 }

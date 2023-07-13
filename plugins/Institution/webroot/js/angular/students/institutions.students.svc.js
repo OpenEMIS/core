@@ -43,6 +43,9 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
         getAddNewStudentConfig: getAddNewStudentConfig,
+        //start POCOR-6172-HINDOL
+        getMultipleInstitutionsStudentEnrollmentConfig: getMultipleInstitutionsStudentEnrollmentConfig,
+        //end POCOR-6172-HINDOL
         getUserContactTypes: getUserContactTypes,
         getIdentityTypes: getIdentityTypes,
         getIdentityTypesExternalSave: getIdentityTypesExternalSave,
@@ -1015,6 +1018,15 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
             .where({type: 'Add New Student'})
             .ajax({defer: true});
     }
+
+    //POCOR-6172-HINDOL[START]
+    function getMultipleInstitutionsStudentEnrollmentConfig() {
+        return ConfigItems
+            .select()
+            .where({code: 'multiple_institutions_student_enrollment'})
+            .ajax({defer: true});
+    }
+    //POCOR-6172-HINDOL[END]
 
     function getUserContactTypes() {
         return ContactTypes

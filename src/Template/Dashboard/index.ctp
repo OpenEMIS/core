@@ -15,6 +15,7 @@ $panelHeader = $this->fetch('panelHeader');
 <div class="panel">
 	<div class="panel-body" style="position: relative;">
 		<?= $this->element('nav_tabs') ?>
+		<?= $this->element('OpenEmis.alert') ?><!--POCOR-7520 add alret element-->
 		<bg-splitter orientation="horizontal" class="content-splitter" collapse="{{DashboardController.collapse}}" elements="getSplitterElements" float-btn="false">
 		<bg-pane class="main-content">
 			<?= $this->element('Dashboard/profile'); ?>
