@@ -5443,3 +5443,455 @@ components:
           type: boolean
       xml:
         name: order
+    #POCOR-7394-S starts
+    User-Genders:
+      type: "object"
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        name:
+          type: string
+          format: varchar
+          example: Male
+        code:
+          type: string
+          format: varchar
+          example: M
+        order:
+          type: integer
+          format: int11
+          example: 1
+        created_user_id:
+          type: integer
+          format: int
+          example: 1
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    Institutions-Genders:
+      type: "object"
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        name:
+          type: string
+          format: varchar
+          example: Mixed
+        code:
+          type: string
+          format: varchar
+          example: X
+        order:
+          type: integer
+          format: int11
+          example: 1
+        created_user_id:
+          type: integer
+          format: int
+          example: 1
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    Absence-Reasons:
+      type: "object"
+      properties:
+        data:
+          type: "array"
+          items:
+            example: " { 'id': 1, 'name': 'Illness' }, { 'id': 3, 'name': 'Emergency' }, { 'id': 4, 'name': 'Weather' }, { 'id': 5, 'name': 'Family Matter' }, { 'id': 7, 'name': 'Personal Reasons' }, { 'id': 8, 'name': 'Transportation' }"
+    Absence-Types:
+      type: "object"
+      properties:
+        data:
+          type: "array"
+          items:
+            example: "{ 'id': 0, 'name': 'Present', 'code': 'PRESENT'}, { 'id': 1, 'name': 'Absence - Excused', 'code': 'EXCUSED'}, { 'id': 2, 'name': 'Absence - Unexcused', 'code': 'UNEXCUSED'}, { 'id': 3, 'name': 'Late', 'code': 'LATE'}"
+    Area-Administratives:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        code:
+          type: string
+          format: varchar
+          example: world
+        name:
+          type: string
+          format: varchar
+          example: world
+        is_main_country:
+          type: integer
+          format: int11
+          example: 0
+        parent_id:
+          type: integer
+          format: int11
+          example: 
+        lft:
+          type: integer
+          format: int11
+          example: 1
+        rght:
+          type: integer
+          format: int11
+          example: 450
+        area_administrative_level_id:
+          type: integer
+          format: int11
+          example: 6
+        order:
+          type: integer
+          format: int11
+          example: 1
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        modified_user_id:
+          type: integer
+          format: int
+          example: 0
+        modified:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+        created_user_id:
+          type: integer
+          format: int
+          example: 1
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+        area_administrative_level:
+          type: object
+          format: varchar
+          example: "{...}"
+    Area-Administratives-Id:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        code:
+          type: string
+          format: varchar
+          example: world
+        name:
+          type: string
+          format: varchar
+          example: world
+        is_main_country:
+          type: integer
+          format: int11
+          example: 0
+        parent_id:
+          type: integer
+          format: int11
+          example: 
+        lft:
+          type: integer
+          format: int11
+          example: 1
+        rght:
+          type: integer
+          format: int11
+          example: 450
+        area_administrative_level_id:
+          type: integer
+          format: int11
+          example: 6
+        order:
+          type: integer
+          format: int11
+          example: 1
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        modified_user_id:
+          type: integer
+          format: int
+          example: 0
+        modified:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+        created_user_id:
+          type: integer
+          format: int
+          example: 1
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    Institution-Localities:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        name:
+          type: string
+          format: varchar
+          example: urban
+        order:
+          type: integer
+          format: int11
+          example: 2
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        editable:
+          type: integer
+          format: int11
+          example: 1
+        default:
+          type: integer
+          format: int11
+          example: 0
+        international_code:
+          type: string
+          format: varchar
+          example:
+        national_code:
+          type: string
+          format: varchar
+          example:
+        modified_user_id:
+          type: integer
+          format: int
+          example: 0
+        modified:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+        created_user_id:
+          type: integer
+          format: int
+          example: 1
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    Institution-Ownerships:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        name:
+          type: string
+          format: varchar
+          example: Customary (Disputed)
+        order:
+          type: integer
+          format: int11
+          example: 3
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        editable:
+          type: integer
+          format: int11
+          example: 1
+        default:
+          type: integer
+          format: int11
+          example: 0
+        international_code:
+          type: string
+          format: varchar
+          example:
+        national_code:
+          type: string
+          format: varchar
+          example:
+        modified_user_id:
+          type: integer
+          format: int
+          example:
+        modified:
+          type: object
+          format: timestamp
+          example:
+        created_user_id:
+          type: integer
+          format: int
+          example: 1
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    Institution-Sectors:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        name:
+          type: string
+          format: varchar
+          example: Public
+        order:
+          type: integer
+          format: int11
+          example: 1
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        editable:
+          type: integer
+          format: int11
+          example: 1
+        default:
+          type: integer
+          format: int11
+          example: 0
+        international_code:
+          type: string
+          format: varchar
+          example:
+        national_code:
+          type: string
+          format: varchar
+          example:
+        modified_user_id:
+          type: integer
+          format: int
+          example: 2
+        modified:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+        created_user_id:
+          type: integer
+          format: int
+          example: 1
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    Institution-Providers:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        name:
+          type: string
+          format: varchar
+          example: Religious
+        order:
+          type: integer
+          format: int11
+          example: 2
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        editable:
+          type: integer
+          format: int11
+          example: 1
+        default:
+          type: integer
+          format: int11
+          example: 0
+        institution_sector_id:
+          type: integer
+          format: int11
+          example: 2
+        international_code:
+          type: string
+          format: varchar
+          example:
+        national_code:
+          type: string
+          format: varchar
+          example:
+        modified_user_id:
+          type: integer
+          format: int
+          example: 2
+        modified:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+        created_user_id:
+          type: integer
+          format: int
+          example: 1
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    Institution-Types:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 1
+        name:
+          type: string
+          format: varchar
+          example: Pre-primary
+        order:
+          type: integer
+          format: int11
+          example: 1
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        editable:
+          type: integer
+          format: int11
+          example: 1
+        default:
+          type: integer
+          format: int11
+          example: 0
+        international_code:
+          type: string
+          format: varchar
+          example:
+        national_code:
+          type: string
+          format: varchar
+          example:
+        modified_user_id:
+          type: integer
+          format: int
+          example:
+        modified:
+          type: object
+          format: timestamp
+          example:
+        created_user_id:
+          type: integer
+          format: int
+          example: 2
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    
+    #POCOR-7394-S ends
