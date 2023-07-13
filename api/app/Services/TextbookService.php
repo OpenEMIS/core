@@ -37,7 +37,28 @@ class TextbookService extends Controller
     
         try {
             $data = $this->textbookRepository->getTextbookByID($id);
-            return $data;
+
+            $list = [];
+            if($data){
+                    $list['id'] = $data['id'];
+                    $list['code'] = $data['code'];
+                    $list['title'] = $data['title'];
+                    $list['author'] = $data['author'];
+                    $list['publisher'] = $data['publisher'];
+                    $list['year_published'] = $data['year_published'];
+                    $list['ISBN'] = $data['ISBN'];
+                    $list['expiry_date'] = $data['expiry_date'];
+                    $list['academic_period_id'] = $data['academic_period_id'];
+                    $list['education_grade_id'] = $data['education_grade_id'];
+                    $list['education_subject_id'] = $data['education_subject_id'];
+                    $list['dimension_id'] = $data['textbook_dimension_id'];
+                    $list['modified_user_id'] = $data['modified_user_id'];
+                    $list['modified'] = $data['modified'];
+                    $list['created_user_id'] = $data['created_user_id'];
+                    $list['created'] = $data['created'];
+            }
+            
+            return $list;
             
         } catch (\Exception $e) {
             Log::error(
