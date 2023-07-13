@@ -151,13 +151,13 @@ var Workflow = {
 			return !error;
 		} else if (actionType == 'caselink') {
 			var caseId = $('.workflow-case-link').val();
-			console.log(caseId);
+			//console.log(caseId);
 			Workflow.resetError(actionType);
 
 			var error = false;
-			if (caseId == '') {
-				$('.workflow-reassign-new-assignee').addClass('form-error');
-				$('.workflow-reassign-new-assignee').closest('.input-select-wrapper').after('<div class="assignee-error error-message">' + $('.workflow-reassign-assignee-error').html() + '</div>');
+			if (caseId == '') { console.log('ram');
+				$('.workflow-case-link').addClass('form-error');
+				$('.workflow-case-link').closest('.input-select-wrapper').after('<div class="assignee-error error-message">' + $('.workflow-case-link-error').html() + '</div>');
 				error = true;
 			
 			} else {
