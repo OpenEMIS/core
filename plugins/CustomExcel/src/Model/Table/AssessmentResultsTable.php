@@ -505,6 +505,7 @@ class AssessmentResultsTable extends AppTable
                     $AssessmentItemResults->aliasField('student_id'),
                     $AssessmentItemResults->aliasField('marks'),
                     $AssessmentPeriods->aliasField('weight'),
+                    $AssessmentItems->aliasField('classification'),
                     'subject_classification' => '(
                         CASE
                         WHEN '.$AssessmentItems->aliasField('classification <> \'\'').' THEN '.$AssessmentItems->aliasField('classification').'
@@ -589,10 +590,10 @@ class AssessmentResultsTable extends AppTable
                         $assessmentItemResults->aliasField('academic_period_id') => $value['academic_period_id'],
                         $assessmentItemResults->aliasField('education_grade_id') => $value['education_grade_id'],
                         $assessmentItemResults->aliasField('assessment_period_id') => $value['assessment_period_id'],
-                        $assessmentItem->aliasField('classification') => $value['subject_classification']
+                        $assessmentItem->aliasField('classification') => $value['classification']
                     ])
                     ->group([
-                        $assessmentItem->aliasField('education_subject_id'),
+                        $assessmentItem->aliasField('classification'),
                     ])
                     ->toArray();
 //                $this->log('assessmentItemResultsData', 'debug');
@@ -606,6 +607,13 @@ class AssessmentResultsTable extends AppTable
                             ->select([
                                 $assessmentItemResults->aliasField('marks')
                             ])
+                            ->leftJoin(
+                                [$assessmentItem->alias() => $assessmentItem->table()],
+                                [
+                                    $assessmentItem->aliasField('assessment_id = ') . $assessmentItemResults->aliasField('assessment_id'),
+                                    $assessmentItem->aliasField('education_subject_id = ') . $assessmentItemResults->aliasField('education_subject_id')
+                                ]
+                            )
                             ->order([
                                 $assessmentItemResults->aliasField('modified') => 'DESC',
                                 $assessmentItemResults->aliasField('created') => 'DESC',
@@ -647,7 +655,7 @@ class AssessmentResultsTable extends AppTable
                     $AssessmentPeriods->aliasField('weight'),
                     'subject_classification' => '(
                             CASE
-                            WHEN '.$AssessmentItems->aliasField('classification <> \'\'').' THEN '.$AssessmentItems->aliasField('classification').'
+                            WHEN '.$AssessmentItems->aliasField("classification <> ''").' THEN '.$AssessmentItems->aliasField('classification').'
                                 ELSE '.$EducationSubjects->aliasField('name').'
                                 END
                         )',
@@ -739,6 +747,13 @@ class AssessmentResultsTable extends AppTable
                                 $assessmentItemResults->aliasField('modified') => 'DESC',
                                 $assessmentItemResults->aliasField('created') => 'DESC',
                             ])
+                            ->leftJoin(
+                                [$assessmentItem->alias() => $assessmentItem->table()],
+                                [
+                                    $assessmentItem->aliasField('assessment_id = ') . $assessmentItemResults->aliasField('assessment_id'),
+                                    $assessmentItem->aliasField('education_subject_id = ') . $assessmentItemResults->aliasField('education_subject_id')
+                                ]
+                            )
                             ->where([
                                 $assessmentItemResults->aliasField('student_id') => $item_val['student_id'],
                                 $assessmentItemResults->aliasField('academic_period_id') => $item_val['academic_period_id'],
