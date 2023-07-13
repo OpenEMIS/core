@@ -40,7 +40,7 @@ class POCOR7562 extends AbstractMigration
         //insert 
         $record = [
             [
-                'name' => 'CopyData', 'controller' => 'Archives', 'module' => 'Administration', 'category' => 'Archive', 'parent_id' => 2000,'_view' => 'DataManagementCopy.index|DataManagementCopy.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 410, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+                'name' => 'Copy', 'controller' => 'Archives', 'module' => 'Administration', 'category' => 'Archive', 'parent_id' => 2000,'_view' => 'DataManagementCopy.index|DataManagementCopy.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 410, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ]
         ];
         $this->insert('security_functions', $record);
@@ -50,20 +50,13 @@ class POCOR7562 extends AbstractMigration
         //insert 
         $record = [
             [
-                'name' => 'BackupLog', 'controller' => 'Archives', 'module' => 'Administration', 'category' => 'Archive', 'parent_id' => 2000,'_view' => 'DataManagementCopy.index|DataManagementCopy.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 411, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
-            ]
-        ];
-        $this->insert('security_functions', $record);
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 412');
-        //insert 
-        $record = [
-            [
-                'name' => 'Transfer', 'controller' => 'Archives', 'module' => 'Administration', 'category' => 'Archive', 'parent_id' => 2000,'_view' => 'DataManagementCopy.index|DataManagementCopy.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 412, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
+                'name' => 'Backup', 'controller' => 'Archives', 'module' => 'Administration', 'category' => 'Archive', 'parent_id' => 2000,'_view' => 'BackupLogs.index|BackupLogs.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => 411, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
             ]
         ];
         $this->insert('security_functions', $record);
 
         $this->execute("UPDATE security_functions SET `_view` = 'Notices.index|Notices.view' WHERE `name` = 'Notices'");
+        $this->execute("UPDATE security_functions SET `_view` = 'TransferLogs.index|TransferLogs.view' WHERE `name` = 'Archive'");
 
     }
 

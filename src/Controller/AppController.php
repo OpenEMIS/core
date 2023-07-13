@@ -332,7 +332,10 @@ class AppController extends Controller
     }
 
     public function getIdBySecurityFunctionName($actionParam, $controllerParam){
-        //print_r($controllerParam);die;
+        //POCOR-7562 start
+        $session = $this->request->session();
+        $superAdmin = $session->read('Auth.User.super_admin');
+        //POCOR-7562 end
         $name = '';
         if($controllerParam == 'Securities'){
             if($actionParam == 'Users'){
@@ -457,7 +460,7 @@ class AppController extends Controller
                 $name = 'Status';  
             }else if($actionParam == 'Rules'){
                 $name = 'Rules';  
-            }else if($actionParam == 'Filters'){
+            }else if($actionParam == 'Filters'){ //POCOR-7562
                 $name = 'Rules';  
             }else if($actionParam == 'Recipients'){
                 $name = 'Rules';  
@@ -643,15 +646,17 @@ class AppController extends Controller
                 $name = 'MoodleApi Log';
             }
         }else if($controllerParam == 'Archives'){
-            if($actionParam == 'add' || $actionParam == 'index' || $actionParam == 'view' || $actionParam == 'edit' ||  $actionParam == 'delete'){
-                $name = 'Archive';
-            }
-            if($actionParam == 'CopyData'){
-                $name = 'CopyData';
-            }else if($actionParam == 'BackupLog'){
-                 $name = 'BackupLog';
-            }else if($actionParam == 'Transfer'){
-                 $name = 'Transfer';
+            if($superAdmin == 0){
+                if($actionParam == 'add' || $actionParam == 'index' || $actionParam == 'view' || $actionParam == 'edit' ||  $actionParam == 'delete'){
+                    $name = 'Archive';
+                }
+                if($actionParam == 'CopyData'){ //POCOR-7562
+                    $name = 'Copy';
+                }else if($actionParam == 'BackupLog'){
+                     $name = 'Backup';
+                }else if($actionParam == 'Transfer'){
+                     $name = 'Archive';
+                }
             }
         }
         $module = 'Administration';
