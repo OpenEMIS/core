@@ -26,7 +26,6 @@ use Cake\ORM\TableRegistry;
 class FieldOptionComponent extends Component
 {
     private $controller;
-    
     private $fieldOptions = [];
 
     public $components = ['AccessControl'];
@@ -104,6 +103,12 @@ class FieldOptionComponent extends Component
             return "Meal.MealType";
         }elseif($key== "MealTargets" ){
             return "Meal.MealTarget";
+        //POCOR-7363 start
+        }elseif($key== "FoodTypes"){
+            return "Meal.FoodTypes";
+        }elseif($key== "MealRatings" ){
+            return "Meal.MealRatings";
+         //POCOR-7363 end
         }elseif($key== "MealNutritions" ){
             return "Meal.MealNutritions";
         }elseif($key== "MealImplementers" ){

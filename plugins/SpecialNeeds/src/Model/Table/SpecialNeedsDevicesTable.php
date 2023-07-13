@@ -167,4 +167,40 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
             'security_user_id =' .$studentUserId,
         ]);
     }
+
+    // Start POCOR-7467
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $monthOptions = ['1'=> '1', '2'=> '2','3'=> '3','4'=> '4', '5'=> '5', '6'=> '6','7'=> '7','8'=> '8','9'=> '9','10'=> '10', '11'=>'11', '12'=> '12'];
+        $monthOptions = ['-1' => '-- ' . __('Select Month') . ' --'] + $monthOptions;    
+        $selectedmonth = !is_null($this->request->query('month')) ? $this->request->query('month') : '-1';
+        $AcademicPeriods = TableRegistry::get('academic_periods');
+        $periodsOptions = $AcademicPeriods
+                    ->find('list', ['keyField' => 'start_year', 'valueField' => 'start_year'])
+                    ->order([$AcademicPeriods->aliasField('start_year') => 'DESC']);
+        $periodsOptions = ['-1' => '-- ' . __('Select Period') . ' --'] + $periodsOptions->toArray();      
+        $selectedPeriods = !is_null($this->request->query('period')) ? $this->request->query('period') : '-1';
+
+        if ($selectedPeriods > 0) {
+            $compare_start_date = $selectedPeriods .'-01-01';
+            $compare_end_date = $selectedPeriods .'-12-31';   
+            $query->where([$this->aliasField('created >=') => $compare_start_date, $this->aliasField('created <=') => $compare_end_date]); 
+        }
+
+        if ($selectedmonth > 0) {
+            if ($selectedPeriods > 0) {
+                $compare_start_date = $selectedPeriods .'-'. $selectedmonth.'-'.'01';
+                $compare_end_date = $selectedPeriods .'-'. $selectedmonth.'-'.date("t", strtotime($compare_start_date));   
+                $query->where([$this->aliasField('created >=') => $compare_start_date, $this->aliasField('created <=') => $compare_end_date]); 
+            }else{
+                $compare_start_date = date('Y').'-'.$selectedmonth.'-01';
+                $compare_end_date = date("Y-m-t", strtotime($compare_start_date));
+                $query->where([$this->aliasField('created >=') => $compare_start_date, $this->aliasField('created <=') => $compare_end_date]); 
+            } 
+        }
+        $this->controller->set(compact('monthOptions', 'selectedmonth','periodsOptions','selectedPeriods'));
+        $extra['elements']['controls'] = ['name' => 'SpecialNeeds.Devices/controls', 'data' => [], 'options' => [], 'order' => 1];
+    }
+
+    // End POCOR-7467
 }
