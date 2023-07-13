@@ -111,6 +111,10 @@ class AssessmentItemResultsTable extends AppTable
                             $assessmentItemResults->aliasField('assessment_id') => $entity->assessment_id,
                             $assessmentItemResults->aliasField('education_subject_id') => $entity->education_subject_id,
                         ])
+                        ->order([ //POCOR-7580-KHINDOL
+                            $assessmentItemResults->aliasField('created') => 'DESC',
+                            $assessmentItemResults->aliasField('modified') => 'DESC',
+                        ])
                         ->first();
                     if ($previousAssessment) {
                         $id = $previousAssessment->id;
