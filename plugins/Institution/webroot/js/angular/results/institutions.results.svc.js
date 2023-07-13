@@ -907,7 +907,14 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             }
         },
 
-        getRowData: function (gradingTypes, periods, institutionId, classId, assessmentId, academicPeriodId, educationSubjectId, educationGradeId) {
+        getRowData: function (gradingTypes,
+                              periods,
+                              institutionId,
+                              classId,
+                              assessmentId,
+                              academicPeriodId,
+                              educationSubjectId,
+                              educationGradeId) {
             var success = function (response, deferred) {
                 if (angular.isDefined(response.data.error)) {
                     deferred.reject(response.data.error);
@@ -934,7 +941,8 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         angular.forEach(subjectStudents, function (subjectStudent, key) {
                             currentStudentId = parseInt(subjectStudent.student_id);
                             assessmentPeriodId = subjectStudent.AssessmentItemResults.assessment_period_id;
-                            if (assessmentPeriodId != null && angular.isDefined(gradingTypes[assessmentPeriodId])) {
+                            if (assessmentPeriodId != null
+                                && angular.isDefined(gradingTypes[assessmentPeriodId])) {
                                 resultType = gradingTypes[assessmentPeriodId].assessment_grading_type.result_type;
                             }
 
@@ -1008,7 +1016,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
             return InstitutionSubjectStudentsTable
                 .select()
-                .find('Results', {
+                .find('InstitutionSubjectStudentsTableResults', {
                     institution_id: institutionId,
                     class_id: classId,
                     assessment_id: assessmentId,

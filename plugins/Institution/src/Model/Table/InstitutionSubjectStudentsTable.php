@@ -206,7 +206,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         }
     }
 
-    public function findResults(Query $query, array $options)
+    public function findInstitutionSubjectStudentsTableResults(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
         $classId = $options['class_id'];
