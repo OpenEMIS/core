@@ -8,7 +8,7 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
-class SaveStaffDataRequest extends FormRequest
+class SaveGuardianDataRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -28,12 +28,11 @@ class SaveStaffDataRequest extends FormRequest
     public function rules()
     {
         return [
-            'institution_id' => 'required',
             'first_name' => 'required',
             'last_name' => 'required',
             'gender_id' => 'required',
             'date_of_birth' => 'required',
-            'academic_period_id' => 'required'
+            //'academic_period_id' => 'required'
         ];
     }
 

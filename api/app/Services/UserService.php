@@ -229,4 +229,22 @@ class UserService extends Controller
         }
     }
 
+
+    public function saveGuardianData($request)
+    {
+        try {
+            $data = $this->userRepository->saveGuardianData($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to store guardian data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to store guardian data.');
+        }
+    }
+
 }

@@ -180,6 +180,7 @@ Route::group(
 
         Route::post('institutions/save-student', 'UserController@saveStudentData');
         Route::post('institutions/save-staff', 'UserController@saveStaffData');
+        Route::post('institutions/save-guardian', 'UserController@saveGuardianData');
         // POCOR-7394-S starts
 
         Route::get('absence-reasons', 'InstitutionController@getAbsenceReasons');
