@@ -13,6 +13,7 @@ use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\Utility\Text;
 use Cake\Core\Configure;
+use Cake\Log\Log;
 
 class AssessmentItemResultsTable extends AppTable
 {
@@ -129,7 +130,8 @@ class AssessmentItemResultsTable extends AppTable
                                    institution_classes_id=$institution_classes_id,
                                    institution_id=$institution_id,
                                    modified_user_id = $modified_user_id,
-                                   modified = '$modified'
+                                   modified = '$modified',
+                                   created = '$modified'
                                    where id='$id'";
                         $connection->execute($sql);
                         $previousAssessment = $assessmentItemResults->find()
@@ -641,5 +643,170 @@ class AssessmentItemResultsTable extends AppTable
             }
         }
     }
+
     /**POCOR-6912 ends*/
+    /*
+     * $assessmentItemResults = Cake\ORM\TableRegistry::get('Assessment.AssessmentItemResults');
+     * $options = ["student_id" => 45, "academic_period_id" => 32, "education_grade_id" => 189, "education_subject_id" => 60];
+     * $mark = $assessmentItemResults::getLastMark($options);
+     */
+    /**
+     * @param $options
+     * @return float|null
+     */
+    public static function getLastMark($options)
+    {
+//        echo('$options');
+//        print_r($options);
+        $id = $options['id'];
+        $student_id = $options['student_id'];
+        $academic_period_id = $options['academic_period_id'];
+        $education_grade_id = $options['education_grade_id'];
+        $education_subject_id = $options['education_subject_id'];
+        $assessment_id = self::getFromArray($options, 'assessment_id');
+        $assessment_period_id = self::getFromArray($options, 'assessment_period_id');
+        $assessment_grading_option_id = self::getFromArray($options, 'assessment_grading_option_id');
+        $institution_id = self::getFromArray($options, 'institution_id');
+        $institution_classes_id = self::getFromArray($options, 'institution_classes_id');
+        $select = 'assessment_item_results.marks, ';
+        if ($id) {
+            $select = $select . 'assessment_item_results.id, ';
+        }
+        if ($student_id) {
+            $select = $select . 'assessment_item_results.student_id, ';
+        }
+        if ($academic_period_id) {
+            $select = $select . 'assessment_item_results.academic_period_id, ';
+        }
+        if ($education_grade_id) {
+            $select = $select . 'assessment_item_results.education_grade_id, ';
+        }
+        if ($education_subject_id) {
+            $select = $select . 'assessment_item_results.education_subject_id, ';
+        }
+        if ($assessment_id) {
+            $select = $select . 'assessment_item_results.assessment_id, ';
+        }
+        if ($assessment_period_id) {
+            $select = $select . 'assessment_item_results.assessment_period_id, ';
+        }
+        if ($assessment_grading_option_id) {
+            $select = $select . 'assessment_item_results.assessment_grading_option_id, ';
+        }
+        if ($institution_id) {
+            $select = $select . 'assessment_item_results.institution_id, ';
+        }
+        if ($institution_classes_id) {
+            $select = $select . 'assessment_item_results.institution_classes_id, ';
+        }
+        $where = "WHERE assessment_item_results.academic_period_id = $academic_period_id
+    AND assessment_item_results.education_grade_id = $education_grade_id
+    AND assessment_item_results.education_subject_id = $education_subject_id
+    AND assessment_item_results.student_id = $student_id";
+        if ($id > 0) {
+            $where = $where . " AND assessment_item_results.id = $id ";
+        }
+        if ($assessment_id > 0) {
+            $where = $where . " AND assessment_item_results.assessment_id = $assessment_id ";
+        }
+        if ($assessment_period_id > 0) {
+            $where = $where . " AND assessment_item_results.assessment_period_id = $assessment_period_id ";
+        }
+        if ($assessment_grading_option_id > 0) {
+            $where = $where . " AND assessment_item_results.assessment_grading_option_id = $assessment_grading_option_id ";
+        }
+        if ($institution_id > 0) {
+            $where = $where . " AND assessment_item_results.institution_id = $institution_id ";
+        }
+        if ($institution_classes_id > 0) {
+            $where = $where . " AND assessment_item_results.institution_classes_id = $institution_classes_id";
+        }
+
+        $select = rtrim($select, ', ');
+        $sql = "SELECT $select
+FROM assessment_item_results
+INNER JOIN
+(
+    SELECT assessment_item_results.student_id
+        ,assessment_item_results.assessment_id
+        ,assessment_item_results.education_subject_id
+        ,assessment_item_results.assessment_period_id
+        ,MAX(assessment_item_results.created) latest_created
+    FROM assessment_item_results
+    $where    
+    GROUP BY assessment_item_results.student_id
+        ,assessment_item_results.assessment_id
+        ,assessment_item_results.education_subject_id
+        ,assessment_item_results.assessment_period_id
+) latest_grades
+ON latest_grades.student_id = assessment_item_results.student_id
+AND latest_grades.assessment_id = assessment_item_results.assessment_id
+AND latest_grades.education_subject_id = assessment_item_results.education_subject_id
+AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id
+AND latest_grades.latest_created = assessment_item_results.created
+
+GROUP BY assessment_item_results.student_id
+    ,assessment_item_results.assessment_id
+    ,assessment_item_results.education_subject_id
+    ,assessment_item_results.assessment_period_id";
+//        Log::write('debug', 'marks_sql');
+//        Log::write('debug', $sql);
+        $connection = ConnectionManager::get('default');
+        $marks = $connection->execute($sql)->fetch('assoc');
+        if (isset($marks['marks'])) {
+            return $marks;
+        }
+        return null;
+
+    }
+
+    private static function getFromArray($options, $field)
+    {
+        return isset($options[$field]) ? $options[$field] : null;
+    }
+
+    public static function getLastMarkForInstitutionResults($options)
+    {
+//        return $options;
+        $academic_period_id = $options['academic_period_id'];
+        $education_grade_id = $options['education_grade_id'];
+        $education_subject_id = $options['education_subject_id'];
+        $student_id = $options['student_id'];
+        $sql = "SELECT assessment_item_results.marks
+FROM assessment_item_results
+INNER JOIN
+(
+    SELECT assessment_item_results.student_id
+        ,assessment_item_results.assessment_id
+        ,assessment_item_results.education_subject_id
+        ,assessment_item_results.assessment_period_id
+        ,MAX(assessment_item_results.created) latest_created
+    FROM assessment_item_results
+    WHERE assessment_item_results.academic_period_id = $academic_period_id
+    AND assessment_item_results.education_grade_id = $education_grade_id
+    AND assessment_item_results.education_subject_id = $education_subject_id
+    AND assessment_item_results.student_id = $student_id    
+    GROUP BY assessment_item_results.student_id
+        ,assessment_item_results.assessment_id
+        ,assessment_item_results.education_subject_id
+        ,assessment_item_results.assessment_period_id
+) latest_grades
+ON latest_grades.student_id = assessment_item_results.student_id
+AND latest_grades.assessment_id = assessment_item_results.assessment_id
+AND latest_grades.education_subject_id = assessment_item_results.education_subject_id
+AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id
+AND latest_grades.latest_created = assessment_item_results.created
+
+GROUP BY assessment_item_results.student_id
+    ,assessment_item_results.assessment_id
+    ,assessment_item_results.education_subject_id
+    ,assessment_item_results.assessment_period_id";
+        $connection = ConnectionManager::get('default');
+        $marks = $connection->execute($sql)->fetch('assoc');
+        if (isset($marks['marks'])) {
+            return floatval($marks['marks']);
+        }
+        return null;
+
+    }
 }
