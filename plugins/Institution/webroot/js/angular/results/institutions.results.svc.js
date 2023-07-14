@@ -1039,7 +1039,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     deferred.reject(response.data.error);
                 } else {
                     var subjectStudents = response.data.data;
-                    console.log(subjectStudents);
+                    // console.log(subjectStudents);
                     var periodObj = {};
                     angular.forEach(periods, function (period, key) {
                         periodObj[period.id] = period;
