@@ -464,14 +464,13 @@ class AssessmentResultsTable extends AppTable
                                                                         ArrayObject $extra)
     {
         $this->log('onExcelTemplateInitialiseGroupAssessmentItemResults', 'debug');
-        $this->log($params, 'debug');
-        $this->log($extra, 'debug');
-        $this->log($this->query()->sql(), 'debug');
+//        $this->log($params, 'debug');
+//        $this->log($extra, 'debug');
+//        $this->log($this->query()->sql(), 'debug');
         if (array_key_exists('class_id', $params)
             && array_key_exists('assessment_id', $params)
             && array_key_exists('institution_id', $params)) {
             $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-            $OtherAssessmentItemResults = TableRegistry::get('assessment_item_results');
             $AssessmentGradingOptions = TableRegistry::get('Assessment.AssessmentGradingOptions');
             $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
@@ -484,8 +483,8 @@ class AssessmentResultsTable extends AppTable
             $query = $AssessmentItemResults->find()
                 ->where([
                     $AssessmentItemResults->aliasField('academic_period_id') => $academic_period_id,
-                    $AssessmentItemResults->aliasField('institution_id') => $institution_id,
-                    $AssessmentItemResults->aliasField('institution_classes_id') => $class_id,
+//                    $AssessmentItemResults->aliasField('institution_id') => $institution_id,
+//                    $AssessmentItemResults->aliasField('institution_classes_id') => $class_id,
                     $AssessmentItemResults->aliasField('education_grade_id') => $grade_id
                 ])
                 ->group([$AssessmentItemResults->aliasField('assessment_period_id')]);
@@ -505,6 +504,7 @@ class AssessmentResultsTable extends AppTable
                     $AssessmentItemResults->aliasField('student_id'),
                     $AssessmentItemResults->aliasField('marks'),
                     $AssessmentPeriods->aliasField('weight'),
+                    'classification_subjects' => '(GROUP_CONCAT(' . $EducationSubjects->aliasField('name') . '))',
                     $AssessmentItems->aliasField('classification'),
                     'subject_classification' => '(
                         CASE
@@ -513,8 +513,9 @@ class AssessmentResultsTable extends AppTable
                             END
                     )',
                     'academic_term_value' => $AssessmentPeriods->aliasField('academic_term'),
-                    'academic_term_total_weighted_marks' => $query->func()->sum($AssessmentItemResults->aliasField('marks * ') . $AssessmentPeriods->aliasField('weight')),
-                    'academic_term_total_weighted_marks_new_school' => $query->func()->sum($AssessmentItemResults->aliasField('marks * ') . $AssessmentPeriods->aliasField('weight')),
+                    'academic_term_total_weighted_marks' => '(SUM(' . $AssessmentItemResults->aliasField('marks') . '*' . $AssessmentPeriods->aliasField('weight') . '))',
+//                    'academic_term_total_weighted_marks' => $query->func()->sum($AssessmentItemResults->aliasField('marks * ') . $AssessmentPeriods->aliasField('weight')),
+                    'academic_term_total_weighted_marks_first' => '(SUM(' . $AssessmentItemResults->aliasField('marks') . '*' . $AssessmentPeriods->aliasField('weight') . '))',
                 ])
                 ->innerJoin(
                     [$this->alias() => $this->table()],
@@ -543,8 +544,8 @@ class AssessmentResultsTable extends AppTable
                     $AssessmentItemResults->aliasField('education_grade_id') => $grade_id
                 ])
                 ->order([
-                    $AssessmentItemResults->aliasField('modified') => 'DESC',
                     $AssessmentItemResults->aliasField('created') => 'DESC',
+                    $AssessmentItemResults->aliasField('modified') => 'DESC',
                 ])
                 ->group([
                     $AssessmentItemResults->aliasField('academic_period_id'),
@@ -557,7 +558,7 @@ class AssessmentResultsTable extends AppTable
                 ->hydrate(false)
                 ->toArray();
             $this->log('withTerm', 'debug');
-            $this->log(sizeof($withTerm), 'debug');
+            $this->log($withTerm, 'debug');
             $sum = 0;
             foreach($withTerm AS $key => $value){
                 //POCOR-6586 starts
@@ -590,7 +591,7 @@ class AssessmentResultsTable extends AppTable
                         $assessmentItemResults->aliasField('academic_period_id') => $value['academic_period_id'],
                         $assessmentItemResults->aliasField('education_grade_id') => $value['education_grade_id'],
                         $assessmentItemResults->aliasField('assessment_period_id') => $value['assessment_period_id'],
-                        $assessmentItem->aliasField('classification') => $value['classification']
+                        $assessmentItem->aliasField('classification') => $value['subject_classification']
                     ])
                     ->group([
                         $assessmentItem->aliasField('classification'),
@@ -615,8 +616,8 @@ class AssessmentResultsTable extends AppTable
                                 ]
                             )
                             ->order([
-                                $assessmentItemResults->aliasField('modified') => 'DESC',
                                 $assessmentItemResults->aliasField('created') => 'DESC',
+                                $assessmentItemResults->aliasField('modified') => 'DESC',
                             ])
                             ->where([
                                 $assessmentItemResults->aliasField('student_id') => $item_val['student_id'],
@@ -868,14 +869,14 @@ class AssessmentResultsTable extends AppTable
             // $studentSubjectResults = array_merge($withoutTerm->toArray(), $withTerm->toArray(), $averageRecords);
             $studentSubjectResults = array_merge($withoutTerm, $withTerm, $averageRecords);
 
-//            $this->log('lastresult', 'debug');
+            $this->log('lastresult', 'debug');
 //            $this->log(sizeof($withoutTerm), 'debug');
 //            $this->log(sizeof($withTerm), 'debug');
 //            $this->log(sizeof($averageRecords), 'debug');
 //            $this->log(sizeof($studentSubjectResults), 'debug');
 //            $this->log('studentSubjectResults', 'debug');
-//            $this->log($recordsToUse, 'debug');
-//            $this->log($studentSubjectResults, 'debug');
+            $this->log($recordsToUse, 'debug');
+            $this->log($studentSubjectResults, 'debug');
             return $studentSubjectResults;
         }
     }
