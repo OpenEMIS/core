@@ -125,8 +125,19 @@ class QueryCompiler
     protected function _sqlCompiler(&$sql, $query, $generator)
     {
         return function ($parts, $name) use (&$sql, $query, $generator) {
-            if (!count($parts)) {
-                return;
+            //POCOR-7521-KHINDOL
+            $phpVersion = phpversion();
+            if (version_compare($phpVersion, '7.0.0', '>')) {
+                if (
+                    !isset($parts) ||
+                    ((is_array($parts) || $parts instanceof \Countable) && !count($parts))
+                ) {
+                    return;
+                }
+            }else{
+                if (!count($parts)) {
+                    return;
+                }
             }
             if ($parts instanceof ExpressionInterface) {
                 $parts = [$parts->sql($generator)];
