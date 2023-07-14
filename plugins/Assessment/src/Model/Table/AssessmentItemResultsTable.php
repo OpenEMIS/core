@@ -645,11 +645,13 @@ class AssessmentItemResultsTable extends AppTable
     }
 
     /**POCOR-6912 ends*/
+
     /*
      * $assessmentItemResults = Cake\ORM\TableRegistry::get('Assessment.AssessmentItemResults');
      * $options = ["student_id" => 45, "academic_period_id" => 32, "education_grade_id" => 189, "education_subject_id" => 60];
      * $mark = $assessmentItemResults::getLastMark($options);
      */
+
     /**
      * @param $options
      * @return float|null
