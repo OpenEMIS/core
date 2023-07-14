@@ -7,6 +7,7 @@ use App\Services\UserService;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\SaveStudentDataRequest;
 use App\Http\Requests\SaveStaffDataRequest;
+use App\Http\Requests\SaveGuardianDataRequest;
 
 class UserController extends Controller
 {
@@ -115,6 +116,30 @@ class UserController extends Controller
             );
 
             return $this->sendErrorResponse('Users Gender List Not Found');
+        }
+    }
+
+
+    public function saveGuardianData(SaveGuardianDataRequest $request)
+    {
+        try {
+            $data = $this->userService->saveGuardianData($request);
+            
+            if($data == 1){
+                return $this->sendSuccessResponse("Guardian data stored successfully.");
+            } elseif($data == 2) {
+                return $this->sendErrorResponse("Invalid academic period.");
+            }else {
+                return $this->sendErrorResponse("Guardian data not stored.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to store guardian data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to store guardian data.');
         }
     }
 }
