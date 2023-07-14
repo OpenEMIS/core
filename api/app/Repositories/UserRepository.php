@@ -57,6 +57,11 @@ use App\Models\StudentCustomFieldValues;
 use App\Models\SecurityGroupUsers;
 use App\Models\InstitutionStaffShifts;
 use App\Models\InstitutionStaffTransfers;
+use App\Models\StaffCustomFieldValues;
+use App\Models\StaffCustomFields;
+use App\Models\StudentCustomField;
+use App\Models\UserContacts;
+use App\Models\StudentGuardians;
 
 class UserRepository extends Controller
 {
@@ -423,22 +428,26 @@ class UserRepository extends Controller
                         }
 
                         foreach ($param['custom'] as $skey => $sval) {
-                            $entityCustomData = [
-                                'id' => Str::uuid(),
-                                'text_value' => $sval['text_value']??Null,
-                                'number_value' => $sval['number_value']??Null,
-                                'decimal_value' => $sval['decimal_value']??Null,
-                                'textarea_value' => $sval['textarea_value']??Null,
-                                'date_value' => $sval['date_value']??Null,
-                                'time_value' => $sval['time_value']??Null,
-                                'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
-                                'student_custom_field_id' => $sval['student_custom_field_id']??Null,
-                                'student_id' => $user_record_id,
-                                'created_user_id' => JWTAuth::user()->id,
-                                'created' => Carbon::now()->toDateTimeString()
-                            ];
+                            $check = StudentCustomField::where('id', $sval['student_custom_field_id']??0)->first();
+                            if($check){
+                                $entityCustomData = [
+                                    'id' => Str::uuid(),
+                                    'text_value' => $sval['text_value']??Null,
+                                    'number_value' => $sval['number_value']??Null,
+                                    'decimal_value' => $sval['decimal_value']??Null,
+                                    'textarea_value' => $sval['textarea_value']??Null,
+                                    'date_value' => $sval['date_value']??Null,
+                                    'time_value' => $sval['time_value']??Null,
+                                    'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
+                                    'student_custom_field_id' => $sval['student_custom_field_id']??Null,
+                                    'student_id' => $user_record_id,
+                                    'created_user_id' => JWTAuth::user()->id,
+                                    'created' => Carbon::now()->toDateTimeString()
+                                ];
 
-                            $store = StudentCustomFieldValues::insert($entityCustomData);
+                                $store = StudentCustomFieldValues::insert($entityCustomData);
+                            }
+                            
                         }
                     }
 
@@ -486,6 +495,7 @@ class UserRepository extends Controller
 
     public function saveStaffData($request)
     {
+        DB::beginTransaction();
         try {
             $requestData = $request->all();
             if (!empty($requestData)) {
@@ -555,7 +565,7 @@ class UserRepository extends Controller
 
 
                 //get Student Status List
-                $statuses = StudentStatuses::pluck('id', 'code')->toArray();
+                $statuses = StaffStatuses::pluck('id', 'code')->toArray();
                 
 
                 //get nationality data
@@ -710,7 +720,7 @@ class UserRepository extends Controller
                                         })
                                         ->where('security_group_institutions.security_group_id', $institutionsSecurityGroupId->security_group_id??0)
                                         ->where('security_group_users.security_user_id', $staffId)
-                                        ->where('security_group_users.security_role_id', $roleval->id)
+                                        ->where('security_group_users.security_role_id', $roleval['id'])
                                         ->count();
 
                                     if (empty($countSecurityGroupUsers)) {
@@ -718,7 +728,7 @@ class UserRepository extends Controller
                                             'id' => Str::uuid(),
                                             'security_group_id' => $institutionsSecurityGroupId->security_group_id, 
                                             'security_user_id' => $staffId,
-                                            'security_role_id' => $roleval->id, 
+                                            'security_role_id' => $roleval['id'], 
                                             'created_user_id' => $userId,
                                             'created' => date('Y-m-d H:i:s')
                                         ];
@@ -741,7 +751,7 @@ class UserRepository extends Controller
                             ->where('security_roles.code', '!=', 'HOMEROOM_TEACHER')
                             ->first();
 
-
+                        
                         $entityStaffsData = [
                             'FTE' => $fte,
                             'start_date' => $startDate,
@@ -779,29 +789,34 @@ class UserRepository extends Controller
                     if (!empty($custom)) {
                         //if staff custom field values already exist in `staff_custom_field_values` table then delete the old values and insert the new ones.
 
-                        $StaffCustomFieldValuesCount = StudentCustomFieldValues::where('staff_id', $staffId)->count();
+                        $StaffCustomFieldValuesCount = StaffCustomFieldValues::where('staff_id', $staffId)->count();
 
                         if ($StaffCustomFieldValuesCount > 0) {
-                            $delete = StudentCustomFieldValues::where(['staff_id', $staffId])->delete();
+                            $delete = StaffCustomFieldValues::where(['staff_id', $staffId])->delete();
                         }
 
                         foreach ($custom as $skey => $sval) {
-                            $entityCustomData = [
-                                'id' => Str::uuid(),
-                                'text_value' => $sval['text_value']??Null,
-                                'number_value' => $sval['number_value']??Null,
-                                'decimal_value' => $sval['decimal_value']??Null,
-                                'textarea_value' => $sval['textarea_value']??Null,
-                                'date_value' => $sval['date_value']??Null,
-                                'time_value' => $sval['time_value']??Null,
-                                'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
-                                'staff_custom_field_id' => $sval['staff_custom_field_id'],
-                                'staff_id' => $staffId,
-                                'created_user_id' => $userId,
-                                'created' => date('Y-m-d H:i:s')
-                            ];
 
-                            $store = StudentCustomFieldValues::insert($entityCustomData);
+                            $check = StaffCustomFields::where('id', $sval['staff_custom_field_id']??0)->first();
+                            if(!empty($check)){
+                                $entityCustomData = [
+                                    'id' => Str::uuid(),
+                                    'text_value' => $sval['text_value']??Null,
+                                    'number_value' => $sval['number_value']??Null,
+                                    'decimal_value' => $sval['decimal_value']??Null,
+                                    'textarea_value' => $sval['textarea_value']??Null,
+                                    'date_value' => $sval['date_value']??Null,
+                                    'time_value' => $sval['time_value']??Null,
+                                    'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
+                                    'staff_custom_field_id' => $sval['staff_custom_field_id'],
+                                    'staff_id' => $staffId,
+                                    'created_user_id' => $userId,
+                                    'created' => date('Y-m-d H:i:s')
+                                ];
+
+                                $store = StaffCustomFieldValues::insert($entityCustomData);
+                            }
+                            
                         }
                     }
 
@@ -824,16 +839,16 @@ class UserRepository extends Controller
                         'new_FTE' => $fte,
                         'new_start_date' => $startDate,
                         'new_end_date' => $endDate,
-                        'previous_institution_staff_id' => '',
-                        'previous_staff_type_id' => '',
-                        'previous_FTE' => '',
-                        'previous_end_date' => '',
-                        'previous_effective_date' => '',
+                        'previous_institution_staff_id' => Null,
+                        'previous_staff_type_id' => Null,
+                        'previous_FTE' => Null,
+                        'previous_end_date' => Null,
+                        'previous_effective_date' => Null,
                         'comment' => $comment,
                         'transfer_type' => 0,
                         'all_visible' => 0,
-                        'modified_user_id' => '',
-                        'modified' => '',
+                        'modified_user_id' => Null,
+                        'modified' => Null,
                         'created_user_id' => $userId,
                         'created' => date('Y-m-d H:i:s'),
                     ];
@@ -978,7 +993,7 @@ class UserRepository extends Controller
                                             })
                                             ->where('security_group_institutions.security_group_id', $institutionsSecurityGroupId->security_group_id??0)
                                             ->where('security_group_users.security_user_id', $staffId)
-                                            ->where('security_group_users.security_role_id', $roleval->id)
+                                            ->where('security_group_users.security_role_id', $roleval['id'])
                                             ->count();
 
                                         if (empty($countSecurityGroupUsers)) {
@@ -986,7 +1001,7 @@ class UserRepository extends Controller
                                                 'id' => Str::uuid(),
                                                 'security_group_id' => $institutionsSecurityGroupId->security_group_id, 
                                                 'security_user_id' => $staffId,
-                                                'security_role_id' => $roleval->id, 
+                                                'security_role_id' => $roleval['id'], 
                                                 'created_user_id' => $userId,
                                                 'created' => date('Y-m-d H:i:s')
                                             ];
@@ -1046,29 +1061,34 @@ class UserRepository extends Controller
                         if (!empty($custom)) {
                             //if staff custom field values already exist in `staff_custom_field_values` table then delete the old values and insert the new ones.
 
-                            $StaffCustomFieldValuesCount = StudentCustomFieldValues::where('staff_id', $user_record_id)->count();
+                            $StaffCustomFieldValuesCount = StaffCustomFieldValues::where('staff_id', $user_record_id)->count();
 
                             if ($StaffCustomFieldValuesCount > 0) {
-                                $delete = StudentCustomFieldValues::where(['staff_id', $user_record_id])->delete();
+                                $delete = StaffCustomFieldValues::where(['staff_id', $user_record_id])->delete();
                             }
 
                             foreach ($custom as $skey => $sval) {
-                                $entityCustomData = [
-                                    'id' => Str::uuid(),
-                                    'text_value' => $sval['text_value']??Null,
-                                    'number_value' => $sval['number_value']??Null,
-                                    'decimal_value' => $sval['decimal_value']??Null,
-                                    'textarea_value' => $sval['textarea_value']??Null,
-                                    'date_value' => $sval['date_value']??Null,
-                                    'time_value' => $sval['time_value']??Null,
-                                    'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
-                                    'staff_custom_field_id' => $sval['staff_custom_field_id'],
-                                    'staff_id' => $user_record_id,
-                                    'created_user_id' => $userId,
-                                    'created' => date('Y-m-d H:i:s')
-                                ];
+                                $check = StaffCustomFields::where('id', $sval['staff_custom_field_id']??0)->first();
 
-                                $store = StudentCustomFieldValues::insert($entityCustomData);
+                                if(!empty($check)){
+                                    $entityCustomData = [
+                                        'id' => Str::uuid(),
+                                        'text_value' => $sval['text_value']??Null,
+                                        'number_value' => $sval['number_value']??Null,
+                                        'decimal_value' => $sval['decimal_value']??Null,
+                                        'textarea_value' => $sval['textarea_value']??Null,
+                                        'date_value' => $sval['date_value']??Null,
+                                        'time_value' => $sval['time_value']??Null,
+                                        'file' => !empty($sval['file']) ? file_get_contents($sval['file']) : '',
+                                        'staff_custom_field_id' => $sval['staff_custom_field_id'],
+                                        'staff_id' => $user_record_id,
+                                        'created_user_id' => $userId,
+                                        'created' => date('Y-m-d H:i:s')
+                                    ];
+
+                                    $store = StaffCustomFieldValues::insert($entityCustomData);
+                                }
+                                
                             }
                         }
 
@@ -1082,12 +1102,237 @@ class UserRepository extends Controller
             DB::commit();
             return 1;
         } catch(\Exception $e) {
+            DB::rollback();
             Log::error(
                 'Failed to store staff data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
             return $this->sendErrorResponse('Failed to store staff data.');
+        }
+    }
+
+
+    public function saveGuardianData($request)
+    {
+        DB::beginTransaction();
+        try {
+            $requestData = $request->all();
+            if (!empty($requestData)) {
+                $studentOpenemisNo = (array_key_exists('student_openemis_no', $requestData)) ? $requestData['student_openemis_no'] : null;
+                $openemisNo = (array_key_exists('openemis_no', $requestData)) ? $requestData['openemis_no'] : null;
+                $firstName = (array_key_exists('first_name', $requestData)) ? $requestData['first_name'] : null;
+                $middleName = (array_key_exists('middle_name', $requestData)) ? $requestData['middle_name'] : null;
+                $thirdName = (array_key_exists('third_name', $requestData)) ? $requestData['third_name'] : null;
+                $lastName = (array_key_exists('last_name', $requestData)) ? $requestData['last_name'] : null;
+                $preferredName = (array_key_exists('preferred_name', $requestData)) ? $requestData['preferred_name'] : null;
+                $genderId = (array_key_exists('gender_id', $requestData)) ? $requestData['gender_id'] : null;
+                $dateOfBirth = (array_key_exists('date_of_birth', $requestData)) ? date('Y-m-d', strtotime($requestData['date_of_birth'])) : null;
+                $identityNumber = (array_key_exists('identity_number', $requestData)) ? $requestData['identity_number'] : null;
+                $nationality_id = (array_key_exists('nationality_id', $requestData)) ? $requestData['nationality_id'] : null;
+                $nationalityName = (array_key_exists('nationality_name', $requestData)) ? $requestData['nationality_name'] : null;
+                $username = (array_key_exists('username', $requestData)) ? $requestData['username'] : null;
+                $password = (array_key_exists('password', $requestData)) ? Hash::make($requestData['password']) : null;
+                $address = (array_key_exists('address', $requestData)) ? $requestData['address'] : null;
+                $postalCode = (array_key_exists('postal_code', $requestData)) ? $requestData['postal_code'] : null;
+                $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData)) ? $requestData['birthplace_area_id'] : null;
+                $addressAreaId = (array_key_exists('address_area_id', $requestData)) ? $requestData['address_area_id'] : null;
+                $identityTypeId = (array_key_exists('identity_type_id', $requestData)) ? $requestData['identity_type_id'] : null;
+                $identityTypeName = (array_key_exists('identity_type_name', $requestData)) ? $requestData['identity_type_name'] : null;
+
+                $guardianRelationId = (array_key_exists('guardian_relation_id', $requestData)) ? $requestData['guardian_relation_id'] : null;
+                $studentId = (array_key_exists('student_id', $requestData)) ? $requestData['student_id'] : null;
+                $photoContent = (array_key_exists('photo_base_64', $requestData)) ? $requestData['photo_base_64'] : null;
+                $photoName = (array_key_exists('photo_name', $requestData)) ? $requestData['photo_name'] : null;
+
+                $userId =  JWTAuth::user()->id??1;
+                $contactType = (array_key_exists('contact_type', $requestData)) ? $requestData['contact_type'] : null;
+                $contactValue = (array_key_exists('contact_value', $requestData)) ? $requestData['contact_value'] : null;
+
+
+                //get prefered language
+                $pref_lang = ConfigItem::where(['code' => 'language','type' => 'System'])->first();
+
+                //get nationality data
+                $nationalities = '';
+                if (!empty($nationalityName)) {
+                    $nationalities = Nationalities::where(['name' => $nationalityName])->first();
+
+                    if (empty($nationalities)) {
+                        //Adding new nationality...
+                        $orderNationalities = Nationalities::orderBy('order', 'DESC')->first();
+
+                        $entityNationality = [
+                            'name' => $nationalityName,
+                            'order' => !empty($orderNationalities->order) ? $orderNationalities->order + 1 : 0,
+                            'visible' => 1,
+                            'editable' => 1,
+                            'identity_type_id' => null,
+                            'default' => 0,
+                            'international_code' => '',
+                            'national_code' => '',
+                            'external_validation' => 0,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+
+                        $nationalityId = Nationalities::insertGetId($entityNationality);
+                    } else {
+                        $nationalityId = $nationalities->id;
+                    }
+                }
+
+
+                $CheckGaurdianExist = SecurityUsers::where(['openemis_no' => $openemisNo])->first();
+
+                if (!empty($CheckGaurdianExist)) {
+                    $existGaurdianId = $CheckGaurdianExist->id;
+
+                    $entityData = [
+                        'id' => !empty($existGaurdianId) ? $existGaurdianId : '',
+                        'openemis_no' => $openemisNo,
+                        'first_name' => $firstName,
+                        'middle_name' => $middleName,
+                        'third_name' => $thirdName,
+                        'last_name' => $lastName,
+                        'preferred_name' => $preferredName,
+                        'gender_id' => $genderId,
+                        'date_of_birth' => $dateOfBirth,
+                        'nationality_id' => !empty($nationalityId) ? $nationalityId : Null,
+                        'preferred_language' => $pref_lang->value,
+                        'username' => $username,
+                        'password' => $password,
+                        'address' => $address,
+                        'address_area_id' => $addressAreaId,
+                        'birthplace_area_id' => $birthplaceAreaId,
+                        'postal_code' => $postalCode,
+                        'photo_name' => $photoName,
+                        'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                        'is_guardian' => 1,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s'),
+                    ];
+
+                    $SecurityUserResult = $CheckGaurdianExist;
+                    $securityUserUpdate = SecurityUsers::where('id', $CheckGaurdianExist->id)->update($entityData);
+                } else {
+                    $entityData = [
+                        'openemis_no' => $openemisNo,
+                        'first_name' => $firstName,
+                        'middle_name' => $middleName,
+                        'third_name' => $thirdName,
+                        'last_name' => $lastName,
+                        'preferred_name' => $preferredName,
+                        'gender_id' => $genderId,
+                        'date_of_birth' => $dateOfBirth,
+                        'nationality_id' => !empty($nationalityId) ? $nationalityId : Null,
+                        'preferred_language' => $pref_lang->value,
+                        'username' => $username,
+                        'password' => $password,
+                        'address' => $address,
+                        'address_area_id' => $addressAreaId,
+                        'birthplace_area_id' => $birthplaceAreaId,
+                        'postal_code' => $postalCode,
+                        'photo_name' => $photoName,
+                        'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                        'is_staff' => 1,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s'),
+                    ];
+
+                    $securityUserId = SecurityUsers::insertGetId($entityData);
+                    $SecurityUserResult = SecurityUsers::where('id', $securityUserId)->first();
+                }
+
+
+                if ($SecurityUserResult) {
+                    $user_record_id = $SecurityUserResult->id;
+
+                    if (!empty($nationality_id) || !empty($nationalityName)) {
+                        if (!empty($nationalityId)) {
+                            $checkexistingNationalities = UserNationalities::where('nationality_id', $nationalityId)
+                                ->where('security_user_id', $user_record_id)
+                                ->first();
+
+                            if (empty($checkexistingNationalities)) {
+                                $entityNationalData = [
+                                    'id' => Str::uuid(),
+                                    'preferred' => 1,
+                                    'nationality_id' => $nationalityId,
+                                    'security_user_id' => $user_record_id,
+                                    'created_user_id' => $userId,
+                                    'created' => date('Y-m-d H:i:s')
+                                ];
+
+                                $UserNationalitiesResult = UserNationalities::insert($entityNationalData);
+                            }
+                        }
+                    }
+
+                    if (!empty($nationalityId) && !empty($identityTypeId) && !empty($identityNumber)) {
+                        $identityTypes = IdentityTypes::where('name', $identityTypeName)->first();
+
+                        if (!empty($identityTypes)) {
+                            $checkexistingIdentities = UserIdentities::where('nationality_id', $nationalityId)->where('identity_type_id', $identityTypeId)->where('number', $identityNumber)->first();
+
+                            if (empty($checkexistingIdentities)){
+                                $entityIdentitiesData = [
+                                    'identity_type_id' => $identityTypes->id,
+                                    'number' => $identityNumber,
+                                    'nationality_id' => $nationalityId,
+                                    'security_user_id' => $user_record_id,
+                                    'created_user_id' => $userId,
+                                    'created' => date('Y-m-d H:i:s')
+                                ];
+
+                                $store = UserIdentities::insert($entityIdentitiesData);
+                            }
+                        }
+                    }
+
+                    if (!empty($contactType) && !empty($contactValue)) {
+                        $entityContactData = [
+                            'contact_type_id' => $contactType,
+                            'value' => $contactValue,
+                            'preferred' => 1,
+                            'security_user_id' => $user_record_id,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s')
+                        ];
+
+                        $store = UserContacts::insert($entityContactData);
+                    }
+
+                    //if relationship id and staudent openemis_no is not empty
+                    if (!empty($guardianRelationId) && !empty($studentOpenemisNo)) {
+                        $StudentData = SecurityUsers::where('openemis_no', $studentOpenemisNo)->first();
+                        if(!empty($StudentData)){
+                            $entityGuardiansData = [
+                                'id' => Str::uuid(),
+                                'student_id' => $StudentData->id,
+                                'guardian_id' => $user_record_id,
+                                'guardian_relation_id' => $guardianRelationId,
+                                'created_user_id' => $userId,
+                                'created' => date('Y-m-d H:i:s')
+                            ];
+
+                            $store = StudentGuardians::insert($entityGuardiansData);
+                        }
+                    }
+                }
+            }
+            DB::commit();
+            return 1;
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            dd($e);
+            Log::error(
+                'Failed to store guardian data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to store guardian data.');
         }
     }
 }
