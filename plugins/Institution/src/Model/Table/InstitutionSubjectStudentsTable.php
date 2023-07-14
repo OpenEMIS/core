@@ -447,7 +447,8 @@ class InstitutionSubjectStudentsTable extends AppTable
                         "assessment_grading_option_id" => "-1",
                         "assessment_period_id" => $assessment_period_id,
                         'assessment_id' => $assessment_id];
-                    $mark = $Results::getLastMark($options);
+                    $marks = $Results::getLastMark($options);
+                    $mark = $marks[0];
                     $row['mark_id'] = self::getFromArray($mark, 'id');
                     $row['mark'] = self::getFromArray($mark, 'marks');
                     $row['academic_period_id'] = self::getFromArray($mark, 'academic_period_id');
