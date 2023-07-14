@@ -462,7 +462,19 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         //POCOR-7067 Starts
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $timeZone= $ConfigItems->value("time_zone");
+        //POCOR-7581 start
+        $ConfigItem =   $ConfigItems
+        ->find()
+        ->select(['zonevalue' => 'ConfigItems.value'])
+        ->where([
+            $ConfigItems->aliasField('name') => 'Time Zone'
+               ])
+        ->first();
+        $timeZone = $ConfigItem->zonevalue;
+        if(empty($timZone)){
+        $this->Alert->warning('ReportCardStatuses.timezone');
+        }
+         //POCOR-7581 end
         date_default_timezone_set($timeZone);//POCOR-7067 Ends
         //Start:POCOR-6785 need to convert this custom query to cake query
         $conn = ConnectionManager::get('default');
@@ -1358,12 +1370,13 @@ class ReportCardStatusesTable extends ControllerActionTable
                             ->first();
         $timZone = $ConfigItem->zonevalue;
         $value = '';
+        if($timZone){//POCOR-7581
         if ($entity->has('report_card_started_on')) {
             $date = new DateTime($entity->report_card_started_on, new DateTimeZone($timZone));
             $date->setTimezone(new DateTimeZone($timZone));
             $value = $date->format('F d, Y h:i:s');
         }
-
+        }//POCOR-7581
         return $value;
         //END: POCOR-6716
     }
@@ -1385,6 +1398,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                             ->first();
         $timZone = $ConfigItem->zonevalue;
         $value = '';
+        if($timZone){//POCOR-7581
         if ($entity->has('report_card_completed_on')) {
             if(!empty($timZone)){
                 $date = new DateTime($entity->report_card_completed_on, new DateTimeZone($timZone));
@@ -1392,7 +1406,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $value = $date->format('F d, Y h:i:s');
             }
         }
-
+        }//POCOR-7581
         return $value;
         //END: POCOR-6716
     }
