@@ -2088,7 +2088,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     {
         // console.log('checkUserExistByIdentityFromConfiguration');
         //POCOR-7481-HINDOL
-        const user_id =  studentId = StudentController.studentData && StudentController.studentData.id ? StudentController.studentData.id : null;
+        const user_id = studentId = StudentController.studentData && StudentController.studentData.id ? StudentController.studentData.id : null;
 
         const { identity_type_id, identity_number, id } = StudentController.selectedStudentData;
         // StudentController.error.nationality_id = "";
@@ -2126,10 +2126,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if (result.data.user_exist === 1)
         {
             StudentController.messageClass = 'alert-warning';
-            StudentController.message = 'This identity is already present in the system.';
+            StudentController.message = result.data.message;
             StudentController.isIdentityUserExist = true;
-            StudentController.error.identity_number =
-            "This identity is already present in the system.";
+            StudentController.error.identity_number = result.data.message;
             $window.scrollTo({bottom:0});
         } else
         {

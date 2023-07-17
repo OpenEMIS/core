@@ -1100,6 +1100,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             name: selectedData.birth_area_name,
             code: selectedData.birth_area_code
         };
+        scope.selectedUserData.user_id = selectedData.id;
         scope.selectedUserData.openemis_no = selectedData.openemis_no;
         scope.selectedUserData.first_name = selectedData.first_name;
         scope.selectedUserData.middle_name = selectedData.middle_name;
@@ -1456,7 +1457,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     }
     scope.checkUserExistByIdentityFromConfiguration = async function checkUserExistByIdentityFromConfiguration()
     {
-        const { identity_type_id, identity_number, nationality_id } = scope.selectedUserData;
+        const { identity_type_id, identity_number, user_id } = scope.selectedUserData;
         // scope.error.nationality_id = "";
         scope.error.identity_type_id = ""
         scope.error.identity_number = "";
@@ -1487,15 +1488,15 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 identity_type_id: identity_type_id,
                 identity_number: identity_number,
               /*   nationality_id: nationality_id, */
+                user_id: user_id
             });
  
         if (result.data.user_exist === 1)
         { 
             scope.messageClass = 'alert_warn';
-            scope.message = 'This identity has already existed in the system.';
+            scope.message =  result.data.message;
             scope.isIdentityUserExist = true;
-            scope.error.identity_number =
-            "This identity has already existed in the system.";
+            scope.error.identity_number =  result.data.message;
             $window.scrollTo({bottom:0});
         } else
         { 
