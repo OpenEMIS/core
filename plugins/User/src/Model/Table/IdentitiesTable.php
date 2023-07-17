@@ -48,8 +48,8 @@ class IdentitiesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->log('beforeSave', 'debug');
-        $this->log($entity, 'debug');
+//        $this->log('beforeSave', 'debug');
+//        $this->log($entity, 'debug');
         $options = [];
         $options['identity_type_id'] = $entity->identity_type_id;
         $options['identity_number'] = $entity->number;
@@ -63,8 +63,8 @@ class IdentitiesTable extends ControllerActionTable
 
     public function afterSaveUsers(Event $event, Entity $entity)
     {
-        $this->log('beforeSage', 'debug');
-        $this->log($entity, 'debug');
+//        $this->log('beforeSage', 'debug');
+//        $this->log($entity, 'debug');
         //whichever identity type and number that came from import user, will be treat as new identity user record.
         $options = [];
         $options['identity_type_id'] = $entity->identity_type_id;
