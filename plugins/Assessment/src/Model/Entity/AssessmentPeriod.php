@@ -25,7 +25,7 @@ class AssessmentPeriod extends Entity
         $securityGroupUserData=$SecurityGroupUsersTable->
                                find('all')->where([$SecurityGroupUsersTable->aliasField('security_user_id') => $user_id])
                                ->toArray();
-                               $ids=[];
+        $ids=[];
         foreach( $securityGroupUserData as $key=>$value){
             $ids[]=$value['security_role_id'];
         }
@@ -35,6 +35,7 @@ class AssessmentPeriod extends Entity
             $ExcludedSecurityRoleEntity=$ExcludedSecurityRoleTable->find('all')
                                                                ->where([
                                                                 'security_role_id In'=>$ids,
+                                                                'security_role_id IN'=>$ids,
                                                                 'assessment_period_id'=> $assessment_period_id
                                                                ])
                                                                ->toArray();

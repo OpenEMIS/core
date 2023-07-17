@@ -1,3 +1,10 @@
+### [3.89.1] - 2023-07-11
+- Bug Fixed: Institutions > Students > Undo: Changes to Behaviour for WIthdraw and Transfer for Pending Cancellation
+- Bug Fixed: Institutions > Performance > Outcomes > Import page: The user is not seeing any option to import outcomes
+- Bug Fixed: Institutions>Performance>Assessments/Students > Academic > Assessments: Page is not showing latest assessment marks
+- Bug Fixed: Institutions> Students > Profiles: Profile view permission is not working
+- Bug Fixed: Administrations > System Setup > System Configurations > Student Settings : Allow users to enroll students to multiple institutions for import
+
 ### [3.89.0] - 2023-07-07
 - Implemented: 2.16 Reports > Student Case Report
 - Implemented: Develop a function to copy Institution > Performance > Competencies from one academic period to another
