@@ -5805,7 +5805,7 @@ class InstitutionsController extends AppController
                             ])
                             ->first();
                         if (!empty($identityTypes)) {
-                            $UserIdentities = TableRegistry::get('user_identities');
+                            $UserIdentities = TableRegistry::get('User.Identities');
                             $checkexistingIdentities = $UserIdentities->find()
                                 ->where([
                                     $UserIdentities->aliasField('nationality_id') => $nationalities->id,
@@ -6399,7 +6399,7 @@ class InstitutionsController extends AppController
                                 ])
                                 ->first();
                             if (!empty($identityTypes)) {
-                                $UserIdentities = TableRegistry::get('user_identities');
+                                $UserIdentities = TableRegistry::get('User.Identities');
                                 $checkexistingIdentities = $UserIdentities->find()
                                     ->where([
                                         $UserIdentities->aliasField('nationality_id') => $nationalities->id,
@@ -6407,7 +6407,7 @@ class InstitutionsController extends AppController
                                         $UserIdentities->aliasField('number') => $identityNumber,
                                     ])->first();
                                 if (empty($checkexistingIdentities)) {
-                                    $UserIdentities = TableRegistry::get('user_identities');
+                                    $UserIdentities = TableRegistry::get('User.Identities');
                                     $entityIdentitiesData = [
                                         'identity_type_id' => $identityTypes->id,
                                         'number' => $identityNumber,
@@ -6759,7 +6759,7 @@ class InstitutionsController extends AppController
                             ])
                             ->first();
                         if (!empty($identityTypes)) {
-                            $UserIdentities = TableRegistry::get('user_identities');
+                            $UserIdentities = TableRegistry::get('User.Identities');
                             $checkexistingIdentities = $UserIdentities->find()
                                 ->where([
                                     $UserIdentities->aliasField('nationality_id') => $nationalities->id,
@@ -6767,7 +6767,7 @@ class InstitutionsController extends AppController
                                     $UserIdentities->aliasField('number') => $identityNumber,
                                 ])->first();
                             if (empty($checkexistingIdentities)) {
-                                $UserIdentities = TableRegistry::get('user_identities');
+                                $UserIdentities = TableRegistry::get('User.Identities');
                                 $entityIdentitiesData = [
                                     'identity_type_id' => $identityTypes->id,
                                     'number' => $identityNumber,
@@ -7156,7 +7156,7 @@ class InstitutionsController extends AppController
                         ])
                         ->first();
                     if (!empty($identityTypes)) {
-                        $UserIdentities = TableRegistry::get('user_identities');
+                        $UserIdentities = TableRegistry::get('User.Identities');
                         $checkexistingIdentities = $UserIdentities->find()
                             ->where([
                                 $UserIdentities->aliasField('nationality_id') => $nationalities->id,
@@ -7430,7 +7430,7 @@ class InstitutionsController extends AppController
                         ])
                         ->first();
                     if (!empty($identityTypes)) {
-                        $UserIdentities = TableRegistry::get('user_identities');
+                        $UserIdentities = TableRegistry::get('User.Identities');
                         $checkexistingIdentities = $UserIdentities->find()
                             ->where([
                                 $UserIdentities->aliasField('nationality_id') => $nationalities->id,
@@ -7560,14 +7560,14 @@ class InstitutionsController extends AppController
 
 
             if (!empty($identityTypeId) && !empty($identityNumber)) {//POCOR-7390 starts
-                $UserIdentities = TableRegistry::get('user_identities');//POCOR-7390
+                $UserIdentities = TableRegistry::get('User.Identities');//POCOR-7390
                 $where = [$UserIdentities->aliasField('identity_type_id') => $identityTypeId,
                     $UserIdentities->aliasField('number') => $identityNumber];
                 if (!empty($userId)) {
                     $where[] = $UserIdentities->aliasField('security_user_id') . ' != ' . $userId;
                 }
                 if (!empty($nationalityId)) {
-                    $where[$UserIdentities->aliasField('nationalityId')] = $nationalityId;
+                    $where[$UserIdentities->aliasField('nationality_id')] = $nationalityId;
                 }
 
                 $CheckUserExist = $UserIdentities->find()
