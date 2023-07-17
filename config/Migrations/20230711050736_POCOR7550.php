@@ -13,9 +13,9 @@ class POCOR7550 extends AbstractMigration
     public function up()
     {
         // Backup table
-        $this->execute('CREATE TABLE `zz_7550_assessment_periods` LIKE `assessment_periods`');
+       $this->execute('CREATE TABLE `zz_7550_assessment_periods` LIKE `assessment_periods`');
         $this->execute('INSERT INTO `zz_7550_assessment_periods` SELECT * FROM `assessment_periods`');
-        $this->execute("ALTER TABLE `assessment_periods` ADD COLUMN editable_student_statuses DEFAULT '0' COMMENT '1=yes, 0=no' INT(11) AFTER assessment_id ");
+        $this->execute("ALTER TABLE `assessment_periods` ADD COLUMN editable_student_statuses  INT(11) DEFAULT 0 COMMENT '1=yes, 0=no' AFTER assessment_id ");
         
     }
     public function down()
