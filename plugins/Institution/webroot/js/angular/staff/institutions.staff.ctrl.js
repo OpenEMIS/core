@@ -2565,10 +2565,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     
-    async function checkUserExistByIdentityFromConfiguration()
-    { 
-        const { identity_type_id,identity_number } = StaffController.selectedStaffData;
-        StaffController.error.nationality_id = "";
+     async function checkUserExistByIdentityFromConfiguration()
+    {
+        // console.log('checkUserExistByIdentityFromConfiguration');
+        //POCOR-7593-HINDOL
+        const user_id = staffId = StaffController.staffData && StaffController.staffData.id ? StaffController.staffData.id : null;
+
+        const { identity_type_id, identity_number, id } = StaffController.selectedStaffData;
+        // StaffController.error.nationality_id = "";
         StaffController.error.identity_type_id = ""
         StaffController.error.identity_number = "";
 
@@ -2583,33 +2587,33 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         {
             StaffController.error.identity_type_id =
                 "This field cannot be left empty";
-                return false;
+            return false;
         }
         if (!identity_number)
         {
             StaffController.error.identity_number =
                 "This field cannot be left empty";
-
-                return false;
+            return false;
         }
 
         const result =
             await InstitutionsStaffSvc.checkUserAlreadyExistByIdentity({
                 identity_type_id: identity_type_id,
                 identity_number: identity_number,
-              /*   nationality_id: nationality_id, */
+                //POCOR-7481-HINDOL if the identity belongs to the same openemis_no - skip
+                user_id: user_id
             });
-      
+
         if (result.data.user_exist === 1)
-        { 
+        {
             StaffController.messageClass = 'alert-warning';
-            StaffController.message = 'This identity has already existed in the system.';
+            StaffController.message = result.data.message;
             StaffController.isIdentityUserExist = true;
             StaffController.error.identity_number =
-            "This identity has already existed in the system.";
+                result.data.message;
             $window.scrollTo({bottom:0});
         } else
-        { 
+        {
             StaffController.messageClass = '';
             StaffController.message = '';
             StaffController.isIdentityUserExist = false;
