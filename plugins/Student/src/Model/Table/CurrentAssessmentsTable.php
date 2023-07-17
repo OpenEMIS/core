@@ -98,11 +98,12 @@ class CurrentAssessmentsTable extends ControllerActionTable
         //POCOR-7201[START]
         $session = $this->Session;
         $institutionId = $session->read('Institution.Institutions.id');
+        $studentId = $this->studentId;
         //POCOR-7201[END]
         $query->contain('Assessments');
         $query->contain('AssessmentPeriods');
         $query->contain('EducationSubjects');
-        $maxAssess = TableRegistry::get('assessment_item_results');
+        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
 
 
         $query->find('all', [
@@ -112,6 +113,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
                 'education_subject_id' => 'EducationSubjects.id',
                 'assessment_period_id' => 'AssessmentPeriods.id',
                 'assessment_period_name' => 'AssessmentPeriods.name',
+                'assessment_period_term' => 'AssessmentPeriods.academic_term',
                 'assessment_id' => 'Assessments.id',
                 'assessment_name' => 'Assessments.name',
                 'assessment_code' => 'Assessments.code',
@@ -126,8 +128,10 @@ class CurrentAssessmentsTable extends ControllerActionTable
             ->group([ //POCOR-7536 change
                 $this->aliasField('student_id'),
                 $this->aliasField('education_subject_id'),
+                $this->aliasField('assessment_id'),
                 $this->aliasField('assessment_period_id'),
-                $this->aliasField('assessment_period_id')
+                $AssessmentPeriods->aliasField('academic_term'),
+//                $this->aliasField('assessment_id')
             ]);
 //        $this->log($query->sql, 'debug');
         // Academic Periods filter
@@ -142,28 +146,31 @@ class CurrentAssessmentsTable extends ControllerActionTable
         // removed for the quickfix POCOR-7536-KHINDOL
         //End
         //Assessment Period filter
+        $selectedAcademicPeriod = $this->setAcademicPeriodOptions($institutionId, $studentId, $selectedAcademicPeriod);
+
         if (!empty($selectedAcademicPeriod)) {
-            $academicPeriodRecord = $this->AcademicPeriods->get($selectedAcademicPeriod);
-            $startDate = $academicPeriodRecord->start_date->format('Y-m-d');
-            $endDate = $academicPeriodRecord->end_date->format('Y-m-d');
-            $InstitutionStudents = TableRegistry::get('Assessment.AssessmentPeriods');
-            $institutionQuery = $InstitutionStudents->find('list')
-                ->where([
-                    'start_date >=' => $startDate,
-                    'end_date <=' => $endDate
-                ])
-                ->order([$InstitutionStudents->aliasField('created') => 'DESC'])
-                ->toArray();
+            $selectedAssessment = $this->setAssessmentOptions($selectedAcademicPeriod, $selectedAssessment);
+            $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
-            $institutionOptions = $institutionQuery;
-            $institutionOptions = ['-1' => __('All Assessment Periods')] + $institutionOptions;
-            $selectedInstitution = !is_null($this->request->query('assessment_period_id')) ? $this->request->query('assessment_period_id') : -1;
-            $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
+        }
+        if (!empty($selectedAssessment)) {
+            $selectedAssessmentPeriod = $this->setAssessmentPeriodOptions($selectedAssessment, $selectedAssessmentPeriod);
+            if ($selectedAssessment != null) {
+                if ($selectedAssessment != -1) {
+                    $where[$this->aliasField('assessment_id')] = $selectedAssessment;
+                }
+            }
 
-            if ($selectedInstitution != "-1") {
-                $where[$this->aliasField('assessment_period_id')] = $selectedInstitution;
+        }
+        if (!empty($selectedAssessmentPeriod)) {
+            if ($selectedAssessmentPeriod != null) {
+                if ($selectedAssessmentPeriod != -1) {
+                    $where[$this->aliasField('assessment_period_id')] = $selectedAssessmentPeriod;
+                }
             }
         }
+        $where[$this->aliasField('institution_id')] = $institutionId;
+        $where[$this->aliasField('student_id')] = $studentId;
         $query->find('all')->where([$where]);
 //        $this->log($query->sql(), 'debug');
 
@@ -172,7 +179,12 @@ class CurrentAssessmentsTable extends ControllerActionTable
 
     public function onGetAssessmentsName(Event $event, Entity $entity)
     {
-        return $entity->assessment_code . ' - ' . $entity->assessment_name;
+        return $entity->assessment_name . ' - ' . $entity->assessment_code . ' - ' . $entity->assessment_name;
+    }
+
+    public function onGetAssessmentPeriodName(Event $event, Entity $entity)
+    {
+        return $entity->assessment_period_term . ' - ' . $entity->assessment_period_name;
     }
 
     /**
@@ -377,6 +389,95 @@ class CurrentAssessmentsTable extends ControllerActionTable
         }
         //POCOR-7526::End
         return $is_archive_exists;
+    }
+
+    /**
+     * @param $institutionId
+     * @param $studentId
+     * @param $selectedAcademicPeriod
+     * @return int|string|null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function setAcademicPeriodOptions($institutionId, $studentId, $selectedAcademicPeriod)
+    {
+    // Academic Periods filter
+        $ItemResults = TableRegistry::get('assessment_item_results');
+        $years_arr = $ItemResults->find()
+            ->select('academic_period_id')
+            ->distinct('academic_period_id')
+            ->where(['student_id' => $this->studentId])
+            ->toArray();
+        $years_ids = array_column($years_arr, 'academic_period_id');
+
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList([
+            'isEditable' => true,
+            'conditions' => [
+                $this->AcademicPeriods->aliasField('id IN') => $years_ids]
+        ]
+        );
+
+        $selectedAcademicPeriod = $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod);
+        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
+        return $selectedAcademicPeriod;
+    }
+
+    /**
+     * @param Query $selectedAcademicPeriod
+     * @return array
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function setAssessmentOptions($selectedAcademicPeriod, $selectedAssessment = -1)
+    {
+        $ItemResults = TableRegistry::get('assessment_item_results');
+        $assessments_arr = $ItemResults->find()
+            ->select('assessment_id')
+            ->distinct('assessment_id')
+            ->where(['student_id' => $this->studentId])
+            ->toArray();
+        $assessments_ids = array_column($assessments_arr, 'assessment_id');
+
+        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $assessmentOptions = $Assessments
+            ->find('list')
+            ->where([$Assessments->aliasField('id IN') => $assessments_ids,
+                $Assessments->aliasField('academic_period_id') => $selectedAcademicPeriod])
+            ->toArray();
+        $assessmentOptions = ['-1' => __('All Assessments')] + $assessmentOptions;
+        $selectedAssessment = $this->advancedSelectOptions($assessmentOptions, $selectedAssessment);
+        $this->controller->set(compact('assessmentOptions', 'selectedAssessment'));
+        //Assessment[End]
+        return $selectedAssessment;
+    }
+
+    /**
+     * @param int $selectedAssessment
+     * @param int $selectedAssessmentPeriod
+     * @return int|string|null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function setAssessmentPeriodOptions($selectedAssessment = -1, $selectedAssessmentPeriod = -1)
+    {
+        $ItemResults = TableRegistry::get('assessment_item_results');
+        $assessment_periods_arr = $ItemResults->find()
+            ->select('assessment_id')
+            ->distinct('assessment_id')
+            ->where(['student_id' => $this->studentId])
+            ->toArray();
+        $assessment_periods_ids = array_column($assessment_periods_arr, 'assessment_id');
+
+        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+        $where = [$AssessmentPeriods->aliasField('id IN') => $assessment_periods_ids];
+        if ($selectedAssessment != '-1') {
+            $where[$AssessmentPeriods->aliasField('assessment_id')] = $selectedAssessment;
+        }
+        $AssessmentPeriodsOptions = $AssessmentPeriods
+            ->find('list')
+            ->where($where)
+            ->toArray();
+        $AssessmentPeriodsOptions = ['-1' => __('All Assessment Periods')] + $AssessmentPeriodsOptions;
+        $selectedAssessmentPeriod = $this->advancedSelectOptions($AssessmentPeriodsOptions, $selectedAssessmentPeriod);
+        $this->controller->set(compact('AssessmentPeriodsOptions', 'selectedAssessmentPeriod'));
+        return $selectedAssessmentPeriod;
     }
 
 }
