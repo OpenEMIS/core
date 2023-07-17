@@ -352,7 +352,7 @@ class StudentsTable extends ControllerActionTable
                     ->first();
 
                     //POCOR-6457[START]
-                    $UserIdentities = TableRegistry::get('user_identities');
+                    $UserIdentities = TableRegistry::get('User.Identities');
                     $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
                     $identity = $IdentityType->getDefaultEntity();
                     $UserIdentitiesData = $UserIdentities
