@@ -319,14 +319,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ->first();
                 //POCOR-6838: End
                 //POCOR-7400 start
-                $ExcludedSecurityRoleTable=TableRegistry::get('report_card_excluded_security_roles');
-                $ExcludedSecurityRoleEntity=$ExcludedSecurityRoleTable->find('all')
-                                                                      ->where([
-                                                                        'security_role_id'=> $SecurityRoleFunctionsTableGenerateData->security_role_id,
-                                                                        'report_card_id'=>$reportCard->id
-                                                                      ])
-                                                                      ->toArray();
-                                                                      
+                $ExcludedSecurityRoleEntity=$this->getExcludedSecurityRolesData($reportCard->id);  //POCOR-7551
                 //POCOR-7400 end
                 if ($this->AccessControl->isAdmin()) {
                     if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
@@ -2234,19 +2227,19 @@ class ReportCardStatusesTable extends ControllerActionTable
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
         
-        $securityGroupInstitutions = TableRegistry::get('Security.securityGroupInstitutions');
-        $SecurityGroupInstitutionsData = $securityGroupInstitutions
-                ->find()        
-                ->where([
-                $securityGroupInstitutions->aliasField('institution_id') =>$this->Session->read('Institution.Institutions.id') ])
-                ->toArray();
+        // $securityGroupInstitutions = TableRegistry::get('Security.securityGroupInstitutions');
+        // $SecurityGroupInstitutionsData = $securityGroupInstitutions
+        //         ->find()        
+        //         ->where([
+        //         $securityGroupInstitutions->aliasField('institution_id') =>$this->Session->read('Institution.Institutions.id') ])
+        //         ->toArray();
 
-        $securityGroupIds = [];
-        if (!empty($SecurityGroupInstitutionsData)) {
-                foreach ($SecurityGroupInstitutionsData as $value) {
-                        $securityGroupIds[] = $value->security_group_id;
-                }
-        }
+        // $securityGroupIds = [];
+        // if (!empty($SecurityGroupInstitutionsData)) {
+        //         foreach ($SecurityGroupInstitutionsData as $value) {
+        //                 $securityGroupIds[] = $value->security_group_id;
+        //         }
+        // }
 
         $SecurityGroupUsersData = $SecurityGroupUsers
                 ->find()        
@@ -2254,19 +2247,22 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $SecurityRoles->aliasField('id = ') . $SecurityGroupUsers->aliasField('security_role_id')
                 ])
                 ->where([
-                    $SecurityGroupUsers->aliasField('security_group_id IN') => $securityGroupIds,
+                    // $SecurityGroupUsers->aliasField('security_group_id IN') => $securityGroupIds,
                     $SecurityGroupUsers->aliasField('security_user_id IN') =>  $this->Auth->user('id')
                 ])
                 ->group([$SecurityGroupUsers->aliasField('security_role_id')])
                 ->order([$SecurityRoles->aliasField('order') => 'ASC'])
-                ->first();
+                ->toArray();
 
-
+        $ids=[];
+        foreach($SecurityGroupUsersData as $key=>$value){
+             $ids[]=$value['security_role_id'] ;
+        }
         
         $ExcludedSecurityRoleTable=TableRegistry::get('report_card_excluded_security_roles');
         $ExcludedSecurityRoleEntity=$ExcludedSecurityRoleTable->find('all')
                                                               ->where([
-                                                                'security_role_id'=>$SecurityGroupUsersData->security_role_id,
+                                                                'security_role_id IN'=>$ids,
                                                                 'report_card_id'=> $report_card_id
                                                               ])->count();
         

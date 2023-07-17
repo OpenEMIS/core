@@ -306,26 +306,24 @@ class AssessmentItemsTable extends AppTable
                         return $row;
                     }
                     //checking whether logged in user is admin or not
-                    //POCOR-7432 start
+                    //POCOR-7551 start
                     $SecurityGroupUsersTable = TableRegistry::get('security_group_users');
                     $SecurityInstitutionsTable = TableRegistry::get('security_group_institutions');
                     $SecurityRoleFunTable = TableRegistry::get('security_role_functions');
-
-                    $securityGroupUserEditAccessCount = $SecurityGroupUsersTable->find('all')
+                    $SecurityRoleTable = TableRegistry::get('security_roles');
+                    $SecurityGroupTable=TableRegistry::get('security_groups');
+                    $securityGroupUserData = $SecurityGroupUsersTable->find('all')
                             ->select([$SecurityGroupUsersTable->aliasField('security_role_id'),
-                                    'edit' => $SecurityRoleFunTable->aliasField('_edit')
-//                                $SecurityGroupUsersTable->aliasField('id')
+                                    'edit' => $SecurityRoleFunTable->aliasField('_edit'),
+                                    // $SecurityGroupTable->aliasField('id'),
+                                    "group_id"=>$SecurityGroupUsersTable->aliasField('security_group_id'),
+                                    "role_order"=>$SecurityRoleTable->aliasField('order'),
                                 ]
                             )
-                        -> distinct([$SecurityGroupUsersTable->aliasField('security_role_id'),
+                            -> distinct([$SecurityGroupUsersTable->aliasField('security_role_id'),
                             'edit'])
-                            ->innerJoin(
-                                [$SecurityInstitutionsTable->alias() => $SecurityInstitutionsTable->table()],
-                                [
-                                    $SecurityInstitutionsTable->aliasField('institution_id = ') . $institution_id,
-                                    $SecurityInstitutionsTable->aliasField('security_group_id = ') . $SecurityGroupUsersTable->aliasField('security_group_id'),
-                                ]
-                            )->where([$SecurityGroupUsersTable->aliasField('security_user_id') => $logged_in_user_id,
+                           
+                            ->where([$SecurityGroupUsersTable->aliasField('security_user_id') => $logged_in_user_id,
                             ])
                             ->innerJoin(
                                 [$SecurityRoleFunTable->alias() => $SecurityRoleFunTable->table()],
@@ -333,10 +331,28 @@ class AssessmentItemsTable extends AppTable
                                     $SecurityRoleFunTable->aliasField('security_role_id = ') .
                                     $SecurityGroupUsersTable->aliasField('security_role_id'),
                                     $SecurityRoleFunTable->aliasField('security_function_id') => 1015,
-                                    $SecurityRoleFunTable->aliasField('_edit') => '1'
+                                    // $SecurityRoleFunTable->aliasField('_edit') => '1'
                                 ]
                             )
-                            ->count();
+                            ->innerJoin(
+                                [$SecurityRoleTable->alias() => $SecurityRoleTable->table()],
+                                [
+                                    $SecurityRoleTable->aliasField('id = ') .
+                                    $SecurityGroupUsersTable->aliasField('security_role_id')
+                                ]
+                            )
+                            ->toArray();
+                    
+                            //for checking role order
+                            $securityGroupUserEditAccessCount=0;
+                            $min_val =$securityGroupUserData[0]['role_order']; 
+                            foreach($securityGroupUserData as $val) {
+                               if ($min_val>$val['role_order']) {
+                                  $min_val = $val['role_order'];
+                                  $securityGroupUserEditAccessCount=$val['edit'];
+                               }
+                            }
+                    //POCOR-7551 end
 //                    $this->log($securityGroupUserEditAccessCount, 'debug');
                     if ($securityGroupUserEditAccessCount > 0) {
                                 $row['is_editable'] = 1;
