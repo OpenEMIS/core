@@ -828,6 +828,46 @@ class InstitutionSubjectStudentsTable extends AppTable
         return $studentList;
     }
 
+    // POCOR-7362 starts
+    public function getEnrolledStudent($period, $subject, $educationGradeId)
+    {
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $enrolled = $StudentStatuses->getIdByCode('CURRENT');
+
+        $Users = $this->Users;
+
+        $students = $this
+            ->find()
+            ->matching('Users')
+            ->matching('ClassStudents', function ($q) use ($enrolled) {
+                return $q->where([
+                    'ClassStudents.student_status_id' => $enrolled
+                ]);
+            })
+            ->where([
+                $this->aliasField('academic_period_id') => $period,
+                $this->aliasField('education_subject_id') => $subject,
+                $this->aliasField('education_grade_id') => $educationGradeId
+            ])
+            ->select([
+                $this->aliasField('student_id'),
+                $Users->aliasField('openemis_no'),
+                $Users->aliasField('first_name'),
+                $Users->aliasField('middle_name'),
+                $Users->aliasField('third_name'),
+                $Users->aliasField('last_name'),
+            ])
+            ->toArray();
+
+        $studentList = [];
+        foreach ($students as $key => $value) {
+            $studentList[$value->student_id] = $value->_matchingData['Users']['name_with_id'];
+        }
+
+        return $studentList;
+    }
+    // POCOR-7362 ends
+
     public function getStudentClassGradeDetails($period, $institution, $student, $subject) //function return class and grade of student.
     {
         return  $this

@@ -9,6 +9,7 @@ class TextbookStatusesTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->hasMany('InstitutionTextbooks', ['className' => 'Institution.InstitutionTextbooks', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->addBehavior('FieldOption.FieldOption');  //POCOR-7362
 	}
 
 	public function findCodeList() {
