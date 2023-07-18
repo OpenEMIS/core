@@ -273,25 +273,28 @@ class StudentSubjectsTable extends ControllerActionTable
             ]);  
     }
 
-    /*
-    * Function is get the total mark of the subject
-    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
-    * return data
-    * @ticket POCOR-6776
-    */
-
+    /**
+     * get total marks from a common query
+     * @param Event $event
+     * @param Entity $entity
+     * @return float
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onGetTotalMark(Event $event, Entity $entity)
     {
         $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-        $studentId = $entity->student_id;
-        $academicPeriodId =  $entity->academic_period_id;
-        $educationSubjectId =  $entity->education_subject_id;
-        $educationGradeId =  $entity->education_grade_id;
-        $institutionClassesId =  $entity->institution_class_id;
-        $assessmentPeriodId =  '';
-        $institutionId = $entity->institution_id;
-        $totalMark = $ItemResults->getTotalMarksForSubject($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId,$institutionClassesId, $assessmentPeriodId, $institutionId );//POCOR-6479
-        return round($totalMark->calculated_total, 2);
+        $options = ["student_id" => $entity->student_id,
+//            "institution_id" => $entity->institution_id,
+//            "institution_class_id" => $entity->institution_class_id,
+            "academic_period_id" => $entity->academic_period_id,
+            "education_grade_id" => $entity->education_grade_id,
+            "education_subject_id" => $entity->education_subject_id,
+            "assessment_period_id" => -1,
+            'assessment_id' => $entity->assessment_id];
+        $marks = $ItemResults::getLastMark($options);
+        $last_results = array_column($marks, 'marks');
+        $sum_results = array_sum($last_results);
+        return round($sum_results, 2);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)

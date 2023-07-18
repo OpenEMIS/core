@@ -14,7 +14,6 @@ use Cake\Utility\Security;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\HtmlTrait;
-
 use Cake\Utility\Text;
 
 class InstitutionTextbooksTable extends ControllerActionTable
@@ -23,6 +22,8 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     private $studentOptions = [];
     private $availableStudent = [];
+
+    // NOTE : studentoption used to retrive enrolled students only, however later for pocor-7362 assigned staff are also required and hence a method is written to get assigned staff and merged with $studentOptions. 
 
     public function initialize(array $config)
     {
@@ -36,7 +37,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
         $this->EducationLevels          = TableRegistry::get('Education.EducationLevels');
         $this->EducationProgrammes      = TableRegistry::get('Education.EducationProgrammes');
@@ -238,10 +239,12 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->field('comment', ['visible' => false]);
         $this->field('education_subject_id', ['visible' => false]);
         $this->field('education_grade_id', ['visible' => false]);
+        $this->field('student_status', ['visible' => false]);
         $this->field('student_status');
+        $this->field('openemis_no');
 
         $this->setFieldOrder([
-            'academic_period_id', 'code', 'textbook_id', 'textbook_condition_id', 'textbook_status_id', 'student_id', 'student_status'
+            'academic_period_id', 'code', 'textbook_id', 'textbook_condition_id', 'textbook_status_id', 'openemis_no', 'security_user_id'
         ]);
 
 
@@ -301,7 +304,14 @@ class InstitutionTextbooksTable extends ControllerActionTable
             $query->where([$conditions]);
         }
     }
-    
+
+    public function onGetOpenEmisNo(Event $event, Entity $entity)
+    {
+        if (($this->action == 'index')) {
+            return $entity->user->openemis_no;
+        }
+    }
+
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
@@ -317,8 +327,8 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
         $this->field('textbooks_students', ['visible' => false]);
 
-        if ($entity->student_id) {
-            $studentClassGrade = $this->InstitutionSubjectStudents->getStudentClassGradeDetails($entity->academic_period_id, $this->institutionId, $entity->student_id, $entity->education_subject_id);
+        if ($entity->security_user_id) {
+            $studentClassGrade = $this->InstitutionSubjectStudents->getStudentClassGradeDetails($entity->academic_period_id, $this->institutionId, $entity->security_user_id, $entity->education_subject_id);
             $entity->education_grade_id = $studentClassGrade[0]->education_grade_id;
             $entity->institution_class_id = $studentClassGrade[0]->institution_class_id;
         }
@@ -352,7 +362,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
                         $obj['textbook_status_id'] = $textbook['textbook_status_id'];
                         $obj['textbook_condition_id'] = $textbook['textbook_condition_id'];
 
-                        $obj['student_id'] = $textbook['student_id'];
+                        $obj['security_user_id'] = $textbook['security_user_id'];
 
                         $obj['institution_id'] = $entity->institution_id;
                         $obj['academic_period_id'] = $entity->academic_period_id;
@@ -405,12 +415,15 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if ($entity->student_id) { //retrieve student grade and class
-            $studentClassGrade = $this->InstitutionSubjectStudents->getStudentClassGradeDetails($entity->academic_period_id, $this->institutionId, $entity->student_id, $entity->education_subject_id);
-            $entity->education_grade_id = $studentClassGrade[0]->education_grade_id;
-            $entity->institution_class_id = $studentClassGrade[0]->institution_class_id;
+        if ($entity->security_user_id) { //retrieve student and staff POCOR-7362 
+
+            $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudent($entity->academic_period_id, $entity->education_subject_id, $entity->education_grade_id); 
+            $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId, $entity->education_subject_id, $entity->education_grade_id);
+            $studentOptions = $studentOptions + $staffOptions;
+            $entity->institution_class_id = $studentOptions;
             // pr($entity);
-        } else { //if no student assigned to the book, then use the textbook details
+        } 
+        else { //if no user assigned to the book, then use the textbook details
             $entity->education_grade_id = $entity->textbook->education_grade_id;
             $entity->institution_class_id = '';
         }
@@ -426,7 +439,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
             $this->field('comment', ['visible' => false]);
             $this->field('textbook_status_id', ['visible' => false]);
             $this->field('textbook_condition_id', ['visible' => false]);
-            $this->field('student_id', ['visible' => false]);
+            $this->field('security_user_id', ['visible' => false]);
             $this->setFieldOrder(['academic_period_id', 'education_level_id', 'education_programme_id', 'education_grade_id', 'education_subject_id', 'textbook_id', 'institution_class_id', 'allocated_to']);
         } else {
             $this->setupFields($entity);
@@ -441,26 +454,30 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $studentOptions = [];
         if ($request->data($this->aliasField('textbook_id'))) {
             $textbookStudents = $this->find('list', [
-                    'keyField' => 'student_id',
-                    'valueField' => 'student_id'
+                    'keyField' => 'security_user_id',
+                    'valueField' => 'security_user_id'
                 ])
                 ->where([$this->aliasField('textbook_id') => $request->data($this->aliasField('textbook_id'))])
                 ->select([
-                    $this->aliasField('student_id')
+                    $this->aliasField('security_user_id')
                 ])
-                ->distinct(['student_id'])
+                ->distinct(['security_user_id'])
                 ->hydrate(false)
                 ->toArray();
             $textbookId = $entity->textbook_id;
-            $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudentBySubject($entity->academic_period_id, $entity->institution_class_id, $entity->education_subject_id);
+            $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudent($entity->academic_period_id, $entity->education_subject_id, $entity->education_grade_id);
+
+            $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId, $entity->education_subject_id, $entity->education_grade_id); //POCOR-7362
+            $studentOptions = $studentOptions + $staffOptions; //POCOR-7362
+            
             $this->studentOptions = $studentOptions;
             $studentOptions = array_diff_key($studentOptions, $textbookStudents);
-            $textbooksStudents = is_array($request->data($this->aliasField('textbooks_students'))) ? array_column($request->data($this->aliasField('textbooks_students')), 'student_id') : [];
+            $textbooksStudents = is_array($request->data($this->aliasField('textbooks_students'))) ? array_column($request->data($this->aliasField('textbooks_students')), 'security_user_id') : [];
             $studentOptions = array_diff_key($studentOptions, array_flip($textbooksStudents));
             $this->availableStudent = $studentOptions; //to pass remaining students
         }
         if (!empty($studentOptions)) {
-            $studentOptions = [null => $this->getMessage('Users.select_student'), 'all' => $this->getMessage('Users.add_all_student')] + $studentOptions;
+            $studentOptions = [null => $this->getMessage('Users.select_users'), 'all' => $this->getMessage('Users.add_all_users')] + $studentOptions;
         } else {
             $studentOptions = [null => $this->getMessage('general.select.noOptions')];
         }
@@ -470,6 +487,72 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $attr['attr']['multiple'] = false;
         return $attr;
     }
+
+    // POCOR-7362 starts
+
+    public function getAssignedStaffForInstitution($institutionId, $educationSubjectId, $educationGradeId){
+
+        // echo $educationGradesId;
+        // exit;
+        $staff = TableRegistry::get('institution_staff');
+        $query = $staff->find()
+                ->select([
+                   'su.openemis_no',
+                    'su.first_name',
+                    'su.middle_name',
+                    'su.third_name',
+                    'su.last_name',
+                    'su.id'
+                ])
+                ->join([
+                    'table' => 'security_users',
+                    'alias' => 'su',
+                    'type' => 'INNER',
+                    'conditions' => 'institution_staff.staff_id = su.id'
+                ])
+                ->join([
+                    'table' => 'staff_statuses',
+                    'alias' => 'ss',
+                    'type' => 'INNER',
+                    'conditions' => 'institution_staff.staff_status_id = ss.id'
+                ])
+                ->join([
+                    'table' => 'institution_subject_staff',
+                    'alias' => 'iss',
+                    'type' => 'INNER',
+                    'conditions' => 'institution_staff.staff_id = iss.staff_id'
+                ])
+                ->join([
+                    'table' => 'institution_subjects',
+                    // 'alias' => 'iss',
+                    'type' => 'INNER',
+                    'conditions' => 'iss.institution_subject_id = institution_subjects.id'
+                ])
+                ->where([
+                    'institution_staff.institution_id' => $institutionId,
+                    'ss.id' => 1,
+                    'institution_subjects.education_subject_id' => $educationSubjectId,
+                    'institution_subjects.education_grade_id' => $educationGradeId
+                ])
+                ->hydrate(false);
+
+        $result = $query->toArray();
+
+        // echo "<pre>";
+        // print_r($result);
+        // exit;
+
+        $staffList =[];
+
+        foreach ($result as $key => $value) {
+            $user = $value['su'];
+            $staffList[$user['id']] = $user['openemis_no'] .  " - " .  $user['first_name'] ." ". $user['middle_name']." ". $user['third_name']." ". $user['last_name'];
+        }
+
+        return $staffList;
+        }
+
+    // POCOR-7362 ends
 
     public function onUpdateFieldAvailableStudent(Event $event, array $attr, $action, Request $request)
     {
@@ -543,28 +626,6 @@ class InstitutionTextbooksTable extends ControllerActionTable
         return $entity->textbook->code_title;
     }
 
-    public function onGetStudentStatus(Event $event, Entity $entity)
-    {
-        if (!empty($entity->user)) {
-            $InstitutionStudents = TableRegistry::get('Institution.Students');
-            $query = $InstitutionStudents
-                    ->find()
-                    ->matching('StudentStatuses')
-                    ->select([
-                        'status_name' => 'StudentStatuses.name'
-                    ])
-                    ->where([
-                        $InstitutionStudents->aliasField('institution_id') => $entity->institution->id,
-                        $InstitutionStudents->aliasField('student_id') => $entity->user->id,
-                        $InstitutionStudents->aliasField('education_grade_id') => $entity->education_grade->id,
-                        $InstitutionStudents->aliasField('academic_period_id') => $entity->academic_period->id
-                    ])
-                    ->first();
-
-            return __($query->status_name);
-        }
-    }
-
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
@@ -614,7 +675,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEducationLevelId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
@@ -628,132 +689,21 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
 				$list = $InstitutionGrades
 					->find()
-					->select(['level_id' => 'EducationLevels.id', 'level_name' => 'EducationLevels.name', 'system_name' => 'EducationSystems.name'])
+					->select(['level_id' => 'EducationGrades.id', 'level_name' => 'EducationGrades.name'])
 					->matching('EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems')
 					->where([
 						'EducationSystems.academic_period_id' => $academicPeriodId,
 						$InstitutionGrades->aliasField('institution_id') => $this->institutionId
 					])
-					->order(['EducationSystems.order', 'EducationLevels.order'])
-					->group(['level_id'])
 					->toArray();
 
 				$returnList = [];
 				foreach ($list as $key => $value) {
-					$returnList[$value->level_id] = $value->system_name . " - " . $value->level_name;
+					$returnList[$value->level_id] =  $value->level_name;
 				}
 				
-				$educationLevelOptions = $returnList;
+				$gradeOptions = $returnList;
 		
-                $attr['options'] = $educationLevelOptions;
-                $attr['onChangeReload'] = 'changeEducationLevel';
-
-            } else if ($action == 'edit') {
-
-                $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $attr['entity']->education_subject->education_grades[0]->education_programme->education_cycle->education_level->system_level_name;
-                $attr['value'] = $attr['entity']->education_subject->education_grades[0]->education_programme->education_cycle->education_level->id;
-                // pr($attr['entity']);
-
-            }
-        }
-        return $attr;
-    }
-
-    public function addEditOnChangeEducationLevel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    {
-        $request = $this->request;
-        $request->query['programme'] = -1;
-        $request->query['grade'] = -1;
-        $request->query['class'] = -1;
-        $request->query['subject'] = -1;
-
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-                    $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
-                }
-
-                if (array_key_exists('education_level_id', $request->data[$this->alias()])) {
-                    $request->query['level'] = $request->data[$this->alias()]['education_level_id'];
-                }
-
-                if (isset($data[$this->alias()]['textbooks_students'])) {
-                    unset($data[$this->alias()]['textbooks_students']);
-                }
-                if (isset($data[$this->alias()]['education_grade_id'])) {
-                    unset($data[$this->alias()]['education_grade_id']);
-                }
-            }
-        }
-    }
-
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-
-            if ($action == 'add') {
-
-                $selectedLevel = $request->data($this->aliasField('education_level_id'));
-
-                $programmeOptions = [];
-                if ($selectedLevel) {
-                    $programmeOptions = $this->EducationProgrammes->getEducationProgrammesList($selectedLevel);
-                }
-                $attr['options'] = $programmeOptions;
-                $attr['onChangeReload'] = 'changeEducationProgramme';
-
-            } else if ($action == 'edit') {
-
-                $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $attr['entity']->education_subject->education_grades[0]->education_programme->cycle_programme_name;
-                $attr['value'] = $attr['entity']->education_subject->education_grades[0]->education_programme->id;
-            }
-
-        }
-        return $attr;
-    }
-
-    public function addEditOnChangeEducationProgramme(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    {
-        $request = $this->request;
-        $request->query['grade'] = -1;
-        $request->query['class'] = -1;
-        $request->query['subject'] = -1;
-
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
-                    $request->query['programme'] = $request->data[$this->alias()]['education_programme_id'];
-                }
-            }
-
-            if (isset($data[$this->alias()]['textbooks_students'])) {
-                unset($data[$this->alias()]['textbooks_students']);
-            }
-            if (isset($data[$this->alias()]['education_grade_id'])) {
-                unset($data[$this->alias()]['education_grade_id']);
-            }
-        }
-    }
-
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-
-            if ($action == 'add') {
-
-                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
-
-                $selectedProgramme = $request->data($this->aliasField('education_programme_id'));
-                $gradeOptions = [];
-                if ($selectedProgramme) {
-                    $gradeOptions = $this->EducationGrades->getEducationGradesByProgrammes($selectedProgramme);
-                }
-
-                $attr['options'] = $gradeOptions;
-                $attr['onChangeReload'] = 'changeEducationGrade';
-
                 $attr['options'] = $gradeOptions;
                 $attr['onChangeReload'] = 'changeEducationGrade';
 
@@ -785,61 +735,6 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
                 if (isset($data[$this->alias()]['textbooks_students'])) {
                     unset($data[$this->alias()]['textbooks_students']);
-                }
-            }
-        }
-    }
-
-    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-
-            if ($action == 'edit' && $attr['entity']->institution_class_id && !$request->is(['post', 'put'])) {
-
-                $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $this->InstitutionClasses->get($attr['entity']->institution_class_id)->name;
-                $attr['value'] = $attr['entity']->institution_class_id;
-
-            } else { //this is for "add" and also "edit" that not assigned to any student
-
-                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
-
-                if ($action == 'edit') {
-                    $selectedGrade = $attr['entity']->education_grade_id;
-                } else {
-                    $selectedGrade = $request->query('grade');
-                }
-
-                $classOptions = [];
-                if ($selectedGrade && $attr['entity']->education_subject_id) {
-                    $classOptions = $this->InstitutionClasses->getSubjectClasses($this->institutionId, $selectedPeriod, $selectedGrade, $attr['entity']->education_subject_id);
-                }
-
-                $attr['options'] = $classOptions;
-                $attr['onChangeReload'] = 'changeInstitutionClass';
-            }
-        }
-        return $attr;
-    }
-
-    public function addEditOnChangeInstitutionClass(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    {
-        $request = $this->request;
-        $request->query['subject'] = '-1';
-        $request->query['textbook'] = '-1';
-        $request->query['student'] = '-1';
-
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-                    $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
-                }
-
-                if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
-                    $request->query['grade'] = $request->data[$this->alias()]['education_grade_id'];
-                }
-                if (array_key_exists('institution_class_id', $request->data[$this->alias()])) {
-                    $request->query['class'] = $request->data[$this->alias()]['institution_class_id'];
                 }
             }
         }
@@ -1029,7 +924,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
                         $textbook_status_id = $obj['textbook_status_id'];
                         $textbook_condition_id = $obj['textbook_condition_id'];
                         $comment = $obj['comment'];
-                        $student_id = $obj['student_id'];
+                        $security_user_id = $obj['security_user_id'];
 
                         $rowData = [];
 
@@ -1050,8 +945,8 @@ class InstitutionTextbooksTable extends ControllerActionTable
                         $rowData[] = $Form->input("$alias.$fieldKey.$key.textbook_status_id", ['type' => 'select', 'label' => false, 'options' => $textbookStatusOptions]);
                         $rowData[] = $Form->input("$alias.$fieldKey.$key.textbook_condition_id", ['type' => 'select', 'label' => false, 'options' => $textbookConditionOptions]);
                         $rowData[] = $Form->input("$alias.$fieldKey.$key.comment", ['type' => 'text', 'label' => false]);
-                        $rowData[] = isset($studentOptions[$this->request->data("$alias.$fieldKey.$key.student_id")]) ? $studentOptions[$this->request->data("$alias.$fieldKey.$key.student_id")] : __('No Allocation');
-                        $rowData[] = $Form->hidden("$alias.$fieldKey.$key.student_id");
+                        $rowData[] = isset($studentOptions[$this->request->data("$alias.$fieldKey.$key.security_user_id")]) ? $studentOptions[$this->request->data("$alias.$fieldKey.$key.security_user_id")] : __('No Allocation');
+                        $rowData[] = $Form->hidden("$alias.$fieldKey.$key.security_user_id");
                         $rowData[] = $this->getDeleteButton(['onclick' => 'jsTable.doRemove(this); $(\'#reload\').click();']);
                         $tableCells[] = $rowData;
                     }
@@ -1082,7 +977,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
                             'textbook_status_id' => '',
                             'textbook_condition_id' => '',
                             'comment' => '',
-                            'student_id' => $value
+                            'security_user_id' => $value
                         ];
                     }
                 } else {
@@ -1091,7 +986,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
                         'textbook_status_id' => '',
                         'textbook_condition_id' => '',
                         'comment' => '',
-                        'student_id' => !empty($data[$this->alias()]['allocated_to']) ? $data[$this->alias()]['allocated_to'] : ''
+                        'security_user_id' => !empty($data[$this->alias()]['allocated_to']) ? $data[$this->alias()]['allocated_to'] : ''
                     ];
                 }
             } else {
@@ -1100,34 +995,38 @@ class InstitutionTextbooksTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
 
             $selectedPeriod= $attr['entity']->academic_period_id;
             $selectedSubject = $attr['entity']->education_subject_id;
+            $selectedGrade = $attr['entity']->education_grade_id;
+            // $selectedGrade = $request->data($this->aliasField('education_grade_id'));
 
             $selectedClass = $attr['entity']->institution_class_id;
 
             $textbookStudents = $this->find('list', [
-                    'keyField' => 'student_id',
-                    'valueField' => 'student_id'
+                    'keyField' => 'security_user_id',
+                    'valueField' => 'security_user_id'
                 ])
                 ->where([
                     $this->aliasField('textbook_id') => $attr['entity']->textbook_id,
                 ])
                 ->select([
-                    $this->aliasField('student_id')
+                    $this->aliasField('security_user_id')
                 ])
-                ->distinct(['student_id']);
+                ->distinct(['security_user_id']);
 
-            if ($attr['entity']->student_id) {
-                $textbookStudents = $textbookStudents->where([$this->aliasField('student_id').' <> ' => $attr['entity']->student_id]);
+            if ($attr['entity']->security_user_id) {
+                $textbookStudents = $textbookStudents->where([$this->aliasField('security_user_id').' <> ' => $attr['entity']->security_user_id]);
             }
 
             $studentOptions = [];
             if ($selectedPeriod && $selectedClass && $selectedSubject) {
-                $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudentBySubject($selectedPeriod, $selectedClass, $selectedSubject);
+                $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudent($selectedPeriod, $selectedSubject, $selectedGrade);
+                $staffOptions = $this->getAssignedStaffForInstitution($this->institutionId, $selectedSubject, $selectedGrade); //POCOR-7362
+                $studentOptions = $studentOptions + $staffOptions; //POCOR-7362
                 $studentOptions = array_diff_key($studentOptions, $textbookStudents->toArray());
             }
             $attr['options'] = $studentOptions;
@@ -1143,16 +1042,6 @@ class InstitutionTextbooksTable extends ControllerActionTable
             'entity' => $entity
         ]);
 
-        $this->field('education_level_id', [
-            'type' => 'select',
-            'entity' => $entity
-        ]);
-
-        $this->field('education_programme_id', [
-            'type' => 'select',
-            'entity' => $entity
-        ]);
-
         $this->field('education_grade_id', [
             'type' => 'select',
             'entity' => $entity
@@ -1164,11 +1053,6 @@ class InstitutionTextbooksTable extends ControllerActionTable
         ]);
 
         $this->field('textbook_id', [
-            'type' => 'select',
-            'entity' => $entity
-        ]);
-
-        $this->field('institution_class_id', [
             'type' => 'select',
             'entity' => $entity
         ]);
@@ -1196,7 +1080,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
             'entity' => $entity
         ]);
 
-        $this->field('student_id', [
+        $this->field('security_user_id', [
             'type' => 'chosenSelect',
             'attr' => [
                 'multiple' => false
@@ -1205,7 +1089,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
             'entity' => $entity
         ]);
 
-        $this->field('student_status');
+        // $this->field('student_status');
     }
 
     public function getAcademicPeriodOptions($querystringPeriod)
@@ -1219,5 +1103,21 @@ class InstitutionTextbooksTable extends ControllerActionTable
         }
 
         return compact('periodOptions', 'selectedPeriod');
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'code':
+                return __('Textbook ID');
+            case 'textbook_condition_id':
+                return __('Condition');
+            case 'textbook_status_id':
+                return __('Status');
+            case 'security_user_id':
+                return __('Name');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

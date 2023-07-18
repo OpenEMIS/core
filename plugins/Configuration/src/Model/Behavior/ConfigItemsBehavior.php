@@ -112,6 +112,11 @@ class ConfigItemsBehavior extends Behavior
         if($typeValue == 'ExternalDataSource-Identity'){
             $typeValue = 'ExternalDataSourceIdentity';
         }
+        //POCOR-7531 start
+        if($typeValue == 'ExternalDataSource-Exams'){
+            $typeValue = 'ExternalDataSourceExams';
+        }
+        //POCOR-7531 start
          // End POCOR-7507
 
         if (method_exists($this->model->controller, $typeValue) && $action != $typeValue) {
