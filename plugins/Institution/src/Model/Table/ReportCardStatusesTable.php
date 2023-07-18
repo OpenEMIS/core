@@ -677,7 +677,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $reportCardId = $this->request->query('report_card_id');
         $classId = $this->request->query('class_id');
         //POCOR-7131 starts
-        $loginUserIdUser = $this->Session->read('Auth.User.id');
+        $loginUserIdUser = $this->Auth->User('id');
         $securityRoles = $this->AccessControl->getRolesByUser($loginUserIdUser)->toArray();
         $securityRoleIds = [];
         foreach ($securityRoles as $key => $value) {
@@ -2240,7 +2240,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         //                 $securityGroupIds[] = $value->security_group_id;
         //         }
         // }
-
+       
         $SecurityGroupUsersData = $SecurityGroupUsers
                 ->find()        
                 ->innerJoin([$SecurityRoles->alias() => $SecurityRoles->table()], [
@@ -2248,23 +2248,25 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ])
                 ->where([
                     // $SecurityGroupUsers->aliasField('security_group_id IN') => $securityGroupIds,
-                    $SecurityGroupUsers->aliasField('security_user_id IN') =>  $this->Auth->user('id')
+                    $SecurityGroupUsers->aliasField('security_user_id') =>  $this->Auth->user('id')
                 ])
                 ->group([$SecurityGroupUsers->aliasField('security_role_id')])
-                ->order([$SecurityRoles->aliasField('order') => 'ASC'])
-                ->toArray();
+                ->order([$SecurityRoles->aliasField('order') => 'ASC']);
+                // ->toArray();
 
         $ids=[];
         foreach($SecurityGroupUsersData as $key=>$value){
              $ids[]=$value['security_role_id'] ;
         }
-        
+        $ExcludedSecurityRoleEntity=-1;
+        if(!empty($ids)){
         $ExcludedSecurityRoleTable=TableRegistry::get('report_card_excluded_security_roles');
         $ExcludedSecurityRoleEntity=$ExcludedSecurityRoleTable->find('all')
                                                               ->where([
                                                                 'security_role_id IN'=>$ids,
                                                                 'report_card_id'=> $report_card_id
                                                               ])->count();
+        }
         
         if (($ExcludedSecurityRoleEntity > 0)) {                                                      
                  return true;
