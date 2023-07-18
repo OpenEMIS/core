@@ -211,6 +211,28 @@ class DataManagementCopyTable extends ControllerActionTable
                 return false;
             }
         }
+
+        $outcomeTemplates = TableRegistry::get('outcome_templates');
+        $outcomeCriterias = TableRegistry::get('outcome_criterias');
+        if($entity->features == 'Institution Performance Outcomes'){
+            if($entity->from_academic_period == $entity->to_academic_period){
+                $this->Alert->error('CopyData.genralerror', ['reset' => true]);
+                return false;
+            }
+            $outcomeTemplatesData = $outcomeTemplates
+                ->find('all')
+                ->where(['academic_period_id ' => $entity->to_academic_period])
+                ->toArray();
+            $outcomeCriteriasData = $outcomeCriterias
+                ->find('all')
+                ->where(['academic_period_id ' => $entity->to_academic_period])
+                ->toArray();
+            if(!empty($outcomeTemplatesData) && !empty($outcomeCriteriasData)){
+                $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+                return false;
+            }
+        }
+
         if($entity->features == 'Shifts'){
             $InstitutionShiftsData = $InstitutionShifts
                 ->find('all')
@@ -275,8 +297,8 @@ class DataManagementCopyTable extends ControllerActionTable
             }
             //**********************POCOR-7326 End******************************* */
             if(!empty($InstitutionBuildingsData) && !empty($InstitutionFloorsData) && !empty($InstitutionRoomsData) && !empty($InstitutionLandsData)){
-               // $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
-                //return false;
+                $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+                return false;
             }
         }
     }
