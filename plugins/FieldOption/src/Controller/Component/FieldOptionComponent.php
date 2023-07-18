@@ -28,6 +28,8 @@ class FieldOptionComponent extends Component
     private $controller;
     private $fieldOptions = [];
 
+    
+
     public $components = ['AccessControl'];
 
     // Is called before the controller's beforeFilter method.
@@ -92,6 +94,12 @@ class FieldOptionComponent extends Component
             return "Institution.StaffDuties";
         }elseif($key== "TextbookConditions" ){
             return "Textbook.TextbookConditions";
+
+        }elseif($key== "TextbookDimensions" ){
+            return "Textbook.TextbookDimensions";  // POCOR 7362
+
+        }elseif($key== "TextbookStatuses" ){
+            return "Textbook.TextbookStatuses";  // POCOR 7362
 
         }elseif($key== "ReportCardCommentCodes" ){
             return "ReportCard.ReportCardCommentCodes";
