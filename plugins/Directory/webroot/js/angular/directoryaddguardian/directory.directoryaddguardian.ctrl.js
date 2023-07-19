@@ -1230,6 +1230,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 name: selectedData.birth_area_name,
                 code: selectedData.birth_area_code
             };
+            scope.selectedUserData.user_id = selectedData.id;
             scope.selectedUserData.openemis_no = selectedData.openemis_no;
             scope.selectedUserData.first_name = selectedData.first_name;
             scope.selectedUserData.middle_name = selectedData.middle_name;
@@ -1324,11 +1325,32 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
     async function checkUserAlreadyExistByIdentity()
     {
-        const result = await DirectoryaddguardianSvc.checkUserAlreadyExistByIdentity({
-            'identity_type_id': scope.selectedUserData.identity_type_id,
-            'identity_number': scope.selectedUserData.identity_number,
-            'nationality_id': scope.selectedUserData.nationality_id
+        const userData = scope.selectedUserData;
+        const userSvc = DirectoryaddguardianSvc;
+        const result = await userSvc.checkUserAlreadyExistByIdentity({
+            'identity_type_id': userData.identity_type_id,
+            'identity_number': userData.identity_number,
+            'nationality_id':userData.nationality_id,
+            'first_name': userData.first_name,
+            'last_name': userData.last_name,
+            'gender_id': userData.gender_id,
+            'date_of_birth': userData.date_of_birth,
+            'user_id': userData.user_id
         });
+
+        const userData = scope.selectedUserData;
+        const userSvc = DirectoryaddguardianSvc;
+        const result = await userSvc.checkUserAlreadyExistByIdentity({
+            'identity_type_id': userData.identity_type_id,
+            'identity_number': userData.identity_number,
+            'nationality_id':userData.nationality_id,
+            'first_name': userData.first_name,
+            'last_name': userData.last_name,
+            'gender_id': userData.gender_id,
+            'date_of_birth': userData.date_of_birth,
+            'user_id': user_id
+        });
+
         if (result.data.user_exist === 1)
         {
             scope.messageClass = 'alert_warn';

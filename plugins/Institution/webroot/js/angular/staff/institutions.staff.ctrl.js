@@ -1357,6 +1357,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             name: deepCopy.birth_area_name,
             code: deepCopy.birth_area_code
         };
+        StaffController.selectedStaffData.user_id = selectedData.id;
         StaffController.selectedStaffData.openemis_no = selectedData.openemis_no;
         StaffController.selectedStaffData.first_name = selectedData.first_name;
         StaffController.selectedStaffData.middle_name = selectedData.middle_name;
@@ -2565,60 +2566,59 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     
-     async function checkUserExistByIdentityFromConfiguration()
+
+
+    async function checkUserExistByIdentityFromConfiguration()
     {
         // console.log('checkUserExistByIdentityFromConfiguration');
-        //POCOR-7593-HINDOL
-        const user_id = staffId = StaffController.staffData && StaffController.staffData.id ? StaffController.staffData.id : null;
+        //POCOR-7481-HINDOL
 
-        const { identity_type_id, identity_number, id } = StaffController.selectedStaffData;
-        // StaffController.error.nationality_id = "";
-        StaffController.error.identity_type_id = ""
-        StaffController.error.identity_number = "";
+        const userData = StaffController.selectedStaffData;
+        const userSvc = InstitutionsStaffSvc;
+        const userCtrl = StaffController;
 
-        /* if (!nationality_id)
-        {
-            StaffController.error.nationality_id =
-                "This field cannot be left empty";
-
-                return false;
-        } */
         if (!identity_type_id)
         {
-            StaffController.error.identity_type_id =
+            userCtrl.error.identity_type_id =
                 "This field cannot be left empty";
             return false;
         }
         if (!identity_number)
         {
-            StaffController.error.identity_number =
+            userCtrl.error.identity_number =
                 "This field cannot be left empty";
             return false;
         }
 
-        const result =
-            await InstitutionsStaffSvc.checkUserAlreadyExistByIdentity({
-                identity_type_id: identity_type_id,
-                identity_number: identity_number,
-                //POCOR-7481-HINDOL if the identity belongs to the same openemis_no - skip
-                user_id: user_id
-            });
+        const result = await userSvc.checkUserAlreadyExistByIdentity({
+            'identity_type_id': userData.identity_type_id,
+            'identity_number': userData.identity_number,
+            'nationality_id':userData.nationality_id,
+            'first_name': userData.first_name,
+            'last_name': userData.last_name,
+            'gender_id': userData.gender_id,
+            'date_of_birth': userData.date_of_birth,
+            'user_id': userData.user_id,
+        });
+        // StudentController.error.nationality_id = "";
+        userCtrl.error.identity_type_id = ""
+        userCtrl.error.identity_number = "";
 
         if (result.data.user_exist === 1)
         {
-            StaffController.messageClass = 'alert-warning';
-            StaffController.message = result.data.message;
-            StaffController.isIdentityUserExist = true;
-            StaffController.error.identity_number =
-                result.data.message;
+            userCtrl.messageClass = 'alert-warning';
+            userCtrl.message = result.data.message;
+            userCtrl.isIdentityUserExist = true;
+            userCtrl.error.identity_number = result.data.message;
             $window.scrollTo({bottom:0});
         } else
         {
-            StaffController.messageClass = '';
-            StaffController.message = '';
-            StaffController.isIdentityUserExist = false;
-            StaffController.error.identity_number ==""
+            userCtrl.messageClass = '';
+            userCtrl.message = '';
+            userCtrl.isIdentityUserExist = false;
+            userCtrl.error.identity_number ==""
         }
         return result.data.user_exist === 1;
     }
+
 }
