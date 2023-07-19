@@ -1,7 +1,7 @@
 <?php
     $alias = $ControllerAction['table']->alias();
     if ($ControllerAction['action'] == 'add') {
-        $this->Form->unlockField('Examinations.examination_items');
+        $this->Form->unlockField('Examinations.examination_subjects');
     }
 ?>
 
