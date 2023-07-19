@@ -17,9 +17,10 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
+       
         parent::initialize($config);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
-        $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
+        $this->belongsTo('ExaminationSubjects', ['className' => 'Examination.ExaminationSubjects']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentresExaminations', [
@@ -29,7 +30,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         $this->belongsToMany('ExaminationCentresExaminationsStudents', [
             'className' => 'Examination.ExaminationCentresExaminationsStudents',
             'joinTable' => 'examination_centres_examinations_subjects_students',
-            'foreignKey' => ['examination_centre_id', 'examination_item_id'],
+            'foreignKey' => ['examination_centre_id', 'examination_subject_id'],
             'targetForeignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
             'through' => 'Examination.ExaminationCentresExaminationsSubjectsStudents',
             'dependent' => true,
@@ -76,10 +77,10 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
             $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Subjects'));
         }
 
-        $this->field('code', ['sort' => ['field' => 'ExaminationItems.code']]);
-        $this->field('name', ['sort' => ['field' => 'ExaminationItems.name']]);
+        $this->field('code', ['sort' => ['field' => 'ExaminationSubjects.code']]);
+        $this->field('name', ['sort' => ['field' => 'ExaminationSubjects.name']]);
         $this->field('education_subject_id', ['sort' => ['field' => 'EducationSubjects.name']]);
-        $this->field('examination_date', ['type' => 'date', 'sort' => ['field' => 'ExaminationItems.examination_date']]);
+        $this->field('examination_date', ['type' => 'date', 'sort' => ['field' => 'ExaminationSubjects.examination_date']]);
         $this->field('examination_id', ['type' => 'select']);
         $this->setFieldOrder(['code', 'name', 'education_subject_id', 'examination_date', 'examination_id']);
 
@@ -141,14 +142,14 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         $extra['elements']['controls'] = ['name' => 'Examination.ExaminationCentres/controls', 'data' => [], 'options' => [], 'order' => 1];
 
         $where[$this->aliasField('examination_centre_id')] = $this->examCentreId;
-        $extra['auto_contain_fields'] = ['ExaminationItems' => ['code', 'examination_date']];
+        $extra['auto_contain_fields'] = ['ExaminationSubjects' => ['code', 'examination_date']];
 
         $query
             ->contain('EducationSubjects')
             ->where([$where]);
 
         // sorting columns
-        $sortList = ['ExaminationItems.code', 'ExaminationItems.name', 'ExaminationItems.examination_date', 'EducationSubjects.name'];
+        $sortList = ['ExaminationSubjects.code', 'ExaminationSubjects.name', 'ExaminationSubjects.examination_date', 'EducationSubjects.name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
@@ -166,7 +167,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain('ExaminationItems.ExaminationGradingTypes');
+        $query->contain('ExaminationSubjects.ExaminationGradingTypes');
     }
 
     public function onGetName(Event $event, Entity $entity)
@@ -251,9 +252,10 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
 
     public function getExaminationCentreSubjects($examinationCentreId, $examinationId)
     {
+        
         $subjectList = $this
             ->find('list', [
-                'keyField' => 'examination_item_id',
+                'keyField' => 'examination_subject_id',
                 'valueField' => 'education_subject_id'
             ])
             ->where([

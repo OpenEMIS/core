@@ -34,7 +34,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
             'className' => 'Examination.ExaminationCentresExaminationsSubjects',
             'joinTable' => 'examination_centres_examinations_subjects_students',
             'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
-            'targetForeignKey' => ['examination_centre_id', 'examination_item_id'],
+            'targetForeignKey' => ['examination_centre_id', 'examination_subject_id'],
             'through' => 'Examination.ExaminationCentresExaminationsSubjectsStudents',
             'dependent' => true,
             'cascadeCallbacks' => true
@@ -96,8 +96,8 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
         $ExaminationCentreRoomStudents->deleteAll($conditions);
 
         // delete results for student(s)
-        $ExaminationItemResults = TableRegistry::get('Examination.ExaminationItemResults');
-        $ExaminationItemResults->deleteAll($conditions);
+        $ExaminationStudentSubjectResults = TableRegistry::get('Examination.ExaminationStudentSubjectResults');
+        $ExaminationStudentSubjectResults->deleteAll($conditions);
 
         $examinationCentreIds = is_array($examinationCentres) ? $examinationCentres : array($examinationCentres);
 
@@ -486,13 +486,13 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                 foreach ($examCentreSubjects as $examItemId => $subjectId) {
                     $obj['examination_centres_examinations_subjects'][] = [
                         'examination_centre_id' => $requestData[$this->alias()]['examination_centre_id'],
-                        'examination_item_id' => $examItemId,
+                        'examination_subject_id' => $examItemId,
                         '_joinData' => [
                             'education_subject_id' => $subjectId,
                             'examination_centre_id' => $selectedExaminationCentre,
                             'examination_id' => $selectedExamination,
                             'student_id' => $requestData[$this->alias()]['student_id'],
-                            'examination_item_id' => $examItemId
+                            'examination_subject_id' => $examItemId
                         ]
                     ];
 
