@@ -7535,7 +7535,9 @@ class InstitutionsController extends AppController
                     }
                 }
                 try {
-                    die('success');
+                    $response = ['user_id' => $SecurityUserResult->id];
+                    echo json_encode($SecurityUserResult);
+                    die();
                 } catch (Exception $e) {
                     return $e;
                 }
@@ -7552,34 +7554,63 @@ class InstitutionsController extends AppController
         $requestData = $this->request->input('json_decode', true);
         $requestData = $requestData['params'];
         if (!empty($requestData)) {
-            $identityTypeId = (array_key_exists('identity_type_id', $requestData)) ? $requestData['identity_type_id'] : null;
-            $identityNumber = (array_key_exists('identity_number', $requestData)) ? $requestData['identity_number'] : null;
+            $identity_type_id = (array_key_exists('identity_type_id', $requestData))
+                ? $requestData['identity_type_id'] :
+                null;
+            $identity_number = (array_key_exists('identity_number', $requestData))
+                ? $requestData['identity_number']
+                : null;
             //POCOR-7481-HINDOL if the identity belongs to the same openemis_no - skip
-            $userId = (array_key_exists('user_id', $requestData)) ? $requestData['user_id'] : null;
-            $nationalityId = (array_key_exists('nationality_id', $requestData)) ? $requestData['nationality_id'] : null;
+            $user_id = (array_key_exists('user_id', $requestData))
+                ? $requestData['user_id']
+                : null;
+            $first_name = (array_key_exists('first_name', $requestData))
+                ? $requestData['first_name']
+                : null;
+            $last_name = (array_key_exists('last_name', $requestData))
+                ? $requestData['last_name']
+                : null;
+            $gender_id = (array_key_exists('gender_id', $requestData))
+                ? $requestData['gender_id']
+                : null;
+            $date_of_birth = (array_key_exists('date_of_birth', $requestData))
+                ? $requestData['date_of_birth']
+                : null;
+            $nationality_id = (array_key_exists('nationality_id', $requestData))
+                ? $requestData['nationality_id']
+                : null;
 
 
-            if (!empty($identityTypeId) && !empty($identityNumber)) {//POCOR-7390 starts
+            if (!empty($identity_type_id) && !empty($identity_number)) {//POCOR-7390 starts
                 $UserIdentities = TableRegistry::get('User.Identities');//POCOR-7390
-                $where = [$UserIdentities->aliasField('identity_type_id') => $identityTypeId,
-                    $UserIdentities->aliasField('number') => $identityNumber];
-                if (!empty($userId)) {
-                    $where[] = $UserIdentities->aliasField('security_user_id') . ' != ' . $userId;
+                $where = [$UserIdentities->aliasField('identity_type_id') => $identity_type_id,
+                    $UserIdentities->aliasField('number') => $identity_number];
+                if (!empty($user_id)) {
+                    $where[] = $UserIdentities->aliasField('security_user_id') . ' != ' . $user_id;
                 }
-                if (!empty($nationalityId)) {
-                    $where[$UserIdentities->aliasField('nationality_id')] = $nationalityId;
+                if (!empty($nationality_id)) {
+                    $where[$UserIdentities->aliasField('nationality_id')] = $nationality_id;
                 }
 
                 $CheckUserExist = $UserIdentities->find()
                     ->where($where)->count();
                 if ($CheckUserExist > 0) {
-                    echo json_encode(['user_exist' => 1, 'status_code' => 200, 'message' => __('User already exist with this nationality, identity type & identity number. Kindly select user from below list.')]);
+                    $message = __('User already exist with this nationality, identity type & identity number. Kindly select user from below list.');
+                    echo json_encode(['user_exist' => 1, 'status_code' => 200, 'message' => $message]);
                 } else {
                     $message = $this->validateCustomIdentityNumber($requestData);
                     if ($message != "") {
                         echo json_encode(['user_exist' => 1, 'status_code' => 200, 'message' => $message]);
                     } else {
+                        if($first_name === null
+                            || $last_name === null
+                            || $gender_id === null
+                            || $date_of_birth === null){
+                            $message = __("Please provide all the required information: First Name, Last Name, Gender, Date of Birth");
+                            echo json_encode(['user_exist' => 1, 'status_code' => 200, 'message' => $message]);
+                        }else{
                         echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => '']);
+                        }
                     }
                 }
             } else {

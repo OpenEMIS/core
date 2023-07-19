@@ -1563,6 +1563,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             name: selectedData.birth_area_name,
             code: selectedData.birth_area_code
         };
+        StudentController.selectedStudentData.user_id = selectedData.id;
         StudentController.selectedStudentData.openemis_no = selectedData.openemis_no;
         StudentController.selectedStudentData.name = selectedData.name;//POCOR-7172
         StudentController.selectedStudentData.first_name = selectedData.first_name;
@@ -1953,13 +1954,17 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         // console.log(selectedStudentData);
         // console.log('selectedStudentData.id');
         // console.log(selectedStudentData.id());
-
-        const studentId = StudentController.selectedStudentData && StudentController.selectedStudentData.id ? StudentController.selectedStudentData.id : null;
-        const result = await InstitutionsStudentsSvc.checkUserAlreadyExistByIdentity({
-            'identity_type_id': StudentController.selectedStudentData.identity_type_id,
-            'identity_number': StudentController.selectedStudentData.identity_number,
-            'nationality_id': StudentController.selectedStudentData.nationality_id,
-            'user_id': studentId
+        const userData = StudentController.selectedStudentData;
+        const userSvc = InstitutionsStudentsSvc;
+        const result = await userSvc.checkUserAlreadyExistByIdentity({
+            'identity_type_id': userData.identity_type_id,
+            'identity_number': userData.identity_number,
+            'nationality_id':userData.nationality_id,
+            'first_name': userData.first_name,
+            'last_name': userData.last_name,
+            'gender_id': userData.gender_id,
+            'date_of_birth': userData.date_of_birth,
+            'user_id': userData.user_id,
         });
         if (result.data.user_exist === 1)
         {
@@ -2088,54 +2093,51 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     {
         // console.log('checkUserExistByIdentityFromConfiguration');
         //POCOR-7481-HINDOL
-        const user_id = studentId = StudentController.studentData && StudentController.studentData.id ? StudentController.studentData.id : null;
 
-        const { identity_type_id, identity_number, id } = StudentController.selectedStudentData;
-        // StudentController.error.nationality_id = "";
-        StudentController.error.identity_type_id = ""
-        StudentController.error.identity_number = "";
+        const userData = StudentController.selectedStudentData;
+        const userSvc = InstitutionsStudentsSvc;
+        const userCtrl = StudentController;
 
-        /* if (!nationality_id)
-        {
-            StudentController.error.nationality_id =
-                "This field cannot be left empty";
-
-                return false;
-        } */
         if (!identity_type_id)
         {
-            StudentController.error.identity_type_id =
+            userCtrl.error.identity_type_id =
                 "This field cannot be left empty";
                 return false;
         }
         if (!identity_number)
         {
-            StudentController.error.identity_number =
+            userCtrl.error.identity_number =
                 "This field cannot be left empty";
                 return false;
         }
 
-        const result =
-            await InstitutionsStudentsSvc.checkUserAlreadyExistByIdentity({
-                identity_type_id: identity_type_id,
-                identity_number: identity_number,
-                //POCOR-7481-HINDOL if the identity belongs to the same openemis_no - skip
-                user_id: user_id
-            });
+        const result = await userSvc.checkUserAlreadyExistByIdentity({
+            'identity_type_id': userData.identity_type_id,
+            'identity_number': userData.identity_number,
+            'nationality_id':userData.nationality_id,
+            'first_name': userData.first_name,
+            'last_name': userData.last_name,
+            'gender_id': userData.gender_id,
+            'date_of_birth': userData.date_of_birth,
+            'user_id': userData.user_id,
+        });
+        // StudentController.error.nationality_id = "";
+        userCtrl.error.identity_type_id = ""
+        userCtrl.error.identity_number = "";
 
         if (result.data.user_exist === 1)
         {
-            StudentController.messageClass = 'alert-warning';
-            StudentController.message = result.data.message;
-            StudentController.isIdentityUserExist = true;
-            StudentController.error.identity_number = result.data.message;
+            userCtrl.messageClass = 'alert-warning';
+            userCtrl.message = result.data.message;
+            userCtrl.isIdentityUserExist = true;
+            userCtrl.error.identity_number = result.data.message;
             $window.scrollTo({bottom:0});
         } else
         {
-            StudentController.messageClass = '';
-            StudentController.message = '';
-            StudentController.isIdentityUserExist = false;
-            StudentController.error.identity_number ==""
+            userCtrl.messageClass = '';
+            userCtrl.message = '';
+            userCtrl.isIdentityUserExist = false;
+            userCtrl.error.identity_number ==""
         }
         return result.data.user_exist === 1;
     }
