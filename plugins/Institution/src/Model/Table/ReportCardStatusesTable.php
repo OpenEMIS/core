@@ -471,7 +471,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                ])
         ->first();
         $timeZone = $ConfigItem->zonevalue;
-        if(empty($timZone)){
+        if(empty($timeZone)){
         $this->Alert->warning('ReportCardStatuses.timezone');
         }
          //POCOR-7581 end
