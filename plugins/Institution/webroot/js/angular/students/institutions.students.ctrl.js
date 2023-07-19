@@ -1950,10 +1950,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     async function checkUserAlreadyExistByIdentity()
     {
-        // console.log('selectedStudentData');
-        // console.log(selectedStudentData);
-        // console.log('selectedStudentData.id');
-        // console.log(selectedStudentData.id());
+
         const userData = StudentController.selectedStudentData;
         const userSvc = InstitutionsStudentsSvc;
         const result = await userSvc.checkUserAlreadyExistByIdentity({
@@ -2097,7 +2094,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         const userData = StudentController.selectedStudentData;
         const userSvc = InstitutionsStudentsSvc;
         const userCtrl = StudentController;
-
+        const { identity_type_id, identity_number } = userData;
         if (!identity_type_id)
         {
             userCtrl.error.identity_type_id =
