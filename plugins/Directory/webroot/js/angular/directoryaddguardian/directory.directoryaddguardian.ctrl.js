@@ -1335,19 +1335,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             'last_name': userData.last_name,
             'gender_id': userData.gender_id,
             'date_of_birth': userData.date_of_birth,
-            'user_id': userData.user_id
-        });
-
-        const userData = scope.selectedUserData;
-        const userSvc = DirectoryaddguardianSvc;
-        const result = await userSvc.checkUserAlreadyExistByIdentity({
-            'identity_type_id': userData.identity_type_id,
-            'identity_number': userData.identity_number,
-            'nationality_id':userData.nationality_id,
-            'first_name': userData.first_name,
-            'last_name': userData.last_name,
-            'gender_id': userData.gender_id,
-            'date_of_birth': userData.date_of_birth,
             'user_id': user_id
         });
 

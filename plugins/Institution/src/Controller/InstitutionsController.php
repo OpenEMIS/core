@@ -7595,29 +7595,37 @@ class InstitutionsController extends AppController
                 $CheckUserExist = $UserIdentities->find()
                     ->where($where)->count();
                 if ($CheckUserExist > 0) {
-                    $message = __('User already exist with this nationality, identity type & identity number. Kindly select user from below list.');
+                    $message = __('User already exists with this nationality, identity type & identity number.');
                     echo json_encode(['user_exist' => 1, 'status_code' => 200, 'message' => $message]);
+                    die;
                 } else {
                     $message = $this->validateCustomIdentityNumber($requestData);
                     if ($message != "") {
                         echo json_encode(['user_exist' => 1, 'status_code' => 200, 'message' => $message]);
-                    } else {
+                        die;
+                    }
+                    else {
                         if($first_name === null
                             || $last_name === null
                             || $gender_id === null
                             || $date_of_birth === null){
-                            $message = __("Please provide all the required information: First Name, Last Name, Gender, Date of Birth");
+                            $message = __("Please provide all the required information: First Name, Last Name, Gender, Date of Birth.");
                             echo json_encode(['user_exist' => 1, 'status_code' => 200, 'message' => $message]);
-                        }else{
-                        echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => '']);
+                            die;
+                        }
+                        else{
+                            echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => '']);
+                            die;
                         }
                     }
                 }
             } else {
                 echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid data.')]);
+                die;
             }
         } else {
             echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid data.')]);
+            die;
         }
         die;
     }
