@@ -130,7 +130,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationStudentSubjectResults', ['className' => 'Examination.ExaminationStudentSubjectResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionCommittees', ['className' => 'Institution.InstitutionCommittees', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 
@@ -2343,14 +2343,14 @@ class InstitutionsTable extends ControllerActionTable
             $institution_quality_rubrics = TableRegistry::get('institution_quality_rubrics')->find()->where(['institution_id' => $institutionId])->count();
             $institution_quality_visits = TableRegistry::get('institution_quality_visits')->find()->where(['institution_id' => $institutionId])->count();
             $examination_centres = TableRegistry::get('examination_centres')->find()->where(['institution_id' => $institutionId])->count();
-            $examination_item_results = TableRegistry::get('examination_item_results')->find()->where(['institution_id' => $institutionId])->count();
+            $examination_student_subject_results = TableRegistry::get('examination_student_subject_results')->find()->where(['institution_id' => $institutionId])->count();
             $institution_committees = TableRegistry::get('institution_committees')->find()->where(['institution_id' => $institutionId])->count();
             $examination_centres_examinations_institutions = TableRegistry::get('examination_centres_examinations_institutions')->find()->where(['institution_id' => $institutionId])->count();
             $institution_staff_transfers = TableRegistry::get('institution_staff_transfers')->find()->where(['new_institution_id' => $institutionId])->count();
             $institution_staff_transfers_1 = TableRegistry::get('institution_staff_transfers')->find()->where(['previous_institution_id' => $institutionId])->count();
 
 
-            if($institution_attachments || $institution_positions || $institution_shifts || $institution_classes || $institution_custom_field_values || $institution_subject_students || $institution_subjects || $institution_staff || $staff_behaviours || $institution_students || $student_behaviours || $institution_student_absences || $institution_bank_accounts || $institution_fees || $institution_lands || $institution_buildings || $institution_floors || $institution_rooms || $institution_grades || $assessment_item_results || $institution_quality_rubrics || $institution_quality_visits || $examination_centres || $examination_item_results || $institution_committees || $examination_centres_examinations_institutions || $institution_staff_transfers || $institution_staff_transfers_1) {
+            if($institution_attachments || $institution_positions || $institution_shifts || $institution_classes || $institution_custom_field_values || $institution_subject_students || $institution_subjects || $institution_staff || $staff_behaviours || $institution_students || $student_behaviours || $institution_student_absences || $institution_bank_accounts || $institution_fees || $institution_lands || $institution_buildings || $institution_floors || $institution_rooms || $institution_grades || $assessment_item_results || $institution_quality_rubrics || $institution_quality_visits || $examination_centres || $examination_student_subject_results || $institution_committees || $examination_centres_examinations_institutions || $institution_staff_transfers || $institution_staff_transfers_1) {
                 $result = true;
             }
             // End POCOR-7253

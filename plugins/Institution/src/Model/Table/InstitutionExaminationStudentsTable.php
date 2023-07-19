@@ -39,7 +39,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             'className' => 'Examination.ExaminationCentresExaminationsSubjects',
             'joinTable' => 'examination_centres_examinations_subjects_students',
             'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
-            'targetForeignKey' => ['examination_centre_id', 'examination_item_id'],
+            'targetForeignKey' => ['examination_centre_id', 'examination_subject_id'],
             'through' => 'Examination.ExaminationCentresExaminationsSubjectsStudents',
             'dependent' => true,
             'cascadeCallbacks' => true
@@ -54,7 +54,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
         $this->addBehavior('Examination.RegisteredStudents');
         $this->addBehavior('Excel', [
-            'excludes' => ['id', 'education_subject_id', 'examination_item_id'],
+            'excludes' => ['id', 'education_subject_id', 'examination_subject_id'],
             'pages' => ['index'],
             'filename' => 'RegisteredStudents',
             'orientation' => 'landscape'
@@ -394,12 +394,13 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->field('special_needs', ['type' => 'readonly']);
         $this->field('institution_class_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]);
         $this->field('auto_assign_to_rooms', ['type' => 'select', 'options' => $this->getSelectOptions('general.yesno')]);
+        $this->field('subject_id');
         $this->field('student_id', ['entity' => $entity]);
         $this->field('education_grade_id', ['type' => 'hidden']);
         $this->field('registration_number', ['visible' => false]);
 
         $this->setFieldOrder([
-            'academic_period_id', 'examination_id', 'examination_education_grade', 'examination_centre_id', 'special_needs', 'auto_assign_to_rooms', 'institution_class_id', 'student_id'
+            'academic_period_id', 'examination_id', 'examination_education_grade', 'examination_centre_id', 'special_needs', 'auto_assign_to_rooms', 'institution_class_id', 'subject_id','student_id'
         ]);
     }
 
@@ -637,21 +638,39 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
         return $attr;
     }
+    public function onUpdateFieldSubjectId(Event $event, array $attr, $action, $request){
+        $subjects = [];
+        if ($action == 'add') {
+            if (!empty($request->data[$this->alias()]['examination_id']) && !empty($request->data[$this->alias()]['institution_class_id'])) {
+                $ExaminationSubjects=TableRegistry::get('Examination.ExaminationSubjects');
+                $subjects=$ExaminationSubjects->find()->where([
+                                 $ExaminationSubjects->aliasField('examination_id')=>$request->data[$this->alias()]['examination_id']   
+                          ])->toArray();
+                }
+        $attr['label']="Education Subjects";
+        $attr['type'] = 'element';
+        $attr['element'] = 'Examination.institution_examination_subjects';
+        $attr['data'] = $subjects;
+        return $attr;
+    }}
+
+  
+
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $requestData[$this->alias()]['student_id'] = 0;
     }
-
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
-    {
+    {  
         $process = function ($model, $entity) use ($requestData) {
             $errors = $entity->errors();
             if (!empty($errors)) {
                 return false;
             }
-
+            $listOfSelectedStudents=[];
             if (!empty($requestData[$this->alias()]['examination_students']) && !empty($requestData[$this->alias()]['examination_centre_id'])) {
+              
                 $students = $requestData[$this->alias()]['examination_students'];
                 $newEntities = [];
 
@@ -678,10 +697,10 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                         foreach($examCentreSubjects as $examItemId => $subjectId) {
                             $obj['examination_centres_examinations_subjects'][] = [
                                 'examination_centre_id' => $selectedExaminationCentre,
-                                'examination_item_id' => $examItemId,
+                                'examination_subject_id' => $examItemId,
                                 '_joinData' => [
                                     'education_subject_id' => $subjectId,
-                                    'examination_item_id' => $examItemId,
+                                    'examination_subject_id' => $examItemId,
                                     'examination_centre_id' => $selectedExaminationCentre,
                                     'student_id' => $student['student_id'],
                                     'examination_id' => $selectedExamination
@@ -690,14 +709,16 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                             ];
                         }
                         $newEntities[] = $obj;
+                        $listOfSelectedStudents[]=$student['student_id'];
                     }
                 }
+                
                 if (empty($newEntities)) {
                     $model->Alert->warning($this->aliasField('noStudentSelected'));
                     $entity->errors('student_id', __('There are no students selected'));
                     return false;
                 }
-
+                
                 $success = $this->connection()->transactional(function() use ($newEntities, $entity) {
                     $patchOptions['associated'] = ['ExaminationCentresExaminationsSubjects' => ['validate' => false]];
                     $return = true;
@@ -724,8 +745,27 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                         ->group([$this->aliasField('student_id')])
                         ->count();
                     $this->ExaminationCentresExaminations->updateAll(['total_registered' => $studentCount],['examination_centre_id' => $entity->examination_centre_id, 'examination_id' => $entity->examination_id]);
+                    //POCOR-7511 start
+                    if($entity->examination_subjects){
+                        $examinationStudentSubjects=TableRegistry::get('examination_student_subjects');
+                        if(!empty($listOfSelectedStudents)){
+                            for($i=0;$i<count($listOfSelectedStudents);$i++){
+                          
+                            foreach($entity->examination_subjects as $Key=>$value){
+                             
+                              if($value['selected']==1){
+                              $entity=$examinationStudentSubjects->newEntity([
+                                         'student_id'=>$listOfSelectedStudents[$i],
+                                         'examination_subject_id'=>$value['subject_id']
+                              ]);
+                              $result=$examinationStudentSubjects->save($entity);
+                            }}
+                            }
+                       } 
+                    }
+                     //POCOR-7511 end
                 }
-
+              
                 if ($entity->auto_assign_to_rooms) {
                     if ($success) {
                         $examCentreRooms = $this->ExaminationCentres->ExaminationCentreRooms
@@ -770,6 +810,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 } else {
                     return $success;
                 }
+
+              
             } else {
                 $model->Alert->warning($this->aliasField('noStudentSelected'));
                 $entity->errors('student_id', __('There are no students selected'));
@@ -778,5 +820,18 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         };
 
         return $process;
+    }
+    public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    {
+       
+    }
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'subject_id':
+                return __('Education Subjects');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }
