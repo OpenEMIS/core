@@ -236,7 +236,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     }
 
     scope.processExternalGridUserRecord = function(userRecords, params, totalRowCount) {
-        console.log(userRecords);
+
         if (userRecords.length === 0)
         {
             params.failCallback([], totalRowCount);
@@ -805,7 +805,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     }
 
     scope.goToNextStep = async function() {
-        debugger;
+        // debugger;
         if(scope.step === 'confirmation'){
             const result = await scope.checkUserExistByIdentityFromConfiguration();
             if(result)return;
@@ -1604,6 +1604,9 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         }
         UtilsSvc.isAppendLoader(true);
         DirectoryaddSvc.saveDirectoryData(param).then(function(resp){
+            console.log('after save');
+            console.log(resp);
+            scope.selectedUserData.user_id = resp.data.id;
             scope.confirmUser();
             UtilsSvc.isAppendLoader(false);
         }, function(error){
@@ -1614,11 +1617,25 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
     async function checkUserAlreadyExistByIdentity()
     {
+        const userData = scope.selectedUserData;
+        const userSvc = DirectoryaddSvc;
+        const userCtrl = scope;
+
         const result = await DirectoryaddSvc.checkUserAlreadyExistByIdentity({
-            'identity_type_id': scope.selectedUserData.identity_type_id,
-            'identity_number': scope.selectedUserData.identity_number,
-            'nationality_id': scope.selectedUserData.nationality_id
+            'identity_type_id': userData.identity_type_id,
+            'identity_number': userData.identity_number,
+            'nationality_id':userData.nationality_id,
+            'first_name': userData.first_name,
+            'last_name': userData.last_name,
+            'gender_id': userData.gender_id,
+            'date_of_birth': userData.date_of_birth,
+            'user_id': userData.user_id,
         });
+        // const result = await DirectoryaddSvc.checkUserAlreadyExistByIdentity({
+        //     'identity_type_id': scope.selectedUserData.identity_type_id,
+        //     'identity_number': scope.selectedUserData.identity_number,
+        //     'nationality_id': scope.selectedUserData.nationality_id
+        // });
         if (result.data.user_exist === 1)
         {
             scope.messageClass = 'alert_warn';
@@ -1644,7 +1661,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         const { first_name, last_name, gender_id, date_of_birth, identity_type_id, identity_number, nationality_id, openemis_no } = scope.selectedUserData;
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
         const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
-        const isIdentityHasError = identity_number?.length>1  && (nationality_id === undefined || nationality_id==="" || nationality_id === null  || identity_type_id===""|| identity_type_id===undefined || identity_type_id=== null)
+        const isIdentityHasError = identity_number?.length> 1  && (nationality_id === undefined || nationality_id==="" || nationality_id === null  || identity_type_id===""|| identity_type_id===undefined || identity_type_id=== null)
         const isSkipableForIdentity = identity_number?.length>1 && nationality_id > 0 && identity_type_id >0;
 
         if (isIdentityHasError)
@@ -1667,6 +1684,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
         return ["", false];
     }
+
     scope.checkConfigForExternalSearch=function checkConfigForExternalSearch()
     {
         DirectoryaddSvc.checkConfigForExternalSearch().then(function (resp)
@@ -1734,10 +1752,13 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
 
     scope.checkUserExistByIdentityFromConfiguration = async function checkUserExistByIdentityFromConfiguration()
     {
-        const { identity_type_id, identity_number, user_id } = scope.selectedUserData;
+        const { identity_type_id, identity_number } = scope.selectedUserData;
+        userData = scope.selectedUserData;
+        // console.log(scope.selectedUserData);
         // scope.error.nationality_id = "";
         scope.error.identity_type_id = ""
         scope.error.identity_number = "";
+
 
         /* if (!nationality_id)
         {
@@ -1760,14 +1781,20 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                 return false;
         }
 
-        const result =
-            await DirectoryaddSvc.checkUserAlreadyExistByIdentity({
-                identity_type_id: identity_type_id,
-                identity_number: identity_number,
-              /*   nationality_id: nationality_id, */
-                user_id: user_id
-            });
- 
+        const userSvc = DirectoryaddSvc;
+        const userCtrl = scope;
+
+        const result = await DirectoryaddSvc.checkUserAlreadyExistByIdentity({
+            'identity_type_id': userData.identity_type_id,
+            'identity_number': userData.identity_number,
+            'nationality_id':userData.nationality_id,
+            'first_name': userData.first_name,
+            'last_name': userData.last_name,
+            'gender_id': userData.gender_id,
+            'date_of_birth': userData.date_of_birth,
+            'user_id': userData.user_id,
+        });
+
         if (result.data.user_exist === 1)
         {
             console.log(result.data);
@@ -1777,7 +1804,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
             scope.error.identity_number = result.data.message;
             $window.scrollTo({bottom:0});
         } else
-        { 
+        {
             scope.messageClass = '';
             scope.message = '';
             scope.isIdentityUserExist = false;
@@ -1785,4 +1812,59 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
         }
         return result.data.user_exist === 1;
     }
+
+    async function checkUserExistByIdentityFromConfiguration()
+    {
+        // console.log('checkUserExistByIdentityFromConfiguration');
+        //POCOR-7481-HINDOL
+
+        const userData = scope.selectedUserData;
+        const userSvc = DirectoryaddSvc;
+        const userCtrl = scope;
+
+        if (!identity_type_id)
+        {
+            userCtrl.error.identity_type_id =
+                "This field cannot be left empty";
+            return false;
+        }
+        if (!identity_number)
+        {
+            userCtrl.error.identity_number =
+                "This field cannot be left empty";
+            return false;
+        }
+
+        const result = await userSvc.checkUserAlreadyExistByIdentity({
+            'identity_type_id': userData.identity_type_id,
+            'identity_number': userData.identity_number,
+            'nationality_id':userData.nationality_id,
+            'first_name': userData.first_name,
+            'last_name': userData.last_name,
+            'gender_id': userData.gender_id,
+            'date_of_birth': userData.date_of_birth,
+            'user_id': userData.user_id,
+        });
+        // StudentController.error.nationality_id = "";
+        userCtrl.error.identity_type_id = ""
+        userCtrl.error.identity_number = "";
+
+        if (result.data.user_exist === 1)
+        {
+            userCtrl.messageClass = 'alert-warning';
+            userCtrl.message = result.data.message;
+            userCtrl.isIdentityUserExist = true;
+            userCtrl.error.identity_number = result.data.message;
+            $window.scrollTo({bottom:0});
+        } else
+        {
+            userCtrl.messageClass = '';
+            userCtrl.message = '';
+            userCtrl.isIdentityUserExist = false;
+            userCtrl.error.identity_number ==""
+        }
+        return result.data.user_exist === 1;
+    }
+
+
 }
