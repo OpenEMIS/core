@@ -95,7 +95,7 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->field('location', ['visible' => false]);
         $this->field('comments', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => true]);
-        $this->field('type', ['visible' => ['index'=>true,'view' => true,'edit' => false,'add'=>false]]);
+        // $this->field('type', ['visible' => ['index'=>true,'view' => true,'edit' => false,'add'=>false]]);
         $this->field('curricular_type', ['visible' => ['index'=>true,'view' => true,'edit' => false,'add'=>false]]);
         $this->field('category',  ['visible' => ['index'=>false,'view' => true,'edit' => false,'add'=>false]]);
 
