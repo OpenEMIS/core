@@ -178,7 +178,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $query = $this->request->query;
         $this->field('academic_period_id', ['visible' => true]);
         $this->field('student_id', ['visible' => false]);
-        $this->field('student_name', ['visible' => false]);
+        $this->field('student_name', ['visible' => true]);
         $this->field('curricular_category', ['visible' => true]);
         $this->field('curricular_position_id', ['visible' => true]);
         $this->field('type', ['visible' => ['index'=>true,'view' => true,'edit' => false,'add'=>false]]);
@@ -192,10 +192,10 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $this->field('points', ['visible' => false]);
         $this->field('location', ['visible' => false]);
         $this->field('comments', ['visible' => false]);
-        $this->field('openemis_no', ['visible' => ['index'=>false,'view' => false]]);
+        $this->field('openemis_no', ['visible' => ['index'=>true,'view' => false]]);
         
         $this->setFieldOrder([
-        'academic_period_id','education_grade','institution_class','curricular_category', 'institution_curricular_id', 'openemis_no', 'curricular_position_id']);
+        'academic_period_id','student_name','openemis_no','education_grade','institution_class','curricular_category', 'institution_curricular_id', 'curricular_position_id']);
                
     }
 
