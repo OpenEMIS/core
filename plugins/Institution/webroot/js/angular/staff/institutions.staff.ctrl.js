@@ -123,7 +123,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         let fileReader = new FileReader();
         fileReader.readAsDataURL(photo);
         fileReader.onload = () => {
-            console.log(fileReader.result);
+            // console.log(fileReader.result);
             StaffController.selectedStaffData.photo_base_64 = fileReader.result;
         }
     }
@@ -292,7 +292,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 StaffController.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
             }
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -309,7 +309,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 StaffController.selectedStaffData.username = angular.copy(StaffController.selectedStaffData.openemis_no);
                 UtilsSvc.isAppendLoader(false);
         }, function(error) {
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -365,7 +365,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return StaffController.processInternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
-                    console.log(error);
+                    console.error(error);
                     UtilsSvc.isAppendLoader(false);
                 });
             }
@@ -375,7 +375,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function processInternalGridUserRecord(userRecords, params, totalRowCount) {
-        console.log(userRecords);
+        // console.log(userRecords);
         if (userRecords.length === 0)
         {
             params.failCallback([], totalRowCount);
@@ -421,7 +421,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return StaffController.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
-                    console.log(error);
+                    console.error(error);
                     UtilsSvc.isAppendLoader(false);
                 });
             }
@@ -431,7 +431,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function processExternalGridUserRecord(userRecords, params, totalRowCount) {
-        console.log(userRecords);
+        // console.log(userRecords);
         if (userRecords.length === 0)
         {
             params.failCallback([], totalRowCount);
@@ -455,7 +455,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             }
             StaffController.getPostionTypes();
         }, function(error) {
-            console.log(error);
+            console.error(error);
             StaffController.getPostionTypes();
         });
     }
@@ -465,7 +465,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.genderOptions = resp;
             StaffController.getNationalities();
         }, function(error){
-            console.log(error);
+            console.error(error);
             StaffController.getNationalities();
         });
     }
@@ -475,7 +475,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.nationalitiesOptions = resp.data;
             StaffController.getIdentityTypes();
         }, function(error){
-            console.log(error);
+            console.error(error);
             StaffController.getIdentityTypes();
         });
     }
@@ -486,7 +486,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.checkConfigForExternalSearch()
             UtilsSvc.isAppendLoader(false);
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -496,7 +496,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.positionTypeOptions = resp.data;
             StaffController.getStaffPosititonGrades();//POCOR-5069
         }, function(error){
-            console.log(error);
+            console.error(error);
             StaffController.getStaffPosititonGrades();//POCOR-5069
         });
     }
@@ -507,7 +507,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.fteOptions = resp.data;
             UtilsSvc.isAppendLoader(false);
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -530,7 +530,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.institutionPositionOptions.selectedOption = null;
             UtilsSvc.isAppendLoader(false);
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -541,7 +541,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.staffGradePositionOptions = resp.data;
             StaffController.getStaffTypes();
         }, function(error){
-            console.log(error);
+            console.error(error);
             StaffController.getStaffTypes();
         });
     }//POCOR-5069 ends
@@ -551,7 +551,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.staffTypeOptions = resp.data;
             StaffController.getShifts();
         }, function(error){
-            console.log(error);
+            console.error(error);
             StaffController.getShifts();
         });
     }
@@ -561,7 +561,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.shiftsOptions = resp.data;
             StaffController.getStaffCustomFields();
         }, function(error){
-            console.log(error);
+            console.error(error);
             StaffController.getStaffCustomFields();
         });
     }
@@ -574,7 +574,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.createCustomFieldsArray();
             UtilsSvc.isAppendLoader(false);
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -1269,7 +1269,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     break;
                 case 'confirmation': 
                     StaffController.step = 'add_staff';
-                    console.log(StaffController.selectedStaffData)
+                    // console.log(StaffController.selectedStaffData)
                     StaffController.generatePassword();
                     break;
             }
@@ -1357,6 +1357,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             name: deepCopy.birth_area_name,
             code: deepCopy.birth_area_code
         };
+        StaffController.selectedStaffData.user_id = selectedData.id;
         StaffController.selectedStaffData.openemis_no = selectedData.openemis_no;
         StaffController.selectedStaffData.first_name = selectedData.first_name;
         StaffController.selectedStaffData.middle_name = selectedData.middle_name;
@@ -1771,7 +1772,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                         var totalRowCount = response.total;
                         return StaffController.processStaffRecord(staffRecords, params, totalRowCount);
                     }, function(error) {
-                        console.log(error);
+                        console.error(error);
                         AlertSvc.warning($scope, error);
                     });
                 } else {
@@ -1811,7 +1812,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                         StaffController.initialLoad = false;
                         return StaffController.processExternalStaffRecord(staffRecords, params, totalRowCount);
                     }, function(error) {
-                        console.log(error);
+                        console.error(error);
                         var status = error.status;
                         if (status == '401') {
                             var message = 'You have not been authorised to fetch from external data source.';
@@ -1871,7 +1872,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function processStaffRecord(staffRecords, params, totalRowCount) {
-        console.log(staffRecords);
+        // console.log(staffRecords);
         for(var key in staffRecords) {
             staffRecords[key]['institution_name'] = '-';
             staffRecords[key]['academic_period_name'] = '-';
@@ -1942,8 +1943,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 shift_id: shiftId,
             };
        
-        console.log("data",data);
-        console.log("shiftData",shiftData);
+        // console.log("data",data);
+        // console.log("shiftData",shiftData);
         
         var deferred = $q.defer();
 
@@ -2013,7 +2014,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             }
 
         }, function(error) {
-            console.log(error);
+            console.error(error);
             AlertSvc.warning($scope, error);
             deferred.reject(error);
         });
@@ -2052,7 +2053,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 });
             }
         }, function(error) {
-            console.log(errors);
+            console.error(error);
             // error handling here
         });
     }
@@ -2178,14 +2179,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 AlertSvc.error($scope, 'There is an error in adding staff transfer request.');
             }
         }, function(error) {
-            console.log(error);
+            console.error(error);
             AlertSvc.error($scope, 'There is an error in adding staff transfer request.');
         })
     }
 
     function postForm() {
         var deferred = $q.defer();
-        console.log("StaffController"+StaffController);
+        // console.log("StaffController"+StaffController);
         var academicPeriodId = (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption'))? StaffController.academicPeriodOptions.selectedOption.id: '';
         var positionType = StaffController.positionType;
         var institutionPositionId = (StaffController.institutionPositionOptions.hasOwnProperty('selectedOption') && StaffController.institutionPositionOptions.selectedOption != null) ? StaffController.institutionPositionOptions.selectedOption.value: '';
@@ -2284,7 +2285,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 deferred.resolve(StaffController.postResponse);
             }
         }, function(error){
-            console.log(error);
+            console.error(error);
             deferred.reject(error);
             AlertSvc.warning($scope, error);
         });
@@ -2381,7 +2382,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             }
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -2445,10 +2446,18 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     async function checkUserAlreadyExistByIdentity()
     {
-        const result = await InstitutionsStaffSvc.checkUserAlreadyExistByIdentity({
-            'identity_type_id': StaffController.selectedStaffData.identity_type_id,
-            'identity_number': StaffController.selectedStaffData.identity_number,
-            'nationality_id': StaffController.selectedStaffData.nationality_id
+
+        const userData = StaffController.selectedStaffData;
+        const userSvc = InstitutionsStaffSvc;
+        const result = await userSvc.checkUserAlreadyExistByIdentity({
+            'identity_type_id': userData.identity_type_id,
+            'identity_number': userData.identity_number,
+            'nationality_id':userData.nationality_id,
+            'first_name': userData.first_name,
+            'last_name': userData.last_name,
+            'gender_id': userData.gender_id,
+            'date_of_birth': userData.date_of_birth,
+            'user_id': userData.user_id,
         });
         if (result.data.user_exist===1)
         {
@@ -2555,7 +2564,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     var totalRowCount = gridData.length === 0 ? 1 : gridData.length;
                     return StaffController.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
-                    console.log(error);
+                    console.error(error);
                     UtilsSvc.isAppendLoader(false);
                 });
             }
@@ -2565,56 +2574,59 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     
+
+
     async function checkUserExistByIdentityFromConfiguration()
-    { 
-        const { identity_type_id,identity_number } = StaffController.selectedStaffData;
-        StaffController.error.nationality_id = "";
-        StaffController.error.identity_type_id = ""
-        StaffController.error.identity_number = "";
+    {
+        // console.log('checkUserExistByIdentityFromConfiguration');
+        //POCOR-7481-HINDOL
 
-        /* if (!nationality_id)
-        {
-            StaffController.error.nationality_id =
-                "This field cannot be left empty";
-
-                return false;
-        } */
+        const userData = StaffController.selectedStaffData;
+        const userSvc = InstitutionsStaffSvc;
+        const userCtrl = StaffController;
+        const { identity_type_id, identity_number } = userData;
         if (!identity_type_id)
         {
-            StaffController.error.identity_type_id =
+            userCtrl.error.identity_type_id =
                 "This field cannot be left empty";
-                return false;
+            return false;
         }
         if (!identity_number)
         {
-            StaffController.error.identity_number =
+            userCtrl.error.identity_number =
                 "This field cannot be left empty";
-
-                return false;
+            return false;
         }
 
-        const result =
-            await InstitutionsStaffSvc.checkUserAlreadyExistByIdentity({
-                identity_type_id: identity_type_id,
-                identity_number: identity_number,
-              /*   nationality_id: nationality_id, */
-            });
-      
+        const result = await userSvc.checkUserAlreadyExistByIdentity({
+            'identity_type_id': userData.identity_type_id,
+            'identity_number': userData.identity_number,
+            'nationality_id':userData.nationality_id,
+            'first_name': userData.first_name,
+            'last_name': userData.last_name,
+            'gender_id': userData.gender_id,
+            'date_of_birth': userData.date_of_birth,
+            'user_id': userData.user_id,
+        });
+        // StudentController.error.nationality_id = "";
+        userCtrl.error.identity_type_id = ""
+        userCtrl.error.identity_number = "";
+
         if (result.data.user_exist === 1)
-        { 
-            StaffController.messageClass = 'alert-warning';
-            StaffController.message = 'This identity has already existed in the system.';
-            StaffController.isIdentityUserExist = true;
-            StaffController.error.identity_number =
-            "This identity has already existed in the system.";
+        {
+            userCtrl.messageClass = 'alert-warning';
+            userCtrl.message = result.data.message;
+            userCtrl.isIdentityUserExist = true;
+            userCtrl.error.identity_number = result.data.message;
             $window.scrollTo({bottom:0});
         } else
-        { 
-            StaffController.messageClass = '';
-            StaffController.message = '';
-            StaffController.isIdentityUserExist = false;
-            StaffController.error.identity_number ==""
+        {
+            userCtrl.messageClass = '';
+            userCtrl.message = '';
+            userCtrl.isIdentityUserExist = false;
+            userCtrl.error.identity_number ==""
         }
         return result.data.user_exist === 1;
     }
+
 }
