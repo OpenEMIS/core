@@ -300,10 +300,12 @@ class AssessmentPeriodsTable extends ControllerActionTable
             'visible' => ['index'=>false]
         ]);
 
+        $this->field('editable_student_statuses', [//POCOR-7550
+            'visible' => ['index'=>false]
+        ]);
         $this->field('weight', [
             'visible' => ['index'=>false]
         ]);
-
         $this->setFieldOrder([
             'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled'
         ]);
@@ -404,6 +406,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
             ]
         ]);
         $this->field('excluded_security_roles');//POCOR-7400
+        $this->field('editable_student_statuses');//POCOR-7400
         $this->field('weight', [
             'attr' => [
                 'label' => $this->getMessage('Assessments.periodWeight')
@@ -413,7 +416,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $this->controller->set('assessmentGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
 
         $this->setFieldOrder([
-             'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled','excluded_security_roles', 'weight', 'education_subjects'
+             'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled','excluded_security_roles','editable_student_statuses','weight', 'education_subjects'
         ]);
 
         //this is to sort array based on certain value on subarray, in this case based on education order value
@@ -731,7 +734,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         ]);
 
         $this->setFieldOrder([
-             'academic_period_id', 'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled','excluded_security_roles', 'weight', 'education_subjects'
+             'academic_period_id', 'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled','excluded_security_roles', 'editable_student_statuses','weight', 'education_subjects'
         ]);
     }
 
@@ -816,16 +819,23 @@ class AssessmentPeriodsTable extends ControllerActionTable
                 ]
         ]]);
         $this->fields['excluded_security_roles']['options'] =  $SecurityRoleOptions;
+        $this->field('editable_student_statuses',['type'=>'select']);//POCOR-7550
     }
      
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
        
         $table=TableRegistry::get('assessment_periods');
+        $entityData=[];//POCOR-7550
+        if(empty($entity->id)){//POCOR-7550
         $entityData=$table->find()->where([$table->aliasField('code')=>$entity->code,
                                            $table->aliasField('assessment_id')=>$entity->assessment_id,
                                            $table->aliasField('academic_term')=>$entity->academic_term,
-        ])->first();
+        ]);
+        }//POCOR-7550
+        else{
+         $entityData=$entity;   
+        }//POCOR-7550
       
         $AssessmentPeriodExcludedSecurityRolesTable = TableRegistry::get('assessment_period_excluded_security_roles');
   
@@ -864,6 +874,14 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $values = !empty($obj) ? implode(', ', $obj) : __('No Excluded Security Roles ');
         return $values;
     }
+    //POCOR-7400 end
+    //POCOR-7550 start
+    public function onUpdateFieldEditableStudentStatuses(Event $event, array $attr, $action, Request $request)
+    {
+        $attr['options'] = ['Enrolled','All Statuses'];
+        $attr['onChangeReload'] = 'changeCurrent';
 
-     //POCOR-7400 end
+        return $attr;
+    }
+      //POCOR-7550 end
 }

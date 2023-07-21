@@ -31,6 +31,10 @@ class TextbooksTable extends ControllerActionTable {
         $this->belongsTo('EducationGrades',     ['className' => 'Education.EducationGrades']);
         $this->belongsTo('EducationSubjects',   ['className' => 'Education.EducationSubjects']);
 
+        // $this->belongsTo('TextbookDimensions',   ['className' => 'Textbook.TextbookDimensions']); //POCOR-7362
+
+        $this->hasMany('TextbookDimensions', ['className' => 'Textbook.TextbookDimensions', 'foreignKey' => ['textbook_id', 'textbook_dimension_id'], 'dependent' => true, 'cascadeCallBack' => true]); //POCOR-7362
+
         $this->hasMany('InstitutionTextbooks', ['className' => 'Institution.InstitutionTextbooks', 'foreignKey' => ['textbook_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallBack' => true]);
 
         $this->setDeleteStrategy('restrict');
@@ -167,6 +171,7 @@ class TextbooksTable extends ControllerActionTable {
         $this->field('author', ['visible' => false]);
         $this->field('year_published', ['visible' => false]);
         $this->field('expiry_date', ['visible' => false]);
+        $this->field('textbook_dimension_id', ['visible' => false]); //POCOR-7362
 
         $this->setFieldOrder([
             'code', 'title', 'ISBN', 'publisher'
@@ -277,6 +282,25 @@ class TextbooksTable extends ControllerActionTable {
             return $entity->education_subject->code_name;
         }
     }
+
+    // POCOR-7362
+    public function onGetTextbookDimensionId(Event $event, Entity $entity)
+    {
+        
+        $textbookdimensions = TableRegistry::get('textbook_dimensions');
+        $query = $textbookdimensions->find()
+                ->select('name')
+                ->where([
+                    'id' => $entity->textbook_dimension_id
+                ])
+                ->hydrate(false);
+
+        $result = $query->toArray();
+        if ($this->action == 'view') {
+            return $result;
+        }
+    }
+    // POCOR-7362
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
@@ -488,6 +512,23 @@ class TextbooksTable extends ControllerActionTable {
         return $attr;
     }
 
+    // POCOR-7362
+
+    public function onUpdateFieldTextbookDimensionId(Event $event, array $attr, $action, Request $request)
+    {
+         $textbookdimensions = TableRegistry::get('textbook_dimensions');
+         if ($action == 'add' || $action == 'edit') {
+         $dimension = $textbookdimensions->find('list')->toArray();
+         
+         $attr['options'] = $dimension;
+         }
+
+         return $attr;
+               
+    }
+
+    // POCOR-7362 ends
+
     public function setupFields(Entity $entity)
     {
         $this->field('academic_period_id', [
@@ -522,9 +563,18 @@ class TextbooksTable extends ControllerActionTable {
             'entity' => $entity
         ]);
 
+        // POCOR-7362 add textbook dimension
+
+        $this->field('textbook_dimension_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
+
+        // POCOR-7362 ends
+
         $this->setFieldOrder([
             'academic_period_id', 'education_level_id', 'education_programme_id', 'education_grade_id', 'education_subject_id',
-            'code', 'title', 'author', 'publisher' , 'year_published', 'ISBN', 'expiry_date'
+            'code', 'title', 'author', 'publisher' , 'year_published', 'textbook_dimension_id', 'ISBN', 'expiry_date'
         ]);
     }
 
@@ -558,5 +608,14 @@ class TextbooksTable extends ControllerActionTable {
                 ])
                 ->order([$this->aliasField('code') => 'ASC'])
                 ->toArray();
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'textbook_dimension_id') {
+            return __('Dimension');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }
