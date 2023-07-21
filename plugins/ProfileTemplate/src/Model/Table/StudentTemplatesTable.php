@@ -171,6 +171,17 @@ class StudentTemplatesTable extends ControllerActionTable
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
+        //POCOR-5191 :: Strat
+        $Roles = TableRegistry::get('security_roles');	
+        $roles = $Roles->find('list',['keyField' => 'id', 'valueField' => 'name'])->toArray();	
+        $this->field('student_profile_template_id', [	
+            'type' => 'chosenSelect',	
+            'attr' => [	
+                'label' => __('Security Roles')	
+            ]	
+        ]);	
+        $this->fields['student_profile_template_id']['options'] = $roles;
+        //POCOR-5191 :: End
         // to set template download button
         $downloadUrl = $this->url('downloadTemplate');
         $this->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
@@ -179,8 +190,46 @@ class StudentTemplatesTable extends ControllerActionTable
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'generate_start_date', 'generate_end_date', 'excel_template']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'student_profile_template_id','generate_start_date', 'generate_end_date', 'excel_template']);
     }
+
+    //POCOR-5191 :: Strat
+    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $ProfileSecurityRoles = TableRegistry::get('student_profile_security_roles');	
+                $ProfileSecurityRolesData = $ProfileSecurityRoles->find()->where(['student_profile_template_id'=>$row->id])->toArray();
+               
+                $arr =[];
+                foreach($ProfileSecurityRolesData as $k =>$data1){
+                    $arr[$k] = ['id'=>$data1->security_role_id];
+                }
+                $row['student_profile_template_id'] = $arr;
+                return $row;
+            });
+        });
+    }
+    
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)	
+    {	
+        $ProfileSecurityRoles = TableRegistry::get('student_profile_security_roles');	
+        //Delete all Records for this student_profile_template
+        $AlreadyRecord = $ProfileSecurityRoles->find('all',['conditions'=>['student_profile_template_id' => $entity->id]])->toArray();
+        foreach($AlreadyRecord as $k=> $del){
+            $ProfileSecurityRoles->delete($del);
+        }
+        if(!empty($entity['student_profile_template_id']['_ids'])){	
+            foreach($entity['student_profile_template_id']['_ids'] as $profile){	
+                $ProfileSecurityRolesEntity = $ProfileSecurityRoles->newEntity([
+                    'security_role_id' => $profile,
+                    'student_profile_template_id' => $entity->id
+                ]);
+                $ProfileSecurityRoles->save($ProfileSecurityRolesEntity);
+            }	
+        }	
+    }
+    //POCOR-5191 :: End
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
