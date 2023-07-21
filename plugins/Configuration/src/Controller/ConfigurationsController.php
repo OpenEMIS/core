@@ -165,12 +165,16 @@ class ConfigurationsController extends AppController
         }
     }
 
-    // Start POCOR-7508
-
+    // Start POCOR-7507
+    public function ExternalDataSourceIdentity()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataSource']);
+    }
+    // End POCOR-7507
+    //POCOR-7531 start
     public function ExternalDataSourceExams()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataSourceExam']);
     }
-
-    // End POCOR-7508
+      //POCOR-7531 end
 }

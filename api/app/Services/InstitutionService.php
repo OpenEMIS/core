@@ -1284,7 +1284,390 @@ class InstitutionService extends Controller
         }
     }
 
+    // POCOR-7394-S starts
 
+    public function getAbsenceReasons($request)
+    {
+        try {
+            $data = $this->institutionRepository->getAbsenceReasons($request);
+            $list = [];
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['name'] = $d['name']; 
+                }
+            }
+
+            $data['data'] = $list;
+
+            return $data;
+                   
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Absence Reasons List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Absence Reasons List.');
+        }
+    }
+
+    public function getAbsenceTypes($request)
+    {
+        try {
+            $data = $this->institutionRepository->getAbsenceTypes($request);
+            // dd($data);
+            $list = [];
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['code'] = $d['code'];
+                    $list[$k]['name'] = $d['name']; 
+                }
+            }
+
+            $data['data'] = $list;
+
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Absence Types List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Absence Types List.');
+        }
+    }
+
+    public function getAreaAdministratives($request)
+    {
+        try {
+            $data = $this->institutionRepository->getAreaAdministratives($request);
+            // dd($data);
+            $list = [];
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['code'] = $d['code'];
+                    $list[$k]['name'] = $d['name'];
+                    $list[$k]['is_main_country'] = $d['is_main_country'];
+                    $list[$k]['parent_id'] = $d['parent_id'];
+                    $list[$k]['lft'] = $d['lft'];
+                    $list[$k]['rght'] = $d['rght'];
+                    $list[$k]['area_administrative_level_id'] = $d['area_administrative_level_id'];
+                    $list[$k]['order'] = $d['order'];
+                    $list[$k]['visible'] = $d['visible'];
+                    $list[$k]['modified_user_id'] = $d['modified_user_id'];
+                    $list[$k]['modified'] = $d['modified'];
+                    $list[$k]['created_user_id'] = $d['created_user_id'];
+                    $list[$k]['created'] = $d['created'];
+                    $list[$k]['area_administrative_levels'] = $d['area_administrative_levels'];
+                    
+                }
+            }
+
+            $data['data'] = $list;
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Area Administratives List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Area Administratives List.');
+        }
+    }
+
+    public function getAreaAdministrativesById($areaAdministrativeId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getAreaAdministrativesById($areaAdministrativeId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Area Administrative.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Area Administrative.');
+        }
+    }
+    
+    public function getInstitutionGenders()
+    {
+        try {
+
+            $data = $this->institutionRepository->getInstitutionGenders();
+            // dd($data);
+            $list = [];
+            if(count($data) > 0){
+                foreach($data as $k => $d){
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['name'] = $d['name'];
+                    $list[$k]['code'] = $d['code'];
+                    $list[$k]['order'] = $d['order'];
+                    $list[$k]['created_user_id'] = $d['created_user_id'];
+                    $list[$k]['created'] = $d['created'];
+                }
+            }
+            
+            return $list;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Genders List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Institution Genders List.');
+        }
+    }
+
+    public function getInstitutionsLocalitiesById($localityId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionsLocalitiesById($localityId);
+            $list = [];
+            if($data){
+                    $list['id'] = $data['id'];
+                    $list['name'] = $data['name'];
+                    $list['order'] = $data['order'];
+                    $list['visible'] = $data['visible'];
+                    $list['editable'] = $data['editable'];
+                    $list['default'] = $data['default'];
+                    $list['international_code'] = $data['international_code'];
+                    $list['national_code'] = $data['national_code'];
+                    $list['modified_user_id'] = $data['modified_user_id'];
+                    $list['modified'] = $data['modified'];
+                    $list['created_user_id'] = $data['created_user_id'];
+                    $list['created'] = $data['created'];
+
+            }
+            
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Locality.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Locality.');
+        }
+    }
+
+    public function getInstitutionsOwnershipsById($ownershipId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionsOwnershipsById($ownershipId);
+            $list = [];
+            if($data){
+                    $list['id'] = $data['id'];
+                    $list['name'] = $data['name'];
+                    $list['order'] = $data['order'];
+                    $list['visible'] = $data['visible'];
+                    $list['editable'] = $data['editable'];
+                    $list['default'] = $data['default'];
+                    $list['international_code'] = $data['international_code'];
+                    $list['national_code'] = $data['national_code'];
+                    $list['modified_user_id'] = $data['modified_user_id'];
+                    $list['modified'] = $data['modified'];
+                    $list['created_user_id'] = $data['created_user_id'];
+                    $list['created'] = $data['created'];
+            }
+            
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Ownership.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Ownership.');
+        }
+    }
+
+    public function getInstitutionSectorsById($sectorId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionSectorsById($sectorId);
+            $list = [];
+            if($data){
+                    $list['id'] = $data['id'];
+                    $list['name'] = $data['name'];
+                    $list['order'] = $data['order'];
+                    $list['visible'] = $data['visible'];
+                    $list['editable'] = $data['editable'];
+                    $list['default'] = $data['default'];
+                    $list['international_code'] = $data['international_code'];
+                    $list['national_code'] = $data['national_code'];
+                    $list['modified_user_id'] = $data['modified_user_id'];
+                    $list['modified'] = $data['modified'];
+                    $list['created_user_id'] = $data['created_user_id'];
+                    $list['created'] = $data['created'];
+            }
+            
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Sector.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Sector.');
+        }
+    }
+
+    public function getInstitutionProvidersById($providerId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionProvidersById($providerId);
+            $list = [];
+            if($data){
+                    $list['id'] = $data['id'];
+                    $list['name'] = $data['name'];
+                    $list['order'] = $data['order'];
+                    $list['visible'] = $data['visible'];
+                    $list['editable'] = $data['editable'];
+                    $list['default'] = $data['default'];
+                    $list['institution_sector_id'] = $data['institution_sector_id'];
+                    $list['international_code'] = $data['international_code'];
+                    $list['national_code'] = $data['national_code'];
+                    $list['modified_user_id'] = $data['modified_user_id'];
+                    $list['modified'] = $data['modified'];
+                    $list['created_user_id'] = $data['created_user_id'];
+                    $list['created'] = $data['created'];
+            }
+            
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Provider.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Provider.');
+        }
+    }
+
+    public function getInstitutionTypesById($typeId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionTypesById($typeId);
+            $list = [];
+            if($data){
+                    $list['id'] = $data['id'];
+                    $list['name'] = $data['name'];
+                    $list['order'] = $data['order'];
+                    $list['visible'] = $data['visible'];
+                    $list['editable'] = $data['editable'];
+                    $list['default'] = $data['default'];
+                    $list['international_code'] = $data['international_code'];
+                    $list['national_code'] = $data['national_code'];
+                    $list['modified_user_id'] = $data['modified_user_id'];
+                    $list['modified'] = $data['modified'];
+                    $list['created_user_id'] = $data['created_user_id'];
+                    $list['created'] = $data['created'];
+            }
+            
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Type.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Type.');
+        }
+    }
+
+    public function getInstitutionProviderBySectorId($sectorId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionProviderBySectorId($sectorId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Provider By Sector ID.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Provider By Sector ID.');
+        }
+    }
+
+    public function getMealBenefits($request)
+    {
+        try {
+            $data = $this->institutionRepository->getMealBenefits($request);
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Meal Benefits List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Meal Benefits List.');
+        }
+    }
+
+    public function getMealProgrammes($request)
+    {
+        try {
+            $data = $this->institutionRepository->getMealProgrammes($request);
+            $list = [];
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['academic_period_id'] = $d['academic_period_id'];
+                    $list[$k]['name'] = $d['name'];
+                    $list[$k]['code'] = $d['code'];
+                    $list[$k]['type'] = $d['type'];
+                    $list[$k]['targeting'] = $d['targeting'];
+                    $list[$k]['start_date'] = $d['start_date'];
+                    $list[$k]['end_date'] = $d['end_date'];
+                    $list[$k]['amount'] = $d['amount'];
+                    $list[$k]['implementer'] = $d['implementer'];
+                    $list[$k]['modified_user_id'] = $d['modified_user_id'];
+                    $list[$k]['modified'] = $d['modified'];
+                    $list[$k]['created_user_id'] = $d['created_user_id'];
+                    $list[$k]['created'] = $d['created'];
+                    
+                }
+            }
+
+            $data['data'] = $list;
+
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Meal Programmes List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Meal Programmes List.');
+        }
+    }
+
+    // POCOR-7394-S ends
 
     public function deleteClassAttendance($request)
     {
