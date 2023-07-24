@@ -197,6 +197,7 @@ Route::group(
         // POCOR-7394-S ends
 
         Route::get('surveys', 'SurveyController@getSurveys');
+        Route::get('survey/download/xform/{surveyFormId}', 'SurveyController@downloadXform');
 
     }
 );

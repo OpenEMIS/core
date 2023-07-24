@@ -31,4 +31,23 @@ class SurveyController extends Controller
             return $this->sendErrorResponse('Surveys List Not Found');
         }
     }
+
+
+    public function downloadXform(Request $request, $surveyFormId)
+    {
+        try {
+            $data = $this->surveyService->downloadXform($request, $surveyFormId);
+            
+            //return $this->sendSuccessResponse("Surveys xform downloaded.", $data);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to download survey xform.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to download survey xform.');
+        }
+    }
 }
