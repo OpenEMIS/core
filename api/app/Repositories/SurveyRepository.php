@@ -9,17 +9,39 @@ use Carbon\Carbon;
 use JWTAuth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use App\Models\SurveyForms;
+use App\Models\InstitutionSurveys;
 
 class SurveyRepository extends Controller
 {
     public function getSurveys($request)
     {
         try {
-            $param = $request->all();
-            dd($param);
+            $params = $request->all();
+
+            $limit = config('constants.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $surveys = InstitutionSurveys::with('surveyForms','surveyForms.customModule');
+
+            if(isset($params['institution_id'])){
+                $surveys = $surveys->where('institution_id', $params['institution_id']);
+            }
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $surveys = $surveys->orderBy($col, $orderBy);
+            }
+
+            $list = $surveys->paginate($limit)->toArray();
             
+            return $list;
         } catch (\Exception $e) {
-            dd($e);
+            
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
