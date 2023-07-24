@@ -475,11 +475,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             //POCOR-6841 starts
             if($entity->status == 2){
                 //POCOR-6895: START
-                if($timeZone == 'Asia/Kuwait'){
-                    $date = new DateTime("now", new DateTimeZone('Asia/Kuwait') );
-                    $data = $date->format('Y-m-d H:i:s');
-                    $c_timestap = strtotime("$data+6");
-                }
+              
                 //POCOR-6895: END
                 $currentTimeZone = new DateTime();
                 $modifiedDate = ($modifiedDate === null) ? $currentTimeZone : $modifiedDate;
