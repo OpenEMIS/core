@@ -513,6 +513,67 @@ class DataManagementCopyTable extends ControllerActionTable
                     }
             }
 
+            $Unmatched =[];
+            $Matched = [];
+
+            $institutions = $Institutions->find('all')->toArray();        
+            // foreach($InstitutionGradesdataToInsert AS $InstitutionGradesdataValue){
+                foreach($institutions as $k => $Insti){ 
+                    if (!in_array($Insti->id, $InsIds)) {
+                        $InstitutionGradesdataValue = $InstitutionGrades
+                        ->find('all')
+                        ->where(['academic_period_id' => $from_academic_period,'institution_id'=> $Insti->id])
+                        ->first();
+                        if(!empty($InstitutionGradesdataValue)){
+                            try{
+                                $statement = $connection->prepare('INSERT INTO institution_grades 
+                                (
+                                education_grade_id, 
+                                academic_period_id,
+                                start_date,
+                                start_year,
+                                end_date,
+                                end_year,
+                                institution_id,
+                                modified_user_id,
+                                modified,
+                                created_user_id,
+                                created)
+                                
+                                VALUES (:education_grade_id,
+                                :academic_period_id,
+                                :start_date, 
+                                :start_year,
+                                :end_date,
+                                :end_year,
+                                :institution_id,
+                                :modified_user_id,
+                                :modified,
+                                :created_user_id,
+                                :created)');
+            
+                                $statement->execute([
+                                'education_grade_id' => $InstitutionGradesdataValue->education_grade_id,
+                                'academic_period_id' => $to_academic_period,
+                                'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
+                                'start_year' => $ToAcademicPeriodsData['start_year'],
+                                'end_date' => null,
+                                'end_year' => null,
+                                'institution_id' => $InstitutionGradesdataValue->institution_id,
+                                'modified_user_id' => 2,
+                                'modified' => date('Y-m-d H:i:s'),
+                                'created_user_id' => 2,
+                                'created' => date('Y-m-d H:i:s')
+                                ]);
+                            
+                            }catch (PDOException $e) {
+                                echo "<pre>";print_r($e);die;
+                            }
+                        }
+
+                    }
+            }
+
             $from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
             $to_end_date = $ToAcademicPeriodsData['end_date']->format('Y-m-d');
             $to_start_year = $ToAcademicPeriodsData['start_year'];
