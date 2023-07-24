@@ -181,7 +181,8 @@ trait MessagesTrait
             ],
             'change_in_building_type' => [
                 'restrictEdit' => 'Not allowed to change building type in the same day.'
-            ]
+            ],
+            'sizeGreater' => 'The size of building larger than the size of land.'
         ],
         'InstitutionFloors' => [
             'noFloors' => 'No Floor found',
@@ -195,7 +196,8 @@ trait MessagesTrait
             ],
             'change_in_floor_type' => [
                 'restrictEdit' => 'Not allowed to change floor type in the same day.'
-            ]
+            ],
+            'sizeGreater' => 'The size of floor larger than the size of building.'
         ],
         'InstitutionRooms' => [
             'noRooms' => 'No Room found',
@@ -210,7 +212,8 @@ trait MessagesTrait
             'change_in_room_type' => [
                 'restrictEdit' => 'Not allowed to change room type in the same day.'
             ],
-            'select_subject' => 'Select Subject'
+            'select_subject' => 'Select Subject',
+            'sizeGreater' => 'The size of room larger than the size of floor.'
         ],
         'InfrastructureCustomFields' => [
             'infrastructure_level_id' => 'Level Name'
