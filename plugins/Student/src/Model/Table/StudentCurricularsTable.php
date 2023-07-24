@@ -212,14 +212,18 @@ class StudentCurricularsTable extends ControllerActionTable
         
         $this->field('academic_period_id', ['visible' => true]);
         $this->field('category', ['visible' => true]);
+        $this->field('openemis_no', ['visible' => true]);
         $this->field('education_grade', ['visible' => true]);
         $this->field('institution_class', ['visible' => true]);
         $this->field('student_id', ['visible' => true]);
         $this->field('curricular_category', ['visible' => true]);
+        $this->field('category', ['visible' => false]);
         $this->field('institution_curricular_id', ['visible' => true]);
         $this->field('curricular_type', ['visible' => true]);
 
         $this->field('curricular_position_id', ['visible' => true]);
+        $this->setFieldOrder([
+        'academic_period_id','student_id','openemis_no','education_grade','institution_class', 'curricular_category','curricular_type','institution_curricular_id', 'curricular_position_id','start_date','end_date']); //POCOR-7604
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
