@@ -18,7 +18,7 @@ class Controller extends BaseController
                 'message' => $message,
                 'data' => $data,
             ],
-            config('constants.statusCodes.resourceNotFound')
+            config('constantvalues.statusCodes.resourceNotFound')
         );
     }
 
@@ -29,7 +29,7 @@ class Controller extends BaseController
                 'message' => $message,
                 'data' => $data,
             ],
-            config('constants.statusCodes.fieldNotFound')
+            config('constantvalues.statusCodes.fieldNotFound')
         );
     }
 
@@ -40,7 +40,7 @@ class Controller extends BaseController
                 'message' => $message,
                 'data' => $data,
             ],
-            config('constants.statusCodes.success')
+            config('constantvalues.statusCodes.success')
         );
     }
 
@@ -56,7 +56,7 @@ class Controller extends BaseController
             [
                 'message' => $message,
             ],
-            config('constants.statusCodes.deleteError')
+            config('constantvalues.statusCodes.deleteError')
         );
     }
 }
