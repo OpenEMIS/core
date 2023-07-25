@@ -721,7 +721,36 @@ class StudentPromotionTable extends AppTable
                     elseif (in_array($studentStatusId, [$statuses['GRADUATED']]) && !$isLastGrade) {
                         $options = [0 => $this->getMessage($this->aliasField('notEnrolled'))] + $gradeOptions;
                     } elseif (in_array($studentStatusId, [$statuses['PROMOTED']])) {
-                        $options = $toGradeOptionPromoted;
+                       //POCOR-4746 start
+                       $educationGrades=TableRegistry::get('Education.EducationGrades');
+                       $educationProgramme=TableRegistry::get('education_programmes');
+                       $data=$educationGrades->find()
+                                             ->select([
+                                                "id"=> $educationGrades->aliasField('id'),
+                                                "grade_name"=> $educationGrades->aliasField('name'),
+                                                "programme_id"=> $educationProgramme->aliasField('id'),
+                                                "same_grade_promotion"=>$educationProgramme->aliasField('same_grade_promotion'),
+                                                "programme"=>$educationProgramme->aliasField('name'),
+                                                      ]
+                                                    )
+                                             ->innerJoin(
+                                                [$educationProgramme->alias() => $educationProgramme->table()],
+                                                [
+                                            
+                                                    $educationProgramme->aliasField('id = ') . $educationGrades->aliasField('education_programme_id')
+                                                ]
+                                            )
+                                            ->where([$educationGrades->aliasField('id')=>$entity->grade_to_promote])
+                                            ->first();
+                       $newOption = [];
+                       $newOption[$data->id] = $data->programme . ' - ' .$data->grade_name;
+                       if($data->same_grade_promotion=="yes"){
+                            $options =   $newOption;
+                        }
+                        else{
+                            $options = $toGradeOptionPromoted;
+                        }
+                    //POCOR-4746 end
                     } else {
                         // to cater for promote
                         $options = $gradeOptions;
