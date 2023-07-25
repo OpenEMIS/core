@@ -38,7 +38,6 @@ class SurveyController extends Controller
         try {
             $data = $this->surveyService->downloadXform($request, $surveyFormId);
             
-            //return $this->sendSuccessResponse("Surveys xform downloaded.", $data);
             return $data;
             
         } catch (\Exception $e) {
