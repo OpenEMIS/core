@@ -342,13 +342,30 @@ class DataManagementConnectionsTable extends ControllerActionTable
         return $encrypted;
     }
 
-
+    /**
+     * helper function to generate a short random string
+     * @param int $length
+     * @return bool|string
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     private static function generateRandomString($length = 4)
     {
         $bytes = random_bytes($length);
         return substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $length);
     }
 
+    /**
+     * a common function to check whether there is an archive table or not.
+     * If the archive table is absent it is created.
+     * If the archive table is present or successfully created, the func returns the name of the archive table
+     * If the archive table can not be created, then "" string is returned
+     * @param $sourceTableName
+     * @param string $db_name
+     * @return string
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public static function hasArchiveTable($sourceTableName, $db_name = 'default')
     {
 
@@ -416,10 +433,12 @@ class DataManagementConnectionsTable extends ControllerActionTable
     }
 
     /**
+     * common function to know if there are some archive records, using base table name and $where criteria
      * @param string $table_name
      * @param array $where
      * @return bool
-     *
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     public static function hasArchiveRecords(string $table_name, array $where = [])
     {
@@ -427,9 +446,9 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
-        $remoteConnection = ConnectionManager::get($targetTableConnection);
+        $archiveConnection = ConnectionManager::get($targetTableConnection);
         $tableArchived = TableRegistry::get($targetTableName, [
-            'connection' => $remoteConnection,
+            'connection' => $archiveConnection,
         ]);
         $count = $tableArchived->find('all')
 //            ->select('*')// POCOR-7339-HINDOL
@@ -445,7 +464,13 @@ class DataManagementConnectionsTable extends ControllerActionTable
         return $is_archive_exists;
     }
 
-
+    /**
+     * common function to get archive table name and connection
+     * @param $sourceTableName
+     * @return array
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public static function getArchiveTableAndConnection($sourceTableName)
     {
         $db_name = 'default';
@@ -462,6 +487,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
 
     /**
      * @return bool
+     * @throws \Exception
      */
     public static function hasArchiveConnection()
     {
@@ -474,5 +500,164 @@ class DataManagementConnectionsTable extends ControllerActionTable
         return $archiveConnection;
     }
 
+    /**
+     * proc to get unique list of academic periods having archived records
+     * @param string $table_name - name of the base table
+     * @param array $where - parameters, like institution_id, institution_class_id etc
+     * @return array
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function getArchiveYears(string $table_name, array $where)
+    {
+        $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
+        $targetTableName = $targetTableNameAndConnection[0];
+        $targetTableConnection = $targetTableNameAndConnection[1];
+        $remoteConnection = ConnectionManager::get($targetTableConnection);
+        $tableArchived = TableRegistry::get($targetTableName, [
+            'connection' => $remoteConnection,
+        ]);
+//        Log::write('debug', 'getArchiveYears');
+//        Log::write('debug', $where);
+        $distinctYears = $tableArchived->find('all')
+            ->where($where)
+            ->select(['academic_period_id'])
+            ->distinct(['academic_period_id'])
+            ->toArray();
+        $distinctYearValues = array_column($distinctYears, 'academic_period_id');
+//        Log::write('debug', '$distinctYearValues');
+//        Log::write('debug', $distinctYearValues);
+        $uniqu_array = array_unique($distinctYearValues);
+
+        return $uniqu_array;
+    }
+
+    /**
+     * @param string $table_name
+     * @param array $where
+     * @return array
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function getArchiveAssessments(string $table_name, array $where)
+    {
+        $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
+        $targetTableName = $targetTableNameAndConnection[0];
+        $targetTableConnection = $targetTableNameAndConnection[1];
+        $remoteConnection = ConnectionManager::get($targetTableConnection);
+        $tableArchived = TableRegistry::get($targetTableName, [
+            'connection' => $remoteConnection,
+        ]);
+        $distinctResults = $tableArchived->find('all')
+            ->where($where)
+            ->select(['assessment_id'])
+            ->distinct(['assessment_id'])
+            ->toArray();
+
+        $distinctResultsValues = array_column($distinctResults, 'assessment_id');
+
+        $uniqu_array = array_unique($distinctResultsValues);
+
+        return $uniqu_array;
+    }
+
+    /**
+     * @param string $table_name
+     * @param array $where
+     * @return array
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function getArchiveAssessmentPeriods(string $table_name, array $where)
+    {
+        $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
+        $targetTableName = $targetTableNameAndConnection[0];
+        $targetTableConnection = $targetTableNameAndConnection[1];
+        $remoteConnection = ConnectionManager::get($targetTableConnection);
+        $tableArchived = TableRegistry::get($targetTableName, [
+            'connection' => $remoteConnection,
+        ]);
+        $distinctResults = $tableArchived->find('all')
+            ->where($where)
+            ->select(['assessment_period_id'])
+            ->distinct(['assessment_period_id'])
+            ->toArray();
+
+        $distinctResultsValues = array_column($distinctResults, 'assessment_period_id');
+
+        $uniqu_array = array_unique($distinctResultsValues);
+
+        return $uniqu_array;
+    }
+
+    /**
+     * @param string $table_name
+     * @param array $where
+     * @return array
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function getArchiveStudents(string $table_name, array $where)
+    {
+        $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
+        $targetTableName = $targetTableNameAndConnection[0];
+        $targetTableConnection = $targetTableNameAndConnection[1];
+        $remoteConnection = ConnectionManager::get($targetTableConnection);
+        $tableArchived = TableRegistry::get($targetTableName, [
+            'connection' => $remoteConnection,
+        ]);
+        $distinctResults = $tableArchived->find('all')
+            ->where($where)
+            ->select(['student_id'])
+            ->distinct(['student_id'])
+            ->toArray();
+
+        $distinctResultsValues = array_column($distinctResults, 'student_id');
+
+        $uniqu_array = array_unique($distinctResultsValues);
+
+        return $uniqu_array;
+    }
+
+    /**
+     * @param string $table_name
+     * @param array $where
+     * @return array
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function getArchiveClasses(string $table_name, array $where)
+    {
+        $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
+        $targetTableName = $targetTableNameAndConnection[0];
+        $targetTableConnection = $targetTableNameAndConnection[1];
+        $remoteConnection = ConnectionManager::get($targetTableConnection);
+        $tableArchived = TableRegistry::get($targetTableName, [
+            'connection' => $remoteConnection,
+        ]);
+//        Log::write('debug', 'getArchiveYears');
+//        Log::write('debug', $where);
+
+        if($table_name == 'assessment_item_results'){
+            $distinctResults = $tableArchived->find('all')
+                ->where($where)
+                ->select(['institution_class_id' => 'institution_classes_id'])
+                ->distinct(['institution_class_id'])
+                ->toArray();
+        }else{
+            $distinctResults = $tableArchived->find('all')
+                ->where($where)
+                ->select(['institution_class_id'])
+                ->distinct(['institution_class_id'])
+                ->toArray();
+        }
+
+        $distinctResultsValues = array_column($distinctResults, 'institution_class_id');
+//        Log::write('debug', '$distinctResultsValues');
+//        Log::write('debug', $distinctResultsValues);
+        $uniqu_array = array_unique($distinctResultsValues);
+
+        return $uniqu_array;
+    }
 
 }
