@@ -133,14 +133,15 @@ class SurveyRepository extends Controller
                     ->select('academic_periods.id as academic_period_id', 'academic_periods.name as academic_period_name')
                     ->groupBy('academic_periods.id')
                     ->get();
-                   
+            
             if (!empty($periodListResults)) {
                 $periodOptions = $periodListResults->toArray();
                 
-                foreach ($periodOptions as $periodId => $periodName) {
+                foreach ($periodOptions as $key => $period) {
+                    
                     $itemNode = $fieldNode->addChild("item", null, NS_XF);
-                    $itemNode->addChild("label", htmlspecialchars($periodName), NS_XF);
-                    $itemNode->addChild("value", htmlspecialchars($periodId), NS_XF);
+                    $itemNode->addChild("label", htmlspecialchars($period['academic_period_name']), NS_XF);
+                    $itemNode->addChild("value", htmlspecialchars($period['academic_period_id']), NS_XF);
                 }
             }
             
