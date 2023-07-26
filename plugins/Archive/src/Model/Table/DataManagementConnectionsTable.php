@@ -341,4 +341,138 @@ class DataManagementConnectionsTable extends ControllerActionTable
         );
         return $encrypted;
     }
+
+
+    private static function generateRandomString($length = 4)
+    {
+        $bytes = random_bytes($length);
+        return substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $length);
+    }
+
+    public static function hasArchiveTable($sourceTableName, $db_name = 'default')
+    {
+
+        $targetTableName = $sourceTableName . '_archived';
+        $archive_connection = ConnectionManager::get($db_name);
+        $default_connection = ConnectionManager::get('default');
+        $archiveSchemaCollection = new \Cake\Database\Schema\Collection($archive_connection);
+        $defaultSchemaCollection = new \Cake\Database\Schema\Collection($default_connection);
+        $existingTables = $archiveSchemaCollection->listTables();
+        $tableExists = in_array($targetTableName, $existingTables);
+
+        if ($tableExists) {
+            return $targetTableName;
+        }
+
+        $sourceTableSchema = $defaultSchemaCollection->describe($sourceTableName);
+
+        // Create a new table schema for the target table
+        $targetTableSchema = new \Cake\Database\Schema\Table($targetTableName);
+
+        // Copy the columns from the source table to the target table
+        foreach ($sourceTableSchema->columns() as $column) {
+            $columnDefinition = $sourceTableSchema->column($column);
+            $targetTableSchema->addColumn($column, $columnDefinition);
+        }
+        $randomString = self::generateRandomString();
+        // Copy the indexes from the source table to the target table
+        foreach ($sourceTableSchema->indexes() as $index) {
+            $indexDefinition = $sourceTableSchema->index($index);
+            $targetTableSchema->addIndex($index . $randomString, $indexDefinition);
+        }
+
+        // Copy the constraints from the source table to the target table
+        // FIX for random FK name
+
+        foreach ($sourceTableSchema->constraints() as $constraint) {
+            $constraintDefinition = $sourceTableSchema->constraint($constraint);
+            if ($constraintDefinition['type'] !== \Cake\Database\Schema\Table::CONSTRAINT_FOREIGN) {
+                // If it's not a foreign key constraint, proceed with adding it to the destination table
+                $constraintname = $constraint != 'primary' ? $constraint . $randomString : $constraint;
+                $targetTableSchema->addConstraint($constraintname, $constraintDefinition);
+            }
+//            Log::write('debug', '$constraintDefinition');
+//            Log::write('debug', $constraintname);
+//            Log::write('debug', $constraintDefinition);
+        }
+
+
+        // Generate the SQL statement to create the target table
+        $createTableSql = $targetTableSchema->createSql($archive_connection);
+
+        // Execute the SQL statement to create the target table
+        foreach ($createTableSql as $sql) {
+            $archive_connection->execute($sql);
+        }
+
+        // Check if the target table was created successfully
+        $existingTables = $archiveSchemaCollection->listTables();
+        $tableExists = in_array($targetTableName, $existingTables);
+        if ($tableExists) {
+            return $targetTableName;
+        }
+
+        return ""; // Return blank string if the table couldn't be created
+    }
+
+    /**
+     * @param string $table_name
+     * @param array $where
+     * @return bool
+     *
+     */
+    public static function hasArchiveRecords(string $table_name, array $where = [])
+    {
+        $is_archive_exists = false;
+        $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
+        $targetTableName = $targetTableNameAndConnection[0];
+        $targetTableConnection = $targetTableNameAndConnection[1];
+        $remoteConnection = ConnectionManager::get($targetTableConnection);
+        $tableArchived = TableRegistry::get($targetTableName, [
+            'connection' => $remoteConnection,
+        ]);
+        $count = $tableArchived->find('all')
+//            ->select('*')// POCOR-7339-HINDOL
+            ->where($where)->first();
+//        Log::write('debug', 'hasArchiveRecords');
+//        Log::write('debug', $count);
+        if ($count) {
+            $is_archive_exists = true;
+        }
+        if (!$count) {
+            $is_archive_exists = false;
+        }
+        return $is_archive_exists;
+    }
+
+
+    public static function getArchiveTableAndConnection($sourceTableName)
+    {
+        $db_name = 'default';
+        $archiveConnection = self::hasArchiveConnection();
+        if ($archiveConnection) {
+//            $db_name = self::getRemoteArchiveDatabase();
+        }
+        if ($db_name === "") {
+            $db_name = 'default';
+        }
+        $archive_table_name = self::hasArchiveTable($sourceTableName, $db_name);
+        return [$archive_table_name, $db_name];
+    }
+
+    /**
+     * @return bool
+     */
+    public static function hasArchiveConnection()
+    {
+        $archiveConnection = false;
+//        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+//        $archiveConnection = $ConfigItems->value('remote_archive_data_connection');
+//        if ($archiveConnection) {
+//            $archiveConnection = ($archiveConnection == "1") ? true : false;
+//        }
+        return $archiveConnection;
+    }
+
+
 }
