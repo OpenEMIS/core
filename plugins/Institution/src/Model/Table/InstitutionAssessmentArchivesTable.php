@@ -2,7 +2,7 @@
 // POCOR-7339-HINDOL
 namespace Institution\Model\Table;
 
-use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
+
 use ArrayObject;
 use Cake\Database\Schema\Collection;
 use Cake\Database\Schema\Table;
@@ -14,6 +14,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
+use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 
 class InstitutionAssessmentArchivesTable extends ControllerActionTable
 {
