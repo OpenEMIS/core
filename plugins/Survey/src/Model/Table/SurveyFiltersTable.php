@@ -545,7 +545,6 @@ class SurveyFiltersTable extends ControllerActionTable
         $surveyinstitutionProviders = TableRegistry::get('survey_filter_institution_providers');
         $institutionProvidersData = $surveyinstitutionProviders->find()
                                 ->where([$surveyinstitutionProviders->aliasField('survey_filter_id') => $filterId])->first()->institution_provider_id;
-        
         if($institutionProvidersData != -1){  
             $data = $surveyinstitutionProviders->find()->select(['id'=> $institutionProviders->aliasField('id'),
                             'name' => $institutionProviders->aliasField('name')])
@@ -652,6 +651,108 @@ class SurveyFiltersTable extends ControllerActionTable
         }
         return $query;
     }
+    //POCOR-7611 start
+    public function onUpdateFieldInstitutionProviderId(Event $event, array $attr, $action, Request $request)
+    {  
+        if($action=="edit"){
+        if(!empty($request->params['pass'][1])){
+        $data=$this->paramsDecode($request->params['pass'][1]);
+        $filterId=$data['id'];
+        }
+        $institutionProviders = TableRegistry::get('institution_providers');
+        $surveyinstitutionProviders = TableRegistry::get('survey_filter_institution_providers');
+        $institutionProvidersData = $surveyinstitutionProviders->find()
+        ->where([$surveyinstitutionProviders->aliasField('survey_filter_id') => $filterId])
+        ->first()
+        ->institution_provider_id;
+        $result=[];
+        if($institutionProvidersData != -1){  
+            $data = $surveyinstitutionProviders->find()->select(['id'=> $institutionProviders->aliasField('id'),
+                            'name' => $institutionProviders->aliasField('name')])
+                            ->leftJoin([$institutionProviders->alias() => $institutionProviders->table()],
+                            [$institutionProviders->aliasField('id').'='.$surveyinstitutionProviders->aliasField('institution_provider_id') ])
+                            ->where([$surveyinstitutionProviders->aliasField('survey_filter_id') => $filterId]);         
+            foreach($data as $key => $value){
+               $result[] = $value->name;
+            }               
+        }elseif($institutionProvidersData == -1){
+            $result[] = 'All Institution Provider';
+           
+        }elseif($institutionProvidersData == NULL){
+            $result = '';
+           
+        }
+        $attr['type'] = 'readonly';
+        $attr['attr']['value'] = implode(', ', $result);;
+           return $attr; 
+        }
+    }
+    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, Request $request)
+    { 
+        if($action=="edit"){
+            if(!empty($request->params['pass'][1])){
+            $data=$this->paramsDecode($request->params['pass'][1]);
+            $filterId=$data['id'];
+            }
+        $typedata = [];
+        $type = TableRegistry::get('institution_types');
+        $surveyInstitutionTypes = TableRegistry::get('survey_filter_institution_types');
+        $InstitutionTypesData = $surveyInstitutionTypes->find()
+                                ->where([$surveyInstitutionTypes->aliasField('survey_filter_id') => $filterId])->first()->institution_type_id;
+        if($InstitutionTypesData != -1){  
+            $data = $surveyInstitutionTypes->find()->select(['id'=> $type->aliasField('id'),
+                            'name' => $type->aliasField('name')])
+                            ->leftJoin([$type->alias() => $type->table()],
+                            [$type->aliasField('id').'='.$surveyInstitutionTypes->aliasField('institution_type_id') ])
+                            ->where([$surveyInstitutionTypes->aliasField('survey_filter_id') => $filterId]);         
+            foreach($data as $key => $value){
 
+                $typedata[] = $value->name;
+            }               
+           
+        }elseif($InstitutionTypesData == -1){
+            $typedata[] = 'All Institution Type';
+           
+        }elseif($InstitutionTypesData == NULL){
+            $typedata[] = '';
+        }
+        $attr['type'] = 'readonly';
+        $attr['attr']['value'] = implode(', ', $typedata);
+           return $attr; 
 
+    }
+   }
+   public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, Request $request)
+   { 
+       if($action=="edit"){
+        $result = [];
+        if(!empty($request->params['pass'][1])){
+            $data=$this->paramsDecode($request->params['pass'][1]);
+            $filterId=$data['id'];
+            }
+        $areaEducation = TableRegistry::get('areas');
+        $surveyAreaEducation = TableRegistry::get('survey_filter_areas');
+        $areaeducationData = $surveyAreaEducation->find()
+                                ->where([$surveyAreaEducation->aliasField('survey_filter_id') => $filterId])->first()->area_education_id;
+        if($areaeducationData != -1){  
+            $data = $surveyAreaEducation->find()->select(['id'=> $areaEducation->aliasField('id'),
+                            'name' => $areaEducation->aliasField('name')])
+                            ->leftJoin([$areaEducation->alias() => $areaEducation->table()],
+                            [$areaEducation->aliasField('id').'='.$surveyAreaEducation->aliasField('area_education_id') ])
+                            ->where([$surveyAreaEducation->aliasField('survey_filter_id') => $filterId]);         
+            foreach($data as $key => $value){
+
+                $result[] = $value->name;
+            }               
+        }elseif($areaeducationData == NULL){
+            $result[] = '';
+        }elseif($areaeducationData == -1){
+            $result[] = 'All Area Education';
+        }
+        $attr['type'] = 'readonly';
+        $attr['attr']['value'] = implode(', ', $result);
+           return $attr; 
+     }
+   }
+    //POCOR-7611 end
 }
