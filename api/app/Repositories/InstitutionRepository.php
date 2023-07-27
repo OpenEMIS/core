@@ -2253,8 +2253,13 @@ class InstitutionRepository extends Controller
             }
 
             $check2 = $delete2->exists();
+
+            if(!$check1 && !$check2){
+                DB::commit();
+                return 2;
+            }
             
-            if($check1 && $check2){
+            if($check1 || $check2){
                 $delete1 = $delete1->delete();
                 $delete2 = $delete2->delete();
 
