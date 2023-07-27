@@ -364,7 +364,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
 
     private function isArchiveExists()
     {
-        $is_archive_exists = false;
+        $is_archive_exists = true;
         $institutionId = $this->institutionId;
         $studentId = $this->studentId;
         //POCOR-7526::Start
@@ -408,7 +408,9 @@ class CurrentAssessmentsTable extends ControllerActionTable
             ->where(['student_id' => $this->studentId])
             ->toArray();
         $years_ids = array_column($years_arr, 'academic_period_id');
-
+        if(sizeof($years_ids) == 0){
+            $years_ids = [0];
+        }
         $academicPeriodOptions = $this->AcademicPeriods->getYearList([
             'isEditable' => true,
             'conditions' => [
@@ -435,7 +437,9 @@ class CurrentAssessmentsTable extends ControllerActionTable
             ->where(['student_id' => $this->studentId])
             ->toArray();
         $assessments_ids = array_column($assessments_arr, 'assessment_id');
-
+        if(sizeof($assessments_ids) == 0){
+            $assessments_ids = [0];
+        }
         $Assessments = TableRegistry::get('Assessment.Assessments');
         $assessmentOptions = $Assessments
             ->find('list')
@@ -464,7 +468,9 @@ class CurrentAssessmentsTable extends ControllerActionTable
             ->where(['student_id' => $this->studentId])
             ->toArray();
         $assessment_periods_ids = array_column($assessment_periods_arr, 'assessment_id');
-
+        if(sizeof($assessment_periods_ids) == 0){
+            $assessment_periods_ids = [0];
+        }
         $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
         $where = [$AssessmentPeriods->aliasField('id IN') => $assessment_periods_ids];
         if ($selectedAssessment != '-1') {
