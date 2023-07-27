@@ -170,7 +170,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             if ($entity->has('identity_type_id') && $entity->has('number') && $entity->has('validate_number'))
             {
                 if($entity->validate_number == 1){
-                    $UserIdentities = TableRegistry::get('user_identities');
+                    $UserIdentities = TableRegistry::get('User.Identities');
                     $newEntity = $UserIdentities->newEntity([
                         'identity_type_id' => $entity->identity_type_id,
                         'number' => $entity->number,
@@ -198,7 +198,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                 $UserIdentitiesData = $this->findDataExistInUserIdentityTable($entity->identity_type_id, $entity->nationality_id, $entity->security_user_id);
                 if($UserIdentitiesData->number != $entity->number){
 
-                    $UserIdentities = TableRegistry::get('user_identities');
+                    $UserIdentities = TableRegistry::get('User.Identities');
                     $update_identity_data = [
                         'id' => $UserIdentitiesData->id,
                         'identity_type_id' => $entity->identity_type_id,

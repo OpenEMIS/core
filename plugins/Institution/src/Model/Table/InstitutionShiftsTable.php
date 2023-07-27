@@ -962,7 +962,7 @@ class InstitutionShiftsTable extends ControllerActionTable
                         $Institutions->aliasField('code') . ' LIKE ' => $search,
                         $Institutions->aliasField('name') . ' LIKE ' => $search
                     ],
-                    // $Institutions->aliasField('id').' IS NOT ' => $institutionId
+                    $Institutions->aliasField('institution_status_id') => 1 // POCOR-7598
                 ])
                 ->order([$Institutions->aliasField('name')]);
 
