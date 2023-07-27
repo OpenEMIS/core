@@ -114,7 +114,7 @@ class SurveyRecipientsTable extends ControllerActionTable
                 $SurveyInstitutionProvidersData=$SurveyInstitutionProviders
                             ->find()
                             ->select([$SurveyInstitutionProviders->aliasField('institution_provider_id')])
-                            ->where([ $SurveyInstitutionProviders->aliasField('survey_filter_id').'='.$surveyFilterId])
+                            ->where([ $SurveyInstitutionProviders->aliasField('survey_filter_id')=>$surveyFilterId])
                             ->toArray();
                 $provider_ids=[];
                 foreach( $SurveyInstitutionProvidersData as $key=>$value){
@@ -124,7 +124,7 @@ class SurveyRecipientsTable extends ControllerActionTable
                 $SurveyInstitutionTypesData=$SurveyInstitutionTypes
                             ->find()
                             ->select([$SurveyInstitutionTypes->aliasField('institution_type_id')])
-                            ->where([ $SurveyInstitutionTypes->aliasField('survey_filter_id').'='.$surveyFilterId])
+                            ->where([ $SurveyInstitutionTypes->aliasField('survey_filter_id')=>$surveyFilterId])
                             ->toArray();
                 $institution_types_ids=[];
                 foreach( $SurveyInstitutionTypesData as $key=>$value){
@@ -133,7 +133,7 @@ class SurveyRecipientsTable extends ControllerActionTable
 
                 $SurveyAreaData=$SurveyAreas->find()
                             ->select([$SurveyAreas->aliasField('area_education_id')])
-                            ->where([ $SurveyAreas->aliasField('survey_filter_id').'='.$surveyFilterId])
+                            ->where([ $SurveyAreas->aliasField('survey_filter_id')=>$surveyFilterId])
                             ->toArray();
                 $area_ids=[];
                 foreach(  $SurveyAreaData as $key=>$value){
