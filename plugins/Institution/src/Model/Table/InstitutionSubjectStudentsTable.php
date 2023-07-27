@@ -375,8 +375,7 @@ class InstitutionSubjectStudentsTable extends AppTable
     public function findStudentResults(Query $query, array $options)
     {
 // POCOR-7419-KHINDOL
-        $this->log('findStudentResults', 'debug');
-//        $this->log($options, 'debug');
+//        $this->log('findStudentResults', 'debug');
         $institution_id = self::getFromArray($options, 'institution_id');
         $institution_class_id = self::getFromArray($options, 'institution_class_id'); //568
         $assessment_id = self::getFromArray($options, 'assessment_id');
@@ -384,6 +383,14 @@ class InstitutionSubjectStudentsTable extends AppTable
         $education_subject_id = self::getFromArray($options, 'education_subject_id'); //60
         $institution_subject_id = self::getFromArray($options, 'institution_subject_id'); //60
         $education_grade_id = self::getFromArray($options, 'education_grade_id');
+        $archive = self::getFromArray($options, 'archive');
+        if($archive){
+            $archive = true;
+        }
+//        $this->log('findStudentResults', 'debug');
+//        $this->log($archive, 'debug');
+//        $this->log($institution_subject_id, 'debug');
+//        $this->log($query->sql(), 'debug');
 
         if ($institution_subject_id) {
             if (!$education_subject_id) {
@@ -391,10 +398,20 @@ class InstitutionSubjectStudentsTable extends AppTable
                 $education_subject_id = $institution_subject['education_subject_id'];
             }
         }
-
+//        $this->log("$institution_id = $institution_class_id = $assessment_id = $academic_period_id = $education_subject_id ", 'debug');
+//        $this->log("$institution_subject_id = $education_grade_id = $archive", 'debug');
         $Results = TableRegistry::get('Assessment.AssessmentItemResults');
-        $ItemResults = TableRegistry::get('assessment_item_results');
-
+        $AssessmentPeriods = TableRegistry::get('assessment_periods');
+        $where = [
+            $this->aliasField('education_subject_id') => $education_subject_id,
+            $this->aliasField('institution_class_id') => $institution_class_id,
+            $this->aliasField('institution_id') => $institution_id,
+            $this->aliasField('education_grade_id') => $education_grade_id,
+            $this->aliasField('academic_period_id') => $academic_period_id,
+        ];
+        if(!$archive){
+            $where[$this->StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED', 'WITHDRAWN', 'REPEATED'];
+        }
         return $query
             ->select([
                 $this->aliasField('student_id'),
@@ -405,34 +422,27 @@ class InstitutionSubjectStudentsTable extends AppTable
                 $this->aliasField('education_subject_id'),
                 $this->StudentStatuses->aliasField('name'),
                 $this->StudentStatuses->aliasField('code'),
-                'assessment_id' => $ItemResults->aliasField('assessment_id'),
-                'assessment_period_id' => $ItemResults->aliasField('assessment_period_id'),
+                'assessment_id' => $AssessmentPeriods->aliasField('assessment_id'),
+                'assessment_period_id' => $AssessmentPeriods->aliasField('id'),
             ])
             ->contain('StudentStatuses')
-            ->where([
-                $this->aliasField('education_subject_id') => $education_subject_id,
-                $this->aliasField('institution_class_id') => $institution_class_id,
-                $this->aliasField('institution_id') => $institution_id,
-                $this->aliasField('education_grade_id') => $education_grade_id,
-                $this->aliasField('academic_period_id') => $academic_period_id,
-                $this->StudentStatuses->aliasField('code NOT IN ') => ['TRANSFERRED', 'WITHDRAWN', 'REPEATED']
-            ])
+            ->where($where)
             ->group([
                 $this->aliasField('student_id'),
-                $ItemResults->aliasField('assessment_period_id'),
+                $AssessmentPeriods->aliasField('id'),
             ])
-            ->leftJoin(
-                [$ItemResults->alias() => $ItemResults->table()],
+            ->innerJoin(
+                [$AssessmentPeriods->alias() => $AssessmentPeriods->table()],
                 [
-                    $ItemResults->aliasField('student_id = ') . $this->aliasField('student_id'),
-                    $ItemResults->aliasField('assessment_id') => $assessment_id,
-                    $ItemResults->aliasField('academic_period_id') => $academic_period_id,
-                    $ItemResults->aliasField('education_subject_id') => $education_subject_id,
-                    $ItemResults->aliasField('education_grade_id') => $education_grade_id
+                    $AssessmentPeriods->aliasField('assessment_id = ') . $assessment_id,
+//                    $ItemResults->aliasField('assessment_id') => $assessment_id,
+//                    $ItemResults->aliasField('academic_period_id') => $academic_period_id,
+//                    $ItemResults->aliasField('education_subject_id') => $education_subject_id,
+//                    $ItemResults->aliasField('education_grade_id') => $education_grade_id
                 ]
             )
-            ->formatResults(function (ResultSetInterface $results) use ($Results) {
-                return $results->map(function ($row) use ($Results) {
+            ->formatResults(function (ResultSetInterface $results) use ($Results, $archive) {
+                return $results->map(function ($row) use ($Results, $archive) {
                     $academic_period_id = $row->academic_period_id;
                     $education_subject_id = $row->education_subject_id;
                     $education_grade_id = $row->education_grade_id;
@@ -447,7 +457,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                         "assessment_grading_option_id" => "-1",
                         "assessment_period_id" => $assessment_period_id,
                         'assessment_id' => $assessment_id];
-                    $marks = $Results::getLastMark($options);
+                    $marks = $Results::getLastMark($options, $archive);
                     $mark = $marks[0];
                     $row['mark_id'] = self::getFromArray($mark, 'id');
                     $row['mark'] = self::getFromArray($mark, 'marks');
