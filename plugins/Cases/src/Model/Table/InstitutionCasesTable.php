@@ -32,7 +32,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
         $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Dashboard' => ['index']
+            'Dashboard' => ['index',]
         ]);
 
         // $this->toggle('add', false);
@@ -153,8 +153,10 @@ class InstitutionCasesTable extends ControllerActionTable
         }
         
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Cases','Cases');       
+        if($this->request->params['controller'] == 'Profiles'){ 
+		$is_manual_exist = $this->getManualUrl('Personal','Cases','Cases');       
         if(!empty($is_manual_exist)){
+           
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
                 'data-toggle' => 'tooltip',
@@ -169,9 +171,10 @@ class InstitutionCasesTable extends ControllerActionTable
             $helpBtn['attr'] = $btnAttr;
             $helpBtn['attr']['title'] = __('Help');
             $extra['toolbarButtons']['help'] = $helpBtn;
-        }
+        
+    
 		// End POCOR-5188
-    }
+        }}}
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
