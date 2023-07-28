@@ -1700,6 +1700,12 @@ class NavigationComponent extends Component
                     'Profiles.StaffLicenses',
                     'Profiles.StaffAwards']
             ],
+            'Profiles.Cases' => [
+                'title' => 'Cases',
+                'parent' => 'Profiles.Personal',
+                'params' => ['plugin' => 'Profile'],
+            
+            ],
             'Profiles.SpecialNeedsReferrals' => [
                 'title' => 'Special Needs',
                 'parent' => 'Profiles.Personal',
