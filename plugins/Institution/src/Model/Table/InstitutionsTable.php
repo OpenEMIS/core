@@ -294,22 +294,6 @@ class InstitutionsTable extends ControllerActionTable
             'last' => true
         ])
 
-        // POCOR-6625 <vikas.rathore@mail.valocoders.com>
-        ->add('latitude', [
-            'ruleForLatitudeLength' => [
-                'rule' => ['forLatitudeLength'],
-                'message' => __('Latitude length is incomplete')
-            ]
-        ])
-
-        ->add('longitude', [
-            'ruleForLongitudeLength' => [
-                'rule' => ['forLongitudeLength'],
-                'message' => __('Longitude length is incomplete')
-            ]
-        ])
-        // POCOR-6625 <vikas.rathore@mail.valocoders.com>
-
         ->add('code', 'ruleUnique', [
             'rule' => 'validateUnique',
             'provider' => 'table',
