@@ -1052,5 +1052,23 @@ class SurveyRepository extends Controller
 
         return $fieldNode;
     }
+
+
+
+    public function uploadXform($request)
+    {
+        try {
+            $params = $request->all();
+            dd($params);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to upload survey xform.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to upload survey xform.');
+        }
+    }
 }
 
