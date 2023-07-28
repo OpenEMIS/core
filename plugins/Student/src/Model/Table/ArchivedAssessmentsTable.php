@@ -393,9 +393,9 @@ class ArchivedAssessmentsTable extends ControllerActionTable
         if (sizeof($archived_assessment_period_array) > 0) {
             $assessment_period_array = $archived_assessment_period_array;
         }
-        $this->log('assessment_period_array', 'debug');
-        $this->log($whereArchive, 'debug');
-        $this->log($assessment_period_array, 'debug');
+//        $this->log('assessment_period_array', 'debug');
+//        $this->log($whereArchive, 'debug');
+//        $this->log($assessment_period_array, 'debug');
         $where = [$AssessmentPeriods->aliasField('id IN') => $assessment_period_array];
 
         $AssessmentPeriodsOptions = $AssessmentPeriods
