@@ -374,10 +374,10 @@ function InstitutionsResultsController($q,
                 grading_types: $scope.gradingTypes,
                 periods: $scope.periods,
                 institution_id: $scope.institution_id,
-                class_id: $scope.class_id,
+                institution_class_id: $scope.class_id,
                 assessment_id: $scope.assessment_id,
                 academic_period_id: $scope.academic_period_id,
-                education_subject_id: $scope.education_subject_id,
+                institution_subject_id: $scope.education_subject_id,
                 education_grade_id: $scope.education_grade_id
             };
             promise = InstitutionsResultsSvc.getNewRowData(

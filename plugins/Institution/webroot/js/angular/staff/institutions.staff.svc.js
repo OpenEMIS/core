@@ -1061,13 +1061,11 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
      * If staff exist then user_exist will be 1 otherwise 0 & show the message as warning
      * @required {identity_type_id} identity_type_id
      * @required {identity_number} identity_number
-     * @required {nationality_id} nationality_id
+     * @required {user_id} security_user.id
      * @returns {[{"user_exist":1,"status_code":2,"message":"User already exist with this nationality, identity type & identity type. Kindly select user from below list."}]}
      */
     function checkUserAlreadyExistByIdentity(params)
     {
-        console.log('checkUserAlreadyExistByIdentity')
-        console.log(params)
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institutions/checkUserAlreadyExistByIdentity';
         $http.post(url, { params: params })

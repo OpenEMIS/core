@@ -45,11 +45,11 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc, $wind
     function getUniqueOpenEmisId() {
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Directories/getUniqueOpenemisId/';
-        console.log(url);
+        // console.log(url);
         $http.get(url)
         .then(function(response){
-            console.log("response");
-            console.log(response);
+            // console.log("response");
+            // console.log(response);
             deferred.resolve(response.data.openemis_no);
         }, function(error) {
             deferred.reject(error);
