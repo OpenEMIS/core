@@ -24,18 +24,24 @@ class AssessmentPeriod extends Entity
         $SecurityGroupUsersTable=TableRegistry::get('security_group_users');
         $securityGroupUserData=$SecurityGroupUsersTable->
                                find('all')->where([$SecurityGroupUsersTable->aliasField('security_user_id') => $user_id])
-                               ->first();
+                               ->toArray();
+        $ids=[];
+        foreach( $securityGroupUserData as $key=>$value){
+            $ids[]=$value['security_role_id'];
+        }
         if($securityGroupUserData){
            
             $ExcludedSecurityRoleTable=TableRegistry::get('assessment_period_excluded_security_roles');
             $ExcludedSecurityRoleEntity=$ExcludedSecurityRoleTable->find('all')
                                                                ->where([
-                                                                'security_role_id'=>$securityGroupUserData->security_role_id,
+                                                                'security_role_id In'=>$ids,
+                                                                'security_role_id IN'=>$ids,
                                                                 'assessment_period_id'=> $assessment_period_id
                                                                ])
                                                                ->toArray();
                                                               
         }
+       
         if($ExcludedSecurityRoleEntity){
             return true;
         }

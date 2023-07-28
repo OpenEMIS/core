@@ -37,7 +37,7 @@ class TrainersSessionsTable extends AppTable
 
     public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
-        $userIdentities = TableRegistry::get('user_identities');
+        $userIdentities = TableRegistry::get('User.Identities');
         $userIdentitiesResult = $userIdentities->find()
                 ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
                 ->select([
