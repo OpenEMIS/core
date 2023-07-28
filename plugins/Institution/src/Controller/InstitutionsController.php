@@ -1994,7 +1994,7 @@ class InstitutionsController extends AppController
             $this->set('is_button_accesible', $is_button_accesible);
             $this->set('institution_id', $institutionId);
             $this->set('excelUrl', Router::url($excelUrl));
-            $this->set('ngController', 'InstitutionStaffAttendancesArchiveCtrl as $ctrl');
+            $this->set('ngController', 'StaffAttendancesArchivedCtrl as $ctrl');
         }
         // $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStaffAttendancesArchive']);
     }
@@ -2452,10 +2452,10 @@ class InstitutionsController extends AppController
                 ]);
                 break;
 
-            case 'InstitutionStaffAttendancesArchive':
+            case 'StaffAttendancesArchived':
                 $this->Angular->addModules([
-                    'institution.staff.attendances.archive.ctrl',
-                    'institution.staff.attendances.archive.svc'
+                    'staff.attendances.archived.ctrl',
+                    'staff.attendances.archived.svc'
                 ]);
                 break;
 
