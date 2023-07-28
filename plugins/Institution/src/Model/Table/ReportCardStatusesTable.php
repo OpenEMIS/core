@@ -319,14 +319,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ->first();
                 //POCOR-6838: End
                 //POCOR-7400 start
-                $ExcludedSecurityRoleTable=TableRegistry::get('report_card_excluded_security_roles');
-                $ExcludedSecurityRoleEntity=$ExcludedSecurityRoleTable->find('all')
-                                                                      ->where([
-                                                                        'security_role_id'=> $SecurityRoleFunctionsTableGenerateData->security_role_id,
-                                                                        'report_card_id'=>$reportCard->id
-                                                                      ])
-                                                                      ->toArray();
-                                                                      
+                $ExcludedSecurityRoleEntity=$this->getExcludedSecurityRolesData($reportCard->id);  //POCOR-7551
                 //POCOR-7400 end
                 if ($this->AccessControl->isAdmin()) {
                     if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
@@ -462,7 +455,19 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         //POCOR-7067 Starts
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $timeZone= $ConfigItems->value("time_zone");
+        //POCOR-7581 start
+        $ConfigItem =   $ConfigItems
+        ->find()
+        ->select(['zonevalue' => 'ConfigItems.value'])
+        ->where([
+            $ConfigItems->aliasField('name') => 'Time Zone'
+               ])
+        ->first();
+        $timeZone = $ConfigItem->zonevalue;
+        if(empty($timeZone)){
+        $this->Alert->warning('ReportCardStatuses.timezone');
+        }
+         //POCOR-7581 end
         date_default_timezone_set($timeZone);//POCOR-7067 Ends
         //Start:POCOR-6785 need to convert this custom query to cake query
         $conn = ConnectionManager::get('default');
@@ -684,7 +689,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $reportCardId = $this->request->query('report_card_id');
         $classId = $this->request->query('class_id');
         //POCOR-7131 starts
-        $loginUserIdUser = $this->Session->read('Auth.User.id');
+        $loginUserIdUser = $this->Auth->User('id');
         $securityRoles = $this->AccessControl->getRolesByUser($loginUserIdUser)->toArray();
         $securityRoleIds = [];
         foreach ($securityRoles as $key => $value) {
@@ -1292,7 +1297,8 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $this->field('institution_class_id', ['type' => 'integer']);
         $this->field('academic_period_id', ['visible' => true]);
-        $this->setFieldOrder(['academic_period_id', 'institution_class_id', 'openemis_no', 'student_id', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+        $this->field('gpa', ['visible' => true]);
+        $this->setFieldOrder(['academic_period_id', 'institution_class_id', 'openemis_no', 'student_id', 'gpa','report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -1306,7 +1312,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
                 'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on'),
                 'email_status_id' => $this->ReportCardEmailProcesses->aliasField('status'),
-                'email_error_message' => $this->ReportCardEmailProcesses->aliasField('error_message')
+                'email_error_message' => $this->ReportCardEmailProcesses->aliasField('error_message'),
+                'gpa' => $this->StudentsReportCards->aliasField('gpa')//POCOR-7318
             ])
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
@@ -1358,12 +1365,13 @@ class ReportCardStatusesTable extends ControllerActionTable
                             ->first();
         $timZone = $ConfigItem->zonevalue;
         $value = '';
+        if($timZone){//POCOR-7581
         if ($entity->has('report_card_started_on')) {
             $date = new DateTime($entity->report_card_started_on, new DateTimeZone($timZone));
             $date->setTimezone(new DateTimeZone($timZone));
             $value = $date->format('F d, Y h:i:s');
         }
-
+        }//POCOR-7581
         return $value;
         //END: POCOR-6716
     }
@@ -1385,6 +1393,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                             ->first();
         $timZone = $ConfigItem->zonevalue;
         $value = '';
+        if($timZone){//POCOR-7581
         if ($entity->has('report_card_completed_on')) {
             if(!empty($timZone)){
                 $date = new DateTime($entity->report_card_completed_on, new DateTimeZone($timZone));
@@ -1392,7 +1401,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $value = $date->format('F d, Y h:i:s');
             }
         }
-
+        }//POCOR-7581
         return $value;
         //END: POCOR-6716
     }
@@ -1827,7 +1836,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'institution_class_id' => $student->institution_class_id,
                 'student_id' => $student->student_id
             ];
-
+            $educationGradeId = $student->education_grade_id;
             $data = [
                 'status' => $ReportCardProcesses::NEW_PROCESS,
                 'institution_id' => $student->institution_id,
@@ -1849,7 +1858,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $this->ReportCardEmailProcesses->delete($reportCardEmailProcessEntity);
             }
             // end
-
+            $getGpa = $this->addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId,$educationGradeId);//POCOR-7318 get student GPA
             // Student report card
             $recordIdKeys = [
                 'report_card_id' => $reportCardId,
@@ -1870,7 +1879,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                     'completed_on' => NULL,
                     'file_name' => NULL,
                     'file_content' => NULL,
-                    'institution_class_id' => $studentsReportCardEntity->institution_class_id
+                    'institution_class_id' => $studentsReportCardEntity->institution_class_id,
+                    'gpa' => $getGpa,
                 ];
                 $newEntity = $this->StudentsReportCards->patchEntity($studentsReportCardEntity, $newData);
 
@@ -1883,24 +1893,24 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
                 $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
                 if (!$StudentsReportCards->exists($recordIdKeys)) {
-
                     // insert student report card record if it does not exist
                     $recordIdKeys['status'] = $StudentsReportCards::IN_PROGRESS;
                     $recordIdKeys['started_on'] = date('Y-m-d H:i:s');
+                    $recordIdKeys['gpa'] = $getGpa;
                     $newEntity = $StudentsReportCards->newEntity($recordIdKeys);
                     $StudentsReportCards->save($newEntity);
                 } else {
                     // update status to in progress if record exists
                     $StudentsReportCards->updateAll([
                         'status' => $StudentsReportCards::IN_PROGRESS,
-                        'started_on' => date('Y-m-d H:i:s')
+                        'started_on' => date('Y-m-d H:i:s'),
+                        'gpa' => $getGpa,
                     ], $recordIdKeys);
                 }
                 //POCOR-6431[END]
             }
             // end
         }
-
         Log::write('debug', 'End Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
     }
 
@@ -2225,47 +2235,52 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
         }
     }
-    /**POCOR-6836 ends*/  
+
     //POCOR-7400 start
     public function getExcludedSecurityRolesData($report_card_id){
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
         
-        $securityGroupInstitutions = TableRegistry::get('Security.securityGroupInstitutions');
-        $SecurityGroupInstitutionsData = $securityGroupInstitutions
-                ->find()        
-                ->where([
-                $securityGroupInstitutions->aliasField('institution_id') =>$this->Session->read('Institution.Institutions.id') ])
-                ->toArray();
+        // $securityGroupInstitutions = TableRegistry::get('Security.securityGroupInstitutions');
+        // $SecurityGroupInstitutionsData = $securityGroupInstitutions
+        //         ->find()        
+        //         ->where([
+        //         $securityGroupInstitutions->aliasField('institution_id') =>$this->Session->read('Institution.Institutions.id') ])
+        //         ->toArray();
 
-        $securityGroupIds = [];
-        if (!empty($SecurityGroupInstitutionsData)) {
-                foreach ($SecurityGroupInstitutionsData as $value) {
-                        $securityGroupIds[] = $value->security_group_id;
-                }
-        }
-
+        // $securityGroupIds = [];
+        // if (!empty($SecurityGroupInstitutionsData)) {
+        //         foreach ($SecurityGroupInstitutionsData as $value) {
+        //                 $securityGroupIds[] = $value->security_group_id;
+        //         }
+        // }
+       
         $SecurityGroupUsersData = $SecurityGroupUsers
                 ->find()        
                 ->innerJoin([$SecurityRoles->alias() => $SecurityRoles->table()], [
                     $SecurityRoles->aliasField('id = ') . $SecurityGroupUsers->aliasField('security_role_id')
                 ])
                 ->where([
-                    $SecurityGroupUsers->aliasField('security_group_id IN') => $securityGroupIds,
-                    $SecurityGroupUsers->aliasField('security_user_id IN') =>  $this->Auth->user('id')
+                    // $SecurityGroupUsers->aliasField('security_group_id IN') => $securityGroupIds,
+                    $SecurityGroupUsers->aliasField('security_user_id') =>  $this->Auth->user('id')
                 ])
                 ->group([$SecurityGroupUsers->aliasField('security_role_id')])
-                ->order([$SecurityRoles->aliasField('order') => 'ASC'])
-                ->first();
+                ->order([$SecurityRoles->aliasField('order') => 'ASC']);
+                // ->toArray();
 
-
-        
+        $ids=[];
+        foreach($SecurityGroupUsersData as $key=>$value){
+             $ids[]=$value['security_role_id'] ;
+        }
+        $ExcludedSecurityRoleEntity=-1;
+        if(!empty($ids)){
         $ExcludedSecurityRoleTable=TableRegistry::get('report_card_excluded_security_roles');
         $ExcludedSecurityRoleEntity=$ExcludedSecurityRoleTable->find('all')
                                                               ->where([
-                                                                'security_role_id'=>$SecurityGroupUsersData->security_role_id,
+                                                                'security_role_id IN'=>$ids,
                                                                 'report_card_id'=> $report_card_id
                                                               ])->count();
+        }
         
         if (($ExcludedSecurityRoleEntity > 0)) {                                                      
                  return true;
@@ -2275,5 +2290,45 @@ class ReportCardStatusesTable extends ControllerActionTable
                                                           
     }
      //POCOR-7400 end
+
+    //POCOR-7318
+    private function addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId,$educationGradeId)
+    {
+
+        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods'); 
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+        $selectedAcademicPeriodId =  $this->AcademicPeriods->getCurrent();
+        $gpa = 0.00;
+        $connection = ConnectionManager::get('default');
+        $statement = $connection->prepare("SELECT subq.student_id
+                        ,AVG(subq.gpa_per_subject) gpa_per_student
+                    FROM
+                    (
+                        SELECT institution_subject_students.student_id
+                            ,MAX(IFNULL(assessment_grading_options.point, 0)) gpa_per_subject
+                        FROM institution_subject_students
+                        LEFT JOIN assessment_grading_options
+                        ON institution_subject_students.total_mark >= assessment_grading_options.min 
+                        AND institution_subject_students.total_mark <= assessment_grading_options.max
+                        WHERE institution_subject_students.academic_period_id = $selectedAcademicPeriodId
+                        AND institution_subject_students.institution_id = $institutionId
+                        AND institution_subject_students.education_grade_id = $educationGradeId
+                        AND institution_subject_students.student_id = $studentId
+                        GROUP BY institution_subject_students.student_id
+                                ,institution_subject_students.education_subject_id
+                    ) subq
+                    GROUP BY subq.student_id");
+        $statement->execute();
+        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+    
+        if(!empty($result)){
+           foreach($result as $val){
+            $gpa = $val['gpa_per_student'];
+
+           }
+        }
+         return number_format((float)$gpa, 2, '.', '');
+        
+    }
 
 }

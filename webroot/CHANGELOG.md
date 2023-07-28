@@ -1,3 +1,21 @@
+### [3.90.0] - 2023-07-18
+- Implemented: Develop GPA feature
+- Implemented: Changes to the Textbook feature
+- Implemented: Develop "External Data Source - Exams" config page for OpenEMIS Exams
+- Implemented: Develop a new "All Student Statuses" on the Assessment Periods page
+- Bug Fixed: Institutions>Performance>Assessments: Users is still unable to edit past assessments or regenerate past student report cards
+- Bug Fixed: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 1 Remainder
+- Bug Fixed: Administration>Scholarships>Applications: 404 error when viewing and editing
+- Bug Fixed: Institutions > Staff > Training > Application > Apply: The page goes to 404 error
+- Bug Fixed: Institutions>Performance>Assessments: Report cannot generate and taking a long time
+
+### [3.89.1] - 2023-07-11
+- Bug Fixed: Institutions > Students > Undo: Changes to Behaviour for WIthdraw and Transfer for Pending Cancellation
+- Bug Fixed: Institutions > Performance > Outcomes > Import page: The user is not seeing any option to import outcomes
+- Bug Fixed: Institutions>Performance>Assessments/Students > Academic > Assessments: Page is not showing latest assessment marks
+- Bug Fixed: Institutions> Students > Profiles: Profile view permission is not working
+- Bug Fixed: Administrations > System Setup > System Configurations > Student Settings : Allow users to enroll students to multiple institutions for import
+
 ### [3.89.0] - 2023-07-07
 - Implemented: 2.16 Reports > Student Case Report
 - Implemented: Develop a function to copy Institution > Performance > Competencies from one academic period to another
