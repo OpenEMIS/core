@@ -845,7 +845,8 @@ class NavigationComponent extends Component
                 'parent' => 'Institution.Attendance',
                 'selected' => ['Institutions.StudentAttendances',
                     'Institutions.StudentAbsences',
-                    'Institutions.ImportStudentAttendances', 'Institutions.StudentArchive',
+                    'Institutions.ImportStudentAttendances',
+                    'Institutions.StudentArchive',
                     'Institutions.InstitutionStudentAbsencesArchived'],
                 'params' => ['plugin' => 'Institution']
             ],
@@ -854,7 +855,8 @@ class NavigationComponent extends Component
                 'title' => 'Staff',
                 'parent' => 'Institution.Attendance',
                 'selected' => ['Institutions.InstitutionStaffAttendances',
-                    'Institutions.ImportStaffAttendances', 'Institutions.InstitutionStaffAttendancesArchive'],
+                    'Institutions.ImportStaffAttendances',
+                    'Institutions.StaffAttendancesArchived'],
                 'params' => ['plugin' => 'Institution']
             ],
 
@@ -919,9 +921,10 @@ class NavigationComponent extends Component
                 'parent' => 'Institution.Performance',
                 'selected' => ['Institutions.Assessments',
                     'Institutions.Results',
-                    'Institutions.AssessmentsArchive',
+                    'Institutions.AssessmentArchives',
                     'Institutions.ImportAssessmentItemResults.add',
-                    'Institutions.ImportAssessmentItemResults.results', 'Institutions.AssessmentItemResultsArchived',
+                    'Institutions.ImportAssessmentItemResults.results',
+                    'Institutions.AssessmentItemResultsArchived',
                     'Institutions.reportCardGenerate'],
                 'params' => ['plugin' => 'Institution'],
             ],
