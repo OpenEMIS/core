@@ -443,7 +443,7 @@ class ImportStudentAttendancesTable extends AppTable {
             'period'               => $tempRow['period'],
             'subject_id'           => 0,
         ]);
-        $this->log($markRecord, 'debug');
+//        $this->log($markRecord, 'debug');
         if (!$markRecord->errors()) {
             $StudentAttendanceMarkedRecords->save($markRecord);
         }
