@@ -2005,6 +2005,8 @@ class InstitutionsController extends AppController
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']);
         } else {
 
+            $this->Navigation->addCrumb('Staff Attendance');
+
             $institutionId = $this->getInstitutionId();
 
             $this->setInstitutionStaffAttendancesEdit();
@@ -8527,8 +8529,15 @@ class InstitutionsController extends AppController
         }
 
         if ($pass != 'excel') {
-
             $institutionId = $this->getInstitutionId();
+
+            $this->Navigation->addCrumb('Staff Attendance',
+                ['plugin' => $this->plugin,
+                    'controller' => 'Institutions',
+                    'action' => 'InstitutionStaffAttendances',
+                    'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
+
+            $this->Navigation->addCrumb('Staff Attendance Archived');
 
             $this->setInstitutionStaffAttendancesOwnView();
 
