@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Services\SurveyService;
+use App\Http\Requests\UploadXformRequest;
 
 class SurveyController extends Controller
 {
@@ -47,6 +48,24 @@ class SurveyController extends Controller
             );
 
             return $this->sendErrorResponse('Failed to download survey xform.');
+        }
+    }
+
+
+    public function uploadXform(UploadXformRequest $request)
+    {
+        try {
+            $data = $this->surveyService->uploadXform($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to upload survey xform.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to upload survey xform.');
         }
     }
 }

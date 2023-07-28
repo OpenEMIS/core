@@ -68,4 +68,22 @@ class SurveyService extends Controller
             return $this->sendErrorResponse('Failed to download survey xform.');
         }
     }
+
+
+    public function uploadXform($request)
+    {
+        try {
+            $data = $this->surveyRepository->uploadXform($request);
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to upload survey xform.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to upload survey xform.');
+        }
+    }
 }

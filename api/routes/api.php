@@ -202,5 +202,6 @@ Route::group(
 );
 Route::get('surveys', 'SurveyController@getSurveys');
 Route::get('survey/download/xform/{surveyFormId}', 'SurveyController@downloadXform');
+Route::post('survey/upload', 'SurveyController@uploadXform');
 
 
