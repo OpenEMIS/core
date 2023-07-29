@@ -8337,6 +8337,10 @@ class InstitutionsController extends AppController
         return $myClassName;
     }
 
+    /**
+     * common function to get _edit access control and set it for js
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     private function setInstitutionStaffAttendancesEdit()
     {
         $_edit = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'edit']);
@@ -8350,7 +8354,9 @@ class InstitutionsController extends AppController
     }
 
     /**
+     * common function to get institution id
      * @return string|null
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function getInstitutionId()
     {
@@ -8519,7 +8525,6 @@ class InstitutionsController extends AppController
         $this->set('_archive', $_archive);
         $this->set('archiveUrl', Router::url($archiveUrl));
     }
-
 
     public function StaffAttendancesArchived($pass = '')
     {

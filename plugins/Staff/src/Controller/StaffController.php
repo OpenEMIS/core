@@ -242,11 +242,6 @@ class StaffController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.InstitutionStaffAttendanceActivities']);
     }
 
-    public function InstitutionStaffAttendancesArchive()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.InstitutionStaffAttendancesArchive']);
-    }
-
     //POCOR-6138 - Add export Button
     public function StaffBodyMasses()
     {
@@ -347,6 +342,11 @@ class StaffController extends AppController
             $this->set('is_manual_exist', []);
         }
         // End POCOR-5188
+    }
+
+    public function InstitutionStaffAttendancesArchive()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.InstitutionStaffAttendancesArchive']);
     }
 
     private function attachAngularModules()
