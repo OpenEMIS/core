@@ -60,52 +60,16 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
 
         // POCOR-4047 to get staff profile data
 
-        $this->toggle('view', true);
-        $this->toggle('edit', true);
-        $this->toggle('delete', true);
-        $this->toggle('remove', true);
+        $this->toggle('view', false);
+        $this->toggle('edit', false);
+        $this->toggle('delete', false);
+        $this->toggle('remove', false);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->setInstitutionStaffIDs();
-        $this->updateBreadcrumbAndPageTitle();
-    }
 
-    private function updateBreadcrumbAndPageTitle()
-    {
-
-        // breadcrumb update
-//        $NavigationComponent = $this->controller->Navigation;
-//        $currentCrumb = Inflector::humanize(Inflector::underscore($this->alias()));
-//        $newCrumb = Inflector::humanize(Inflector::underscore(str_replace('Historical', '', $this->alias())));
-//        $NavigationComponent->substituteCrumb($currentCrumb, $newCrumb);
-
-//        // page title update
-//        $userName = $this->getStaffName();
-//
-//        if (!is_null($userName)) {
-//            $this->controller->set('contentHeader', $userName . ' - ' . __($newCrumb));
-//        }
-    }
-
-    private function getStaffName()
-    {
-        $model = $this;
-        $session = $model->request->session();
-
-        if ($model->controller->name === 'Directories') {
-            if ($session->check('Directory.Directories.name')) {
-                return $session->read('Directory.Directories.name');
-            }
-        } elseif ($model->controller->name === 'Institutions' || $model->controller->name === 'Staff') {
-            if ($session->check('Staff.Staff.name')) {
-                return $session->read('Staff.Staff.name');
-            }
-        } elseif ($model->controller->name === 'Profiles') {
-            return $model->Auth->user('name');
-        }
-        return null;
     }
 
     public function implementedEvents()
