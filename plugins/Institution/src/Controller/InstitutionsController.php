@@ -454,7 +454,7 @@ class InstitutionsController extends AppController
 
     public function ArchivedStaffLeave()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ArchivedStaffLeave']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.ArchivedStaffLeave']);
     }
 
     public function VisitRequests()
