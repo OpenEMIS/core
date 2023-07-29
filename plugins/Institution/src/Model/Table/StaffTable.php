@@ -3642,6 +3642,7 @@ class StaffTable extends ControllerActionTable
      */
     private function getLeaveByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $archive=false)
     {
+        $whereForLeaveTable = $this->setWhereForLeaveTable($weekStartDate, $weekEndDate, $archive);
         if(!$archive){
             $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
             $allStaffLeaves = $StaffLeaveTable
@@ -3670,7 +3671,6 @@ class StaffTable extends ControllerActionTable
                 ->hydrate(false)
                 ->toArray();
         }
-        $whereForLeaveTable = $this->setWhereForLeaveTable($weekStartDate, $weekEndDate, $archive);
         $leaveByStaffIdRecords = Hash::combine($allStaffLeaves, '{n}.id', '{n}', '{n}.staff_id');
         return $leaveByStaffIdRecords;
     }
