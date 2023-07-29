@@ -6,6 +6,7 @@ use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 use ArrayObject;
 use Cake\Datasource\ConnectionManager;
 use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Utility\Inflector;
 use DatePeriod;
 use DateInterval;
 use Cake\Event\Event;
@@ -67,15 +68,45 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $contentHeader = $this->controller->viewVars['contentHeader'];
-        list($staffName, $module) = explode(' - ', $contentHeader);
-        $module = __('Staff Leaves Archived');
-        $contentHeader = $staffName . ' - ' . $module;
-        $this->controller->set('contentHeader', $contentHeader);
-        $this->controller->Navigation->substituteCrumb(__('Staff Leaves Archived'), $module);
         $this->setInstitutionStaffIDs();
+        $this->updateBreadcrumbAndPageTitle();
     }
 
+    private function updateBreadcrumbAndPageTitle()
+    {
+
+        // breadcrumb update
+//        $NavigationComponent = $this->controller->Navigation;
+//        $currentCrumb = Inflector::humanize(Inflector::underscore($this->alias()));
+//        $newCrumb = Inflector::humanize(Inflector::underscore(str_replace('Historical', '', $this->alias())));
+//        $NavigationComponent->substituteCrumb($currentCrumb, $newCrumb);
+
+//        // page title update
+//        $userName = $this->getStaffName();
+//
+//        if (!is_null($userName)) {
+//            $this->controller->set('contentHeader', $userName . ' - ' . __($newCrumb));
+//        }
+    }
+
+    private function getStaffName()
+    {
+        $model = $this;
+        $session = $model->request->session();
+
+        if ($model->controller->name === 'Directories') {
+            if ($session->check('Directory.Directories.name')) {
+                return $session->read('Directory.Directories.name');
+            }
+        } elseif ($model->controller->name === 'Institutions' || $model->controller->name === 'Staff') {
+            if ($session->check('Staff.Staff.name')) {
+                return $session->read('Staff.Staff.name');
+            }
+        } elseif ($model->controller->name === 'Profiles') {
+            return $model->Auth->user('name');
+        }
+        return null;
+    }
 
     public function implementedEvents()
     {

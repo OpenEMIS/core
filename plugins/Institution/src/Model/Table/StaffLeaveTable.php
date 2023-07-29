@@ -998,7 +998,9 @@ class StaffLeaveTable extends ControllerActionTable
             $customButtonUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
-                'action' => 'ArchivedStaffLeave'
+                'action' => 'ArchivedStaffLeave',
+                0=>'index',
+                'user_id' => $this->staffId,
 
             ];
             $customButtonLabel = '<i class="fa fa-folder"></i>';
