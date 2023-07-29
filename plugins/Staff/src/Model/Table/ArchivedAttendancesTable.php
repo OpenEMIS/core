@@ -11,6 +11,7 @@ use Cake\I18n\Date;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
@@ -40,21 +41,6 @@ class ArchivedAttendancesTable extends ControllerActionTable
         $this->table($targetTableName);
         parent::initialize($config);
 
-//        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-//        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
-//        $this->belongsTo('StaffLeaveTypes', ['className' => 'Staff.StaffLeaveTypes']);
-//        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-//        $this->belongsTo('Assignees', ['className' => 'User.Users']);
-//        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-
-        // POCOR-4047 to get staff profile data
-
-//        $this->belongsTo('Users',       ['className' => 'User.Users', 'foreignKey'=>'staff_id']);
-//        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-//        $this->addBehavior('AcademicPeriod.AcademicPeriod');
-//        $this->addBehavior('AcademicPeriod.Period');
-//        $this->addBehavior('Activity');
-
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -64,9 +50,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-//        $this->log('$this->fields()','debug');
-//        $this->log($this->query()->sql(),'debug');
-//        $this->field('absence_type_id', ['visible' => true]);
+
         $this->field('Date', ['visible' => true]);
         $this->field('absence_type_id', ['visible' => false]);
 
@@ -91,15 +75,32 @@ class ArchivedAttendancesTable extends ControllerActionTable
         ];
     }
 
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+        $this->setupTabElements();
+    }
+
+    private function setupTabElements()
+    {
+        $options['type'] = 'staff';
+        $userId = $this->staffId;
+        if (!is_null($userId)) {
+            $options['user_id'] = $userId;
+        }
+
+        $tabElements = $this->controller->getCareerTabElements($options);
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', 'StaffAttendances');
+    }
+
+
     /**
      * common proc to get/set main variables to use further
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function setInstitutionStaffIDs()
     {
-//        $this->log('setInstitutionStaffIDs', 'debug');
-//        $this->log($this->staffId);
-//        $this->log($this->institutionId);
+
         $institutionId = $staffId = null;
         $session = $this->controller->request->session();
         if ($session->check('Institution.Institutions.id')) {
@@ -107,26 +108,24 @@ class ArchivedAttendancesTable extends ControllerActionTable
         }
         if (!is_null($this->request->query('user_id'))) {
             $staffId = $this->request->query('user_id');
-//            $this->log('$this->request->query(\'user_id\')', 'debug');
-//            $this->log($staffId, 'debug');
         }
-        if (!is_null($this->request->query('staff_id'))) {
-            $staffId = $this->request->query('staff_id');
-//            $this->log('$this->request->query(\'staff_id\')', 'debug');
-//            $this->log($staffId, 'debug');
-        }
-        if ($session->check('Institution.Staff.id')) {
-            if(is_numeric($session->read('Institution.Staff.id'))){
-                $staffId = $session->read('Institution.Staff.id');
-//            $this->log('$session->read(\'Institution.Staff.id\')', 'debug');
-//            $this->log($staffId, 'debug');
+        if (!$staffId) {
+            if (!is_null($this->request->query('staff_id'))) {
+                $staffId = $this->request->query('staff_id');
             }
         }
-        if ($session->check('Staff.Staff.id')) {
-            if(is_numeric($session->read('Staff.Staff.id'))){
-                $staffId = $session->read('Staff.Staff.id');
-//            $this->log('$session->read(\'Staff.Staff.id\')', 'debug');
-//            $this->log($staffId, 'debug');
+        if (!$staffId) {
+            if ($session->check('Institution.Staff.id')) {
+                if (is_numeric($session->read('Institution.Staff.id'))) {
+                    $staffId = $session->read('Institution.Staff.id');
+                }
+            }
+        }
+        if (!$staffId) {
+            if ($session->check('Staff.Staff.id')) {
+                if (is_numeric($session->read('Staff.Staff.id'))) {
+                    $staffId = $session->read('Staff.Staff.id');
+                }
             }
         }
 //        if ($session->check('Directory.Staff.id')) {
@@ -180,7 +179,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
      */
     public function getRelatedName($tableName, $relatedField)
     {
-        if(!$relatedField){
+        if (!$relatedField) {
             return "";
         }
         $Table = TableRegistry::get($tableName);
@@ -203,7 +202,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
      */
     public function getRelatedNameWithId($tableName, $relatedField)
     {
-        if(!$relatedField){
+        if (!$relatedField) {
             return "";
         }
         $Table = TableRegistry::get($tableName);
