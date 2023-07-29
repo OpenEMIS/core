@@ -1547,6 +1547,7 @@ class NavigationComponent extends Component
                     'Staff.Subjects',
                     'Staff.Absences',
                     'Staff.StaffAttendances',
+                    'Staff.ArchivedAttendances',
                     'Staff.InstitutionStaffAttendanceActivities',
                     'Institutions.StaffLeave',
                     'Institutions.ArchivedStaffLeave',
@@ -1557,8 +1558,8 @@ class NavigationComponent extends Component
                     'Institutions.StaffPositionProfiles.add',
                     'Institutions.StaffAppraisals',
                     'Institutions.ImportStaffLeave',
-                    'Staff.Duties','Staff.StaffAssociations',
-                    'Staff.InstitutionStaffAttendancesArchive',
+                    'Staff.Duties',
+                    'Staff.StaffAssociations',
                     'Staff.StaffCurriculars'],
             ],
             'Staff.Employments' => [
