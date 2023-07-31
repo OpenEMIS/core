@@ -13,6 +13,8 @@ use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
 use Workflow\Model\Behavior\WorkflowBehavior;
 
+use Cake\Datasource\ConnectionManager; // POCOR-7578
+
 class StaffTrainingApplicationsTable extends ControllerActionTable
 {
     public function initialize(array $config)
@@ -136,6 +138,9 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
 
     private function saveSession($sessionId, ArrayObject $extra)
     {
+        $connection = ConnectionManager::get('default'); // POCOR-7578
+        $connection->query("SET FOREIGN_KEY_CHECKS=0");  // POCOR-7578
+
         $staffId = $extra['staffId'];
         $institutionId = $extra['institutionId'];
 
@@ -148,9 +153,10 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $entity = $this->newEntity($application);
 
         if ($this->save($entity)) {
+            $connection->query("SET FOREIGN_KEY_CHECKS=1");  // POCOR-7578
             return true;
         }
-
+        $connection->query("SET FOREIGN_KEY_CHECKS=1");  // POCOR-7578
         return false;
     }
 
