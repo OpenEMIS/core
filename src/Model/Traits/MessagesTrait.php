@@ -54,6 +54,7 @@ trait MessagesTrait
             'notExists' => 'The record does not exist.',
             'notEditable' => 'This record is not editable',
             'notConfigured' => 'Not Configured',
+            'specialChar' => 'Academic term does not allow special characters such as "&"', //POCOR-7387
             'unassigned' => 'Unassigned',
             'exists' => 'The record exists in the system.',
             'noData' => 'There are no records.',
@@ -181,7 +182,8 @@ trait MessagesTrait
             ],
             'change_in_building_type' => [
                 'restrictEdit' => 'Not allowed to change building type in the same day.'
-            ]
+            ],
+            'sizeGreater' => 'The size of building larger than the size of land.'
         ],
         'InstitutionFloors' => [
             'noFloors' => 'No Floor found',
@@ -195,7 +197,8 @@ trait MessagesTrait
             ],
             'change_in_floor_type' => [
                 'restrictEdit' => 'Not allowed to change floor type in the same day.'
-            ]
+            ],
+            'sizeGreater' => 'The size of floor larger than the size of building.'
         ],
         'InstitutionRooms' => [
             'noRooms' => 'No Room found',
@@ -210,7 +213,8 @@ trait MessagesTrait
             'change_in_room_type' => [
                 'restrictEdit' => 'Not allowed to change room type in the same day.'
             ],
-            'select_subject' => 'Select Subject'
+            'select_subject' => 'Select Subject',
+            'sizeGreater' => 'The size of room larger than the size of floor.'
         ],
         'InfrastructureCustomFields' => [
             'infrastructure_level_id' => 'Level Name'
@@ -459,9 +463,11 @@ trait MessagesTrait
         'Users' => [
             'student_category' => 'Category',
             'status' => 'Status',
-            'select_student' => 'Select Student',
+            'select_student' => 'Select Student', 
+            'select_users' => 'Select Users', // POCOR-7362
             'select_student_empty' => 'No Other Student Available',
             'add_all_student' => 'Add All Students',
+            'add_all_users' => 'Add All Users', // POCOR-7362
             'add_student' => 'Add Student',
             'select_staff' => 'Select Staff',
             'add_staff' => 'Add Staff',
@@ -794,7 +800,8 @@ trait MessagesTrait
             'email' => 'The Report Card will be sent in the background',
             'emailAll' => 'All Report Cards will be sent in the background',
             'emailInProgress' => 'There is already a email process sending in the background',
-			'date_closed' => 'Generate date for report card has been closed'
+			'date_closed' => 'Generate date for report card has been closed',
+            'timezone'=>'Timezone is not configured. Please contact the administrator for assistance.'
         ],
         'StaffProfiles' => [
             'noProgrammes' => 'There is no programme set for this institution',

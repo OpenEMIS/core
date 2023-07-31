@@ -1,3 +1,34 @@
+### [3.90.1] - 2023-07-27
+- Bug Fixed: Institutions>Performance>Assessments: Assessment is showing sql error message
+- Bug Fixed: Institutions > Students > Academic > Curriculars: Bugs
+- Bug Fixed: Institutions > Performance > Report Cards: Status started from Error however it went to Generated upon refresh
+- Bug Fixed: Administration: User is able to see system setup even though they have no permission
+- Bug Fixed: Administration: Student and teacher user can access other administration module page when there is no permission enabled part 2
+- Bug Fixed: Institutions > Performance > Report Cards: 404 error when generating report cards
+- Bug Fixed: Report > Staff > Staff report: The Nationality column is showing the id instead of showing what is the nationality name
+- Bug Fixed: Institutions/Directory > Add Staff/Student: Issues with adding by identity number
+- Bug Fixed: Administration>System Setup>System Configuration: Student Settings is appearing twice
+- Bug Fixed: Infrastructure>Overview: The system allows to add the size of building larger than the size of land
+- Bug Fixed: Institutions>General>Shifts: The system allows to add inactive school as a second shift for other school
+- Bug Fixed: Institutions > Students > Academic: There is an edit button even though the permission for the edit is disabled
+- Bug Fixed: Institutions > Students > Academic > Curriculars: Order of fields should be in correct order
+- Bug Fixed: Directory/Institution>Students/Staff: The identity type is not in order according to the configuration
+- Bug Fixed: Response code should not be in the same file as email content configuration
+- Bug Fixed: Administration > Survey > Forms > Recipients: The recipient page should show the correct data
+- Bug Fixed: API: Unable to delete student attendance records
+- Bug Fixed: SAME DB ARCHIVE : Institutions > Performance > Assessments > Archive page: The page is not showing any data
+
+### [3.90.0] - 2023-07-18
+- Implemented: Develop GPA feature
+- Implemented: Changes to the Textbook feature
+- Implemented: Develop "External Data Source - Exams" config page for OpenEMIS Exams
+- Implemented: Develop a new "All Student Statuses" on the Assessment Periods page
+- Bug Fixed: Institutions>Performance>Assessments: Users is still unable to edit past assessments or regenerate past student report cards
+- Bug Fixed: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 1 Remainder
+- Bug Fixed: Administration>Scholarships>Applications: 404 error when viewing and editing
+- Bug Fixed: Institutions > Staff > Training > Application > Apply: The page goes to 404 error
+- Bug Fixed: Institutions>Performance>Assessments: Report cannot generate and taking a long time
+
 ### [3.89.1] - 2023-07-11
 - Bug Fixed: Institutions > Students > Undo: Changes to Behaviour for WIthdraw and Transfer for Pending Cancellation
 - Bug Fixed: Institutions > Performance > Outcomes > Import page: The user is not seeing any option to import outcomes

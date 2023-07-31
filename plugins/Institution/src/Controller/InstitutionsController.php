@@ -5805,7 +5805,7 @@ class InstitutionsController extends AppController
                             ])
                             ->first();
                         if (!empty($identityTypes)) {
-                            $UserIdentities = TableRegistry::get('user_identities');
+                            $UserIdentities = TableRegistry::get('User.Identities');
                             $checkexistingIdentities = $UserIdentities->find()
                                 ->where([
                                     $UserIdentities->aliasField('nationality_id') => $nationalities->id,
@@ -6399,7 +6399,7 @@ class InstitutionsController extends AppController
                                 ])
                                 ->first();
                             if (!empty($identityTypes)) {
-                                $UserIdentities = TableRegistry::get('user_identities');
+                                $UserIdentities = TableRegistry::get('User.Identities');
                                 $checkexistingIdentities = $UserIdentities->find()
                                     ->where([
                                         $UserIdentities->aliasField('nationality_id') => $nationalities->id,
@@ -6407,7 +6407,7 @@ class InstitutionsController extends AppController
                                         $UserIdentities->aliasField('number') => $identityNumber,
                                     ])->first();
                                 if (empty($checkexistingIdentities)) {
-                                    $UserIdentities = TableRegistry::get('user_identities');
+                                    $UserIdentities = TableRegistry::get('User.Identities');
                                     $entityIdentitiesData = [
                                         'identity_type_id' => $identityTypes->id,
                                         'number' => $identityNumber,
@@ -6759,7 +6759,7 @@ class InstitutionsController extends AppController
                             ])
                             ->first();
                         if (!empty($identityTypes)) {
-                            $UserIdentities = TableRegistry::get('user_identities');
+                            $UserIdentities = TableRegistry::get('User.Identities');
                             $checkexistingIdentities = $UserIdentities->find()
                                 ->where([
                                     $UserIdentities->aliasField('nationality_id') => $nationalities->id,
@@ -6767,7 +6767,7 @@ class InstitutionsController extends AppController
                                     $UserIdentities->aliasField('number') => $identityNumber,
                                 ])->first();
                             if (empty($checkexistingIdentities)) {
-                                $UserIdentities = TableRegistry::get('user_identities');
+                                $UserIdentities = TableRegistry::get('User.Identities');
                                 $entityIdentitiesData = [
                                     'identity_type_id' => $identityTypes->id,
                                     'number' => $identityNumber,
@@ -7156,7 +7156,7 @@ class InstitutionsController extends AppController
                         ])
                         ->first();
                     if (!empty($identityTypes)) {
-                        $UserIdentities = TableRegistry::get('user_identities');
+                        $UserIdentities = TableRegistry::get('User.Identities');
                         $checkexistingIdentities = $UserIdentities->find()
                             ->where([
                                 $UserIdentities->aliasField('nationality_id') => $nationalities->id,
@@ -7430,7 +7430,7 @@ class InstitutionsController extends AppController
                         ])
                         ->first();
                     if (!empty($identityTypes)) {
-                        $UserIdentities = TableRegistry::get('user_identities');
+                        $UserIdentities = TableRegistry::get('User.Identities');
                         $checkexistingIdentities = $UserIdentities->find()
                             ->where([
                                 $UserIdentities->aliasField('nationality_id') => $nationalities->id,
@@ -7535,7 +7535,9 @@ class InstitutionsController extends AppController
                     }
                 }
                 try {
-                    die('success');
+                    $response = ['user_id' => $SecurityUserResult->id];
+                    echo json_encode($SecurityUserResult);
+                    die();
                 } catch (Exception $e) {
                     return $e;
                 }
@@ -7552,42 +7554,121 @@ class InstitutionsController extends AppController
         $requestData = $this->request->input('json_decode', true);
         $requestData = $requestData['params'];
         if (!empty($requestData)) {
-            $identityTypeId = (array_key_exists('identity_type_id', $requestData)) ? $requestData['identity_type_id'] : null;
-            $identityNumber = (array_key_exists('identity_number', $requestData)) ? $requestData['identity_number'] : null;
+            $identity_type_id = (array_key_exists('identity_type_id', $requestData))
+                ? $requestData['identity_type_id'] :
+                null;
+            $identity_number = (array_key_exists('identity_number', $requestData))
+                ? $requestData['identity_number']
+                : null;
             //POCOR-7481-HINDOL if the identity belongs to the same openemis_no - skip
-            $userId = (array_key_exists('user_id', $requestData)) ? $requestData['user_id'] : null;
-            $nationalityId = (array_key_exists('nationality_id', $requestData)) ? $requestData['nationality_id'] : null;
+            $user_id = (array_key_exists('user_id', $requestData))
+                ? $requestData['user_id']
+                : null;
+            $first_name = (array_key_exists('first_name', $requestData))
+                ? $requestData['first_name']
+                : null;
+            $last_name = (array_key_exists('last_name', $requestData))
+                ? $requestData['last_name']
+                : null;
+            $gender_id = (array_key_exists('gender_id', $requestData))
+                ? $requestData['gender_id']
+                : null;
+            $date_of_birth = (array_key_exists('date_of_birth', $requestData))
+                ? $requestData['date_of_birth']
+                : null;
+            $nationality_id = (array_key_exists('nationality_id', $requestData))
+                ? $requestData['nationality_id']
+                : null;
 
 
-            if (!empty($identityTypeId) && !empty($identityNumber)) {//POCOR-7390 starts
-                $UserIdentities = TableRegistry::get('user_identities');//POCOR-7390
-                $where = [$UserIdentities->aliasField('identity_type_id') => $identityTypeId,
-                    $UserIdentities->aliasField('number') => $identityNumber];
-                if (!empty($userId)) {
-                    $where[] = $UserIdentities->aliasField('security_user_id') . ' != ' . $userId;
+            if (!empty($identity_type_id) && !empty($identity_number)) {//POCOR-7390 starts
+                $UserIdentities = TableRegistry::get('User.Identities');//POCOR-7390
+                $where = [$UserIdentities->aliasField('identity_type_id') => $identity_type_id,
+                    $UserIdentities->aliasField('number') => $identity_number];
+                if (!empty($user_id)) {
+                    $where[] = $UserIdentities->aliasField('security_user_id') . ' != ' . $user_id;
                 }
-                if (!empty($nationalityId)) {
-                    $where[$UserIdentities->aliasField('nationalityId')] = $nationalityId;
+                if (!empty($nationality_id)) {
+                    $where[$UserIdentities->aliasField('nationality_id')] = $nationality_id;
                 }
 
                 $CheckUserExist = $UserIdentities->find()
                     ->where($where)->count();
                 if ($CheckUserExist > 0) {
-                    echo json_encode(['user_exist' => 1, 'status_code' => 200, 'message' => __('User already exist with this nationality, identity type & identity number. Kindly select user from below list.')]);
+                    $message = __('User already exists with this nationality, identity type & identity number.');
+                    echo json_encode(['user_exist' => 1, 'status_code' => 200, 'message' => $message]);
+                    die;
                 } else {
-                    echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => '']);
+                    $message = $this->validateCustomIdentityNumber($requestData);
+                    if ($message != "") {
+                        echo json_encode(['user_exist' => 1, 'status_code' => 200, 'message' => $message]);
+                        die;
+                    }
+                    else {
+                        if($first_name === null
+                            || $last_name === null
+                            || $gender_id === null
+                            || $date_of_birth === null){
+                            $message = __("Please provide all the required information: First Name, Last Name, Gender, Date of Birth.");
+                            echo json_encode(['user_exist' => 1, 'status_code' => 200, 'message' => $message]);
+                            die;
+                        }
+                        else{
+                            echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => '']);
+                            die;
+                        }
+                    }
                 }
             } else {
                 echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid data.')]);
+                die;
             }
         } else {
             echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid data.')]);
+            die;
         }
         die;
     }
 
-    //POCOR-7123 starts
-    public function checkConfigurationForExternalSearch()
+    private function validateCustomIdentityNumber($options)
+    {
+        $pattern = '';
+
+
+        if (array_key_exists('identity_type_id', $options) && !empty($options['identity_type_id'])) {
+            $identityTypeId = $options['identity_type_id'];
+        } else {
+            return "";
+        }
+        if (array_key_exists('identity_number', $options) && !empty($options['identity_number'])) {
+            $identityNumber = $options['identity_number'];
+        } else {
+            return "";
+        }
+
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityTypesData = $IdentityTypes
+            ->find()
+            ->where([$IdentityTypes->aliasField('id') => $identityTypeId])
+            ->first();
+
+        if (!empty($IdentityTypesData->validation_pattern)) {
+            $pattern = '/' . $IdentityTypesData->validation_pattern . '/';
+        }
+
+
+        // custom validation is nullable, have to cater for the null pattern.
+        if (!empty($pattern) && !preg_match($pattern, $identityNumber)) {
+            return __("Please enter a valid Identity Number");
+        }
+
+        return "";
+    }
+
+
+//POCOR-7123 starts
+    public
+    function checkConfigurationForExternalSearch()
     {
         $this->autoRender = false;
         $configItems = TableRegistry::get('config_items');
@@ -7607,7 +7688,8 @@ class InstitutionsController extends AppController
         die;
     }//POCOR-7123 ends
 
-    public function customFieldsUseJustForExample()
+    public
+    function customFieldsUseJustForExample()
     {
         $this->autoRender = false;
         $requestData = json_decode('{"login_user_id":"1","openemis_no":"152227233311111222","first_name":"AMARTAA","middle_name":"","third_name":"","last_name":"Fenicott","preferred_name":"","gender_id":"1","date_of_birth":"2011-01-01","identity_number":"1231122","nationality_id":"2","username":"kkk111","password":"sdsd","postal_code":"12233","address":"sdsdsds","birthplace_area_id":"2","address_area_id":"2","identity_type_id":"160","education_grade_id":"59","academic_period_id":"30", "start_date":"01-01-2021","end_date":"31-12-2021","institution_class_id":"524","student_status_id":1,"custom":[{"student_custom_field_id":17,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":27,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":29,"text_value":"test.jpg","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":28,"text_value":"","number_value":2,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":31,"text_value":"","number_value":3,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":26,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":31,"text_value":"","number_value":4,"decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":8,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":9,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":30,"text_value":"{\"latitude\":\"11.1\",\"longitude\":\"2.22\"}","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"},{"student_custom_field_id":18,"text_value":"yes","number_value":"","decimal_value":"","textarea_value":"","time_value":"","file":"","created_user_id":1,"created":"22-01-20 08:59:35"}]}', true);
@@ -7639,29 +7721,35 @@ class InstitutionsController extends AppController
     }
 
     /*POCOR-6264 starts*/
-    public function Lands()
+    public
+    function Lands()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Lands']);
     }
+
     /*POCOR-6264 ends*/
 
-    //  POCOR-6130 export
-    public function StudentUserExport()
+//  POCOR-6130 export
+    public
+    function StudentUserExport()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentUserExport']);
     }
 
-    public function InstitutionBuses()
+    public
+    function InstitutionBuses()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionBuses']);
     }
 
-    public function Distributions()
+    public
+    function Distributions()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionDistributions']);
     }
 
-    public function ViewReport()
+    public
+    function ViewReport()
     {
         ini_set('memory_limit', '-1');
         $data = $_GET;
@@ -7752,7 +7840,8 @@ class InstitutionsController extends AppController
      * @ticket POCOR-6493
      * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
      */
-    public function getInstitutionStatisticStandardReportFeature(): array
+    public
+    function getInstitutionStatisticStandardReportFeature(): array
     {
         // Start POCOR-6871
         $options = [
@@ -7775,7 +7864,8 @@ class InstitutionsController extends AppController
      * POCOR-6995
      * show Institution Class data in webhook
      **/
-    private function institutionClassStudentData($institutionClassId)
+    private
+    function institutionClassStudentData($institutionClassId)
     {
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $bodyData = $InstitutionClasses->find('all',
@@ -7871,7 +7961,8 @@ class InstitutionsController extends AppController
      * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
      * assign Role and group to student while creating student
      **/
-    private static function assignStudentRoleGroup($institution_id, $student_id)
+    private
+    static function assignStudentRoleGroup($institution_id, $student_id)
     {
         $student_role_id = self::getStudentSecurityRoleId();
         $security_group_id = self::getInstitutionSecurityGroupId($institution_id);
@@ -7896,13 +7987,14 @@ class InstitutionsController extends AppController
     }
 
     /**
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
      * @param $student_id
      * @param $security_group_id
      * @param $previous_security_group_id
      * @param $student_role_id
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
+    private
+    static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
     {
         $securityGroupUsersTbl = TableRegistry::get('security_group_users');
         $securityGroupUsersTbl->updateAll(
@@ -7919,13 +8011,14 @@ class InstitutionsController extends AppController
     }
 
     /**
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
      * @param $institution_id
      * @param $student_id
      * @param $institutionTbl
      * @return mixed
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private static function getPreviousSecurityGroupId($institution_id, $student_id)
+    private
+    static function getPreviousSecurityGroupId($institution_id, $student_id)
     {
         $previous_security_group_id = 0;
         $institutionTbl = TableRegistry::get('institutions');
@@ -7964,12 +8057,13 @@ class InstitutionsController extends AppController
     }
 
     /**
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
      * @param $student_id
      * @param $student_role_id
      * @return array
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private static function getStudentSecurityGroups($student_id, $student_role_id)
+    private
+    static function getStudentSecurityGroups($student_id, $student_role_id)
     {
         $securityGroupUsersTbl = TableRegistry::get('security_group_users');
         $countSecurityGroupStudent = $securityGroupUsersTbl->find('all')
@@ -7984,10 +8078,11 @@ class InstitutionsController extends AppController
     }
 
     /**
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
      * @return int
+     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private static function getStudentSecurityRoleId()
+    private
+    static function getStudentSecurityRoleId()
     {
         $securityRolesTbl = TableRegistry::get('security_roles');
         $securityRoles = $securityRolesTbl->find()
@@ -8003,7 +8098,8 @@ class InstitutionsController extends AppController
      * @return integer
      * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private static function getInstitutionSecurityGroupId($institutionId)
+    private
+    static function getInstitutionSecurityGroupId($institutionId)
     {
         $institutionTbl = TableRegistry::get('institutions');
         $security_group_id = null;
@@ -8043,7 +8139,8 @@ class InstitutionsController extends AppController
      * @param $student_role_id
      * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private static function createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id)
+    private
+    static function createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id)
     {
         $id = Text::uuid();
         $securityGroupUsersTbl = TableRegistry::get('security_group_users');
@@ -8065,7 +8162,8 @@ class InstitutionsController extends AppController
      * Changes to Behaviour for Withdraw.
      * Stop the behavior in add student page. If Student in pending cancellation for withdraw
      **/
-    public function checkStudentStatus($studentId, $academicPeriodId)
+    public
+    function checkStudentStatus($studentId, $academicPeriodId)
     {
         $institutionStudents = TableRegistry::get('institution_students');
         $studentWithdraw = TableRegistry::get('institution_student_withdraw');
@@ -8111,7 +8209,8 @@ class InstitutionsController extends AppController
      * @ticket POCOR-6930
      **@author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
      */
-    public function getCspdData()
+    public
+    function getCspdData()
     {
         error_reporting(0);
         $this->autoRender = false;
@@ -8263,7 +8362,8 @@ class InstitutionsController extends AppController
      * @ticket POCOR-6930
      **@author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
      */
-    public function getConfigurationForExternalSourceData()
+    public
+    function getConfigurationForExternalSourceData()
     {
         $this->autoRender = false;
         //get Configuration For External Source Data from config_items table
@@ -8284,8 +8384,9 @@ class InstitutionsController extends AppController
     }
 
 
-    //POCOR-7231 :: Start
-    public function Addguardian()
+//POCOR-7231 :: Start
+    public
+    function Addguardian()
     {
         $requestDataa = $this->paramsDecode($this->request->query('queryString1'));
         $StudentID = $this->paramsEncode(['id' => $requestDataa['institution_id']]);
@@ -8303,7 +8404,8 @@ class InstitutionsController extends AppController
         $this->set('ngController', 'DirectoryaddguardianCtrl as $ctrl');
     }
 
-    private function attachAngularModulesForDirectory()
+    private
+    function attachAngularModulesForDirectory()
     {
         $action = $this->request->pass[0];
         if ($action == '' || $this->request->params['action'] != 'Directories') {
@@ -8324,10 +8426,12 @@ class InstitutionsController extends AppController
                 break;
         }
     }
-    //POCOR-7231 :: END
 
-    //POCOR-6673
-    public function getCurricularsTabElements($options = [])
+//POCOR-7231 :: END
+
+//POCOR-6673
+    public
+    function getCurricularsTabElements($options = [])
     {
         $queryString = $this->request->query('queryString');
         $tabElements = [
@@ -8343,8 +8447,9 @@ class InstitutionsController extends AppController
         return $tabElements;
     }
 
-    //POCOR-6673
-    public function StudentCurriculars()
+//POCOR-6673
+    public
+    function StudentCurriculars()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurriculars']);
     }
@@ -8353,7 +8458,8 @@ class InstitutionsController extends AppController
      * @param $classId
      * @return mixed
      */
-    private function getInstitutionClassName($classId)
+    private
+    function getInstitutionClassName($classId)
     {
         $classes_table = TableRegistry::get('Institution.InstitutionClasses');
         $myClass = $classes_table->get($classId);
