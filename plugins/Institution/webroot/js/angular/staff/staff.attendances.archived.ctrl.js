@@ -156,7 +156,10 @@ function StaffAttendancesArchivedController($scope, $q, $window, $http, UtilsSvc
     //onChange
     vm.changeAcademicPeriod = function () {
         UtilsSvc.isAppendLoader(true);
-        StaffAttendancesArchivedSvc.getWeekListOptions(vm.selectedAcademicPeriod)
+        // console.log('changeAcademicPeriod');
+        // console.log(vm.institutionId);
+        // console.log(vm.selectedAcademicPeriod);
+        StaffAttendancesArchivedSvc.getWeekListOptions(vm.institutionId, vm.selectedAcademicPeriod)
             .then(function (weekListOptions) {
                 vm.gridOptions.context.period = vm.selectedAcademicPeriod;
                 vm.setWeekList(weekListOptions);
