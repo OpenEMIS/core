@@ -32,7 +32,7 @@ class TextbookAddRequest extends FormRequest
             'year_published' => 'required',   
             'academic_period_id' => 'required',
             'education_grade_id' => 'required',
-            'education_subject_id' => 'required',
+            'education_subject_id' => 'required'
         ];
     }
 
