@@ -2287,7 +2287,10 @@ class ReportCardStatusesTable extends ControllerActionTable
     }
      //POCOR-7400 end
 
-    //POCOR-7318
+    /**
+     * POCOR-7318 GPA fetures developed
+     * POCOR-7604 GPA get data logic changed
+     **/ 
     private function addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId,$educationGradeId)
     {
 
@@ -2296,24 +2299,58 @@ class ReportCardStatusesTable extends ControllerActionTable
         $selectedAcademicPeriodId =  $this->AcademicPeriods->getCurrent();
         $gpa = 0.00;
         $connection = ConnectionManager::get('default');
-        $statement = $connection->prepare("SELECT subq.student_id
-                        ,AVG(subq.gpa_per_subject) gpa_per_student
-                    FROM
+        $statement = $connection->prepare("SELECT student_info.report_card_code
+                        ,student_info.report_card_name
+                        ,student_info.start_date
+                        ,student_info.end_date
+                        ,ROUND(AVG(student_info.gpa_per_subject), 2) gpa_per_student_report_card_period
+                    FROM 
                     (
-                        SELECT institution_subject_students.student_id
+                        SELECT student_subject_info.report_card_code
+                            ,student_subject_info.report_card_name
+                            ,student_subject_info.start_date
+                            ,student_subject_info.end_date
                             ,MAX(IFNULL(assessment_grading_options.point, 0)) gpa_per_subject
-                        FROM institution_subject_students
+                            ,student_subject_info.student_id
+                            ,student_subject_info.report_card_id
+                        FROM 
+                        (
+                            SELECT education_subjects.name subject_name
+                                ,report_cards.code report_card_code
+                                ,report_cards.name report_card_name
+                                ,report_cards.start_date
+                                ,report_cards.end_date
+                                ,SUM(assessment_item_results.marks * assessment_periods.weight) subject_mark
+                                ,assessment_item_results.education_subject_id
+                                ,assessment_item_results.student_id
+                                ,report_cards.id report_card_id
+                            FROM assessment_item_results
+                            INNER JOIN assessment_periods
+                            ON assessment_periods.id = assessment_item_results.assessment_period_id
+                            INNER JOIN assessments
+                            ON assessments.id = assessment_periods.assessment_id
+                            INNER JOIN report_cards
+                            ON report_cards.academic_period_id = assessments.academic_period_id
+                            AND report_cards.education_grade_id = assessments.education_grade_id
+                            AND assessment_periods.end_date BETWEEN report_cards.start_date AND report_cards.end_date
+                            INNER JOIN education_subjects
+                            ON education_subjects.id = assessment_item_results.education_subject_id
+                            WHERE assessment_item_results.student_id = $studentId
+                            AND assessment_item_results.academic_period_id = $selectedAcademicPeriodId
+                            AND report_cards.id = $reportCardId
+                            GROUP BY assessment_item_results.education_subject_id
+                                ,assessment_item_results.student_id
+                                ,report_cards.id
+                        ) student_subject_info
                         LEFT JOIN assessment_grading_options
-                        ON institution_subject_students.total_mark >= assessment_grading_options.min 
-                        AND institution_subject_students.total_mark <= assessment_grading_options.max
-                        WHERE institution_subject_students.academic_period_id = $selectedAcademicPeriodId
-                        AND institution_subject_students.institution_id = $institutionId
-                        AND institution_subject_students.education_grade_id = $educationGradeId
-                        AND institution_subject_students.student_id = $studentId
-                        GROUP BY institution_subject_students.student_id
-                                ,institution_subject_students.education_subject_id
-                    ) subq
-                    GROUP BY subq.student_id");
+                        ON student_subject_info.subject_mark >= assessment_grading_options.min 
+                        AND student_subject_info.subject_mark <= assessment_grading_options.max
+                        GROUP BY student_subject_info.education_subject_id
+                            ,student_subject_info.student_id
+                            ,student_subject_info.report_card_id
+                    ) student_info
+                    GROUP BY student_info.student_id
+                        ,student_info.report_card_id");
         $statement->execute();
         $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
     
@@ -2323,7 +2360,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
            }
         }
-         return number_format((float)$gpa, 2, '.', '');
+         return $gpa;
         
     }
 
