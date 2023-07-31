@@ -77,13 +77,13 @@ function StaffAttendancesArchivedSvc($http, $q, $filter, KdDataSvc, AlertSvc, Ut
     }
 
     function getAcademicPeriodOptions(institutionId) {
-        console.log('institutionId');
-        console.log(institutionId);
+        // console.log('institutionId');
+        // console.log(institutionId);
         var success = function(response, deferred) {
             var periods = response.data.data;
             if (angular.isObject(periods) && periods.length > 0) {
-                console.log('getAcademicPeriodOptions');
-                console.log(periods);
+                // console.log('getAcademicPeriodOptions');
+                // console.log(periods);
                 deferred.resolve(periods);
             } else {
                 deferred.reject('There was an error when retrieving the academic periods');
