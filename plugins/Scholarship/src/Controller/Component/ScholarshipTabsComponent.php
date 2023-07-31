@@ -3,6 +3,12 @@ namespace Scholarship\Controller\Component;
 
 use Cake\Controller\Component;
 
+use Cake\Event\Event;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
+use Cake\I18n\Date;
+use Cake\Log\Log;
+
 class ScholarshipTabsComponent extends Component
 {
     public $components = ['TabPermission', 'Page.Page'];
@@ -92,7 +98,17 @@ class ScholarshipTabsComponent extends Component
         $isLoan = false;
         if (array_key_exists('scholarship_id', $ids) && !empty($ids['scholarship_id'])) {
             $scholarshipEntity = $this->controller->Scholarships->get($ids['scholarship_id']);
-            $isLoan = $this->controller->FinancialAssistanceTypes->is($scholarshipEntity->scholarship_financial_assistance_type_id, 'LOAN');
+            // $isLoan = $this->controller->FinancialAssistanceTypes->is($scholarshipEntity->scholarship_financial_assistance_type_id, 'LOAN');
+            // Start POCOR-7570
+            $FinancialAssistanceTypesTable = TableRegistry::get('Scholarship.FinancialAssistanceTypes');
+            $rec = $FinancialAssistanceTypesTable->get($scholarshipEntity->scholarship_financial_assistance_type_id);
+            $isLoan = false;
+            if(!empty($rec)){
+                if($rec->code == 'LOAN'){
+                    $isLoan = true;
+                }
+            }
+            // END POCOR-7570
         }
         if (!$isLoan) {
             unset($tabElements['Collections']);
