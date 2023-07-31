@@ -11,6 +11,7 @@ use App\Http\Requests\CompetencyResultsAddRequest;
 use App\Http\Requests\CompetencyCommentAddRequest;
 use App\Http\Requests\CompetencyPeriodCommentAddRequest;
 use App\Http\Requests\DeleteClassAttendanceRequest;
+use Exception;
 
 class InstitutionController extends Controller
 {
