@@ -53,6 +53,7 @@ class StaffBehavioursTable extends AppTable  {
         $areaId = $requestData->area_education_id;
         $superAdmin = $requestData->super_admin;
         $userId = $requestData->user_id;
+        $where=[];
         //area filter
         if ($areaId != -1) {
             $where['Areas.id'] = $areaId;
@@ -83,8 +84,7 @@ class StaffBehavioursTable extends AppTable  {
         -> where([$where]);
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $row['time_of_behaviour'] = ;
-
+                $row->time_of_behaviour= $row->time_of_behaviour->i18nFormat('HH:mm:ss');
                 return $row;
             });
         });
@@ -165,7 +165,7 @@ class StaffBehavioursTable extends AppTable  {
         $extraField[] = [
             'key' => 'StaffBehaviour.time_of_behaviour',
             'field' => 'time_of_behaviour',
-            'type' => 'time',
+            'type' => 'string',
             'label' => __('Time Of Behaviour')
         ];
         $extraField[] = [
