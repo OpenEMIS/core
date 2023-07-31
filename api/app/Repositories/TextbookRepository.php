@@ -88,20 +88,21 @@ class TextbookRepository extends Controller
 
         try {
             $data = $request->all();
-
-            $store['code'] = $data['code'];
+            
+            $store['code'] = $data['code']??Null;
             $store['title'] = $data['title'];
-            $store['author'] = $data['author'];
-            $store['publisher'] = $data['publisher'];
+            $store['author'] = $data['author']??Null;
+            $store['publisher'] = $data['publisher']??Null;
             $store['year_published'] = $data['year_published'];
-            $store['ISBN'] = $data['ISBN'];
-            $store['expiry_date'] = $data['expiry_date'];
+            $store['ISBN'] = $data['ISBN']??Null;
+            $store['expiry_date'] = $data['expiry_date']??Null;
             $store['academic_period_id'] = $data['academic_period_id'];
             $store['education_grade_id'] = $data['education_grade_id'];
             $store['education_subject_id'] = $data['education_subject_id'];
-            $store['dimension_id'] = $data['textbook_dimension_id'];
+            $store['textbook_dimension_id'] = $data['dimension_id']??Null;
             $store['created_user_id'] = JWTAuth::user()->id;
             $store['created'] = Carbon::now()->toDateTimeString();
+            
             $insert = Textbooks::insert($store);
             DB::commit();
             return 1;
@@ -145,15 +146,15 @@ class TextbookRepository extends Controller
         try {
             $data = $request->all();
 
-            $store['code'] = $data['code'];
-            $store['comment'] = $data['comment'];
-            $store['textbook_status_id'] = $data['textbook_status_id'];
-            $store['textbook_condition_id'] = $data['textbook_condition_id'];
+            $store['code'] = $data['code']??NULL;
+            $store['comment'] = $data['comment']??NULL;
+            $store['textbook_status_id'] = $data['textbook_status_id']??NULL;
+            $store['textbook_condition_id'] = $data['textbook_condition_id']??NULL;
             $store['institution_id'] = $institutionId;
             $store['academic_period_id'] = $data['academic_period_id'];
             $store['education_grade_id'] = $data['education_grade_id'];
             $store['education_subject_id'] = $data['education_subject_id'];
-            $store['security_user_id'] = $data['security_user_id'];
+            $store['security_user_id'] = $data['security_user_id']??NULL;
             $store['textbook_id'] = $data['textbook_id'];
             $store['created_user_id'] = JWTAuth::user()->id;
             $store['created'] = Carbon::now()->toDateTimeString();
