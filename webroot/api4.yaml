@@ -3255,7 +3255,7 @@ paths:
         summary: Add Textbooks
         description: Multiple values can be provided with comma separated strings
         parameters:
-          - name: institutionId
+          - name: institution_id
             in: query
             description: Add Institution id to filter
             required: true
@@ -3302,6 +3302,34 @@ paths:
           - name: institutionId
             in: path
             description: Add Institution id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+          - name: Academic Period Id
+            in: header
+            description: Add academic period id in request parameters.
+            required: true
+            schema:
+              type: integer
+              format: int
+          - name: Education Grade Id
+            in: header
+            description: Add education grade id in request parameters.
+            required: true
+            schema:
+              type: integer
+              format: int
+          - name: Education Subject Id
+            in: header
+            description: Add education subject id in request parameters.
+            required: true
+            schema:
+              type: integer
+              format: int
+          - name: Textbook Id
+            in: header
+            description: Add textbook id in request parameters.
             required: true
             schema:
               type: integer
