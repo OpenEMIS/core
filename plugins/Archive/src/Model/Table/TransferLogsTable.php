@@ -305,7 +305,7 @@ class TransferLogsTable extends ControllerActionTable
     public function getFeatureOptions()
     {
         $options = [
-            'Student Attendance' => __('Student Attendance'),
+            'Student Attendances' => __('Student Attendances'),
             'Staff Attendances' => __('Staff Attendances'),
             'Student Assessments' => __('Student Assessments'),
         ];
