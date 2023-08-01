@@ -920,12 +920,13 @@ class InstitutionSurveysTable extends ControllerActionTable
                 ->find()
                 ->where([
                     [$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId],
-                    [
-                        'OR' => [
-                            [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
+                    //POCOR-7622
+                    /*[
+                         'OR' => [
+                           [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
                             [$SurveyFormsFilters->aliasField('survey_filter_id') => SurveyForms::ALL_CUSTOM_FILER]
-                        ]
-                    ]
+                         ]
+                    ]*/
                 ]);
 
             $isInstitutionTypeMatch = $filterTypeQuery->count() > 0;
@@ -1068,12 +1069,13 @@ class InstitutionSurveysTable extends ControllerActionTable
                     ])
                 ->where([
                     [$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId],
-                    [
+                    //POCOR-7622
+                    /*[
                         'OR' => [
                             [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
                             [$SurveyFormsFilters->aliasField('survey_filter_id') => SurveyForms::ALL_CUSTOM_FILER]
                         ]
-                    ]
+                    ]*/
                 ]);
             
             $isInstitutionTypeMatch = $filterTypeQuery->count() > 0;
