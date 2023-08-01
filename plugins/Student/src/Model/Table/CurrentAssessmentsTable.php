@@ -10,6 +10,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
+use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -349,7 +350,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
     private function addArchiveButton($toolbarButtons)
     {
         $is_archive_exists = $this->isArchiveExists();
-        if ($is_archive_exists) {
+//        if ($is_archive_exists) {
             $customButtonName = 'archive';
             $customButtonUrl = [
                 'plugin' => 'Student',
@@ -359,7 +360,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
             $customButtonLabel = '<i class="fa fa-folder"></i>';
             $customButtonTitle = __('Archive');
             $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl);
-        }
+//        }
     }
 
     private function isArchiveExists()
@@ -368,25 +369,14 @@ class CurrentAssessmentsTable extends ControllerActionTable
         $institutionId = $this->institutionId;
         $studentId = $this->studentId;
         //POCOR-7526::Start
-        $connection = ConnectionManager::get('default');
-        $getArchiveData = $connection->query("SHOW TABLES LIKE 'assessment_item_results_archived' ");
-        $archiveDataArr = $getArchiveData->fetch();
-        if (!empty($archiveDataArr)) {
-            $AssessmentItemResultsArchived = TableRegistry::get('Institution.AssessmentItemResultsArchived');
-            $count = $AssessmentItemResultsArchived->find()
-                //            ->distinct([$AssessmentItemResultsArchived->aliasField('student_id')])// POCOR-7339-HINDOL
-                ->select([$AssessmentItemResultsArchived->aliasField('student_id')])// POCOR-7339-HINDOL
-                ->where([
-                    $AssessmentItemResultsArchived->aliasField('institution_id') => $institutionId,
-                    $AssessmentItemResultsArchived->aliasField('student_id') => $studentId,
-                ])->first();
-            if ($count) {
-                $is_archive_exists = true;
-            }
-            if (!$count) {
-                $is_archive_exists = false;
-            }
-        }
+
+        $where = [
+            ['institution_id = ' .  $institutionId,
+                'student_id =' . $studentId],
+        ];
+        $table_name = 'assessment_item_results';
+        $is_archive_exists = ArchiveConnections::hasArchiveRecords($table_name, $where);
+        return $is_archive_exists;
         //POCOR-7526::End
         return $is_archive_exists;
     }
