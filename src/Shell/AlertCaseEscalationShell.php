@@ -8,7 +8,7 @@ use Cake\Filesystem\File;
 
 use App\Shell\AlertShell;
 /* POCOR-7462 cases */
-class AlertCasesShell extends AlertShell
+class AlertCaseEscalationShell extends AlertShell
 {
      
     public function initialize()

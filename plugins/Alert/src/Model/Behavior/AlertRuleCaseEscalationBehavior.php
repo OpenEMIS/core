@@ -10,10 +10,10 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 
 /* POCOR-7462 for cases alert rule */ 
-class AlertRuleCasesBehavior extends AlertRuleBehavior
+class AlertRuleCaseEscalationBehavior extends AlertRuleBehavior
 {
     protected $_defaultConfig = [
-        'feature' => 'Cases',
+        'feature' => 'CaseEscalation',
         'name' => 'Case Escalation',
         'method' => 'Email',
         'threshold' => [
@@ -71,12 +71,12 @@ class AlertRuleCasesBehavior extends AlertRuleBehavior
         }
     }
 
-    public function onCasesSetupFields(Event $event, Entity $entity)
+    public function onCaseEscalationSetupFields(Event $event, Entity $entity)
     {
         $this->onAlertRuleSetupFields($event, $entity);
     }
 
-    public function onGetCasesThreshold(Event $event, Entity $entity)
+    public function onGetCaseThreshold(Event $event, Entity $entity)
     {
         $thresholdData = json_decode($entity->threshold, true);
         return $thresholdData['value'];
