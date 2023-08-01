@@ -505,9 +505,9 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $entity->modified = $currentTimeZone;//POCOR-6841
                     $ReportCardProcessesTable->save($entity);
                     $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-			        $StudentsReportCards->updateAll([
-				         'status'=>-1//POCOR-7530
-			        ],['student_id' => $entity->student_id, 'report_card_id'=> $entity->report_card_id]);
+                    $StudentsReportCards->updateAll([
+                         'status'=>-1//POCOR-7530
+                    ],['student_id' => $entity->student_id, 'report_card_id'=> $entity->report_card_id]);
                     
                 }//POCOR-7067 Ends
             }//POCOR-6841 ends
@@ -1300,8 +1300,17 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $params = $this->request->query;
-
-        $query
+        $reportCardTable = TableRegistry::get('report_cards');
+        //POCOR-7605 start
+        $decodeParam = $this->paramsDecode($this->request->params['pass'][1]);
+        $conditions = [];
+        $CheckStudent = $this->StudentsReportCards->find()->where([$this->StudentsReportCards->aliasField('student_id') =>$decodeParam['student_id'], $this->StudentsReportCards->aliasField('report_card_id') =>$params['report_card_id']])->first();
+        if(!empty($CheckStudent)){
+            $conditions[$this->StudentsReportCards->aliasField('report_card_id')] = $params['report_card_id'];
+            
+        }
+        //POCOR-7605 end
+            $query
             ->select([
                 'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
                 'report_card_status' => $this->StudentsReportCards->aliasField('status'),
@@ -1309,7 +1318,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on'),
                 'email_status_id' => $this->ReportCardEmailProcesses->aliasField('status'),
                 'email_error_message' => $this->ReportCardEmailProcesses->aliasField('error_message'),
-                'gpa' => $this->StudentsReportCards->aliasField('gpa')//POCOR-7318
+                'gpa' => $this->StudentsReportCards->aliasField('gpa'),//POCOR-7318
             ])
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
@@ -1330,8 +1339,11 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $params['report_card_id']
                 ]
             )
+            ->where($conditions)
             ->order(['report_card_id' => 'DESC'])
             ->autoFields(true);
+
+        
     }
 
     public function onGetStatus(Event $event, Entity $entity)
@@ -1441,8 +1453,9 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function onGetReportCard(Event $event, Entity $entity)
     {
         $value = '';
+        $params = $this->request->query;
         if ($entity->has('report_card_id')) {
-            $reportCardId = $entity->report_card_id;
+            $reportCardId = $params['report_card_id'];
         } else if (!is_null($this->request->query('report_card_id'))) {
             // used if student report card record has not been created yet
             $reportCardId = $this->request->query('report_card_id');
@@ -2287,10 +2300,10 @@ class ReportCardStatusesTable extends ControllerActionTable
     }
      //POCOR-7400 end
 
-    /**
-     * POCOR-7318 GPA fetures developed
-     * POCOR-7604 GPA get data logic changed
-     **/ 
+    /*
+    * POCOR-7318
+    * query again change in POCOR-7605
+    **/
     private function addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId,$educationGradeId)
     {
 
@@ -2356,7 +2369,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     
         if(!empty($result)){
            foreach($result as $val){
-            $gpa = $val['gpa_per_student'];
+            $gpa = $val['gpa_per_student_report_card_period'];
 
            }
         }
