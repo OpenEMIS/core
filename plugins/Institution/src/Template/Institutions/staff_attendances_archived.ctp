@@ -192,12 +192,12 @@ $institutionId = $paramsQuery['institution_id'];
                             <h1 class="data-header">{{$ctrl.allAttendances}}</h1>
                         </div>
                     </div>
-                    <!-- <div class="data-section">
+                    <div class="data-section">
                         <div class="data-field">
                             <h4><?= __('No. of Present') ?></h4>
                             <h1 class="data-header">{{$ctrl.allPresentCount}}</h1>
                         </div>
-                    </div> -->
+                    </div>
                     <div class="data-section">
                         <div class="data-field">
                             <h4><?= __('No. of Staff on Leave') ?></h4>
