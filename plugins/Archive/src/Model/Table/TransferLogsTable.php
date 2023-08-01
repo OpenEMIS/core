@@ -1,6 +1,8 @@
 <?php
+
 namespace Archive\Model\Table;
 
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -31,13 +33,15 @@ class TransferLogsTable extends ControllerActionTable
      */
     // for status
     private $statusOptions = [];
+
     CONST IN_PROGRESS = 1;
     CONST DONE = 2;
     CONST ERROR = 3;
+
     public function initialize(array $config)
     {
         parent::initialize($config);
-        
+
         $this->table('transfer_logs');
         $this->displayField('id');
         $this->primaryKey('id');
@@ -86,47 +90,41 @@ class TransferLogsTable extends ControllerActionTable
         return $rules;
     }
 
-    /*public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        return $events;
-    }*/
-
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('academic_period_id');    
+        $this->field('academic_period_id');
         $this->field('generated_on');
         $this->field('generated_by');
         $this->field('p_id', ['visible' => false]);
         $this->field('features', ['sort' => false]); // POCOR-6816 
-        $this->setFieldOrder(['academic_period_id','features','generated_on','generated_by']);
+        $this->setFieldOrder(['academic_period_id', 'features', 'generated_on', 'generated_by']);
 
         //$this->Alert->info('Archive.backupReminder', ['reset' => false]);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Archive','Archive');       
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Administration', 'Archive', 'Archive');
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $condition = [$this->AcademicPeriods->aliasField('current').' <> ' => "1"];
+        $condition = [$this->AcademicPeriods->aliasField('current') . ' <> ' => "1"];
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
         $this->field('academic_period_id', ['type' => 'select', 'options' => $academicPeriodOptions]);
         $this->field('features', ['type' => 'select', 'options' => $this->getFeatureOptions()]); // POCOR-6816 
@@ -135,288 +133,146 @@ class TransferLogsTable extends ControllerActionTable
         $this->field('generated_by', ['visible' => false]);
         $this->field('process_status', ['visible' => false]);
         $this->field('p_id', ['visible' => false]);
-        
-        $this->setFieldOrder(['academic_period_id','features']); // POCOR-6816 
+
+        $this->setFieldOrder(['academic_period_id', 'features']); // POCOR-6816
 
     }
 
     public function addOnInitialize(Event $event, Entity $entity)
     {
         //POCOR-6816
-        $condition = [$this->AcademicPeriods->aliasField('current').' <> ' => "1"];
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
-        foreach($academicPeriodOptions AS $key => $val){
-            //POCOR-7486-HINDOL
-            $transferLogdata = $this->find('all')
-                                    ->where(['academic_period_id' => $key,
-                                        'process_status' => $this::DONE])->toArray();
-            $getFeatureOptionsCount = count($this->getFeatureOptions());
-            if($getFeatureOptionsCount == count($transferLogdata)){
-                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-                $AcademicPeriods->updateAll(
-                    ['editable' => 0, 'visible' => 0],    //field
-                    ['id' => $key, 'current'=> 0] //condition
-                );
-            }
-        }
+        $this->setFullyArchivedYearInactive();
+        $this->setFullyArchivedYearInvisible();
         //POCOR-6816
-
-
-
-        $this->Alert->info('Archive.backupReminder');
-        try {
-// POCOR-7486-HINDOL removed backup DB check
-//            $DataManagementConnections =  TableRegistry::get('Archive.DataManagementConnections');
-//            $DataManagementConnectionsData = $DataManagementConnections->find('all')
-//                ->select([
-//                    'DataManagementConnections.host','DataManagementConnections.db_name','DataManagementConnections.host','DataManagementConnections.username','DataManagementConnections.password','DataManagementConnections.db_name'
-//                ])
-//                ->first();
-//            if ( base64_encode(base64_decode($DataManagementConnectionsData['password'], true)) === $DataManagementConnectionsData['password']){
-//            $db_password = $this->decrypt($DataManagementConnectionsData['password'], Security::salt());
-//            }
-//            else {
-//            $db_password = $dbConnection['db_password'];
-//            }
-//            $connectiontwo = ConnectionManager::config($DataManagementConnectionsData['db_name'], [
-//                'className' => 'Cake\Database\Connection',
-//                'driver' => 'Cake\Database\Driver\Mysql',
-//                'persistent' => false,
-//                'host' => $DataManagementConnectionsData['host'],
-//                'username' => $DataManagementConnectionsData['username'],
-//                'password' => $db_password,
-//                'database' => $DataManagementConnectionsData['db_name'],
-//                'encoding' => 'utf8mb4',
-//                'timezone' => 'UTC',
-//                'cacheMetadata' => true,
-//            ]);
-//            $connection = ConnectionManager::get($DataManagementConnectionsData['db_name']);
-//            $connected = $connection->connect();
-
-        } catch (Exception $connectionError) {
-            //$this->Alert->warning('Connection.archiveConfigurationFail'); //POCOR-7399
-        }
     }
 
-    public function decrypt($encrypted_string, $secretHash) {
-
-        $iv = substr($secretHash, 0, 16);
-        $data = base64_decode($encrypted_string);
-        $decryptedMessage = openssl_decrypt($data, "AES-256-CBC", $secretHash, $raw_input = false, $iv);
-        $decrypted = rtrim(
-            $decryptedMessage
-        );
-        return $decrypted;
-    }
-
+    /**
+     * common proc to show related user name
+     * @param Event $event
+     * @param Entity $entity
+     * @return mixed
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onGetGeneratedBy(Event $event, Entity $entity)
     {
-        $Users = TableRegistry::get('User.Users');
-        $result = $Users
-            ->find()
-            ->select(['first_name','last_name'])
-            ->where(['id' => $entity->generated_by])
-            ->first();
-
-        return $entity->generated_by = $result->first_name.' '.$result->last_name;
+        $generated_by = self::getRelatedRecord('User.Users', $entity->generated_by);
+        $name = $generated_by['name'];
+        return $name;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
-        $session = $this->Session;
-        $superAdmin = $session->read('Auth.User.super_admin');
-        $is_connection_is_online = $session->read('is_connection_stablished');
-        if( ($superAdmin == 1 ) ){ //POCOR-7399
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-            $AcademicPeriodsData = $AcademicPeriods->find()
-                ->where(['current'=> 1])
-                ->first();  
-        
-            if($entity['academic_period_id'] == $AcademicPeriodsData->id){
-                $this->Alert->error('Archive.currentAcademic');
-            }else{
-                $entity->p_id = getmypid();
-                $entity->process_status =  self::IN_PROGRESS;
-                $entity->academic_period_id = $entity['academic_period_id'];
-                $entity->generated_on = date("Y-m-d H:i:s");
-                $entity->generated_by = $this->Session->read('Auth.User.id');
-                $entity->features = $entity['features'];
-            }
-            // return $this->Alert->warning('Connection.transferConnectionFail');
-            // return true;
+
+    /**
+     * common proc to get the setting from Configuration
+     * @return bool
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function hideAcademicPeriod()
+    {
+        $answer = false;
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $question = $ConfigItems->value('archiving_hides_academic_period');
+        if ($question) {
+            $answer = ($question == "1") ? true : false;
         }
-        else{
-           // $this->Alert->error('Connection.archiveConfigurationFail', ['reset' => true]); //POCOR-7399
+        return $answer;
+    }
+
+    /**
+     * common proc to get the setting from Configuration
+     * @return bool
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function disableAcademicPeriod()
+    {
+        $answer = false;
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $question = $ConfigItems->value('archiving_disables_academic_period');
+        if ($question) {
+            $answer = ($question == "1") ? true : false;
+        }
+        return $answer;
+    }
+
+    /**
+     * common proc to show related field with id in the index table
+     * @param $tableName
+     * @param $relatedField
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getRelatedRecord($tableName, $relatedField)
+    {
+        if (!$relatedField) {
+            return null;
+        }
+        $Table = TableRegistry::get($tableName);
+        try {
+            $related = $Table->get($relatedField);
+            return $related->toArray();
+        } catch (RecordNotFoundException $e) {
+            return '-';
+        }
+        return '+';
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
+    {
+        $superAdmin = $this->checkSuperAdmin();
+        if (!$superAdmin) {
+            $this->Alert->error('Archive.notSuperAdmin');
             return false;
         }
-        
-
-        // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        
-        // $AcademicPeriodsData = $AcademicPeriods->find()
-        //     ->where(['current'=> 1])
-        //     ->first();  
-       
-        // if($entity['academic_period_id'] == $AcademicPeriodsData->id){
-        //     $this->Alert->error('Archive.currentAcademic');
-        // }else{
-        //     $entity->academic_period_id = $entity['academic_period_id'];
-        //     $entity->generated_on = date("Y-m-d H:i:s");
-        //     $entity->generated_by = $this->Session->read('Auth.User.id');
-        // }
+        $current = $this->isCurrent($entity);
+        if ($current) {
+            $this->Alert->error('Archive.currentAcademic');
+            return false;
+        }
+        $entity->p_id = getmypid();
+        $entity->process_status = self::IN_PROGRESS;
+        $entity->academic_period_id = $entity['academic_period_id'];
+        $entity->generated_on = date("Y-m-d H:i:s");
+        $entity->generated_by = $this->Session->read('Auth.User.id');
+        $entity->features = $entity['features'];
     }
 
+    /**
+     * @param Event $event
+     * @param Entity $entity
+     * @param ArrayObject $data
+     * POCOR-7521-KHINDOL
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $data){
+
+        $superAdmin = $this->checkSuperAdmin();
+        if (!$superAdmin) {
+            $this->Alert->error('Archive.notSuperAdmin');
+            return false;
+        }
         ini_set('memory_limit', '-1');
-        if($entity->features == "Student Attendance"){
-            // /*flag the academic period table
-            // academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
-        
-            $session = $this->Session;
-            $superAdmin = $session->read('Auth.User.super_admin');
-            $is_connection_is_online = $session->read('is_connection_stablished');
-            if( ($superAdmin == 1 ) ){//POCOR-7399
-                // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-                // $AcademicPeriods->updateAll(
-                //     ['editable' => 0, 'visible' => 0],    //field
-                //     ['id' => $entity->academic_period_id, 'current'=> 0] //condition
-                // );
-
-                $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
-                $ClassAttendanceRecordsData = $ClassAttendanceRecords->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
-                
-
-                $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
-                $InstitutionStudentAbsencesData = $InstitutionStudentAbsences->find('all')
-                                                        ->where(['academic_period_id' => $entity->academic_period_id])->count();
-                
-                                                        
-                $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
-                $StudentAbsencesPeriodDetailsData = $StudentAbsencesPeriodDetails->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
-                
-
-                $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
-                $StudentAttendanceMarkedRecordsData = $StudentAttendanceMarkedRecords->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
-
-                 
-                $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
-                $InstitutionStaffAttendancesData = $StudentAttendanceMarkTypes->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
-                if(($ClassAttendanceRecordsData == 0) && ($InstitutionStudentAbsencesData == 0) && ($StudentAbsencesPeriodDetailsData == 0) && ($StudentAttendanceMarkedRecordsData == 0) && ($InstitutionStaffAttendancesData == 0)){
-                    $this->deleteAll([
-                        $this->aliasField('p_id') => $entity->p_id
-                    ]);
-                    $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
-                }else{
-                    $this->log('=======>Before triggerStudentAttendanceShell', 'debug');
-                    $this->triggerStudentAttendanceShell('StudentAttendance',$entity->academic_period_id, $entity->p_id);
-                    $this->log(' <<<<<<<<<<======== After triggerStudentAttendanceShell', 'debug');
-                }
-            }
-            else{
-                $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
-            }
-        }else if($entity->features == "Staff Attendances"){
-            /*flag the academic period table
-            academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
-        
-            $session = $this->Session;
-            $superAdmin = $session->read('Auth.User.super_admin');
-            $is_connection_is_online = $session->read('is_connection_stablished');
-            if( ($superAdmin == 1 ) ){ //POCOR-7399
-                // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-                // $AcademicPeriods->updateAll(
-                //     ['editable' => 0, 'visible' => 0],    //field
-                //     ['id' => $entity->academic_period_id, 'current'=> 0] //condition
-                // );
-                $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
-                $InstitutionStaffAttendancesData = $InstitutionStaffAttendances->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
-                
-                $StaffLeave = TableRegistry::get('Institution.StaffLeave');
-                $StaffLeaveData = $StaffLeave->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->count();
-                
-                if(($InstitutionStaffAttendancesData == 0) && ($StaffLeaveData == 0)){
-                    $this->deleteAll([
-                        $this->aliasField('p_id') => $entity->p_id
-                    ]);
-                    $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
-                }else{
-                    $this->log('=======>Before triggerStaffAttendancesShell', 'debug');
-                    $this->triggerStaffAttendancesShell('StaffAttendances',$entity->academic_period_id, $entity->p_id);
-                    $this->log(' <<<<<<<<<<======== After triggerStaffAttendancesShell', 'debug');
-                }
-            }
-            else{
-                $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
-            }
-        }else if($entity->features == "Student Assessments"){
-            // /*flag the academic period table
-            // academic_periods.editable = 0, academic_periods.visible = 0 only when it is not current year-- only update columns*/
-        
-            $session = $this->Session;
-            $superAdmin = $session->read('Auth.User.super_admin');
-            $is_connection_is_online = $session->read('is_connection_stablished');
-            if( ($superAdmin == 1 ) ){ //POCOR-7399
-                // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-                // $AcademicPeriods->updateAll(
-                //     ['editable' => 0, 'visible' => 0],    //field
-                //     ['id' => $entity->academic_period_id, 'current'=> 0] //condition
-                // );
-                $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-                $AssessmentItemResultsData = $AssessmentItemResults->find('all')
-                                    ->where(['academic_period_id' => $entity->academic_period_id])->limit(1)->toArray();
-                                    
-                if(empty($AssessmentItemResultsData)){
-                    $this->deleteAll([
-                        $this->aliasField('p_id') => $entity->p_id
-                    ]);
-                    $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
-                }else{
-                    $this->log('=======>Before triggerStudentAssessmentsShell', 'debug');
-                    $this->triggerStudentAssessmentsShell('StudentAssessments',$entity->academic_period_id, $entity->p_id);
-                    $this->log(' <<<<<<<<<<======== After triggerStudentAssessmentsShell', 'debug');
-                }
-            }
-            else{
-                $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
-            }
+        if($entity->features == "Student Attendances"){
+            $this->archiveStudentAttendances($entity);
+        }
+        if($entity->features == "Staff Attendances"){
+            $this->archiveStaffAttendances($entity);
+        }
+        if($entity->features == "Student Assessments"){
+            $this->archiveStudentAssessments($entity);
         }
     }
 
+    /**
+     * @param $shellName
+     * @param null $academicPeriodId
+     * @param null $pid
+     * POCOR-7521-KHINDOL
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
+     */
 
-    /*
-    * Function to take backup from current database and put in archive database
-    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
-    * return data
-    * @ticket POCOR-6816
-    */
-
-    public function triggerStudentAttendanceShell($shellName,$academicPeriodId = null, $pid = null)
+    public function triggerArchiveShell($shellName, $academicPeriodId = null, $pid = null)
     {
-        $args = '';
-        $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
-        $args .= !is_null($pid) ? ' '.$pid : '';
-
-        $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $shellName . $args;
-        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
-        $shellCmd = $cmd . ' >> ' . $logs;
-        exec($shellCmd);
-        Log::write('debug', $shellCmd);
-    }
-
-    /*
-    * Function to take backup from current database and put in archive database
-    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
-    * return data
-    * @ticket POCOR-6816
-    */
-
-    public function triggerStaffAttendancesShell($shellName,$academicPeriodId = null, $pid = null)
-    {
+        $this->log("=======>Before $shellName", 'debug');
         $args = '';
         $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
         $args .= !is_null($pid) ? ' '.$pid : '';
@@ -426,27 +282,9 @@ class TransferLogsTable extends ControllerActionTable
         $shellCmd = $cmd . ' >> ' . $logs;
         exec($shellCmd);
         Log::write('debug', $shellCmd);
+        $this->log("<<<<<<<<<<======== After $shellName", 'debug');
     }
 
-    /*
-    * Function to take backup from current database and put in archive database
-    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
-    * return data
-    * @ticket POCOR-6816
-    */
-
-    public function triggerStudentAssessmentsShell($shellName,$academicPeriodId = null, $pid = null)
-    {
-        $args = '';
-        $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
-        $args .= !is_null($pid) ? ' '.$pid : '';
-
-        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
-        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
-        $shellCmd = $cmd . ' >> ' . $logs;
-        exec($shellCmd);
-        Log::write('debug', $shellCmd);
-    }
 
     public function triggerDatabaseTransferShell($shellName,$academicPeriodId = null)
     {
@@ -460,11 +298,12 @@ class TransferLogsTable extends ControllerActionTable
         Log::write('debug', $shellCmd);
     }
 
-    /**
-     * POCOR-6816 
+     /**
+     * POCOR-6816
      * add features dropdown
-    */
-    public function getFeatureOptions(){
+     */
+    public function getFeatureOptions()
+    {
         $options = [
             'Student Attendance' => __('Student Attendance'),
             'Staff Attendances' => __('Staff Attendances'),
@@ -473,24 +312,210 @@ class TransferLogsTable extends ControllerActionTable
         return $options;
     }
 
-     /*
-    * Function to show status on view page
-    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
-    * return data
-    * @ticket POCOR-7237
-    */
+    /*
+   * Function to show status on view page
+   * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+   * return data
+   * @ticket POCOR-7237
+   */
     public function onGetProcessStatus(Event $event, Entity $entity)
     {
         if ($entity->process_status == 1) {
             $value = $this->statusOptions[self::IN_PROGRESS];
-        } elseif($entity->process_status == 2) {
+        } elseif ($entity->process_status == 2) {
             $value = $this->statusOptions[self::DONE];
-        } elseif($entity->process_status == 3) {
+        } elseif ($entity->process_status == 3) {
             $value = $this->statusOptions[self::DONE];
-        }else{
+        } else {
             $value = $this->statusOptions[self::DONE];
         }
         return $value;
     }
-    
+
+    /**
+     * @param Entity $entity
+     * POCOR-7521-KHINDOL
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * cleaner code
+     * Archive following tables
+     * institution_class_attendance_records
+     * institution_student_absences
+     * institution_student_absence_details
+     * student_attendance_marked_records
+     * student_attendance_mark_types
+     */
+    private function archiveStudentAttendances(Entity $entity)
+    {
+        $tablesToArchive = [
+            'institution_class_attendance_records',
+            'institution_student_absences',
+            'institution_student_absence_details',
+            'student_attendance_marked_records',
+            'student_attendance_mark_types',
+        ];
+        $shellName = "ArchiveStudentAttendances";
+        $this->archiveTableRecords($entity, $tablesToArchive, $shellName);
+    }
+
+    /**
+     * @param Entity $entity
+     * POCOR-7521-KHINDOL
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * cleaner code
+     * Archive following tables
+     * institution_staff_attendances
+     * institution_staff_leave
+     */
+    private function archiveStaffAttendances(Entity $entity)
+    {
+        $tablesToArchive = [
+            'institution_staff_attendances',
+            'institution_staff_leave',
+        ];
+        $shellName = "ArchiveStaffAttendances";
+        $this->archiveTableRecords($entity, $tablesToArchive, $shellName);
+    }
+
+    /**
+     * @param Entity $entity
+     * POCOR-7521-KHINDOL
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * cleaner code
+     * archive following tables
+     * assessment_item_results
+     */
+    private function archiveStudentAssessments(Entity $entity)
+    {
+        $tablesToArchive = [
+            'assessment_item_results',
+        ];
+        $shellName = "ArchiveStudentAssessments";
+        $this->archiveTableRecords($entity, $tablesToArchive, $shellName);
+    }
+
+
+    /**
+     * @param Entity $entity, $tablesToArchive, $shellName
+     * POCOR-7521-KHINDOL
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * Archive table records
+     */
+    private function archiveTableRecords(Entity $entity, $tablesToArchive, $shellName)
+    {
+        $session = $this->Session;
+        $superAdmin = $session->read('Auth.User.super_admin');
+        if ($superAdmin == 1) {//POCOR-7399
+            $academic_period_id = $entity->academic_period_id;
+            $recordsToArchive = 0;
+            $tableRecordsCount = 0;
+            foreach ($tablesToArchive as $tableToArchive){
+                $tableRecordsCount =
+                    $this->getTableRecordsCountForAcademicPeriod($tableToArchive,
+                        $academic_period_id);
+                $recordsToArchive = $recordsToArchive + $tableRecordsCount;
+                $tableRecordsCount = 0;
+            }
+
+            if ($recordsToArchive == 0) {
+                $this->deleteAll([
+                    $this->aliasField('p_id') => $entity->p_id
+                ]);
+
+                $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
+            }
+            if ($recordsToArchive > 0) {
+                $this->triggerArchiveShell($shellName, $academic_period_id, $entity->p_id);
+            }
+        }
+        if ($superAdmin != 1) {
+            $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+        }
+    }
+
+    /**
+     * @param $table_name
+     * @param $academic_period_id
+     * @return int
+     * POCOR-7521-KHINDOL
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * cleaner code
+     */
+    private function getTableRecordsCountForAcademicPeriod($table_name, $academic_period_id)
+    {
+        $Table = TableRegistry::get($table_name);
+        $RecordsCount = $Table->find('all')
+            ->where(['academic_period_id' => $academic_period_id])->count();
+        return intval($RecordsCount);
+    }
+
+
+    private function setFullyArchivedYearInactive()
+    {
+        $setting = self::disableAcademicPeriod();
+        if (!$setting) {
+            return;
+        }
+        $condition = [$this->AcademicPeriods->aliasField('current') . ' <> ' => "1"];
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
+        foreach ($academicPeriodOptions AS $key => $val) {
+            $transferLogdata = $this->find('all')
+                ->where(['academic_period_id' => $key,
+                    'process_status' => $this::DONE])
+                ->toArray();
+            $getFeatureOptionsCount = count($this->getFeatureOptions());
+            if ($getFeatureOptionsCount == count($transferLogdata)) {
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $AcademicPeriods->updateAll(
+                    ['editable' => 0],    //field
+                    ['id' => $key, 'current' => 0] //condition
+                );
+            }
+        }
+    }
+
+    private function setFullyArchivedYearInvisible()
+    {
+        $setting = self::hideAcademicPeriod();
+        if (!$setting) {
+            return;
+        }
+        $condition = [$this->AcademicPeriods->aliasField('current') . ' <> ' => "1"];
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
+        foreach ($academicPeriodOptions AS $key => $val) {
+            $transferLogdata = $this->find('all')
+                ->where(['academic_period_id' => $key,
+                    'process_status' => $this::DONE])->toArray();
+            $getFeatureOptionsCount = count($this->getFeatureOptions());
+            if ($getFeatureOptionsCount == count($transferLogdata)) {
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $AcademicPeriods->updateAll(
+                    ['visible' => 0],    //field
+                    ['id' => $key, 'current' => 0] //condition
+                );
+            }
+        }
+    }
+
+    /**
+     * @return mixed
+     */
+    private function checkSuperAdmin()
+    {
+        $session = $this->Session;
+        $superAdmin = $session->read('Auth.User.super_admin');
+        return $superAdmin;
+    }
+
+    /**
+     * @param Entity $entity
+     * @return bool
+     */
+    private function isCurrent(Entity $entity)
+    {
+        $academic_period_id = $entity['academic_period_id'];
+        $current_academic_period_id = $this->AcademicPeriods->getCurrent();
+        $current = $academic_period_id == $current_academic_period_id;
+        return $current;
+    }
+
 }
