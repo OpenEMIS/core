@@ -50,7 +50,7 @@ class AlertRulesTable extends ControllerActionTable
         $this->addBehavior('Alert.AlertRuleStaffType');
         $this->addBehavior('Alert.AlertRuleScholarshipApplication');
         $this->addBehavior('Alert.AlertRuleScholarshipDisbursement');
-        $this->addBehavior('Alert.AlertRuleCases');//POCOR-7642
+        $this->addBehavior('Alert.AlertRuleCaseEscalation');//POCOR-7642
     }
 
     public function validationDefault(Validator $validator)
