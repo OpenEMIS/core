@@ -26,7 +26,6 @@ class ArchiveStaffAttendancesShell extends Shell
 {
 
     /**
-     * POCOR-7521-KHINDOL
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     public function initialize()
@@ -67,8 +66,17 @@ class ArchiveStaffAttendancesShell extends Shell
         $recordsToArchive = 0;
         $tableRecordsCount = 0;
         foreach ($tablesToArchive as $tableToArchive) {
-            $tableRecordsCount =
-                CommonArchiveShell::moveRecordsToArchive($academicPeriodId, $tableToArchive);
+            try {
+                $tableRecordsCount =
+                    CommonArchiveShell::moveRecordsToArchive($academicPeriodId, $tableToArchive);
+            } catch (\Exception $e) {
+                $this->out("Error in $processName");
+                $this->out($e->getMessage());
+                $processInfo = CommonArchiveShell::setTransferLogsFailed($pid);
+                $this->out("Transfer failed $processName:  $processInfo");
+                $processInfo = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
+                $this->out("System process failed $processName:  $processInfo");
+            }
             $this->out("Count of archived records for $tableToArchive: $tableRecordsCount");
             $recordsToArchive = $recordsToArchive + $tableRecordsCount;
             $tableRecordsCount = 0;
@@ -79,29 +87,26 @@ class ArchiveStaffAttendancesShell extends Shell
             try {
                 $processInfo = CommonArchiveShell::setTransferLogsCompleted($pid);
                 $this->out("Transfer completed $processName:  $processInfo");
-
                 $processInfo = CommonArchiveShell::setSystemProcessCompleted($systemProcessId);
                 $this->out("System process completed $processName:  $processInfo");
             } catch (\Exception $e) {
                 $this->out("Error in $processName");
                 $this->out($e->getMessage());
-                $processInfo = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
-                $this->out("System process failed $processName:  $processInfo");
                 $processInfo = CommonArchiveShell::setTransferLogsFailed($pid);
                 $this->out("Transfer failed $processName:  $processInfo");
+                $processInfo = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
+                $this->out("System process failed $processName:  $processInfo");
             }
         }
 
         if ($recordsToArchive < 0) {
-            $processInfo = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
-            $this->out("System process failed $processName:  $processInfo");
             $processInfo = CommonArchiveShell::setTransferLogsFailed($pid);
             $this->out("Transfer failed $processName:  $processInfo");
+            $processInfo = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
+            $this->out("System process failed $processName:  $processInfo");
             $this->out("No records to update ");
         }
-
         $this->out("Ended $processName:  $processInfo");
-
     }
 
 }
