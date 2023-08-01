@@ -316,6 +316,7 @@ class ArchivedAssessmentsTable extends ControllerActionTable
 //
         $institutionId = $this->institutionId;
         $studentId = $this->studentId;
+
         $academicPeriodStudentAttendanceArray = ArchiveConnections::getArchiveYears('assessment_item_results',
             ['institution_id' => $institutionId,
                 'student_id' => $studentId]);
@@ -324,17 +325,24 @@ class ArchivedAssessmentsTable extends ControllerActionTable
         } else {
             $selectedYear = $selectedAcademicPeriod;
         }
+        if (sizeof($academicPeriodStudentAttendanceArray) == 0) {
+            $academicPeriodStudentAttendanceArray = [0];
+            $selectedYear = null;
+        }
 //        $this->log('uniqu_array', 'debug');
 //        $this->log($academicPeriodStudentAttendanceArray, 'debug');
         $conditions = [
             'current !=' => 1,
-            'id IN'  => $academicPeriodStudentAttendanceArray
+            'id IN' => $academicPeriodStudentAttendanceArray
         ];
-        $academicPeriodOptions = $AcademicPeriod->getYearList(['conditions' => $conditions]);
-        if (empty($this->request->query['academic_period'])) {
-            $this->request->query['academic_period'] = $selectedYear;
+        if (sizeof($academicPeriodStudentAttendanceArray) > 0) {
+            $academicPeriodOptions = $AcademicPeriod->getYearList(['conditions' => $conditions]);
+            if (empty($this->request->query['academic_period'])) {
+                $this->request->query['academic_period'] = $selectedYear;
+            }
         }
         $selectedPeriod = $this->request->query['academic_period'];
+
         $this->advancedSelectOptions($academicPeriodOptions, $selectedPeriod);
         $this->controller->set(compact('academicPeriodOptions', 'selectedPeriod'));
         return $selectedPeriod;
