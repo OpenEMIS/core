@@ -15,7 +15,7 @@ class POCOR4746 extends AbstractMigration
         // Backup table
         $this->execute('CREATE TABLE `zz_4746_education_programmes` LIKE `education_programmes`');
         $this->execute('INSERT INTO `zz_4746_education_programmes` SELECT * FROM `education_programmes`');
-        $this->execute("ALTER TABLE `education_programmes` ADD COLUMN same_grade_promotion  VARCHAR(11) DEFAULT 'no' COMMENT 'yes=enabled,no=disabled' AFTER education_certification_id");
+        $this->execute("ALTER TABLE `education_programmes` ADD COLUMN same_grade_promotion  Int(11) DEFAULT '0' COMMENT '1=enabled,0=disabled' AFTER education_certification_id");
     }
 
     // rollback

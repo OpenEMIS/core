@@ -14,7 +14,7 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Validation\Validator;
 use Cake\Log\Log;
 use App\Model\Table\AppTable;
-
+use Cake\Datasource\ConnectionManager;
 class StudentPromotionTable extends AppTable
 {
     private $InstitutionGrades = null;
@@ -742,11 +742,27 @@ class StudentPromotionTable extends AppTable
                                             )
                                             ->where([$educationGrades->aliasField('id')=>$entity->grade_to_promote])
                                             ->first();
+                        $connection = ConnectionManager::get('default');
+                        $sql="SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name 
+                                                   FROM education_grades 
+                                                   INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                                                   INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                                                   INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id 
+                                                   INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+                                                   INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
+                                                   WHERE academic_periods.id=  $academicPeriodId and education_grades.name = '".$data->grade_name."'
+                                                   ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC;";
+                       
+                        $newOption[$entity['grade_id']] = $entity['programme_name'] . ' - ' .$entity['grade_name'];
+                          
+                        if($data->same_grade_promotion==1){
+                            $options =   $newOption;
+                        }
                        $newOption = [];
                        $newOption[$data->id] = $data->programme . ' - ' .$data->grade_name;
                        if($data->same_grade_promotion=="yes"){
                             $options =   $newOption;
-                        }
+                       }
                         else{
                             $options = $toGradeOptionPromoted;
                         }

@@ -472,17 +472,17 @@ class EducationProgrammesTable extends ControllerActionTable {
     //POCOR-4746 start
     public function onUpdateFieldSameGradePromotion(Event $event, array $attr, $action, Request $request) {
         if($action=="add"||$action=="edit"){
-        $options=["yes"=>"Enabled","no"=>"Disabled"];
+        $options=[1=>"Enabled",0=>"Disabled"];
         $attr['options'] = $options;}
         return $attr;
     }
 
     public function onGetSameGradePromotion(Event $event, Entity $entity)
     {
-       if($entity->same_grade_promotion=="yes"){
+       if($entity->same_grade_promotion==1){
           return $entity->same_grade_promotion="Enabled";
        }
-       if($entity->same_grade_promotion=="no"){
+       if($entity->same_grade_promotion==0){
           return $entity->same_grade_promotion="Disabled";
        }
     }
