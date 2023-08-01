@@ -82,12 +82,16 @@ class StaffBehavioursTable extends AppTable  {
                 $Statuses1->aliasField('id')."=(`StaffBehaviours`.`status_id`)"
         ])      
         -> where([$where]);
+     
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 $row->time_of_behaviour= $row->time_of_behaviour->i18nFormat('HH:mm:ss');
+                $row->behaviour_classification=$row->behaviour_classification->name;
+             
                 return $row;
             });
         });
+       
         //institution_filter
         switch ($filter) {
             case self::NO_STUDENT:
@@ -145,12 +149,6 @@ class StaffBehavioursTable extends AppTable  {
             'label' => __('Institution Code')
         ];
         $extraField[] = [
-            'key' => 'StaffBehaviour.Institutions.name',
-            'field' => 'institution_name',
-            'type' => 'string',
-            'label' => __('Institution Name')
-        ];
-        $extraField[] = [
             'key' => 'Institutions.name',
             'field' => 'institution_name',
             'type' => 'string',
@@ -199,11 +197,13 @@ class StaffBehavioursTable extends AppTable  {
             'label' => __('Behaviour category')
         ];
         $extraField[] = [
-            'key' => 'BehaviourClassifications',
+            'key' => 'behaviour_classification',
             'field' => 'behaviour_classification',
             'type' => 'string',
             'label' => __('Behaviour Classification')
         ];
+       
+      
     
         // POCOR-6155
         $fields->exchangeArray($extraField);
