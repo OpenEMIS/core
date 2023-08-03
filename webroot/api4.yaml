@@ -55,6 +55,10 @@ tags:
   - name: Meals
     description: APIs for Meals Details
   #POCOR-7394-S ends
+  #POCOR-7546 starts
+  - name: Assessments
+    description: APIs for Assessments Details
+  #POCOR-7546 ends
 paths:
   /api/v4/login:
     post:
@@ -3791,6 +3795,479 @@ paths:
 
 # POCOR-7394-S Ends
 
+# POCOR-7546 starts
+
+  /api/v4/assessments/education-grades:
+      get:
+        tags:
+          - Assessments
+        summary: Get Assessments Education Grades
+        description: Multiple Education Grades will be provided with comma separated strings
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Meal-Benefits'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Meal-Benefits'
+          '400':
+            description: Invalid status value
+  /api/v4/assessments/items:
+      get:
+        tags:
+          - Assessments
+        summary: Get Assessments Items List
+        description: Multiple Items List will be provided with comma separated strings
+        parameters:
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Meal-Programmes'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Meal-Programmes'
+          '400':
+            description: Invalid status value
+
+# POCOR-7394-S Ends
+
+# POCOR-7546 starts
+
+  /api/v4/assessments/education-grades:
+      get:
+        tags:
+          - Assessments
+        summary: Get Assessments Education Grades
+        description: Multiple Education Grades will be provided with comma separated strings
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Assessments'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Assessments'
+          '400':
+            description: Invalid status value
+  /api/v4/assessments/items:
+      get:
+        tags:
+          - Assessments
+        summary: Get Assessments Items List
+        description: Multiple Items List will be provided with comma separated strings
+        parameters:
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/AssessmentItem'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/AssessmentItem'
+          '400':
+            description: Invalid status value
+  /api/v4/assessments/periods:
+      get:
+        tags:
+          - Assessments
+        summary: Get Assessments Periods List
+        description: Multiple Periods List will be provided with comma separated strings
+        parameters:
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/AssessmentPeriod'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/AssessmentPeriod'
+          '400':
+            description: Invalid status value
+  /api/v4/assessments/items/grading-types:
+      get:
+        tags:
+          - Assessments
+        summary: Get Assessments Item Grading Types List
+        description: Multiple Item Grading Types List will be provided with comma separated strings
+        parameters:
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/AssessmentGradingTypes'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/AssessmentGradingTypes'
+          '400':
+            description: Invalid status value
+  /api/v4/assessments/grading-options:
+      get:
+        tags:
+          - Assessments
+        summary: Get Assessments Grading Options List
+        description: Multiple Grading Options List will be provided with comma separated strings
+        parameters:
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/AssessmentGradingOptions'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/AssessmentGradingOptions'
+          '400':
+            description: Invalid status value
+  /api/v4/behaviours/categories:
+      get:
+        tags:
+          - Institution Staff
+        summary: Get Institution Behaviours Categories List
+        description: Multiple Institution Behaviours Categories List will be provided with comma separated strings
+        parameters:
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/StaffBehaviourCategories'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/StaffBehaviourCategories'
+          '400':
+            description: Invalid status value
+  /api/v4/institutions/{institutionId}/students/{studentId}/behaviours:
+      get:
+        tags:
+          - Institution students
+        summary: Get Institution Student Behaviour
+        description: Multiple Institution Student Behaviour will be provided with comma separated strings
+        parameters:
+          - name: institutionId
+            in: path
+            description: Add Institution id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+          - name: studentId
+            in: path
+            description: Add student id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/StudentBehaviours'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/StudentBehaviours'
+          '400':
+            description: Invalid status value
+  /api/v4/institutions/{institutionId}/institution-classes/{institutionClassId}/education-grades/{educationGradeId}/students:
+      get:
+        tags:
+          - Institution students
+        summary: Get Institution Class Grade Students List
+        description: Multiple Institution Class Grade Students List will be provided with comma separated strings
+        parameters:
+          - name: institutionId
+            in: path
+            description: Add Institution id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+          - name: institutionClassId
+            in: path
+            description: Add class id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+          - name: educationGradeId
+            in: path
+            description: Add education grade id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/InstitutionClasses'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/InstitutionClasses'
+          '400':
+            description: Invalid status value
+  /api/v4/institutions/{institutionId}/education-grades/{educationGradeId}/institution-subjects/students:
+      get:
+        tags:
+          - Institution students
+        summary: Get Institution Education Grade Students List
+        description: Multiple Institution Education Grade Students List will be provided with comma separated strings
+        parameters:
+          - name: institutionId
+            in: path
+            description: Add Institution id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+          - name: educationGradeId
+            in: path
+            description: Add education grade id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/InstitutionSubjects'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/InstitutionSubjects'
+          '400':
+            description: Invalid status value
+  /api/v4/institutions/students/assessment-item-results:
+      post:
+        tags:
+          - Assessments
+        summary: Add Students Assessment Item Results
+        description: Multiple values can be provided with comma separated strings
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value
+  /api/v4/institutions/students/behaviours:
+      post:
+        tags:
+          - Institution students
+        summary: Add Students Behaviours
+        description: Multiple values can be provided with comma separated strings
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value
+  /api/v4/institutions/{institutionId}/students/{studentId}/behaviours/{behaviourId}:
+      delete:
+        tags:
+          - Institution students
+        summary: Delete Students Behaviours
+        description: Multiple values can be provided with comma separated strings
+        parameters:
+          - name: institutionId
+            in: path
+            description: Add Institution id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+          - name: studentId
+            in: path
+            description: Add student id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+          - name: behaviourId
+            in: path
+            description: Add behaviour id to filter
+            required: true
+            schema:
+              type: integer
+              format: int
+        responses:
+          '200':
+            description: successful operation
+          '400':
+            description: Invalid status value
+
+# POCOR-7546 ends
+
 components:
   schemas:
     Institutions:
@@ -5978,105 +6455,28 @@ components:
           example: "2023-01-01 12:00:00"
     
     #POCOR-7394-S ends
-    #POCOR-7368 starts
-    InstitutionTextbooks:
+
+    
+    #POCOR-7546 starts
+    Assessments:
       type: object
       properties:
         id:
           type: integer
           format: int11
-          example: 1
+          example: 17
         code:
           type: string
           format: varchar
-          example: MA001-1
-        comment:
+          example: A1
+        name:
           type: string
           format: varchar
-          example: ""
-        textbook_status_id:
-          type: integer
-          format: int11
-          example: 1
-        textbook_condition_id:
-          type: integer
-          format: int11
-          example: 1
-        institution_id:
-          type: integer
-          format: int11
-          example: 6
-        academic_period_id:
-          type: integer
-          format: int11
-          example: 28
-        education_grade_id:
-          type: integer
-          format: int11
-          example: 121
-        education_subject_id:
-          type: integer
-          format: int11
-          example: 91
-        security_user_id:
-          type: integer
-          format: int11
-          example: 10551
-        textbook_id:
-          type: integer
-          format: int11
-          example: 19
-        modified_user_id:
-          type: integer
-          format: int
+          example: Assessment - Kindergarten 1
+        description:
+          type: string
+          format: varchar
           example:
-        modified:
-          type: object
-          format: timestamp
-          example:
-        created_user_id:
-          type: integer
-          format: int
-          example: 2
-        created:
-          type: object
-          format: timestamp
-          example: "2023-01-01 12:00:00"
-    Textbooks:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int11
-          example: 1
-        code:
-          type: string
-          format: varchar
-          example: MA001-1
-        title:
-          type: string
-          format: varchar
-          example: "Large Print Language Arts Textbook"
-        author:
-          type: string
-          format: varchar
-          example: "Steven Janson"
-        publisher:
-          type: string
-          format: varchar
-          example: "Khan"
-        year_published:
-          type: integer
-          format: int11
-          example: 2000
-        ISBN:
-          type: string
-          format: varchar
-          example: "15345645"
-        expiry_date:
-          type: integer
-          format: int11
-          example: 
         academic_period_id:
           type: integer
           format: int11
@@ -6084,15 +6484,50 @@ components:
         education_grade_id:
           type: integer
           format: int11
-          example: 76
+          example: 136
+        modified_user_id:
+          type: integer
+          format: int
+          example:
+        modified:
+          type: object
+          format: timestamp
+          example:
+        created_user_id:
+          type: integer
+          format: int
+          example: 2
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    AssessmentItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 01cbd28f-38cb-464b-b369-3a94a8bc396f
+        weight:
+          type: integer
+          format: int11
+          example: 0.00
+        classification:
+          type: string
+          format: varchar
+          example:
+        assessment_id:
+          type: integer
+          format: int11
+          example: 33
         education_subject_id:
           type: integer
           format: int11
-          example: 6
-        textbook_dimension_id:
-          type: integer
-          format: int11
-          example: 1
+          example: 83
+        education_subject_name:
+          type: string
+          format: varchar
+          example: CA-Creative Arts
         modified_user_id:
           type: integer
           format: int
@@ -6109,127 +6544,198 @@ components:
           type: object
           format: timestamp
           example: "2023-01-01 12:00:00"
-    TextbookDimensions:
+    AssessmentPeriod:
       type: object
       properties:
         id:
           type: integer
           format: int11
-          example: 1
-        name:
-          type: string
-          format: varchar
-          example: "50mmx76mm"
-        order:
-          type: integer
-          format: int11
-          example: 1
-        visible:
-          type: integer
-          format: int11
-          example: 1
-        editable:
-          type: integer
-          format: int11
-          example: 1
-        default:
-          type: integer
-          format: int11
-          example: 0
-        international_code:
-          type: string
-          format: varchar
-          example:
-        national_code:
-          type: string
-          format: varchar
-          example:
-        modified_user_id:
-          type: integer
-          format: int
-          example:
-        modified:
-          type: object
-          format: timestamp
-          example:
-        created_user_id:
-          type: integer
-          format: int
           example: 2
-        created:
-          type: object
-          format: timestamp
-          example: "2023-01-01 12:00:00"
-    TextbookConditions:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int11
-          example: 1
-        name:
-          type: string
-          format: varchar
-          example: new
-        order:
-          type: integer
-          format: int11
-          example: 1
-        visible:
-          type: integer
-          format: int11
-          example: 1
-        editable:
-          type: integer
-          format: int11
-          example: 1
-        default:
-          type: integer
-          format: int11
-          example: 0
-        international_code:
-          type: string
-          format: varchar
-          example:
-        national_code:
-          type: string
-          format: varchar
-          example:
-        modified_user_id:
-          type: integer
-          format: int
-          example:
-        modified:
-          type: object
-          format: timestamp
-          example:
-        created_user_id:
-          type: integer
-          format: int
-          example: 2
-        created:
-          type: object
-          format: timestamp
-          example: "2023-01-01 12:00:00"
-    TextbookStatuses:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int11
-          example: 1
         code:
           type: string
           format: varchar
-          example: AVAILABLE
+          example: FYAK2
         name:
           type: string
           format: varchar
-          example: Available
+          example: Final Year Assessment K2
+        start_date:
+          type: object
+          format: timestamp
+          example: "2023-01-01"
+        end_date:
+          type: object
+          format: timestamp
+          example: "2023-01-01"
+        date_enabled:
+          type: object
+          format: timestamp
+          example: "2023-01-01"
+        date_disabled:
+          type: object
+          format: timestamp
+          example: "2023-01-01"
+        weight:
+          type: integer
+          format: int11
+          example: 100
+        academic_term:
+          type: string
+          format: varchar
+          example:
+        assessment_id:
+          type: integer
+          format: int11
+          example: 16
+        education_grade_id:
+          type: integer
+          format: int11
+          example: 171
+        education_grade_code:
+          type: string
+          format: varchar
+          example: "K2"
+        education_grade_name:
+          type: string
+          format: varchar
+          example: "K2"
+        modified_user_id:
+          type: integer
+          format: int
+          example:
+        modified:
+          type: object
+          format: timestamp
+          example:
+        created_user_id:
+          type: integer
+          format: int
+          example: 2
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    AssessmentGradingTypes:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 2
+        code:
+          type: integer
+          format: int11
+          example: 001
+        name:
+          type: string
+          format: varchar
+          example: Marks Grading Scale
+        pass_mark:
+          type: integer
+          format: int11
+          example: 50
+        max:
+          type: integer
+          format: int11
+          example: 100
+        result_type:
+          type: string
+          format: varchar
+          example: MARKS
+        assessment_grading_options:
+          type: string
+          format: varchar
+          example: "id: 2
+                    code: A
+                    name: Excellent
+                    description: null
+                    min: '80.00'
+                    max: '100.00'
+                    order: 1
+                    visible: 1
+                    assessment_grading_type_id: 2
+                    modified_user_id: 1
+                    modified: '2015-07-10 19:24:17'
+                    created_user_id: 1
+                    created: '2015-07-10 19:24:17'"
+        modified_user_id:
+          type: integer
+          format: int
+          example:
+        modified:
+          type: object
+          format: timestamp
+          example:
+        created_user_id:
+          type: integer
+          format: int
+          example: 2
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    AssessmentGradingOptions:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 2
+        code:
+          type: string
+          format: varchar
+          example: A
+        name:
+          type: string
+          format: varchar
+          example: Excellent
+        min:
+          type: integer
+          format: int11
+          example: 80
+        max:
+          type: integer
+          format: int11
+          example: 100
         order:
           type: integer
           format: int11
           example: 1
+        visible:
+          type: integer
+          format: int11
+          example: 1
+        modified_user_id:
+          type: integer
+          format: int
+          example:
+        modified:
+          type: object
+          format: timestamp
+          example:
+        created_user_id:
+          type: integer
+          format: int
+          example: 2
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    StaffBehaviourCategories:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 368
+        name:
+          type: string
+          format: varchar
+          example: Repeated Tardiness
+        order:
+          type: integer
+          format: int11
+          example: 22
         visible:
           type: integer
           format: int11
@@ -6253,11 +6759,11 @@ components:
         modified_user_id:
           type: integer
           format: int
-          example:
+          example: 2
         modified:
           type: object
           format: timestamp
-          example:
+          example: "2023-01-01 12:00:00"
         created_user_id:
           type: integer
           format: int
@@ -6266,5 +6772,175 @@ components:
           type: object
           format: timestamp
           example: "2023-01-01 12:00:00"
-
-    #POCOR-7368 ends
+    StudentBehaviours:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 2
+        description:
+          type: string
+          format: varchar
+          example: Copying of fellow learner's homework . Student has copied a fellow learner's homework
+        action:
+          type: string
+          format: varchar
+          example: Disciplinary actions have been taken
+        date_of_behaviour:
+          type: object
+          format: date
+          example: "2023-01-01"
+        time_of_behaviour:
+          type: object
+          format: date
+          example: "2023-01-01"
+        academic_period_id:
+          type: integer
+          format: int11
+          example: 27
+        student_id:
+          type: integer
+          format: int11
+          example: 1177
+        editable:
+          type: integer
+          format: int11
+          example: 1
+        institution_id:
+          type: integer
+          format: int11
+          example: 6
+        status_id:
+          type: integer
+          format: int11
+          example: 128
+        student_behaviour_category_id:
+          type: integer
+          format: int11
+          example: 237
+        assignee_id:
+          type: integer
+          format: int11
+          example:
+        student_behaviour_classification_id:
+          type: integer
+          format: int11
+          example:
+        modified_user_id:
+          type: integer
+          format: int
+          example: 2
+        modified:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+        created_user_id:
+          type: integer
+          format: int
+          example: 2
+        created:
+          type: object
+          format: timestamp
+          example: "2023-01-01 12:00:00"
+    InstitutionClasses:
+      type: object
+      properties:
+        institution_class_id:
+          type: integer
+          format: int11
+          example: 539
+        institution_class_name:
+          type: string
+          format: varchar
+          example: Primary 1-D
+        institution_id:
+          type: integer
+          format: int11
+          example: 6
+        student_id:
+          type: integer
+          format: int11
+          example: "{13658,
+                13659,
+                14079,
+                14080,
+                14084,
+                14085}"
+    InstitutionSubjects:
+      type: object
+      properties:
+        institution_subject_id:
+          type: integer
+          format: int11
+          example: 129
+        institution_subject_name:
+          type: string
+          format: varchar
+          example: Social Studies
+        education_subject_code:
+          type: string
+          format: varchar
+          example: SSMC
+        education_subject_name:
+          type: string
+          format: varchar
+          example: Social Studies
+        institution_id:
+          type: integer
+          format: int11
+          example: 6
+        student_id:
+          type: integer
+          format: int11
+          example: "{1180,
+                1181,
+                1182,
+                1183,
+                1184,
+                1185,
+                1186,
+                1187,
+                1188,
+                1189,
+                1190,
+                1191,
+                1192,
+                1193,
+                1194,
+                1195,
+                1196,
+                1197,
+                1198,
+                1199,
+                1200,
+                1201,
+                1202,
+                1203,
+                1204,
+                1205,
+                1206,
+                1207,
+                1208,
+                1209,
+                1210,
+                1211,
+                1212,
+                1213,
+                1214,
+                1215,
+                1216,
+                1217,
+                1218,
+                1219,
+                1220,
+                1221,
+                1222,
+                1223,
+                1224,
+                1225,
+                1226,
+                1227,
+                1228,
+                1229}"
+    #POCOR-7546 ends
