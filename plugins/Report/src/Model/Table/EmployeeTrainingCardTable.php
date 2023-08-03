@@ -52,8 +52,7 @@ class EmployeeTrainingCardTable extends AppTable
     {   
         $userIdentities = TableRegistry::get('user_identities');
         $userIdentitiesResult = $userIdentities->find()
-                ->leftJoin(['IdentityTypes' => 'identity_types'],
-                    ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
+                ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
                 ->select([
                     'identity_number' => $userIdentities->aliasField('number'),
                     'identity_type_name' => 'IdentityTypes.name',
