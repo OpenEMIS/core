@@ -715,8 +715,8 @@ class InstitutionCasesTable extends ControllerActionTable
         ->contain(['Institutions', 'Assignees', 'Statuses'])
         ->where([
             $this->Statuses->aliasField('id In') => $workflowCategory,
-            $this->aliasField('modified is ')."null",
-            $this->aliasField('modified_user_id is ')."null",
+            $this->aliasField('modified is null'),
+            $this->aliasField('modified_user_id is null'),
             $sqlConditions
         ]);
 
