@@ -85,7 +85,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         $educationSubjectId = $InstitutionSubjects->get($subjectId)->education_subject_id;
         $Users = $this->Users;
         $StudentStatuses = $this->StudentStatuses;
-        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');//POCOR-6468 starts
+//        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');//POCOR-6468 starts
         return $query
             ->select([
                 $this->aliasField('id'),

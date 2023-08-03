@@ -20,7 +20,7 @@ class LoginController extends Controller
             
             $userCheck = SecurityUsers::where('username', $request->username)->first();
             
-            if($userCheck->super_admin == config('constants.canLogIn.superAdmin') || $userCheck->is_staff == config('constants.canLogIn.isStaff') || $userCheck->is_student == 1){
+            if($userCheck->super_admin == config('constantvalues.canLogIn.superAdmin') || $userCheck->is_staff == config('constantvalues.canLogIn.isStaff') || $userCheck->is_student == 1){
                 $input = $request->only('username', 'password');
                 $token = null;
                 $api_key = $request->api_key??"";

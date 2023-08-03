@@ -2819,114 +2819,120 @@ class NavigationComponent extends Component
      */
     private function getAdminstrationFirstNav()
     {
+         // Start POCOR-7542
         $getDropdownMenu = $this->getAdminstrationSubmenuNav();
-        $navigations = [
-            'SystemSetup' => [
-                'title' => 'System Setup',
-                'parent' => 'Administration',
-                'link' => false,
-            ],
-
-            'Areas.Areas' => [
-                'title' => 'Administrative Boundaries',
-                'parent' => 'SystemSetup',
-                'params' => ['plugin' => 'Area'],
-                'selected' => ['Areas.Areas',
-                    'Areas.Levels',
-                    'Areas.AdministrativeLevels',
-                    'Areas.Administratives']
-            ],
-            'AcademicPeriods.Periods' => [
-                'title' => 'Academic Periods',
-                'parent' => 'SystemSetup',
-                'params' => ['plugin' => 'AcademicPeriod'],
-                'selected' => ['AcademicPeriods.Periods',
-                    'AcademicPeriods.Levels']
-            ],
-            'Educations.Systems' => [
-                'title' => 'Education Structure',
-                'parent' => 'SystemSetup',
-                'params' => ['plugin' => 'Education'],
-                'selected' => ['Educations.Systems',
-                    'Educations.Levels',
-                    'Educations.Cycles',
-                    'Educations.Programmes',
-                    'Educations.Grades',
-                    'Educations.Stages',
-                    'Educations.Subjects',
-                    'Educations.GradeSubjects',
-                    'Educations.Certifications',
-                    'Educations.FieldOfStudies',
-                    'Educations.ProgrammeOrientations', 'Educations.CopySystems']
-            ],
-            'Attendances.StudentMarkTypes' => [
-                'title' => 'Attendances',
-                'parent' => 'SystemSetup',
-                'params' => ['plugin' => 'Attendance'],
-                'selected' => ['Attendances.StudentMarkTypeStatuses']
-            ],
-            'FieldOptions.index' => [
-                'title' => 'Field Options',
-                'parent' => 'SystemSetup',
-                'params' => ['plugin' => 'FieldOption'],
-                'selected' => ['FieldOptions.index',
-                    'FieldOptions.add',
-                    'FieldOptions.view',
-                    'FieldOptions.edit',
-                    'FieldOptions.remove']
-            ],
-            
-            'Labels.index' => [
-                'title' => 'Labels',
-                'parent' => 'SystemSetup',
-                'selected' => ['Labels.index',
-                    'Labels.view',
-                    'Labels.edit']
-            ],
-            
-            'Configurations.index' => [
-                'title' => 'System Configurations',
-                'parent' => 'SystemSetup',
-                'selected' => ['Configurations.index',
-                    'Configurations.add',
-                    'Configurations.view',
-                    'Configurations.edit',
-                    'Themes.index',
-                    'Themes.view',
-                    'Themes.edit']
-            ],
-            // Start POCOR-5188
-            'Manuals.Institutions' => [
-                'title' => 'Manuals',
-                'parent' => 'SystemSetup',
-                'selected' => ['Manuals.Institutions', 'Manuals.view',
-                    'Manuals.edit',
-                    'Manuals.Directory',
-                    'Manuals.Reports',
-                    'Manuals.Personal',
-                    'Manuals.Administration',
-                    'Manuals.Guardian']
-            ],
-            // End POCOR-5188
-           
-            'Notices.index' => [
-                'title' => 'Notices',
-                'parent' => 'SystemSetup',
-                'selected' => ['Notices.index',
-                    'Notices.add',
-                    'Notices.view',
-                    'Notices.edit',
-                    'Notices.delete']
-            ],
-            'Risks.Risks' => [
-                'title' => 'Risks',
-                'parent' => 'SystemSetup',
-                'params' => ['plugin' => 'Risk'],
-                'selected' => ['Risks.Risks']
-            ],
-        ];
-        $menuNavigation = array_merge($navigations,$getDropdownMenu);
-        return $menuNavigation;
+        if(!empty($getDropdownMenu)){
+            $navigations = [
+                'SystemSetup' => [
+                    'title' => 'System Setup',
+                    'parent' => 'Administration',
+                    'link' => false,
+                ],
+    
+                'Areas.Areas' => [
+                    'title' => 'Administrative Boundaries',
+                    'parent' => 'SystemSetup',
+                    'params' => ['plugin' => 'Area'],
+                    'selected' => ['Areas.Areas',
+                        'Areas.Levels',
+                        'Areas.AdministrativeLevels',
+                        'Areas.Administratives']
+                ],
+                'AcademicPeriods.Periods' => [
+                    'title' => 'Academic Periods',
+                    'parent' => 'SystemSetup',
+                    'params' => ['plugin' => 'AcademicPeriod'],
+                    'selected' => ['AcademicPeriods.Periods',
+                        'AcademicPeriods.Levels']
+                ],
+                'Educations.Systems' => [
+                    'title' => 'Education Structure',
+                    'parent' => 'SystemSetup',
+                    'params' => ['plugin' => 'Education'],
+                    'selected' => ['Educations.Systems',
+                        'Educations.Levels',
+                        'Educations.Cycles',
+                        'Educations.Programmes',
+                        'Educations.Grades',
+                        'Educations.Stages',
+                        'Educations.Subjects',
+                        'Educations.GradeSubjects',
+                        'Educations.Certifications',
+                        'Educations.FieldOfStudies',
+                        'Educations.ProgrammeOrientations', 'Educations.CopySystems']
+                ],
+                'Attendances.StudentMarkTypes' => [
+                    'title' => 'Attendances',
+                    'parent' => 'SystemSetup',
+                    'params' => ['plugin' => 'Attendance'],
+                    'selected' => ['Attendances.StudentMarkTypeStatuses']
+                ],
+                'FieldOptions.index' => [
+                    'title' => 'Field Options',
+                    'parent' => 'SystemSetup',
+                    'params' => ['plugin' => 'FieldOption'],
+                    'selected' => ['FieldOptions.index',
+                        'FieldOptions.add',
+                        'FieldOptions.view',
+                        'FieldOptions.edit',
+                        'FieldOptions.remove']
+                ],
+                
+                'Labels.index' => [
+                    'title' => 'Labels',
+                    'parent' => 'SystemSetup',
+                    'selected' => ['Labels.index',
+                        'Labels.view',
+                        'Labels.edit']
+                ],
+                
+                'Configurations.index' => [
+                    'title' => 'System Configurations',
+                    'parent' => 'SystemSetup',
+                    'selected' => ['Configurations.index',
+                        'Configurations.add',
+                        'Configurations.view',
+                        'Configurations.edit',
+                        'Themes.index',
+                        'Themes.view',
+                        'Themes.edit']
+                ],
+                // Start POCOR-5188
+                'Manuals.Institutions' => [
+                    'title' => 'Manuals',
+                    'parent' => 'SystemSetup',
+                    'selected' => ['Manuals.Institutions', 'Manuals.view',
+                        'Manuals.edit',
+                        'Manuals.Directory',
+                        'Manuals.Reports',
+                        'Manuals.Personal',
+                        'Manuals.Administration',
+                        'Manuals.Guardian']
+                ],
+                // End POCOR-5188
+               
+                'Notices.index' => [
+                    'title' => 'Notices',
+                    'parent' => 'SystemSetup',
+                    'selected' => ['Notices.index',
+                        'Notices.add',
+                        'Notices.view',
+                        'Notices.edit',
+                        'Notices.delete']
+                ],
+                'Risks.Risks' => [
+                    'title' => 'Risks',
+                    'parent' => 'SystemSetup',
+                    'params' => ['plugin' => 'Risk'],
+                    'selected' => ['Risks.Risks']
+                ],
+            ];
+            $menuNavigation = array_merge($navigations,$getDropdownMenu);
+            return $menuNavigation;
+        }else{
+            return [];
+        }
+        // End POCOR-7542
     }
 
     //POCOR-7527
