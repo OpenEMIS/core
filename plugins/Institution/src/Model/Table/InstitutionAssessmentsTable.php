@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
+use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 
 class InstitutionAssessmentsTable extends ControllerActionTable {
     public function initialize(array $config) {
@@ -166,57 +167,9 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
         $this->setFieldOrder(['name', 'assessment', 'academic_period_id', 'education_grade', 'subjects', 'total_male_students', 'total_female_students']);
 
+        $this->addExtraButtons($extra);
         // from onUpdateToolbarButtons
-        $btnAttr = [
-            'class' => 'btn btn-xs btn-default icon-big',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false
-        ];
-        $buttons = $extra['indexButtons'];
-        $superAdmin = $session->read('Auth.User.super_admin');
-        $is_connection_is_online = $session->read('is_connection_stablished');
-        if( ($is_connection_is_online == 1) ){
-            $extraButtons = [
-                'archive' => [
-                    // 'AssessmentItemResultsArchived' => ['Institutions', 'AssessmentItemResultsArchived', 'index', 'queryString' => $archive_query_string],
-                    // 'action' => 'AssessmentItemResultsArchived',
-                    // 'icon' => '<i class="fa fa-folder"></i>',
-                    // 'title' => __('Archive'),
-                    // 'queryString' => $archive_query_string
 
-// POCOR-7339-HINDOL temp down
-//                    'plugin' => 'Institutions',
-//                    'controller' => 'Institution',
-//                    'action' => 'AssessmentItemResultsArchived',
-//                    'icon' => '<i class="fa fa-folder"></i>',
-//                    'title' => __('Archive'),
-//                    'queryString' => $archive_query_string
-                    'plugin' => 'Institutions',
-                    'controller' => 'Institution',
-                    'action' => 'AssessmentArchives',
-                    'icon' => '<i class="fa fa-folder"></i>',
-                    'title' => __('Archive'),
-                    'queryString' => $archive_query_string
-                ]
-            ];
-    
-            foreach ($extraButtons as $key => $attr) {
-                if ($this->AccessControl->check($attr['permission'])) {
-                    $button = [
-                        'type' => 'button',
-                        'attr' => $btnAttr,
-                        'url' => ['queryString' => $archive_query_string]
-                    ];
-                    // echo "<pre>";print_r($attr);die;
-                    $button['url']['action'] = $attr['action'];
-                    $button['attr']['title'] = $attr['title'];
-                    $button['label'] = $attr['icon'];
-    
-                    $extra['toolbarButtons'][$key] = $button;
-                }
-            }
-        }
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
@@ -553,4 +506,93 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
         return $class->name;
     }
+
+    /**
+     * common proc to add extra buttons, to call in indexBeforeAction
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @param ArrayObject $extra
+     */
+    private function addExtraButtons(ArrayObject $extra)
+    {
+
+        $toolbarButtons = $extra['toolbarButtons'];
+        $this->addArchiveButton($toolbarButtons);
+    }
+
+    /**
+     * common proc to add an archive button
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @param $toolbarButtons
+     */
+    private function addArchiveButton($toolbarButtons)
+    {
+
+        $is_archive_exists = $this->isArchiveExists();
+        if ($is_archive_exists) {
+            $customButtonName = 'archive';
+            $customButtonUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'AssessmentArchives'
+
+            ];
+            $customButtonLabel = '<i class="fa fa-folder"></i>';
+            $customButtonTitle = __('Archive');
+            $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl);
+        }
+    }
+
+    /**
+     * common proc to check if there is an archive
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @return bool
+     */
+    private function isArchiveExists()
+    {
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+
+        $where = [
+            ['institution_id = '.  $institutionId],
+        ];
+        $table_name = 'assessment_item_results';
+        $is_archive_exists = ArchiveConnections::hasArchiveRecords($table_name, $where);
+        return $is_archive_exists;
+    }
+    /**
+     * @param ArrayObject $toolbarButtons
+     * @param $name
+     * @param $title
+     * @param $label
+     * @param $url
+     * @param null $btnAttr
+     * common proc to generate button
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function generateButton(ArrayObject $toolbarButtons, $name, $title, $label, $url, $btnAttr = null)
+    {
+        if (!$btnAttr) {
+            $btnAttr = $this->getButtonAttr();
+        }
+        $customButton = [];
+        if (array_key_exists('_ext', $url)) {
+            unset($customButton['url']['_ext']);
+        }
+        if (array_key_exists('pass', $url)) {
+            unset($customButton['url']['pass']);
+        }
+        if (array_key_exists('paging', $url)) {
+            unset($customButton['url']['paging']);
+        }
+        if (array_key_exists('filter', $url)) {
+            unset($customButton['url']['filter']);
+        }
+        $customButton['type'] = 'button';
+        $customButton['attr'] = $btnAttr;
+        $customButton['attr']['title'] = $title;
+        $customButton['label'] = $label;
+        $customButton['url'] = $url;
+        $customButton['name'] = $name;
+        $toolbarButtons[$name] = $customButton;
+    }
+
 }
