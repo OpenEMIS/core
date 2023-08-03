@@ -20,6 +20,7 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 		$this->fields['min']['attr']['min'] = 0;
 		$this->fields['min']['required'] = true;
 		$this->fields['min']['length'] = 7;
+		$this->fields['point']['required'] = false;
 
 		$this->addBehavior('Restful.RestfulAccessControl', [
             'OpenEMIS_Classroom' => ['index']
@@ -28,9 +29,9 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 
 	public function getFormFields($action = 'edit') {
 		if ($action=='edit') {
-			return ['code'=>'', 'name'=>'', 'description'=>'', 'min'=>'', 'max'=>'', 'assessment_grading_type_id'=>'', 'id'=>''];
+			return ['code'=>'', 'name'=>'', 'description'=>'', 'min'=>'', 'max'=>'', 'assessment_grading_type_id'=>'', 'id'=>'','point' => ''];
 		} else {
-			return ['code'=>'', 'name'=>'', 'description'=>'', 'min'=>'', 'max'=>''];
+			return ['code'=>'', 'name'=>'', 'description'=>'', 'min'=>'', 'max'=>'','point'=>'']; //POCOR-7318 add point field
 		}
 	}
 
@@ -39,6 +40,7 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 
 		$validator
 			->allowEmpty('code')
+			//->allowEmpty('point')
 			->add('code', 'ruleUniqueCode', [
 			    'rule' => ['checkUniqueCode', 'assessment_grading_type_id'],
 			    'last' => true
@@ -70,6 +72,11 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
                 'ruleRange' => [
                     'rule' => ['range', 0, 9999.99]
                 ]
+			])
+			->allowEmpty('point', [
+				'ruleIsDecimal' => [
+				    'rule' => ['decimal', null],
+				]
 			])
 			;
 		return $validator;
