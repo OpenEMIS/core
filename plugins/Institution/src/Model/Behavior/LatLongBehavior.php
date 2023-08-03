@@ -22,11 +22,11 @@ class LatLongBehavior extends Behavior
         if ($LatLongPermission == self::MANDATORY && $LongPermission == self::MANDATORY) { //POCOR-7045
             $validator = new Validator();
             return $validator
-                ->requirePresence('longitude')
+                ->allowEmpty('longitude')
                 ->add('longitude', 'ruleLongitude', [
                         'rule' => 'checkLongitude'
                 ])
-                ->requirePresence('latitude')
+                ->allowEmpty('latitude')
                 ->add('latitude', 'ruleLatitude', [
                     'rule' => 'checkLatitude'
                 ])
