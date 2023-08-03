@@ -236,8 +236,9 @@ class DataManagementCopyTable extends ControllerActionTable
                 ->where(['academic_period_id ' => $entity->to_academic_period])
                 ->toArray();
             if(!empty($InstitutionShiftsData)){
-                $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
-                return false;
+                if($this->checkshiftCoiedData($entity->from_academic_period,$entity->to_academic_period)){//POCOR-7576-shifts
+                   $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);//POCOR-7576-shifts
+                   return false;}//POCOR-7576-shifts
             }
         }
         if($entity->features == 'Infrastructure'){
@@ -1378,5 +1379,36 @@ class DataManagementCopyTable extends ControllerActionTable
         exec($shellCmd);
         Log::write('debug', $shellCmd);
      }
-    
-}
+    //POCOR-7576-shifts start
+    private function checkshiftCoiedData( $copyFrom,$copyTo)
+    {
+        $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+        $copiedRecords = $InstitutionShifts->find()
+                        ->innerJoin(
+                                    ['InstitutionShifts1' => 'institution_shifts'],
+                                    [
+                                        $InstitutionShifts->aliasField('institution_id') . ' = InstitutionShifts1.institution_id',
+                                        $InstitutionShifts->aliasField('location_institution_id') . ' = InstitutionShifts1.location_institution_id',
+                                        $InstitutionShifts->aliasField('shift_option_id') . ' = InstitutionShifts1.shift_option_id',
+                                        $InstitutionShifts->aliasField('start_time') . ' = InstitutionShifts1.start_time',
+                                        $InstitutionShifts->aliasField('end_time') . ' = InstitutionShifts1.end_time'
+                                    ]
+                        )
+                        ->where([
+                                    $InstitutionShifts->aliasField('academic_period_id') => $copyFrom,
+                                    'InstitutionShifts1.academic_period_id' => $copyTo,
+                        ])
+                        ->count();
+           
+        $allRecords= $InstitutionShifts->find()
+                                  ->where([$InstitutionShifts->aliasField('academic_period_id') => $copyFrom])
+                                  ->count();
+        if($copiedRecords<$allRecords){
+                return false;
+        }
+        return true;
+    }
+     //POCOR-7576-shifts end
+ }
+
+
