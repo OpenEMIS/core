@@ -37,7 +37,7 @@ class POCOR6172 extends AbstractMigration
         'multiple_institutions_student_enrollment', '
         Student Settings', 
         'Multiple Institutions Student Enrollment', 
-        '1', 
+        '0', 
         '', 
         '0',
         1, 
