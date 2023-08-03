@@ -11,8 +11,8 @@ class POCOR7462 extends AbstractMigration
 
         // alerts
         $alertData = [
-            'name' => 'Cases',
-            'process_name' => 'AlertCases',
+            'name' => 'CaseEscalation',
+            'process_name' => 'AlertCaseEscalation',
             'created_user_id' => 1,
             'created' => $today,
             'frequency'=>'Daily'
@@ -23,8 +23,7 @@ class POCOR7462 extends AbstractMigration
 
     public function down()
     {
-      
-    $this->execute('DROP TABLE IF EXISTS `alerts`');
-    $this->execute('RENAME TABLE `zz_7462_alerts` TO `alerts`');
+       $this->execute('DROP TABLE IF EXISTS `alerts`');
+       $this->execute('RENAME TABLE `zz_7462_alerts` TO `alerts`');
     }
 }
