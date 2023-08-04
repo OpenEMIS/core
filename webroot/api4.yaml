@@ -3259,34 +3259,69 @@ paths:
         summary: Add Textbooks
         description: Multiple values can be provided with comma separated strings
         parameters:
-          - name: institution_id
-            in: query
-            description: Add Institution id to filter
-            required: true
-            schema:
-              type: integer
-              format: int
           - name: academic_period_id
             in: query
             description: This is to filter the results based on the academic_period_id
-            required: false
+            required: true
+            schema:
+              type: integer
+          - name: title
+            in: query
+            description: This is the title of the textbook.
+            required: true
+            schema:
+              type: string
+          - name: year_published
+            in: query
+            description: This is year in which the textbook is published.
+            required: true
             schema:
               type: integer
           - name: education_grade_id
             in: query
             description: This is to filter the results based on the education_grade_id
-            required: false
+            required: true
             schema:
               type: integer
           - name: education_subject_id
             in: query
             description: This is to filter the results based on the education_subject_id
-            required: false
+            required: true
             schema:
               type: integer
-          - name: textbook_id
+          - name: code
             in: query
-            description: This is to filter the results based on the textbook_id
+            description: This is the code of textbook.
+            required: false
+            schema:
+              type: string
+          - name: publisher
+            in: query
+            description: This is the publisher of textbook.
+            required: false
+            schema:
+              type: string
+          - name: ISBN
+            in: query
+            description: This is the ISBN of textbook.
+            required: false
+            schema:
+              type: string
+          - name: author
+            in: query
+            description: This is the author of textbook.
+            required: false
+            schema:
+              type: string
+          - name: expiry_date
+            in: query
+            description: This is the expiry date of textbook.
+            required: false
+            schema:
+              type: string
+          - name: textbook_dimension_id
+            in: query
+            description: This is the textbook dimension id of textbook.
             required: false
             schema:
               type: integer
@@ -3338,6 +3373,36 @@ paths:
             schema:
               type: integer
               format: int
+          - name: code
+            in: query
+            description: This is the code of textbook.
+            required: false
+            schema:
+              type: string
+          - name: comment
+            in: query
+            description: This is the comment of textbook.
+            required: false
+            schema:
+              type: string
+          - name: textbook_status_id 
+            in: query
+            description: This is the textbook status id of textbook.
+            required: false
+            schema:
+              type: integer
+          - name: textbook_condition_id 
+            in: query
+            description: This is the textbook condition id of textbook.
+            required: false
+            schema:
+              type: integer
+          - name: security_user_id  
+            in: query
+            description: This is the security user id.
+            required: false
+            schema:
+              type: integer
         responses:
           '200':
             description: successful operation
