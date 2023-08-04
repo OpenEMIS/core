@@ -54,9 +54,8 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             return AssessmentsTable.get(assessmentId).ajax({defer: true});
         },
 
-        getAcademicPeriod: function()
-        {
-            var success = function(response, deferred) {
+        getAcademicPeriod: function () {
+            var success = function (response, deferred) {
                 var terms = response.data.data;
 
                 if (angular.isObject(terms) && terms.length > 0) {
@@ -213,7 +212,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     deferred.resolve(response);
                 }, handleError);
 
-            function checkAllMyHomeSecondaryPermissions () {
+            function checkAllMyHomeSecondaryPermissions() {
                 // console.log('checkAllMyHomeSecondaryPermissions');
                 var promises = [];
 
@@ -228,14 +227,14 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                 return $q.all(promises);
             };
 
-            function handleGetPermissions (response) {
+            function handleGetPermissions(response) {
                 // console.log('handleGetPermissions');
                 is_super_admin = response[0];
                 security_user_id = response[1];
                 return true;
             };
 
-            function handleError (error) {
+            function handleError(error) {
                 console.log('error:');
                 console.log(error);
                 deferred.reject(error);
@@ -463,7 +462,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         };
                     }
 
-                    columnDef = ResultsSvc.renderMarks(allowEdit, columnDef, extra,period, _results);  //POCOR-7550
+                    columnDef = ResultsSvc.renderMarks(allowEdit, columnDef, extra, period, _results);  //POCOR-7550
                 } else if (isGradesType) {
                     if (subject.grading_type != null) {
                         var gradingOptions = {
@@ -540,7 +539,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
             return {data: columnDefs};
         },
 
-        renderMarks: function (allowEdit, cols, extra,period, _results) {  //POCOR-7550 start
+        renderMarks: function (allowEdit, cols, extra, period, _results) {  //POCOR-7550 start
             var minMark = extra.minMark;
             var passMark = extra.passMark;
             var maxMark = extra.maxMark;
@@ -571,13 +570,13 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                     cellClassRules: {
                         'oe-cell-highlight': function (params) {
                             var studentStatusId = params.data.student_status_id;
-                              //POCOR-7550 start
-                            if(period.editable_student_statuses==0){                               
-                            return studentStatusId == enrolledStatus
-                            }
-                            else{
+                            //POCOR-7550 start
+                            if (period.editable_student_statuses == 0) {
+                                return studentStatusId == enrolledStatus
+                            } else {
                                 return 1;
-                            };
+                            }
+                            ;
                             //POCOR-7550 end
                         },
                         'oe-cell-error': function (params) {
@@ -588,12 +587,11 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                         // only enrolled student is editable
                         studentStatusId = params.node.data.student_status_id;
                         //POCOR-7550 start
-                        if(period.editable_student_statuses==0){                               
+                        if (period.editable_student_statuses == 0) {
                             return studentStatusId == enrolledStatus
-                            }
-                            else{
-                                return 1;
-                            }
+                        } else {
+                            return 1;
+                        }
                         //POCOR-7550 end
                     },
                     newValueHandler: function (params) {
@@ -1105,8 +1103,12 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                                 };
                                 var periodWeight = 0;
                                 angular.forEach(periods, function (period, key) {
-                                    var resultTypeByPeriod = gradingTypes[period.id].assessment_grading_type.result_type;
-
+                                    // console.log(period.id)
+                                    try {
+                                        var resultTypeByPeriod = gradingTypes[period.id].assessment_grading_type.result_type;
+                                    } catch (a) {
+                                        resultTypeByPeriod = resultTypes.MARKS;
+                                    }
                                     // if is GRADES type, set weight to empty so that will not be included when calculate total marks.
                                     if (resultTypeByPeriod == resultTypes.MARKS) {
                                         periodWeight = parseFloat(periodObj[parseInt(period.id)]['weight']);
@@ -1126,9 +1128,12 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                             if (isMarksType) {
                                 // console.log("isMarksType");
                                 var marks = parseFloat(subjectStudent.mark);
+                                studentResults['period_' + parseInt(assessmentPeriodId)] = 0;
                                 if (!isNaN(marks)) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = marks;
                                 }
+
+
                             } else if (isGradesType) {
                                 // console.log("isGradesType");
                                 if (subjectStudent.assessment_grading_option_id != null && subjectStudent.mark == null) {

@@ -195,7 +195,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $this->field('openemis_no', ['visible' => ['index'=>true,'view' => false]]);
         
         $this->setFieldOrder([
-        'academic_period_id','student_name','openemis_no','education_grade','institution_class','curricular_category', 'institution_curricular_id', 'curricular_position_id']);
+        'academic_period_id','student_name','openemis_no','education_grade','institution_class','curricular_category','type', 'institution_curricular_id', 'curricular_position_id','start_date','end_date']); //POCOR-7604
                
     }
 

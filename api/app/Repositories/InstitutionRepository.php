@@ -63,7 +63,7 @@ class InstitutionRepository extends Controller
         try {
             $params = $request->all();
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -125,7 +125,7 @@ class InstitutionRepository extends Controller
             $params = $request->all();
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -156,7 +156,7 @@ class InstitutionRepository extends Controller
         try {
             $params = $request->all();
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -226,7 +226,7 @@ class InstitutionRepository extends Controller
                 $classes = $classes->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -270,7 +270,7 @@ class InstitutionRepository extends Controller
                 $institutionClasses = $institutionClasses->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -341,7 +341,7 @@ class InstitutionRepository extends Controller
                 $subjects = $subjects->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -389,7 +389,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -453,7 +453,7 @@ class InstitutionRepository extends Controller
                 $shifts = $shifts->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -492,7 +492,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -552,7 +552,7 @@ class InstitutionRepository extends Controller
                 $areas = $areas->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -595,7 +595,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -661,7 +661,7 @@ class InstitutionRepository extends Controller
                 $summaries = $summaries->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -700,7 +700,7 @@ class InstitutionRepository extends Controller
                 $summaries = $summaries->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -739,7 +739,7 @@ class InstitutionRepository extends Controller
                 $summaries = $summaries->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -778,7 +778,7 @@ class InstitutionRepository extends Controller
                 $summaries = $summaries->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -835,7 +835,7 @@ class InstitutionRepository extends Controller
                 $nationalitySummaries = $nationalitySummaries->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -875,7 +875,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -915,7 +915,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -955,7 +955,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -994,7 +994,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1029,7 +1029,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1064,7 +1064,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1120,7 +1120,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1155,7 +1155,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1226,7 +1226,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1285,7 +1285,7 @@ class InstitutionRepository extends Controller
                 $roomType = $roomType->where("academic_period_id", $academic_period_id);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1319,7 +1319,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1856,7 +1856,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1889,7 +1889,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1922,7 +1922,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -2156,7 +2156,7 @@ class InstitutionRepository extends Controller
                 $params = $request->all();
 
 
-                $limit = config('constants.defaultPaginateLimit');
+                $limit = config('constantvalues.defaultPaginateLimit');
 
                 if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -2189,7 +2189,7 @@ class InstitutionRepository extends Controller
 
                 $mealProgrammes = new MealProgrammes();
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -2255,8 +2255,13 @@ class InstitutionRepository extends Controller
             }
 
             $check2 = $delete2->exists();
+
+            if(!$check1 && !$check2){
+                DB::commit();
+                return 2;
+            }
             
-            if($check1 && $check2){
+            if($check1 || $check2){
                 $delete1 = $delete1->delete();
                 $delete2 = $delete2->delete();
 
