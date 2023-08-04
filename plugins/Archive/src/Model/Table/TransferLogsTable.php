@@ -168,12 +168,12 @@ class TransferLogsTable extends ControllerActionTable
      */
     public static function hideAcademicPeriod()
     {
-        $answer = false;
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $question = $ConfigItems->value('archiving_hides_academic_period');
-        if ($question) {
-            $answer = ($question == "1") ? true : false;
-        }
+        $answer = true;
+//        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+//        $question = $ConfigItems->value('archiving_hides_academic_period');
+//        if ($question) {
+//            $answer = ($question == "1") ? true : false;
+//        }
         return $answer;
     }
 
@@ -184,12 +184,12 @@ class TransferLogsTable extends ControllerActionTable
      */
     public static function disableAcademicPeriod()
     {
-        $answer = false;
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $question = $ConfigItems->value('archiving_disables_academic_period');
-        if ($question) {
-            $answer = ($question == "1") ? true : false;
-        }
+        $answer = true;
+//        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+//        $question = $ConfigItems->value('archiving_disables_academic_period');
+//        if ($question) {
+//            $answer = ($question == "1") ? true : false;
+//        }
         return $answer;
     }
 
