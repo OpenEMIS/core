@@ -1,7 +1,7 @@
 <?php
     $alias = $ControllerAction['table']->alias();
     if ($ControllerAction['action'] == 'add') {
-        $this->Form->unlockField('Examinations.examination_items');
+        $this->Form->unlockField('Examinations.examination_subjects');
     }
 ?>
 
@@ -13,9 +13,9 @@
                 <th><?= __('Name') ?></th>
                 <th><?= __('Education Subject') ?></th>
             </thead>
-            <?php if (isset($data['examination_items'])) : ?>
+            <?php if (isset($data['examination_subjects'])) : ?>
                 <tbody>
-                    <?php foreach ($data['examination_items'] as $i => $item) : ?>
+                    <?php foreach ($data['examination_subjects'] as $i => $item) : ?>
                         <tr>
                             <td><?= $item->code; ?></td>
                             <td><?= $item->name; ?></td>
