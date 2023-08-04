@@ -25,6 +25,7 @@ use App\Models\WorkflowFilters;
 use App\Models\SurveyStatusPeriods;
 use App\Models\InstitutionSurveyAnswers;
 use App\Models\InstitutionSurveyTableCells;
+use App\Models\SurveyQuestionChoices;
 
 
 define("NS_XHTML", "http://www.w3.org/1999/xhtml");
@@ -1096,7 +1097,7 @@ class SurveyRepository extends Controller
                 $institutionResult = Institutions::where(DB::raw('lower(code)'), strtolower($institutionCode))->first();
                 
                 if (empty($institutionResult)) {
-                    return 1; //Invalid institution code
+                    return 0; //Invalid institution code
                 }
 
                 $institutionId = $institutionResult->id;
@@ -1178,8 +1179,10 @@ class SurveyRepository extends Controller
 
                         $extra = [];
 
-                        $extra['model'] = "InstitutionSurveyAnswers";
-                        $extra['cellModel'] = "InstitutionSurveyTableCells";
+                        //$extra['model'] = "InstitutionSurveyAnswers";
+                        $extra['model'] = "institution_survey_answers";
+                        //$extra['cellModel'] = "InstitutionSurveyTableCells";
+                        $extra['cellModel'] = "institution_survey_table_cells";
                         $extra['data'] = $responseData;
                         $extra['value'] = trim($responseValue);
                         $extra['recordKey'] = "institution_survey_id";
@@ -1199,13 +1202,10 @@ class SurveyRepository extends Controller
 
             }
 
-
-            dd("stop");
             DB::commit();
-            
+            return 1;
         } catch (\Exception $e) {
             DB::rollback();
-            dd($e);
             Log::error(
                 'Failed to upload survey xform.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1238,17 +1238,36 @@ class SurveyRepository extends Controller
         return $show;
     }
 
+
+    private function deleteTableCell($data, $extra)
+    {
+        $cellModel = $extra['cellModel'];
+        $recordKey = $extra['recordKey'];
+        $fieldKey = $extra['fieldKey'];
+        
+        /*$cellModel->deleteAll([
+            $cellModel->aliasField($recordKey) => $data[$recordKey],
+            $cellModel->aliasField($fieldKey) => $data[$fieldKey]
+        ]);*/
+
+        $delete = DB::table($cellModel)->where($recordKey, $data[$recordKey])->where($fieldKey, $data[$fieldKey])->delete();
+        
+    }
+
+
+
     private function deleteFieldValue($data, $extra)
     {
         $model = $extra['model'];
         $recordKey = $extra['recordKey'];
         $fieldKey = $extra['fieldKey'];
-        dd("sss");
-        $delete = $model::where($recordKey, $data[$recordKey])->where($fieldKey, $data[$fieldKey])->delete();
+        
         /*$model->deleteAll([
             $model->aliasField($recordKey) => $data[$recordKey],
             $model->aliasField($fieldKey) => $data[$fieldKey]
         ]);*/
+
+        $delete = DB::table($model)->where($recordKey, $data[$recordKey])->where($fieldKey, $data[$fieldKey])->delete();
     }
 
     private function processUpload($key, $extra)
@@ -1259,7 +1278,7 @@ class SurveyRepository extends Controller
         $this->deleteFieldValue($data, $extra);
         if (strlen($value) != 0) {
             $data[$key] = $value;
-            dd($data, $extra);
+            
             $this->saveFieldValue($data, $extra);
         }
     }
@@ -1268,10 +1287,12 @@ class SurveyRepository extends Controller
     {
         $model = $extra['model'];
 
-        $answerEntity = $model->newEntity($answerData);
+        /*$answerEntity = $model->newEntity($answerData);
         if (!$model->save($answerEntity)) {
             Log::write('debug', $answerEntity->errors());
-        }
+        }*/
+
+        $store = DB::table($model)->insert($answerData);
     }
 
     private function uploadText($field, $entity, $extra)
@@ -1284,9 +1305,9 @@ class SurveyRepository extends Controller
         $data = $extra['data'];
         $value = $extra['value'];
         $fieldEntity = $extra['fieldEntity'];
-
+        
         $cellValueColumn = 'text_value';
-        if ($fieldEntity->has('params') && !empty($fieldEntity->params)) {
+        if (isset($fieldEntity->params) && !empty($fieldEntity->params)) {
             $params = json_decode($fieldEntity->params, true);
 
             if (array_key_exists('number', $params)) {
@@ -1295,18 +1316,20 @@ class SurveyRepository extends Controller
                 $cellValueColumn = 'decimal_value';
             }
         }
-
+        ;
         $this->deleteTableCell($data, $extra);
         foreach ($field->children() as $row => $rowObj) {
+
             $rowId = $rowObj->attributes()->id->__toString();
             foreach ($rowObj->children() as $col => $colObj) {
+
                 $colId = $colObj->attributes()->id->__toString();
                 if ($colId != 0) {
                     $cellValue = urldecode($colObj->__toString());
                     if (strlen($cellValue) != 0) {
                         $cellData = array_merge($data, [
-                            $this->tableColumnKey => $colId,
-                            $this->tableRowKey => $rowId,
+                            "survey_table_column_id" => $colId,
+                            "survey_table_row_id" => $rowId,
                             'text_value' => '',
                             'number_value' => '',
                             'decimal_value' => ''
@@ -1318,6 +1341,56 @@ class SurveyRepository extends Controller
                 }
             }
         }
+    }
+
+
+    private function uploadNumber($field, $entity, $extra)
+    {
+        $this->processUpload('number_value', $extra);
+    }
+
+    private function uploadDecimal($field, $entity, $extra)
+    {
+        $this->processUpload('decimal_value', $extra);
+    }
+
+    private function uploadTextarea($field, $entity, $extra)
+    {
+        $this->processUpload('textarea_value', $extra);
+    }
+
+    private function uploadDropdown($field, $entity, $extra)
+    {
+        $this->processUpload('number_value', $extra);
+    }
+
+
+    private function uploadCheckbox($field, $entity, $extra)
+    {
+        $data = $extra['data'];
+        $value = $extra['value'];
+
+        $this->deleteFieldValue($data, $extra);
+        if (strlen($value) != 0) {
+            $checkboxValues = explode(" ", $value);
+            foreach ($checkboxValues as $checkboxKey => $checkboxValue) {
+                $data['number_value'] = $checkboxValue;
+                $this->saveFieldValue($data, $extra);
+            }
+        }
+    }
+
+
+    private function saveTableCell($cellData, $extra)
+    {
+        $cellModel = $extra['cellModel'];
+
+        /*$cellEntity = $cellModel->newEntity($cellData);
+        if (!$cellModel->save($cellEntity)) {
+            Log::write('debug', $cellEntity->errors());
+        }*/
+
+        $store = DB::table($cellModel)->insert($cellData);
     }
 
 
