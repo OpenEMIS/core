@@ -1,4 +1,5 @@
 <?php
+
 namespace Student\Controller;
 
 use ArrayObject;
@@ -64,13 +65,13 @@ class StudentsController extends AppController
 
         $this->ControllerAction->model('Institution.StudentUser');
         $this->ControllerAction->models = [
-            'Accounts'          => ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
-            'Nationalities'     => ['className' => 'User.Nationalities'],
+            'Accounts' => ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
+            'Nationalities' => ['className' => 'User.Nationalities'],
             // 'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view','remove']],
-            'Behaviours'        => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
-            'Extracurriculars'  => ['className' => 'Student.Extracurriculars',  'actions' => ['index', 'add', 'edit', 'remove','view']],//POCOR-6700
-            'History'           => ['className' => 'User.UserActivities', 'actions' => ['index']],
-            'ImportStudents'    => ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
+            'Behaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
+            'Extracurriculars' => ['className' => 'Student.Extracurriculars', 'actions' => ['index', 'add', 'edit', 'remove', 'view']],//POCOR-6700
+            'History' => ['className' => 'User.UserActivities', 'actions' => ['index']],
+            'ImportStudents' => ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
         ];
 
         $this->loadComponent('User.Image');
@@ -88,20 +89,29 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']);
     }
+
+    public function Qualifications()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']);
+    }
+
     //POCOR-7528 start
     public function Licenses()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']);
     }
+
     //POCOR-7528 end
     public function StudentFees()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']);
     }
+
     public function Classes()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']);
     }
+
     public function Subjects()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']);
@@ -109,9 +119,10 @@ class StudentsController extends AppController
 
     //POCOR-7474-HINDOL TYPO FIX
     public function Assessments()
-    {	
+    {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.CurrentAssessments']);
     }
+
     public function AssessmentsArchived()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.ArchivedAssessments']);
@@ -121,57 +132,69 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']);
     }
+
     public function Languages()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']);
     }
+
     public function Contacts()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']);
     }
+
     public function BankAccounts()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']);
     }
+
     public function Identities()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']);
     }
+
     public function Awards()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']);
     }
+
     public function Guardians()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']);
     }
+
     public function GuardianUser()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']);
     }
+
     public function Attachments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']);
     }
+
     public function ReportCards()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentReportCards']);
     }
+
     public function Demographic()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']);
     }
+
     public function StudentTransport()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentTransport']);
     }
+
     public function Outcomes()
     {
         $comment = $this->request->query['comment'];
-        if(!empty($comment) && $comment == 1){
+        if (!empty($comment) && $comment == 1) {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
 
-        }else{
+        } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
         }
     }
@@ -191,7 +214,7 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionMealStudents']);
     }
 
-	public function Profiles()
+    public function Profiles()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Profiles']);
     }
@@ -201,30 +224,37 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']);
     }
+
     public function HealthAllergies()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Allergies']);
     }
+
     public function HealthConsultations()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Consultations']);
     }
+
     public function HealthFamilies()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Families']);
     }
+
     public function HealthHistories()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Histories']);
     }
+
     public function HealthImmunizations()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Immunizations']);
     }
+
     public function HealthMedications()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Medications']);
     }
+
     public function HealthTests()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
@@ -236,22 +266,27 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsReferrals']);
     }
+
     public function SpecialNeedsAssessments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsAssessments']);
     }
+
     public function SpecialNeedsServices()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsServices']);
     }
+
     public function SpecialNeedsDevices()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDevices']);
     }
+
     public function SpecialNeedsPlans()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
     }
+
     public function SpecialNeedsDiagnostics()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDiagnostics']);
@@ -263,10 +298,12 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentVisitRequests']);
     }
+
     public function StudentVisits()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentVisits']);
     }
+
     // Visits - END
 
     public function Competencies()
@@ -288,6 +325,7 @@ class StudentsController extends AppController
         }
 
     }
+
     // End
 
     public function AssessmentItemResultsArchived()
@@ -308,7 +346,7 @@ class StudentsController extends AppController
 
     public function changeStudentHealthHeader($model, $modelAlias, $userType)
     {
-        if($this->request->param('action') == 'StudentBodyMasses'){
+        if ($this->request->param('action') == 'StudentBodyMasses') {
             $session = $this->request->session();
             $institutionId = 0;
             if ($session->check('Institution.Institutions.id')) {
@@ -322,7 +360,7 @@ class StudentsController extends AppController
                 $this->Navigation->addCrumb(__('Body Mass'));
                 $this->set('contentHeader', $header);
             }
-        } else if($this->request->param('action') == 'StudentInsurances'){
+        } else if ($this->request->param('action') == 'StudentInsurances') {
             $session = $this->request->session();
             $institutionId = 0;
             if ($session->check('Institution.Institutions.id')) {
@@ -368,7 +406,8 @@ class StudentsController extends AppController
         }
     }
 
-    public function InstitutionStudentAbsencesArchived(){
+    public function InstitutionStudentAbsencesArchived()
+    {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.InstitutionStudentAbsencesArchived']);
     }
 
@@ -390,15 +429,15 @@ class StudentsController extends AppController
 
             // Start POCOR-5188
             $manualTable = TableRegistry::get('Manuals');
-            $ManualContent =   $manualTable->find()->select(['url'])->where([
-                    $manualTable->aliasField('function') => 'Examinations',
-                    $manualTable->aliasField('module') => 'Institutions',
-                    $manualTable->aliasField('category') => 'Students - Academic',
-                    ])->first();
-            
+            $ManualContent = $manualTable->find()->select(['url'])->where([
+                $manualTable->aliasField('function') => 'Examinations',
+                $manualTable->aliasField('module') => 'Institutions',
+                $manualTable->aliasField('category') => 'Students - Academic',
+            ])->first();
+
             if (!empty($ManualContent['url'])) {
-                $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
-            }else{
+                $this->set('is_manual_exist', ['status' => 'success', 'url' => $ManualContent['url']]);
+            } else {
                 $this->set('is_manual_exist', []);
             }
             // End POCOR-5188
@@ -406,6 +445,7 @@ class StudentsController extends AppController
             $this->set('ngController', 'StudentExaminationResultsCtrl as StudentExaminationResultsController');
         }
     }
+
     // End
 
     private function attachAngularModules()
@@ -496,7 +536,7 @@ class StudentsController extends AppController
                         break;
                     }
                 }
-                if (! $enrolledStatus) {
+                if (!$enrolledStatus) {
                     if ($model->alias() != 'BankAccounts' && $model->alias() != 'StudentFees') {
                         $this->ControllerAction->removeDefaultActions(['add', 'edit', 'remove']);
                     }
@@ -515,7 +555,7 @@ class StudentsController extends AppController
 
             $alias = $model->alias;
             //POCOR-5890 starts
-            if($model->getHeader($alias) == 'HealthImmunizations'){
+            if ($model->getHeader($alias) == 'HealthImmunizations') {
                 $alias = __('Vaccinations');
             }
             //POCOR-5890 ends
@@ -544,26 +584,30 @@ class StudentsController extends AppController
                         return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
                     }
                 }
-            } else if ($model->hasField('student_id')) {
-                $model->fields['student_id']['type'] = 'hidden';
-                $model->fields['student_id']['value'] = $userId;
+            } else
+                if ($model->hasField('staff_id')) {
+                    $model->fields['staff_id']['type'] = 'hidden';
+                    $model->fields['staff_id']['value'] = $userId;
+                } else if ($model->hasField('student_id')) {
+                    $model->fields['student_id']['type'] = 'hidden';
+                    $model->fields['student_id']['value'] = $userId;
 
-                if (count($this->request->pass) > 1) {
-                    $modelId = $this->request->pass[1]; // id of the sub model
+                    if (count($this->request->pass) > 1) {
+                        $modelId = $this->request->pass[1]; // id of the sub model
 
-                    $ids = $this->ControllerAction->paramsDecode($modelId);
-                    $idKey = $this->ControllerAction->getIdKeys($model, $ids);
-                    $idKey[$model->aliasField('student_id')] = $userId;
+                        $ids = $this->ControllerAction->paramsDecode($modelId);
+                        $idKey = $this->ControllerAction->getIdKeys($model, $ids);
+                        $idKey[$model->aliasField('student_id')] = $userId;
 
-                    /**
-                     * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
-                     */
-                    if (!$model->exists($idKey)) {
-                        $this->Alert->warning('general.notExists');
-                        return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
+                        /**
+                         * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+                         */
+                        if (!$model->exists($idKey)) {
+                            $this->Alert->warning('general.notExists');
+                            return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
+                        }
                     }
                 }
-            }
         } else {
             if ($model->alias() == 'ImportStudents') {
                 $this->Navigation->addCrumb($model->getHeader($model->alias()));
@@ -589,6 +633,9 @@ class StudentsController extends AppController
                 } else if ($model->hasField('student_id')) {
                     $userId = $session->read('Student.Students.id');
                     $query->where([$model->aliasField('student_id') => $userId]);
+                }  else if ($model->hasField('staff_id')) {
+                    $userId = $session->read('Student.Students.id');
+                    $query->where([$model->aliasField('staff_id') => $userId]);
                 }
             } else {
                 $this->Alert->warning('general.noData');
@@ -630,7 +677,7 @@ class StudentsController extends AppController
     // }
 
     public function getUserTabElements($options = [])
-    {   
+    {
         $session = $this->request->session();
         $tabElements = $session->read('Institution.Students.tabElements');
 
@@ -673,14 +720,14 @@ class StudentsController extends AppController
                     'action' => 'Guardians',
                     'view',
                     $this->paramsEncode(['id' => $StudentGuardianId])
-                    ];
+                ];
             } elseif ($key == 'GuardianUser') {
                 $tabElements[$key]['url'] = ['plugin' => 'Student',
                     'controller' => 'Students',
                     'action' => 'GuardianUser',
                     'view',
                     $this->paramsEncode(['id' => $id, 'StudentGuardians.id' => $StudentGuardianId])
-                    ];
+                ];
             } elseif ($key == 'Accounts') {
                 $tabElements[$key]['url']['plugin'] = 'Guardian';
                 $tabElements[$key]['url']['controller'] = 'Guardians';
@@ -689,9 +736,9 @@ class StudentsController extends AppController
                 $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
             } else if ($key == 'Comments') {
                 $url = [
-                        'plugin' => 'Guardian',
-                        'controller' => 'GuardianComments',
-                        'action' => 'index'
+                    'plugin' => 'Guardian',
+                    'controller' => 'GuardianComments',
+                    'action' => 'index'
                 ];
                 $tabElements[$key]['url'] = $this->ControllerAction->setQueryString($url, ['security_user_id' => $id]);
             } elseif ($key == 'UserNationalities') {
@@ -731,16 +778,19 @@ class StudentsController extends AppController
     {
         $tabElements = [];
         $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
+
         $professionalTabElements = [
             'Employments' => ['text' => __('Employments')],
+            'Qualifications' => ['text' => __('Qualifications')],
             'Licenses' => ['text' => __('Licenses')], //POCOR-7528
-
         ];
 
         $tabElements = array_merge($tabElements, $professionalTabElements);
 
         foreach ($tabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+            {
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+            }
         }
         return $this->TabPermission->checkTabPermission($tabElements);
     }
@@ -757,7 +807,7 @@ class StudentsController extends AppController
         $tabElements = array_merge($tabElements, $studentTabElements);
 
         foreach ($studentTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
+            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
         }
         return $this->TabPermission->checkTabPermission($tabElements);
     }
@@ -771,7 +821,7 @@ class StudentsController extends AppController
 
     public function getStudentGuardianTabElements($options = [])
     {
-        $type = (array_key_exists('type', $options))? $options['type']: null;
+        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
         $plugin = $this->plugin;
         $name = $this->name;
         $tabElements = [
@@ -838,48 +888,48 @@ class StudentsController extends AppController
         if ($session->check('Student.Students.id')) {
             $userId = $session->read('Student.Students.id');
 
-        }else{
+        } else {
             $userId = $this->Auth->user('id');
         }
 
         $InstitutionStudents =
             TableRegistry::get('Institution.InstitutionStudents')
+                ->find()
+                ->where([
+                    'InstitutionStudents.student_id' => $userId
+                ])
+                ->hydrate(false)
+                ->first();
+
+        $institutionId = $InstitutionStudents['institution_id'];
+        $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
+            ->getCurrent();
+
+        $InstitutionClassStudentsResult =
+            TableRegistry::get('Institution.InstitutionClassStudents')
+                ->find()
+                ->where([
+                    'academic_period_id' => $academicPeriodId,
+                    'student_id' => $userId,
+                    'institution_id' => $institutionId
+                ])
+                ->hydrate(false)
+                ->first();
+
+        $institutionClassId = $InstitutionClassStudentsResult['institution_class_id'];
+        $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables')
             ->find()
             ->where([
-                'InstitutionStudents.student_id' => $userId
+                'academic_period_id' => $academicPeriodId,
+                'institution_class_id' => $institutionClassId,
+                'institution_id' => $institutionId,
+                'status' => 2
             ])
             ->hydrate(false)
             ->first();
 
-        $institutionId = $InstitutionStudents['institution_id'];
-        $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
-                ->getCurrent();
-
-        $InstitutionClassStudentsResult =
-                TableRegistry::get('Institution.InstitutionClassStudents')
-                    ->find()
-                    ->where([
-                        'academic_period_id'=>$academicPeriodId,
-                        'student_id' => $userId,
-                        'institution_id' => $institutionId
-                    ])
-                    ->hydrate(false)
-                    ->first();
-
-        $institutionClassId = $InstitutionClassStudentsResult['institution_class_id'];
-        $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables')
-                ->find()
-                ->where([
-                        'academic_period_id'=>$academicPeriodId,
-                        'institution_class_id' => $institutionClassId,
-                        'institution_id' => $institutionId,
-                        'status' => 2
-                    ])
-                ->hydrate(false)
-                ->first();
-
         $this->set('userId', $userId);
-        $timetable_id = (isset($ScheduleTimetables['id']))?$ScheduleTimetables['id']:0;
+        $timetable_id = (isset($ScheduleTimetables['id'])) ? $ScheduleTimetables['id'] : 0;
         $this->set('timetable_id', $timetable_id);
         $this->set('academicPeriodId', $academicPeriodId);
         $this->set('institutionDefaultId', $institutionId);
@@ -887,15 +937,15 @@ class StudentsController extends AppController
 
         // Start POCOR-5188
         $manualTable = TableRegistry::get('Manuals');
-        $ManualContent =   $manualTable->find()->select(['url'])->where([
-                $manualTable->aliasField('function') => 'Students',
-                $manualTable->aliasField('module') => 'Institutions',
-                $manualTable->aliasField('category') => 'Timetable',
-                ])->first();
-        
+        $ManualContent = $manualTable->find()->select(['url'])->where([
+            $manualTable->aliasField('function') => 'Students',
+            $manualTable->aliasField('module') => 'Institutions',
+            $manualTable->aliasField('category') => 'Timetable',
+        ])->first();
+
         if (!empty($ManualContent['url'])) {
-            $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
-        }else{
+            $this->set('is_manual_exist', ['status' => 'success', 'url' => $ManualContent['url']]);
+        } else {
             $this->set('is_manual_exist', []);
         }
         // End POCOR-5188
