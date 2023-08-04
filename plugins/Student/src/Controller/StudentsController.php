@@ -584,11 +584,9 @@ class StudentsController extends AppController
                         return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
                     }
                 }
-            } else
-                if ($model->hasField('staff_id')) {
-                    $model->fields['staff_id']['type'] = 'hidden';
-                    $model->fields['staff_id']['value'] = $userId;
-                } else if ($model->hasField('student_id')) {
+            }
+            else
+                if ($model->hasField('student_id')) {
                     $model->fields['student_id']['type'] = 'hidden';
                     $model->fields['student_id']['value'] = $userId;
 
@@ -607,6 +605,11 @@ class StudentsController extends AppController
                             return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
                         }
                     }
+                }
+                else
+                    if ($model->hasField('staff_id')) {
+                    $model->fields['staff_id']['type'] = 'hidden';
+                    $model->fields['staff_id']['value'] = $userId;
                 }
         } else {
             if ($model->alias() == 'ImportStudents') {
@@ -633,7 +636,7 @@ class StudentsController extends AppController
                 } else if ($model->hasField('student_id')) {
                     $userId = $session->read('Student.Students.id');
                     $query->where([$model->aliasField('student_id') => $userId]);
-                }  else if ($model->hasField('staff_id')) {
+                } else if ($model->hasField('staff_id')) {
                     $userId = $session->read('Student.Students.id');
                     $query->where([$model->aliasField('staff_id') => $userId]);
                 }
