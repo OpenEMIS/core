@@ -12,7 +12,7 @@ use App\Model\Table\ControllerActionTable;
 class ExaminationResultsTable extends ControllerActionTable
 {
     private $fieldPrefix = 'examination_item_';
-    private $examinationItems = null;
+    private $ExaminationSubjects = null;
 
     public function initialize(array $config)
     {
@@ -32,7 +32,7 @@ class ExaminationResultsTable extends ControllerActionTable
             'className' => 'Examination.ExaminationCentresExaminationsSubjects',
             'joinTable' => 'examination_centres_examinations_subjects_students',
             'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
-            'targetForeignKey' => ['examination_centre_id', 'examination_item_id'],
+            'targetForeignKey' => ['examination_centre_id', 'examination_subject_id'],
             'through' => 'Examination.ExaminationCentresExaminationsSubjectsStudents',
             'dependent' => true,
             'cascadeCallbacks' => true
@@ -68,8 +68,8 @@ class ExaminationResultsTable extends ControllerActionTable
         if ($this->startsWith($field, $this->fieldPrefix)) {
             $examinationItemId = str_replace($this->fieldPrefix, "", $field);
 
-            if (!is_null($this->examinationItems) && array_key_exists($examinationItemId, $this->examinationItems)) {
-                $examinationItemEntity = $this->examinationItems[$examinationItemId];
+            if (!is_null($this->ExaminationSubjects) && array_key_exists($examinationItemId, $this->ExaminationSubjects)) {
+                $examinationItemEntity = $this->ExaminationSubjects[$examinationItemId];
                 $label = $examinationItemEntity->code;
                 $label .= '&nbsp;&nbsp;<i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="top" uib-tooltip="'.$examinationItemEntity->name.'" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
 
@@ -152,7 +152,7 @@ class ExaminationResultsTable extends ControllerActionTable
             $studentExaminationResults = $this->getStudentExaminationResults($academicPeriodId, $examinationId, $institutionId, $studentId);
 
             foreach ($studentExaminationResults as $key => $obj) {
-                $examItemObj = $obj->_matchingData['ExaminationItems'];
+                $examItemObj = $obj->_matchingData['ExaminationSubjects'];
                 $subjectObj = $obj->_matchingData['EducationSubjects'];
                 $gradingOptionObj = $obj->_matchingData['ExaminationGradingOptions'];
                 $gradingTypeId = $gradingOptionObj->examination_grading_type_id;
@@ -207,8 +207,8 @@ class ExaminationResultsTable extends ControllerActionTable
 
             if ($selectedExamination != '-1') {
                 // Start: add each examination item as new columns
-                $this->examinationItems = $this->getExaminationItems($selectedExamination);
-                foreach ($this->examinationItems as $examItemKey => $examItemObj) {
+                $this->ExaminationSubjects = $this->getExaminationSubjects($selectedExamination);
+                foreach ($this->ExaminationSubjects as $examItemKey => $examItemObj) {
                     $fieldName = $this->getFieldNameByExamItem($examItemObj);
                     $this->field($fieldName, [
                         'type' => 'string'
@@ -237,27 +237,27 @@ class ExaminationResultsTable extends ControllerActionTable
         return $gradingTypes;
     }
 
-    private function getExaminationItems($selectedExamination)
+    private function getExaminationSubjects($selectedExamination)
     {
         $items = [];
 
-        $ExaminationItems = TableRegistry::get('Examination.ExaminationItems');
+        $ExaminationSubjects = TableRegistry::get('Examination.ExaminationSubjects');
         $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-        $examinationItemResults = $ExaminationItems
+        $ExaminationStudentSubjectResults = $ExaminationSubjects
             ->find()
             ->leftJoinWith('EducationSubjects')
             ->where([
-                $ExaminationItems->aliasField('examination_id') => $selectedExamination,
-                $ExaminationItems->aliasField('weight > ') => 0
+                $ExaminationSubjects->aliasField('examination_id') => $selectedExamination,
+                $ExaminationSubjects->aliasField('weight > ') => 0
             ])
             ->order([
                 $EducationSubjects->aliasField('order'),
-                $ExaminationItems->aliasField('code'),
-                $ExaminationItems->aliasField('name')
+                $ExaminationSubjects->aliasField('code'),
+                $ExaminationSubjects->aliasField('name')
             ])
             ->toArray();
 
-        foreach ($examinationItemResults as $key => $obj) {
+        foreach ($ExaminationStudentSubjectResults as $key => $obj) {
             $items[$obj->id] = $obj;
         }
 
@@ -272,44 +272,44 @@ class ExaminationResultsTable extends ControllerActionTable
 
     private function getStudentExaminationResults($academicPeriodId, $examinationId, $institutionId, $studentId)
     {
-        $ExaminationItemResults = TableRegistry::get('Examination.ExaminationItemResults');
-        $studentExaminationResults = $ExaminationItemResults
+        $ExaminationStudentSubjectResults = TableRegistry::get('Examination.ExaminationStudentSubjectResults');
+        $studentExaminationResults = $ExaminationStudentSubjectResults
             ->find()
             ->select([
-                $ExaminationItemResults->aliasField('id'),
-                $ExaminationItemResults->aliasField('marks'),
-                $ExaminationItemResults->aliasField('examination_grading_option_id'),
-                $ExaminationItemResults->aliasField('student_id'),
-                $ExaminationItemResults->aliasField('examination_id'),
-                $ExaminationItemResults->aliasField('examination_item_id'),
-                $ExaminationItemResults->aliasField('education_subject_id'),
-                $ExaminationItemResults->aliasField('institution_id'),
-                $ExaminationItemResults->aliasField('academic_period_id'),
-                $ExaminationItemResults->Examinations->aliasField('code'),
-                $ExaminationItemResults->Examinations->aliasField('name'),
-                $ExaminationItemResults->Examinations->aliasField('education_grade_id'),
-                $ExaminationItemResults->ExaminationItems->aliasField('id'),
-                $ExaminationItemResults->ExaminationItems->aliasField('code'),
-                $ExaminationItemResults->ExaminationItems->aliasField('name'),
-                $ExaminationItemResults->ExaminationItems->aliasField('weight'),
-                $ExaminationItemResults->EducationSubjects->aliasField('code'),
-                $ExaminationItemResults->EducationSubjects->aliasField('name'),
-                $ExaminationItemResults->ExaminationGradingOptions->aliasField('code'),
-                $ExaminationItemResults->ExaminationGradingOptions->aliasField('name'),
-                $ExaminationItemResults->ExaminationGradingOptions->aliasField('examination_grading_type_id'),
+                $ExaminationStudentSubjectResults->aliasField('id'),
+                $ExaminationStudentSubjectResults->aliasField('marks'),
+                $ExaminationStudentSubjectResults->aliasField('examination_grading_option_id'),
+                $ExaminationStudentSubjectResults->aliasField('student_id'),
+                $ExaminationStudentSubjectResults->aliasField('examination_id'),
+                $ExaminationStudentSubjectResults->aliasField('examination_subject_id'),
+                $ExaminationStudentSubjectResults->aliasField('education_subject_id'),
+                $ExaminationStudentSubjectResults->aliasField('institution_id'),
+                $ExaminationStudentSubjectResults->aliasField('academic_period_id'),
+                $ExaminationStudentSubjectResults->Examinations->aliasField('code'),
+                $ExaminationStudentSubjectResults->Examinations->aliasField('name'),
+                $ExaminationStudentSubjectResults->Examinations->aliasField('education_grade_id'),
+                $ExaminationStudentSubjectResults->ExaminationSubjects->aliasField('id'),
+                $ExaminationStudentSubjectResults->ExaminationSubjects->aliasField('code'),
+                $ExaminationStudentSubjectResults->ExaminationSubjects->aliasField('name'),
+                $ExaminationStudentSubjectResults->ExaminationSubjects->aliasField('weight'),
+                $ExaminationStudentSubjectResults->EducationSubjects->aliasField('code'),
+                $ExaminationStudentSubjectResults->EducationSubjects->aliasField('name'),
+                $ExaminationStudentSubjectResults->ExaminationGradingOptions->aliasField('code'),
+                $ExaminationStudentSubjectResults->ExaminationGradingOptions->aliasField('name'),
+                $ExaminationStudentSubjectResults->ExaminationGradingOptions->aliasField('examination_grading_type_id'),
             ])
             ->contain('ExaminationGradingOptions') //POCOR-6879
             ->contain('ExaminationGradingOptions.ExaminationGradingTypes') //POCOR-6879
             ->innerJoinWith('Examinations')
-            ->innerJoinWith('ExaminationItems')
+            ->innerJoinWith('ExaminationSubjects')
             ->leftJoinWith('EducationSubjects')
            // ->innerJoinWith('ExaminationGradingOptions')
             ->where([
-                $ExaminationItemResults->aliasField('academic_period_id') => $academicPeriodId,
-                $ExaminationItemResults->aliasField('examination_id') => $examinationId,
-                $ExaminationItemResults->aliasField('institution_id') => $institutionId,
-                $ExaminationItemResults->aliasField('student_id') => $studentId,
-                $ExaminationItemResults->ExaminationItems->aliasField('weight > ') => 0
+                $ExaminationStudentSubjectResults->aliasField('academic_period_id') => $academicPeriodId,
+                $ExaminationStudentSubjectResults->aliasField('examination_id') => $examinationId,
+                $ExaminationStudentSubjectResults->aliasField('institution_id') => $institutionId,
+                $ExaminationStudentSubjectResults->aliasField('student_id') => $studentId,
+                $ExaminationStudentSubjectResults->ExaminationSubjects->aliasField('weight > ') => 0
             ])
             ->toArray();
 
@@ -319,7 +319,7 @@ class ExaminationResultsTable extends ControllerActionTable
     private function setStudentExaminationResults(ResultSet $data)
     {
         $gradingTypes = $this->getGradingTypes();
-        $ExaminationItemResults = TableRegistry::get('Examination.ExaminationItemResults');
+        $ExaminationStudentSubjectResults = TableRegistry::get('Examination.ExaminationStudentSubjectResults');
 
         foreach ($data as $examCentreStudentKey => $examCentreStudentObj) {
             $academicPeriodId = $examCentreStudentObj['academic_period_id'];
@@ -330,7 +330,7 @@ class ExaminationResultsTable extends ControllerActionTable
 
             foreach ($studentExaminationResults as $key => $itemResultObj) {
                
-                $examItemObj = $itemResultObj->_matchingData['ExaminationItems'];
+                $examItemObj = $itemResultObj->_matchingData['ExaminationSubjects'];
                 //$gradingOptionObj = $itemResultObj->_matchingData['ExaminationGradingOptions'];
                 $gradingOptionObj = $itemResultObj['examination_grading_option'];
                 $gradingTypeId = $gradingOptionObj->examination_grading_type_id;

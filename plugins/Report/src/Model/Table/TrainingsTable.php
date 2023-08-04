@@ -173,7 +173,7 @@ class TrainingsTable extends AppTable
                 $feature = $this->request->data[$this->alias()]['feature'];
                 if (in_array($feature, ['Report.TrainingResults', 'Report.TrainingSessionParticipants', 'Report.TrainingTrainers', 'Report.TrainersSessions'])) { // POCOR-6569
                     $options = $this->Training->getCourseList();
-                    $options = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Training Courses')] + $options; //POCOR-6595
+                    $options = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Training Courses')] + $options; //POCOR-6595
 
                     // $options = ['-1' => __('All Training Courses')] + $options;
 
@@ -537,9 +537,9 @@ class TrainingsTable extends AppTable
                     //$attr['select'] = true;
                     /*POCOR-6333 starts*/
                     if (count($areaOptions) > 1) {
-                        $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas')] + $areaOptions;
+                        $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas')] + $areaOptions;
                     } else {
-                        $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $areaOptions;
+                        $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $areaOptions;
                     }
                     /*POCOR-6333 ends*/
                     $attr['onChangeReload'] = true;
@@ -571,7 +571,7 @@ class TrainingsTable extends AppTable
                     $attr['type'] = 'chosenSelect';
                     $attr['attr']['multiple'] = false;
                     $attr['select'] = true;
-                    $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Session')] + $session;
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Session')] + $session;
                     $attr['onChangeReload'] = true;
                 } else {
                     $attr['type'] = 'hidden';

@@ -56,7 +56,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         }
         //POCOR-7531 end
         //POCOR-7533 start
-        else if($this->request['data']['ConfigExternalDataSourceExam']['value'] == 'CXC'){
+         else if($this->request['data']['ConfigExternalDataSourceExam']['value'] == 'CXC'){
             return $validator
                 ->requirePresence('url')
                 ->requirePresence('username')
@@ -64,7 +64,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         }
         //POCOR-7533 end
         //POCOR-7532 start
-         else if($this->request['data']['ConfigExternalDataSourceExam']['value'] == 'PacSIMS'){
+        else if($this->request['data']['ConfigExternalDataSourceExam']['value'] == 'PacSIMS'){
             return $validator
                 ->requirePresence('url')
                 ->requirePresence('username')
@@ -175,7 +175,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
             unset($attributes['private_key']);
         }
 
-        if ($entity->value == 'OpenEMIS Exams'||$entity->value == 'CXC'||$entity->value == 'PacSIMS') {//POCOR-7532 
+        if ($entity->value == 'OpenEMIS Exams'||$entity->value == 'CXC'||$entity->value == 'PacSIMS') {//POCOR-7533
             $newAttributes = [];
             // $newAttributes['client_id'] = $attributes['client_id'];  //POCOR-7531 
             $newAttributes['url'] = $attributes['url'];
@@ -259,7 +259,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
     {
-        if ($requestData[$this->alias()]['value'] == 'OpenEMIS Exams'||$requestData[$this->alias()]['value'] =='CXC'||$requestData[$this->alias()]['value'] =='PacSIMS') {//POCOR-7532 
+        if ($requestData[$this->alias()]['value'] == 'OpenEMIS Exams'||$requestData[$this->alias()]['value'] =='CXC'||$requestData[$this->alias()]['value'] =='PacSIMS') {//POCOR-7533
             $url = rtrim(trim($requestData[$this->alias()]['url']), "/");
             $requestData[$this->alias()]['url'] = $url;
             $requestData[$this->alias()]['scope'] = 'Student';
@@ -383,7 +383,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                 // $this->field('public_key', ['type' => 'text']);//POCOR-7531 
                 break;
                 //POCOR-7533 start
-                case 'CXC':
+            case 'CXC':
                     $this->field('url');
                     $this->field('username'); 
                     $this->field('password',['type'=>'password']);
@@ -407,8 +407,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                     $this->field('value_selection', ['type' => 'hidden']);
                     break;
                  //POCOR-7533 end
-                  //POCOR-7532 start
-                 case 'PacSIMS':
+            case 'PacSIMS':
                     $this->field('url');
                     $this->field('username'); 
                     $this->field('password',['type'=>'password']);
@@ -430,9 +429,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                     $this->field('postal_mapping', ['type' => 'hidden']);
                     $this->field('user_endpoint_uri', ['type' => 'hidden']);
                     $this->field('value_selection', ['type' => 'hidden']);
-                    break;
-                 //POCOR-7532 end
-
+                break;
             case 'Custom':
                 $this->field('token_uri');
                 $this->field('record_uri');
