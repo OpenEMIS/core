@@ -5,15 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class WorkflowSteps extends Model
+class Workflows extends Model
 {
     use HasFactory;
 
     public $timestamps = false;
-    protected $table = "workflow_steps";
+    protected $table = "workflows";
 
-    public function WorkflowActions()
+
+    public function WorkflowSteps()
     {
-        return $this->hasMany(WorkflowActions::class, 'workflow_step_id', 'id');
+        return $this->hasMany(WorkflowSteps::class, 'workflow_id', 'id');
     }
 }

@@ -15,6 +15,16 @@ use App\Models\SurveyRules;
 use App\Models\SurveyFormQuestions;
 use App\Models\SurveyTableColumns;
 use App\Models\SurveyTableRows;
+use App\Models\SurveyResponse;
+use App\Models\Institutions;
+use App\Models\SecurityUsers;
+use App\Models\SurveyFormFilter;
+use App\Models\WorkflowModel;
+use App\Models\Workflows;
+use App\Models\WorkflowFilters;
+use App\Models\SurveyStatusPeriods;
+use App\Models\InstitutionSurveyAnswers;
+use App\Models\InstitutionSurveyTableCells;
 
 
 define("NS_XHTML", "http://www.w3.org/1999/xhtml");
@@ -1055,13 +1065,147 @@ class SurveyRepository extends Controller
 
 
 
-    public function uploadXform($request)
+    public function uploadXform(Request $request)
     {
+        DB::beginTransaction();
         try {
             $params = $request->all();
-            dd($params);
+            $xml = file_get_contents('php://input');
+            
+            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+                $formAlias = 'SurveyForms';
+                $fieldAlias = 'SurveyQuestions';
+                $xmlResponse = $xml;
+                //dd("xmlResponse", $xmlResponse);
+
+                $this->deleteExpiredResponse();
+                $this->addResponse($xmlResponse);
+
+                $xmlResponse = str_replace("xf:", "", $xmlResponse);
+                $xmlResponse = str_replace("oe:", "", $xmlResponse);
+
+                $xmlstr = '<?xml version="1.0" encoding="UTF-8"?>' . $xmlResponse;
+
+                $xml = new \SimpleXMLElement($xmlstr);
+
+                $periodId = $xml->{$formAlias}->AcademicPeriods->__toString();
+                $formId = $xml->{$formAlias}->attributes()->id->__toString();
+                $institutionCode = $xml->{$formAlias}->Institutions->__toString();
+
+                // checking institutionId
+                $institutionResult = Institutions::where(DB::raw('lower(code)'), strtolower($institutionCode))->first();
+                
+                if (empty($institutionResult)) {
+                    return 1; //Invalid institution code
+                }
+
+                $institutionId = $institutionResult->id;
+                // end of check for institutionId
+
+                $userId = 2;
+                $userEntity = SecurityUsers::where('id', $userId)->first();
+                // checking of access only if the user is not super admin    
+                if ($userEntity->super_admin == 0) {
+                    /*$userHasAccess = $Institutions
+                        ->find('byAccess', ['userId' => $userId])
+                        ->where([
+                            $Institutions->aliasField('id') => $institutionId
+                        ])
+                        ->count();
+
+                    if ($userHasAccess == 0) {
+                        return $generateErrorResponse(['message' => __('You do not have the permission to upload this survey')], 500);
+                    }*/
+                } 
+
+                // build survey records than check if the record don't exist, it is a invalid combination
+                $buildSurveyRecords = $this->buildSurveyRecords($institutionId, $formId, $periodId);
+
+                
+                $institutionSurveyResults = InstitutionSurveys::with('status')->where('survey_form_id', $formId)->where('institution_id', $institutionId)->where('academic_period_id', $periodId)->first();
+
+                if(empty($institutionSurveyResults)){
+                    return 2; //'No record found for institution for the form for the period'
+                }
+                $institutionSurveyEntity = $institutionSurveyResults;
+                $institutionSurveyId = $institutionSurveyEntity->id;
+                $institutionSurveyStatusId = $institutionSurveyEntity->status_id;
+
+                // if the survey is expired
+                if ($institutionSurveyStatusId == '-1') {
+                    return 3; //'Survey is already expired'
+                }
+
+                // if the survey is done
+                if (!is_null($institutionSurveyEntity->status) && $institutionSurveyEntity->status->category == 3) {
+                    return 4; //'Survey is already completed'
+                }
+                
+                $update = InstitutionSurveys::where('survey_form_id', $formId)->where('institution_id', $institutionId)->where('academic_period_id', $periodId)->update(['modified_user_id' => $userId]);
+
+
+                // Delete relevance questions
+                $this->deleteQuestionWithRules($formId, $institutionSurveyId);
+
+                $rules = [];
+                $rulesData = SurveyRules::where('survey_form_id', $formId)->get();
+                foreach($rulesData as $r){
+                    
+                    $rules[$r->survey_question_id][$r->dependent_question_id] = $r->show_options;
+
+                }
+                
+                $answers = [];
+                $fields = $xml->{$formAlias}->{$fieldAlias};
+
+                foreach ($fields as $field) {
+                    $fieldId = $field->attributes()->id->__toString();
+                    //dd($fieldId);
+                    $fieldEntity = DB::table('survey_questions')->where('id', $fieldId)->first();
+                    $fieldType = $fieldEntity->field_type??"";
+                    $responseValue = urldecode($field->__toString());
+
+                    $fieldTypeFunction = "upload" . ucfirst(strtolower($fieldType));
+                    //dd($fieldTypeFunction);
+
+                    if (method_exists($this, $fieldTypeFunction)) {
+                        $responseData = [
+                            "institution_survey_id" => $institutionSurveyEntity->id,
+                            'survey_question_id' => $fieldId,
+                            'created_user_id' => $userId,
+                            'created' => Carbon::now()->toDateTimeString()
+                        ];
+
+                        $extra = [];
+
+                        $extra['model'] = "InstitutionSurveyAnswers";
+                        $extra['cellModel'] = "InstitutionSurveyTableCells";
+                        $extra['data'] = $responseData;
+                        $extra['value'] = trim($responseValue);
+                        $extra['recordKey'] = "institution_survey_id";
+                        $extra['formKey'] = "survey_form_id";
+                        $extra['fieldKey'] = "survey_question_id";
+                        $extra['fieldEntity'] = $fieldEntity;
+
+
+                        $questionId = $extra['data']['survey_question_id'];
+                        $show = $this->isRelevantQuestion($rules, $questionId, $answers, $responseValue);
+
+                        if ($show) {
+                            $this->$fieldTypeFunction($field, $institutionSurveyEntity, $extra);
+                        }
+                    }
+                }
+
+            }
+
+
+            dd("stop");
+            DB::commit();
             
         } catch (\Exception $e) {
+            DB::rollback();
+            dd($e);
             Log::error(
                 'Failed to upload survey xform.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1069,6 +1213,318 @@ class SurveyRepository extends Controller
 
             return $this->sendErrorResponse('Failed to upload survey xform.');
         }
+    }
+
+
+    private function isRelevantQuestion($rules, $questionId, $answers, $responseValue)
+    {
+        $show = true;
+        if (isset($rules[$questionId])) {
+            $show = false;
+            $dependentQuestions = $rules[$questionId];
+            //$ans = $answers->getArrayCopy();
+            $ans = $answers;
+            $intersectKey = array_intersect_key($ans, $dependentQuestions);
+            foreach ($intersectKey as $key => $value) {
+                $ruleOptions = json_decode($dependentQuestions[$key]);
+                if (in_array($value, $ruleOptions)) {
+                    $show = true;
+                }
+            }
+        }
+        if ($show) {
+            $answers[$questionId] = $responseValue;
+        }
+        return $show;
+    }
+
+    private function deleteFieldValue($data, $extra)
+    {
+        $model = $extra['model'];
+        $recordKey = $extra['recordKey'];
+        $fieldKey = $extra['fieldKey'];
+        dd("sss");
+        $delete = $model::where($recordKey, $data[$recordKey])->where($fieldKey, $data[$fieldKey])->delete();
+        /*$model->deleteAll([
+            $model->aliasField($recordKey) => $data[$recordKey],
+            $model->aliasField($fieldKey) => $data[$fieldKey]
+        ]);*/
+    }
+
+    private function processUpload($key, $extra)
+    {
+        $data = $extra['data'];
+        $value = $extra['value'];
+
+        $this->deleteFieldValue($data, $extra);
+        if (strlen($value) != 0) {
+            $data[$key] = $value;
+            dd($data, $extra);
+            $this->saveFieldValue($data, $extra);
+        }
+    }
+
+    private function saveFieldValue($answerData, $extra)
+    {
+        $model = $extra['model'];
+
+        $answerEntity = $model->newEntity($answerData);
+        if (!$model->save($answerEntity)) {
+            Log::write('debug', $answerEntity->errors());
+        }
+    }
+
+    private function uploadText($field, $entity, $extra)
+    {
+        $this->processUpload('text_value', $extra);
+    }
+
+    private function uploadTable($field, $entity, $extra)
+    {
+        $data = $extra['data'];
+        $value = $extra['value'];
+        $fieldEntity = $extra['fieldEntity'];
+
+        $cellValueColumn = 'text_value';
+        if ($fieldEntity->has('params') && !empty($fieldEntity->params)) {
+            $params = json_decode($fieldEntity->params, true);
+
+            if (array_key_exists('number', $params)) {
+                $cellValueColumn = 'number_value';
+            } elseif (array_key_exists('decimal', $params)) {
+                $cellValueColumn = 'decimal_value';
+            }
+        }
+
+        $this->deleteTableCell($data, $extra);
+        foreach ($field->children() as $row => $rowObj) {
+            $rowId = $rowObj->attributes()->id->__toString();
+            foreach ($rowObj->children() as $col => $colObj) {
+                $colId = $colObj->attributes()->id->__toString();
+                if ($colId != 0) {
+                    $cellValue = urldecode($colObj->__toString());
+                    if (strlen($cellValue) != 0) {
+                        $cellData = array_merge($data, [
+                            $this->tableColumnKey => $colId,
+                            $this->tableRowKey => $rowId,
+                            'text_value' => '',
+                            'number_value' => '',
+                            'decimal_value' => ''
+                        ]);
+                        $cellData[$cellValueColumn] = $cellValue;
+
+                        $this->saveTableCell($cellData, $extra);
+                    }
+                }
+            }
+        }
+    }
+
+
+    private function deleteExpiredResponse()
+    {
+        //$SurveyResponses = TableRegistry::get('Survey.SurveyResponses');
+
+        $expiryDate = Date('Y-m-d h:i:s', strtotime('-3 days'));
+
+        $delete = SurveyResponse::where('created', '<', $expiryDate)->delete();
+    }
+
+
+    private function addResponse($xmlResponse)
+    {
+        $responseData = [
+            'id' => Str::Uuid(),
+            'response' => $xmlResponse,
+            'created' => date('Y-m-d h:i:s')
+        ];
+        $store = SurveyResponse::insert($responseData);
+    }
+
+
+    public function buildSurveyRecords($institutionId = 6, $surveyFormId = null, $academicPeriodId = null)
+    {
+        $surveyForms = new SurveyForms();
+        if(!is_null($surveyFormId)){
+            $surveyForms = $surveyForms->where('id', $surveyFormId);
+        }
+
+        $surveyForms = $surveyForms->pluck('id')->toArray();
+        $todayDate = date("Y-m-d");
+        $institution = Institutions::where('id', $institutionId)->first();
+        $institutionTypeId = $institution->institution_type_id??0;
+
+        foreach ($surveyForms as $key => $surveyFormId) {
+            $filterTypeQuery = SurveyFormFilter::where(['survey_form_id' => $surveyFormId])->get();
+
+
+            $registryAlias = 'Institution.InstitutionSurveys';
+            $openStatusId = null;
+            $workflow = $this->getWorkflow($registryAlias, null, $surveyFormId);
+            //dd("workflow", $workflow->WorkflowSteps);
+            if(count($filterTypeQuery) > 0){
+                if (!empty($workflow)) {
+                    foreach ($workflow->WorkflowSteps as $workflowStep) {
+                        
+                        if ($workflowStep->category == 1) {
+                            $openStatusId = $workflowStep->id;
+                            break;
+                        }
+                    }
+
+                    // Update all New Survey to Expired by Institution Id
+                    /*$this->updateAll(
+                        ['status_id' => self::EXPIRED],
+                        [
+                            'institution_id' => $institutionId,
+                            'survey_form_id' => $surveyFormId,
+                            'status_id' => $openStatusId
+                        ]
+                    );*/
+
+                    $update = InstitutionSurveys::where('institution_id', $institutionId)->where('survey_form_id', $surveyFormId)->where('status_id', $openStatusId)->update(['status_id' => '-1']);
+                    
+
+                    $periodResults = SurveyStatusPeriods::select('survey_status_periods.id', 'survey_status_periods.academic_period_id', 'survey_status_id')->join('survey_statuses', 'survey_statuses.id', '=', 'survey_status_periods.survey_status_id')->join('survey_forms', 'survey_forms.id', '=', 'survey_statuses.survey_form_id')
+                        ->join('academic_periods', 'academic_periods.id', '=', 'survey_status_periods.academic_period_id');
+                    if(!is_null($academicPeriodId)){
+                        $periodResults = $periodResults->where('academic_periods.id', $academicPeriodId);
+                    }
+
+                    if(isset($surveyFormId) && isset($todayDate)){
+                        $periodResults = $periodResults->where('survey_statuses.survey_form_id', $surveyFormId)->where('survey_statuses.date_disabled', '>', $todayDate);
+                    }
+
+                    $periodResults = $periodResults->get();
+                    //dd($academicPeriodId, $surveyFormId, $todayDate, $periodResults);
+
+                    foreach ($periodResults as $obj) {
+                        if (!is_null($institutionId)) {
+                            $periodId = $obj->academic_period_id;
+                            $instutionSurvey = InstitutionSurveys::where('academic_period_id', $periodId)->where('survey_form_id', $surveyFormId)->where('institution_id', $institutionId)->first();
+                            
+                            if(empty($instutionSurvey)){
+                                // Insert New Survey if not found
+                                $surveyData = [
+                                    'status_id' => $openStatusId,
+                                    'academic_period_id' => $periodId,
+                                    'survey_form_id' => $surveyFormId,
+                                    'institution_id' => $institutionId,
+                                    'created_user_id' => 1,
+                                    'created' => Carbon::now()->toDateTimeString()
+                                ];
+
+                                $insert = InstitutionSurveys::insert($surveyData);
+                            } else {
+                                $update = InstitutionSurveys::where('institution_id', $institutionId)->where('survey_form_id', $surveyFormId)->where('status_id', '-1')->where('academic_period_id', $periodId)->update(['status_id' => $openStatusId]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    public function getWorkflow($registryAlias, $entity = null, $filterId = null)
+    {
+        $workflowModel = $this->getWorkflowSetup($registryAlias);
+        //dd($workflowModel);
+        if (!empty($workflowModel)) {
+            // Find all Workflow setup for the model
+            $workflowIdsQuery = Workflows::where('workflow_model_id', $workflowModel->id)->pluck('id');
+            
+            //$excludedModels = $this->Workflows->getExcludedModels();
+            $excludedModels = ['Cases.InstitutionCases'];
+
+            /*if (in_array($workflowModel->model, $excludedModels) && !is_null($entity) && $entity->has('workflow_rule_id') && !empty($entity->workflow_rule_id)) {
+                dd("ifffff");
+                $workflowRuleId = $entity->workflow_rule_id;
+                $workflowIdsQuery->matching('WorkflowRules', function ($q) use ($workflowRuleId) {
+                    return $q->where([
+                        'WorkflowRules.id' => $workflowRuleId
+                    ]);
+                });
+            }*/
+
+            $workflowIds = $workflowIdsQuery->toArray();
+            
+            $workflowQuery = Workflows::with('WorkflowSteps', 'WorkflowSteps.WorkflowActions');
+
+            if (empty($workflowModel->filter)) {
+                $workflowQuery = $workflowQuery->whereIn('id', $workflowIds);
+            } else {
+                // Filter key
+                /*list(, $base) = pluginSplit($workflowModel->filter);
+                $filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
+
+                $workflowId = 0;
+                if (empty($filterId)) {
+                    if (!is_null($entity) && $entity->has($filterKey)) {
+                        $filterId = $entity->{$filterKey};
+                    }
+                }*/
+
+                if (!is_null($filterId)) {
+                    //$conditions = [$this->WorkflowsFilters->aliasField('workflow_id IN') => $workflowIds];
+
+                    $filterQuery = WorkflowFilters::whereIn('workflow_id', $workflowIds)->where('filter_id', $filterId);
+                        
+
+                    $workflowFilterResults = $filterQuery->get()->toArray();
+                    
+                    // Use Workflow with filter if found otherwise use Workflow that Apply To All
+                    if (empty($workflowFilterResults)) {
+                        $filterQuery->whereIn('workflow_id', $workflowIds)->where('filter_id', $filterId);
+
+                        $workflowResults = $filterQuery->get()->toArray();
+                    } else {
+                        $workflowResults = $workflowFilterResults;
+                    }
+                    
+                    if (!empty($workflowResults)) {
+                        //$workflowId = $workflowResults->first()->workflow_id;
+                        $workflowId = $workflowResults[0]['workflow_id'];
+                    }
+                }
+                //dd($workflowId);
+                $workflowQuery = $workflowQuery->where('id', $workflowId);
+            }
+            $workflowQuery = $workflowQuery->first();
+            return $workflowQuery;
+        } else {
+            return null;
+        }
+    }
+
+
+    public function getWorkflowSetup($registryAlias)
+    {
+        $workflowModel = WorkflowModel::where('model', 'Institution.InstitutionSurveys')->first();
+        
+        return $workflowModel;
+    }
+
+
+    private function deleteQuestionWithRules($surveyFormId, $recordId)
+    {
+        $questions = SurveyRules::where('survey_form_id', $surveyFormId)->where('enabled', 1)->pluck('survey_question_id');
+
+        /*$CustomFieldValues = $this->FieldValue;
+        $CustomTableCells = $this->TableCell;
+        $CustomFieldValues->deleteAll([
+            'survey_question_id IN ' => $questions,
+            'institution_survey_id' => $recordId
+        ]);*/
+
+        $deleteInstitutionSurveyAnswers = InstitutionSurveyAnswers::whereIn('survey_question_id', $questions)->where('institution_survey_id', $recordId)->delete();
+
+        /*$CustomTableCells->deleteAll([
+            'survey_question_id IN ' => $questions,
+            'institution_survey_id' => $recordId
+        ]);*/
+
+        $delInstitutionSurveyTableCells = InstitutionSurveyTableCells::whereIn('survey_question_id', $questions)->where('institution_survey_id', $recordId)->delete();
     }
 }
 

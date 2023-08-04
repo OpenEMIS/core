@@ -28,7 +28,7 @@ class UploadXformRequest extends FormRequest
     public function rules()
     {
         return [
-            'response' => 'required',
+            //'response' => 'required',
         ];
     }
 
