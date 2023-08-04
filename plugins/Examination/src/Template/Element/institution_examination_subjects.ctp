@@ -2,8 +2,9 @@
 <?php
 $alias = $ControllerAction['table']->alias();
 $checkboxOptions = ['class' => 'no-selection-label', 'kd-checkbox-radio' => ''];
+
 ?>
-<?php if ($action == 'add') :?>
+<?php if ($action == 'add'||$action=='edit') :?>
 
     <div class="input clearfix required">
         <label><?= isset($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
@@ -31,13 +32,16 @@ $checkboxOptions = ['class' => 'no-selection-label', 'kd-checkbox-radio' => ''];
 
                                         ?>
                                 </td>
-                                <td><?php echo $obj->code; ?></td>
-                                <td><?php echo $obj->name; ?></td>
-                                ?>
-
+                                <td>
+                                    <?php
+                                            echo $this->Form->hidden("$fieldPrefix.id");
+                                            echo $obj->code;
+                                    ?>
                                 </td>
-                            </tr>
-
+                                 <td>
+                                    <?php echo $obj->name; ?>
+                                  </td>
+                                </tr>
 
                         <?php endforeach ?>
                     <?php else : ?>

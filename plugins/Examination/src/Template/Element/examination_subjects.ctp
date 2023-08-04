@@ -11,12 +11,14 @@
             <thead>
                 <th><?= __('Code') ?></th>
                 <th><?= __('Name') ?></th>
+               <?php if($alias !='ExaminationCentresExaminationsStudents'&&$alias !='InstitutionExaminationStudents'):?>
                 <th><?= __('Weight') ?></th>
                 <th><?= __('Education Subject') ?></th>
                 <th><?= __('Grading Type') ?></th>
                 <th><?= __('Date') ?></th>
                 <th><?= __('Start Time') ?></th>
                 <th><?= __('End Time') ?></th>
+             <?php endif?>
             </thead>
 
             <?php if (isset($data['examination_subjects'])) : ?>
@@ -25,6 +27,7 @@
                         <tr>
                             <td><?= $item->code ?></td>
                             <td><?= $item->name ?></td>
+                            <?php if($alias !='ExaminationCentresExaminationsStudents'&&$alias !='InstitutionExaminationStudents'):?>
                             <td><?= $item->weight ?></td>
                             <td>
                                 <?php
@@ -37,6 +40,7 @@
                             <td><?= !is_null($item->examination_date) ? $item->examination_date->format('d-m-Y') : '' ?></td>
                             <td><?= !is_null($item->start_time) ? $item->start_time->format('H:i A') : '' ?></td>
                             <td><?= !is_null($item->end_time) ? $item->end_time->format('H:i A') : '' ?></td>
+                            <?php endif?>
                         </tr>
                     <?php endforeach ?>
                 </tbody>
