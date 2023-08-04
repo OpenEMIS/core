@@ -35,81 +35,144 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         $academicPeriodId = $requestData->academic_period_id;
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
-
-        $query->join([
-            'InstitutionStudent' => [
-                'type' => 'left',
-                'table' => 'institution_students',
-                'conditions' => [
-                    $this->aliasField($this->primaryKey()) . ' = InstitutionStudent.student_id'
-                ],
-            ],            
-            'InstitutionStudentFilter' => [
-                'type' => 'left',
-                'table' => 'institution_students',
-                'conditions' => [
-                    $this->aliasField($this->primaryKey()) . ' = InstitutionStudentFilter.student_id',
-                    'InstitutionStudentFilter.student_status_id = '.$enrolled
-                ],
-            ],
-            'StudentStatus' => [
-                'type' => 'left',
-                'table' => 'student_statuses',
-                'conditions' => [
-                    'StudentStatus.id = InstitutionStudent.student_status_id'
-                ]
-            ],
-            'Institution' => [
-                'type' => 'left',
-                'table' => 'institutions',
-                'conditions' => [
-                    'Institution.id = InstitutionStudent.institution_id'
-                ]
-            ],
-            'AcademicPeriod' => [
-                'type' => 'left',
-                'table' => 'academic_periods',
-                'conditions' => [
-                    'AcademicPeriod.id = InstitutionStudent.academic_period_id'
-                ]
-            ],
-            'EducationGrade' => [
-                'type' => 'left',
-                'table' => 'education_grades',
-                'conditions' => [
-                    'EducationGrade.id = InstitutionStudent.education_grade_id'
-                ]
+        //POCOR-7631::Start
+        $join =[];
+        $join['student_info'] = [
+            'type' => 'left',
+            'table' => "(SELECT institution_students.student_id
+            ,institution_students.end_date EndDate
+            ,student_statuses.name StudentStatus
+            ,academic_periods.name AcademicPeriod
+            ,education_grades.name EducationGrade
+            ,institutions.code institution_code
+            ,institutions.name institution_name
+        FROM institution_students
+        INNER JOIN student_statuses
+        ON student_statuses.id = institution_students.student_status_id
+        INNER JOIN institutions
+        ON institutions.id = institution_students.institution_id
+        INNER JOIN education_grades
+        ON education_grades.id = institution_students.education_grade_id
+        INNER JOIN academic_periods
+        ON academic_periods.id = institution_students.academic_period_id
+        WHERE institution_students.academic_period_id = $academicPeriodId
+        AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_students.student_status_id = 1, institution_students.student_status_id IN (1, 7, 6, 8))
+        GROUP BY institution_students.student_id)",
+            'conditions'=>[
+                'student_info.student_id = InstitutionStudentsOutOfSchool.id'
             ]
-        ]);
-        
+            ]; 
 
-        $query->contain(['MainNationalities', 'MainIdentityTypes']);
-
-        $query->select([
-                    'EndDate' => 'InstitutionStudent.end_date', 'StudentStatus' => 'StudentStatus.name', 'AcademicPeriod' => 'AcademicPeriod.name', 'EducationGrade' => 'EducationGrade.name',
-                    'nationality_id' => 'MainNationalities.name', 'identity_type_id' => 'MainIdentityTypes.name',
-                    'institution_code' => 'Institution.code','institution_name' => 'Institution.name'
-                ]);
-        $query->autoFields('true');
-
-        $query->where([$this->aliasField('is_student') => 1,'InstitutionStudent.academic_period_id' => $academicPeriodId]);
-
-        // omit all records who are 'enrolled'
-        $query->where([
-            'OR' => [
-                    'InstitutionStudent.student_status_id != ' => $enrolled,
-                    'InstitutionStudent.student_status_id IS NULL'
+            $join['MainNationalities'] = [
+                'type' => 'left',
+                'table' => "(SELECT user_nationalities.security_user_id
+                ,nationalities.*
+            FROM user_nationalities
+            INNER JOIN nationalities
+            ON nationalities.id = user_nationalities.nationality_id
+            WHERE user_nationalities.preferred = 1
+            GROUP BY  user_nationalities.security_user_id)",
+                'conditions'=>[
+                    'MainNationalities.security_user_id = InstitutionStudentsOutOfSchool.id'
                 ]
-            ]);
+                ]; 
 
-        // omit all students in current records who has 'enrolled'
-        $query->where([
-            'InstitutionStudentFilter.student_status_id IS NULL',
-            // 'InstitutionStudent.academic_period_id' => $academicPeriodId,
+                $join['MainIdentityTypes'] = [
+                    'type' => 'left',
+                    'table' => "(SELECT  user_identities.security_user_id
+                    ,identity_types.*
+                FROM user_identities
+                INNER JOIN identity_types
+                ON identity_types.id = user_identities.identity_type_id
+                WHERE identity_types.default = 1
+                GROUP BY  user_identities.security_user_id)",
+                    'conditions'=>[
+                        'MainIdentityTypes.security_user_id = InstitutionStudentsOutOfSchool.id'
+                    ]
+                    ]; 
+
+        $query
+        ->select([
+            'EndDate' => "IFNULL(student_info.EndDate, '')",
+            'StudentStatus' => "IFNULL(student_info.StudentStatus, '')",
+            'AcademicPeriod' => "IFNULL(student_info.EducationGrade, '')",
+            'EducationGrade'=> "IFNULL(student_info.EducationGrade, '')",
+            'nationality_id' => "IFNULL(MainNationalities.id, '')",
+            'identity_type_id' => "IFNULL(MainIdentityTypes.id, '')",
+            'institution_code' => "IFNULL(student_info.institution_code, '')",
+            'institution_name' => "IFNULL(student_info.institution_name, '')",
+            'InstitutionStudentsOutOfSchool__id' => "InstitutionStudentsOutOfSchool.id",
+            'InstitutionStudentsOutOfSchool__username' => "InstitutionStudentsOutOfSchool.username",
+            'InstitutionStudentsOutOfSchool__password' => "InstitutionStudentsOutOfSchool.password",
+            'InstitutionStudentsOutOfSchool__openemis_no' => "InstitutionStudentsOutOfSchool.openemis_no",
+            'InstitutionStudentsOutOfSchool__first_name' => "InstitutionStudentsOutOfSchool.first_name",
+            'InstitutionStudentsOutOfSchool__middle_name' => "InstitutionStudentsOutOfSchool.middle_name",
+            'InstitutionStudentsOutOfSchool__third_name' => "InstitutionStudentsOutOfSchool.third_name",
+            'InstitutionStudentsOutOfSchool__last_name' => "InstitutionStudentsOutOfSchool.last_name",
+            'InstitutionStudentsOutOfSchool__preferred_name' => "InstitutionStudentsOutOfSchool.preferred_name",
+            'InstitutionStudentsOutOfSchool__email' => "InstitutionStudentsOutOfSchool.email",
+            'InstitutionStudentsOutOfSchool__address' => "InstitutionStudentsOutOfSchool.address",
+            'InstitutionStudentsOutOfSchool__postal_code' => "InstitutionStudentsOutOfSchool.postal_code",
+            'InstitutionStudentsOutOfSchool__address_area_id' => "InstitutionStudentsOutOfSchool.address_area_id",
+            'InstitutionStudentsOutOfSchool__birthplace_area_id' => "InstitutionStudentsOutOfSchool.birthplace_area_id",
+            'InstitutionStudentsOutOfSchool__gender_id' => "InstitutionStudentsOutOfSchool.gender_id",
+            'InstitutionStudentsOutOfSchool__date_of_birth' => "InstitutionStudentsOutOfSchool.date_of_birth",
+            'InstitutionStudentsOutOfSchool__date_of_death' => "InstitutionStudentsOutOfSchool.date_of_death",
+            'InstitutionStudentsOutOfSchool__nationality_id' => "InstitutionStudentsOutOfSchool.nationality_id",
+            'InstitutionStudentsOutOfSchool__identity_type_id' => "InstitutionStudentsOutOfSchool.identity_type_id",
+            'InstitutionStudentsOutOfSchool__identity_number' => "InstitutionStudentsOutOfSchool.identity_number",
+            'InstitutionStudentsOutOfSchool__external_reference' => "InstitutionStudentsOutOfSchool.external_reference",
+            'InstitutionStudentsOutOfSchool__super_admin' => "InstitutionStudentsOutOfSchool.super_admin",
+            'InstitutionStudentsOutOfSchool__status' => "InstitutionStudentsOutOfSchool.status",
+            'InstitutionStudentsOutOfSchool__last_login' => "InstitutionStudentsOutOfSchool.last_login",
+            'InstitutionStudentsOutOfSchool__photo_name' => "InstitutionStudentsOutOfSchool.photo_name",
+            'InstitutionStudentsOutOfSchool__photo_content' => "InstitutionStudentsOutOfSchool.photo_content",
+            'InstitutionStudentsOutOfSchool__preferred_language' => "InstitutionStudentsOutOfSchool.preferred_language",
+            'InstitutionStudentsOutOfSchool__is_student' => "InstitutionStudentsOutOfSchool.is_student",
+            'InstitutionStudentsOutOfSchool__is_staff' => "InstitutionStudentsOutOfSchool.is_staff",
+            'InstitutionStudentsOutOfSchool__is_guardian' => "InstitutionStudentsOutOfSchool.is_guardian",
+            'InstitutionStudentsOutOfSchool__modified_user_id' => "InstitutionStudentsOutOfSchool.modified_user_id",
+            'InstitutionStudentsOutOfSchool__modified' => "InstitutionStudentsOutOfSchool.modified",
+            'InstitutionStudentsOutOfSchool__created_user_id' => "InstitutionStudentsOutOfSchool.created_user_id",
+            'InstitutionStudentsOutOfSchool__created' => "InstitutionStudentsOutOfSchool.created",
+            'MainNationalities__id' => "IFNULL(MainNationalities.id, '')",
+            'MainNationalities__name' => "IFNULL(MainNationalities.name, '')",
+            'MainNationalities__order' => "IFNULL(MainNationalities.order, '')",
+            'MainNationalities__visible' => "IFNULL(MainNationalities.visible, '')",
+            'MainNationalities__editable' => "IFNULL(MainNationalities.editable, '')",
+            'MainNationalities__identity_type_id' => "IFNULL(MainNationalities.identity_type_id, '')",
+            'MainNationalities__default' => "IFNULL(MainNationalities.default, '')",
+            'MainNationalities__international_code' => "IFNULL(MainNationalities.international_code, '')",
+            'MainNationalities__national_code' => "IFNULL(MainNationalities.national_code, '')",
+            'MainNationalities__external_validation' => "IFNULL(MainNationalities.external_validation, '')",
+            'MainNationalities__modified_user_id' => "IFNULL(MainNationalities.modified_user_id, '')",
+            'MainNationalities__modified' => "IFNULL(MainNationalities.modified, '')",
+            'MainNationalities__created_user_id' => "IFNULL(MainNationalities.created_user_id, '')",
+            'MainNationalities__created' => "IFNULL(MainNationalities.created, '')",
+            'MainIdentityTypes__id' => "IFNULL(MainIdentityTypes.id, '')",
+            'MainIdentityTypes__name' => "IFNULL(MainIdentityTypes.name, '')",
+            'MainIdentityTypes__validation_pattern' => "IFNULL(MainIdentityTypes.validation_pattern, '')",
+            'MainIdentityTypes__order' => "IFNULL(MainIdentityTypes.order, '')",
+            'MainIdentityTypes__visible' => "IFNULL(MainIdentityTypes.visible, '')",
+            'MainIdentityTypes__editable' => "IFNULL(MainIdentityTypes.editable, '')",
+            'MainIdentityTypes__default' => "IFNULL(MainIdentityTypes.default, '')",
+            'MainIdentityTypes__international_code' => "IFNULL(MainIdentityTypes.international_code, '')",
+            'MainIdentityTypes__national_code' => "IFNULL(MainIdentityTypes.national_code, '')",
+            'MainIdentityTypes__modified_user_id' => "IFNULL(MainIdentityTypes.modified_user_id, '')",
+            'MainIdentityTypes__modified' => "IFNULL(MainIdentityTypes.modified, '')",
+            'MainIdentityTypes__created_user_id' => "IFNULL(MainIdentityTypes.created_user_id, '')",
+            'MainIdentityTypes__created' => "IFNULL(MainIdentityTypes.created, '')"
+
+            ])
+        ->where([
+            'InstitutionStudentsOutOfSchool.is_student' => 1,
+            'InstitutionStudentsOutOfSchool.status' =>$enrolled,
+            'student_info.student_id IS NULL'
+
         ]);
-
-        $query->group([$this->aliasField($this->primaryKey())]);
-        $query->order(['InstitutionStudent.end_date desc']);
+        $query->join($join);
+        //POCOR-7631::End
+        
     }
 
     public function onExcelRenderAge(Event $event, Entity $entity, $attr) {
