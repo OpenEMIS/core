@@ -1,3 +1,7 @@
+### [3.90.2] - 2023-08-01
+- Implemented: Develop APIs for the Textbook feature
+- Bug Fixed: Institutions>Student>Academic>Assessment: Archive button should be present even if student does not have archive
+
 ### [3.90.1] - 2023-07-27
 - Bug Fixed: Institutions>Performance>Assessments: Assessment is showing sql error message
 - Bug Fixed: Institutions > Students > Academic > Curriculars: Bugs

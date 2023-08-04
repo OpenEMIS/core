@@ -8,7 +8,7 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
     var properties = {
         academicPeriods: {},
         examinations: {},
-        examinationItems: {},
+        ExaminationSubjects: {},
         subjects: {},
         examinationGradingTypes: {},
         examinationGradingOptions: {}
@@ -17,7 +17,7 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
     var models = {
         AcademicPeriodsTable: 'AcademicPeriod.AcademicPeriods',
         ExaminationGradingTypesTable: 'Examination.ExaminationGradingTypes',
-        ExaminationItemResultsTable: 'Examination.ExaminationItemResults'
+        ExaminationStudentSubjectResultsTable: 'Examination.ExaminationStudentSubjectResults'
     };
 
     var service = {
@@ -58,7 +58,7 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
     };
 
     function getExaminationItem(id) {
-        return properties.examinationItems[id];
+        return properties.ExaminationSubjects[id];
     };
 
     function getSubject(id) {
@@ -117,7 +117,7 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                 angular.forEach(studentExaminationResults, function(studentExaminationResult, key) {
                     var academicPeriodId = studentExaminationResult.academic_period_id;
                     var examinationId = studentExaminationResult.examination_id;
-                    var examinationItemId = studentExaminationResult.examination_item_id;
+                    var examinationItemId = studentExaminationResult.examination_subject_id;
                     var subjectId = studentExaminationResult.education_subject_id;
                     var gradingOptionId = studentExaminationResult.examination_grading_option_id;
                     var marks = studentExaminationResult.marks;
@@ -137,9 +137,9 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                     }
 
                     if (angular.isUndefined(results[academicPeriodId][examinationId][examinationItemId])) {
-                        properties.examinationItems[examinationItemId] = studentExaminationResult._matchingData.ExaminationItems;
+                        properties.ExaminationSubjects[examinationItemId] = studentExaminationResult._matchingData.ExaminationSubjects;
                         if(gradingOptionId!=null){ //POCOR-6761
-                            properties.examinationItems[examinationItemId]['examination_grading_type'] = gradingType;
+                            properties.ExaminationSubjects[examinationItemId]['examination_grading_type'] = gradingType;
                         }
                         results[academicPeriodId][examinationId][examinationItemId] = {};
                     }
@@ -165,7 +165,7 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             }
         };
 
-        return ExaminationItemResultsTable
+        return ExaminationStudentSubjectResultsTable
             .select()
             .find('Results', {
                 academic_period_id: academicPeriodId
@@ -203,13 +203,13 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             menuTabs: menuTabs,
             filterParams: filterParams,
             cellStyle: function(params) {
-                var examinationItemId = params.data['examination_item_id'];
+                var examinationItemId = params.data['examination_subject_id'];
                // var examinationgrade = params.data['examination_grading_option_id']; //POCOR-6761
                 var examinationmarks = params.data['marks']; //POCOR-6761
 
                 var passMark = 0;
-                if (angular.isDefined(properties.examinationItems[examinationItemId]) && angular.isDefined(properties.examinationItems[examinationItemId]['examination_grading_type'])) {
-                    gradingType = properties.examinationItems[examinationItemId]['examination_grading_type'];
+                if (angular.isDefined(properties.ExaminationSubjects[examinationItemId]) && angular.isDefined(properties.ExaminationSubjects[examinationItemId]['examination_grading_type'])) {
+                    gradingType = properties.ExaminationSubjects[examinationItemId]['examination_grading_type'];
                     passMark = gradingType.pass_mark;
                 }
 
@@ -220,7 +220,7 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                 }
             },
             valueGetter: function(params) {
-                var examinationItemId = params.data['examination_item_id'];
+                var examinationItemId = params.data['examination_subject_id'];
                 var examinationmarkk = params.data['marks']; //POCOR-6761
 
                 var resultType = "MARKS";
@@ -237,8 +237,8 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                          return counter==0?true:false;
                     }
                     //POCOR-6761 end    
-                if (angular.isDefined(properties.examinationItems[examinationItemId]) && angular.isDefined(properties.examinationItems[examinationItemId]['examination_grading_type']) && checkExaminationGradingTypesIdIsNull()) {
-                    gradingType = properties.examinationItems[examinationItemId]['examination_grading_type'];
+                if (angular.isDefined(properties.ExaminationSubjects[examinationItemId]) && angular.isDefined(properties.ExaminationSubjects[examinationItemId]['examination_grading_type']) && checkExaminationGradingTypesIdIsNull()) {
+                    gradingType = properties.ExaminationSubjects[examinationItemId]['examination_grading_type'];
                     resultType = gradingType.result_type;
                     
                 }else { //POCOR-6761
@@ -300,13 +300,13 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
 
         var rowData = [];
         angular.forEach(examinationResults, function(resultObj, examinationItemId) {
-            var examinationItemDisplayName = properties.examinationItems[examinationItemId].code_name;
-            var itemWeight = properties.examinationItems[examinationItemId].weight;
+            var examinationItemDisplayName = properties.ExaminationSubjects[examinationItemId].code_name;
+            var itemWeight = properties.ExaminationSubjects[examinationItemId].weight;
             var subjectId = resultObj.education_subject_id;
             var subjectDisplayName = properties.subjects[subjectId].code_name;
             var examinationgradingoptionid = resultObj.examination_grading_option_id; //POCOR-6761
             var data = {
-                examination_item_id: examinationItemId,
+                examination_subject_id: examinationItemId,
                 examination_item: examinationItemDisplayName,
                 subject_id: subjectId,
                 subject: subjectDisplayName,

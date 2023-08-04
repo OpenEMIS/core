@@ -1392,7 +1392,7 @@ class Indic
 	  const IMC_TR = 11; //	INDIC_MATRA_CATEGORY_TOP_AND_RIGHT		Top_And_Right
 	  const IMC_VOL = 2; //	INDIC_MATRA_CATEGORY_VISUAL_ORDER_LEFT		Visual_Order_Left
 
-	  If in original table = _(C,x), that = ISC_C,IMC_x
+	  If in original table = __(C,x), that = ISC_C,IMC_x
 	  Value is IMC_x << 8 (or IMC_x * 256) = 3840
 	  plus ISC_C = 1, so = 3841
 
