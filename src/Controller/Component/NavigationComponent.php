@@ -16,6 +16,112 @@ class NavigationComponent extends Component
 
     public $components = ['AccessControl'];
 
+    /**
+     * @return array
+     */
+    private static function getFullPerformanceNavigation()
+    {
+        $fullPerformanceNavigation = [
+            'Administration.Performance' => [
+                'title' => 'Performance',
+                'parent' => 'Administration',
+                'link' => false
+            ],
+            'Competencies.Templates' => [
+                'title' => 'Competencies',
+                'parent' => 'Administration.Performance',
+                'params' => ['plugin' => 'Competency'],
+                'selected' => ['Competencies.Templates',
+                    'Competencies.Items',
+                    'Competencies.Criterias',
+                    'Competencies.Periods',
+                    'Competencies.GradingTypes']
+            ],
+
+            'Outcomes.Templates' => [
+                'title' => 'Outcomes',
+                'parent' => 'Administration.Performance',
+                'params' => ['plugin' => 'Outcome'],
+                'selected' => ['Outcomes.Templates',
+                    'Outcomes.Criterias',
+                    'Outcomes.Periods',
+                    'Outcomes.GradingTypes',
+                    'Outcomes.ImportOutcomeTemplates']
+            ],
+
+            'Assessments.Assessments' => [
+                'title' => 'Assessments',
+                'parent' => 'Administration.Performance',
+                'params' => ['plugin' => 'Assessment'],
+                'selected' => ['Assessments.Assessments',
+                    'Assessments.AssessmentPeriods',
+                    'Assessments.GradingTypes']
+            ],
+
+            'ReportCards.Templates' => [
+                'title' => 'Report Cards',
+                'parent' => 'Administration.Performance',
+                'params' => ['plugin' => 'ReportCard'],
+                'selected' => ['ReportCards.Templates',
+                    'ReportCards.ReportCardEmail',
+                    'ReportCards.Processes']
+            ],
+
+        ];
+        return $fullPerformanceNavigation;
+    }
+
+    /**
+     * @return array
+     */
+    private static function getTrainingNavigationFull()
+    {
+        $trainingNavigation = [
+            'Administration.Training' => [
+                'title' => 'Training',
+                'parent' => 'Administration',
+                'link' => false,
+            ],
+
+            'Trainings.Courses' => [
+                'title' => 'Courses',
+                'parent' => 'Administration.Training',
+                'params' => ['plugin' => 'Training'],
+                'selected' => ['Trainings.Courses']
+            ],
+
+            'Trainings.Sessions' => [
+                'title' => 'Sessions',
+                'parent' => 'Administration.Training',
+                'params' => ['plugin' => 'Training'],
+                'selected' => ['Trainings.Sessions',
+                    'Trainings.Applications',
+                    'Trainings.ImportTrainees']
+            ],
+
+            'Trainings.Results' => [
+                'title' => 'Results',
+                'parent' => 'Administration.Training',
+                'params' => ['plugin' => 'Training'],
+                'selected' => ['Trainings.Results',
+                    'Trainings.ImportTrainingSessionTraineeResults']//5695
+            ],
+        ];
+        return $trainingNavigation;
+    }
+
+    /**
+     * @param $user_id
+     * @return mixed
+     */
+    private static function isSuperUser($user_id)
+    {
+        $users = TableRegistry::get('security_users');
+        $is_super_user = $users->find()->where([$users->aliasField('super_admin') => 1,
+            $users->aliasField('id') => $user_id])->first();
+        return $is_super_user;
+    }
+
     public function initialize(array $config)
     {
         $this->controller = $this->_registry->getController();
@@ -161,12 +267,12 @@ class NavigationComponent extends Component
             }
         }
         // unset the parents if there is no children
-        /*$linkOnly = array_reverse($linkOnly);
-            foreach ($linkOnly as $link) {
-                if (!array_search($link, $this->array_column($navigations, 'parent'))) {
-                    unset($navigations[$link]);
-                }
-            }*/
+//        $linkOnly = array_reverse($linkOnly);
+//            foreach ($linkOnly as $link) {
+//                if (!array_search($link, $this->array_column($navigations, 'parent'))) {
+//                    unset($navigations[$link]);
+//                }
+//            }
     }
 
     public function checkSelectedLink(array &$navigations)
@@ -2440,7 +2546,8 @@ class NavigationComponent extends Component
                                 $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
                             ]
                         )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
-                        $securityFunctions->aliasField('module') => 'Administration',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+                        $securityFunctions->aliasField('module') => 'Administration',
+                        $SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
             }
         
         $navigationToAppends = [];
@@ -3385,257 +3492,50 @@ class NavigationComponent extends Component
     //POCOR-7527
     private function getAdminstrationTrainingNav()
     {
-        $session = $this->request->session();
-        $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
-        $uId = $this->controller->paramsDecode($userId)['id'];
-        $users = TableRegistry::get('security_users');
-        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
-                    $users->aliasField('id') => $uId])->first();
-
-        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
-        $securityFunctions = TableRegistry::get('security_functions');
-        $securityRole = TableRegistry::get('security_roles');
-        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-        $groupUserRecords = $GroupUsers->find()
-            ->matching('SecurityGroups')
-            ->matching('SecurityRoles')
-            ->where([$GroupUsers->aliasField('security_user_id') => $uId])
-            ->group([
-                $GroupUsers->aliasField('security_group_id'),
-                $GroupUsers->aliasField('security_role_id')
-            ])
-            ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
-            ->all();
-            $rowData = [];
-            $rowId = [];
-        foreach ($groupUserRecords as $obj) {
-            $rowData[] = $obj->role_name;
-            $rowId[] = $obj->id;
+        $user_id = $this->getCurrentUserId();
+        $is_super_user = self::isSuperUser($user_id);
+        $emptyNavigation = [];
+        $fullTrainingNavigation = self::getTrainingNavigationFull();
+        if($is_super_user){
+            return $fullTrainingNavigation;
         }
-        if(!empty($rowId)){
-            $SecurityTrainingFunctions = $SecurityRoleFunctions->find()
-                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                        [
-                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                        ]
-                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, $securityFunctions->aliasField('module') => 'Administration',
-                    $securityFunctions->aliasField('category') => 'Training',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+        $userRoleIdArray = $this->getUserRoleIdArray($user_id);
+        $module = 'Administration';
+        $category = 'Trainings';
+        $function = '_view';
+//        $this->log('userRoleIdArray', 'debug');
+//        $this->log($userRoleIdArray, 'debug');
+        $has_user_permission = self::hasUserPermission($module, $category, $function, $userRoleIdArray);
+//        $this->log($has_user_permission, 'debug');
+        if($has_user_permission){
+                return $fullTrainingNavigation;
         }
-        $navfive = [];
-        if(empty($userinfo)){
-            if(!empty($SecurityTrainingFunctions)){
-                $navfive = [
-                    'Administration.Training' => [
-                        'title' => 'Training',
-                        'parent' => 'Administration',
-                        'link' => false,
-                    ],
-
-                    'Trainings.Courses' => [
-                        'title' => 'Courses',
-                        'parent' => 'Administration.Training',
-                        'params' => ['plugin' => 'Training'],
-                        'selected' => ['Trainings.Courses']
-                    ],
-
-                    'Trainings.Sessions' => [
-                        'title' => 'Sessions',
-                        'parent' => 'Administration.Training',
-                        'params' => ['plugin' => 'Training'],
-                        'selected' => ['Trainings.Sessions',
-                            'Trainings.Applications',
-                            'Trainings.ImportTrainees']
-                    ],
-
-                    'Trainings.Results' => [
-                        'title' => 'Results',
-                        'parent' => 'Administration.Training',
-                        'params' => ['plugin' => 'Training'],
-                        'selected' => ['Trainings.Results',
-                            'Trainings.ImportTrainingSessionTraineeResults']//5695
-                    ],
-                ];   
-            }
-        }else{
-            $navfive = [
-                'Administration.Training' => [
-                    'title' => 'Training',
-                    'parent' => 'Administration',
-                    'link' => false,
-                ],
-
-                'Trainings.Courses' => [
-                    'title' => 'Courses',
-                    'parent' => 'Administration.Training',
-                    'params' => ['plugin' => 'Training'],
-                    'selected' => ['Trainings.Courses']
-                ],
-
-                'Trainings.Sessions' => [
-                    'title' => 'Sessions',
-                    'parent' => 'Administration.Training',
-                    'params' => ['plugin' => 'Training'],
-                    'selected' => ['Trainings.Sessions',
-                        'Trainings.Applications',
-                        'Trainings.ImportTrainees']
-                ],
-
-                'Trainings.Results' => [
-                    'title' => 'Results',
-                    'parent' => 'Administration.Training',
-                    'params' => ['plugin' => 'Training'],
-                    'selected' => ['Trainings.Results',
-                        'Trainings.ImportTrainingSessionTraineeResults']//5695
-                ],
-
-            ];   
-        }
-        return $navfive;
+       return $emptyNavigation;
     }
 
     //POCOR-7527
     private function getAdminstrationPerformanceNav()
     {
-        $session = $this->request->session();
-        $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
-        $uId = $this->controller->paramsDecode($userId)['id'];
-        $users = TableRegistry::get('security_users');
-        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
-                    $users->aliasField('id') => $uId])->first();
-
-        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
-        $securityFunctions = TableRegistry::get('security_functions');
-        $securityRole = TableRegistry::get('security_roles');
-        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-        $groupUserRecords = $GroupUsers->find()
-            ->matching('SecurityGroups')
-            ->matching('SecurityRoles')
-            ->where([$GroupUsers->aliasField('security_user_id') => $uId])
-            ->group([
-                $GroupUsers->aliasField('security_group_id'),
-                $GroupUsers->aliasField('security_role_id')
-            ])
-            ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name'])
-            ->all();
-            $rowData = [];
-            $rowId = [];
-        foreach ($groupUserRecords as $obj) {
-            $rowData[] = $obj->role_name;
-            $rowId[] = $obj->id;
+        $user_id = $this->getCurrentUserId();
+        $is_super_user = self::isSuperUser($user_id);
+        $emptyNavigation = [];
+        $fullPerformanceNavigation = self::getFullPerformanceNavigation();
+        if($is_super_user){
+            return $fullPerformanceNavigation;
         }
-        if(!empty($rowId)){
-            $SecurityPerformanceFunctions = $SecurityRoleFunctions->find()
-                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
-                        [
-                            $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
-                        ]
-                    )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, $securityFunctions->aliasField('module') => 'Administration',
-                    $securityFunctions->aliasField('category') => 'Performance',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
+        $userRoleIdArray = $this->getUserRoleIdArray($user_id);
+        $module = 'Administration';
+        $category = ['Performance', 'Competencies', 'ReportCards', 'Assessments', 'Outcomes'];
+        $function = '_view';
+//        $this->log('userRoleIdArray', 'debug');
+//        $this->log($userRoleIdArray, 'debug');
+        $has_user_permission = self::hasUserPermission($module, $category, $function, $userRoleIdArray);
+        $this->log('$has_user_permission', 'debug');
+        $this->log($has_user_permission, 'debug');
+        if($has_user_permission){
+            return $fullPerformanceNavigation;
         }
-        $navSix = [];
-        //POCOR-7569 start
-        // if(empty($userinfo)){
-        //     if(!empty($SecurityPerformanceFunctions)){
-        //         $navSix = [
-        //             'Administration.Performance' => [
-        //             'title' => 'Performance',
-        //             'parent' => 'Administration',
-        //             'link' => false
-        //         ],
-
-        //         'Competencies.Templates' => [
-        //             'title' => 'Competencies',
-        //             'parent' => 'Administration.Performance',
-        //             'params' => ['plugin' => 'Competency'],
-        //             'selected' => ['Competencies.Templates',
-        //                 'Competencies.Items',
-        //                 'Competencies.Criterias',
-        //                 'Competencies.Periods',
-        //                 'Competencies.GradingTypes']
-        //         ],
-
-        //         'Outcomes.Templates' => [
-        //             'title' => 'Outcomes',
-        //             'parent' => 'Administration.Performance',
-        //             'params' => ['plugin' => 'Outcome'],
-        //             'selected' => ['Outcomes.Templates',
-        //                 'Outcomes.Criterias',
-        //                 'Outcomes.Periods',
-        //                 'Outcomes.GradingTypes',
-        //                 'Outcomes.ImportOutcomeTemplates']
-        //         ],
-
-        //         'Assessments.Assessments' => [
-        //             'title' => 'Assessments',
-        //             'parent' => 'Administration.Performance',
-        //             'params' => ['plugin' => 'Assessment'],
-        //             'selected' => ['Assessments.Assessments',
-        //                 'Assessments.AssessmentPeriods',
-        //                 'Assessments.GradingTypes']
-        //         ],
-
-        //         'ReportCards.Templates' => [
-        //             'title' => 'Report Cards',
-        //             'parent' => 'Administration.Performance',
-        //             'params' => ['plugin' => 'ReportCard'],
-        //             'selected' => ['ReportCards.Templates',
-        //                 'ReportCards.ReportCardEmail',
-        //                 'ReportCards.Processes']
-        //         ],
-        //         ];
-        //     }
-        // }else{
-        //POCOR-7569 end
-            $navSix = [
-                    'Administration.Performance' => [
-                    'title' => 'Performance',
-                    'parent' => 'Administration',
-                    'link' => false
-                ],
-
-                'Competencies.Templates' => [
-                    'title' => 'Competencies',
-                    'parent' => 'Administration.Performance',
-                    'params' => ['plugin' => 'Competency'],
-                    'selected' => ['Competencies.Templates',
-                        'Competencies.Items',
-                        'Competencies.Criterias',
-                        'Competencies.Periods',
-                        'Competencies.GradingTypes']
-                ],
-
-                'Outcomes.Templates' => [
-                    'title' => 'Outcomes',
-                    'parent' => 'Administration.Performance',
-                    'params' => ['plugin' => 'Outcome'],
-                    'selected' => ['Outcomes.Templates',
-                        'Outcomes.Criterias',
-                        'Outcomes.Periods',
-                        'Outcomes.GradingTypes',
-                        'Outcomes.ImportOutcomeTemplates']
-                ],
-
-                'Assessments.Assessments' => [
-                    'title' => 'Assessments',
-                    'parent' => 'Administration.Performance',
-                    'params' => ['plugin' => 'Assessment'],
-                    'selected' => ['Assessments.Assessments',
-                        'Assessments.AssessmentPeriods',
-                        'Assessments.GradingTypes']
-                ],
-
-                'ReportCards.Templates' => [
-                    'title' => 'Report Cards',
-                    'parent' => 'Administration.Performance',
-                    'params' => ['plugin' => 'ReportCard'],
-                    'selected' => ['ReportCards.Templates',
-                        'ReportCards.ReportCardEmail',
-                        'ReportCards.Processes']
-                ],
-
-            ];
-        // }
-        return $navSix;
+        return $emptyNavigation;
     }
 
     //POCOR-7527
@@ -4139,6 +4039,75 @@ class NavigationComponent extends Component
             ];
         }
         return $navdataMgt;
+    }
+
+    /**
+     * @return mixed
+     */
+    private function getCurrentUserId()
+    {
+        $session = $this->request->session();
+        $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        $user_id = $this->controller->paramsDecode($userId)['id'];
+        return $user_id;
+    }
+
+    /**
+     * @param $user_id
+     * @return array
+     */
+    private function getUserRoleIdArray($user_id)
+    {
+        $this->log('user_id', 'debug');
+        $this->log($user_id, 'debug');
+        $GroupUsers = TableRegistry::get('security_group_users');
+        $distinctResults = $GroupUsers->find('all')
+            ->where(['security_user_id' => $user_id])
+            ->select(['security_role_id'])
+            ->distinct(['security_role_id'])
+            ->toArray();
+        $this->log($distinctResults, 'debug');
+        $distinctResultsValues = array_column($distinctResults, 'security_role_id');
+        $this->log($distinctResultsValues, 'debug');
+        $uniqu_array = array_unique($distinctResultsValues);
+        if(sizeof($uniqu_array) == 0){
+            $uniqu_array = [0];
+        }
+        return $uniqu_array;
+    }
+
+    /**
+     * @param $module
+     * @param $category
+     * @param $function
+     * @param array $userRoleIdArray
+     * @return boolean
+     */
+    private static function hasUserPermission($module, $category, $function, array $userRoleIdArray)
+    {
+        if(!is_array($category)){
+            $category = [$category];
+        }
+        $has_user_permission = false;
+        $securityRoleFunctions = TableRegistry::get('security_role_functions');
+        $securityFunctions = TableRegistry::get('security_functions');
+        $SecurityTrainingFunctions = $securityRoleFunctions->find()
+            ->InnerJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                [
+                    $securityFunctions->aliasField('id = ') .
+                    $securityRoleFunctions->aliasField('security_function_id'),
+                    $securityFunctions->aliasField('module') => $module,
+                    $securityFunctions->aliasField('controller IN') => $category
+                ]
+            )->where(
+                [$securityRoleFunctions->aliasField('security_role_id IN') => $userRoleIdArray,
+                    $securityRoleFunctions->aliasField($function) => 1]
+            )
+            ->first();
+        if($SecurityTrainingFunctions){
+            $has_user_permission = true;
+        }
+        return $has_user_permission;
     }
 
 }
