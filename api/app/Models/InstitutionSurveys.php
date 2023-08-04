@@ -16,4 +16,9 @@ class InstitutionSurveys extends Model
     {
         return $this->belongsTo(SurveyForms::class, 'survey_form_id', 'id');
     }
+
+    public function status()
+    {
+        return $this->belongsTo(WorkflowSteps::class, 'status_id', 'id');
+    }
 }
