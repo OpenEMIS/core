@@ -219,14 +219,18 @@ class DataManagementCopyTable extends ControllerActionTable
             }
 
             if(!empty($education_grades_id_arr )){
-
+                
                 $InstitutionGradesdata = $InstitutionGrades
                 ->find('all')
                 ->where(['education_grade_id IN ' => $education_grades_id_arr])
                 ->toArray();
                 if(!empty($InstitutionGradesdata)){
+                  
+                    if($this->checkInstitutionCopiedData($entity->from_academic_period,$entity->to_academic_period)){//POCOR-7567-institution programme
+                       
                     $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
                     return false;
+                    }
                 }
             }
         }
@@ -458,122 +462,135 @@ class DataManagementCopyTable extends ControllerActionTable
 
             $institutions = $Institutions->find('all')->toArray();        
             // foreach($InstitutionGradesdataToInsert AS $InstitutionGradesdataValue){
+                //POCOR-7567-institution programme start
                 foreach($institutions as $k => $Insti){ 
-                    if (!in_array($Insti->id, $InsIds)) {
-                        $InstitutionGradesdataValue = $InstitutionGrades
-                        ->find('all')
-                        ->where(['academic_period_id' => $from_academic_period,'institution_id'=> $Insti->id])
-                        ->first();
-                        if(!empty($InstitutionGradesdataValue)){
-                            try{
-                                $statement = $connection->prepare('INSERT INTO institution_grades 
-                                (
-                                education_grade_id, 
-                                academic_period_id,
-                                start_date,
-                                start_year,
-                                end_date,
-                                end_year,
-                                institution_id,
-                                modified_user_id,
-                                modified,
-                                created_user_id,
-                                created)
-                                
-                                VALUES (:education_grade_id,
-                                :academic_period_id,
-                                :start_date, 
-                                :start_year,
-                                :end_date,
-                                :end_year,
-                                :institution_id,
-                                :modified_user_id,
-                                :modified,
-                                :created_user_id,
-                                :created)');
-            
-                                $statement->execute([
-                                'education_grade_id' => $InstitutionGradesdataValue->education_grade_id,
-                                'academic_period_id' => $to_academic_period,
-                                'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
-                                'start_year' => $ToAcademicPeriodsData['start_year'],
-                                'end_date' => null,
-                                'end_year' => null,
-                                'institution_id' => $InstitutionGradesdataValue->institution_id,
-                                'modified_user_id' => 2,
-                                'modified' => date('Y-m-d H:i:s'),
-                                'created_user_id' => 2,
-                                'created' => date('Y-m-d H:i:s')
-                                ]);
-                            
-                            }catch (PDOException $e) {
-                                echo "<pre>";print_r($e);die;
-                            }
+
+                    $existingRecords = array_filter(
+                        $InstitutionGradesdatasToInsert,
+                        function ($value) {
+                            return $value['institution_id']  === $Insti->id ;
                         }
+                    );
+                    $recordsToEnter = $InstitutionGrades
+                    ->find('all')
+                    ->where(['academic_period_id' => $from_academic_period,'institution_id'=> $Insti->id])
+                    ->all();
+                   if($existingRecords<  $recordsToEnter ){
+                        $InstitutionGradesdataValue = $InstitutionGrades
+                            ->find('all')
+                            ->where(['academic_period_id' => $from_academic_period,'institution_id'=> $Insti->id])
+                            ->first();
+                        
+                            if(!empty($InstitutionGradesdataValue)){
+                                try{
+                                    $statement = $connection->prepare('INSERT INTO institution_grades 
+                                    (
+                                                        education_grade_id, 
+                                                        academic_period_id,
+                                                        start_date,
+                                                        start_year,
+                                                        end_date,
+                                                        end_year,
+                                                        institution_id,
+                                                        modified_user_id,
+                                                        modified,
+                                                        created_user_id,
+                                                        created)
+                                    VALUES (:education_grade_id,
+                                                        :academic_period_id,
+                                                        :start_date, 
+                                                        :start_year,
+                                                        :end_date,
+                                                        :end_year,
+                                                        :institution_id,
+                                                        :modified_user_id,
+                                                        :modified,
+                                                        :created_user_id,
+                                                        :created)');
+                
+                                    $statement->execute([
+                                    'education_grade_id' => $InstitutionGradesdataValue->education_grade_id,
+                                    'academic_period_id' => $to_academic_period,
+                                    'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
+                                    'start_year' => $ToAcademicPeriodsData['start_year'],
+                                    'end_date' => null,
+                                    'end_year' => null,
+                                    'institution_id' => $InstitutionGradesdataValue->institution_id,
+                                    'modified_user_id' => 2,
+                                    'modified' => date('Y-m-d H:i:s'),
+                                    'created_user_id' => 2,
+                                    'created' => date('Y-m-d H:i:s')
+                                    ]);
+                                
+                                }catch (PDOException $e) {
+                                    echo "<pre>";print_r($e);die;
+                                }
+                            
 
-                    }
+                             }
+                   }
             }
-
+            //POCOR-7567-institution programme end 
             $Unmatched =[];
             $Matched = [];
 
-            $institutions = $Institutions->find('all')->toArray();        
-            // foreach($InstitutionGradesdataToInsert AS $InstitutionGradesdataValue){
-                foreach($institutions as $k => $Insti){ 
-                    if (!in_array($Insti->id, $InsIds)) {
-                        $InstitutionGradesdataValue = $InstitutionGrades
-                        ->find('all')
-                        ->where(['academic_period_id' => $from_academic_period,'institution_id'=> $Insti->id])
-                        ->first();
-                        if(!empty($InstitutionGradesdataValue)){
-                            try{
-                                $statement = $connection->prepare('INSERT INTO institution_grades 
-                                (
-                                education_grade_id, 
-                                academic_period_id,
-                                start_date,
-                                start_year,
-                                end_date,
-                                end_year,
-                                institution_id,
-                                modified_user_id,
-                                modified,
-                                created_user_id,
-                                created)
-                                
-                                VALUES (:education_grade_id,
-                                :academic_period_id,
-                                :start_date, 
-                                :start_year,
-                                :end_date,
-                                :end_year,
-                                :institution_id,
-                                :modified_user_id,
-                                :modified,
-                                :created_user_id,
-                                :created)');
+            // $institutions = $Institutions->find('all')->toArray();        
+            // // foreach($InstitutionGradesdataToInsert AS $InstitutionGradesdataValue){
+            //     foreach($institutions as $k => $Insti){ 
+            //         if (!in_array($Insti->id, $InsIds)) {
+            //             $InstitutionGradesdataValue = $InstitutionGrades
+            //             ->find('all')
+            //             ->where(['academic_period_id' => $from_academic_period,'institution_id'=> $Insti->id])
+            //             ->first();
+            //             if(!empty($InstitutionGradesdataValue)){
+            //                 try{
+            //                     $statement = $connection->prepare('INSERT INTO institution_grades 
+            //                     (
+            //                     education_grade_id, 
+            //                     academic_period_id,
+            //                     start_date,
+            //                     start_year,
+            //                     end_date,
+            //                     end_year,
+            //                     institution_id,
+            //                     modified_user_id,
+            //                     modified,
+            //                     created_user_id,
+            //                     created)
+          
+            //                     VALUES (:education_grade_id,
+            //                     :academic_period_id,
+            //                     :start_date, 
+            //                     :start_year,
+            //                     :end_date,
+            //                     :end_year,
+            //                     :institution_id,
+            //                     :modified_user_id,
+            //                     :modified,
+            //                     :created_user_id,
+            //                     :created)');
             
-                                $statement->execute([
-                                'education_grade_id' => $InstitutionGradesdataValue->education_grade_id,
-                                'academic_period_id' => $to_academic_period,
-                                'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
-                                'start_year' => $ToAcademicPeriodsData['start_year'],
-                                'end_date' => null,
-                                'end_year' => null,
-                                'institution_id' => $InstitutionGradesdataValue->institution_id,
-                                'modified_user_id' => 2,
-                                'modified' => date('Y-m-d H:i:s'),
-                                'created_user_id' => 2,
-                                'created' => date('Y-m-d H:i:s')
-                                ]);
+            //                     $statement->execute([
+            //                     'education_grade_id' => $InstitutionGradesdataValue->education_grade_id,
+            //                     'academic_period_id' => $to_academic_period,
+            //                     'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
+            //                     'start_year' => $ToAcademicPeriodsData['start_year'],
+            //                     'end_date' => null,
+            //                     'end_year' => null,
+            //                     'institution_id' => $InstitutionGradesdataValue->institution_id,
+            //                     'modified_user_id' => 2,
+            //                     'modified' => date('Y-m-d H:i:s'),
+            //                     'created_user_id' => 2,
+            //                     'created' => date('Y-m-d H:i:s')
+            //                     ]);
                             
-                            }catch (PDOException $e) {
-                                echo "<pre>";print_r($e);die;
-                            }
-                        }
+            //                 }catch (PDOException $e) {
+            //                     echo "<pre>";print_r($e);die;
+            //                 }
+            //             }
 
-                    }
-            }
+            //         }
+            // }
 
             $from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
             $to_end_date = $ToAcademicPeriodsData['end_date']->format('Y-m-d');
@@ -1380,7 +1397,7 @@ class DataManagementCopyTable extends ControllerActionTable
         Log::write('debug', $shellCmd);
      }
     //POCOR-7576-shifts start
-    private function checkshiftCoiedData( $copyFrom,$copyTo)
+    private function checkshiftCopiedData( $copyFrom,$copyTo)
     {
         $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
         $copiedRecords = $InstitutionShifts->find()
@@ -1408,7 +1425,87 @@ class DataManagementCopyTable extends ControllerActionTable
         }
         return true;
     }
+    
      //POCOR-7576-shifts end
- }
+    //POCOR-7576-institution programme start
+    private function checkInstitutionCopiedData($copyFrom,$copyTo){
+        $educationGradesTable = TableRegistry::get('Education.EducationGrades');
+        $institutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
 
 
+        $query = $institutionGradesTable
+        ->find()
+        ->select([
+            'period_id' => 'AcademicPeriods.id',
+            'period_name' => 'AcademicPeriods.name',
+            'period_code' => 'AcademicPeriods.code',
+            'grade_id' => 'EducationGrades.id',
+            'grade_name' => 'EducationGrades.name',
+            'programme_name' => 'EducationProgrammes.name',
+            'institution_id' => 'Institutions.id'
+        ])
+        ->innerJoin(
+            ['EducationGrades' => 'education_grades'],
+            ['EducationGrades.id = InstitutionGrades.education_grade_id']
+        )
+        ->innerJoin(
+            ['Institutions' => 'institutions'],
+            ['Institutions.id = InstitutionGrades.institution_id']
+        )
+        ->innerJoin(
+            ['EducationProgrammes' => 'education_programmes'],
+            ['EducationGrades.education_programme_id = EducationProgrammes.id']
+        )
+        ->innerJoin(
+            ['EducationCycles' => 'education_cycles'],
+            ['EducationProgrammes.education_cycle_id = EducationCycles.id']
+        )
+        ->innerJoin(
+            ['EducationLevels' => 'education_levels'],
+            ['EducationCycles.education_level_id = EducationLevels.id']
+        )
+        ->innerJoin(
+            ['EducationSystems' => 'education_systems'],
+            ['EducationLevels.education_system_id = EducationSystems.id']
+        )
+        ->innerJoin(
+            ['AcademicPeriods' => 'academic_periods'],
+            ['EducationSystems.academic_period_id = AcademicPeriods.id']
+        )
+        ->order([
+            'AcademicPeriods.order' => 'ASC',
+            'EducationLevels.order' => 'ASC',
+            'EducationCycles.order' => 'ASC',
+            'EducationProgrammes.order' => 'ASC',
+            'EducationGrades.order' => 'ASC',
+            'Institutions.id' => 'ASC'
+        ])->toArray();
+
+
+        $copyFromData = $this->filter_array($query,$copyFrom,'period_id');
+        $copyToData = $this->filter_array($query,$copyTo,'period_id');
+        $count=0;
+        foreach($copyFromData as $key=>$value){
+            foreach($copyToData as $Key=>$Value){
+                if(($value['grade_name']==$Value['grade_name'])&&($value['programme_name']==$Value['programme_name'])&&($value['institution_id']==$Value['institution_id'])){
+                    //nothing to do
+                    $count++;
+                }
+        }}
+        if(count($copyFromData)>$count){
+           return false;
+        }
+        return true;
+        
+   }
+ 
+    public function filter_array($array,$term,$column){
+        $matches = array();
+        foreach($array as $a){
+            if($a[$column] == $term)
+                $matches[]=$a;
+        }
+        return $matches;
+    }
+    //POCOR-7576-institution programme end 
+}
