@@ -65,14 +65,28 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
-        return $validator
-            ->allowEmpty('registration_number')
-            ->add('registration_number', 'ruleUnique', [
-                'rule' => ['validateUnique', ['scope' => ['examination_id']]],
-                'provider' => 'table'
-            ])
-            ->requirePresence('auto_assign_to_rooms');
-    }
+          //POCOR-7512 start
+        if (isset($this->action))
+            if($this->action == 'add') {
+                $validator
+                ->allowEmpty('registration_number')
+                ->add('registration_number', 'ruleUnique', [
+                    'rule' => ['validateUnique', ['scope' => ['examination_id']]],
+                    'provider' => 'table'
+                ])
+                ->requirePresence('auto_assign_to_rooms');
+            }
+            if($this->action == 'edit') {
+                $validator ->allowEmpty('registration_number')
+                ->add('registration_number', 'ruleUnique', [
+                    'rule' => ['validateUnique', ['scope' => ['examination_id']]],
+                    'provider' => 'table'
+                ]);
+            }
+            return $validator;
+        }
+        //POCOR-7512 end
+    
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
@@ -394,16 +408,35 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->field('special_needs', ['type' => 'readonly']);
         $this->field('institution_class_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]);
         $this->field('auto_assign_to_rooms', ['type' => 'select', 'options' => $this->getSelectOptions('general.yesno')]);
-        $this->field('subject_id');
+       
         $this->field('student_id', ['entity' => $entity]);
+        $this->field('subject_id');
         $this->field('education_grade_id', ['type' => 'hidden']);
         $this->field('registration_number', ['visible' => false]);
 
         $this->setFieldOrder([
-            'academic_period_id', 'examination_id', 'examination_education_grade', 'examination_centre_id', 'special_needs', 'auto_assign_to_rooms', 'institution_class_id', 'subject_id','student_id'
+            'academic_period_id', 'examination_id', 'examination_education_grade', 'examination_centre_id', 'special_needs', 'auto_assign_to_rooms', 'institution_class_id', 'student_id','subject_id'
         ]);
     }
+      //POCOR-7512 start
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $subjectTable=TableRegistry::get('examination_student_subjects');
+        $subjectData=$subjectTable->find('all')->
+        select([
+          'id'=> 'ExaminationSubjects.id',
+          'name'=> 'ExaminationSubjects.name',
+           'code'=>'ExaminationSubjects.code'
 
+        ])->leftJoin(
+        ['ExaminationSubjects' => 'examination_subjects'],
+        [
+            'ExaminationSubjects.id = '.  $subjectTable->aliasField('examination_subject_id')
+        ]
+        )->where([$subjectTable->aliasField('student_id')=>$entity->student_id])->toArray();
+        $entity['examination_subjects']=$subjectData;
+     
+    }  //POCOR-7512 end
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
@@ -634,14 +667,16 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             $attr['type'] = 'element';
             $attr['element'] = 'Examination.students';
             $attr['data'] = $students;
+            $request->data[$this->alias()]['studentList'] =$students;
         }
 
         return $attr;
     }
     public function onUpdateFieldSubjectId(Event $event, array $attr, $action, $request){
+    
         $subjects = [];
         if ($action == 'add') {
-            if (!empty($request->data[$this->alias()]['examination_id']) && !empty($request->data[$this->alias()]['institution_class_id'])) {
+            if (!empty($request->data[$this->alias()]['examination_id']) &&!empty($request->data[$this->alias()]['studentList'])) {
                 $ExaminationSubjects=TableRegistry::get('Examination.ExaminationSubjects');
                 $subjects=$ExaminationSubjects->find()->where([
                                  $ExaminationSubjects->aliasField('examination_id')=>$request->data[$this->alias()]['examination_id']   
@@ -660,7 +695,26 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $requestData[$this->alias()]['student_id'] = 0;
-    }
+    }  //POCOR-7512 start
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        $examinationStudentSubjects=TableRegistry::get('examination_student_subjects');
+        $examinationSubjects = $examinationStudentSubjects->find()
+                                   ->where(['student_id'=>$entity->student_id]
+                                   )->toArray();  
+        foreach($examinationSubjects as $data){
+                $deleteEntity =   $examinationStudentSubjects->delete($data);
+        } 
+        foreach($entity->examination_subjects as $Key=>$value){
+            if($value['selected']==1){
+                $studSubArr= $examinationStudentSubjects->newEntity(array(
+                    'student_id'=>$entity->student_id,
+                    'examination_subject_id'=>$value['subject_id']
+                ));
+                $save =$examinationStudentSubjects->save($studSubArr); 
+        }}
+    }  //POCOR-7512 end
+        
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {  
         $process = function ($model, $entity) use ($requestData) {
@@ -749,17 +803,21 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                     if($entity->examination_subjects){
                         $examinationStudentSubjects=TableRegistry::get('examination_student_subjects');
                         if(!empty($listOfSelectedStudents)){
-                            for($i=0;$i<count($listOfSelectedStudents);$i++){
-                          
-                            foreach($entity->examination_subjects as $Key=>$value){
-                             
-                              if($value['selected']==1){
-                              $entity=$examinationStudentSubjects->newEntity([
-                                         'student_id'=>$listOfSelectedStudents[$i],
-                                         'examination_subject_id'=>$value['subject_id']
-                              ]);
-                              $result=$examinationStudentSubjects->save($entity);
-                            }}
+                            $entities=[];
+                            foreach($listOfSelectedStudents as $stu ){
+                                foreach($entity->examination_subjects as $Key=>$value){
+                                if($value['selected']==1){
+                                    $studSubArr= array(
+                                        'student_id'=>$stu,
+                                        'examination_subject_id'=>$value['subject_id']
+                                    );
+                                $entitiesData[]=  $studSubArr;
+                                }
+                                }
+                            }
+                            $entities = $examinationStudentSubjects->newEntities($entitiesData);
+                            foreach ($entities as $entity) {
+                                $examinationStudentSubjects->save($entity);
                             }
                        } 
                     }
@@ -821,10 +879,6 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
         return $process;
     }
-    public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
-    {
-       
-    }
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
@@ -834,4 +888,30 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-}
+      //POCOR-7512 start
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+      {
+       
+        $subjectTable=TableRegistry::get('examination_subjects');
+        $subjectData=$subjectTable->find('all')->
+                                    select([
+                                    'id'=> $subjectTable->aliasField('id'),
+                                    'name'=> $subjectTable->aliasField('name'),
+                                    'code'=>$subjectTable->aliasField('code'),])->
+                                    where([$subjectTable->aliasField('examination_id')=>$entity->examination_id])->toArray();
+        $entity['examination_subjects']=$subjectData;
+
+        $this->field('academic_period_id', ['type' => 'readonly']);
+        $this->field('examination_id', ['type' => 'readonly']);
+        $this->field('openemis_no', ['type' => 'readonly']);
+        $this->field('student_id', ['type' => 'readonly']);
+       
+      
+        $this->field('examination_subjects',[
+            'type'=>'element','element'=>'Examination.institution_examination_subjects','data'=>$entity['examination_subjects']
+        ]);
+        $this->setFieldOrder(['academic_period_id','examination_id','registration_number','openemis_no','student_id','examination_subjects']);
+    }}  
+      //POCOR-7512 end
+      
+    
