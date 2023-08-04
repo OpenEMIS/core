@@ -34,12 +34,26 @@ class SurveyController extends Controller
     }
 
 
-    public function downloadXform(Request $request, $surveyFormId)
+    public function downloadXform(Request $request, $surveyFormId, $action=1)
     {
         try {
             $data = $this->surveyService->downloadXform($request, $surveyFormId);
             
-            return $data;
+            if(!empty($data)){
+                if($action == 1){
+                    return response($data, 200,['Content-Type' => 'application/xml']);
+                } else {
+                    $fileName = 'xform_' . date('Ymdhis');
+                    $fileWithExt = $fileName.".xml";
+
+                    return response($data)
+                        ->header('Content-type', 'application/xml')
+                        ->header('Content-Disposition', 'attachment; filename='.$fileWithExt);
+                }
+            } else {
+                return $this->sendErrorResponse('Failed to download survey xformqqq.');
+            }
+            
             
         } catch (\Exception $e) {
             Log::error(
@@ -57,7 +71,19 @@ class SurveyController extends Controller
         try {
             $data = $this->surveyService->uploadXform($request);
             
-            return $data;
+            if($data == 0){
+                return $this->sendErrorResponse('Invalid institution code.');
+            } elseif($data == 2){
+                return $this->sendErrorResponse('No record found for institution for the form for the period.');
+            } elseif($data == 3){
+                return $this->sendErrorResponse('Survey is already expired.');
+            } elseif($data == 4){
+                return $this->sendErrorResponse('Survey is already completed.');
+            } elseif($data == 1){
+                return $this->sendSuccessResponse('Survey xfrom uploaded successfully.');
+            } else {
+                return $this->sendErrorResponse('Failed to upload survey xform.');
+            }
             
         } catch (\Exception $e) {
             Log::error(
