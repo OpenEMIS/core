@@ -706,7 +706,7 @@ trait MessagesTrait
             'noGradingOptions' => 'There are no grading options for this grading type'
         ],
         'Examinations' => [
-            'noExaminationItems' => 'There are no examination items for this examination'
+            'noExaminationSubjects' => 'There are no examination items for this examination'
         ],
         'ExaminationCentres' => [
             'savingProcessStarted' => 'Examination centres are currently being added in the background'
@@ -2115,7 +2115,7 @@ trait MessagesTrait
                     'ruleSeatsNumber' => 'Number of seats is out of range'
                 ]
             ],
-            'ExaminationItems' => [
+            'ExaminationSubjects' => [
                 'weight' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
                     'ruleWeightRange' => 'Value must be positive and less than 2.0'
