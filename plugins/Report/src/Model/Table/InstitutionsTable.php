@@ -1007,9 +1007,9 @@ class InstitutionsTable extends AppTable
                     $attr['attr']['multiple'] = false;
                     $attr['select'] = true;
                     if($feature == "Report.InstitutionSummaryReport"){ 
-                        $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $areaOptions->toArray();
+                        $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $areaOptions->toArray();
                     }else{
-                        $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas Level')] + $areaOptions->toArray();
+                        $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas Level')] + $areaOptions->toArray();
                     }
                     
                     $attr['onChangeReload'] = true;
@@ -1077,9 +1077,9 @@ class InstitutionsTable extends AppTable
                     $attr['select'] = true;
                     /*POCOR-6333 starts*/
                     if (count($areaOptions) > 1) {
-                        $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas')] + $areaOptions;
+                        $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas')] + $areaOptions;
                     } else {
-                        $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $areaOptions;
+                        $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $areaOptions;
                     }
                     /*POCOR-6333 ends*/
                     $attr['onChangeReload'] = true;
@@ -1150,9 +1150,9 @@ class InstitutionsTable extends AppTable
                 $attr['select'] = false;
                 /*POCOR-6337 starts*/
                 if (count($programmeOptions) > 1) {
-                    $attr['options'] = ['' => '-- ' . _('Select') . ' --', 0 => _('All Programmes')] + $programmeOptions;
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --', 0 => __('All Programmes')] + $programmeOptions;
                 } else {
-                    $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $programmeOptions;
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $programmeOptions;
                 }
                 /*POCOR-6337 starts*/
                 $attr['onChangeReload'] = true;
@@ -2238,9 +2238,9 @@ class InstitutionsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 if (count($levelOptions) > 1) {
-                    $attr['options'] = ['' => '-- ' . _('Select') . ' --', 0 => _('All Level')] + $levelOptions;
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --', 0 => __('All Level')] + $levelOptions;
                 } else {
-                    $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $levelOptions;
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $levelOptions;
                 }
                 /*POCOR-6337 starts*/
                 $attr['onChangeReload'] = true;
