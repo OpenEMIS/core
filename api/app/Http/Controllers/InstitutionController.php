@@ -13,6 +13,7 @@ use App\Http\Requests\CompetencyCommentAddRequest;
 use App\Http\Requests\CompetencyPeriodCommentAddRequest;
 use App\Http\Requests\DeleteClassAttendanceRequest;
 use App\Http\Requests\StudentBehavioursRequest;
+use Exception;
 
 class InstitutionController extends Controller
 {

@@ -108,7 +108,7 @@ class InstitutionsTable extends AppTable
 
         /*POCOR-6333 starts*/
         $feature = $this->request->data[$this->alias()]['feature'];
-        if (in_array($feature, ['Report.Institutions','Report.StudentAbsencesPerDays'])) {
+        if (in_array($feature, ['Report.Institutions','Report.StaffBehaviours','Report.StudentAbsencesPerDays'])) {
             $validator = $validator
                     ->notEmpty('area_level_id')
                     ->notEmpty('area_education_id');
@@ -313,6 +313,7 @@ class InstitutionsTable extends AppTable
         } elseif ($data[$this->alias()]['feature'] == 'Report.StaffLeave') { //POCOR-5762
             $options['validate'] = 'StaffLeave';
         }
+       
         elseif ($data[$this->alias()]['feature'] == 'Report.StudentAbsencesPerDays') { //POCOR-7276
             $options['validate'] = 'StudentAbsencesPerDays';
         }
@@ -328,6 +329,7 @@ class InstitutionsTable extends AppTable
             switch ($feature) {
                 /*POCOR-6176 Starts*/
                 case 'Report.Institutions':
+                case 'Report.StaffBehaviours':
                     $fieldsOrder[] = 'area_level_id';
                     $fieldsOrder[] = 'area_education_id';
                     $fieldsOrder[] = 'institution_filter';
@@ -565,7 +567,7 @@ class InstitutionsTable extends AppTable
     }
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
-    {
+    { 
 
         $requestData = json_decode($settings['process']['params']);
         $feature = $requestData->feature;
@@ -670,7 +672,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if ($feature == 'Report.Institutions') {
+            if ($feature == 'Report.Institutions'||$feature == 'Report.StaffBehaviours') {
                 $option[self::NO_FILTER] = __('All Institutions');
                 $option[self::NO_STUDENT] = __('Institutions with No Students');
                 $option[self::NO_STAFF] = __('Institutions with No Staff');
@@ -940,7 +942,7 @@ class InstitutionsTable extends AppTable
 
 
                          ]
-                    )) ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
+                    )) ||(((in_array($feature, ['Report.Institutions'])||in_array($feature, ['Report.StaffBehaviours'])) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
 
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
@@ -990,7 +992,8 @@ class InstitutionsTable extends AppTable
                 'Report.Income',
                 'Report.Expenditure',
                 'Report.InstitutionPositionsSummaries',
-                'Report.StudentAbsencesPerDays' //POCOR-7276
+                'Report.StudentAbsencesPerDays',
+                'Report.StaffBehaviours' //POCOR-7276
             ]))) {
                 $Areas = TableRegistry::get('AreaLevel.AreaLevels');
                 $entity = $attr['entity'];
@@ -1053,7 +1056,8 @@ class InstitutionsTable extends AppTable
                     'Report.Income',
                     'Report.Expenditure',
                     'Report.InstitutionPositionsSummaries',
-                    'Report.StudentAbsencesPerDays' //POCOR-7276
+                    'Report.StudentAbsencesPerDays' ,
+                    'Report.StaffBehaviours'//POCOR-7276
                 ]))) {
                 $Areas = TableRegistry::get('Area.Areas');
                 $entity = $attr['entity'];
@@ -1840,6 +1844,7 @@ class InstitutionsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+      
         $requestData = json_decode($settings['process']['params']);
         $filter = $requestData->institution_filter;
         $areaId = $requestData->area_education_id;

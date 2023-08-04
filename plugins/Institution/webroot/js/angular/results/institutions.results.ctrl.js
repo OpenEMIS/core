@@ -28,9 +28,9 @@ function InstitutionsResultsController($q,
 
     function handleError(error) {
         // No Assessment
-        console.log(error);
-        AlertSvc.warning($scope, error);
         removeLoader();
+        console.error(error);
+        AlertSvc.warning($scope, error);
     }
 
     function removeLoader() {
