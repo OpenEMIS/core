@@ -11,5 +11,6 @@
 				<?= $this->Html->link($btn['label'], $btn['url'], $btn['attr']) ?>
 			</li>
 		<?php endforeach ?>
+<!--        --><?//= die() ?>
 	</ul>
 </div>
