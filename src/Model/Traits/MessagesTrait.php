@@ -54,6 +54,7 @@ trait MessagesTrait
             'notExists' => 'The record does not exist.',
             'notEditable' => 'This record is not editable',
             'notConfigured' => 'Not Configured',
+            'specialChar' => 'Academic term does not allow special characters such as "&"', //POCOR-7387
             'unassigned' => 'Unassigned',
             'exists' => 'The record exists in the system.',
             'noData' => 'There are no records.',
