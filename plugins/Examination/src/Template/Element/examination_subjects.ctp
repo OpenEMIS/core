@@ -1,7 +1,7 @@
 <?php
     $alias = $ControllerAction['table']->alias();
     if ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit') {
-        $this->Form->unlockField('Examinations.examination_items');
+        $this->Form->unlockField('Examinations.examination_subjects');
     }
 ?>
 
@@ -19,9 +19,9 @@
                 <th><?= __('End Time') ?></th>
             </thead>
 
-            <?php if (isset($data['examination_items'])) : ?>
+            <?php if (isset($data['examination_subjects'])) : ?>
                 <tbody>
-                    <?php foreach ($data['examination_items'] as $i => $item) : ?>
+                    <?php foreach ($data['examination_subjects'] as $i => $item) : ?>
                         <tr>
                             <td><?= $item->code ?></td>
                             <td><?= $item->name ?></td>
@@ -73,11 +73,11 @@
                             <th><?= __('End Time') ?></th>
                             <th class="cell-delete"></th>
                         </thead>
-                        <?php if (isset($data['examination_items'])) : ?>
+                        <?php if (isset($data['examination_subjects'])) : ?>
                             <tbody>
-                                <?php foreach ($data['examination_items'] as $i => $item) : ?>
+                                <?php foreach ($data['examination_subjects'] as $i => $item) : ?>
                                     <?php
-                                        $fieldPrefix = "$alias.examination_items.$i";
+                                        $fieldPrefix = "$alias.examination_subjects.$i";
                                         $joinDataPrefix = $fieldPrefix . '._joinData';
                                     ?>
                                     <tr>
