@@ -93,7 +93,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $events['ControllerAction.Model.generateAll'] = 'generateAll';
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
         $events['ControllerAction.Model.downloadAllPdf'] = 'downloadAllPdf';
-        $events['ControllerAction.Model.mergeAnddownloadAllPdf'] = 'mergeAnddownloadAllPdf';   // POCOR-7320
+        $events['ControllerAction.Model.mergeAndDownloadAllPdf'] = 'mergeAndDownloadAllPdf';   // POCOR-7320
         $events['ControllerAction.Model.viewPDF'] = 'viewPDF';//POCOR-7321
         $events['ControllerAction.Model.publish'] = 'publish';
         $events['ControllerAction.Model.publishAll'] = 'publishAll';
@@ -274,7 +274,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     // Start POCOR-7320
 
-    public function mergeAnddownloadAllPdf(Event $event, ArrayObject $extra)
+    public function mergeAndDownloadAllPdf(Event $event, ArrayObject $extra)
     {
         // ini_set('max_execution_time', '1500');
         $params = $this->getQueryString();
@@ -293,6 +293,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             ->toArray();
 
         if (!empty($files)) {
+            $fileName = 'ReportCards' . '_' . date('Ymd') . '.pdf';
             header('Content-type: application/pdf');
             header('Content-Disposition: inline; filename="' . $fileName . '"');
             header('Content-Transfer-Encoding: binary');
@@ -2308,7 +2309,8 @@ class ReportCardStatusesTable extends ControllerActionTable
             $url = 'mergeAnddownloadAllPdf';
             $label = '<i class="fa kd-download"></i>';
             $title = 'Merge and Download PDF';
-            $name = 'mergeAnddownloadAllPdf';
+            $name = 'mergeAndDownloadAllPdf';
+            $target = true;
             $extra = $this->setUpperButton($extra,
                 $institution_id,
                 $classId,
@@ -2316,7 +2318,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $name,
                 $url,
                 $label,
-                $title);
+                $title,
+                $target);
         }
         return $extra;
     }
@@ -2430,7 +2433,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $url,
                 $label,
                 $title);
-            }
+        }
         return $extra;
     }
 
@@ -2519,6 +2522,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $label = '<i class="fa fa-envelope"></i>';
         $title = 'Email All Excel';
         $name = 'emailAllExcel';
+
         $extra = $this->setUpperButton($extra,
             $institution_id,
             $classId,
@@ -2530,7 +2534,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $extra;
     }
 
-    private function setUpperButton($extra, $institution_id, $classId, $reportCardId, $name, $url, $label, $title)
+    private function setUpperButton($extra, $institution_id, $classId, $reportCardId, $name, $url, $label, $title, $target = null)
     {
         $toolbarAttr = [
             'class' => 'btn btn-xs btn-default',
@@ -2555,7 +2559,9 @@ class ReportCardStatusesTable extends ControllerActionTable
         $upperButton['label'] = $label;
         $upperButton['attr'] = $toolbarAttr;
         $upperButton['attr']['title'] = __($title);
-        $upperButton['attr']['target'] = '_blank';
+        if ($target) {
+            $upperButton['attr']['target'] = '_blank';
+        }
         $extra['toolbarButtons'][$name] = $upperButton;
         return $extra;
     }
