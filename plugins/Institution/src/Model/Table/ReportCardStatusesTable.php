@@ -91,9 +91,9 @@ class ReportCardStatusesTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.generate'] = 'generate';
         $events['ControllerAction.Model.generateAll'] = 'generateAll';
-        $events['ControllerAction.Model.downloadAllExcel'] = 'downloadAllExcel';
+        $events['ControllerAction.Model.downloadAll'] = 'downloadAllExcel';
         $events['ControllerAction.Model.downloadAllPdf'] = 'downloadAllPdf';
-        $events['ControllerAction.Model.mergeAndDownloadAllPdf'] = 'mergeAndDownloadAllPdf';   // POCOR-7320
+        $events['ControllerAction.Model.mergeAnddownloadAllPdf'] = 'mergeAndDownloadAllPdf';   // POCOR-7320
         $events['ControllerAction.Model.viewPDF'] = 'viewPDF';//POCOR-7321
         $events['ControllerAction.Model.publish'] = 'publish';
         $events['ControllerAction.Model.publishAll'] = 'publishAll';
@@ -1709,19 +1709,19 @@ class ReportCardStatusesTable extends ControllerActionTable
         if (is_array($loggedInUserRoles)) {
             $where[$SecurityRoleFunctionsTable->aliasField('security_role_id IN')] = $loggedInUserRoles; //POCOR-7060
         }
-        $this->log('hasSecurityFunction', 'debug');
-        $this->log('where', 'debug');
-        $this->log($where, 'debug');
-        $this->log('functionNames', 'debug');
-        $this->log($functionNames, 'debug');
-        $this->log('functionRight', 'debug');
-        $this->log($functionRight, 'debug');
+//        $this->log('hasSecurityFunction', 'debug');
+//        $this->log('where', 'debug');
+//        $this->log($where, 'debug');
+//        $this->log('functionNames', 'debug');
+//        $this->log($functionNames, 'debug');
+//        $this->log('functionRight', 'debug');
+//        $this->log($functionRight, 'debug');
         $SecurityRoleFunction = $SecurityRoleFunctionsTable
             ->find('all')
             ->where($where)
             ->count();
-        $this->log('count', 'debug');
-        $this->log($SecurityRoleFunction, 'debug');
+//        $this->log('count', 'debug');
+//        $this->log($SecurityRoleFunction, 'debug');
         if ($SecurityRoleFunction > 0) {
             $isSecurityFunction = true;
         }
@@ -2329,10 +2329,10 @@ class ReportCardStatusesTable extends ControllerActionTable
             $this->hasSecurityFunction('Merge and Download PDF',
                 null,
                 $loggedInUserRoles);
-        $this->log('addButton', 'debug');
-        $this->log($addButton, 'debug');
+//        $this->log('addButton', 'debug');
+//        $this->log($addButton, 'debug');
         if ($addButton) {
-            $url = 'mergeAndDownloadAllPdf';
+            $url = 'mergeAnddownloadAllPdf';
             $label = '<i class="fa kd-download"></i>';
             $title = 'Merge and Download PDF';
             $name = 'mergeAndDownloadAllPdf';
@@ -2347,7 +2347,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $title,
                 $target);
         }
-        $this->log($extra, 'debug');
+//        $this->log($extra, 'debug');
         return $extra;
     }
 
@@ -2399,7 +2399,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 '_execute',
                 $loggedInUserRoles);
         if ($addButton) {
-            $url = 'downloadAllExcel';
+            $url = 'downloadAll';
             $label = '<i class="fa kd-download"></i>';
             $title = 'Download All Excel';
             $name = 'downloadAllExcel';
