@@ -91,7 +91,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.generate'] = 'generate';
         $events['ControllerAction.Model.generateAll'] = 'generateAll';
-        $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
+        $events['ControllerAction.Model.downloadAllExcel'] = 'downloadAllExcel';
         $events['ControllerAction.Model.downloadAllPdf'] = 'downloadAllPdf';
         $events['ControllerAction.Model.mergeAndDownloadAllPdf'] = 'mergeAndDownloadAllPdf';   // POCOR-7320
         $events['ControllerAction.Model.viewPDF'] = 'viewPDF';//POCOR-7321
@@ -106,6 +106,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $events['ControllerAction.Model.emailExcel'] = 'emailExcel';
         $events['ControllerAction.Model.emailAllExcel'] = 'emailAllExcel';
         /**POCOR-6836 ends*/
+//        $this->log('debug');
         return $events;
     }
 
@@ -124,7 +125,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         $isSuperAdmin = $this->AccessControl->isAdmin();
         $institution_id = $entity->institution_id;
-        $loggedInUserRoles = $this->getLoggedInUserRoles($institution_id);
+        $loggedInUserRoles = $this->getLoggedInUserRoles();
 
         $buttons = $this->addEntityDownloadButton($entity, $buttons, $reportCardId, $isSuperAdmin, $loggedInUserRoles);
         $buttons = $this->addEntityGenerateButton($entity, $buttons, $reportCardId, $report_card, $isSuperAdmin, $loggedInUserRoles);
@@ -277,8 +278,10 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function mergeAndDownloadAllPdf(Event $event, ArrayObject $extra)
     {
         // ini_set('max_execution_time', '1500');
+
         $params = $this->getQueryString();
         $statusArray = [self::GENERATED, self::PUBLISHED];
+
         $files = $this->StudentsReportCards->find()
             ->contain(['Students', 'ReportCards'])
             ->where([
@@ -291,7 +294,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $this->StudentsReportCards->aliasField('file_content_pdf IS NOT NULL')
             ])
             ->toArray();
-
+//        $this->log('$files', 'debug');
+//        $this->log($files, 'debug');
         if (!empty($files)) {
             $fileName = 'ReportCards' . '_' . date('Ymd') . '.pdf';
             header('Content-type: application/pdf');
@@ -311,6 +315,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
             if (!empty($filePaths)) {
                 $this->mergePDFFiles($filePaths);
+                exit();
             }
 
         } else {
@@ -318,6 +323,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
             return $this->controller->redirect($this->url('index'));
         }
+//        return $this->controller->redirect($this->url('index'));
     }
 
 
@@ -629,7 +635,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
             //POCOR-6692 end     
 
-
+            $inProgress = false;
             if (!$inProgress) {
                 $this->addReportCardsToProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
                 $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
@@ -690,7 +696,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     }
 
     //POCOR-7321 ends
-    public function downloadAll(Event $event, ArrayObject $extra)
+    public function downloadAllExcel(Event $event, ArrayObject $extra)
     {
 
         $params = $this->getQueryString();
@@ -748,6 +754,7 @@ class ReportCardStatusesTable extends ControllerActionTable
      * */
     public function downloadAllPdf(Event $event, ArrayObject $extra)
     {
+
         $params = $this->getQueryString();
 
         // only download report cards with generated or published status
@@ -795,6 +802,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
+            exit();
         } else {
             $event->stopPropagation();
             $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
@@ -938,6 +946,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'academic_period_id' => $student->academic_period_id,
                 'created' => date('Y-m-d H:i:s')
             ];
+            $studentId = $student->student_id;
             $obj = array_merge($idKeys, $data);
             $newEntity = $ReportCardProcesses->newEntity($obj);
             $ReportCardProcesses->save($newEntity);
@@ -1399,7 +1408,8 @@ class ReportCardStatusesTable extends ControllerActionTable
         $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
         $gpa = 0.00;
         $connection = ConnectionManager::get('default');
-        $statement = $connection->prepare("SELECT student_info.report_card_code
+
+        $sql = "SELECT student_info.report_card_code
                         ,student_info.report_card_name
                         ,student_info.start_date
                         ,student_info.end_date
@@ -1450,7 +1460,10 @@ class ReportCardStatusesTable extends ControllerActionTable
                             ,student_subject_info.report_card_id
                     ) student_info
                     GROUP BY student_info.student_id
-                        ,student_info.report_card_id");
+                        ,student_info.report_card_id";
+//        $this->log($sql, 'debug');
+        $statement = $connection->prepare($sql);
+
         $statement->execute();
         $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -1549,7 +1562,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ->getRolesByUser($loggedInUserId)
                 ->extract('security_role_id')
                 ->toArray();
-            return $loggedInUserRoles;
+            return array_unique($loggedInUserRoles);
         }
         $theInstitutionSecurityGroupsIds = $this->getInstitutionSecurityGroupsIds($institution_id);
         $theAreaSecurityGroupsIds = $this->getArraySecurityGroupsIds($institution_id);
@@ -1672,10 +1685,11 @@ class ReportCardStatusesTable extends ControllerActionTable
 //POCOR:6838 START
         $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
         $SecurityFunctionsIds = $SecurityFunctions
-            ->find()
+            ->find('all')
+            ->distinct(['id'])
             ->where([
                 $SecurityFunctions->aliasField('name IN') => $functionNames])
-            ->extract('id');
+            ->extract('id')->toArray();
         if (sizeof($SecurityFunctionsIds) == 0) {
             $SecurityFunctionsIds = [0];
         }
@@ -1695,11 +1709,20 @@ class ReportCardStatusesTable extends ControllerActionTable
         if (is_array($loggedInUserRoles)) {
             $where[$SecurityRoleFunctionsTable->aliasField('security_role_id IN')] = $loggedInUserRoles; //POCOR-7060
         }
+        $this->log('hasSecurityFunction', 'debug');
+        $this->log('where', 'debug');
+        $this->log($where, 'debug');
+        $this->log('functionNames', 'debug');
+        $this->log($functionNames, 'debug');
+        $this->log('functionRight', 'debug');
+        $this->log($functionRight, 'debug');
         $SecurityRoleFunction = $SecurityRoleFunctionsTable
-            ->find()
+            ->find('all')
             ->where($where)
-            ->first();
-        if ($SecurityRoleFunction) {
+            ->count();
+        $this->log('count', 'debug');
+        $this->log($SecurityRoleFunction, 'debug');
+        if ($SecurityRoleFunction > 0) {
             $isSecurityFunction = true;
         }
         return $isSecurityFunction;
@@ -2186,6 +2209,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $availableGrades = $InstitutionGrades->find()
             ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
+            ->distinct('education_grade_id')
             ->extract('education_grade_id')
             ->toArray();
         //print_r($availableGrades);die;
@@ -2305,8 +2329,10 @@ class ReportCardStatusesTable extends ControllerActionTable
             $this->hasSecurityFunction('Merge and Download PDF',
                 null,
                 $loggedInUserRoles);
+        $this->log('addButton', 'debug');
+        $this->log($addButton, 'debug');
         if ($addButton) {
-            $url = 'mergeAnddownloadAllPdf';
+            $url = 'mergeAndDownloadAllPdf';
             $label = '<i class="fa kd-download"></i>';
             $title = 'Merge and Download PDF';
             $name = 'mergeAndDownloadAllPdf';
@@ -2321,6 +2347,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $title,
                 $target);
         }
+        $this->log($extra, 'debug');
         return $extra;
     }
 
@@ -2372,7 +2399,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 '_execute',
                 $loggedInUserRoles);
         if ($addButton) {
-            $url = 'downloadAll';
+            $url = 'downloadAllExcel';
             $label = '<i class="fa kd-download"></i>';
             $title = 'Download All Excel';
             $name = 'downloadAllExcel';
@@ -2534,7 +2561,15 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $extra;
     }
 
-    private function setUpperButton($extra, $institution_id, $classId, $reportCardId, $name, $url, $label, $title, $target = null)
+    private function setUpperButton($extra,
+                                    $institution_id,
+                                    $classId,
+                                    $reportCardId,
+                                    $name,
+                                    $url,
+                                    $label,
+                                    $title,
+                                    $target = null)
     {
         $toolbarAttr = [
             'class' => 'btn btn-xs btn-default',
