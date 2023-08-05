@@ -230,7 +230,7 @@ class GuardiansTable extends AppTable
         }
         if (!empty($academicPeriodId) && $academicPeriodId > 0) {
             $conditions['InstitutionClassStudents.academic_period_id'] = $academicPeriodId;
-        }
+        } //added to check year
         if (!empty($institutionTypeId) && $institutionTypeId > 0) {
             $conditions['Institutions.institution_type_id'] = $institutionTypeId;
         }
@@ -304,11 +304,10 @@ class GuardiansTable extends AppTable
             ->leftJoin(['UserContacts' => 'user_contacts'], [
                 'Guardians.guardian_id = ' . 'UserContacts.security_user_id'
             ])
-            ->group('Users.id')
+            ->group(['Users.id', 'Guardians.id']) //Student may have several guardians
             ->orderAsc('StudentStatuses.code')
             ->where([
-                'StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN'],
-//            'StudentStatuses.code' => 'CURRENT',
+                'StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN'], //students maybe in diff states in prev years
                 'InstitutionClassStudents.student_status_id = ' . 'StudentStatuses.id',
 //            'Areas.area_level_id !=' . 1,
                 $conditions
