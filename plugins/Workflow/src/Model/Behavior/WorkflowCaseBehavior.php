@@ -2154,7 +2154,7 @@ class WorkflowCaseBehavior extends Behavior
                             $addButton['label'] = '<i class="fa kd-add"></i>';
                             $addButton['url'] = '#';
                             $addButton['attr'] = $addButtonAttr;
-                            $addButton['attr']['title'] = __('Link');
+                            $addButton['attr']['title'] = __('Comment');
                             $toolbarButtons['add'] = $addButton;
                             /***************
                              * End
