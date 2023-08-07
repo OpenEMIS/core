@@ -1,8 +1,10 @@
 <?php
+
 namespace Institution\Model\Table;
 
 use ArrayObject;
- 
+
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\I18n\Date;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -13,42 +15,41 @@ use App\Model\Traits\OptionsTrait;
 
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
+use Cake\View\NumberHelper;
+use Cake\Network\Session;
 
 class InstitutionAssetsTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    private $academicPeriodOptions = [];
+
     private $accessibilityOptions = [];
     private $purposeOptions = [];
+    public $currency = '';
 
     public function initialize(array $config)
     {
         parent::initialize($config);
 
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+//        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AssetStatuses', ['className' => 'Institution.AssetStatuses']);
         $this->belongsTo('AssetTypes', ['className' => 'Institution.AssetTypes']);
+        $this->belongsTo('AssetMakes', ['className' => 'FieldOption.AssetMakes']);
+        $this->belongsTo('AssetModels', ['className' => 'FieldOption.AssetModels']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'user_id']);
         $this->belongsTo('AssetConditions', ['className' => 'Institution.AssetConditions']);
+        $this->belongsTo('InstitutionRooms', ['className' => 'Institution.InstitutionRooms']);
 
         // POCOR-6152 export button <vikas.rathore@mail.valuecoders.com>
-        $this->addBehavior('Excel',[
-            'excludes' => ['academic_period_id', 'id'],
+        $this->addBehavior('Excel', [
+            'excludes' => [
+//                'academic_period_id',
+                'id'
+            ],
             'pages' => ['index'],
         ]);
         // POCOR-6152 export button <vikas.rathore@mail.valuecoders.com>
-    }
-
-    public function validationDefault(Validator $validator)
-    {
-        $validator = parent::validationDefault($validator);
-
-        return $validator
-            ->add('code', 'ruleUnique', [
-                'rule' => ['validateUnique', ['scope' => ['academic_period_id', 'institution_id']]],
-                'provider' => 'table'
-            ]);
     }
 
     // POCOR-6152 set breadcrumb header <vikas.rathore@mail.valuecoders.com>
@@ -58,60 +59,450 @@ class InstitutionAssetsTable extends ControllerActionTable
         $userType = '';
         $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
 
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $this->currency = $ConfigItems->value('currency');
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Assets','Details');       
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Institutions', 'Assets', 'Details');
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
     // POCOR-6152 set breadcrumb header <vikas.rathore@mail.valuecoders.com>
 
     // setting up  fields and filter POCOR-6152
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        // POCOR-6152 set academic period filter <vikas.rathore@mail.valuecoders.com>
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
-        // set academic period filter <vikas.rathore@mail.valuecoders.com>
 
-        // set asset types filter POCOR-6152
+        $extra = $this->setFilterOptions($extra);
+        $this->setFieldsOrder();
+
+    }
+
+    // setting up  fields and filter POCOR-6152
+
+
+    // setting up query for index POCOR-6152 start
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+//        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
+        $assetType = ($this->request->query('asset_type_id')) ? $this->request->query('asset_type_id') : 0;
+        $accessibility = $this->request->query('accessibility');;
+
+        if ($assetType > 0) {
+            $query->where([
+                $this->aliasField('asset_type_id') => $assetType
+            ]);
+        }
+        if ($accessibility != "") {
+            $query->where([
+                $this->aliasField('accessibility') => $accessibility
+            ]);
+        }
+
+//        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+//            return $results->map(function ($row) {
+//                if($row->purpose == 1){
+//                    $row['purpose'] = 'Teaching';
+//                }else{
+//                    $row['purpose'] = 'Non-Teaching';
+//                }
+//
+//                if($row->accessibility == 1){
+//                    $row['accessibility'] = 'Accessible';
+//                }else{
+//                    $row['accessibility'] = 'Not Accessible';
+//                }
+//
+//                return $row;
+//            });
+//        });
+    }
+    // setting up query for index POCOR-6152 ends
+
+    // POCOR-6152 Export Functionality 
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+//        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
+        $assetType = ($this->request->query('asset_type_id')) ? $this->request->query('asset_type_id') : 0;
+        $accessibility = $this->request->query('accessibility');
+
+        $query->select([
+        ])
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+            ]);
+
+        if ($assetType > 0) {
+            $query->where([
+                $this->aliasField('asset_type_id') => $assetType
+            ]);
+        }
+        if ($accessibility != "") {
+            $query->where([
+                $this->aliasField('accessibility') => $accessibility
+            ]);
+        }
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                if ($row->purpose == 1) {
+                    $row['purpose'] = 'Teaching';
+                } else {
+                    $row['purpose'] = 'Non-Teaching';
+                }
+
+                if ($row->accessibility == 1) {
+                    $row['accessibility'] = 'Accessible';
+                } else {
+                    $row['accessibility'] = 'Not Accessible';
+                }
+                return $row;
+            });
+        });
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+
+        $this->log($fields, 'debug');
+        $extraField[] = [
+            'key' => 'InstitutionAssets.code',
+            'field' => 'code',
+            'type' => 'string',
+            'label' => __('Code')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionAssets.description',
+            'field' => 'description',
+            'type' => 'string',
+            'label' => __('Description')
+        ];
+
+        $extraField[] = [
+            'key' => 'purpose',
+            'field' => 'purpose',
+            'type' => 'string',
+            'label' => __('Purpose')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionAssets.asset_type_id',
+            'field' => 'asset_type_id',
+            'type' => 'string',
+            'label' => __('Type')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionAssets.asset_make_id',
+            'field' => 'asset_make_id',
+            'type' => 'string',
+            'label' => __('Make')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionAssets.asset_model_id',
+            'field' => 'asset_model_id',
+            'type' => 'string',
+            'label' => __('Model')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionAssets.serial_number',
+            'field' => 'serial_number',
+            'type' => 'string',
+            'label' => __('Serial Number')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionAssets.purchase_date',
+            'field' => 'purchase_date',
+            'type' => 'date',
+            'label' => __('Purchase Date')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionAssets.purchase_order',
+            'field' => 'purchase_order',
+            'type' => 'string',
+            'label' => __('Purchase Order')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionAssets.cost',
+            'field' => 'cost',
+            'type' => 'string',
+            'label' => __('Cost')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionAssets.stocktake_date',
+            'field' => 'stocktake_date',
+            'type' => 'date',
+            'label' => __('Stocktake Date')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionAssets.lifespan',
+            'field' => 'lifespan',
+            'type' => 'string',
+            'label' => __('Lifespan')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionAssets.institution_room_id',
+            'field' => 'institution_room_id',
+            'type' => 'string',
+            'label' => __('Location')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionAssets.user_id',
+            'field' => 'user_id',
+            'type' => 'string',
+            'label' => __('User')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionAssets.accessibility',
+            'field' => 'accessibility',
+            'type' => 'string',
+            'label' => __('Accessibility')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionAssets.asset_condition_id',
+            'field' => 'asset_condition_id',
+            'type' => 'string',
+            'label' => __('Condition')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionAssets.depreciation',
+            'field' => 'depreciation',
+            'type' => 'string',
+            'label' => __('Depreciation')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionAssets.asset_status_id',
+            'field' => 'asset_status_id',
+            'type' => 'string',
+            'label' => __('Status')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        // purpose fields POCOR-6152
+        $this->purposeOptions = $this->getSelectOptions($this->aliasField('purpose'));
+        $this->accessibilityOptions =
+            $this->getSelectOptions($this->aliasField('accessibility'));
+        $makeOptions = $this->getMakeOptions();
+        $modelOptions = $this->getModelOptions();
+        $userOptions = $this->getUserOptions();
+        $locationOptions = $this->getLocationOptions();
+        $this->fields['purpose']['type'] = 'select';
+        $this->fields['asset_type_id']['type'] = 'select';
+        $this->fields['asset_make_id']['type'] = 'select';
+        $this->fields['asset_make_id']['default'] = -1;
+        $this->fields['asset_make_id']['options'] = $makeOptions;
+        $this->fields['asset_make_id']['empty'] = true;
+        $this->fields['asset_model_id']['type'] = 'select';
+        $this->fields['asset_make_id']['options'] = $makeOptions;
+        $this->fields['asset_model_id']['empty'] = true;
+        $this->fields['asset_model_id']['options'] = $modelOptions;
+        $this->fields['asset_condition_id']['type'] = 'select';
+        $this->fields['asset_status_id']['type'] = 'select';
+        $this->fields['institution_room_id']['type'] = 'select';
+        $this->fields['institution_room_id']['empty'] = true;
+        $this->fields['institution_room_id']['options'] = $locationOptions;
+        $this->fields['user_id']['type'] = 'select';
+        $this->fields['user_id']['empty'] = true;
+        $this->fields['user_id']['options'] = $userOptions;
+        $this->fields['accessibility']['type'] = 'select';
+//        $this->log($this->fields['asset_make_id'], 'debug');
+        $this->fields['purpose']['options'] = $this->purposeOptions;
+        $this->fields['accessibility']['options'] = $this->accessibilityOptions;
+
+    }
+
+    private function getMakeOptions()
+    {
+        $makeOptions = [];
+        if (array_key_exists($this->alias(), $this->request->data)
+            && array_key_exists('asset_type_id', $this->request->data[$this->alias()])
+            && !empty($this->request->data[$this->alias()]['asset_type_id'])) {
+            $asset_type_id = $this->request->data[$this->alias()]['asset_type_id'];
+            $makes = TableRegistry::get('asset_makes');
+            $makeOptions = $makes->find('list')
+                ->select(['id', 'name'])
+                ->orderAsc('order')
+                ->where([
+                    $makes->aliasField('visible') => 1,
+                    $makes->aliasField('asset_type_id') => $asset_type_id
+                ])
+                ->toArray();
+        }
+        return $makeOptions;
+    }
+
+    private function getModelOptions()
+    {
+        $modelOptions = [];
+        if (array_key_exists($this->alias(), $this->request->data)
+            && array_key_exists('asset_type_id', $this->request->data[$this->alias()])
+            && !empty($this->request->data[$this->alias()]['asset_make_id'])) {
+            $asset_make_id = $this->request->data[$this->alias()]['asset_make_id'];
+            $models = TableRegistry::get('asset_models');
+            $modelOptions = $models->find('list')
+                ->select(['id', 'name'])
+                ->orderAsc('order')
+                ->where([
+                    $models->aliasField('visible') => 1,
+                    $models->aliasField('asset_make_id') => $asset_make_id
+                ])
+                ->toArray();
+        }
+        return $modelOptions;
+    }
+
+    private function getUserOptions()
+    {
+        $userOptions = [];
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $staff = TableRegistry::get('institution_staff');
+        $staff_ids = $staff->find('all')
+            ->select('staff_id')
+            ->where(['institution_id' => $institutionId])
+            ->toArray();
+        $staffIds = $this->array_column($staff_ids, 'staff_id');
+        $staffIds = array_unique($staffIds);
+        if (empty($staffIds)) {
+            $staffIds = [0];
+        }
+        $users = TableRegistry::get('security_users');
+        $user_options = $users->find('all')
+            ->select(['id',
+                'first_name',
+                'last_name',
+                'openemis_no'])
+            ->orderAsc('id')
+            ->where([
+                $users->aliasField('id IN') => $staffIds
+            ])
+            ->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {
+                    $row['name'] =
+                        $row['openemis_no'] . ' ' .
+                        $row['first_name'] . ' ' .
+                        $row['last_name'];
+                    unset($row['openemis_no']);
+                    unset($row['first_name']);
+                    unset($row['last_name']);
+                    return $row;
+                });
+            })
+            ->toArray();
+        foreach ($user_options as $user_option) {
+            $userOptions[$user_option->id] = $user_option->name;
+        }
+//            $this->log($userOptions, 'debug');
+        return $userOptions;
+    }
+
+    private function getLocationOptions()
+    {
+        $roomOptions = [];
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $rooms = TableRegistry::get('institution_rooms');
+        $room_options = $rooms->find('all')
+            ->select(['id',
+                'code',
+                'name'])
+            ->orderAsc('id')
+            ->where([
+                $rooms->aliasField('institution_id') => $institutionId
+            ])
+            ->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {
+                    $row['code_name'] =
+                        $row['code'] . ' ' .
+                        $row['name'];
+                    return $row;
+                });
+            })
+            ->toArray();
+        foreach ($room_options as $room_option) {
+            $roomOptions[$room_option->id] = $room_option->code_name;
+        }
+//            $this->log($roomOptions, 'debug');
+        return $roomOptions;
+    }
+
+    // set up fields in add page POCOR-6152
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setFieldsOrder();
+    }
+
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setFieldsOrder();
+    }
+
+    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setFieldsOrder();
+    }
+
+    /**
+     * @param ArrayObject $extra
+     */
+    private function setFilterOptions(ArrayObject $extra)
+    {
         $assetTypes = $this->AssetTypes
             ->find('optionList', ['defaultOption' => false])
             ->find('visible')
             ->find('order')
             ->toArray();
-            
+
         $assetTypeOptions = ['' => __('All Types')] + $assetTypes;
-        $extra['selectedAssetType'] = $this->request->query('asset_type_id'); 
+        $extra['selectedAssetType'] = $this->request->query('asset_type_id');
         // set asset types filter POCOR-6152
-        
+
         // set Accessibilities filter POCOR-6152
         $this->accessibilityOptions = $this->getSelectOptions($this->aliasField('accessibility'));
-        
+
         $accessibilityOptions = ['' => __('All Accessibilities')] + $this->accessibilityOptions;
-        $extra['selectedAccessibility'] = $this->request->query('accessibility'); 
+        $extra['selectedAccessibility'] = $this->request->query('accessibility');
         // set Accessibilities filter POCOR-6152
 
         $extra['elements']['control'] = [
             'name' => 'Institution.Assets/controls',
             'data' => [
-                'academicPeriodOptions'=> $academicPeriodOptions,
-                'selectedAcademicPeriodOptions'=> $extra['selectedAcademicPeriodOptions'],
                 'assetTypeOptions' => $assetTypeOptions,
                 'selectedAssetType' => $extra['selectedAssetType'],
                 'accessibilityOptions' => $accessibilityOptions,
@@ -122,322 +513,167 @@ class InstitutionAssetsTable extends ControllerActionTable
 
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
-        // POCOR-6152 end
-
-        $this->field('Academic_period', ['visible' => true,  'attr' => ['label' => __('Academic Period')]]);
-        $this->field('code', ['visible' => true, 'attr' => ['label' => __('Code')]]);
-        $this->field('name', ['visible' => true, 'attr' => ['label' => __('Name')]]);
-        $this->field('purpose', ['visible' => true, 'attr' => ['label' => __('Purpose')]]);
-        $this->field('type', ['visible' => true, 'attr' => ['label' => __('Type')]]);
-        $this->field('condition', ['visible' => true, 'attr' => ['label' => __('Condition')]]);
-        $this->field('accessibility', ['visible' => true, 'attr' => ['label' => __('Accessibility')]]);
-        $this->field('Status');
-
-        $this->field('asset_type_id', ['visible' => false, 'attr' => ['label' => __('Type')]]);
-        $this->field('asset_condition_id', ['visible' => false, 'attr' => ['label' => __('Condition')]]);
-        $this->field('asset_status_id', ['visible' => false, 'attr' => ['label' => __('Status')]]);
     }
-    // setting up  fields and filter POCOR-6152
 
-    // get selected academic period  POCOR-6152
-    private function getSelectedAcademicPeriod($request)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        $selectedAcademicPeriod = '';
-
-        if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
-            if (isset($request->query) && array_key_exists('academic_period_id', $request->query)) {
-                $selectedAcademicPeriod = $request->query['academic_period_id'];
-            } else {
-                $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
-            }
-        } elseif ($this->action == 'add') {
-            $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+        if ($field == 'asset_status_id') {
+            return __('Status');
         }
+        if ($field == 'asset_condition_id') {
+            return __('Condition');
+        }
+        if ($field == 'asset_type_id') {
+            return __('Type');
+        }
+        if ($field == 'asset_make_id') {
+            return __('Make');
+        }
+        if ($field == 'asset_model_id') {
+            return __('Model');
+        }
+        if ($field == 'institution_room_id') {
+            return __('Location');
+        }
+        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    }
 
-        return $selectedAcademicPeriod;
-    } 
-    // get selected academic period POCOR-6152
-
-    // setting up query for index POCOR-6152 start
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function onGetUserId(Event $event, Entity $entity)
     {
-        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
-        $assetType = ($this->request->query('asset_type_id')) ? $this->request->query('asset_type_id') : 0;
-        $accessibility = $this->request->query('accessibility');
-
-        $query->select([
-            $this->aliasField('id'), 
-            $this->aliasField('academic_period_id'), 
-            $this->aliasField('code'), 
-            $this->aliasField('name'), 
-            $this->aliasField('accessibility'),
-            $this->aliasField('purpose'), 
-            $this->aliasField('institution_id'), 
-            'Academic_period' => $this->AcademicPeriods->aliasField('name'), 
-            'type' => $this->AssetTypes->aliasField('name'), 
-            'condition' =>$this->AssetConditions->aliasField('name'),
-            'Status' => $this->AssetStatuses->aliasField('name'),
-            $this->aliasField('modified_user_id'),
-            $this->aliasField('modified'), 
-            $this->aliasField('created_user_id'),
-            $this->aliasField('created')
-        ])
-        ->innerJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()], [
-            [$this->AcademicPeriods->aliasField('id = '). $this->aliasField('academic_period_id')],
-        ])
-        ->innerJoin([$this->AssetTypes->alias() => $this->AssetTypes->table()], [
-            [$this->AssetTypes->aliasField('id = '). $this->aliasField('asset_type_id')],
-        ])
-        ->innerJoin([$this->AssetConditions->alias() => $this->AssetConditions->table()], [
-            [$this->AssetConditions->aliasField('id = '). $this->aliasField('asset_condition_id')],
-        ])
-        ->innerJoin([$this->AssetStatuses->alias() => $this->AssetStatuses->table()], [
-            [$this->AssetStatuses->aliasField('id = '). $this->aliasField('asset_status_id')],
-        ])
-        ->where([
-            $this->aliasField('academic_period_id') => $academicPeriod,
-        ]);
-
-        if($assetType > 0){
-            $query->where([
-                $this->aliasField('asset_type_id') => $assetType
-            ]);
+        $user = self::getRelatedRecord('security_users', $entity->user_id);
+        if (!$entity->user_id) {
+            return "";
         }
-        if($accessibility != ""){
-            $query->where([
-                $this->aliasField('accessibility') => $accessibility
-            ]);
+        if ($user) {
+            return $user['first_name'] . ' ' . $user['last_name'];
         }
-        
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
-                if($row->purpose == 1){
-                    $row['purpose'] = 'Teaching';
-                }else{
-                    $row['purpose'] = 'Non-Teaching';
-                }
-                
-                if($row->accessibility == 1){
-                    $row['accessibility'] = 'Accessible';
-                }else{
-                    $row['accessibility'] = 'Not Accessible';
-                }
-
-                return $row;
-            });
-        });
+        return 'Deleted User Record. Id #:' . $entity->user_id;
     }
-    // setting up query for index POCOR-6152 ends
 
-    // POCOR-6152 Export Functionality 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onGetPurpose(Event $event, Entity $entity)
     {
-        $session = $this->request->session();
-        $institutionId  = $session->read('Institution.Institutions.id');
-        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
-        $assetType = ($this->request->query('asset_type_id')) ? $this->request->query('asset_type_id') : 0;
-        $accessibility = $this->request->query('accessibility');
-
-        $query->select([
-            $this->aliasField('id'), 
-            $this->aliasField('academic_period_id'), 
-            $this->aliasField('code'), 
-            $this->aliasField('name'), 
-            $this->aliasField('accessibility'),
-            $this->aliasField('purpose'), 
-            $this->aliasField('institution_id'), 
-            'Academic_period' => $this->AcademicPeriods->aliasField('name'), 
-            'type' => $this->AssetTypes->aliasField('name'), 
-            'condition' =>$this->AssetConditions->aliasField('name'),
-            'Status' => $this->AssetStatuses->aliasField('name'),
-            $this->aliasField('modified_user_id'),
-            $this->aliasField('modified'), 
-            $this->aliasField('created_user_id'),
-            $this->aliasField('created')
-        ])
-        ->innerJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()], [
-            [$this->AcademicPeriods->aliasField('id = '). $this->aliasField('academic_period_id')],
-        ])
-        ->innerJoin([$this->AssetTypes->alias() => $this->AssetTypes->table()], [
-            [$this->AssetTypes->aliasField('id = '). $this->aliasField('asset_type_id')],
-        ])
-        ->innerJoin([$this->AssetConditions->alias() => $this->AssetConditions->table()], [
-            [$this->AssetConditions->aliasField('id = '). $this->aliasField('asset_condition_id')],
-        ])
-        ->innerJoin([$this->AssetStatuses->alias() => $this->AssetStatuses->table()], [
-            [$this->AssetStatuses->aliasField('id = '). $this->aliasField('asset_status_id')],
-        ])
-        ->where([
-            $this->aliasField('academic_period_id') => $academicPeriod,
-        ]);
-
-        if($assetType > 0){
-            $query->where([
-                $this->aliasField('asset_type_id') => $assetType
-            ]);
+        if ($entity->purpose) {
+            $purpose = 'Non-Teaching';
+        } else {
+            $purpose = 'Teaching';
         }
-        if($accessibility != ""){
-            $query->where([
-                $this->aliasField('accessibility') => $accessibility
-            ]);
-        }
-        
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
-                if($row->purpose == 1){
-                    $row['purpose'] = 'Teaching';
-                }else{
-                    $row['purpose'] = 'Non-Teaching';
-                }
-                
-                if($row->accessibility == 1){
-                    $row['accessibility'] = 'Accessible';
-                }else{
-                    $row['accessibility'] = 'Not Accessible';
-                }
-
-                return $row;
-            });
-        });
+        return $purpose;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onGetAccessibility(Event $event, Entity $entity)
     {
-        $extraField[] = [
-            'key'   => 'AcademicPeriods.name',
-            'field' => 'Academic_period',
-            'type'  => 'string',
-            'label' => __('Academic Period')
-        ];
-
-        $extraField[] = [
-            'key'   => 'InstitutionAssets.code',
-            'field' => 'code',
-            'type'  => 'string',
-            'label' => __('Code')
-        ];
-
-        $extraField[] = [
-            'key'   => 'InstitutionAssets.name',
-            'field' => 'name',
-            'type'  => 'string',
-            'label' => __('Name')
-        ];
-
-        $extraField[] = [
-            'key'   => '',
-            'field' => 'purpose',
-            'type'  => 'string',
-            'label' => __('Purpose')
-        ];
-
-        $extraField[] = [
-            'key'   => 'AssetTypes.name',
-            'field' => 'type',
-            'type'  => 'string',
-            'label' => __('Type')
-        ];
-
-        $extraField[] = [
-            'key'   => 'AssetConditions.name',
-            'field' => 'condition',
-            'type'  => 'string',
-            'label' => __('Condition')
-        ];
-        $extraField[] = [
-            'key'   => '',
-            'field' => 'accessibility',
-            'type'  => 'string',
-            'label' => __('Accessibility')
-        ];
-        $extraField[] = [
-            'key'   => 'AssetStatuses.name',
-            'field' => 'Status',
-            'type'  => 'string',
-            'label' => __('Status')
-        ];
-
-        $fields->exchangeArray($extraField);
+        if ($entity->accessibility) {
+            $accessibility = 'Accessible';
+        } else {
+            $accessibility = 'Not Accessible';
+        }
+        return $accessibility;
     }
-    // POCOR-6152 Export Functionality
 
-    // set up fields in add page POCOR-6152
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function onGetCost(Event $event, Entity $entity)
     {
-        // academic period field POCOR-6152
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $this->fields['academic_period_id']['type'] = 'select';
-        $this->fields['academic_period_id']['default'] = $this->AcademicPeriods->getCurrent();
-        $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
-        $this->field('academic_period_id', ['attr' => ['label' => __('Academic Period')]]);
-        // academic period field POCOR-6152
-
-        // purpose fields POCOR-6152
-        $this->purposeOptions = $this->getSelectOptions($this->aliasField('purpose'));
-        $this->fields['purpose']['type'] = 'select';
-        $this->fields['purpose']['options'] = $this->purposeOptions;
-        $this->field('purpose', ['after' => 'name','attr' => ['label' => __('Purpose')]]);
-        // purpose fields POCOR-6152
-
-        // asset type field POCOR-6152
-        $this->fields['asset_type_id']['type'] = 'select';
-        $this->field('asset_type_id', ['after' => 'purpose','attr' => ['label' => __('Type')]]);
-        // asset type field POCOR-6152
-
-        // condition Field POCOR-6152
-        $this->fields['asset_condition_id']['type'] = 'select';
-        $this->field('asset_condition_id', ['after' => 'asset_type_id','attr' => ['label' => __('Condition')]]);
-        // condition Field POCOR-6152
-
-        // Accessibility field POCOR-6152
-        $this->accessibilityOptions = $this->getSelectOptions($this->aliasField('accessibility'));
-        $this->fields['accessibility']['type'] = 'select';
-        $this->fields['accessibility']['options'] = $this->accessibilityOptions;
-        $this->field('accessibility', ['after' => 'asset_condition_id','attr' => ['label' => __('Accessibility')]]);
-        // Accessibility field POCOR-6152
-
-        // status field POCOR-6152
-        $this->fields['asset_status_id']['type'] = 'select';
-        $this->field('asset_status_id', ['after' => 'accessibility','attr' => ['label' => __('Status')]]);
-        // status field POCOR-6152
+        if (!$entity->cost) {
+            return "";
+        }
+        $formattedAmount = $this->currency . ' ' . number_format($entity->cost, 2);
+        return $formattedAmount; // Output: $1,234.56
     }
-    // set up fields in add page POCOR-6152
 
-    // view page POCOR-6152
-    public function viewAfterAction(Event $event,Entity $entity, ArrayObject $extra)
+    public function onExcelGetCost(Event $event, Entity $entity)
     {
-        $this->setupFields($entity, $extra);
+        if (!$entity->cost) {
+            return "";
+        }
+        $formattedAmount = $this->currency . '' . number_format($entity->cost, 2);
+        return $formattedAmount; // Output: $1,234.56
     }
-    // view page POCOR-6152
 
-    // setup fields for view and edit POCOR-6152
-    public function setupFields(Entity $entity, ArrayObject $extra)
-    { 
-        // academic field view
-        if($entity->academic_period_id){
-            $entity['academic_periods'] = $entity->academic_period->name;
+    public function onGetDepreciation(Event $event, Entity $entity)
+    {
+        if (!$entity->depreciation) {
+            return "";
         }
-        $this->field('academic_periods',['before' => 'code','attr' => ['label' => __('Academic Period')],'visible' => ['view' => true]]);
-        // purpose field view
-        if($enity->purpose == 0){
-            $entity['purpose'] = 'Non-Teaching';
-        }else{
-            $entity['purpose'] = 'Teaching';
-        }
-        $this->field('purpose',['after' => 'name','visible' => ['view' => true]]);
-        // type field view
-        $this->field('asset_type_id',['after' => 'purpose','attr' => ['label' => __('Type')],'visible' => ['view' => true]]);
-        //condition field view
-        $this->field('asset_condition_id',['after' => 'asset_type_id','attr' => ['label' => __('Condition')],'visible' => ['view' => true]]);
-        //Accessibility field view
-        if($entity->accessibility){
-            $entity['accessibility'] = 'Accessible';
-        }else{
-            $entity['accessibility'] = 'Not Accessible';
-        }
-        $this->field('accessibility',['after' => 'asset_condition_id','attr' => ['label' => __('Accessibility')],'visible' => ['view' => true]]);
-        // status field view
-        $this->field('asset_status_id',['after' => 'accessibility','attr' => ['label' => __('Status')],'visible' => ['view' => true]]);
+        $formattedAmount = $this->currency . ' ' . number_format($entity->depreciation, 2);
+        return $formattedAmount; // Output: $1,234.56
     }
-    // setup fields for view and edit POCOR-6152
+
+    public function onExcelGetDepreciation(Event $event, Entity $entity)
+    {
+        if (!$entity->depreciation) {
+            return "";
+        }
+        $formattedAmount = $this->currency . '' . number_format($entity->depreciation, 2);
+        return $formattedAmount; // Output: $1,234.56
+    }
+
+    /**
+     * common proc to show related field with id in the index table
+     * @param $tableName
+     * @param $relatedField
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getRelatedRecord($tableName, $relatedField)
+    {
+        if (!$relatedField) {
+            return null;
+        }
+        $Table = TableRegistry::get($tableName);
+        try {
+            $related = $Table->get($relatedField);
+            return $related->toArray();
+        } catch (RecordNotFoundException $e) {
+            null;
+        }
+        return null;
+    }
+
+    public function onUpdateFieldAssetTypeId(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $attr['onChangeReload'] = 'changeAssetTypeId';
+        }
+        return $attr;
+    }
+
+    public function addEditOnChangeAssetTypeId(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $this->request->data[$this->alias()]['asset_type_id'] = $entity->asset_type_id;
+    }
+
+    public function onUpdateFieldAssetMakeId(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $attr['onChangeReload'] = 'changeAssetMakeId';
+        }
+        return $attr;
+    }
+
+    public function addEditOnChangeAssetMakeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $this->request->data[$this->alias()]['asset_make_id'] = $entity->asset_make_id;
+    }
+
+    private function setFieldsOrder()
+    {
+        $this->field('code', ['visible' => true]);
+        $this->field('description', ['visible' => true]);
+        $this->field('purpose', ['visible' => true]);
+        $this->field('asset_type_id', ['visible' => true]);
+        $this->field('asset_make_id', ['visible' => true]);
+        $this->field('asset_model_id', ['visible' => true]);
+        $this->field('serial_number', ['visible' => true]);
+        $this->field('purchase_date', ['visible' => true]);
+        $this->field('purchase_order', ['visible' => true]);
+        $this->field('cost', ['visible' => true]);
+        $this->field('stocktake_date', ['visible' => true]);
+        $this->field('lifespan', ['visible' => true]);
+        $this->field('institution_room_id', ['visible' => true]);
+        $this->field('user_id', ['visible' => true]);
+        $this->field('accessibility', ['visible' => true]);
+        $this->field('asset_condition_id', ['visible' => true]);
+        $this->field('depreciation', ['visible' => true]);
+        $this->field('asset_status_id', ['visible' => true]);
+    }
+
+
 }
