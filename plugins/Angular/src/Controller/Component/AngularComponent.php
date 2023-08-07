@@ -18,6 +18,7 @@ namespace Angular\Controller\Component;
 
 use Cake\Controller\Component;
 use Cake\Event\Event;
+use Cake\Http\ServerRequest;
 
 class AngularComponent extends Component
 {
@@ -29,7 +30,7 @@ class AngularComponent extends Component
     ];
 
     // Is called before the controller's beforeFilter method.
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->controller = $this->_registry->getController();
     }
@@ -37,8 +38,8 @@ class AngularComponent extends Component
     // Is called after the controller’s beforeFilter method but before the controller executes the current action handler.
     public function startup(Event $event)
     {
-        $app = $this->config('app');
-        $modules = $this->config('modules');
+        $app = $this->getConfig('app');
+        $modules = $this->getConfig('modules');
 
         $this->controller->set('ng_app', $app);
         $this->controller->set('ng_modules', json_encode($modules));

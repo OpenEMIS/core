@@ -63,7 +63,7 @@ class TrainingApplicationsTable extends ControllerActionTable
         }
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
         foreach($this->workflowEvents as $event) {

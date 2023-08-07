@@ -22,11 +22,11 @@ class AccessControlComponent extends Component
 
     public $components = ['Auth', 'Page.Page'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->controller = $this->_registry->getController();
         $this->action = $this->request->params['action'];
-        $this->Session = $this->request->session();
+        $this->Session = $this->getController()->getRequest()->getSession();
         $this->accessMap = [];
 
         if (!is_null($this->Auth->user()) && $this->Auth->user('super_admin') == 0) {
@@ -44,7 +44,7 @@ class AccessControlComponent extends Component
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         // need to execute before PageComponent::beforeRender

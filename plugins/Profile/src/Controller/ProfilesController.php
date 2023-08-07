@@ -32,7 +32,7 @@ class ProfilesController extends AppController
         'StaffAttendances',
     ];
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
@@ -193,7 +193,7 @@ class ProfilesController extends AppController
     }
     // End
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         //$events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored'; //POCOR-5312
@@ -289,8 +289,8 @@ class ProfilesController extends AppController
     {
         parent::beforeFilter($event);
 
-        $session = $this->request->session();
-        $action = $this->request->params['action'];
+        $session = $this->request->getSession();
+        $action = $this->request->getParams['action'];
 
         $loginUserId = $this->Auth->user('id'); // login user
 
@@ -298,7 +298,7 @@ class ProfilesController extends AppController
         
         $header = '';
 
-        if ($this->Profiles->exists([$this->Profiles->primaryKey() => $loginUserId])) {
+        if ($this->Profiles->exists([$this->Profiles->getPrimaryKey() => $loginUserId])) {
             // if ($session->read('Auth.User.is_guardian') == 1) {
             //     $studentId = $session->read('Student.ExaminationResults.student_id'); 
             // } else {
@@ -367,7 +367,7 @@ class ProfilesController extends AppController
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
         if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
             // off the import action
@@ -375,7 +375,7 @@ class ProfilesController extends AppController
                 $model->removeBehavior('ImportLink');
             }
 
-            $alias = $model->alias();
+            $alias = $model->getAlias();
             $excludedModel = ['ScholarshipApplications', 'Leave', 'StudentReportCards', 'Contacts', 'TrainingNeeds','Comments']; //POCOR-5695 add TrainingNeeds POCOR-6353 add comment
 
             if (!in_array($alias, $excludedModel)) {

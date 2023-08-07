@@ -31,9 +31,9 @@ class UserBehavior extends Behavior
     private $formatSupport = 'Format Supported: %s';
     private $defaultImgMsg = "<p>* %s <br>* %s</p>";
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        if ($this->_table->table() == 'security_users') {
+        if ($this->_table->getTable() == 'security_users') {
             $this->_table->addBehavior('ControllerAction.FileUpload', [
                 'name' => 'photo_name',
                 'content' => 'photo_content',
@@ -49,7 +49,7 @@ class UserBehavior extends Behavior
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 0];

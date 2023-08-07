@@ -1,100 +1,126 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.1.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\View;
 
-use Cake\Event\EventManager;
-use Cake\Network\Request;
-use Cake\Network\Response;
-use RuntimeException;
+use Cake\View\Exception\SerializationFailureException;
+use Exception;
+use TypeError;
 
 /**
  * Parent class for view classes generating serialized outputs like JsonView and XmlView.
  */
-class SerializedView extends View
+abstract class SerializedView extends View
 {
-
     /**
      * Response type.
      *
      * @var string
+     * @deprecated 4.4.0 Implement ``public static contentType(): string`` instead.
      */
     protected $_responseType;
 
     /**
-     * Constructor
+     * Default config options.
      *
-     * @param \Cake\Network\Request|null $request Request instance.
-     * @param \Cake\Network\Response|null $response Response instance.
-     * @param \Cake\Event\EventManager|null $eventManager EventManager instance.
-     * @param array $viewOptions An array of view options
+     * Use ViewBuilder::setOption()/setOptions() in your controlle to set these options.
+     *
+     * - `serialize`: Option to convert a set of view variables into a serialized response.
+     *   Its value can be a string for single variable name or array for multiple
+     *   names. If true all view variables will be serialized. If null or false
+     *   normal view template will be rendered.
+     *
+     * @var array<string, mixed>
      */
-    public function __construct(
-        Request $request = null,
-        Response $response = null,
-        EventManager $eventManager = null,
-        array $viewOptions = []
-    ) {
-        parent::__construct($request, $response, $eventManager, $viewOptions);
+    protected $_defaultConfig = [
+        'serialize' => null,
+    ];
 
-        if ($response && $response instanceof Response) {
-            $response->type($this->_responseType);
+    /**
+     * @inheritDoc
+     */
+    public function initialize(): void
+    {
+        parent::initialize();
+        if ($this->_responseType) {
+            $response = $this->getResponse()->withType($this->_responseType);
+            $this->setResponse($response);
         }
     }
 
     /**
      * Load helpers only if serialization is disabled.
      *
-     * @return void
+     * @return $this
      */
     public function loadHelpers()
     {
-        if (empty($this->viewVars['_serialize'])) {
+        if (!$this->getConfig('serialize')) {
             parent::loadHelpers();
         }
+
+        return $this;
     }
+
+    /**
+     * Serialize view vars.
+     *
+     * @param array|string $serialize The name(s) of the view variable(s) that
+     *   need(s) to be serialized
+     * @return string The serialized data.
+     */
+    abstract protected function _serialize($serialize): string;
 
     /**
      * Render view template or return serialized data.
      *
-     * ### Special parameters
-     * `_serialize` To convert a set of view variables into a serialized form.
-     *   Its value can be a string for single variable name or array for multiple
-     *   names. If true all view variables will be serialized. If unset normal
-     *   view template will be rendered.
-     *
-     * @param string|null $view The view being rendered.
-     * @param string|null $layout The layout being rendered.
-     * @return string|null The rendered view.
+     * @param string|null $template The template being rendered.
+     * @param string|false|null $layout The layout being rendered.
+     * @return string The rendered view.
+     * @throws \Cake\View\Exception\SerializationFailureException When serialization fails.
      */
-    public function render($view = null, $layout = null)
+    public function render(?string $template = null, $layout = null): string
     {
-        $serialize = false;
-        if (isset($this->viewVars['_serialize'])) {
-            $serialize = $this->viewVars['_serialize'];
-        }
+        $serialize = $this->getConfig('serialize', false);
 
+        if ($serialize === true) {
+            $options = array_map(
+                function ($v) {
+                    return '_' . $v;
+                },
+                array_keys($this->_defaultConfig)
+            );
+
+            $serialize = array_diff(
+                array_keys($this->viewVars),
+                $options
+            );
+        }
         if ($serialize !== false) {
-            $result = $this->_serialize($serialize);
-            if ($result === false) {
-                throw new RuntimeException('Serialization of View data failed.');
+            try {
+                return $this->_serialize($serialize);
+            } catch (Exception | TypeError $e) {
+                throw new SerializationFailureException(
+                    'Serialization of View data failed.',
+                    null,
+                    $e
+                );
             }
+        }
 
-            return (string)$result;
-        }
-        if ($view !== false && $this->_getViewFileName($view)) {
-            return parent::render($view, false);
-        }
+        return parent::render($template, false);
     }
 }

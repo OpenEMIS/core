@@ -1,29 +1,30 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.1.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Auth\Storage;
 
 use Cake\Core\InstanceConfigTrait;
-use Cake\Network\Request;
-use Cake\Network\Response;
+use Cake\Http\Response;
+use Cake\Http\ServerRequest;
 
 /**
  * Session based persistent storage for authenticated user record.
  */
 class SessionStorage implements StorageInterface
 {
-
     use InstanceConfigTrait;
 
     /**
@@ -32,14 +33,14 @@ class SessionStorage implements StorageInterface
      * Stores user record array if fetched from session or false if session
      * does not have user record.
      *
-     * @var array|bool
+     * @var \ArrayAccess|array|false|null
      */
     protected $_user;
 
     /**
      * Session object.
      *
-     * @var \Cake\Network\Session
+     * @var \Cake\Http\Session
      */
     protected $_session;
 
@@ -51,30 +52,31 @@ class SessionStorage implements StorageInterface
      * - `key` - Session key used to store user record.
      * - `redirect` - Session key used to store redirect URL.
      *
-     * @var array
+     * @var array<string, mixed>
      */
     protected $_defaultConfig = [
         'key' => 'Auth.User',
-        'redirect' => 'Auth.redirect'
+        'redirect' => 'Auth.redirect',
     ];
 
     /**
      * Constructor.
      *
-     * @param \Cake\Network\Request $request Request instance.
-     * @param \Cake\Network\Response $response Response instance.
-     * @param array $config Configuration list.
+     * @param \Cake\Http\ServerRequest $request Request instance.
+     * @param \Cake\Http\Response $response Response instance.
+     * @param array<string, mixed> $config Configuration list.
      */
-    public function __construct(Request $request, Response $response, array $config = [])
+    public function __construct(ServerRequest $request, Response $response, array $config = [])
     {
-        $this->_session = $request->session();
-        $this->config($config);
+        $this->_session = $request->getSession();
+        $this->setConfig($config);
     }
 
     /**
      * Read user record from session.
      *
-     * @return array|null User record if available else null.
+     * @return \ArrayAccess|array|null User record if available else null.
+     * @psalm-suppress InvalidReturnType
      */
     public function read()
     {
@@ -82,9 +84,11 @@ class SessionStorage implements StorageInterface
             return $this->_user ?: null;
         }
 
+        /** @psalm-suppress PossiblyInvalidPropertyAssignmentValue */
         $this->_user = $this->_session->read($this->_config['key']) ?: false;
 
-        return $this->_user;
+        /** @psalm-suppress InvalidReturnStatement */
+        return $this->_user ?: null;
     }
 
     /**
@@ -92,10 +96,10 @@ class SessionStorage implements StorageInterface
      *
      * The session id is also renewed to help mitigate issues with session replays.
      *
-     * @param array|\ArrayAccess $user User record.
+     * @param \ArrayAccess|array $user User record.
      * @return void
      */
-    public function write($user)
+    public function write($user): void
     {
         $this->_user = $user;
 
@@ -110,7 +114,7 @@ class SessionStorage implements StorageInterface
      *
      * @return void
      */
-    public function delete()
+    public function delete(): void
     {
         $this->_user = false;
 
@@ -119,7 +123,7 @@ class SessionStorage implements StorageInterface
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function redirectUrl($url = null)
     {
@@ -134,5 +138,7 @@ class SessionStorage implements StorageInterface
         }
 
         $this->_session->write($this->_config['redirect'], $url);
+
+        return null;
     }
 }

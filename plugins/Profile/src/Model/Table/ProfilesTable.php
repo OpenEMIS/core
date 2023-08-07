@@ -30,9 +30,9 @@ class ProfilesTable extends ControllerActionTable
 
     private $dashboardQuery;
 
-    public function initialize(array $config) {
-        $this->table('security_users');
-        $this->entityClass('User.User');
+    public function initialize(array $config): void {
+        $this->setTable('security_users');
+        $this->getEntityClass('User.User');
         parent::initialize($config);
 
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
@@ -87,7 +87,7 @@ class ProfilesTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
         $validator
             ->allowEmpty('postal_code')

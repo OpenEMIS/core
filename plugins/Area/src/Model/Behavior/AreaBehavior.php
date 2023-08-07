@@ -6,7 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 
 class AreaBehavior extends Behavior {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 	}
 
 	public function findAreas(Query $query, array $options) {

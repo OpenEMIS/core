@@ -17,8 +17,8 @@ class SystemProcessesTable extends ControllerActionTable {
 	const RUNNING = 2;
 	const ERROR = -2;
 	const ABORT = -1;
-	public function initialize(array $config) {
-        $this->table('system_processes');
+	public function initialize(array $config): void {
+        $this->setTable('system_processes');
         parent::initialize($config);
 	}
 
@@ -47,7 +47,7 @@ class SystemProcessesTable extends ControllerActionTable {
 				$this->aliasField('model') => $model,
 				$this->aliasField('process_id') => $pid
 			])
-			->hydrate(false)
+			//->hydrate(false)
 			->toArray();
 	}
 
@@ -78,7 +78,7 @@ class SystemProcessesTable extends ControllerActionTable {
 				$this->aliasField('model') => $model,
 				$this->aliasField('status') => self::RUNNING
 			])
-			->hydrate(false)
+			//->hydrate(false)
 			->toArray();
 	}
 
@@ -95,6 +95,6 @@ class SystemProcessesTable extends ControllerActionTable {
 			]);
 		}
 
-		return $query->hydrate(false)->toArray();
+		return $query->toArray();
 	}
 }

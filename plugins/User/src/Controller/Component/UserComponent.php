@@ -24,7 +24,7 @@ class UserComponent extends Component
         $this->controller = $this->_registry->getController();
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderPhotoContent'] = 'onRenderPhotoContent';

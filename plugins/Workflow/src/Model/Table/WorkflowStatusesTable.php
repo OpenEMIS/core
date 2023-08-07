@@ -13,7 +13,7 @@ use Cake\ORM\TableRegistry;
 class WorkflowStatusesTable extends AppTable {
 	private $_contain = ['WorkflowSteps'];
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
 		$this->belongsToMany('WorkflowSteps', [

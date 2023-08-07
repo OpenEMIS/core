@@ -397,7 +397,7 @@ class PullBehavior extends Behavior
 	                }
 	                $this->newValues['nationality_id'] = $this->setChanges($entity->main_nationality, $nationalityArr, $this->nationalityMapping);
 
-	                $IdentityTypesTable = TableRegistry::get('FieldOption.IdentityTypes');
+	                $IdentityTypesTable = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
 	                $identityTypeName = trim($this->getValue($body['data'], $this->identityTypeMapping));
 	                $identityTypeArr = [
 	                    'id' => null,

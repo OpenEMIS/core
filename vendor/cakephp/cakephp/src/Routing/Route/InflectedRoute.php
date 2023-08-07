@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Routing\Route;
 
@@ -22,9 +24,8 @@ use Cake\Utility\Inflector;
  */
 class InflectedRoute extends Route
 {
-
     /**
-     * Flag for tracking whether or not the defaults have been inflected.
+     * Flag for tracking whether the defaults have been inflected.
      *
      * Default values need to be inflected so that they match the inflections that match()
      * will create.
@@ -39,13 +40,13 @@ class InflectedRoute extends Route
      *
      * @param string $url The URL to parse
      * @param string $method The HTTP method being matched.
-     * @return array|false An array of request parameters, or false on failure.
+     * @return array|null An array of request parameters, or null on failure.
      */
-    public function parse($url, $method = '')
+    public function parse(string $url, string $method = ''): ?array
     {
-        $params = parent::parse($url);
+        $params = parent::parse($url, $method);
         if (!$params) {
-            return false;
+            return null;
         }
         if (!empty($params['controller'])) {
             $params['controller'] = Inflector::camelize($params['controller']);
@@ -54,7 +55,7 @@ class InflectedRoute extends Route
             if (strpos($params['plugin'], '/') === false) {
                 $params['plugin'] = Inflector::camelize($params['plugin']);
             } else {
-                list($vendor, $plugin) = explode('/', $params['plugin'], 2);
+                [$vendor, $plugin] = explode('/', $params['plugin'], 2);
                 $params['plugin'] = Inflector::camelize($vendor) . '/' . Inflector::camelize($plugin);
             }
         }
@@ -70,9 +71,9 @@ class InflectedRoute extends Route
      * @param array $context An array of the current request context.
      *   Contains information such as the current host, scheme, port, and base
      *   directory.
-     * @return string|false Either a string URL for the parameters if they match or false.
+     * @return string|null Either a string URL for the parameters if they match or null.
      */
-    public function match(array $url, array $context = [])
+    public function match(array $url, array $context = []): ?string
     {
         $url = $this->_underscore($url);
         if (!$this->_inflectedDefaults) {
@@ -89,7 +90,7 @@ class InflectedRoute extends Route
      * @param array $url An array of URL keys.
      * @return array
      */
-    protected function _underscore($url)
+    protected function _underscore(array $url): array
     {
         if (!empty($url['controller'])) {
             $url['controller'] = Inflector::underscore($url['controller']);

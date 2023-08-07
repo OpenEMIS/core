@@ -9,14 +9,14 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 
 class AdvancedContactNumberSearchBehavior extends Behavior {
-	protected $_defaultConfig = [
+	protected $_defaultgetConfig = [
 		'associatedKey' => '',
 	];
 
-	public function initialize(array $config) {
-		$associatedKey = $this->config('associatedKey');
+	public function initialize(array $getConfig): void {
+		$associatedKey = $this->getConfig('associatedKey');
 		if (empty($associatedKey)) {
-			$this->config('associatedKey', $this->_table->aliasField('id'));
+			$this->getConfig('associatedKey', $this->_table->aliasField('id'));
 		}
 	}
 	
@@ -32,7 +32,7 @@ class AdvancedContactNumberSearchBehavior extends Behavior {
 						'table' => 'user_contacts',
 						'alias' => 'Contacts',
 						'conditions' => [
-							'Contacts.security_user_id = '. $this->config('associatedKey')
+							'Contacts.security_user_id = '. $this->getConfig('associatedKey')
 						]
 					]
 				]);
@@ -41,7 +41,7 @@ class AdvancedContactNumberSearchBehavior extends Behavior {
 		return $query;
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'AdvanceSearch.onSetupFormField' => 'onSetupFormField',

@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\Network\Response;
 use Cake\Controller\Exception\MissingActionException;
+use Cake\Http\Session;
 
 //use ControllerAction\Model\Traits\ControllerActionV4Trait;
 //use ControllerActionV4Trait; // extended functionality from v4
@@ -19,7 +20,9 @@ trait ControllerActionV4Trait {
 	private function _initComponents($model) {
 		$model->controller = $this->controller;
 		$model->request = $this->request;
-		$model->Session = $this->request->session();
+		$model->Session = new Session();
+		//$model->Session = $this->request->getSession();
+		//$model->Session =$this->session;
 
 		// Copy all component objects from Controller to Model
 		$components = $this->controller->components()->loaded();

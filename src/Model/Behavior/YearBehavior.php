@@ -12,7 +12,7 @@ use Cake\ORM\TableRegistry;
 
 class YearBehavior extends Behavior
 {
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = 'beforeAction';

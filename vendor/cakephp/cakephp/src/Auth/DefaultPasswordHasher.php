@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Auth;
 
@@ -19,7 +21,6 @@ namespace Cake\Auth;
  */
 class DefaultPasswordHasher extends AbstractPasswordHasher
 {
-
     /**
      * Default config for this object.
      *
@@ -30,22 +31,24 @@ class DefaultPasswordHasher extends AbstractPasswordHasher
      * - `hashOptions` - Associative array of options. Check the PHP manual for
      *   supported options for each hash type. Defaults to empty array.
      *
-     * @var array
+     * @var array<string, mixed>
      */
     protected $_defaultConfig = [
         'hashType' => PASSWORD_DEFAULT,
-        'hashOptions' => []
+        'hashOptions' => [],
     ];
 
     /**
      * Generates password hash.
      *
      * @param string $password Plain text password to hash.
-     * @return bool|string Password hash or false on failure
-     * @link http://book.cakephp.org/3.0/en/core-libraries/components/authentication.html#hashing-passwords
+     * @return string|false Password hash or false on failure
+     * @psalm-suppress InvalidNullableReturnType
+     * @link https://book.cakephp.org/4/en/controllers/components/authentication.html#hashing-passwords
      */
-    public function hash($password)
+    public function hash(string $password)
     {
+        /** @psalm-suppress NullableReturnStatement */
         return password_hash(
             $password,
             $this->_config['hashType'],
@@ -60,7 +63,7 @@ class DefaultPasswordHasher extends AbstractPasswordHasher
      * @param string $hashedPassword Existing hashed password.
      * @return bool True if hashes match else false.
      */
-    public function check($password, $hashedPassword)
+    public function check(string $password, string $hashedPassword): bool
     {
         return password_verify($password, $hashedPassword);
     }
@@ -72,8 +75,8 @@ class DefaultPasswordHasher extends AbstractPasswordHasher
      * @param string $password The password to verify
      * @return bool
      */
-    public function needsRehash($password)
+    public function needsRehash(string $password): bool
     {
-        return password_needs_rehash($password, $this->_config['hashType']);
+        return password_needs_rehash($password, $this->_config['hashType'], $this->_config['hashOptions']);
     }
 }

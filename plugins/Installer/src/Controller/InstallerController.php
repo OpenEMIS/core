@@ -6,6 +6,7 @@ use Installer\Form\DatabaseConnectionForm;
 use PDOException;
 use Cake\Core\Configure;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 require CONFIG . 'installer_mode_config.php';
 
 class InstallerController extends AppController
@@ -14,7 +15,7 @@ class InstallerController extends AppController
         'OpenEmis.Resource'
     ];
 
-    public function initialize()
+    public function initialize(): void
     {
         $this->loadComponent('Angular.Angular', [
             'app' => 'OE_Core',
@@ -39,13 +40,16 @@ class InstallerController extends AppController
         $this->set('productName', APPLICATION_NAME);
         $this->set('productLongName', Configure::read('productLongName'));
         $this->loadComponent('ControllerAction.Alert');
-        $this->viewBuilder()->layout('Installer.default');
+        //$this->viewBuilder()->layout('Installer.default');
+        $this->viewBuilder()->setLayout('Installer.default');
     }
 
     public function index()
     {
+       // $request = new ServerRequest();
+       // print($this->request->getParam());die;
         if (file_exists(CONFIG . 'datasource.php')) {
-            if ($this->request->param('_ext') != 'json') {
+            if ($this->request->getParam('_ext') != 'json') {
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
             } else {
                 $this->set('code', 422);

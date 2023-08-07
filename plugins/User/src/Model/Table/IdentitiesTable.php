@@ -19,9 +19,9 @@ class IdentitiesTable extends ControllerActionTable
 {
     const ISPREFERRED = 1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_identities');
+        $this->setTable('user_identities');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
@@ -35,7 +35,7 @@ class IdentitiesTable extends ControllerActionTable
         $this->excludeDefaultValidations(['security_user_id']);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -99,7 +99,7 @@ class IdentitiesTable extends ControllerActionTable
             return "";
         }
 
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $IdentityTypesData = $IdentityTypes
             ->find()
             ->where([$IdentityTypes->aliasField('id') => $identityTypeId])
@@ -272,7 +272,7 @@ class IdentitiesTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator

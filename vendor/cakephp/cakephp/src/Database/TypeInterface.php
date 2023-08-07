@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.2.14
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Database;
 
@@ -20,36 +22,35 @@ namespace Cake\Database;
  */
 interface TypeInterface
 {
-
     /**
      * Casts given value from a PHP type to one acceptable by a database.
      *
      * @param mixed $value Value to be converted to a database equivalent.
-     * @param \Cake\Database\Driver $driver Object from which database preferences and configuration will be extracted.
+     * @param \Cake\Database\DriverInterface $driver Object from which database preferences and configuration will be extracted.
      * @return mixed Given PHP type casted to one acceptable by a database.
      */
-    public function toDatabase($value, Driver $driver);
+    public function toDatabase($value, DriverInterface $driver);
 
     /**
      * Casts given value from a database type to a PHP equivalent.
      *
      * @param mixed $value Value to be converted to PHP equivalent
-     * @param \Cake\Database\Driver $driver Object from which database preferences and configuration will be extracted
+     * @param \Cake\Database\DriverInterface $driver Object from which database preferences and configuration will be extracted
      * @return mixed Given value casted from a database to a PHP equivalent.
      */
-    public function toPHP($value, Driver $driver);
+    public function toPHP($value, DriverInterface $driver);
 
     /**
      * Casts given value to its Statement equivalent.
      *
      * @param mixed $value Value to be converted to PDO statement.
-     * @param \Cake\Database\Driver $driver Object from which database preferences and configuration will be extracted.
+     * @param \Cake\Database\DriverInterface $driver Object from which database preferences and configuration will be extracted.
      * @return mixed Given value casted to its Statement equivalent.
      */
-    public function toStatement($value, Driver $driver);
+    public function toStatement($value, DriverInterface $driver);
 
     /**
-     * Marshalls flat data into PHP objects.
+     * Marshals flat data into PHP objects.
      *
      * Most useful for converting request data into PHP objects,
      * that make sense for the rest of the ORM/Database layers.
@@ -66,16 +67,16 @@ interface TypeInterface
      * but still want the rest of the framework to use the same assumptions it would
      * do about the base type it inherits from.
      *
-     * @return string The base type name that this class is inheriting.
+     * @return string|null The base type name that this class is inheriting.
      */
-    public function getBaseType();
+    public function getBaseType(): ?string;
 
     /**
      * Returns type identifier name for this object.
      *
-     * @return string The type identifier name for this object.
+     * @return string|null The type identifier name for this object.
      */
-    public function getName();
+    public function getName(): ?string;
 
     /**
      * Generate a new primary key value for a given type.

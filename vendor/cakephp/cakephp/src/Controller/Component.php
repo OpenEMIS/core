@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         1.2.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Controller;
 
@@ -34,47 +36,33 @@ use Cake\Log\LogTrait;
  * Components can provide several callbacks that are fired at various stages of the request
  * cycle. The available callbacks are:
  *
- * - `beforeFilter(Event $event)`
- *   Called before the controller's beforeFilter method by default.
- * - `startup(Event $event)`
- *   Called after the controller's beforeFilter method, and before the
+ * - `beforeFilter(EventInterface $event)`
+ *   Called before Controller::beforeFilter() method by default.
+ * - `startup(EventInterface $event)`
+ *   Called after Controller::beforeFilter() method, and before the
  *   controller action is called.
- * - `beforeRender(Event $event)`
- *   Called before the Controller beforeRender, and before the view class is loaded.
- * - `shutdown(Event $event)`
+ * - `beforeRender(EventInterface $event)`
+ *   Called before Controller::beforeRender(), and before the view class is loaded.
+ * - `afterFilter(EventInterface $event)`
  *   Called after the action is complete and the view has been rendered but
  *   before Controller::afterFilter().
- * - `beforeRedirect(Event $event $url, Response $response)`
+ * - `beforeRedirect(EventInterface $event $url, Response $response)`
  *   Called before a redirect is done. Allows you to change the URL that will
  *   be redirected to by returning a Response instance with new URL set using
  *   Response::location(). Redirection can be prevented by stopping the event
  *   propagation.
  *
  * While the controller is not an explicit argument for the callback methods it
- * is the subject of each event and can be fetched using Event::subject().
+ * is the subject of each event and can be fetched using EventInterface::getSubject().
  *
- * @link http://book.cakephp.org/3.0/en/controllers/components.html
+ * @link https://book.cakephp.org/4/en/controllers/components.html
  * @see \Cake\Controller\Controller::$components
  */
+#[\AllowDynamicProperties]
 class Component implements EventListenerInterface
 {
-
     use InstanceConfigTrait;
     use LogTrait;
-
-    /**
-     * Request object
-     *
-     * @var \Cake\Network\Request
-     */
-    public $request;
-
-    /**
-     * Response object
-     *
-     * @var \Cake\Network\Response
-     */
-    public $response;
 
     /**
      * Component registry class used to lazy load components.
@@ -88,45 +76,51 @@ class Component implements EventListenerInterface
      *
      * @var array
      */
-    public $components = [];
+    protected $components = [];
 
     /**
      * Default config
      *
      * These are merged with user-provided config when the component is used.
      *
-     * @var array
+     * @var array<string, mixed>
      */
     protected $_defaultConfig = [];
 
     /**
      * A component lookup table used to lazy load component objects.
      *
-     * @var array
+     * @var array<string, array>
      */
     protected $_componentMap = [];
 
     /**
      * Constructor
      *
-     * @param \Cake\Controller\ComponentRegistry $registry A ComponentRegistry this component can use to lazy load its components
-     * @param array $config Array of configuration settings.
+     * @param \Cake\Controller\ComponentRegistry $registry A component registry
+     *  this component can use to lazy load its components.
+     * @param array<string, mixed> $config Array of configuration settings.
      */
     public function __construct(ComponentRegistry $registry, array $config = [])
     {
         $this->_registry = $registry;
-        $controller = $registry->getController();
-        if ($controller) {
-            $this->request =& $controller->request;
-            $this->response =& $controller->response;
-        }
 
-        $this->config($config);
+        $this->setConfig($config);
 
-        if (!empty($this->components)) {
+        if ($this->components) {
             $this->_componentMap = $registry->normalizeArray($this->components);
         }
         $this->initialize($config);
+    }
+
+    /**
+     * Get the controller this component is bound to.
+     *
+     * @return \Cake\Controller\Controller The bound controller.
+     */
+    public function getController(): Controller
+    {
+        return $this->_registry->getController();
     }
 
     /**
@@ -135,10 +129,10 @@ class Component implements EventListenerInterface
      * Implement this method to avoid having to overwrite
      * the constructor and call parent.
      *
-     * @param array $config The configuration settings provided to this component.
+     * @param array<string, mixed> $config The configuration settings provided to this component.
      * @return void
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
     }
 
@@ -146,19 +140,16 @@ class Component implements EventListenerInterface
      * Magic method for lazy loading $components.
      *
      * @param string $name Name of component to get.
-     * @return mixed A Component object or null.
+     * @return \Cake\Controller\Component|null A Component object or null.
      */
-    public function __get($name)
+    public function __get(string $name)
     {
         if (isset($this->_componentMap[$name]) && !isset($this->{$name})) {
             $config = (array)$this->_componentMap[$name]['config'] + ['enabled' => false];
             $this->{$name} = $this->_registry->load($this->_componentMap[$name]['class'], $config);
         }
-        if (!isset($this->{$name})) {
-            return null;
-        }
 
-        return $this->{$name};
+        return $this->{$name} ?? null;
     }
 
     /**
@@ -171,22 +162,30 @@ class Component implements EventListenerInterface
      * Override this method if you need to add non-conventional event listeners.
      * Or if you want components to listen to non-standard events.
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $eventMap = [
             'Controller.initialize' => 'beforeFilter',
             'Controller.startup' => 'startup',
             'Controller.beforeRender' => 'beforeRender',
             'Controller.beforeRedirect' => 'beforeRedirect',
-            'Controller.shutdown' => 'shutdown',
+            'Controller.shutdown' => 'afterFilter',
         ];
         $events = [];
         foreach ($eventMap as $event => $method) {
             if (method_exists($this, $method)) {
                 $events[$event] = $method;
             }
+        }
+
+        if (!isset($events['Controller.shutdown']) && method_exists($this, 'shutdown')) {
+            deprecationWarning(
+                '`Controller.shutdown` event callback is now `afterFilter()` instead of `shutdown()`.',
+                0
+            );
+            $events[$event] = 'shutdown';
         }
 
         return $events;
@@ -196,14 +195,14 @@ class Component implements EventListenerInterface
      * Returns an array that can be used to describe the internal state of this
      * object.
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function __debugInfo()
+    public function __debugInfo(): array
     {
         return [
             'components' => $this->components,
             'implementedEvents' => $this->implementedEvents(),
-            '_config' => $this->config(),
+            '_config' => $this->getConfig(),
         ];
     }
 }

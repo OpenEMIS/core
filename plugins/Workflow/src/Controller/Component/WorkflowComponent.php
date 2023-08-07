@@ -22,7 +22,7 @@ class WorkflowComponent extends Component
     public $hasWorkflow = false;    // indicate whether workflow is setup
     public $components = ['Auth', 'ControllerAction', 'AccessControl'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->controller = $this->_registry->getController();
         $this->action = $this->request->params['action'];
@@ -33,7 +33,7 @@ class WorkflowComponent extends Component
         $this->WorkflowStatusesSteps = TableRegistry::get('Workflow.WorkflowStatusesSteps');
 
         // To bypass the permission
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         if ($session->check('Workflow.Workflows.models')) {
             $models = $session->read('Workflow.Workflows.models');
         } else {
@@ -46,7 +46,7 @@ class WorkflowComponent extends Component
         // End
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';

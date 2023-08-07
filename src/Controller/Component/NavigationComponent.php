@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Controller\Exception\SecurityException;
 use Cake\Core\Configure;
+use Cake\Event\EventInterface;
 
 class NavigationComponent extends Component
 {
@@ -16,13 +17,13 @@ class NavigationComponent extends Component
 
     public $components = ['AccessControl'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->controller = $this->_registry->getController();
         $this->action = $this->request->params['action'];
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.initialize'] = ['callable' => 'beforeFilter',
@@ -33,7 +34,7 @@ class NavigationComponent extends Component
     public function addCrumb($title, $options = [])
     {
         $item = array(
-            'title' => __($title),
+            'title' => __((string) $title),
             'link' => ['url' => $options],
             'selected' => sizeof($options) == 0
         );
@@ -65,7 +66,7 @@ class NavigationComponent extends Component
         }
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         $controller = $this->controller;
         try {
@@ -123,7 +124,8 @@ class NavigationComponent extends Component
         $roles = [];
         $restrictedTo = [];
         $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
-        if ($event->result) {
+        //echo "<pre>";print_r($event->getResult());die;
+        if ($event->getResult()) {
             $roles = $event->result['roles'];
             $restrictedTo = $event->result['restrictedTo'];
         }
@@ -207,7 +209,7 @@ class NavigationComponent extends Component
 
     public function checkClassification(array &$navigations)
     {
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
 
         if (!empty($institutionId)) {
@@ -421,7 +423,7 @@ class NavigationComponent extends Component
                     $userType = 3;
                 }
             }
-            $session = $this->request->session();
+            $session = $this->getController()->getRequest()->getSession();
             $isStudent = $session->read('Directory.Directories.is_student');
             $isStaff = $session->read('Directory.Directories.is_staff');
             $isGuardian = $session->read('Directory.Directories.is_guardian');
@@ -470,7 +472,7 @@ class NavigationComponent extends Component
             $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigation());
             $navigations = $this->appendNavigation('Profiles.Personal', $navigations, $this->getProfileNavigation());
 
-            $session = $this->request->session();
+            $session = $this->getController()->getRequest()->getSession();
             $isStudent = $session->read('Auth.User.is_student');
             $isStaff = $session->read('Auth.User.is_staff');
             $isGuardian = $session->read('Auth.User.is_guardian');
@@ -520,12 +522,12 @@ class NavigationComponent extends Component
     public function getMainNavigation()
     {
         /*POCOR-6267 Starts*/
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
             
         if (isset($uId)) {
-            $userInfo = TableRegistry::get('security_users')->get($uId);
+            $userInfo = TableRegistry::getTableLocator()->get('User.Users')->get($uId);
             if (!empty($userInfo) && $userInfo->is_guardian == 1) {
                 $newNavigation = [
                     'GuardianNavs.GuardianNavs.index' => [
@@ -582,7 +584,7 @@ class NavigationComponent extends Component
 
     public function getInstitutionNavigation()
     {
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $id = $this->controller->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
         $institutionId = isset($this->request->params['institutionId']) ? $this->request->params['institutionId'] : $id;
         $navigation = [
@@ -1333,7 +1335,7 @@ class NavigationComponent extends Component
 
     public function getInstitutionStudentNavigation()
     {
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $id = !empty($this->controller->getQueryString('institution_student_id')) ? $this->controller->getQueryString('institution_student_id') : $session->read('Institution.Students.id');
         $studentId = $session->read('Student.Students.id');
         $institutionIdSession = $this->controller->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
@@ -1507,7 +1509,7 @@ class NavigationComponent extends Component
 
     public function getInstitutionStaffNavigation()
     {
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $institutionIdSession = $this->controller->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
         $institutionId = isset($this->request->params['institutionId']) ? $this->request->params['institutionId'] : $institutionIdSession;
         $id = $session->read('Staff.Staff.id');
@@ -1643,7 +1645,7 @@ class NavigationComponent extends Component
     public function getProfileNavigation()
     {
         //POCOR-5886 starts
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $profileUserId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         //POCOR-5886 ends
         $navigation = [
@@ -1735,7 +1737,7 @@ class NavigationComponent extends Component
     public function getDirectoryNavigation()
     {
         //POCOR-5886 starts
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $directorUserId = $this->controller->paramsEncode(['id' => $session->read('Directory.Directories.id')]);
         //POCOR-5886 ends
         $navigation = [
@@ -1955,7 +1957,7 @@ class NavigationComponent extends Component
     public function getProfileGuardianStudentNavigation()
     {
         $sID = $this->request->pass[1];
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         if (!empty($sID)) {
             if ($session->read('Auth.User.is_guardian') == 1) {
                 $session->write('Student.ExaminationResults.student_id', $sID);
@@ -2003,7 +2005,7 @@ class NavigationComponent extends Component
 
     public function getDirectoryStaffNavigation()
     {
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $id = $session->read('Guardian.Guardians.id');
 
         $navigation = [
@@ -2060,7 +2062,7 @@ class NavigationComponent extends Component
 
     public function getDirectoryStudentNavigation()
     {
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $id = $session->read('Guardian.Guardians.id');
 
         $navigation = [
@@ -2113,7 +2115,7 @@ class NavigationComponent extends Component
 
     ];
 
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
         if (!empty($studentToGuardian)) {
             $navigation['Directories.StudentGuardians']['selected'] = ['Directories.StudentGuardians',
@@ -2150,7 +2152,7 @@ class NavigationComponent extends Component
                 'selected' => ['Directories.GuardianStudents']
             ],
         ];
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
         if (!empty($guardianToStudent)) {
             $navigation['Directories.GuardianStudents']['selected'] = ['Directories.GuardianStudents',
@@ -2276,7 +2278,7 @@ class NavigationComponent extends Component
         $connectionId = $this->controller->paramsEncode(['id' => $connectionData['id']]);
         /*for POCOR-5674 */
 
-        $queryString = $this->request->query('queryString');
+        //$queryString = $this->request->query('queryString');
         //POCOR-7527 start
         $firstSubMenuAdmin =  $this->getAdminstrationFirstNav();
         $SecurityNav =  $this->getAdminstrationSecurityNav();
@@ -2352,7 +2354,7 @@ class NavigationComponent extends Component
 
     public function getGuardianNavNavigation()
     {
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $studentId = $session->read('Student.Students.id');
         $queryString = $this->request->query('queryString');
         if ($queryString != '') {
@@ -2403,13 +2405,14 @@ class NavigationComponent extends Component
      */
     private function getReportAdminstrationNavigation($uId)
     {
-        $users = TableRegistry::get('security_users');
-        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
-                    $users->aliasField('id') => $uId])->first();
-        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
-        $securityFunctions = TableRegistry::get('security_functions');
-        $securityRole = TableRegistry::get('security_roles');
-        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $users = TableRegistry::getTableLocator()->get('User.Users');
+       // $users = TableRegistry::getTableLocator()->get('TableNames', ['className' => 'User\Model\Table\UsersTable']);
+        $uId = '';
+        $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1])->first();
+        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
             ->matching('SecurityRoles')
@@ -2505,16 +2508,18 @@ class NavigationComponent extends Component
      */
     private function getAdminstrationSubmenuNav()
     {
-        $session = $this->request->session();
+        
+        $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $users = TableRegistry::get('security_users');
+        $uId = '';
+        $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
 
-        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
-        $securityFunctions = TableRegistry::get('security_functions');
-        $securityRole = TableRegistry::get('security_roles');
+        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
@@ -2938,16 +2943,18 @@ class NavigationComponent extends Component
     //POCOR-7527
     private function getAdminstrationSecurityNav()
     {
-        $session = $this->request->session();
+
+        $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $users = TableRegistry::get('security_users');
+        $uId = '';
+        $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
 
-        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
-        $securityFunctions = TableRegistry::get('security_functions');
-        $securityRole = TableRegistry::get('security_roles');
+        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
@@ -3046,16 +3053,17 @@ class NavigationComponent extends Component
     //POCOR-7527
     private function getAdminstrationProfileNav()
     {
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $users = TableRegistry::get('security_users');
+        $uId = '';
+        $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
 
-        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
-        $securityFunctions = TableRegistry::get('security_functions');
-        $securityRole = TableRegistry::get('security_roles');
+        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
@@ -3180,16 +3188,17 @@ class NavigationComponent extends Component
     //POCOR-7527
     private function getAdminstrationSurveyNav()
     {
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $users = TableRegistry::get('security_users');
+        $users = TableRegistry::getTableLocator()->get('User.Users');
+        $uId = '';
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
 
-        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
-        $securityFunctions = TableRegistry::get('security_functions');
-        $securityRole = TableRegistry::get('security_roles');
+        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
@@ -3283,16 +3292,17 @@ class NavigationComponent extends Component
     //POCOR-7527
     private function getAdminstrationCommunicationsNav()
     {
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $users = TableRegistry::get('security_users');
+        $uId = '';
+        $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
 
-        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
-        $securityFunctions = TableRegistry::get('security_functions');
-        $securityRole = TableRegistry::get('security_roles');
+        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
@@ -3385,16 +3395,17 @@ class NavigationComponent extends Component
     //POCOR-7527
     private function getAdminstrationTrainingNav()
     {
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $users = TableRegistry::get('security_users');
+        $uId = '';
+        $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
 
-        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
-        $securityFunctions = TableRegistry::get('security_functions');
-        $securityRole = TableRegistry::get('security_roles');
+        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
@@ -3496,16 +3507,17 @@ class NavigationComponent extends Component
     //POCOR-7527
     private function getAdminstrationPerformanceNav()
     {
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $users = TableRegistry::get('security_users');
+        $uId = '';
+        $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
 
-        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
-        $securityFunctions = TableRegistry::get('security_functions');
-        $securityRole = TableRegistry::get('security_roles');
+        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
@@ -3641,16 +3653,17 @@ class NavigationComponent extends Component
     //POCOR-7527
     private function getAdminstrationExaminationNav()
     {
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $users = TableRegistry::get('security_users');
+        $uId = '';
+        $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
 
-        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
-        $securityFunctions = TableRegistry::get('security_functions');
-        $securityRole = TableRegistry::get('security_roles');
+        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
@@ -3777,16 +3790,17 @@ class NavigationComponent extends Component
     //POCOR-7527
     private function getAdminstrationScholarshipNav()
     {
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $users = TableRegistry::get('security_users');
+        $uId = '';
+        $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
 
-        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
-        $securityFunctions = TableRegistry::get('security_functions');
-        $securityRole = TableRegistry::get('security_roles');
+        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
@@ -3961,16 +3975,17 @@ class NavigationComponent extends Component
     //POCOR-7527
     private function getAdminstrationMoodleNav()
     {
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $users = TableRegistry::get('security_users');
+        $uId = '';
+        $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
 
-        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
-        $securityFunctions = TableRegistry::get('security_functions');
-        $securityRole = TableRegistry::get('security_roles');
+        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
@@ -4040,16 +4055,17 @@ class NavigationComponent extends Component
     //POCOR-7527
     private function getAdminstrationdataMgtNav()
     {
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $users = TableRegistry::get('security_users');
+        $uId = '';
+        $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
 
-        $SecurityRoleFunctions = TableRegistry::get('security_role_functions');
-        $securityFunctions = TableRegistry::get('security_functions');
-        $securityRole = TableRegistry::get('security_roles');
+        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')

@@ -27,7 +27,7 @@ class ImportTextbooksTable extends AppTable
         $this->Textbooks = TableRegistry::get('Textbook.Textbooks');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.import.onImportPopulateAcademicPeriodsData'] = 'onImportPopulateAcademicPeriodsData';

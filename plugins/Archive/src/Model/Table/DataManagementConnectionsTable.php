@@ -48,13 +48,13 @@ class DataManagementConnectionsTable extends ControllerActionTable
      * @param array $config The configuration for the Table.
      * @return void
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
-        $this->table('data_management_connections');
-        $this->displayField('id');
-        $this->primaryKey('id');
+        $this->setTable('data_management_connections');
+        $this->getDisplayField('id');
+        $this->getPrimaryKey('id');
 
         $this->toggle('remove', false);
         $this->toggle('add', false);
@@ -63,7 +63,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
 
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator->integer('id')->allowEmpty('id', 'create');
         $validator->requirePresence('name', 'create')->notEmpty('name');
@@ -93,7 +93,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
 
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.onGetFormButtons'] = 'onGetFormButtons';

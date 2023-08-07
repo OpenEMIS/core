@@ -12,7 +12,7 @@ class AreapickerBehavior extends Behavior
 {
     private $areaByUser = [];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.edit.beforePatch'] = 'editBeforePatch';

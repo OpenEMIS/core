@@ -27,7 +27,7 @@ class TextbooksTable extends ControllerActionTable {
         $this->toggle('remove', false);
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
        $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
         return $events;

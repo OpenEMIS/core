@@ -1,108 +1,56 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         0.1.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://www.opensource.org/licenses/mit-license.php MIT License
  */
 namespace Bake\View;
 
 use Cake\Core\Configure;
 use Cake\Core\ConventionsTrait;
-use Cake\Core\InstanceConfigTrait;
-use Cake\Event\EventManager;
-use Cake\Network\Request;
-use Cake\Network\Response;
-use Cake\Utility\Inflector;
-use Cake\View\View;
+use Cake\Event\EventInterface;
+use Cake\TwigView\View\TwigView;
 
-class BakeView extends View
+class BakeView extends TwigView
 {
     use ConventionsTrait;
-    use InstanceConfigTrait;
 
     /**
-     * Default class config
-     *
-     * This config is read when evaluating a template file.
-     *
-     * - `phpTagReplacements` are applied to the contents of a bake template, to allow php tags
-     *   to be treated as plain text
-     * - `replacements` are applied in order on the template contents before the template is evaluated.
-     *
-     * The default replacements are (in the following order):
-     *
-     * - swallow leading whitespace for <%- tags
-     * - swallow trailing whitespace for -%> tags
-     * - Add an extra newline to <%=, to counteract php automatically removing a newline
-     * - Replace remaining <=% with php short echo tags
-     * - Replace <% with php open tags
-     * - Replace %> with php close tags
-     *
-     * Replacements that start with `/` will be treated as regex replacements.
-     * All other values will be treated used with str_replace()
-     *
-     * @var array
-     */
-    protected $_defaultConfig = [
-        'phpTagReplacements' => [
-            '<?' => "<CakePHPBakeOpenTag",
-            '?>' => "CakePHPBakeCloseTag>"
-        ],
-        'replacements' => [
-            '/\n[ \t]+<%-( |$)/' => "\n<% ",
-            '/-%>/' => "?>",
-            '/<%=(.*)\%>\n(.)/' => "<%=$1%>\n\n$2",
-            '<%=' => '<?=',
-            '<%' => '<?php',
-            '%>' => '?>'
-        ]
-    ];
-
-    /**
-     * Path where bake's intermediary files are written.
-     * Defaults to `TMP . 'bake' . DS`.
+     * Folder containing bake templates.
      *
      * @var string
      */
-    protected $_tmpLocation;
+    public const BAKE_TEMPLATE_FOLDER = 'bake';
 
     /**
-     * Upon construction, append the plugin's template paths to the paths to check
-     *
-     * @param \Cake\Network\Request|null $request Request instance.
-     * @param \Cake\Network\Response|null $response Response instance.
-     * @param \Cake\Event\EventManager|null $eventManager Event manager instance.
-     * @param array $viewOptions View options. See View::$_passedVars for list of
-     *   options which get set as class properties.
+     * @inheritDoc
      */
-    public function __construct(
-        Request $request = null,
-        Response $response = null,
-        EventManager $eventManager = null,
-        array $viewOptions = []
-    ) {
-        parent::__construct($request, $response, $eventManager, $viewOptions);
+    protected $layout = 'Bake.default';
 
-        $bakeTemplates = dirname(dirname(__FILE__)) . DS . 'Template' . DS;
-        $paths = (array)Configure::read('App.paths.templates');
+    /**
+     * Initialize view
+     *
+     * @return void
+     */
+    public function initialize(): void
+    {
+        $this->setConfig('environment', [
+            'autoescape' => false,
+            'cache' => false,
+            'strict_variables' => Configure::read('Bake.twigStrictVariables', false),
+        ]);
 
-        if (!in_array($bakeTemplates, $paths)) {
-            $paths[] = $bakeTemplates;
-            Configure::write('App.paths.templates', $paths);
-        }
-
-        $this->_tmpLocation = TMP . 'bake' . DS;
-        if (!file_exists($this->_tmpLocation)) {
-            mkdir($this->_tmpLocation);
-        }
+        parent::initialize();
     }
 
     /**
@@ -120,19 +68,16 @@ class BakeView extends View
      *
      * View can also be a template string, rather than the name of a view file
      *
-     * @param string|null $view Name of view file to use, or a template string to render
-     * @param string|null $layout Layout to use. Not used, for consistency with other views only
-     * @return string|null Rendered content.
-     * @throws \Cake\Core\Exception\Exception If there is an error in the view.
+     * @param string|null $template Name of view file to use, or a template string to render
+     * @param string|false|null $layout Layout to use. Not used, for consistency with other views only
+     * @throws \Cake\Core\Exception\CakeException If there is an error in the view.
+     * @return string Rendered content.
      */
-    public function render($view = null, $layout = null)
+    public function render(?string $template = null, $layout = null): string
     {
-        $viewFileName = $this->_getViewFileName($view);
-        $templateEventName = str_replace(
-            ['.ctp', DS],
-            ['', '.'],
-            explode('Template' . DS . 'Bake' . DS, $viewFileName)[1]
-        );
+        $viewFileName = $this->_getTemplateFileName($template);
+        [, $templateEventName] = pluginSplit($template);
+        $templateEventName = str_replace(['/', '\\'], '.', $templateEventName);
 
         $this->_currentType = static::TYPE_TEMPLATE;
         $this->dispatchEvent('View.beforeRender', [$viewFileName]);
@@ -157,15 +102,14 @@ class BakeView extends View
      * Use the Bake prefix for bake related view events
      *
      * @param string $name Name of the event.
-     * @param array|null $data Any value you wish to be transported with this event to
+     * @param mixed $data Any value you wish to be transported with this event to
      * it can be read by listeners.
      *
-     * @param object|null $subject The object that this event applies to
+     * @param mixed $subject The object that this event applies to
      * ($this by default).
-     *
-     * @return \Cake\Event\Event
+     * @return \Cake\Event\EventInterface<mixed>
      */
-    public function dispatchEvent($name, $data = null, $subject = null)
+    public function dispatchEvent(string $name, $data = null, $subject = null): EventInterface
     {
         $name = preg_replace('/^View\./', 'Bake.', $name);
 
@@ -173,81 +117,22 @@ class BakeView extends View
     }
 
     /**
-     * Sandbox method to evaluate a template / view script in.
-     *
-     * @param string $viewFile Filename of the view
-     * @param array $dataForView Data to include in rendered view.
-     *    If empty the current View::$viewVars will be used.
-     * @return string Rendered output
-     */
-    protected function _evaluate($viewFile, $dataForView)
-    {
-        $viewString = $this->_getViewFileContents($viewFile);
-
-        $replacements = array_merge($this->config('phpTagReplacements') + $this->config('replacements'));
-
-        foreach ($replacements as $find => $replace) {
-            if ($this->_isRegex($find)) {
-                $viewString = preg_replace($find, $replace, $viewString);
-            } else {
-                $viewString = str_replace($find, $replace, $viewString);
-            }
-        }
-
-        $this->__viewFile = $this->_tmpLocation . Inflector::slug(preg_replace('@.*Template[/\\\\]@', '', $viewFile)) . '.php';
-        file_put_contents($this->__viewFile, $viewString);
-
-        unset($viewFile, $viewString, $replacements, $find, $replace);
-        extract($dataForView);
-        ob_start();
-
-        include $this->__viewFile;
-
-        $content = ob_get_clean();
-
-        $unPhp = $this->config('phpTagReplacements');
-
-        return str_replace(array_values($unPhp), array_keys($unPhp), $content);
-    }
-
-    /**
-     * Get the contents of the template file
-     *
-     * @param string $filename A template filename
-     * @return string Bake template to evaluate
-     */
-    protected function _getViewFileContents($filename)
-    {
-        return file_get_contents($filename);
-    }
-
-    /**
      * Return all possible paths to find view files in order
      *
-     * @param string $plugin Optional plugin name to scan for view files.
+     * @param ?string $plugin Optional plugin name to scan for view files.
      * @param bool $cached Set to false to force a refresh of view paths. Default true.
-     * @return array paths
+     * @return string[] paths
      */
-    protected function _paths($plugin = null, $cached = true)
+    protected function _paths(?string $plugin = null, bool $cached = true): array
     {
         $paths = parent::_paths($plugin, false);
         foreach ($paths as &$path) {
-            $path .= 'Bake' . DS;
+            // Append 'bake' to all directories that aren't the application override directory.
+            if (strpos($path, 'plugin' . DS . 'Bake') === false) {
+                $path .= static::BAKE_TEMPLATE_FOLDER . DS;
+            }
         }
 
         return $paths;
-    }
-
-    /**
-     * Check if a replacement pattern is a regex
-     *
-     * Use preg_match to detect invalid regexes
-     *
-     * @param string $maybeRegex a fixed string or a regex
-     * @return bool
-     */
-    protected function _isRegex($maybeRegex)
-    {
-        return substr($maybeRegex, 0, 1) === '/';
     }
 }

@@ -1,0 +1,10 @@
+2023-08-02 07:58:02 error: [Cake\Console\Exception\MissingShellException] Shell class for "Cache" could not be found. If you are trying to use a plugin shell, that was loaded via $this->addPlugin(), you may need to update bin/cake.php to match https://github.com/cakephp/app/tree/master/bin/cake.php in C:\xampp-new\htdocs\openemis\pocor-openemis-core\vendor\cakephp\cakephp\src\Console\ShellDispatcher.php on line 327
+Exception Attributes: array (
+  'class' => 'Cache',
+)
+Stack Trace:
+- C:\xampp-new\htdocs\openemis\pocor-openemis-core\vendor\cakephp\cakephp\src\Console\ShellDispatcher.php:227
+- C:\xampp-new\htdocs\openemis\pocor-openemis-core\vendor\cakephp\cakephp\src\Console\ShellDispatcher.php:180
+- C:\xampp-new\htdocs\openemis\pocor-openemis-core\vendor\cakephp\cakephp\src\Console\ShellDispatcher.php:130
+- C:\xampp-new\htdocs\openemis\pocor-openemis-core\bin\cake.php:34
+

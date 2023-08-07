@@ -23,7 +23,7 @@ class WorkflowStepsTable extends AppTable {
 	const APPROVE = 0;
 	const REJECT = 1;
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
 		$this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -61,7 +61,7 @@ class WorkflowStepsTable extends AppTable {
 		$this->addBehavior('Workflow.Transfer');
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 
 		return $validator

@@ -26,7 +26,7 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 
 class FieldOptionBehavior extends Behavior {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->_table->setDeleteStrategy('restrict');
     }
@@ -34,7 +34,7 @@ class FieldOptionBehavior extends Behavior {
     public function getDefaultValue()
     {
         $value = '';
-        $primaryKey = $this->_table->primaryKey();
+        $primaryKey = $this->_table->getPrimaryKey();
         $entity = $this->getDefaultEntity();
         return $entity->{$primaryKey};
     }
@@ -54,7 +54,7 @@ class FieldOptionBehavior extends Behavior {
         return $entity;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];

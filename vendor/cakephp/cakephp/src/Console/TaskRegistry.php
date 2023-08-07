@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         2.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Console;
 
@@ -21,10 +23,11 @@ use Cake\Core\ObjectRegistry;
 /**
  * Registry for Tasks. Provides features
  * for lazily loading tasks.
+ *
+ * @extends \Cake\Core\ObjectRegistry<\Cake\Console\Shell>
  */
 class TaskRegistry extends ObjectRegistry
 {
-
     /**
      * Shell to use to set params to tasks.
      *
@@ -35,22 +38,23 @@ class TaskRegistry extends ObjectRegistry
     /**
      * Constructor
      *
-     * @param \Cake\Console\Shell $Shell Shell instance
+     * @param \Cake\Console\Shell $shell Shell instance
      */
-    public function __construct(Shell $Shell)
+    public function __construct(Shell $shell)
     {
-        $this->_Shell = $Shell;
+        $this->_Shell = $shell;
     }
 
     /**
      * Resolve a task classname.
      *
-     * Part of the template method for Cake\Core\ObjectRegistry::load()
+     * Part of the template method for {@link \Cake\Core\ObjectRegistry::load()}.
      *
      * @param string $class Partial classname to resolve.
-     * @return string|false Either the correct classname or false.
+     * @return string|null Either the correct class name or null.
+     * @psalm-return class-string|null
      */
-    protected function _resolveClassName($class)
+    protected function _resolveClassName(string $class): ?string
     {
         return App::className($class, 'Shell/Task', 'Task');
     }
@@ -59,17 +63,18 @@ class TaskRegistry extends ObjectRegistry
      * Throws an exception when a task is missing.
      *
      * Part of the template method for Cake\Core\ObjectRegistry::load()
+     * and Cake\Core\ObjectRegistry::unload()
      *
      * @param string $class The classname that is missing.
-     * @param string $plugin The plugin the task is missing in.
+     * @param string|null $plugin The plugin the task is missing in.
      * @return void
      * @throws \Cake\Console\Exception\MissingTaskException
      */
-    protected function _throwMissingClassError($class, $plugin)
+    protected function _throwMissingClassError(string $class, ?string $plugin): void
     {
         throw new MissingTaskException([
             'class' => $class,
-            'plugin' => $plugin
+            'plugin' => $plugin,
         ]);
     }
 
@@ -80,11 +85,13 @@ class TaskRegistry extends ObjectRegistry
      *
      * @param string $class The classname to create.
      * @param string $alias The alias of the task.
-     * @param array $settings An array of settings to use for the task.
+     * @param array<string, mixed> $config An array of settings to use for the task.
      * @return \Cake\Console\Shell The constructed task class.
+     * @psalm-suppress MoreSpecificImplementedParamType
      */
-    protected function _create($class, $alias, $settings)
+    protected function _create($class, string $alias, array $config): Shell
     {
-        return new $class($this->_Shell->io());
+        /** @var \Cake\Console\Shell */
+        return new $class($this->_Shell->getIo());
     }
 }

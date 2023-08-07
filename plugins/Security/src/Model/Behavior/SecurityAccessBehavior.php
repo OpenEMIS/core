@@ -10,7 +10,7 @@ use Cake\Log\Log;
 
 class SecurityAccessBehavior extends Behavior
 {
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.beforeFind'] = ['callable' => 'beforeFind', 'priority' => 1];

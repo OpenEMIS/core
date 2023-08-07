@@ -24,7 +24,7 @@ class UsersTable extends AppTable
     const OTHER = 4;
     const ACTIVE = 1;
     const INACTIVE = 2;//PCOOR-6922 Ends
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->table('security_users');
         parent::initialize($config);
@@ -113,7 +113,7 @@ class UsersTable extends AppTable
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';//POCOR-6922
@@ -303,9 +303,9 @@ class UsersTable extends AppTable
         $options['auto_search'] = true;
         $userType = $this->Session->read('Users.advanceSearch.belongsTo.user_type');
         if ($userType == self::STAFF || $userType == self::STUDENT) {
-            $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-            $UserIdentities = TableRegistry::get('User.Identities');
-            $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+            $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+            $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+            $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             if($userType == self::STAFF){
                 $ConfigItem =   $ConfigItemTable
                                 ->find()
@@ -365,7 +365,7 @@ class UsersTable extends AppTable
     //POCOR-6922 starts
     public function getIdentityTypeData($value_selection)
     {
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $typesIdentity =   $IdentityTypes
                             ->find()
                             ->select([

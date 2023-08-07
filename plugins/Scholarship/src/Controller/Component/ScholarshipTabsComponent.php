@@ -14,10 +14,12 @@ class ScholarshipTabsComponent extends Component
     public $components = ['TabPermission', 'Page.Page'];
     private $queryString;
 
-    public function initialize(array $config)
+    public function initialize(array $config) : void
     {
         $this->controller = $this->_registry->getController();
-        $this->queryString = $this->request->query('queryString');
+        $serverData = explode("/",$_SERVER['REQUEST_URI']);
+        //$this->queryString = $this->request->query('queryString');
+        $this->queryString = $serverData[7];
 
         $this->controller->loadModel('Scholarship.Scholarships');
         $this->controller->loadModel('Scholarship.FinancialAssistanceTypes');

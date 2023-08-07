@@ -8,15 +8,16 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Session;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
+use Cake\Http\Session;
 
 
 /**
  * Depends on ControllerActionComponent's function "getAssociatedBelongsToModel()"
  */
 class TrackActivityBehavior extends Behavior {
+	protected $session;
 	protected $_defaultConfig = [
 		'target' => '',
 		'key' => '',
@@ -27,10 +28,11 @@ class TrackActivityBehavior extends Behavior {
 	private $_excludeType = ['binary'];
 	private $_session;
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		$this->_defaultConfig = array_merge($this->_defaultConfig, $config);
-		$this->config($this->_defaultConfig);
-		$this->_session = new Session;
+		$this->getConfig((string) $this->_defaultConfig);
+		//$this->_session = new Session;
+		$this->_session = new Session();
 		$this->_table->trackActivity = true;
 	}
 
@@ -44,13 +46,13 @@ class TrackActivityBehavior extends Behavior {
 	public function beforeSave(Event $event, Entity $entity) {
 		if (!empty($entity->id) && $entity->dirty() && $this->_table->trackActivity && isset($this->_table->fields)) { // edit operation
 			$model = $this->_table;
-		    $schema = $model->schema();
-		    $session = $this->_session->read($this->config('session'));
-		    $ActivityModel = TableRegistry::get($this->config('target'));
+		    $schema = $model->getSchema();
+		    $session = $this->_session->read($this->getConfig('session'));
+		    $ActivityModel = TableRegistry::get($this->getConfig('target'));
 		    $obj = [
-		    	'model' => $model->alias(),
+		    	'model' => $model->getAlias(),
 		    	'model_reference' => $entity->id,
-		    	$this->config('key') => !empty($session) ? $session : $entity->{$this->config('keyField')}
+		    	$this->getConfig('key') => !empty($session) ? $session : $entity->{$this->getConfig('keyField')}
 		    ];
 
 			foreach ($entity->extractOriginalChanged($entity->visibleProperties()) as $field=>$value) {
@@ -105,7 +107,7 @@ class TrackActivityBehavior extends Behavior {
 
 								// if related model exists, get related data
 								if (is_object($relatedModel)) {
-									$relatedModelSchema = $relatedModel->schema();
+									$relatedModelSchema = $relatedModel->getSchema();
 
 									if ($relatedModelSchema->column('name')) {
 										try {
@@ -150,17 +152,17 @@ class TrackActivityBehavior extends Behavior {
 		if (!empty($entity->id) && $this->_table->trackActivity) {
 			$alias = $this->_table->alias();
 			$id = $entity->id;
-			$keyField = $entity->{$this->config('keyField')};
+			$keyField = $entity->{$this->getConfig('keyField')};
 			$activity['model'] = $alias;
 			$activity['model_reference'] = $id;
 			$activity['field'] = '';
 			$activity['field_type'] = '';
 			$activity['old_value'] = '';
 			$activity['new_value'] = '';
-			$activity[$this->config('key')] = $keyField;
+			$activity[$this->getConfig('key')] = $keyField;
 			$activity['operation'] = 'delete';
 
-			$ActivityModel = TableRegistry::get($this->config('target'));
+			$ActivityModel = TableRegistry::getTableLocator()->get($this->getConfig('target'));
 			$newEntity = $ActivityModel->newEntity($activity);
 			if (!$ActivityModel->save($newEntity)) {
 				Log::write('debug', $newEntity->errors());

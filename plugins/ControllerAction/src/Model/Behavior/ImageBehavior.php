@@ -13,7 +13,7 @@ use Cake\Network\Response;
 
 class ImageBehavior extends Behavior
 {
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.image'] = 'image';

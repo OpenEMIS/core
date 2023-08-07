@@ -52,7 +52,7 @@ class ProfilesTable extends ControllerActionTable
 		$this->InstitutionStudentsProfileTemplates = TableRegistry::get('Institution.InstitutionStudentsProfileTemplates');
     }
 	
-	public function implementedEvents()
+	public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.downloadExcel'] = 'downloadExcel';

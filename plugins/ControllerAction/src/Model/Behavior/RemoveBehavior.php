@@ -20,7 +20,7 @@ class RemoveBehavior extends Behavior
     private $showForceDeleteFields = false;
     private $selectedForceDelete = false;
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.remove'] = 'remove';
@@ -31,7 +31,7 @@ class RemoveBehavior extends Behavior
         return $events;
     }
 
-    public function validationForceDelete(Validator $validator)
+    public function validationForceDelete(Validator $validator): Validator
     {
         $validator = $this->_table->validationDefault($validator);
         return $validator

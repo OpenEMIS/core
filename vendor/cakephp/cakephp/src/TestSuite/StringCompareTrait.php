@@ -1,20 +1,20 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\TestSuite;
-
-use Cake\Filesystem\File;
 
 /**
  * Compare a string to the contents of a file
@@ -24,7 +24,6 @@ use Cake\Filesystem\File;
  */
 trait StringCompareTrait
 {
-
     /**
      * The base path for output comparisons
      *
@@ -41,7 +40,7 @@ trait StringCompareTrait
      *
      * @var bool
      */
-    protected $_updateComparisons = null;
+    protected $_updateComparisons;
 
     /**
      * Compare the result to the contents of the file
@@ -50,7 +49,7 @@ trait StringCompareTrait
      * @param string $result test result as a string
      * @return void
      */
-    public function assertSameAsFile($path, $result)
+    public function assertSameAsFile(string $path, string $result): void
     {
         if (!file_exists($path)) {
             $path = $this->_compareBasePath . $path;
@@ -61,11 +60,10 @@ trait StringCompareTrait
         }
 
         if ($this->_updateComparisons) {
-            $file = new File($path, true);
-            $file->write($result);
+            file_put_contents($path, $result);
         }
 
         $expected = file_get_contents($path);
-        $this->assertTextEquals($expected, $result);
+        $this->assertTextEquals($expected, $result, 'Content does not match file ' . $path);
     }
 }

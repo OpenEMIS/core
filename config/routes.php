@@ -92,7 +92,7 @@ Router::scope('/', function (RouteBuilder $routes) {
 });
 
 Router::scope('/Installer', ['plugin' => 'Installer', 'controller' => 'Installer'], function ($route) {
-    $route->extensions(['json']);
+    // $route->extensions(['json']);
     $route->connect('/:action');
 });
 
@@ -112,7 +112,7 @@ Router::scope('/restful', [], function ($routes) {
     });
 
     $routes->scope('/', ['controller' => 'Restful'], function ($routes) {
-        $routes->extensions(['json', 'xml']);
+        // $routes->extensions(['json', 'xml']);
         $routes->connect( '/', ['action' => 'nothing']);
 
         // Regex ([v][\d+]|[v][\d+][.\d]+|latest), start with a lowercase v followed by the following format (v1 or v1.1 or v1.1.1 ..) or latest
@@ -208,9 +208,9 @@ Router::scope('/restful', [], function ($routes) {
 // For restful session
 Router::scope('/session', ['plugin' => 'Restful'], function ($routes) {
     $routes->scope('/', ['controller' => 'Session'], function ($routes) {
-        $routes->extensions(['json']);
+        // $routes->extensions(['json']);
 
-        $routes->connect('/:key', ['action' => 'check', '_method' => 'CHECK'], ['pass' => ['key']]);
+        $routes->connect('/:key', ['action' => 'check', '_method' => 'GET'], ['pass' => ['key']]);
         $routes->connect('/:key', ['action' => 'read', '_method' => 'GET'], ['pass' => ['key']]);
         $routes->connect('/', ['action' => 'write', '_method' => 'POST']);
         $routes->connect('/:key', ['action' => 'delete', '_method' => 'DELETE'], ['pass' => ['key']]);
@@ -221,4 +221,4 @@ Router::scope('/session', ['plugin' => 'Restful'], function ($routes) {
  * Load all plugin routes.  See the Plugin documentation on
  * how to customize the loading of plugin routes.
  */
-Plugin::routes();
+// Plugin::routes();

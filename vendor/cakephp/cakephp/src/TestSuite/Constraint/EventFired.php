@@ -1,34 +1,51 @@
 <?php
+declare(strict_types=1);
+
+/**
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE.txt
+ * Redistributions of files must retain the above copyright notice
+ *
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @since         3.2.0
+ * @license       https://www.opensource.org/licenses/mit-license.php MIT License
+ */
 namespace Cake\TestSuite\Constraint;
 
 use Cake\Event\EventManager;
-use PHPUnit_Framework_AssertionFailedError;
-use PHPUnit_Framework_Constraint;
+use PHPUnit\Framework\AssertionFailedError;
+use PHPUnit\Framework\Constraint\Constraint;
 
 /**
  * EventFired constraint
+ *
+ * @internal
  */
-class EventFired extends PHPUnit_Framework_Constraint
+class EventFired extends Constraint
 {
     /**
      * Array of fired events
      *
-     * @var EventManager
+     * @var \Cake\Event\EventManager
      */
     protected $_eventManager;
 
     /**
      * Constructor
      *
-     * @param EventManager $eventManager Event manager to check
+     * @param \Cake\Event\EventManager $eventManager Event manager to check
      */
-    public function __construct($eventManager)
+    public function __construct(EventManager $eventManager)
     {
-        parent::__construct();
         $this->_eventManager = $eventManager;
 
         if ($this->_eventManager->getEventList() === null) {
-            throw new PHPUnit_Framework_AssertionFailedError('The event manager you are asserting against is not configured to track events.');
+            throw new AssertionFailedError(
+                'The event manager you are asserting against is not configured to track events.'
+            );
         }
     }
 
@@ -38,9 +55,11 @@ class EventFired extends PHPUnit_Framework_Constraint
      * @param mixed $other Constraint check
      * @return bool
      */
-    public function matches($other)
+    public function matches($other): bool
     {
-        return $this->_eventManager->getEventList()->hasEvent($other);
+        $list = $this->_eventManager->getEventList();
+
+        return $list === null ? false : $list->hasEvent($other);
     }
 
     /**
@@ -48,7 +67,7 @@ class EventFired extends PHPUnit_Framework_Constraint
      *
      * @return string
      */
-    public function toString()
+    public function toString(): string
     {
         return 'was fired';
     }

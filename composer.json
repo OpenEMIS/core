@@ -5,26 +5,24 @@
     "type": "project",
     "license": "GPL-2.0",
     "require": {
-        "php": ">=5.4.16",
-        "cakephp/cakephp": "3.3.*",
+        "php": ">=7.4",
+        "cakephp/cakephp": "4.4.*",
         "mobiledetect/mobiledetectlib": "2.*",
-        "PHPOffice/PHPExcel": "dev-master",
-        "korditpteltd/kd-cakephp-restful": "^1.1",
-        "admad/cakephp-jwt-auth": "2.0.1",
         "korditpteltd/kd-cakephp-webhooks": "^1.0",
         "mk-j/php_xlsxwriter": "^0.32",
-        "korditpteltd/kd-cakephp-sso": "^1.2",
-        "korditpteltd/kd-cakephp-page": "^1.0.2",
         "phpoffice/phpspreadsheet": "^1.3",
-        "mpdf/mpdf": "^7.1"
+        "admad/cakephp-jwt-auth": "3.0.0",
+        "mpdf/mpdf": "^8.1",
+        "korditpteltd/iksso-cakephp-sso": "*",
+        "korditpteltd/ikpge-cakephp-page": "*",
+        "korditpteltd/ikrst-cakephp-restful": "*"
     },
     "require-dev": {
         "psy/psysh": "@stable",
         "phpunit/phpunit": "*",
         "cakephp/plugin-installer": "*",
-        "cakephp/migrations": "~1.0",
-        "cakephp/debug_kit": "~3.2",
-        "cakephp/bake": "~1.1"
+        "cakephp/bake": "^2.6",
+        "cakephp/migrations": "^3.2"
     },
     "suggest": {
         "phpunit/phpunit": "Allows automated tests to be run without system-wide install.",
@@ -33,9 +31,28 @@
     "autoload": {
         "psr-4": {
             "App\\": "src",
+            
+            "User\\": "plugins/User/src/",
+            "OpenEmis\\": "plugins/OpenEmis/src/",
             "ControllerAction\\": "./plugins/ControllerAction/src",
+            "Angular\\": "plugins/Angular/src/",
+            "Configuration\\": "plugins/Configuration/src/",
+            "Installer\\": "plugins/Installer/src/",
+            "Themes\\": "plugins/Theme/src/",
+            "Localization\\": "plugins/Localization/src/",
+            "Workflow\\": "plugins/Workflow/src/",
+            "Institution\\": "plugins/Institution/src/",
+            "Security\\": "plugins/Security/src/",
+            "Report\\": "plugins/Report/src/",
+            "AcademicPeriod\\": "plugins/AcademicPeriod/src/",
+            "Area\\": "plugins/Area/src/",
+            "Import\\": "plugins/Import/src/",
+            "Profile\\": "plugins/Profile/src/",
+            "Training\\": "plugins/Training/src/",
+            "Scholarship\\": "plugins/Scholarship/src/",
             "OAuth\\": "./plugins/OAuth/src",
             "Archive\\": "./plugins/Archive/src"
+
         }
     },
     "autoload-dev": {
@@ -50,7 +67,6 @@
     "scripts": {
         "post-install-cmd": "App\\Console\\Installer::postInstall",
         "post-create-project-cmd": "App\\Console\\Installer::postInstall",
-        "post-autoload-dump": "Cake\\Composer\\Installer\\PluginInstaller::postAutoloadDump",
         "check": [
             "@test",
             "@cs-check"
@@ -64,11 +80,11 @@
     "repositories": [
         {
             "type": "git",
-            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git"
+            "url": "git@bitbucket.org:korditpteltd/ikrst-cakephp-restful.git"
         },
         {
             "type": "git",
-            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git"
+            "url": "git@bitbucket.org:korditpteltd/iksso-cakephp-sso.git"
         },
         {
             "type": "git",
@@ -76,7 +92,7 @@
         },
         {
             "type": "git",
-            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-page.git"
+            "url": "git@bitbucket.org:korditpteltd/ikpge-cakephp-page.git"
         }
     ]
 }

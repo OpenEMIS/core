@@ -25,7 +25,7 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
         ]
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -46,7 +46,7 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
     {
         $model = $this->_table;
         if ($model->action == 'index' && $entity->has('rule')) {
-            $ruleConfig = $this->config('rule');
+            $ruleConfig = $this->getConfig('rule');
             $ruleArray = json_decode($entity->rule, true);
 
             $list = [];
@@ -60,7 +60,7 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
                     $value = __($label) . ': ';
 
                     if (isset($ruleConfig[$field]['lookupModel'])) {
-                        $lookupModel = $this->config('rule.'.$field.'.lookupModel');
+                        $lookupModel = $this->getConfig('rule.'.$field.'.lookupModel');
                         $modelTable = TableRegistry::get($lookupModel);
 
                         try {

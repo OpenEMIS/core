@@ -40,7 +40,7 @@ class WorkflowsTable extends AppTable {
     ];
     private $excludedModels = ['Cases.InstitutionCases'];
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
         parent::initialize($config);
         $this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
         $this->hasMany('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -49,7 +49,7 @@ class WorkflowsTable extends AppTable {
         $this->WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
 
         $validator->add('code', [

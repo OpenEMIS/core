@@ -20,7 +20,7 @@ class ImportStudentsTable extends AppTable {
 	    $this->Students = TableRegistry::get('Student.Students');
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'Model.import.onImportCheckUnique' => 'onImportCheckUnique',

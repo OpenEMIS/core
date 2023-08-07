@@ -1,27 +1,35 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Database;
 
+use Cake\Database\Exception\DatabaseException;
+use Cake\Database\Expression\CommonTableExpression;
+use Cake\Database\Expression\IdentifierExpression;
 use Cake\Database\Expression\OrderByExpression;
 use Cake\Database\Expression\OrderClauseExpression;
 use Cake\Database\Expression\QueryExpression;
 use Cake\Database\Expression\ValuesExpression;
+use Cake\Database\Expression\WindowExpression;
 use Cake\Database\Statement\CallbackStatement;
+use Closure;
 use InvalidArgumentException;
 use IteratorAggregate;
 use RuntimeException;
+use Throwable;
 
 /**
  * This class represents a Relational database SQL Query. A query can be of
@@ -31,13 +39,27 @@ use RuntimeException;
  */
 class Query implements ExpressionInterface, IteratorAggregate
 {
-
     use TypeMapTrait;
+
+    /**
+     * @var string
+     */
+    public const JOIN_TYPE_INNER = 'INNER';
+
+    /**
+     * @var string
+     */
+    public const JOIN_TYPE_LEFT = 'LEFT';
+
+    /**
+     * @var string
+     */
+    public const JOIN_TYPE_RIGHT = 'RIGHT';
 
     /**
      * Connection instance to be used to execute this query.
      *
-     * @var \Cake\Datasource\ConnectionInterface
+     * @var \Cake\Database\Connection
      */
     protected $_connection;
 
@@ -51,7 +73,7 @@ class Query implements ExpressionInterface, IteratorAggregate
     /**
      * List of SQL parts that will be used to build this query.
      *
-     * @var array
+     * @var array<string, mixed>
      */
     protected $_parts = [
         'delete' => true,
@@ -59,6 +81,7 @@ class Query implements ExpressionInterface, IteratorAggregate
         'set' => [],
         'insert' => [],
         'values' => [],
+        'with' => [],
         'select' => [],
         'distinct' => false,
         'modifier' => [],
@@ -67,12 +90,48 @@ class Query implements ExpressionInterface, IteratorAggregate
         'where' => null,
         'group' => [],
         'having' => null,
+        'window' => [],
         'order' => null,
         'limit' => null,
         'offset' => null,
         'union' => [],
-        'epilog' => null
+        'epilog' => null,
     ];
+
+    /**
+     * The list of query clauses to traverse for generating a SELECT statement
+     *
+     * @var array<string>
+     * @deprecated 4.4.3 This property is unused.
+     */
+    protected $_selectParts = [
+        'with', 'select', 'from', 'join', 'where', 'group', 'having', 'order', 'limit',
+        'offset', 'union', 'epilog',
+    ];
+
+    /**
+     * The list of query clauses to traverse for generating an UPDATE statement
+     *
+     * @var array<string>
+     * @deprecated 4.4.3 This property is unused.
+     */
+    protected $_updateParts = ['with', 'update', 'set', 'where', 'epilog'];
+
+    /**
+     * The list of query clauses to traverse for generating a DELETE statement
+     *
+     * @var array<string>
+     * @deprecated 4.4.3 This property is unused.
+     */
+    protected $_deleteParts = ['with', 'delete', 'modifier', 'from', 'where', 'epilog'];
+
+    /**
+     * The list of query clauses to traverse for generating an INSERT statement
+     *
+     * @var array<string>
+     * @deprecated 4.4.3 This property is unused.
+     */
+    protected $_insertParts = ['with', 'insert', 'values', 'epilog'];
 
     /**
      * Indicates whether internal state of this query was changed, this is used to
@@ -88,14 +147,14 @@ class Query implements ExpressionInterface, IteratorAggregate
      * statement upon retrieval. Each one of the callback function will receive
      * the row array as first argument.
      *
-     * @var array
+     * @var array<callable>
      */
     protected $_resultDecorators = [];
 
     /**
      * Statement object resulting from executing this query.
      *
-     * @var \Cake\Database\StatementInterface
+     * @var \Cake\Database\StatementInterface|null
      */
     protected $_iterator;
 
@@ -103,19 +162,19 @@ class Query implements ExpressionInterface, IteratorAggregate
      * The object responsible for generating query placeholders and temporarily store values
      * associated to each of those.
      *
-     * @var \Cake\Database\ValueBinder
+     * @var \Cake\Database\ValueBinder|null
      */
     protected $_valueBinder;
 
     /**
      * Instance of functions builder object used for generating arbitrary SQL functions.
      *
-     * @var \Cake\Database\FunctionsBuilder
+     * @var \Cake\Database\FunctionsBuilder|null
      */
     protected $_functionsBuilder;
 
     /**
-     * Boolean for tracking whether or not buffered results
+     * Boolean for tracking whether buffered results
      * are enabled.
      *
      * @var bool
@@ -125,44 +184,50 @@ class Query implements ExpressionInterface, IteratorAggregate
     /**
      * The Type map for fields in the select clause
      *
-     * @var \Cake\Database\TypeMap
+     * @var \Cake\Database\TypeMap|null
      */
     protected $_selectTypeMap;
 
     /**
-     * Tracking flag to ensure only one type caster is appended.
+     * Tracking flag to disable casting
      *
      * @var bool
      */
-    protected $_typeCastAttached = false;
+    protected $typeCastEnabled = true;
 
     /**
      * Constructor.
      *
-     * @param \Cake\Datasource\ConnectionInterface $connection The connection
+     * @param \Cake\Database\Connection $connection The connection
      * object to be used for transforming and executing this query
      */
-    public function __construct($connection)
+    public function __construct(Connection $connection)
     {
-        $this->connection($connection);
+        $this->setConnection($connection);
     }
 
     /**
-     * Sets the connection instance to be used for executing and transforming this query
-     * When called with a null argument, it will return the current connection instance.
+     * Sets the connection instance to be used for executing and transforming this query.
      *
-     * @param \Cake\Datasource\ConnectionInterface|null $connection instance
-     * @return $this|\Cake\Datasource\ConnectionInterface
+     * @param \Cake\Database\Connection $connection Connection instance
+     * @return $this
      */
-    public function connection($connection = null)
+    public function setConnection(Connection $connection)
     {
-        if ($connection === null) {
-            return $this->_connection;
-        }
         $this->_dirty();
         $this->_connection = $connection;
 
         return $this;
+    }
+
+    /**
+     * Gets the connection instance to be used for executing and transforming this query.
+     *
+     * @return \Cake\Database\Connection
+     */
+    public function getConnection(): Connection
+    {
+        return $this->_connection;
     }
 
     /**
@@ -185,21 +250,44 @@ class Query implements ExpressionInterface, IteratorAggregate
      *
      * @return \Cake\Database\StatementInterface
      */
-    public function execute()
+    public function execute(): StatementInterface
     {
         $statement = $this->_connection->run($this);
-        $driver = $this->_connection->driver();
-        $typeMap = $this->selectTypeMap();
-
-        if ($typeMap->toArray() && $this->_typeCastAttached === false) {
-            $this->decorateResults(new FieldTypeConverter($typeMap, $driver));
-            $this->_typeCastAttached = true;
-        }
-
         $this->_iterator = $this->_decorateStatement($statement);
         $this->_dirty = false;
 
         return $this->_iterator;
+    }
+
+    /**
+     * Executes the SQL of this query and immediately closes the statement before returning the row count of records
+     * changed.
+     *
+     * This method can be used with UPDATE and DELETE queries, but is not recommended for SELECT queries and is not
+     * used to count records.
+     *
+     * ## Example
+     *
+     * ```
+     * $rowCount = $query->update('articles')
+     *                 ->set(['published'=>true])
+     *                 ->where(['published'=>false])
+     *                 ->rowCountAndClose();
+     * ```
+     *
+     * The above example will change the published column to true for all false records, and return the number of
+     * records that were updated.
+     *
+     * @return int
+     */
+    public function rowCountAndClose(): int
+    {
+        $statement = $this->execute();
+        try {
+            return $statement->rowCount();
+        } finally {
+            $statement->closeCursor();
+        }
     }
 
     /**
@@ -214,18 +302,17 @@ class Query implements ExpressionInterface, IteratorAggregate
      * values when the query is executed, hence it is most suitable to use with
      * prepared statements.
      *
-     * @param \Cake\Database\ValueBinder|null $generator A placeholder object that will hold
-     * associated values for expressions
+     * @param \Cake\Database\ValueBinder|null $binder Value binder that generates parameter placeholders
      * @return string
      */
-    public function sql(ValueBinder $generator = null)
+    public function sql(?ValueBinder $binder = null): string
     {
-        if (!$generator) {
-            $generator = $this->valueBinder();
-            $generator->resetCount();
+        if (!$binder) {
+            $binder = $this->getValueBinder();
+            $binder->resetCount();
         }
 
-        return $this->connection()->compileQuery($this, $generator);
+        return $this->getConnection()->compileQuery($this, $binder);
     }
 
     /**
@@ -237,7 +324,39 @@ class Query implements ExpressionInterface, IteratorAggregate
      * The callback will receive 2 parameters, the first one is the value of the query
      * part that is being iterated and the second the name of such part.
      *
-     * ### Example:
+     * ### Example
+     * ```
+     * $query->select(['title'])->from('articles')->traverse(function ($value, $clause) {
+     *     if ($clause === 'select') {
+     *         var_dump($value);
+     *     }
+     * });
+     * ```
+     *
+     * @param callable $callback A function or callable to be executed for each part
+     * @return $this
+     */
+    public function traverse($callback)
+    {
+        foreach ($this->_parts as $name => $part) {
+            $callback($part, $name);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Will iterate over the provided parts.
+     *
+     * Traversing functions can aggregate results using variables in the closure
+     * or instance variables. This method can be used to traverse a subset of
+     * query parts in order to render a SQL query.
+     *
+     * The callback will receive 2 parameters, the first one is the value of the query
+     * part that is being iterated and the second the name of such part.
+     *
+     * ### Example
+     *
      * ```
      * $query->select(['title'])->from('articles')->traverse(function ($value, $clause) {
      *     if ($clause === 'select') {
@@ -247,12 +366,11 @@ class Query implements ExpressionInterface, IteratorAggregate
      * ```
      *
      * @param callable $visitor A function or callable to be executed for each part
-     * @param array $parts The query clauses to traverse
+     * @param array<string> $parts The list of query parts to traverse
      * @return $this
      */
-    public function traverse(callable $visitor, array $parts = [])
+    public function traverseParts(callable $visitor, array $parts)
     {
-        $parts = $parts ?: array_keys($this->_parts);
         foreach ($parts as $name) {
             $visitor($this->_parts[$name], $name);
         }
@@ -261,7 +379,72 @@ class Query implements ExpressionInterface, IteratorAggregate
     }
 
     /**
-     * Adds new fields to be returned by a SELECT statement when this query is
+     * Adds a new common table expression (CTE) to the query.
+     *
+     * ### Examples:
+     *
+     * Common table expressions can either be passed as preconstructed expression
+     * objects:
+     *
+     * ```
+     * $cte = new \Cake\Database\Expression\CommonTableExpression(
+     *     'cte',
+     *     $connection
+     *         ->newQuery()
+     *         ->select('*')
+     *         ->from('articles')
+     * );
+     *
+     * $query->with($cte);
+     * ```
+     *
+     * or returned from a closure, which will receive a new common table expression
+     * object as the first argument, and a new blank query object as
+     * the second argument:
+     *
+     * ```
+     * $query->with(function (
+     *     \Cake\Database\Expression\CommonTableExpression $cte,
+     *     \Cake\Database\Query $query
+     *  ) {
+     *     $cteQuery = $query
+     *         ->select('*')
+     *         ->from('articles');
+     *
+     *     return $cte
+     *         ->name('cte')
+     *         ->query($cteQuery);
+     * });
+     * ```
+     *
+     * @param \Cake\Database\Expression\CommonTableExpression|\Closure $cte The CTE to add.
+     * @param bool $overwrite Whether to reset the list of CTEs.
+     * @return $this
+     */
+    public function with($cte, bool $overwrite = false)
+    {
+        if ($overwrite) {
+            $this->_parts['with'] = [];
+        }
+
+        if ($cte instanceof Closure) {
+            $query = $this->getConnection()->newQuery();
+            $cte = $cte(new CommonTableExpression(), $query);
+            if (!($cte instanceof CommonTableExpression)) {
+                throw new RuntimeException(
+                    'You must return a `CommonTableExpression` from a Closure passed to `with()`.'
+                );
+            }
+        }
+
+        $this->_parts['with'][] = $cte;
+        $this->_dirty();
+
+        return $this;
+    }
+
+    /**
+     * Adds new fields to be returned by a `SELECT` statement when this query is
      * executed. Fields can be passed as an array of strings, array of expression
      * objects, a single expression or a single string.
      *
@@ -288,14 +471,14 @@ class Query implements ExpressionInterface, IteratorAggregate
      * ```
      *
      * By default no fields are selected, if you have an instance of `Cake\ORM\Query` and try to append
-     * fields you should also call `Cake\ORM\Query::autoFields()` to select the default fields
+     * fields you should also call `Cake\ORM\Query::enableAutoFields()` to select the default fields
      * from the table.
      *
-     * @param array|\Cake\Database\ExpressionInterface|string|callable $fields fields to be added to the list.
+     * @param \Cake\Database\ExpressionInterface|callable|array|string $fields fields to be added to the list.
      * @param bool $overwrite whether to reset fields with passed list or not
      * @return $this
      */
-    public function select($fields = [], $overwrite = false)
+    public function select($fields = [], bool $overwrite = false)
     {
         if (!is_string($fields) && is_callable($fields)) {
             $fields = $fields($this);
@@ -318,7 +501,7 @@ class Query implements ExpressionInterface, IteratorAggregate
     }
 
     /**
-     * Adds a DISTINCT clause to the query to remove duplicates from the result set.
+     * Adds a `DISTINCT` clause to the query to remove duplicates from the result set.
      * This clause can only be used for select statements.
      *
      * If you wish to filter duplicates based of those rows sharing a particular field
@@ -340,7 +523,7 @@ class Query implements ExpressionInterface, IteratorAggregate
      * $query->distinct('name', true);
      * ```
      *
-     * @param array|\Cake\Database\ExpressionInterface|string|bool $on Enable/disable distinct class
+     * @param \Cake\Database\ExpressionInterface|array|string|bool $on Enable/disable distinct class
      * or list of fields to be filtered on
      * @param bool $overwrite whether to reset fields with passed list or not
      * @return $this
@@ -358,7 +541,7 @@ class Query implements ExpressionInterface, IteratorAggregate
             if (is_array($this->_parts['distinct'])) {
                 $merge = $this->_parts['distinct'];
             }
-            $on = ($overwrite) ? array_values($on) : array_merge($merge, array_values($on));
+            $on = $overwrite ? array_values($on) : array_merge($merge, array_values($on));
         }
 
         $this->_parts['distinct'] = $on;
@@ -368,7 +551,7 @@ class Query implements ExpressionInterface, IteratorAggregate
     }
 
     /**
-     * Adds a single or multiple SELECT modifiers to be used in the SELECT.
+     * Adds a single or multiple `SELECT` modifiers to be used in the `SELECT`.
      *
      * By default this function will append any passed argument to the list of modifiers
      * to be applied, unless the second argument is set to true.
@@ -385,7 +568,7 @@ class Query implements ExpressionInterface, IteratorAggregate
      * // It will produce the SQL: SELECT HIGH_PRIORITY SQL_NO_CACHE name, city FROM products
      * ```
      *
-     * @param array|\Cake\Database\ExpressionInterface|string $modifiers modifiers to be applied to the query
+     * @param \Cake\Database\ExpressionInterface|array|string $modifiers modifiers to be applied to the query
      * @param bool $overwrite whether to reset order with field list or not
      * @return $this
      */
@@ -395,7 +578,10 @@ class Query implements ExpressionInterface, IteratorAggregate
         if ($overwrite) {
             $this->_parts['modifier'] = [];
         }
-        $this->_parts['modifier'] = array_merge($this->_parts['modifier'], (array)$modifiers);
+        if (!is_array($modifiers)) {
+            $modifiers = [$modifiers];
+        }
+        $this->_parts['modifier'] = array_merge($this->_parts['modifier'], $modifiers);
 
         return $this;
     }
@@ -431,13 +617,7 @@ class Query implements ExpressionInterface, IteratorAggregate
      */
     public function from($tables = [], $overwrite = false)
     {
-        if (empty($tables)) {
-            return $this->_parts['from'];
-        }
-
-        if (is_string($tables)) {
-            $tables = [$tables];
-        }
+        $tables = (array)$tables;
 
         if ($overwrite) {
             $this->_parts['from'] = $tables;
@@ -458,11 +638,11 @@ class Query implements ExpressionInterface, IteratorAggregate
      * By default this function will append any passed argument to the list of tables
      * to be joined, unless the third argument is set to true.
      *
-     * When no join type is specified an INNER JOIN is used by default:
+     * When no join type is specified an `INNER JOIN` is used by default:
      * `$query->join(['authors'])` will produce `INNER JOIN authors ON 1 = 1`
      *
      * It is also possible to alias joins using the array key:
-     * `$query->join(['a' => 'authors'])`` will produce `INNER JOIN authors a ON 1 = 1`
+     * `$query->join(['a' => 'authors'])` will produce `INNER JOIN authors a ON 1 = 1`
      *
      * A join can be fully described and aliased using the array notation:
      *
@@ -530,18 +710,14 @@ class Query implements ExpressionInterface, IteratorAggregate
      * $query->join(['something' => 'different_table'], [], true); // resets joins list
      * ```
      *
-     * @param array|string|null $tables list of tables to be joined in the query
-     * @param array $types associative array of type names used to bind values to query
+     * @param array<string, mixed>|string $tables list of tables to be joined in the query
+     * @param array<string, string> $types Associative array of type names used to bind values to query
      * @param bool $overwrite whether to reset joins with passed list or not
-     * @see \Cake\Database\Type
+     * @see \Cake\Database\TypeFactory
      * @return $this
      */
-    public function join($tables = null, $types = [], $overwrite = false)
+    public function join($tables, $types = [], $overwrite = false)
     {
-        if ($tables === null) {
-            return $this->_parts['join'];
-        }
-
         if (is_string($tables) || isset($tables['table'])) {
             $tables = [$tables];
         }
@@ -561,7 +737,7 @@ class Query implements ExpressionInterface, IteratorAggregate
                 $t['conditions'] = $this->newExpr()->add($t['conditions'], $types);
             }
             $alias = is_string($alias) ? $alias : null;
-            $joins[$alias ?: $i++] = $t + ['type' => 'INNER', 'alias' => $alias];
+            $joins[$alias ?: $i++] = $t + ['type' => static::JOIN_TYPE_INNER, 'alias' => $alias];
         }
 
         if ($overwrite) {
@@ -584,7 +760,7 @@ class Query implements ExpressionInterface, IteratorAggregate
      * @param string $name The alias/name of the join to remove.
      * @return $this
      */
-    public function removeJoin($name)
+    public function removeJoin(string $name)
     {
         unset($this->_parts['join'][$name]);
         $this->_dirty();
@@ -593,7 +769,7 @@ class Query implements ExpressionInterface, IteratorAggregate
     }
 
     /**
-     * Adds a single LEFT JOIN clause to the query.
+     * Adds a single `LEFT JOIN` clause to the query.
      *
      * This is a shorthand method for building joins via `join()`.
      *
@@ -622,8 +798,8 @@ class Query implements ExpressionInterface, IteratorAggregate
      *
      * See `join()` for further details on conditions and types.
      *
-     * @param string|array $table The table to join with
-     * @param string|array|\Cake\Database\ExpressionInterface $conditions The conditions
+     * @param array<string, mixed>|string $table The table to join with
+     * @param \Cake\Database\ExpressionInterface|array|string $conditions The conditions
      * to use for joining.
      * @param array $types a list of types associated to the conditions used for converting
      * values to the corresponding database representation.
@@ -631,19 +807,21 @@ class Query implements ExpressionInterface, IteratorAggregate
      */
     public function leftJoin($table, $conditions = [], $types = [])
     {
-        return $this->join($this->_makeJoin($table, $conditions, 'LEFT'), $types);
+        $this->join($this->_makeJoin($table, $conditions, static::JOIN_TYPE_LEFT), $types);
+
+        return $this;
     }
 
     /**
-     * Adds a single RIGHT JOIN clause to the query.
+     * Adds a single `RIGHT JOIN` clause to the query.
      *
      * This is a shorthand method for building joins via `join()`.
      *
      * The arguments of this method are identical to the `leftJoin()` shorthand, please refer
      * to that methods description for further details.
      *
-     * @param string|array $table The table to join with
-     * @param string|array|\Cake\Database\ExpressionInterface $conditions The conditions
+     * @param array<string, mixed>|string $table The table to join with
+     * @param \Cake\Database\ExpressionInterface|array|string $conditions The conditions
      * to use for joining.
      * @param array $types a list of types associated to the conditions used for converting
      * values to the corresponding database representation.
@@ -651,39 +829,44 @@ class Query implements ExpressionInterface, IteratorAggregate
      */
     public function rightJoin($table, $conditions = [], $types = [])
     {
-        return $this->join($this->_makeJoin($table, $conditions, 'RIGHT'), $types);
+        $this->join($this->_makeJoin($table, $conditions, static::JOIN_TYPE_RIGHT), $types);
+
+        return $this;
     }
 
     /**
-     * Adds a single INNER JOIN clause to the query.
+     * Adds a single `INNER JOIN` clause to the query.
      *
      * This is a shorthand method for building joins via `join()`.
      *
      * The arguments of this method are identical to the `leftJoin()` shorthand, please refer
-     * to that methods description for further details.
+     * to that method's description for further details.
      *
-     * @param string|array $table The table to join with
-     * @param string|array|\Cake\Database\ExpressionInterface $conditions The conditions
+     * @param array<string, mixed>|string $table The table to join with
+     * @param \Cake\Database\ExpressionInterface|array|string $conditions The conditions
      * to use for joining.
-     * @param array $types a list of types associated to the conditions used for converting
+     * @param array<string, string> $types a list of types associated to the conditions used for converting
      * values to the corresponding database representation.
      * @return $this
      */
     public function innerJoin($table, $conditions = [], $types = [])
     {
-        return $this->join($this->_makeJoin($table, $conditions, 'INNER'), $types);
+        $this->join($this->_makeJoin($table, $conditions, static::JOIN_TYPE_INNER), $types);
+
+        return $this;
     }
 
     /**
      * Returns an array that can be passed to the join method describing a single join clause
      *
-     * @param string|array $table The table to join with
-     * @param string|array|\Cake\Database\ExpressionInterface $conditions The conditions
+     * @param array<string, mixed>|string $table The table to join with
+     * @param \Cake\Database\ExpressionInterface|array|string $conditions The conditions
      * to use for joining.
      * @param string $type the join type to use
      * @return array
+     * @psalm-suppress InvalidReturnType
      */
-    protected function _makeJoin($table, $conditions, $type)
+    protected function _makeJoin($table, $conditions, $type): array
     {
         $alias = $table;
 
@@ -692,12 +875,16 @@ class Query implements ExpressionInterface, IteratorAggregate
             $table = current($table);
         }
 
+        /**
+         * @psalm-suppress InvalidArrayOffset
+         * @psalm-suppress InvalidReturnStatement
+         */
         return [
             $alias => [
                 'table' => $table,
                 'conditions' => $conditions,
-                'type' => $type
-            ]
+                'type' => $type,
+            ],
         ];
     }
 
@@ -709,12 +896,12 @@ class Query implements ExpressionInterface, IteratorAggregate
      * string or an array of strings.
      *
      * When using arrays, each entry will be joined to the rest of the conditions using
-     * an AND operator. Consecutive calls to this function will also join the new
+     * an `AND` operator. Consecutive calls to this function will also join the new
      * conditions specified using the AND operator. Additionally, values can be
      * expressed using expression objects which can include other query objects.
      *
-     * Any conditions created with this methods can be used with any SELECT, UPDATE
-     * and DELETE type of queries.
+     * Any conditions created with this methods can be used with any `SELECT`, `UPDATE`
+     * and `DELETE` type of queries.
      *
      * ### Conditions using operators:
      *
@@ -753,9 +940,13 @@ class Query implements ExpressionInterface, IteratorAggregate
      *
      * `$query->where(['OR' => [['published' => false], ['published' => true]])`
      *
+     * Would result in:
+     *
+     * `WHERE (published = false) OR (published = true)`
+     *
      * Keep in mind that every time you call where() with the third param set to false
      * (default), it will join the passed conditions to the previous stored list using
-     * the AND operator. Also, using the same array key twice in consecutive calls to
+     * the `AND` operator. Also, using the same array key twice in consecutive calls to
      * this method will not override the previous value.
      *
      * ### Using expressions objects:
@@ -776,14 +967,14 @@ class Query implements ExpressionInterface, IteratorAggregate
      * You can use callable functions to construct complex expressions, functions
      * receive as first argument a new QueryExpression object and this query instance
      * as second argument. Functions must return an expression object, that will be
-     * added the list of conditions for the query using the AND operator.
+     * added the list of conditions for the query using the `AND` operator.
      *
      * ```
      * $query
      *   ->where(['title !=' => 'Hello World'])
      *   ->where(function ($exp, $query) {
-     *     $or = $exp->or_(['id' => 1]);
-     *     $and = $exp->and_(['id >' => 2, 'id <' => 10]);
+     *     $or = $exp->or(['id' => 1]);
+     *     $and = $exp->and(['id >' => 2, 'id <' => 10]);
      *    return $or->add($and);
      *   });
      * ```
@@ -803,19 +994,34 @@ class Query implements ExpressionInterface, IteratorAggregate
      * `WHERE articles.author_id = authors.id AND modified IS NULL`
      *
      * Please note that when using the array notation or the expression objects, all
-     * values will be correctly quoted and transformed to the correspondent database
+     * *values* will be correctly quoted and transformed to the correspondent database
      * data type automatically for you, thus securing your application from SQL injections.
+     * The keys however, are not treated as unsafe input, and should be validated/sanitized.
+     *
      * If you use string conditions make sure that your values are correctly quoted.
      * The safest thing you can do is to never use string conditions.
      *
-     * @param string|array|\Cake\Database\ExpressionInterface|callable|null $conditions The conditions to filter on.
-     * @param array $types associative array of type names used to bind values to query
+     * ### Using null-able values
+     *
+     * When using values that can be null you can use the 'IS' keyword to let the ORM generate the correct SQL based on the value's type
+     *
+     * ```
+     * $query->where([
+     *     'posted >=' => new DateTime('3 days ago'),
+     *     'category_id IS' => $category,
+     * ]);
+     * ```
+     *
+     * If $category is `null` - it will actually convert that into `category_id IS NULL` - if it's `4` it will convert it into `category_id = 4`
+     *
+     * @param \Cake\Database\ExpressionInterface|\Closure|array|string|null $conditions The conditions to filter on.
+     * @param array<string, string> $types Associative array of type names used to bind values to query
      * @param bool $overwrite whether to reset conditions with passed list or not
-     * @see \Cake\Database\Type
+     * @see \Cake\Database\TypeFactory
      * @see \Cake\Database\Expression\QueryExpression
      * @return $this
      */
-    public function where($conditions = null, $types = [], $overwrite = false)
+    public function where($conditions = null, array $types = [], bool $overwrite = false)
     {
         if ($overwrite) {
             $this->_parts['where'] = $this->newExpr();
@@ -823,6 +1029,142 @@ class Query implements ExpressionInterface, IteratorAggregate
         $this->_conjugate('where', $conditions, 'AND', $types);
 
         return $this;
+    }
+
+    /**
+     * Convenience method that adds a NOT NULL condition to the query
+     *
+     * @param \Cake\Database\ExpressionInterface|array|string $fields A single field or expressions or a list of them
+     *  that should be not null.
+     * @return $this
+     */
+    public function whereNotNull($fields)
+    {
+        if (!is_array($fields)) {
+            $fields = [$fields];
+        }
+
+        $exp = $this->newExpr();
+
+        foreach ($fields as $field) {
+            $exp->isNotNull($field);
+        }
+
+        return $this->where($exp);
+    }
+
+    /**
+     * Convenience method that adds a IS NULL condition to the query
+     *
+     * @param \Cake\Database\ExpressionInterface|array|string $fields A single field or expressions or a list of them
+     *   that should be null.
+     * @return $this
+     */
+    public function whereNull($fields)
+    {
+        if (!is_array($fields)) {
+            $fields = [$fields];
+        }
+
+        $exp = $this->newExpr();
+
+        foreach ($fields as $field) {
+            $exp->isNull($field);
+        }
+
+        return $this->where($exp);
+    }
+
+    /**
+     * Adds an IN condition or set of conditions to be used in the WHERE clause for this
+     * query.
+     *
+     * This method does allow empty inputs in contrast to where() if you set
+     * 'allowEmpty' to true.
+     * Be careful about using it without proper sanity checks.
+     *
+     * Options:
+     *
+     * - `types` - Associative array of type names used to bind values to query
+     * - `allowEmpty` - Allow empty array.
+     *
+     * @param string $field Field
+     * @param array $values Array of values
+     * @param array<string, mixed> $options Options
+     * @return $this
+     */
+    public function whereInList(string $field, array $values, array $options = [])
+    {
+        $options += [
+            'types' => [],
+            'allowEmpty' => false,
+        ];
+
+        if ($options['allowEmpty'] && !$values) {
+            return $this->where('1=0');
+        }
+
+        return $this->where([$field . ' IN' => $values], $options['types']);
+    }
+
+    /**
+     * Adds a NOT IN condition or set of conditions to be used in the WHERE clause for this
+     * query.
+     *
+     * This method does allow empty inputs in contrast to where() if you set
+     * 'allowEmpty' to true.
+     * Be careful about using it without proper sanity checks.
+     *
+     * @param string $field Field
+     * @param array $values Array of values
+     * @param array<string, mixed> $options Options
+     * @return $this
+     */
+    public function whereNotInList(string $field, array $values, array $options = [])
+    {
+        $options += [
+            'types' => [],
+            'allowEmpty' => false,
+        ];
+
+        if ($options['allowEmpty'] && !$values) {
+            return $this->where([$field . ' IS NOT' => null]);
+        }
+
+        return $this->where([$field . ' NOT IN' => $values], $options['types']);
+    }
+
+    /**
+     * Adds a NOT IN condition or set of conditions to be used in the WHERE clause for this
+     * query. This also allows the field to be null with a IS NULL condition since the null
+     * value would cause the NOT IN condition to always fail.
+     *
+     * This method does allow empty inputs in contrast to where() if you set
+     * 'allowEmpty' to true.
+     * Be careful about using it without proper sanity checks.
+     *
+     * @param string $field Field
+     * @param array $values Array of values
+     * @param array<string, mixed> $options Options
+     * @return $this
+     */
+    public function whereNotInListOrNull(string $field, array $values, array $options = [])
+    {
+        $options += [
+            'types' => [],
+            'allowEmpty' => false,
+        ];
+
+        if ($options['allowEmpty'] && !$values) {
+            return $this->where([$field . ' IS NOT' => null]);
+        }
+
+        return $this->where(
+            [
+                'OR' => [$field . ' NOT IN' => $values, $field . ' IS' => null],
+            ],
+            $options['types']
+        );
     }
 
     /**
@@ -866,8 +1208,8 @@ class Query implements ExpressionInterface, IteratorAggregate
      *   ->where(['title' => 'Foo'])
      *   ->andWhere(function ($exp, $query) {
      *     return $exp
-     *       ->add(['author_id' => 1])
-     *       ->or_(['author_id' => 2]);
+     *       ->or(['author_id' => 1])
+     *       ->add(['author_id' => 2]);
      *   });
      * ```
      *
@@ -875,78 +1217,15 @@ class Query implements ExpressionInterface, IteratorAggregate
      *
      * `WHERE (title = 'Foo') AND (author_id = 1 OR author_id = 2)`
      *
-     * @param string|array|\Cake\Database\ExpressionInterface|callable $conditions The conditions to add with AND.
-     * @param array $types associative array of type names used to bind values to query
+     * @param \Cake\Database\ExpressionInterface|\Closure|array|string $conditions The conditions to add with AND.
+     * @param array<string, string> $types Associative array of type names used to bind values to query
      * @see \Cake\Database\Query::where()
-     * @see \Cake\Database\Type
+     * @see \Cake\Database\TypeFactory
      * @return $this
      */
-    public function andWhere($conditions, $types = [])
+    public function andWhere($conditions, array $types = [])
     {
         $this->_conjugate('where', $conditions, 'AND', $types);
-
-        return $this;
-    }
-
-    /**
-     * Connects any previously defined set of conditions to the provided list
-     * using the OR operator. This function accepts the conditions list in the same
-     * format as the method `where` does, hence you can use arrays, expression objects
-     * callback functions or strings.
-     *
-     * It is important to notice that when calling this function, any previous set
-     * of conditions defined for this query will be treated as a single argument for
-     * the OR operator. This function will not only operate the most recently defined
-     * condition, but all the conditions as a whole.
-     *
-     * When using an array for defining conditions, creating constraints form each
-     * array entry will use the same logic as with the `where()` function. This means
-     * that each array entry will be joined to the other using the OR operator, unless
-     * you nest the conditions in the array using other operator.
-     *
-     * ### Examples:
-     *
-     * ```
-     * $query->where(['title' => 'Hello World')->orWhere(['title' => 'Foo']);
-     * ```
-     *
-     * Will produce:
-     *
-     * `WHERE title = 'Hello World' OR title = 'Foo'`
-     *
-     * ```
-     * $query
-     *   ->where(['OR' => ['published' => false, 'published is NULL']])
-     *   ->orWhere(['author_id' => 1, 'comments_count >' => 10])
-     * ```
-     *
-     * Produces:
-     *
-     * `WHERE (published = 0 OR published IS NULL) OR (author_id = 1 AND comments_count > 10)`
-     *
-     * ```
-     * $query
-     *   ->where(['title' => 'Foo'])
-     *   ->orWhere(function ($exp, $query) {
-     *     return $exp
-     *       ->add(['author_id' => 1])
-     *       ->or_(['author_id' => 2]);
-     *   });
-     * ```
-     *
-     * Generates the following conditions:
-     *
-     * `WHERE (title = 'Foo') OR (author_id = 1 OR author_id = 2)`
-     *
-     * @param string|array|\Cake\Database\ExpressionInterface|callable $conditions The conditions to add with OR.
-     * @param array $types associative array of type names used to bind values to query
-     * @see \Cake\Database\Query::where()
-     * @see \Cake\Database\Type
-     * @return $this
-     */
-    public function orWhere($conditions, $types = [])
-    {
-        $this->_conjugate('where', $conditions, 'OR', $types);
 
         return $this;
     }
@@ -975,7 +1254,9 @@ class Query implements ExpressionInterface, IteratorAggregate
      * `ORDER BY title DESC, author_id ASC`
      *
      * ```
-     * $query->order(['title' => 'DESC NULLS FIRST'])->order('author_id');
+     * $query
+     *     ->order(['title' => $query->newExpr('DESC NULLS FIRST')])
+     *     ->order('author_id');
      * ```
      *
      * Will generate:
@@ -987,14 +1268,26 @@ class Query implements ExpressionInterface, IteratorAggregate
      * $query->order($expression)->order(['title' => 'ASC']);
      * ```
      *
-     * Will become:
+     * and
+     *
+     * ```
+     * $query->order(function ($exp, $query) {
+     *     return [$exp->add(['id % 2 = 0']), 'title' => 'ASC'];
+     * });
+     * ```
+     *
+     * Will both become:
      *
      * `ORDER BY (id %2 = 0), title ASC`
+     *
+     * Order fields/directions are not sanitized by the query builder.
+     * You should use an allowed list of fields/directions when passing
+     * in user-supplied data to `order()`.
      *
      * If you need to set complex expressions as order conditions, you
      * should use `orderAsc()` or `orderDesc()`.
      *
-     * @param array|\Cake\Database\ExpressionInterface|string $fields fields to be added to the list
+     * @param \Cake\Database\ExpressionInterface|\Closure|array|string $fields fields to be added to the list
      * @param bool $overwrite whether to reset order with field list or not
      * @return $this
      */
@@ -1022,8 +1315,11 @@ class Query implements ExpressionInterface, IteratorAggregate
      * This method allows you to set complex expressions
      * as order conditions unlike order()
      *
-     * @param string|\Cake\Database\Expression\QueryExpression $field The field to order on.
-     * @param bool $overwrite Whether or not to reset the order clauses.
+     * Order fields are not suitable for use with user supplied data as they are
+     * not sanitized by the query builder.
+     *
+     * @param \Cake\Database\ExpressionInterface|\Closure|string $field The field to order on.
+     * @param bool $overwrite Whether to reset the order clauses.
      * @return $this
      */
     public function orderAsc($field, $overwrite = false)
@@ -1033,6 +1329,10 @@ class Query implements ExpressionInterface, IteratorAggregate
         }
         if (!$field) {
             return $this;
+        }
+
+        if ($field instanceof Closure) {
+            $field = $field($this->newExpr(), $this);
         }
 
         if (!$this->_parts['order']) {
@@ -1049,8 +1349,11 @@ class Query implements ExpressionInterface, IteratorAggregate
      * This method allows you to set complex expressions
      * as order conditions unlike order()
      *
-     * @param string|\Cake\Database\Expression\QueryExpression $field The field to order on.
-     * @param bool $overwrite Whether or not to reset the order clauses.
+     * Order fields are not suitable for use with user supplied data as they are
+     * not sanitized by the query builder.
+     *
+     * @param \Cake\Database\ExpressionInterface|\Closure|string $field The field to order on.
+     * @param bool $overwrite Whether to reset the order clauses.
      * @return $this
      */
     public function orderDesc($field, $overwrite = false)
@@ -1060,6 +1363,10 @@ class Query implements ExpressionInterface, IteratorAggregate
         }
         if (!$field) {
             return $this;
+        }
+
+        if ($field instanceof Closure) {
+            $field = $field($this->newExpr(), $this);
         }
 
         if (!$this->_parts['order']) {
@@ -1088,7 +1395,10 @@ class Query implements ExpressionInterface, IteratorAggregate
      * $query->group('title');
      * ```
      *
-     * @param array|\Cake\Database\ExpressionInterface|string $fields fields to be added to the list
+     * Group fields are not suitable for use with user supplied data as they are
+     * not sanitized by the query builder.
+     *
+     * @param \Cake\Database\ExpressionInterface|array|string $fields fields to be added to the list
      * @param bool $overwrite whether to reset fields with passed list or not
      * @return $this
      */
@@ -1109,13 +1419,16 @@ class Query implements ExpressionInterface, IteratorAggregate
     }
 
     /**
-     * Adds a condition or set of conditions to be used in the HAVING clause for this
+     * Adds a condition or set of conditions to be used in the `HAVING` clause for this
      * query. This method operates in exactly the same way as the method `where()`
      * does. Please refer to its documentation for an insight on how to using each
      * parameter.
      *
-     * @param string|array|\Cake\Database\ExpressionInterface|callable|null $conditions The having conditions.
-     * @param array $types associative array of type names used to bind values to query
+     * Having fields are not suitable for use with user supplied data as they are
+     * not sanitized by the query builder.
+     *
+     * @param \Cake\Database\ExpressionInterface|\Closure|array|string|null $conditions The having conditions.
+     * @param array<string, string> $types Associative array of type names used to bind values to query
      * @param bool $overwrite whether to reset conditions with passed list or not
      * @see \Cake\Database\Query::where()
      * @return $this
@@ -1136,8 +1449,11 @@ class Query implements ExpressionInterface, IteratorAggregate
      * the same way as the method `andWhere()` does. Please refer to its
      * documentation for an insight on how to using each parameter.
      *
-     * @param string|array|\Cake\Database\ExpressionInterface|callable $conditions The AND conditions for HAVING.
-     * @param array $types associative array of type names used to bind values to query
+     * Having fields are not suitable for use with user supplied data as they are
+     * not sanitized by the query builder.
+     *
+     * @param \Cake\Database\ExpressionInterface|\Closure|array|string $conditions The AND conditions for HAVING.
+     * @param array<string, string> $types Associative array of type names used to bind values to query
      * @see \Cake\Database\Query::andWhere()
      * @return $this
      */
@@ -1149,19 +1465,30 @@ class Query implements ExpressionInterface, IteratorAggregate
     }
 
     /**
-     * Connects any previously defined set of conditions to the provided list
-     * using the OR operator in the HAVING clause. This method operates in exactly
-     * the same way as the method `orWhere()` does. Please refer to its
-     * documentation for an insight on how to using each parameter.
+     * Adds a named window expression.
      *
-     * @param string|array|\Cake\Database\ExpressionInterface|callable $conditions The OR conditions for HAVING.
-     * @param array $types associative array of type names used to bind values to query.
-     * @see \Cake\Database\Query::orWhere()
+     * You are responsible for adding windows in the order your database requires.
+     *
+     * @param string $name Window name
+     * @param \Cake\Database\Expression\WindowExpression|\Closure $window Window expression
+     * @param bool $overwrite Clear all previous query window expressions
      * @return $this
      */
-    public function orHaving($conditions, $types = [])
+    public function window(string $name, $window, bool $overwrite = false)
     {
-        $this->_conjugate('having', $conditions, 'OR', $types);
+        if ($overwrite) {
+            $this->_parts['window'] = [];
+        }
+
+        if ($window instanceof Closure) {
+            $window = $window(new WindowExpression(), $this);
+            if (!($window instanceof WindowExpression)) {
+                throw new RuntimeException('You must return a `WindowExpression` from a Closure passed to `window()`.');
+            }
+        }
+
+        $this->_parts['window'][] = ['name' => new IdentifierExpression($name), 'window' => $window];
+        $this->_dirty();
 
         return $this;
     }
@@ -1173,15 +1500,19 @@ class Query implements ExpressionInterface, IteratorAggregate
      * in the record set you want as results. If empty the limit will default to
      * the existing limit clause, and if that too is empty, then `25` will be used.
      *
-     * Pages should start at 1.
+     * Pages must start at 1.
      *
      * @param int $num The page number you want.
      * @param int|null $limit The number of rows you want in the page. If null
      *  the current limit clause will be used.
      * @return $this
+     * @throws \InvalidArgumentException If page number < 1.
      */
-    public function page($num, $limit = null)
+    public function page(int $num, ?int $limit = null)
     {
+        if ($num < 1) {
+            throw new InvalidArgumentException('Pages must start at 1.');
+        }
         if ($limit !== null) {
             $this->limit($limit);
         }
@@ -1212,16 +1543,16 @@ class Query implements ExpressionInterface, IteratorAggregate
      * $query->limit($query->newExpr()->add(['1 + 1'])); // LIMIT (1 + 1)
      * ```
      *
-     * @param int|\Cake\Database\ExpressionInterface $num number of records to be returned
+     * @param \Cake\Database\ExpressionInterface|int|null $limit number of records to be returned
      * @return $this
      */
-    public function limit($num)
+    public function limit($limit)
     {
-        $this->_dirty();
-        if ($num !== null && !is_object($num)) {
-            $num = (int)$num;
+        if (is_string($limit) && !is_numeric($limit)) {
+            throw new InvalidArgumentException('Invalid value for `limit()`');
         }
-        $this->_parts['limit'] = $num;
+        $this->_dirty();
+        $this->_parts['limit'] = $limit;
 
         return $this;
     }
@@ -1241,16 +1572,16 @@ class Query implements ExpressionInterface, IteratorAggregate
      * $query->offset($query->newExpr()->add(['1 + 1'])); // OFFSET (1 + 1)
      * ```
      *
-     * @param int|\Cake\Database\ExpressionInterface $num number of records to be skipped
+     * @param \Cake\Database\ExpressionInterface|int|null $offset number of records to be skipped
      * @return $this
      */
-    public function offset($num)
+    public function offset($offset)
     {
-        $this->_dirty();
-        if ($num !== null && !is_object($num)) {
-            $num = (int)$num;
+        if (is_string($offset) && !is_numeric($offset)) {
+            throw new InvalidArgumentException('Invalid value for `offset()`');
         }
-        $this->_parts['offset'] = $num;
+        $this->_dirty();
+        $this->_parts['offset'] = $offset;
 
         return $this;
     }
@@ -1275,7 +1606,7 @@ class Query implements ExpressionInterface, IteratorAggregate
      *
      * `SELECT id, name FROM things d UNION SELECT id, title FROM articles a`
      *
-     * @param string|\Cake\Database\Query $query full SQL query to be used in UNION operator
+     * @param \Cake\Database\Query|string $query full SQL query to be used in UNION operator
      * @param bool $overwrite whether to reset the list of queries to be operated or not
      * @return $this
      */
@@ -1286,7 +1617,7 @@ class Query implements ExpressionInterface, IteratorAggregate
         }
         $this->_parts['union'][] = [
             'all' => false,
-            'query' => $query
+            'query' => $query,
         ];
         $this->_dirty();
 
@@ -1310,7 +1641,7 @@ class Query implements ExpressionInterface, IteratorAggregate
      *
      * `SELECT id, name FROM things d UNION ALL SELECT id, title FROM articles a`
      *
-     * @param string|\Cake\Database\Query $query full SQL query to be used in UNION operator
+     * @param \Cake\Database\Query|string $query full SQL query to be used in UNION operator
      * @param bool $overwrite whether to reset the list of queries to be operated or not
      * @return $this
      */
@@ -1321,7 +1652,7 @@ class Query implements ExpressionInterface, IteratorAggregate
         }
         $this->_parts['union'][] = [
             'all' => true,
-            'query' => $query
+            'query' => $query,
         ];
         $this->_dirty();
 
@@ -1335,7 +1666,7 @@ class Query implements ExpressionInterface, IteratorAggregate
      * with Query::values().
      *
      * @param array $columns The columns to insert into.
-     * @param array $types A map between columns & their datatypes.
+     * @param array<int|string, string> $types A map between columns & their datatypes.
      * @return $this
      * @throws \RuntimeException When there are 0 columns.
      */
@@ -1348,9 +1679,9 @@ class Query implements ExpressionInterface, IteratorAggregate
         $this->_type = 'insert';
         $this->_parts['insert'][1] = $columns;
         if (!$this->_parts['values']) {
-            $this->_parts['values'] = new ValuesExpression($columns, $this->typeMap()->types($types));
+            $this->_parts['values'] = new ValuesExpression($columns, $this->getTypeMap()->setTypes($types));
         } else {
-            $this->_parts['values']->columns($columns);
+            $this->_parts['values']->setColumns($columns);
         }
 
         return $this;
@@ -1362,7 +1693,7 @@ class Query implements ExpressionInterface, IteratorAggregate
      * @param string $table The table name to insert into.
      * @return $this
      */
-    public function into($table)
+    public function into(string $table)
     {
         $this->_dirty();
         $this->_type = 'insert';
@@ -1372,26 +1703,47 @@ class Query implements ExpressionInterface, IteratorAggregate
     }
 
     /**
+     * Creates an expression that refers to an identifier. Identifiers are used to refer to field names and allow
+     * the SQL compiler to apply quotes or escape the identifier.
+     *
+     * The value is used as is, and you might be required to use aliases or include the table reference in
+     * the identifier. Do not use this method to inject SQL methods or logical statements.
+     *
+     * ### Example
+     *
+     * ```
+     * $query->newExpr()->lte('count', $query->identifier('total'));
+     * ```
+     *
+     * @param string $identifier The identifier for an expression
+     * @return \Cake\Database\ExpressionInterface
+     */
+    public function identifier(string $identifier): ExpressionInterface
+    {
+        return new IdentifierExpression($identifier);
+    }
+
+    /**
      * Set the values for an insert query.
      *
      * Multi inserts can be performed by calling values() more than one time,
      * or by providing an array of value sets. Additionally $data can be a Query
      * instance to insert data from another SELECT statement.
      *
-     * @param array|\Cake\Database\Query $data The data to insert.
+     * @param \Cake\Database\Expression\ValuesExpression|\Cake\Database\Query|array $data The data to insert.
      * @return $this
-     * @throws \Cake\Database\Exception if you try to set values before declaring columns.
+     * @throws \Cake\Database\Exception\DatabaseException if you try to set values before declaring columns.
      *   Or if you try to set values on non-insert queries.
      */
     public function values($data)
     {
         if ($this->_type !== 'insert') {
-            throw new Exception(
+            throw new DatabaseException(
                 'You cannot add values before defining columns to use.'
             );
         }
         if (empty($this->_parts['insert'])) {
-            throw new Exception(
+            throw new DatabaseException(
                 'You cannot add values before defining columns to use.'
             );
         }
@@ -1413,7 +1765,7 @@ class Query implements ExpressionInterface, IteratorAggregate
      *
      * Can be combined with set() and where() methods to create update queries.
      *
-     * @param string|\Cake\Database\ExpressionInterface $table The table you want to update.
+     * @param \Cake\Database\ExpressionInterface|string $table The table you want to update.
      * @return $this
      */
     public function update($table)
@@ -1456,23 +1808,23 @@ class Query implements ExpressionInterface, IteratorAggregate
      * });
      * ```
      *
-     * @param string|array|callable|\Cake\Database\Expression\QueryExpression $key The column name or array of keys
+     * @param \Cake\Database\Expression\QueryExpression|\Closure|array|string $key The column name or array of keys
      *    + values to set. This can also be a QueryExpression containing a SQL fragment.
-     *    It can also be a callable, that is required to return an expression object.
+     *    It can also be a Closure, that is required to return an expression object.
      * @param mixed $value The value to update $key to. Can be null if $key is an
      *    array or QueryExpression. When $key is an array, this parameter will be
      *    used as $types instead.
-     * @param array $types The column types to treat data as.
+     * @param array<string, string>|string $types The column types to treat data as.
      * @return $this
      */
     public function set($key, $value = null, $types = [])
     {
         if (empty($this->_parts['set'])) {
-            $this->_parts['set'] = $this->newExpr()->tieWith(',');
+            $this->_parts['set'] = $this->newExpr()->setConjunction(',');
         }
 
-        if ($this->_parts['set']->isCallable($key)) {
-            $exp = $this->newExpr()->tieWith(',');
+        if ($key instanceof Closure) {
+            $exp = $this->newExpr()->setConjunction(',');
             $this->_parts['set']->add($key($exp));
 
             return $this;
@@ -1485,8 +1837,8 @@ class Query implements ExpressionInterface, IteratorAggregate
             return $this;
         }
 
-        if (is_string($types) && is_string($key)) {
-            $types = [$key => $types];
+        if (!is_string($types)) {
+            $types = null;
         }
         $this->_parts['set']->eq($key, $value, $types);
 
@@ -1502,7 +1854,7 @@ class Query implements ExpressionInterface, IteratorAggregate
      * @param string|null $table The table to use when deleting.
      * @return $this
      */
-    public function delete($table = null)
+    public function delete(?string $table = null)
     {
         $this->_dirty();
         $this->_type = 'delete';
@@ -1525,7 +1877,9 @@ class Query implements ExpressionInterface, IteratorAggregate
      *  ->epilog('RETURNING id');
      * ```
      *
-     * @param string|\Cake\Database\Expression\QueryExpression|null $expression The expression to be appended
+     * Epliog content is raw SQL and not suitable for use with user supplied data.
+     *
+     * @param \Cake\Database\ExpressionInterface|string|null $expression The expression to be appended
      * @return $this
      */
     public function epilog($expression = null)
@@ -1541,7 +1895,7 @@ class Query implements ExpressionInterface, IteratorAggregate
      *
      * @return string
      */
-    public function type()
+    public function type(): string
     {
         return $this->_type;
     }
@@ -1556,16 +1910,38 @@ class Query implements ExpressionInterface, IteratorAggregate
      * any format accepted by \Cake\Database\Expression\QueryExpression:
      *
      * ```
-     * $expression = $query->newExpr(); // Returns an empty expression object
-     * $expression = $query->newExpr('Table.column = Table2.column'); // Return a raw SQL expression
+     * $expression = $query->expr(); // Returns an empty expression object
+     * $expression = $query->expr('Table.column = Table2.column'); // Return a raw SQL expression
      * ```
      *
-     * @param mixed $rawExpression A string, array or anything you want wrapped in an expression object
+     * @param \Cake\Database\ExpressionInterface|array|string|null $rawExpression A string, array or anything you want wrapped in an expression object
      * @return \Cake\Database\Expression\QueryExpression
      */
-    public function newExpr($rawExpression = null)
+    public function newExpr($rawExpression = null): QueryExpression
     {
-        $expression = new QueryExpression([], $this->typeMap());
+        return $this->expr($rawExpression);
+    }
+
+    /**
+     * Returns a new QueryExpression object. This is a handy function when
+     * building complex queries using a fluent interface. You can also override
+     * this function in subclasses to use a more specialized QueryExpression class
+     * if required.
+     *
+     * You can optionally pass a single raw SQL string or an array or expressions in
+     * any format accepted by \Cake\Database\Expression\QueryExpression:
+     *
+     * ```
+     * $expression = $query->expr(); // Returns an empty expression object
+     * $expression = $query->expr('Table.column = Table2.column'); // Return a raw SQL expression
+     * ```
+     *
+     * @param \Cake\Database\ExpressionInterface|array|string|null $rawExpression A string, array or anything you want wrapped in an expression object
+     * @return \Cake\Database\Expression\QueryExpression
+     */
+    public function expr($rawExpression = null): QueryExpression
+    {
+        $expression = new QueryExpression([], $this->getTypeMap());
 
         if ($rawExpression !== null) {
             $expression->add($rawExpression);
@@ -1587,9 +1963,9 @@ class Query implements ExpressionInterface, IteratorAggregate
      *
      * @return \Cake\Database\FunctionsBuilder
      */
-    public function func()
+    public function func(): FunctionsBuilder
     {
-        if (empty($this->_functionsBuilder)) {
+        if ($this->_functionsBuilder === null) {
             $this->_functionsBuilder = new FunctionsBuilder();
         }
 
@@ -1602,11 +1978,13 @@ class Query implements ExpressionInterface, IteratorAggregate
      * iterated without having to call execute() manually, thus making it look like
      * a result set instead of the query itself.
      *
-     * @return \Iterator
+     * @return \Cake\Database\StatementInterface
+     * @psalm-suppress ImplementedReturnTypeMismatch
      */
+    #[\ReturnTypeWillChange]
     public function getIterator()
     {
-        if (empty($this->_iterator) || $this->_dirty) {
+        if ($this->_iterator === null || $this->_dirty) {
             $this->_iterator = $this->execute();
         }
 
@@ -1643,9 +2021,15 @@ class Query implements ExpressionInterface, IteratorAggregate
      *
      * @param string $name name of the clause to be returned
      * @return mixed
+     * @throws \InvalidArgumentException When the named clause does not exist.
      */
-    public function clause($name)
+    public function clause(string $name)
     {
+        if (!array_key_exists($name, $this->_parts)) {
+            $clauses = implode(', ', array_keys($this->_parts));
+            throw new InvalidArgumentException("The '$name' clause is not defined. Valid clauses are: $clauses");
+        }
+
         return $this->_parts[$name];
     }
 
@@ -1674,14 +2058,13 @@ class Query implements ExpressionInterface, IteratorAggregate
      * ```
      *
      * @param callable|null $callback The callback to invoke when results are fetched.
-     * @param bool $overwrite Whether or not this should append or replace all existing decorators.
+     * @param bool $overwrite Whether this should append or replace all existing decorators.
      * @return $this
      */
-    public function decorateResults($callback, $overwrite = false)
+    public function decorateResults(?callable $callback, bool $overwrite = false)
     {
         if ($overwrite) {
             $this->_resultDecorators = [];
-            $this->_typeCastAttached = false;
         }
 
         if ($callback !== null) {
@@ -1701,87 +2084,109 @@ class Query implements ExpressionInterface, IteratorAggregate
      *
      * @param callable $callback the function to be executed for each ExpressionInterface
      *   found inside this query.
-     * @return $this|null
+     * @return $this
      */
     public function traverseExpressions(callable $callback)
     {
-        $visitor = function ($expression) use (&$visitor, $callback) {
-            if (is_array($expression)) {
-                foreach ($expression as $e) {
-                    $visitor($e);
-                }
+        if (!$callback instanceof Closure) {
+            $callback = Closure::fromCallable($callback);
+        }
 
-                return null;
-            }
-
-            if ($expression instanceof ExpressionInterface) {
-                $expression->traverse($visitor);
-
-                if (!($expression instanceof self)) {
-                    $callback($expression);
-                }
-            }
-        };
-
-        return $this->traverse($visitor);
-    }
-
-    /**
-     * Associates a query placeholder to a value and a type.
-     *
-     * If type is expressed as "atype[]" (note braces) then it will cause the
-     * placeholder to be re-written dynamically so if the value is an array, it
-     * will create as many placeholders as values are in it. For example:
-     *
-     * ```
-     * $query->bind(':id', [1, 2, 3], 'int[]');
-     * ```
-     *
-     * Will create 3 int placeholders. When using named placeholders, this method
-     * requires that the placeholders include `:` e.g. `:value`.
-     *
-     * @param string|int $param placeholder to be replaced with quoted version
-     *   of $value
-     * @param mixed $value The value to be bound
-     * @param string|int $type the mapped type name, used for casting when sending
-     *   to database
-     * @return $this
-     */
-    public function bind($param, $value, $type = 'string')
-    {
-        $this->valueBinder()->bind($param, $value, $type);
+        foreach ($this->_parts as $part) {
+            $this->_expressionsVisitor($part, $callback);
+        }
 
         return $this;
     }
 
     /**
-     * Returns the currently used ValueBinder instance. If a value is passed,
-     * it will be set as the new instance to be used.
+     * Query parts traversal method used by traverseExpressions()
+     *
+     * @param \Cake\Database\ExpressionInterface|array<\Cake\Database\ExpressionInterface> $expression Query expression or
+     *   array of expressions.
+     * @param \Closure $callback The callback to be executed for each ExpressionInterface
+     *   found inside this query.
+     * @return void
+     */
+    protected function _expressionsVisitor($expression, Closure $callback): void
+    {
+        if (is_array($expression)) {
+            foreach ($expression as $e) {
+                $this->_expressionsVisitor($e, $callback);
+            }
+
+            return;
+        }
+
+        if ($expression instanceof ExpressionInterface) {
+            $expression->traverse(function ($exp) use ($callback) {
+                $this->_expressionsVisitor($exp, $callback);
+            });
+
+            if (!$expression instanceof self) {
+                $callback($expression);
+            }
+        }
+    }
+
+    /**
+     * Associates a query placeholder to a value and a type.
+     *
+     * ```
+     * $query->bind(':id', 1, 'integer');
+     * ```
+     *
+     * @param string|int $param placeholder to be replaced with quoted version
+     *   of $value
+     * @param mixed $value The value to be bound
+     * @param string|int|null $type the mapped type name, used for casting when sending
+     *   to database
+     * @return $this
+     */
+    public function bind($param, $value, $type = null)
+    {
+        $this->getValueBinder()->bind($param, $value, $type);
+
+        return $this;
+    }
+
+    /**
+     * Returns the currently used ValueBinder instance.
      *
      * A ValueBinder is responsible for generating query placeholders and temporarily
      * associate values to those placeholders so that they can be passed correctly
-     * statement object.
+     * to the statement object.
      *
-     * @param \Cake\Database\ValueBinder|null $binder new instance to be set. If no value is passed the
-     *   default one will be returned
-     * @return $this|\Cake\Database\ValueBinder
+     * @return \Cake\Database\ValueBinder
      */
-    public function valueBinder($binder = null)
+    public function getValueBinder(): ValueBinder
     {
-        if ($binder === null) {
-            if ($this->_valueBinder === null) {
-                $this->_valueBinder = new ValueBinder();
-            }
-
-            return $this->_valueBinder;
+        if ($this->_valueBinder === null) {
+            $this->_valueBinder = new ValueBinder();
         }
+
+        return $this->_valueBinder;
+    }
+
+    /**
+     * Overwrite the current value binder
+     *
+     * A ValueBinder is responsible for generating query placeholders and temporarily
+     * associate values to those placeholders so that they can be passed correctly
+     * to the statement object.
+     *
+     * @param \Cake\Database\ValueBinder|null $binder The binder or null to disable binding.
+     * @return $this
+     */
+    public function setValueBinder(?ValueBinder $binder)
+    {
         $this->_valueBinder = $binder;
 
         return $this;
     }
 
     /**
-     * Enable/Disable buffered results.
+     * Enables/Disables buffered results.
      *
      * When enabled the results returned by this Query will be
      * buffered. This enables you to iterate a result set multiple times, or
@@ -1790,46 +2195,126 @@ class Query implements ExpressionInterface, IteratorAggregate
      * When disabled it will consume less memory as fetched results are not
      * remembered for future iterations.
      *
-     * If called with no arguments, it will return whether or not buffering is
-     * enabled.
-     *
-     * @param bool|null $enable whether or not to enable buffering
-     * @return bool|$this
+     * @param bool $enable Whether to enable buffering
+     * @return $this
      */
-    public function bufferResults($enable = null)
+    public function enableBufferedResults(bool $enable = true)
     {
-        if ($enable === null) {
-            return $this->_useBufferedResults;
-        }
-
         $this->_dirty();
-        $this->_useBufferedResults = (bool)$enable;
+        $this->_useBufferedResults = $enable;
 
         return $this;
+    }
+
+    /**
+     * Disables buffered results.
+     *
+     * Disabling buffering will consume less memory as fetched results are not
+     * remembered for future iterations.
+     *
+     * @return $this
+     */
+    public function disableBufferedResults()
+    {
+        $this->_dirty();
+        $this->_useBufferedResults = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns whether buffered results are enabled/disabled.
+     *
+     * When enabled the results returned by this Query will be
+     * buffered. This enables you to iterate a result set multiple times, or
+     * both cache and iterate it.
+     *
+     * When disabled it will consume less memory as fetched results are not
+     * remembered for future iterations.
+     *
+     * @return bool
+     */
+    public function isBufferedResultsEnabled(): bool
+    {
+        return $this->_useBufferedResults;
     }
 
     /**
      * Sets the TypeMap class where the types for each of the fields in the
      * select clause are stored.
      *
-     * When called with no arguments, the current TypeMap object is returned.
-     *
-     * @param \Cake\Database\TypeMap|null $typeMap The map object to use
-     * @return $this|\Cake\Database\TypeMap
+     * @param \Cake\Database\TypeMap $typeMap The map object to use
+     * @return $this
      */
-    public function selectTypeMap(TypeMap $typeMap = null)
+    public function setSelectTypeMap(TypeMap $typeMap)
     {
-        if ($typeMap === null && $this->_selectTypeMap === null) {
+        $this->_selectTypeMap = $typeMap;
+        $this->_dirty();
+
+        return $this;
+    }
+
+    /**
+     * Gets the TypeMap class where the types for each of the fields in the
+     * select clause are stored.
+     *
+     * @return \Cake\Database\TypeMap
+     */
+    public function getSelectTypeMap(): TypeMap
+    {
+        if ($this->_selectTypeMap === null) {
             $this->_selectTypeMap = new TypeMap();
         }
 
-        if ($typeMap === null) {
-            return $this->_selectTypeMap;
-        }
+        return $this->_selectTypeMap;
+    }
 
-        $this->_selectTypeMap = $typeMap;
+    /**
+     * Disables result casting.
+     *
+     * When disabled, the fields will be returned as received from the database
+     * driver (which in most environments means they are being returned as
+     * strings), which can improve performance with larger datasets.
+     *
+     * @return $this
+     */
+    public function disableResultsCasting()
+    {
+        $this->typeCastEnabled = false;
 
         return $this;
+    }
+
+    /**
+     * Enables result casting.
+     *
+     * When enabled, the fields in the results returned by this Query will be
+     * cast to their corresponding PHP data type.
+     *
+     * @return $this
+     */
+    public function enableResultsCasting()
+    {
+        $this->typeCastEnabled = true;
+
+        return $this;
+    }
+
+    /**
+     * Returns whether result casting is enabled/disabled.
+     *
+     * When enabled, the fields in the results returned by this Query will be
+     * casted to their corresponding PHP data type.
+     *
+     * When disabled, the fields will be returned as received from the database
+     * driver (which in most environments means they are being returned as
+     * strings), which can improve performance with larger datasets.
+     *
+     * @return bool
+     */
+    public function isResultsCastingEnabled(): bool
+    {
+        return $this->typeCastEnabled;
     }
 
     /**
@@ -1837,12 +2322,19 @@ class Query implements ExpressionInterface, IteratorAggregate
      * any registered callbacks.
      *
      * @param \Cake\Database\StatementInterface $statement to be decorated
-     * @return \Cake\Database\Statement\CallbackStatement
+     * @return \Cake\Database\Statement\CallbackStatement|\Cake\Database\StatementInterface
      */
-    protected function _decorateStatement($statement)
+    protected function _decorateStatement(StatementInterface $statement)
     {
+        $typeMap = $this->getSelectTypeMap();
+        $driver = $this->getConnection()->getDriver();
+
+        if ($this->typeCastEnabled && $typeMap->toArray()) {
+            $statement = new CallbackStatement($statement, $driver, new FieldTypeConverter($typeMap, $driver));
+        }
+
         foreach ($this->_resultDecorators as $f) {
-            $statement = new CallbackStatement($statement, $this->connection()->driver(), $f);
+            $statement = new CallbackStatement($statement, $driver, $f);
         }
 
         return $statement;
@@ -1852,12 +2344,13 @@ class Query implements ExpressionInterface, IteratorAggregate
      * Helper function used to build conditions by composing QueryExpression objects.
      *
      * @param string $part Name of the query part to append the new part to
-     * @param string|null|array|\Cake\Database\ExpressionInterface|callable $append Expression or builder function to append.
+     * @param \Cake\Database\ExpressionInterface|\Closure|array|string|null $append Expression or builder function to append.
+     *   to append.
      * @param string $conjunction type of conjunction to be used to operate part
-     * @param array $types associative array of type names used to bind values to query
+     * @param array<string, string> $types Associative array of type names used to bind values to query
      * @return void
      */
-    protected function _conjugate($part, $append, $conjunction, $types)
+    protected function _conjugate(string $part, $append, $conjunction, array $types): void
     {
         $expression = $this->_parts[$part] ?: $this->newExpr();
         if (empty($append)) {
@@ -1866,16 +2359,16 @@ class Query implements ExpressionInterface, IteratorAggregate
             return;
         }
 
-        if ($expression->isCallable($append)) {
+        if ($append instanceof Closure) {
             $append = $append($this->newExpr(), $this);
         }
 
-        if ($expression->tieWith() === $conjunction) {
+        if ($expression->getConjunction() === $conjunction) {
             $expression->add($append, $types);
         } else {
             $expression = $this->newExpr()
-                ->tieWith($conjunction)
-                ->add([$append, $expression], $types);
+                ->setConjunction($conjunction)
+                ->add([$expression, $append], $types);
         }
 
         $this->_parts[$part] = $expression;
@@ -1888,20 +2381,17 @@ class Query implements ExpressionInterface, IteratorAggregate
      *
      * @return void
      */
-    protected function _dirty()
+    protected function _dirty(): void
     {
         $this->_dirty = true;
 
         if ($this->_iterator && $this->_valueBinder) {
-            $this->valueBinder()->reset();
+            $this->getValueBinder()->reset();
         }
     }
 
     /**
-     * Do a deep clone on this object.
-     *
-     * Will clone all of the expression objects used in
-     * each of the clauses, as well as the valueBinder.
+     * Handles clearing iterator and cloning all expressions and value binders.
      *
      * @return void
      */
@@ -1920,7 +2410,15 @@ class Query implements ExpressionInterface, IteratorAggregate
             }
             if (is_array($part)) {
                 foreach ($part as $i => $piece) {
-                    if ($piece instanceof ExpressionInterface) {
+                    if (is_array($piece)) {
+                        foreach ($piece as $j => $value) {
+                            if ($value instanceof ExpressionInterface) {
+                                /** @psalm-suppress PossiblyUndefinedMethod */
+                                $this->_parts[$name][$i][$j] = clone $value;
+                            }
+                        }
+                    } elseif ($piece instanceof ExpressionInterface) {
+                        /** @psalm-suppress PossiblyUndefinedMethod */
                         $this->_parts[$name][$i] = clone $piece;
                     }
                 }
@@ -1936,7 +2434,7 @@ class Query implements ExpressionInterface, IteratorAggregate
      *
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->sql();
     }
@@ -1945,17 +2443,21 @@ class Query implements ExpressionInterface, IteratorAggregate
      * Returns an array that can be used to describe the internal state of this
      * object.
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function __debugInfo()
+    public function __debugInfo(): array
     {
         try {
-            $restore = set_error_handler(function ($errno, $errstr) {
-                throw new RuntimeException($errstr, $errno);
-            }, E_ALL);
+            set_error_handler(
+                /** @return no-return */
+                function ($errno, $errstr) {
+                    throw new RuntimeException($errstr, $errno);
+                },
+                E_ALL
+            );
             $sql = $this->sql();
-            $params = $this->valueBinder()->bindings();
-        } catch (RuntimeException $e) {
+            $params = $this->getValueBinder()->bindings();
+        } catch (Throwable $e) {
             $sql = 'SQL could not be generated for this query as it is incomplete.';
             $params = [];
         } finally {
@@ -1966,9 +2468,9 @@ class Query implements ExpressionInterface, IteratorAggregate
             '(help)' => 'This is a Query object, to get the results execute or iterate it.',
             'sql' => $sql,
             'params' => $params,
-            'defaultTypes' => $this->defaultTypes(),
+            'defaultTypes' => $this->getDefaultTypes(),
             'decorators' => count($this->_resultDecorators),
-            'executed' => $this->_iterator ? true : false
+            'executed' => $this->_iterator ? true : false,
         ];
     }
 }

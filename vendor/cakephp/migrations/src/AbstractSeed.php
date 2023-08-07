@@ -1,18 +1,19 @@
 <?php
+declare(strict_types=1);
+
 /**
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
+ * @license       https://www.opensource.org/licenses/mit-license.php MIT License
  */
 namespace Migrations;
 
-use Migrations\Command\Seed;
-use Phinx\Migration\Manager;
+use Migrations\Command\Phinx\Seed;
 use Phinx\Seed\AbstractSeed as BaseAbstractSeed;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
@@ -24,7 +25,6 @@ use Symfony\Component\Console\Input\InputInterface;
  */
 abstract class AbstractSeed extends BaseAbstractSeed
 {
-
     /**
      * InputInterface this Seed class is being used with.
      *
@@ -44,9 +44,9 @@ abstract class AbstractSeed extends BaseAbstractSeed
     {
         $this->getOutput()->writeln('');
         $this->getOutput()->writeln(
-            ' ===='
-            . ' <info>' . $seeder . ':</info>'
-            . ' <comment>seeding</comment>'
+            ' ====' .
+            ' <info>' . $seeder . ':</info>' .
+            ' <comment>seeding</comment>'
         );
 
         $start = microtime(true);
@@ -54,10 +54,10 @@ abstract class AbstractSeed extends BaseAbstractSeed
         $end = microtime(true);
 
         $this->getOutput()->writeln(
-            ' ===='
-            . ' <info>' . $seeder . ':</info>'
-            . ' <comment>seeded'
-            . ' ' . sprintf('%.4fs', $end - $start) . '</comment>'
+            ' ====' .
+            ' <info>' . $seeder . ':</info>' .
+            ' <comment>seeded' .
+            ' ' . sprintf('%.4fs', $end - $start) . '</comment>'
         );
         $this->getOutput()->writeln('');
     }
@@ -71,12 +71,12 @@ abstract class AbstractSeed extends BaseAbstractSeed
      */
     protected function runCall($seeder)
     {
-        list($pluginName, $seeder) = pluginSplit($seeder);
+        [$pluginName, $seeder] = pluginSplit($seeder);
 
         $argv = [
             'seed',
             '--seed',
-            $seeder
+            $seeder,
         ];
 
         $plugin = $pluginName ?: $this->input->getOption('plugin');
@@ -102,7 +102,9 @@ abstract class AbstractSeed extends BaseAbstractSeed
         $seedCommand->setInput($input);
         $config = $seedCommand->getConfig();
 
-        require_once($config->getSeedPath() . DS . $seeder . '.php');
+        $seedPaths = $config->getSeedPaths();
+        require_once array_pop($seedPaths) . DS . $seeder . '.php';
+        /** @var \Phinx\Seed\SeedInterface $seeder */
         $seeder = new $seeder();
         $seeder->setOutput($this->getOutput());
         $seeder->setAdapter($this->getAdapter());
@@ -113,11 +115,13 @@ abstract class AbstractSeed extends BaseAbstractSeed
     /**
      * Sets the InputInterface this Seed class is being used with.
      *
-     * @param InputInterface $input
-     * @return void
+     * @param \Symfony\Component\Console\Input\InputInterface $input Input object.
+     * @return $this
      */
     public function setInput(InputInterface $input)
     {
         $this->input = $input;
+
+        return $this;
     }
 }

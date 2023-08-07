@@ -28,7 +28,7 @@ class DutiesTable extends ControllerActionTable
              
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;

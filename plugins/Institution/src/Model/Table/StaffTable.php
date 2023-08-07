@@ -47,9 +47,9 @@ class StaffTable extends ControllerActionTable
 
     private $dashboardQuery = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff');
+        $this->setTable('institution_staff');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
@@ -164,6 +164,9 @@ class StaffTable extends ControllerActionTable
          * End Advance Search Types
          */
 
+        $this->StaffStatuses = new StaffStatusesTable();
+
+       // $this->StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
         $statuses = $this->StaffStatuses->findCodeList();
         $this->assigned = $statuses['ASSIGNED'];
         $this->endOfAssignment = $statuses['END_OF_ASSIGNMENT'];
@@ -174,7 +177,7 @@ class StaffTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
@@ -204,7 +207,7 @@ class StaffTable extends ControllerActionTable
         $searchableFields[] = 'openemis_no';
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

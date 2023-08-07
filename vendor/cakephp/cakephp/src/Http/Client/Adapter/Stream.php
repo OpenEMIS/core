@@ -1,21 +1,27 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Http\Client\Adapter;
 
-use Cake\Core\Exception\Exception;
-use Cake\Http\Client\Request;
+use Cake\Http\Client\AdapterInterface;
+use Cake\Http\Client\Exception\ClientException;
+use Cake\Http\Client\Exception\NetworkException;
+use Cake\Http\Client\Exception\RequestException;
 use Cake\Http\Client\Response;
+use Composer\CaBundle\CaBundle;
+use Psr\Http\Message\RequestInterface;
 
 /**
  * Implements sending Cake\Http\Client\Request
@@ -23,34 +29,33 @@ use Cake\Http\Client\Response;
  *
  * This approach and implementation is partly inspired by Aura.Http
  */
-class Stream
+class Stream implements AdapterInterface
 {
-
     /**
      * Context resource used by the stream API.
      *
-     * @var resource
+     * @var resource|null
      */
     protected $_context;
 
     /**
      * Array of options/content for the HTTP stream context.
      *
-     * @var array
+     * @var array<string, mixed>
      */
-    protected $_contextOptions;
+    protected $_contextOptions = [];
 
     /**
      * Array of options/content for the SSL stream context.
      *
-     * @var array
+     * @var array<string, mixed>
      */
-    protected $_sslContextOptions;
+    protected $_sslContextOptions = [];
 
     /**
      * The stream resource.
      *
-     * @var resource
+     * @var resource|null
      */
     protected $_stream;
 
@@ -62,16 +67,12 @@ class Stream
     protected $_connectionErrors = [];
 
     /**
-     * Send a request and get a response back.
-     *
-     * @param \Cake\Http\Client\Request $request The request object to send.
-     * @param array $options Array of options for the stream.
-     * @return array Array of populated Response objects
+     * @inheritDoc
      */
-    public function send(Request $request, array $options)
+    public function send(RequestInterface $request, array $options): array
     {
         $this->_stream = null;
-        $this->_context = [];
+        $this->_context = null;
         $this->_contextOptions = [];
         $this->_sslContextOptions = [];
         $this->_connectionErrors = [];
@@ -89,9 +90,9 @@ class Stream
      *
      * @param array $headers The list of headers from the request(s)
      * @param string $content The response content.
-     * @return array The list of responses from the request(s)
+     * @return array<\Cake\Http\Client\Response> The list of responses from the request(s)
      */
-    public function createResponses($headers, $content)
+    public function createResponses(array $headers, string $content): array
     {
         $indexes = $responses = [];
         foreach ($headers as $i => $header) {
@@ -101,10 +102,12 @@ class Stream
         }
         $last = count($indexes) - 1;
         foreach ($indexes as $i => $start) {
+            /** @psalm-suppress InvalidOperand */
             $end = isset($indexes[$i + 1]) ? $indexes[$i + 1] - $start : null;
+            /** @psalm-suppress PossiblyInvalidArgument */
             $headerSlice = array_slice($headers, $start, $end);
-            $body = $i == $last ? $content : '';
-            $responses[] = new Response($headerSlice, $body);
+            $body = $i === $last ? $content : '';
+            $responses[] = $this->_buildResponse($headerSlice, $body);
         }
 
         return $responses;
@@ -113,18 +116,18 @@ class Stream
     /**
      * Build the stream context out of the request object.
      *
-     * @param \Cake\Http\Client\Request $request The request to build context from.
-     * @param array $options Additional request options.
+     * @param \Psr\Http\Message\RequestInterface $request The request to build context from.
+     * @param array<string, mixed> $options Additional request options.
      * @return void
      */
-    protected function _buildContext(Request $request, $options)
+    protected function _buildContext(RequestInterface $request, array $options): void
     {
         $this->_buildContent($request, $options);
         $this->_buildHeaders($request, $options);
         $this->_buildOptions($request, $options);
 
-        $url = $request->url();
-        $scheme = parse_url($url, PHP_URL_SCHEME);
+        $url = $request->getUri();
+        $scheme = parse_url((string)$url, PHP_URL_SCHEME);
         if ($scheme === 'https') {
             $this->_buildSslContext($request, $options);
         }
@@ -139,23 +142,15 @@ class Stream
      *
      * Creates cookies & headers.
      *
-     * @param \Cake\Http\Client\Request $request The request being sent.
-     * @param array $options Array of options to use.
+     * @param \Psr\Http\Message\RequestInterface $request The request being sent.
+     * @param array<string, mixed> $options Array of options to use.
      * @return void
      */
-    protected function _buildHeaders(Request $request, $options)
+    protected function _buildHeaders(RequestInterface $request, array $options): void
     {
         $headers = [];
         foreach ($request->getHeaders() as $name => $values) {
-            $headers[] = sprintf('%s: %s', $name, implode(", ", $values));
-        }
-
-        $cookies = [];
-        foreach ($request->cookies() as $name => $value) {
-            $cookies[] = "$name=$value";
-        }
-        if ($cookies) {
-            $headers[] = 'Cookie: ' . implode('; ', $cookies);
+            $headers[] = sprintf('%s: %s', $name, implode(', ', $values));
         }
         $this->_contextOptions['header'] = implode("\r\n", $headers);
     }
@@ -164,20 +159,15 @@ class Stream
      * Builds the request content based on the request object.
      *
      * If the $request->body() is a string, it will be used as is.
-     * Array data will be processed with Cake\Http\Client\FormData
+     * Array data will be processed with {@link \Cake\Http\Client\FormData}
      *
-     * @param \Cake\Http\Client\Request $request The request being sent.
-     * @param array $options Array of options to use.
+     * @param \Psr\Http\Message\RequestInterface $request The request being sent.
+     * @param array<string, mixed> $options Array of options to use.
      * @return void
      */
-    protected function _buildContent(Request $request, $options)
+    protected function _buildContent(RequestInterface $request, array $options): void
     {
         $body = $request->getBody();
-        if (empty($body)) {
-            $this->_contextOptions['content'] = '';
-
-            return;
-        }
         $body->rewind();
         $this->_contextOptions['content'] = $body->getContents();
     }
@@ -185,22 +175,22 @@ class Stream
     /**
      * Build miscellaneous options for the request.
      *
-     * @param \Cake\Http\Client\Request $request The request being sent.
-     * @param array $options Array of options to use.
+     * @param \Psr\Http\Message\RequestInterface $request The request being sent.
+     * @param array<string, mixed> $options Array of options to use.
      * @return void
      */
-    protected function _buildOptions(Request $request, $options)
+    protected function _buildOptions(RequestInterface $request, array $options): void
     {
-        $this->_contextOptions['method'] = $request->method();
-        $this->_contextOptions['protocol_version'] = $request->version();
+        $this->_contextOptions['method'] = $request->getMethod();
+        $this->_contextOptions['protocol_version'] = $request->getProtocolVersion();
         $this->_contextOptions['ignore_errors'] = true;
 
         if (isset($options['timeout'])) {
             $this->_contextOptions['timeout'] = $options['timeout'];
         }
-        if (isset($options['redirect'])) {
-            $this->_contextOptions['max_redirects'] = (int)$options['redirect'];
-        }
+        // Redirects are handled in the client layer because of cookie handling issues.
+        $this->_contextOptions['max_redirects'] = 0;
+
         if (isset($options['proxy']['proxy'])) {
             $this->_contextOptions['request_fulluri'] = true;
             $this->_contextOptions['proxy'] = $options['proxy']['proxy'];
@@ -210,11 +200,11 @@ class Stream
     /**
      * Build SSL options for the request.
      *
-     * @param \Cake\Http\Client\Request $request The request being sent.
-     * @param array $options Array of options to use.
+     * @param \Psr\Http\Message\RequestInterface $request The request being sent.
+     * @param array<string, mixed> $options Array of options to use.
      * @return void
      */
-    protected function _buildSslContext(Request $request, $options)
+    protected function _buildSslContext(RequestInterface $request, array $options): void
     {
         $sslOptions = [
             'ssl_verify_peer',
@@ -223,14 +213,15 @@ class Stream
             'ssl_allow_self_signed',
             'ssl_cafile',
             'ssl_local_cert',
+            'ssl_local_pk',
             'ssl_passphrase',
         ];
         if (empty($options['ssl_cafile'])) {
-            $options['ssl_cafile'] = CORE_PATH . 'config' . DIRECTORY_SEPARATOR . 'cacert.pem';
+            $options['ssl_cafile'] = CaBundle::getBundledCaBundlePath();
         }
         if (!empty($options['ssl_verify_host'])) {
-            $url = $request->url();
-            $host = parse_url($url, PHP_URL_HOST);
+            $url = $request->getUri();
+            $host = parse_url((string)$url, PHP_URL_HOST);
             $this->_sslContextOptions['peer_name'] = $host;
         }
         foreach ($sslOptions as $key) {
@@ -244,22 +235,23 @@ class Stream
     /**
      * Open the stream and send the request.
      *
-     * @param \Cake\Http\Client\Request $request The request object.
+     * @param \Psr\Http\Message\RequestInterface $request The request object.
      * @return array Array of populated Response objects
-     * @throws \Cake\Core\Exception\Exception
+     * @throws \Psr\Http\Client\NetworkExceptionInterface
      */
-    protected function _send(Request $request)
+    protected function _send(RequestInterface $request): array
     {
         $deadline = false;
         if (isset($this->_contextOptions['timeout']) && $this->_contextOptions['timeout'] > 0) {
             $deadline = time() + $this->_contextOptions['timeout'];
         }
 
-        $url = $request->url();
-        $this->_open($url);
+        $url = $request->getUri();
+        $this->_open((string)$url, $request);
         $content = '';
         $timedOut = false;
 
+        /** @psalm-suppress PossiblyNullArgument  */
         while (!feof($this->_stream)) {
             if ($deadline !== false) {
                 stream_set_timeout($this->_stream, max($deadline - time(), 1));
@@ -273,11 +265,13 @@ class Stream
                 break;
             }
         }
+        /** @psalm-suppress PossiblyNullArgument */
         $meta = stream_get_meta_data($this->_stream);
+        /** @psalm-suppress InvalidPropertyAssignmentValue */
         fclose($this->_stream);
 
         if ($timedOut) {
-            throw new Exception('Connection timed out ' . $url);
+            throw new NetworkException('Connection timed out ' . $url, $request);
         }
 
         $headers = $meta['wrapper_data'];
@@ -289,22 +283,45 @@ class Stream
     }
 
     /**
+     * Build a response object
+     *
+     * @param array $headers Unparsed headers.
+     * @param string $body The response body.
+     * @return \Cake\Http\Client\Response
+     */
+    protected function _buildResponse(array $headers, string $body): Response
+    {
+        return new Response($headers, $body);
+    }
+
+    /**
      * Open the socket and handle any connection errors.
      *
      * @param string $url The url to connect to.
+     * @param \Psr\Http\Message\RequestInterface $request The request object.
      * @return void
-     * @throws \Cake\Core\Exception\Exception
+     * @throws \Psr\Http\Client\RequestExceptionInterface
      */
-    protected function _open($url)
+    protected function _open(string $url, RequestInterface $request): void
     {
-        set_error_handler(function ($code, $message) {
-            $this->_connectionErrors[] = $message;
-        });
-        $this->_stream = fopen($url, 'rb', false, $this->_context);
-        restore_error_handler();
+        if (!(bool)ini_get('allow_url_fopen')) {
+            throw new ClientException('The PHP directive `allow_url_fopen` must be enabled.');
+        }
 
-        if (!$this->_stream || !empty($this->_connectionErrors)) {
-            throw new Exception(implode("\n", $this->_connectionErrors));
+        set_error_handler(function ($code, $message): bool {
+            $this->_connectionErrors[] = $message;
+
+            return true;
+        });
+        try {
+            /** @psalm-suppress PossiblyNullArgument */
+            $this->_stream = fopen($url, 'rb', false, $this->_context);
+        } finally {
+            restore_error_handler();
+        }
+
+        if (!$this->_stream || $this->_connectionErrors) {
+            throw new RequestException(implode("\n", $this->_connectionErrors), $request);
         }
     }
 
@@ -313,9 +330,9 @@ class Stream
      *
      * Useful for debugging and testing context creation.
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function contextOptions()
+    public function contextOptions(): array
     {
         return array_merge($this->_contextOptions, $this->_sslContextOptions);
     }

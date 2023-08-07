@@ -25,7 +25,7 @@ class ConfigItemsTable extends AppTable
     private $languagePath;
     private $languageFilePath;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->languagePath = TMP . 'cache' . DS . 'language_menu';
         $this->languageFilePath = TMP . 'cache'. DS . 'language_menu' . DS . 'language';
@@ -96,7 +96,7 @@ class ConfigItemsTable extends AppTable
         //POCOR-6248 end
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.AreaLevel.afterDelete'] = 'areaLevelAfterDelete';

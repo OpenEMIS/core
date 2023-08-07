@@ -47,9 +47,9 @@ class UsersTable extends AppTable
     public $fieldOrder1;
     public $fieldOrder2;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
+        $this->setTable('security_users');
         parent::initialize($config);
 
         self::handleAssociations($this);
@@ -66,7 +66,7 @@ class UsersTable extends AppTable
             'useDefaultName' => true
         ]);
 
-        $this->addBehavior('Area.Areapicker');
+        //$this->addBehavior('Area.Areapicker');
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StaffRoom' => ['index', 'edit'],
@@ -74,11 +74,11 @@ class UsersTable extends AppTable
             'OpenEMIS_Classroom' => ['view', 'edit']
         ]);
 
-        $this->displayField('first_name');
+        $this->getDisplayField('first_name');
 
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -107,10 +107,12 @@ class UsersTable extends AppTable
     public function afterLogin(Event $event, $user)
     {
         $lastLogin = new Time();
-        $controller = $event->subject();
+        $controller = $event->getSubject();
+        //echo "<pre>";print_r($controller);die;
+        //$session = $this->request->getSession();
         $SSO = $controller->SSO;
         $Cookie = $controller->Localization->getCookie();
-        $session = $controller->request->session();
+        $session = $controller->getRequest()->getSession();
         if ($session->read('System.language_menu') && $SSO->getAuthenticationType() != 'Local') {
             $preferredLanguage = !empty($user['preferred_language']) ? $user['preferred_language'] : 'en';
             $Cookie->write('System.language', $preferredLanguage);
@@ -127,7 +129,7 @@ class UsersTable extends AppTable
     {
         $openemisNo = $this->getUniqueOpenemisId();
 
-        $GenderTable = TableRegistry::get('User.Genders');
+        $GenderTable = TableRegistry::getTableLocator()->get('User.Genders');
         $genderList = $GenderTable->find('list')->toArray();
 
         // Just in case the gender is others
@@ -243,7 +245,7 @@ class UsersTable extends AppTable
 
     //POCOR-6454[START]
     // public function getCorrectEducationGrade($institutionClassId){
-    //     $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+    //     $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
     //     $gradeId = $InstitutionClassGrades
     //     ->find()
     //     ->where([$InstitutionClassGrades->aliasField('institution_class_id') =>$institutionClassId])
@@ -259,11 +261,11 @@ class UsersTable extends AppTable
         $academicPeriodId = null;
         $institutionClassId = null;
         $institutionId = null;
-        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
+        $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
 
         if (array_key_exists('institution_class_id', $options)) {
             $institutionClassId = $options['institution_class_id'];
-            $institutionClassRecord = TableRegistry::get('Institution.InstitutionClasses')->get($institutionClassId, ['contain' => ['EducationGrades']])->toArray();
+            $institutionClassRecord = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')->get($institutionClassId, ['contain' => ['EducationGrades']])->toArray();
             $academicPeriodId = $institutionClassRecord['academic_period_id'];
             $institutionId = $institutionClassRecord['institution_id'];
             $educationGradeIds = array_column($institutionClassRecord['education_grades'], 'id');
@@ -339,7 +341,7 @@ class UsersTable extends AppTable
         $academicPeriodId = $options['academic_period_id'];
         $institutionId = $options['institution_id'];
         $associationId = ($options['institution_association_id'])?$options['institution_association_id'] : null;
-        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
+        $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
 
         return $query
             ->innerJoinWith('InstitutionStudents')
@@ -598,7 +600,7 @@ class UsersTable extends AppTable
     {
         $prefix = '';
 
-        $prefix = TableRegistry::get('Configuration.ConfigItems')->value('openemis_id_prefix');
+        $prefix = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('openemis_id_prefix');
         $prefix = explode(",", $prefix);
         $prefix = ($prefix[1] > 0)? $prefix[0]: '';
 
@@ -627,8 +629,8 @@ class UsersTable extends AppTable
         }
         
         $newOpenemisNo = $prefix.$newStamp;
-        $openemisTemps = TableRegistry::get('User.OpenemisTemps');        
-        $SecurityUser = TableRegistry::get('security_users');
+        $openemisTemps = TableRegistry::getTableLocator()->get('User.OpenemisTemps');        
+        $SecurityUser = TableRegistry::getTableLocator()->get('security_users');
         
            $resultOpenemisTemp = $openemisTemps->find('all')                
                 ->order(['id' => 'DESC'])
@@ -658,7 +660,7 @@ class UsersTable extends AppTable
         
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -891,7 +893,7 @@ class UsersTable extends AppTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'default_identity_type') {
-            $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+            $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
             $defaultIdentity = $IdentityType->getDefaultEntity();
             if ($defaultIdentity) {
                 $value = $defaultIdentity->name;
@@ -1085,7 +1087,7 @@ class UsersTable extends AppTable
                     switch ($column) {
                         case 'Identity':*/
         //comment for ticket POCOR-6512
-                        $userIdentitiesTable = TableRegistry::get('User.Identities');
+                        $userIdentitiesTable = TableRegistry::getTableLocator()->get('User.Identities');
 
                         $defaultValue = $userIdentitiesTable->IdentityTypes->getDefaultValue();
 
@@ -1109,8 +1111,8 @@ class UsersTable extends AppTable
             if (!$entity->has('contact_error')) {
 
                 //Save into user_contacts table if dont have errors
-                $ContactTypesTable = TableRegistry::get('User.ContactTypes');
-                $ContactsTable = TableRegistry::get('User.Contacts');
+                $ContactTypesTable = TableRegistry::getTableLocator()->get('User.ContactTypes');
+                $ContactsTable = TableRegistry::getTableLocator()->get('User.Contacts');
                 $preferred = 1;
 
                 $contactOptionId = $ContactTypesTable->find()
@@ -1150,8 +1152,8 @@ class UsersTable extends AppTable
         if ($entity->has('record_source')) {
             if ($entity->record_source == 'import_user') {
                 $listeners = [
-                    TableRegistry::get('User.UserNationalities'),
-                    TableRegistry::get('User.Identities')
+                    TableRegistry::getTableLocator()->get('User.UserNationalities'),
+                    TableRegistry::getTableLocator()->get('User.Identities')
                 ];
                 $this->dispatchEventToModels('Model.Users.afterSave', [$entity], $this, $listeners);
             }
@@ -1161,7 +1163,7 @@ class UsersTable extends AppTable
     public function onChangeUserNationalities(Event $event, Entity $entity)
     {
         $nationalityId = $entity->nationality_id;
-        $Nationalities = TableRegistry::get('FieldOption.Nationalities');
+        $Nationalities = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
 
         // to find out the default identity type linked to this nationality
         $nationality = $Nationalities
@@ -1172,7 +1174,7 @@ class UsersTable extends AppTable
                         ->first();
 
         // to get the identity record for the user based on the default identity type linked to this nationality
-        $UserIdentities = TableRegistry::get('User.Identities');
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         $latestIdentity = $UserIdentities->find()
         ->where([
             $UserIdentities->aliasField('security_user_id') => $entity->security_user_id,
@@ -1207,7 +1209,7 @@ class UsersTable extends AppTable
 
     public function onChangeUserIdentities(Event $event, Entity $entity)
     {
-        $UserNationalityTable = TableRegistry::get('User.UserNationalities');
+        $UserNationalityTable = TableRegistry::getTableLocator()->get('User.UserNationalities');
         //check whether identity number / type is tied to preferred nationality.
         $preferredNationality = $UserNationalityTable
             ->find()
@@ -1222,7 +1224,7 @@ class UsersTable extends AppTable
 
         if (!empty($preferredNationality)) {
             // to get the identity record for the user based on the default identity type linked to this nationality
-            $UserIdentities = TableRegistry::get('User.Identities');
+            $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
             $latestIdentity = $UserIdentities->find()
             ->where([
                 $UserIdentities->aliasField('security_user_id') => $entity->security_user_id,
@@ -1261,7 +1263,7 @@ class UsersTable extends AppTable
                     ->first();
                 if (!empty($userPreferredNationality)) {
                     $preferredIdentityTypeId = $userPreferredNationality->identityTypeId;
-                    $UserIdentities = TableRegistry::get('User.Identities');
+                    $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
                     $latestIdentity = $UserIdentities->find()
                     ->where([
                         $UserIdentities->aliasField('security_user_id') => $entity->security_user_id,
@@ -1359,7 +1361,7 @@ class UsersTable extends AppTable
     
     public function findStudents($institutionId = 0){
        
-        $query = TableRegistry::get('Institution.Students');
+        $query = TableRegistry::getTableLocator()->get('Institution.Students');
         $studentQuery = $query->find()
                 ->contain(['Users'])                
                 ->where(['institution_id' => $institutionId])

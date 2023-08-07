@@ -1,26 +1,32 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\ORM;
 
 use Cake\Collection\Collection;
+use Cake\Collection\CollectionInterface;
+use Cake\Core\App;
 use Cake\Core\ConventionsTrait;
 use Cake\Database\Expression\IdentifierExpression;
 use Cake\Datasource\EntityInterface;
 use Cake\Datasource\ResultSetDecorator;
+use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Utility\Inflector;
+use Closure;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -32,7 +38,6 @@ use RuntimeException;
  */
 abstract class Association
 {
-
     use ConventionsTrait;
     use LocatorAwareTrait;
 
@@ -41,49 +46,49 @@ abstract class Association
      *
      * @var string
      */
-    const STRATEGY_JOIN = 'join';
+    public const STRATEGY_JOIN = 'join';
 
     /**
      * Strategy name to use a subquery for fetching associated records
      *
      * @var string
      */
-    const STRATEGY_SUBQUERY = 'subquery';
+    public const STRATEGY_SUBQUERY = 'subquery';
 
     /**
      * Strategy name to use a select for fetching associated records
      *
      * @var string
      */
-    const STRATEGY_SELECT = 'select';
+    public const STRATEGY_SELECT = 'select';
 
     /**
      * Association type for one to one associations.
      *
      * @var string
      */
-    const ONE_TO_ONE = 'oneToOne';
+    public const ONE_TO_ONE = 'oneToOne';
 
     /**
      * Association type for one to many associations.
      *
      * @var string
      */
-    const ONE_TO_MANY = 'oneToMany';
+    public const ONE_TO_MANY = 'oneToMany';
 
     /**
      * Association type for many to many associations.
      *
      * @var string
      */
-    const MANY_TO_MANY = 'manyToMany';
+    public const MANY_TO_MANY = 'manyToMany';
 
     /**
      * Association type for many to one associations.
      *
      * @var string
      */
-    const MANY_TO_ONE = 'manyToOne';
+    public const MANY_TO_ONE = 'manyToOne';
 
     /**
      * Name given to the association, it usually represents the alias
@@ -103,14 +108,14 @@ abstract class Association
     /**
      * The field name in the owning side table that is used to match with the foreignKey
      *
-     * @var string|array
+     * @var array<string>|string|null
      */
     protected $_bindingKey;
 
     /**
      * The name of the field representing the foreign key to the table to load
      *
-     * @var string|array
+     * @var array<string>|string
      */
     protected $_foreignKey;
 
@@ -118,7 +123,7 @@ abstract class Association
      * A list of conditions to be always included when fetching records from
      * the target association
      *
-     * @var array
+     * @var \Closure|array
      */
     protected $_conditions = [];
 
@@ -132,7 +137,7 @@ abstract class Association
     protected $_dependent = false;
 
     /**
-     * Whether or not cascaded deletes should also fire callbacks.
+     * Whether cascaded deletes should also fire callbacks.
      *
      * @var bool
      */
@@ -157,7 +162,7 @@ abstract class Association
      *
      * @var string
      */
-    protected $_joinType = 'LEFT';
+    protected $_joinType = Query::JOIN_TYPE_LEFT;
 
     /**
      * The property name that should be filled with data from the target table
@@ -177,26 +182,31 @@ abstract class Association
 
     /**
      * The default finder name to use for fetching rows from the target table
+     * With array value, finder name and default options are allowed.
      *
-     * @var string
+     * @var array|string
      */
     protected $_finder = 'all';
 
     /**
      * Valid strategies for this association. Subclasses can narrow this down.
      *
-     * @var array
+     * @var array<string>
      */
-    protected $_validStrategies = [self::STRATEGY_JOIN, self::STRATEGY_SELECT, self::STRATEGY_SUBQUERY];
+    protected $_validStrategies = [
+        self::STRATEGY_JOIN,
+        self::STRATEGY_SELECT,
+        self::STRATEGY_SUBQUERY,
+    ];
 
     /**
      * Constructor. Subclasses can override _options function to get the original
      * list of passed options if expecting any other special key
      *
      * @param string $alias The name given to the association
-     * @param array $options A list of properties to be set on this object
+     * @param array<string, mixed> $options A list of properties to be set on this object
      */
-    public function __construct($alias, array $options = [])
+    public function __construct(string $alias, array $options = [])
     {
         $defaults = [
             'cascadeCallbacks',
@@ -210,7 +220,7 @@ abstract class Association
             'tableLocator',
             'propertyName',
             'sourceTable',
-            'targetTable'
+            'targetTable',
         ];
         foreach ($defaults as $property) {
             if (isset($options[$property])) {
@@ -218,127 +228,229 @@ abstract class Association
             }
         }
 
-        if (empty($this->_className) && strpos($alias, '.')) {
+        if (empty($this->_className)) {
             $this->_className = $alias;
         }
 
-        list(, $name) = pluginSplit($alias);
+        [, $name] = pluginSplit($alias);
         $this->_name = $name;
 
         $this->_options($options);
 
         if (!empty($options['strategy'])) {
-            $this->strategy($options['strategy']);
+            $this->setStrategy($options['strategy']);
         }
     }
 
     /**
-     * Sets the name for this association. If no argument is passed then the current
-     * configured name will be returned
+     * Sets the name for this association, usually the alias
+     * assigned to the target associated table
      *
-     * @param string|null $name Name to be assigned
-     * @return string
+     * @param string $name Name to be assigned
+     * @return $this
+     * @deprecated 4.3.0 Changing the association name after object creation is
+     *   no longer supported. The name should only be set through the constructor.
      */
-    public function name($name = null)
+    public function setName(string $name)
     {
-        if ($name !== null) {
-            $this->_name = $name;
+        deprecationWarning(
+            'Changing the association name after object creation is no longer supported.'
+            . ' The name should only be set through the constructor'
+        );
+
+        if ($this->_targetTable !== null) {
+            $alias = $this->_targetTable->getAlias();
+            if ($alias !== $name) {
+                throw new InvalidArgumentException(sprintf(
+                    'Association name "%s" does not match target table alias "%s".',
+                    $name,
+                    $alias
+                ));
+            }
         }
 
+        $this->_name = $name;
+
+        return $this;
+    }
+
+    /**
+     * Gets the name for this association, usually the alias
+     * assigned to the target associated table
+     *
+     * @return string
+     */
+    public function getName(): string
+    {
         return $this->_name;
     }
 
     /**
-     * Sets whether or not cascaded deletes should also fire callbacks. If no
-     * arguments are passed, the current configured value is returned
+     * Sets whether cascaded deletes should also fire callbacks.
      *
-     * @param bool|null $cascadeCallbacks cascade callbacks switch value
+     * @param bool $cascadeCallbacks cascade callbacks switch value
+     * @return $this
+     */
+    public function setCascadeCallbacks(bool $cascadeCallbacks)
+    {
+        $this->_cascadeCallbacks = $cascadeCallbacks;
+
+        return $this;
+    }
+
+    /**
+     * Gets whether cascaded deletes should also fire callbacks.
+     *
      * @return bool
      */
-    public function cascadeCallbacks($cascadeCallbacks = null)
+    public function getCascadeCallbacks(): bool
     {
-        if ($cascadeCallbacks !== null) {
-            $this->_cascadeCallbacks = $cascadeCallbacks;
-        }
-
         return $this->_cascadeCallbacks;
     }
 
     /**
-     * The class name of the target table object
+     * Sets the class name of the target table object.
+     *
+     * @param string $className Class name to set.
+     * @return $this
+     * @throws \InvalidArgumentException In case the class name is set after the target table has been
+     *  resolved, and it doesn't match the target table's class name.
+     */
+    public function setClassName(string $className)
+    {
+        if (
+            $this->_targetTable !== null &&
+            get_class($this->_targetTable) !== App::className($className, 'Model/Table', 'Table')
+        ) {
+            throw new InvalidArgumentException(sprintf(
+                'The class name "%s" doesn\'t match the target table class name of "%s".',
+                $className,
+                get_class($this->_targetTable)
+            ));
+        }
+
+        $this->_className = $className;
+
+        return $this;
+    }
+
+    /**
+     * Gets the class name of the target table object.
      *
      * @return string
      */
-    public function className()
+    public function getClassName(): string
     {
         return $this->_className;
     }
 
     /**
-     * Sets the table instance for the source side of the association. If no arguments
-     * are passed, the current configured table instance is returned
+     * Sets the table instance for the source side of the association.
      *
-     * @param \Cake\ORM\Table|null $table the instance to be assigned as source side
-     * @return \Cake\ORM\Table
+     * @param \Cake\ORM\Table $table the instance to be assigned as source side
+     * @return $this
      */
-    public function source(Table $table = null)
+    public function setSource(Table $table)
     {
-        if ($table === null) {
-            return $this->_sourceTable;
-        }
+        $this->_sourceTable = $table;
 
-        return $this->_sourceTable = $table;
+        return $this;
     }
 
     /**
-     * Sets the table instance for the target side of the association. If no arguments
-     * are passed, the current configured table instance is returned
+     * Gets the table instance for the source side of the association.
      *
-     * @param \Cake\ORM\Table|null $table the instance to be assigned as target side
      * @return \Cake\ORM\Table
      */
-    public function target(Table $table = null)
+    public function getSource(): Table
     {
-        if ($table === null && $this->_targetTable) {
-            return $this->_targetTable;
-        }
+        return $this->_sourceTable;
+    }
 
-        if ($table !== null) {
-            return $this->_targetTable = $table;
-        }
+    /**
+     * Sets the table instance for the target side of the association.
+     *
+     * @param \Cake\ORM\Table $table the instance to be assigned as target side
+     * @return $this
+     */
+    public function setTarget(Table $table)
+    {
+        $this->_targetTable = $table;
 
-        if (strpos($this->_className, '.')) {
-            list($plugin) = pluginSplit($this->_className, true);
-            $registryAlias = $plugin . $this->_name;
-        } else {
-            $registryAlias = $this->_name;
-        }
+        return $this;
+    }
 
-        $tableLocator = $this->tableLocator();
+    /**
+     * Gets the table instance for the target side of the association.
+     *
+     * @return \Cake\ORM\Table
+     */
+    public function getTarget(): Table
+    {
+        if ($this->_targetTable === null) {
+            if (strpos($this->_className, '.')) {
+                [$plugin] = pluginSplit($this->_className, true);
+                $registryAlias = (string)$plugin . $this->_name;
+            } else {
+                $registryAlias = $this->_name;
+            }
 
-        $config = [];
-        if (!$tableLocator->exists($registryAlias)) {
-            $config = ['className' => $this->_className];
+            $tableLocator = $this->getTableLocator();
+
+            $config = [];
+            $exists = $tableLocator->exists($registryAlias);
+            if (!$exists) {
+                $config = ['className' => $this->_className];
+            }
+            $this->_targetTable = $tableLocator->get($registryAlias, $config);
+
+            if ($exists) {
+                $className = App::className($this->_className, 'Model/Table', 'Table') ?: Table::class;
+
+                if (!$this->_targetTable instanceof $className) {
+                    $errorMessage = '%s association "%s" of type "%s" to "%s" doesn\'t match the expected class "%s". ';
+                    $errorMessage .= 'You can\'t have an association of the same name with a different target ';
+                    $errorMessage .= '"className" option anywhere in your app.';
+
+                    throw new RuntimeException(sprintf(
+                        $errorMessage,
+                        $this->_sourceTable === null ? 'null' : get_class($this->_sourceTable),
+                        $this->getName(),
+                        $this->type(),
+                        get_class($this->_targetTable),
+                        $className
+                    ));
+                }
+            }
         }
-        $this->_targetTable = $tableLocator->get($registryAlias, $config);
 
         return $this->_targetTable;
     }
 
     /**
      * Sets a list of conditions to be always included when fetching records from
-     * the target association. If no parameters are passed the current list is returned
+     * the target association.
      *
-     * @param array|null $conditions list of conditions to be used
+     * @param \Closure|array $conditions list of conditions to be used
      * @see \Cake\Database\Query::where() for examples on the format of the array
-     * @return array
+     * @return $this
      */
-    public function conditions($conditions = null)
+    public function setConditions($conditions)
     {
-        if ($conditions !== null) {
-            $this->_conditions = $conditions;
-        }
+        $this->_conditions = $conditions;
 
+        return $this;
+    }
+
+    /**
+     * Gets a list of conditions to be always included when fetching records from
+     * the target association.
+     *
+     * @see \Cake\Database\Query::where() for examples on the format of the array
+     * @return \Closure|array
+     */
+    public function getConditions()
+    {
         return $this->_conditions;
     }
 
@@ -346,40 +458,54 @@ abstract class Association
      * Sets the name of the field representing the binding field with the target table.
      * When not manually specified the primary key of the owning side table is used.
      *
-     * If no parameters are passed the current field is returned
-     *
-     * @param string|null $key the table field to be used to link both tables together
-     * @return string|array
+     * @param array<string>|string $key the table field or fields to be used to link both tables together
+     * @return $this
      */
-    public function bindingKey($key = null)
+    public function setBindingKey($key)
     {
-        if ($key !== null) {
-            $this->_bindingKey = $key;
-        }
+        $this->_bindingKey = $key;
 
+        return $this;
+    }
+
+    /**
+     * Gets the name of the field representing the binding field with the target table.
+     * When not manually specified the primary key of the owning side table is used.
+     *
+     * @return array<string>|string
+     */
+    public function getBindingKey()
+    {
         if ($this->_bindingKey === null) {
-            $this->_bindingKey = $this->isOwningSide($this->source()) ?
-                $this->source()->primaryKey() :
-                $this->target()->primaryKey();
+            $this->_bindingKey = $this->isOwningSide($this->getSource()) ?
+                $this->getSource()->getPrimaryKey() :
+                $this->getTarget()->getPrimaryKey();
         }
 
         return $this->_bindingKey;
     }
 
     /**
-     * Sets the name of the field representing the foreign key to the target table.
-     * If no parameters are passed the current field is returned
+     * Gets the name of the field representing the foreign key to the target table.
      *
-     * @param string|null $key the key to be used to link both tables together
-     * @return string|array
+     * @return array<string>|string
      */
-    public function foreignKey($key = null)
+    public function getForeignKey()
     {
-        if ($key !== null) {
-            $this->_foreignKey = $key;
-        }
-
         return $this->_foreignKey;
+    }
+
+    /**
+     * Sets the name of the field representing the foreign key to the target table.
+     *
+     * @param array<string>|string $key the key or keys to be used to link both tables together
+     * @return $this
+     */
+    public function setForeignKey($key)
+    {
+        $this->_foreignKey = $key;
+
+        return $this;
     }
 
     /**
@@ -390,67 +516,94 @@ abstract class Association
      *
      * If no parameters are passed the current setting is returned.
      *
-     * @param bool|null $dependent Set the dependent mode. Use null to read the current state.
+     * @param bool $dependent Set the dependent mode. Use null to read the current state.
+     * @return $this
+     */
+    public function setDependent(bool $dependent)
+    {
+        $this->_dependent = $dependent;
+
+        return $this;
+    }
+
+    /**
+     * Sets whether the records on the target table are dependent on the source table.
+     *
+     * This is primarily used to indicate that records should be removed if the owning record in
+     * the source table is deleted.
+     *
      * @return bool
      */
-    public function dependent($dependent = null)
+    public function getDependent(): bool
     {
-        if ($dependent !== null) {
-            $this->_dependent = $dependent;
-        }
-
         return $this->_dependent;
     }
 
     /**
      * Whether this association can be expressed directly in a query join
      *
-     * @param array $options custom options key that could alter the return value
+     * @param array<string, mixed> $options custom options key that could alter the return value
      * @return bool
      */
-    public function canBeJoined(array $options = [])
+    public function canBeJoined(array $options = []): bool
     {
-        $strategy = isset($options['strategy']) ? $options['strategy'] : $this->strategy();
+        $strategy = $options['strategy'] ?? $this->getStrategy();
 
-        return $strategy == $this::STRATEGY_JOIN;
+        return $strategy === $this::STRATEGY_JOIN;
     }
 
     /**
      * Sets the type of join to be used when adding the association to a query.
-     * If no arguments are passed, the currently configured type is returned.
      *
-     * @param string|null $type the join type to be used (e.g. INNER)
+     * @param string $type the join type to be used (e.g. INNER)
+     * @return $this
+     */
+    public function setJoinType(string $type)
+    {
+        $this->_joinType = $type;
+
+        return $this;
+    }
+
+    /**
+     * Gets the type of join to be used when adding the association to a query.
+     *
      * @return string
      */
-    public function joinType($type = null)
+    public function getJoinType(): string
     {
-        if ($type === null) {
-            return $this->_joinType;
-        }
-
-        return $this->_joinType = $type;
+        return $this->_joinType;
     }
 
     /**
      * Sets the property name that should be filled with data from the target table
      * in the source table record.
-     * If no arguments are passed, the currently configured type is returned.
      *
-     * @param string|null $name The name of the association property. Use null to read the current value.
+     * @param string $name The name of the association property. Use null to read the current value.
+     * @return $this
+     */
+    public function setProperty(string $name)
+    {
+        $this->_propertyName = $name;
+
+        return $this;
+    }
+
+    /**
+     * Gets the property name that should be filled with data from the target table
+     * in the source table record.
+     *
      * @return string
      */
-    public function property($name = null)
+    public function getProperty(): string
     {
-        if ($name !== null) {
-            $this->_propertyName = $name;
-        }
-        if ($name === null && !$this->_propertyName) {
+        if (!$this->_propertyName) {
             $this->_propertyName = $this->_propertyName();
-            if (in_array($this->_propertyName, $this->_sourceTable->schema()->columns())) {
+            if (in_array($this->_propertyName, $this->_sourceTable->getSchema()->columns(), true)) {
                 $msg = 'Association property name "%s" clashes with field of same name of table "%s".' .
                     ' You should explicitly specify the "propertyName" option.';
                 trigger_error(
-                    sprintf($msg, $this->_propertyName, $this->_sourceTable->table()),
+                    sprintf($msg, $this->_propertyName, $this->_sourceTable->getTable()),
                     E_USER_WARNING
                 );
             }
@@ -464,9 +617,9 @@ abstract class Association
      *
      * @return string
      */
-    protected function _propertyName()
+    protected function _propertyName(): string
     {
-        list(, $name) = pluginSplit($this->_name);
+        [, $name] = pluginSplit($this->_name);
 
         return Inflector::underscore($name);
     }
@@ -475,51 +628,68 @@ abstract class Association
      * Sets the strategy name to be used to fetch associated records. Keep in mind
      * that some association types might not implement but a default strategy,
      * rendering any changes to this setting void.
-     * If no arguments are passed, the currently configured strategy is returned.
      *
-     * @param string|null $name The strategy type. Use null to read the current value.
-     * @return string
+     * @param string $name The strategy type. Use null to read the current value.
+     * @return $this
      * @throws \InvalidArgumentException When an invalid strategy is provided.
      */
-    public function strategy($name = null)
+    public function setStrategy(string $name)
     {
-        if ($name !== null) {
-            if (!in_array($name, $this->_validStrategies)) {
-                throw new InvalidArgumentException(
-                    sprintf('Invalid strategy "%s" was provided', $name)
-                );
-            }
-            $this->_strategy = $name;
+        if (!in_array($name, $this->_validStrategies, true)) {
+            throw new InvalidArgumentException(sprintf(
+                'Invalid strategy "%s" was provided. Valid options are (%s).',
+                $name,
+                implode(', ', $this->_validStrategies)
+            ));
         }
+        $this->_strategy = $name;
 
+        return $this;
+    }
+
+    /**
+     * Gets the strategy name to be used to fetch associated records. Keep in mind
+     * that some association types might not implement but a default strategy,
+     * rendering any changes to this setting void.
+     *
+     * @return string
+     */
+    public function getStrategy(): string
+    {
         return $this->_strategy;
     }
 
     /**
-     * Sets the default finder to use for fetching rows from the target table.
-     * If no parameters are passed, it will return the currently configured
-     * finder name.
+     * Gets the default finder to use for fetching rows from the target table.
      *
-     * @param string|null $finder the finder name to use
-     * @return string
+     * @return array|string
      */
-    public function finder($finder = null)
+    public function getFinder()
     {
-        if ($finder !== null) {
-            $this->_finder = $finder;
-        }
-
         return $this->_finder;
+    }
+
+    /**
+     * Sets the default finder to use for fetching rows from the target table.
+     *
+     * @param array|string $finder the finder name to use or array of finder name and option.
+     * @return $this
+     */
+    public function setFinder($finder)
+    {
+        $this->_finder = $finder;
+
+        return $this;
     }
 
     /**
      * Override this function to initialize any concrete association class, it will
      * get passed the original list of options used in the constructor
      *
-     * @param array $options List of options used for initialization
+     * @param array<string, mixed> $options List of options used for initialization
      * @return void
      */
-    protected function _options(array $options)
+    protected function _options(array $options): void
     {
     }
 
@@ -535,8 +705,6 @@ abstract class Association
      * - conditions: array with a list of conditions to filter the join with, this
      *   will be merged with any conditions originally configured for this association
      * - fields: a list of fields in the target table to include in the result
-     * - type: The type of join to be used (e.g. INNER)
-     *   the records found on this association
      * - aliasPath: A dot separated string representing the path of association names
      *   followed from the passed query main table to this association.
      * - propertyPath: A dot separated string representing the path of association
@@ -547,26 +715,30 @@ abstract class Association
      *   with this association.
      *
      * @param \Cake\ORM\Query $query the query to be altered to include the target table data
-     * @param array $options Any extra options or overrides to be taken in account
+     * @param array<string, mixed> $options Any extra options or overrides to be taken in account
      * @return void
-     * @throws \RuntimeException if the query builder passed does not return a query
-     * object
+     * @throws \RuntimeException Unable to build the query or associations.
      */
-    public function attachTo(Query $query, array $options = [])
+    public function attachTo(Query $query, array $options = []): void
     {
-        $target = $this->target();
-        $joinType = empty($options['joinType']) ? $this->joinType() : $options['joinType'];
-        $table = $target->table();
+        $target = $this->getTarget();
+        $table = $target->getTable();
 
         $options += [
             'includeFields' => true,
-            'foreignKey' => $this->foreignKey(),
+            'foreignKey' => $this->getForeignKey(),
             'conditions' => [],
+            'joinType' => $this->getJoinType(),
             'fields' => [],
-            'type' => $joinType,
             'table' => $table,
-            'finder' => $this->finder()
+            'finder' => $this->getFinder(),
         ];
+
+        // This is set by joinWith to disable matching results
+        if ($options['fields'] === false) {
+            $options['fields'] = [];
+            $options['includeFields'] = false;
+        }
 
         if (!empty($options['foreignKey'])) {
             $joinCondition = $this->_joinCondition($options);
@@ -575,7 +747,7 @@ abstract class Association
             }
         }
 
-        list($finder, $opts) = $this->_extractFinder($options['finder']);
+        [$finder, $opts] = $this->_extractFinder($options['finder']);
         $dummy = $this
             ->find($finder, $opts)
             ->eagerLoaded(true);
@@ -585,17 +757,29 @@ abstract class Association
             if (!($dummy instanceof Query)) {
                 throw new RuntimeException(sprintf(
                     'Query builder for association "%s" did not return a query',
-                    $this->name()
+                    $this->getName()
                 ));
             }
+        }
+
+        if (
+            !empty($options['matching']) &&
+            $this->_strategy === static::STRATEGY_JOIN &&
+            $dummy->getContain()
+        ) {
+            throw new RuntimeException(
+                "`{$this->getName()}` association cannot contain() associations when using JOIN strategy."
+            );
         }
 
         $dummy->where($options['conditions']);
         $this->_dispatchBeforeFind($dummy);
 
-        $joinOptions = ['table' => 1, 'conditions' => 1, 'type' => 1];
-        $options['conditions'] = $dummy->clause('where');
-        $query->join([$this->_name => array_intersect_key($options, $joinOptions)]);
+        $query->join([$this->_name => [
+            'table' => $options['table'],
+            'conditions' => $dummy->clause('where'),
+            'type' => $options['joinType'],
+        ]]);
 
         $this->_appendFields($query, $dummy, $options);
         $this->_formatAssociationResults($query, $dummy, $options);
@@ -607,15 +791,15 @@ abstract class Association
      * Conditionally adds a condition to the passed Query that will make it find
      * records where there is no match with this association.
      *
-     * @param \Cake\Datasource\QueryInterface $query The query to modify
-     * @param array $options Options array containing the `negateMatch` key.
+     * @param \Cake\ORM\Query $query The query to modify
+     * @param array<string, mixed> $options Options array containing the `negateMatch` key.
      * @return void
      */
-    protected function _appendNotMatching($query, $options)
+    protected function _appendNotMatching(Query $query, array $options): void
     {
         $target = $this->_targetTable;
         if (!empty($options['negateMatch'])) {
-            $primaryKey = $query->aliasFields((array)$target->primaryKey(), $this->_name);
+            $primaryKey = $query->aliasFields((array)$target->getPrimaryKey(), $this->_name);
             $query->andWhere(function ($exp) use ($primaryKey) {
                 array_map([$exp, 'isNull'], $primaryKey);
 
@@ -631,17 +815,17 @@ abstract class Association
      * @param array $row The row to transform
      * @param string $nestKey The array key under which the results for this association
      *   should be found
-     * @param bool $joined Whether or not the row is a result of a direct join
+     * @param bool $joined Whether the row is a result of a direct join
      *   with this association
-     * @param string $targetProperty The property name in the source results where the association
-     * data should be nested in. Will use the default one if not provided.
+     * @param string|null $targetProperty The property name in the source results where the association
+     * data shuld be nested in. Will use the default one if not provided.
      * @return array
      */
-    public function transformRow($row, $nestKey, $joined, $targetProperty = null)
+    public function transformRow(array $row, string $nestKey, bool $joined, ?string $targetProperty = null): array
     {
-        $sourceAlias = $this->source()->alias();
+        $sourceAlias = $this->getSource()->getAlias();
         $nestKey = $nestKey ?: $this->_name;
-        $targetProperty = $targetProperty ?: $this->property();
+        $targetProperty = $targetProperty ?: $this->getProperty();
         if (isset($row[$sourceAlias])) {
             $row[$sourceAlias][$targetProperty] = $row[$nestKey];
             unset($row[$nestKey]);
@@ -655,16 +839,16 @@ abstract class Association
      * with the default empty value according to whether the association was
      * joined or fetched externally.
      *
-     * @param array $row The row to set a default on.
-     * @param bool $joined Whether or not the row is a result of a direct join
+     * @param array<string, mixed> $row The row to set a default on.
+     * @param bool $joined Whether the row is a result of a direct join
      *   with this association
-     * @return array
+     * @return array<string, mixed>
      */
-    public function defaultRowValue($row, $joined)
+    public function defaultRowValue(array $row, bool $joined): array
     {
-        $sourceAlias = $this->source()->alias();
+        $sourceAlias = $this->getSource()->getAlias();
         if (isset($row[$sourceAlias])) {
-            $row[$sourceAlias][$this->property()] = null;
+            $row[$sourceAlias][$this->getProperty()] = null;
         }
 
         return $row;
@@ -675,79 +859,87 @@ abstract class Association
      * and modifies the query accordingly based of this association
      * configuration
      *
-     * @param string|array|null $type the type of query to perform, if an array is passed,
+     * @param array<string, mixed>|string|null $type the type of query to perform, if an array is passed,
      *   it will be interpreted as the `$options` parameter
-     * @param array $options The options to for the find
+     * @param array<string, mixed> $options The options to for the find
      * @see \Cake\ORM\Table::find()
      * @return \Cake\ORM\Query
      */
-    public function find($type = null, array $options = [])
+    public function find($type = null, array $options = []): Query
     {
-        $type = $type ?: $this->finder();
-        list($type, $opts) = $this->_extractFinder($type);
+        $type = $type ?: $this->getFinder();
+        [$type, $opts] = $this->_extractFinder($type);
 
-        return $this->target()
+        return $this->getTarget()
             ->find($type, $options + $opts)
-            ->where($this->conditions());
+            ->where($this->getConditions());
     }
 
     /**
      * Proxies the operation to the target table's exists method after
      * appending the default conditions for this association
      *
-     * @param array|callable|\Cake\Database\ExpressionInterface $conditions The conditions to use
+     * @param \Cake\Database\ExpressionInterface|\Closure|array|string|null $conditions The conditions to use
      * for checking if any record matches.
      * @see \Cake\ORM\Table::exists()
      * @return bool
      */
-    public function exists($conditions)
+    public function exists($conditions): bool
     {
-        if (!empty($this->_conditions)) {
-            $conditions = $this
-                ->find('all', ['conditions' => $conditions])
-                ->clause('where');
-        }
+        $conditions = $this->find()
+            ->where($conditions)
+            ->clause('where');
 
-        return $this->target()->exists($conditions);
+        return $this->getTarget()->exists($conditions);
     }
 
     /**
      * Proxies the update operation to the target table's updateAll method
      *
      * @param array $fields A hash of field => new value.
-     * @param mixed $conditions Conditions to be used, accepts anything Query::where()
+     * @param \Cake\Database\ExpressionInterface|\Closure|array|string|null $conditions Conditions to be used, accepts anything Query::where()
      * can take.
      * @see \Cake\ORM\Table::updateAll()
-     * @return bool Success Returns true if one or more rows are affected.
+     * @return int Count Returns the affected rows.
      */
-    public function updateAll($fields, $conditions)
+    public function updateAll(array $fields, $conditions): int
     {
-        $target = $this->target();
-        $expression = $target->query()
-            ->where($this->conditions())
+        $expression = $this->find()
             ->where($conditions)
             ->clause('where');
 
-        return $target->updateAll($fields, $expression);
+        return $this->getTarget()->updateAll($fields, $expression);
     }
 
     /**
      * Proxies the delete operation to the target table's deleteAll method
      *
-     * @param mixed $conditions Conditions to be used, accepts anything Query::where()
+     * @param \Cake\Database\ExpressionInterface|\Closure|array|string|null $conditions Conditions to be used, accepts anything Query::where()
      * can take.
      * @return int Returns the number of affected rows.
      * @see \Cake\ORM\Table::deleteAll()
      */
-    public function deleteAll($conditions)
+    public function deleteAll($conditions): int
     {
-        $target = $this->target();
-        $expression = $target->query()
-            ->where($this->conditions())
+        $expression = $this->find()
             ->where($conditions)
             ->clause('where');
 
-        return $target->deleteAll($expression);
+        return $this->getTarget()->deleteAll($expression);
+    }
+
+    /**
+     * Returns true if the eager loading process will require a set of the owning table's
+     * binding keys in order to use them as a filter in the finder query.
+     *
+     * @param array<string, mixed> $options The options containing the strategy to be used.
+     * @return bool true if a list of keys will be required
+     */
+    public function requiresKeys(array $options = []): bool
+    {
+        $strategy = $options['strategy'] ?? $this->getStrategy();
+
+        return $strategy === static::STRATEGY_SELECT;
     }
 
     /**
@@ -757,7 +949,7 @@ abstract class Association
      * @param \Cake\ORM\Query $query the query this association is attaching itself to
      * @return void
      */
-    protected function _dispatchBeforeFind($query)
+    protected function _dispatchBeforeFind(Query $query): void
     {
         $query->triggerBeforeFind();
     }
@@ -768,33 +960,26 @@ abstract class Association
      *
      * @param \Cake\ORM\Query $query the query that will get the fields appended to
      * @param \Cake\ORM\Query $surrogate the query having the fields to be copied from
-     * @param array $options options passed to the method `attachTo`
+     * @param array<string, mixed> $options options passed to the method `attachTo`
      * @return void
      */
-    protected function _appendFields($query, $surrogate, $options)
+    protected function _appendFields(Query $query, Query $surrogate, array $options): void
     {
-        if ($query->eagerLoader()->autoFields() === false) {
+        if ($query->getEagerLoader()->isAutoFieldsEnabled() === false) {
             return;
         }
 
-        $fields = $surrogate->clause('select') ?: $options['fields'];
-        $target = $this->_targetTable;
-        $autoFields = $surrogate->autoFields();
+        $fields = array_merge($surrogate->clause('select'), $options['fields']);
 
-        if (empty($fields) && !$autoFields) {
-            if ($options['includeFields'] && ($fields === null || $fields !== false)) {
-                $fields = $target->schema()->columns();
-            }
+        if (
+            (empty($fields) && $options['includeFields']) ||
+            $surrogate->isAutoFieldsEnabled()
+        ) {
+            $fields = array_merge($fields, $this->_targetTable->getSchema()->columns());
         }
 
-        if ($autoFields === true) {
-            $fields = array_merge((array)$fields, $target->schema()->columns());
-        }
-
-        if (!empty($fields)) {
-            $query->select($query->aliasFields($fields, $target->alias()));
-        }
-        $query->addDefaultTypes($target);
+        $query->select($query->aliasFields($fields, $this->_name));
+        $query->addDefaultTypes($this->_targetTable);
     }
 
     /**
@@ -807,12 +992,12 @@ abstract class Association
      * @param \Cake\ORM\Query $query the query that will get the formatter applied to
      * @param \Cake\ORM\Query $surrogate the query having formatters for the associated
      * target table.
-     * @param array $options options passed to the method `attachTo`
+     * @param array<string, mixed> $options options passed to the method `attachTo`
      * @return void
      */
-    protected function _formatAssociationResults($query, $surrogate, $options)
+    protected function _formatAssociationResults(Query $query, Query $surrogate, array $options): void
     {
-        $formatters = $surrogate->formatResults();
+        $formatters = $surrogate->getResultFormatters();
 
         if (!$formatters || empty($options['propertyPath'])) {
             return;
@@ -820,25 +1005,40 @@ abstract class Association
 
         $property = $options['propertyPath'];
         $propertyPath = explode('.', $property);
-        $query->formatResults(function ($results) use ($formatters, $property, $propertyPath) {
-            $extracted = [];
-            foreach ($results as $result) {
-                foreach ($propertyPath as $propertyPathItem) {
-                    if (!isset($result[$propertyPathItem])) {
-                        $result = null;
-                        break;
+        $query->formatResults(
+            function (CollectionInterface $results, $query) use ($formatters, $property, $propertyPath) {
+                $extracted = [];
+                foreach ($results as $result) {
+                    foreach ($propertyPath as $propertyPathItem) {
+                        if (!isset($result[$propertyPathItem])) {
+                            $result = null;
+                            break;
+                        }
+                        $result = $result[$propertyPathItem];
                     }
-                    $result = $result[$propertyPathItem];
+                    $extracted[] = $result;
                 }
-                $extracted[] = $result;
-            }
-            $extracted = new Collection($extracted);
-            foreach ($formatters as $callable) {
-                $extracted = new ResultSetDecorator($callable($extracted));
-            }
+                $extracted = new Collection($extracted);
+                foreach ($formatters as $callable) {
+                    $extracted = $callable($extracted, $query);
+                    if (!$extracted instanceof ResultSetInterface) {
+                        $extracted = new ResultSetDecorator($extracted);
+                    }
+                }
 
-            return $results->insert($property, $extracted);
-        }, Query::PREPEND);
+                $results = $results->insert($property, $extracted);
+                if ($query->isHydrationEnabled()) {
+                    $results = $results->map(function ($result) {
+                        $result->clean();
+
+                        return $result;
+                    });
+                }
+
+                return $results;
+            },
+            Query::PREPEND
+        );
     }
 
     /**
@@ -851,14 +1051,14 @@ abstract class Association
      *
      * @param \Cake\ORM\Query $query the query that will get the associations attached to
      * @param \Cake\ORM\Query $surrogate the query having the containments to be attached
-     * @param array $options options passed to the method `attachTo`
+     * @param array<string, mixed> $options options passed to the method `attachTo`
      * @return void
      */
-    protected function _bindNewAssociations($query, $surrogate, $options)
+    protected function _bindNewAssociations(Query $query, Query $surrogate, array $options): void
     {
-        $loader = $surrogate->eagerLoader();
-        $contain = $loader->contain();
-        $matching = $loader->matching();
+        $loader = $surrogate->getEagerLoader();
+        $contain = $loader->getContain();
+        $matching = $loader->getMatching();
 
         if (!$contain && !$matching) {
             return;
@@ -869,11 +1069,13 @@ abstract class Association
             $newContain[$options['aliasPath'] . '.' . $alias] = $value;
         }
 
-        $eagerLoader = $query->eagerLoader();
-        $eagerLoader->contain($newContain);
+        $eagerLoader = $query->getEagerLoader();
+        if ($newContain) {
+            $eagerLoader->contain($newContain);
+        }
 
         foreach ($matching as $alias => $value) {
-            $eagerLoader->matching(
+            $eagerLoader->setMatching(
                 $options['aliasPath'] . '.' . $alias,
                 $value['queryBuilder'],
                 $value
@@ -885,22 +1087,25 @@ abstract class Association
      * Returns a single or multiple conditions to be appended to the generated join
      * clause for getting the results on the target table.
      *
-     * @param array $options list of options passed to attachTo method
+     * @param array<string, mixed> $options list of options passed to attachTo method
      * @return array
      * @throws \RuntimeException if the number of columns in the foreignKey do not
      * match the number of columns in the source table primaryKey
      */
-    protected function _joinCondition($options)
+    protected function _joinCondition(array $options): array
     {
         $conditions = [];
-        $tAlias = $this->target()->alias();
-        $sAlias = $this->source()->alias();
+        $tAlias = $this->_name;
+        $sAlias = $this->getSource()->getAlias();
         $foreignKey = (array)$options['foreignKey'];
-        $bindingKey = (array)$this->bindingKey();
+        $bindingKey = (array)$this->getBindingKey();
 
         if (count($foreignKey) !== count($bindingKey)) {
             if (empty($bindingKey)) {
-                $table = $this->isOwningSide($this->source()) ? $this->source()->table() : $this->target()->table();
+                $table = $this->getTarget()->getTable();
+                if ($this->isOwningSide($this->getSource())) {
+                    $table = $this->getSource()->getTable();
+                }
                 $msg = 'The "%s" table does not define a primary key, and cannot have join conditions generated.';
                 throw new RuntimeException(sprintf($msg, $table));
             }
@@ -935,11 +1140,11 @@ abstract class Association
      * $query->contain(['Comments' => ['finder' => ['translations' => []]]]);
      * $query->contain(['Comments' => ['finder' => ['translations' => ['locales' => ['en_US']]]]]);
      *
-     * @param string|array $finderData The finder name or an array having the name as key
+     * @param array|string $finderData The finder name or an array having the name as key
      * and options as value.
      * @return array
      */
-    protected function _extractFinder($finderData)
+    protected function _extractFinder($finderData): array
     {
         $finderData = (array)$finderData;
 
@@ -960,7 +1165,7 @@ abstract class Association
      */
     public function __get($property)
     {
-        return $this->target()->{$property};
+        return $this->getTarget()->{$property};
     }
 
     /**
@@ -972,7 +1177,7 @@ abstract class Association
      */
     public function __isset($property)
     {
-        return isset($this->target()->{$property});
+        return isset($this->getTarget()->{$property});
     }
 
     /**
@@ -985,7 +1190,7 @@ abstract class Association
      */
     public function __call($method, $argument)
     {
-        return call_user_func_array([$this->target(), $method], $argument);
+        return $this->getTarget()->$method(...$argument);
     }
 
     /**
@@ -993,11 +1198,11 @@ abstract class Association
      *
      * @return string Constant of either ONE_TO_ONE, MANY_TO_ONE, ONE_TO_MANY or MANY_TO_MANY.
      */
-    abstract public function type();
+    abstract public function type(): string;
 
     /**
      * Eager loads a list of records in the target table that are related to another
-     * set of records in the source table. Source records can specified in two ways:
+     * set of records in the source table. Source records can be specified in two ways:
      * first one is by passing a Query object setup to find on the source table and
      * the other way is by explicitly passing an array of primary key values from
      * the source table.
@@ -1022,10 +1227,10 @@ abstract class Association
      * - strategy: The name of strategy to use for finding target table records
      * - nestKey: The array key under which results will be found when transforming the row
      *
-     * @param array $options The options for eager loading.
+     * @param array<string, mixed> $options The options for eager loading.
      * @return \Closure
      */
-    abstract public function eagerLoader(array $options);
+    abstract public function eagerLoader(array $options): Closure;
 
     /**
      * Handles cascading a delete from an associated model.
@@ -1034,28 +1239,28 @@ abstract class Association
      * required.
      *
      * @param \Cake\Datasource\EntityInterface $entity The entity that started the cascaded delete.
-     * @param array $options The options for the original delete.
+     * @param array<string, mixed> $options The options for the original delete.
      * @return bool Success
      */
-    abstract public function cascadeDelete(EntityInterface $entity, array $options = []);
+    abstract public function cascadeDelete(EntityInterface $entity, array $options = []): bool;
 
     /**
-     * Returns whether or not the passed table is the owning side for this
+     * Returns whether the passed table is the owning side for this
      * association. This means that rows in the 'target' table would miss important
      * or required information if the row in 'source' did not exist.
      *
      * @param \Cake\ORM\Table $side The potential Table with ownership
      * @return bool
      */
-    abstract public function isOwningSide(Table $side);
+    abstract public function isOwningSide(Table $side): bool;
 
     /**
      * Extract the target's association data our from the passed entity and proxies
      * the saving operation to the target table.
      *
      * @param \Cake\Datasource\EntityInterface $entity the data to be saved
-     * @param array|\ArrayObject $options The options for saving associated data.
-     * @return bool|\Cake\Datasource\EntityInterface false if $entity could not be saved, otherwise it returns
+     * @param array<string, mixed> $options The options for saving associated data.
+     * @return \Cake\Datasource\EntityInterface|false false if $entity could not be saved, otherwise it returns
      * the saved entity
      * @see \Cake\ORM\Table::save()
      */

@@ -1,29 +1,29 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.3.5
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  *
  * Parts of this file are derived from Zend-Diactoros
- *
- * @copyright Copyright (c) 2015-2016 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright Copyright (c) 2015-2016 Zend Technologies USA Inc. (https://www.zend.com/)
  * @license   https://github.com/zendframework/zend-diactoros/blob/master/LICENSE.md New BSD License
  */
 namespace Cake\Http;
 
-use Cake\Core\Configure;
-use Cake\Log\Log;
+use Cake\Http\Cookie\Cookie;
+use Laminas\Diactoros\RelativeStream;
+use Laminas\HttpHandlerRunner\Emitter\EmitterInterface;
 use Psr\Http\Message\ResponseInterface;
-use Zend\Diactoros\RelativeStream;
-use Zend\Diactoros\Response\EmitterInterface;
 
 /**
  * Emits a Response to the PHP Server API.
@@ -37,18 +37,38 @@ use Zend\Diactoros\Response\EmitterInterface;
 class ResponseEmitter implements EmitterInterface
 {
     /**
-     * {@inheritDoc}
+     * Maximum output buffering size for each iteration.
+     *
+     * @var int
      */
-    public function emit(ResponseInterface $response, $maxBufferLength = 8192)
+    protected $maxBufferLength;
+
+    /**
+     * Constructor
+     *
+     * @param int $maxBufferLength Maximum output buffering size for each iteration.
+     */
+    public function __construct(int $maxBufferLength = 8192)
     {
-        $file = $line = null;
+        $this->maxBufferLength = $maxBufferLength;
+    }
+
+    /**
+     * Emit a response.
+     *
+     * Emits a response, including status line, headers, and the message body,
+     * according to the environment.
+     *
+     * @param \Psr\Http\Message\ResponseInterface $response The response to emit.
+     * @return bool
+     */
+    public function emit(ResponseInterface $response): bool
+    {
+        $file = '';
+        $line = 0;
         if (headers_sent($file, $line)) {
             $message = "Unable to emit headers. Headers sent in file=$file line=$line";
-            if (Configure::read('debug')) {
-                trigger_error($message, E_USER_WARNING);
-            } else {
-                Log::warning($message);
-            }
+            trigger_error($message, E_USER_WARNING);
         }
 
         $this->emitStatusLine($response);
@@ -57,25 +77,29 @@ class ResponseEmitter implements EmitterInterface
 
         $range = $this->parseContentRange($response->getHeaderLine('Content-Range'));
         if (is_array($range)) {
-            $this->emitBodyRange($range, $response, $maxBufferLength);
+            $this->emitBodyRange($range, $response);
         } else {
-            $this->emitBody($response, $maxBufferLength);
+            $this->emitBody($response);
         }
 
         if (function_exists('fastcgi_finish_request')) {
             fastcgi_finish_request();
         }
+
+        return true;
     }
 
     /**
      * Emit the message body.
      *
      * @param \Psr\Http\Message\ResponseInterface $response The response to emit
-     * @param int $maxBufferLength The chunk size to emit
      * @return void
      */
-    protected function emitBody(ResponseInterface $response, $maxBufferLength)
+    protected function emitBody(ResponseInterface $response): void
     {
+        if (in_array($response->getStatusCode(), [204, 304], true)) {
+            return;
+        }
         $body = $response->getBody();
 
         if (!$body->isSeekable()) {
@@ -86,7 +110,7 @@ class ResponseEmitter implements EmitterInterface
 
         $body->rewind();
         while (!$body->eof()) {
-            echo $body->read($maxBufferLength);
+            echo $body->read($this->maxBufferLength);
         }
     }
 
@@ -95,12 +119,11 @@ class ResponseEmitter implements EmitterInterface
      *
      * @param array $range The range data to emit
      * @param \Psr\Http\Message\ResponseInterface $response The response to emit
-     * @param int $maxBufferLength The chunk size to emit
      * @return void
      */
-    protected function emitBodyRange(array $range, ResponseInterface $response, $maxBufferLength)
+    protected function emitBodyRange(array $range, ResponseInterface $response): void
     {
-        list($unit, $first, $last, $length) = $range;
+        [, $first, $last] = $range;
 
         $body = $response->getBody();
 
@@ -116,12 +139,12 @@ class ResponseEmitter implements EmitterInterface
         $pos = 0;
         $length = $last - $first + 1;
         while (!$body->eof() && $pos < $length) {
-            if (($pos + $maxBufferLength) > $length) {
+            if ($pos + $this->maxBufferLength > $length) {
                 echo $body->read($length - $pos);
                 break;
             }
 
-            echo $body->read($maxBufferLength);
+            echo $body->read($this->maxBufferLength);
             $pos = $body->tell();
         }
     }
@@ -135,7 +158,7 @@ class ResponseEmitter implements EmitterInterface
      * @param \Psr\Http\Message\ResponseInterface $response The response to emit
      * @return void
      */
-    protected function emitStatusLine(ResponseInterface $response)
+    protected function emitStatusLine(ResponseInterface $response): void
     {
         $reasonPhrase = $response->getReasonPhrase();
         header(sprintf(
@@ -157,11 +180,16 @@ class ResponseEmitter implements EmitterInterface
      * @param \Psr\Http\Message\ResponseInterface $response The response to emit
      * @return void
      */
-    protected function emitHeaders(ResponseInterface $response)
+    protected function emitHeaders(ResponseInterface $response): void
     {
+        $cookies = [];
+        if (method_exists($response, 'getCookieCollection')) {
+            $cookies = iterator_to_array($response->getCookieCollection());
+        }
+
         foreach ($response->getHeaders() as $name => $values) {
             if (strtolower($name) === 'set-cookie') {
-                $this->emitCookies($values);
+                $cookies = array_merge($cookies, $values);
                 continue;
             }
             $first = true;
@@ -174,59 +202,57 @@ class ResponseEmitter implements EmitterInterface
                 $first = false;
             }
         }
+
+        $this->emitCookies($cookies);
     }
 
     /**
      * Emit cookies using setcookie()
      *
-     * @param array $cookies An array of Set-Cookie headers.
+     * @param array<\Cake\Http\Cookie\CookieInterface|string> $cookies An array of cookies.
      * @return void
      */
-    protected function emitCookies(array $cookies)
+    protected function emitCookies(array $cookies): void
     {
-        foreach ((array)$cookies as $cookie) {
-            if (strpos($cookie, '";"') !== false) {
-                $cookie = str_replace('";"', "{__cookie_replace__}", $cookie);
-                $parts = str_replace("{__cookie_replace__}", '";"', explode(';', $cookie));
-            } else {
-                $parts = preg_split('/\;[ \t]*/', $cookie);
-            }
-
-            list($name, $value) = explode('=', array_shift($parts), 2);
-            $data = [
-                'name' => urldecode($name),
-                'value' => urldecode($value),
-                'expires' => 0,
-                'path' => '',
-                'domain' => '',
-                'secure' => false,
-                'httponly' => false
-            ];
-
-            foreach ($parts as $part) {
-                if (strpos($part, '=') !== false) {
-                    list($key, $value) = explode('=', $part);
-                } else {
-                    $key = $part;
-                    $value = true;
-                }
-
-                $key = strtolower($key);
-                $data[$key] = $value;
-            }
-            if (!empty($data['expires'])) {
-                $data['expires'] = strtotime($data['expires']);
-            }
-            setcookie(
-                $data['name'],
-                $data['value'],
-                $data['expires'],
-                $data['path'],
-                $data['domain'],
-                $data['secure'],
-                $data['httponly']
-            );
+        foreach ($cookies as $cookie) {
+            $this->setCookie($cookie);
         }
+    }
+
+    /**
+     * Helper methods to set cookie.
+     *
+     * @param \Cake\Http\Cookie\CookieInterface|string $cookie Cookie.
+     * @return bool
+     */
+    protected function setCookie($cookie): bool
+    {
+        if (is_string($cookie)) {
+            $cookie = Cookie::createFromHeaderString($cookie, ['path' => '']);
+        }
+
+        if (PHP_VERSION_ID >= 70300) {
+            /** @psalm-suppress InvalidArgument */
+            return setcookie($cookie->getName(), $cookie->getScalarValue(), $cookie->getOptions());
+        }
+
+        $path = $cookie->getPath();
+        $sameSite = $cookie->getSameSite();
+        if ($sameSite !== null) {
+            // Temporary hack for PHP 7.2 to set "SameSite" attribute
+            // https://stackoverflow.com/questions/39750906/php-setcookie-samesite-strict
+            $path .= '; samesite=' . $sameSite;
+        }
+
+        return setcookie(
+            $cookie->getName(),
+            $cookie->getScalarValue(),
+            $cookie->getExpiresTimestamp() ?: 0,
+            $path,
+            $cookie->getDomain(),
+            $cookie->isSecure(),
+            $cookie->isHttpOnly()
+        );
     }
 
     /**
@@ -236,9 +262,9 @@ class ResponseEmitter implements EmitterInterface
      * @param int|null $maxBufferLevel Flush up to this buffer level.
      * @return void
      */
-    protected function flush($maxBufferLevel = null)
+    protected function flush(?int $maxBufferLevel = null): void
     {
-        if (null === $maxBufferLevel) {
+        if ($maxBufferLevel === null) {
             $maxBufferLevel = ob_get_level();
         }
 
@@ -249,13 +275,13 @@ class ResponseEmitter implements EmitterInterface
 
     /**
      * Parse content-range header
-     * http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.16
+     * https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.16
      *
      * @param string $header The Content-Range header to parse.
-     * @return false|array [unit, first, last, length]; returns false if no
+     * @return array|false [unit, first, last, length]; returns false if no
      *     content range or an invalid content range is provided
      */
-    protected function parseContentRange($header)
+    protected function parseContentRange(string $header)
     {
         if (preg_match('/(?P<unit>[\w]+)\s+(?P<first>\d+)-(?P<last>\d+)\/(?P<length>\d+|\*)/', $header, $matches)) {
             return [

@@ -7,7 +7,7 @@ use Cake\Event\Event;
 
 class SetupTabBehavior extends Behavior 
 {
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.afterAction'] = 'afterAction';

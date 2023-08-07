@@ -39,8 +39,8 @@ $server = new Server(new Application(dirname(__DIR__) . '/config'));
 try {
     $server->emit($server->run());
 } catch (Exception $ex) {
-    $ErrorTable = TableRegistry::get('System.SystemErrors');
-    $ErrorTable->insertError($ex);
+    //$ErrorTable = TableRegistry::getTableLocator()->get('System.SystemErrors');
+    //$ErrorTable->insertError($ex);
     Log::write('error', $ex);
     throw $ex;
 }

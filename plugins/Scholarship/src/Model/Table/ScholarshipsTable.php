@@ -29,9 +29,9 @@ class ScholarshipsTable extends ControllerActionTable
     private $interestRateOptions = [];
     private $currency = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('scholarships');
+        $this->setTable('scholarships');
         parent::initialize($config);
 
         $this->belongsTo('ScholarshipFinancialAssistances', ['className' => 'Scholarship.ScholarshipFinancialAssistances', 'foreignKey' => 'scholarship_financial_assistance_id']); //POCOR-6839
@@ -85,7 +85,7 @@ class ScholarshipsTable extends ControllerActionTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
@@ -105,7 +105,7 @@ class ScholarshipsTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

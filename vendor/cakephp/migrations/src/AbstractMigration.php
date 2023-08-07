@@ -1,13 +1,15 @@
 <?php
+declare(strict_types=1);
+
 /**
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
+ * @license       https://www.opensource.org/licenses/mit-license.php MIT License
  */
 namespace Migrations;
 
@@ -15,7 +17,6 @@ use Phinx\Migration\AbstractMigration as BaseAbstractMigration;
 
 class AbstractMigration extends BaseAbstractMigration
 {
-
     /**
      * Whether the tables created in this migration
      * should auto-create an `id` field or not
@@ -29,16 +30,22 @@ class AbstractMigration extends BaseAbstractMigration
     public $autoId = true;
 
     /**
-     * {@inheritdoc}
+     * Returns an instance of the Table class.
      *
+     * You can use this class to create and manipulate tables.
+     *
+     * @param string $tableName Table Name
+     * @param array $options Options
      * @return \Migrations\Table
      */
-    public function table($tableName, $options = array())
+    public function table(string $tableName, array $options = []): Table
     {
         if ($this->autoId === false) {
             $options['id'] = false;
         }
 
-        return new Table($tableName, $options, $this->getAdapter());
+        $table = new Table($tableName, $options, $this->getAdapter());
+
+        return $table;
     }
 }

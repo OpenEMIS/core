@@ -24,9 +24,14 @@ use Cake\ORM\TableRegistry;
 use Cake\Core\App;
 use Cake\I18n\Time;
 use Cake\Filesystem\File;
+use Cake\Event\EventManager;
+use Cake\Event\EventDispatcherTrait;
+use Cake\Event\EventInterface;
+use Cake\Http\ServerRequest;
 
 class LocalizationComponent extends Component
 {
+    use EventDispatcherTrait;
     private $defaultLocale = 'en';
     private $autoCompile = true;
     private $controller;
@@ -44,7 +49,7 @@ class LocalizationComponent extends Component
 
     public $components = ['Cookie', 'Auth'];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.initialize'] = 'beforeFilter';
@@ -52,13 +57,13 @@ class LocalizationComponent extends Component
     }
 
     // Is called before the controller's beforeFilter method.
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $this->controller = $this->_registry->getController();
         $this->Cookie->name = str_replace(' ', '_', $config['productName']) . '_COOKIE';
         $this->Cookie->time = 3600 * 24 * 30; // expires after one month
-        list($this->language, $this->showLanguage) = $this->detectLanguage();
+       // list($this->language, $this->showLanguage) = $this->detectLanguage();
         $this->Session = $session;
     }
 
@@ -67,11 +72,13 @@ class LocalizationComponent extends Component
         return $this->Cookie;
     }
 
-    private function dispatchEvent($subject, $eventKey, $method = null, $params = [], $autoOff = false)
+    private function dispatch($subject, $eventKey, $method = null, $params = [], $autoOff = false)
     {
+        $eventManager = $this->getController()->getEventManager();;
         $this->onEvent($subject, $eventKey, $method);
         $event = new Event($eventKey, $this, $params);
-        $event = $subject->eventManager()->dispatch($event);
+
+        $event = $subject->$eventManager->dispatch($event);
         if (!is_null($method) && $autoOff) {
             $this->offEvent($subject, $eventKey, $method);
         }
@@ -83,14 +90,14 @@ class LocalizationComponent extends Component
         $eventMap = $subject->implementedEvents();
         if (!array_key_exists($eventKey, $eventMap) && !is_null($method)) {
             if (method_exists($subject, $method)) {
-                $subject->eventManager()->on($eventKey, [], [$subject, $method]);
+                $subject->getEventManager()->on($eventKey, [], [$subject, $method]);
             }
         }
     }
 
     private function offEvent($subject, $eventKey, $method)
     {
-        $subject->eventManager()->off($eventKey, [$subject, $method]);
+        $subject->getEventManager()->off($eventKey, [$subject, $method]);
     }
 
     /**
@@ -103,10 +110,11 @@ class LocalizationComponent extends Component
         // Default language
         $lang = $this->language;
         $request = $this->request;
-        $session = $request->session();
+        $session = $this->getController()->getRequest()->getSession();
         $showLanguage = $this->showLanguage;
         $lang = $this->language;
-        $event = $this->dispatchEvent($this->controller, 'Controller.Localization.getLanguageOptions', 'getLanguageOptions', [], true);
+        $eventManager = $this->getController()->getEventManager();
+        $event = $eventManager->dispatch($this->controller, 'Controller.Localization.getLanguageOptions', 'getLanguageOptions', [], true);
         if ($event->result) {
             if (is_array($event->result)) {
                 list($showLanguage, $lang) = $event->result;
@@ -119,7 +127,7 @@ class LocalizationComponent extends Component
                 $lang = $request->query('lang');
                 $user = $this->Auth->user();
                 if ($user) {
-                    $event = $this->dispatchEvent($this->controller, 'Controller.Localization.updateLoginLanguage', 'updateLoginLanguage', [$user, $lang], true);
+                    $event = $eventManager->dispatch($this->controller, 'Controller.Localization.updateLoginLanguage', 'updateLoginLanguage', [$user, $lang], true);
                 }
                 $this->Cookie->write('System.language', $lang);
             } else if ($this->Cookie->check('System.language')) {
@@ -136,7 +144,7 @@ class LocalizationComponent extends Component
             // $lang = $session->read('System.language');
             $user = $this->Auth->user();
             if ($user) {
-                $event = $this->dispatchEvent($this->controller, 'Controller.Localization.updateLoginLanguage', 'updateLoginLanguage', [$user, $lang], true);
+                $event = $eventManager->dispatch($this->controller, 'Controller.Localization.updateLoginLanguage', 'updateLoginLanguage', [$user, $lang], true);
             }
             $this->Cookie->write('System.language', $lang);
         }
@@ -144,14 +152,14 @@ class LocalizationComponent extends Component
         return [$lang, $showLanguage];
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         // Call to recompile the language if the translation files are affected
         if ($this->autoCompile()) {
             $this->updateLocaleFile($this->language);
         }
         // Move the I18n::locale setting here so that the update can be instant
-        I18n::locale($this->language);
+        I18n::getLocale($this->language);
     }
 
     public function autoCompile($compile = null)
@@ -175,7 +183,7 @@ class LocalizationComponent extends Component
 
     private function getModifiedDate()
     {
-        $LocaleContentTranslations = TableRegistry::get('LocaleContentTranslations');
+        $LocaleContentTranslations = TableRegistry::getTableLocator()->get('LocaleContentTranslations');
 
         // using modified so when new word modified able to refresh the default.po
         $lastModified = $LocaleContentTranslations
@@ -237,7 +245,7 @@ class LocalizationComponent extends Component
         $localeDir = current(App::path('Locale'));
         $fileLocation = $localeDir . $locale . DS . 'default.po';
 
-        $LocaleContentTranslations = TableRegistry::get('LocaleContentTranslations');
+        $LocaleContentTranslations = TableRegistry::getTableLocator()->get('LocaleContentTranslations');
         $data = $LocaleContentTranslations
             ->find('list', [
                 'keyField' => 'locale_content_en',
@@ -287,13 +295,13 @@ class LocalizationComponent extends Component
     }
 
     // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
-    public function startup(Event $event)
+    public function startup(EventInterface $event)
     {
         $controller = $this->controller;
         $htmlLang = $this->language;
         $languages = $this->languages;
-
-        if ($this->request->is('post') && array_key_exists('System', $this->request->data)) {
+        $request = new ServerRequest();
+        if ($request->is('post') && array_key_exists('System', $this->request->data)) {
             if (isset($this->request->data['System']['language'])) {
                 $htmlLang = $this->request->data['System']['language'];
                 $this->Cookie->write('System.language', $htmlLang);
@@ -303,7 +311,7 @@ class LocalizationComponent extends Component
         $this->Session->write('System.language', $htmlLang);
 
         // get direction from locales table.
-        $Locales = TableRegistry::get('Locales');
+        $Locales = TableRegistry::getTableLocator()->get('Locales');
         $langDir = $Locales->getLangDir($htmlLang);
         $htmlLangDir = array_key_exists($htmlLang, $languages) ? $languages[$htmlLang]['direction'] : $langDir;
 
@@ -322,7 +330,7 @@ class LocalizationComponent extends Component
         }
 
         // new languages added.
-        $Locales = TableRegistry::get('Locales');
+        $Locales = TableRegistry::getTableLocator()->get('Locales');
         $localesData = $Locales->find()->all();
 
         foreach ($localesData as $locale) {

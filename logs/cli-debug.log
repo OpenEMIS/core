@@ -1,0 +1,9 @@
+2023-08-02 07:58:02 notice: Your application is using a deprecated `Error.exceptionRenderer`. You can either remove the `Error.exceptionRenderer` config key to have CakePHP choose one of the default exception renderers, or define a class that is not `Cake\Error\ExceptionRenderer`.
+C:\xampp-new\htdocs\openemis\pocor-openemis-core\vendor\cakephp\cakephp\src\Error\ExceptionTrap.php, line: 240
+You can disable all deprecation warnings by setting `Error.errorLevel` to `E_ALL & ~E_USER_DEPRECATED`. Adding `vendor/cakephp/cakephp/src/Error/ExceptionTrap.php` to `Error.ignoredDeprecationPaths` in your `config/app.php` config will mute deprecations from that file only.
+Trace:
+deprecationWarning C:\xampp-new\htdocs\openemis\pocor-openemis-core\vendor\cakephp\cakephp\src\Core\functions.php, line 328
+Cake\Error\ExceptionTrap::renderer() C:\xampp-new\htdocs\openemis\pocor-openemis-core\vendor\cakephp\cakephp\src\Error\ExceptionTrap.php, line 123
+Cake\Error\ExceptionTrap::handleException() C:\xampp-new\htdocs\openemis\pocor-openemis-core\vendor\cakephp\cakephp\src\Error\ExceptionTrap.php, line 240
+[main] [internal], line ??
+

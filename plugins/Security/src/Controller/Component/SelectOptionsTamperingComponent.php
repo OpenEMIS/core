@@ -10,7 +10,7 @@ class SelectOptionsTamperingComponent extends Component {
 
     public function startup(Event $event) {
         // Select options form tampering
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         if ($session->check('FormTampering')) {
             if ($this->request->is(['post', 'put', 'delete'])) {
                 $formTamperingSession = $session->read('FormTampering');
