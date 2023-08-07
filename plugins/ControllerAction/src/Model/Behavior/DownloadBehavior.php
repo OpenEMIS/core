@@ -39,7 +39,7 @@ class DownloadBehavior extends Behavior
         'zip'   => 'application/zip'
     ];
 	
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.download'] = 'download';

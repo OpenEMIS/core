@@ -16,7 +16,7 @@ class ConfigItemsBehavior extends Behavior
     private $model;
     private $selectedType;
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
@@ -26,7 +26,7 @@ class ConfigItemsBehavior extends Behavior
         return $events;
     }
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->model = $this->_table;
     }

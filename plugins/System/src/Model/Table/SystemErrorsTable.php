@@ -13,14 +13,14 @@ use App\Model\Table\AppTable;
 
 class SystemErrorsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        parent::initialize($config);
 
+        parent::initialize($config);
         $this->belongsTo('CreatedUser', ['className' => 'Security.Users', 'foreignKey' => 'created_user_id']);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.onGetAllowedActions'] = 'onGetAllowedActions';

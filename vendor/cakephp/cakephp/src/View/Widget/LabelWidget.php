@@ -1,20 +1,23 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\View\Widget;
 
 use Cake\View\Form\ContextInterface;
+use Cake\View\StringTemplate;
 
 /**
  * Form 'widget' for creating labels.
@@ -24,7 +27,6 @@ use Cake\View\Form\ContextInterface;
  */
 class LabelWidget implements WidgetInterface
 {
-
     /**
      * Templates
      *
@@ -49,7 +51,7 @@ class LabelWidget implements WidgetInterface
      *
      * @param \Cake\View\StringTemplate $templates Templates list.
      */
-    public function __construct($templates)
+    public function __construct(StringTemplate $templates)
     {
         $this->_templates = $templates;
     }
@@ -65,18 +67,18 @@ class LabelWidget implements WidgetInterface
      *
      * All other attributes will be converted into HTML attributes.
      *
-     * @param array $data Data array.
+     * @param array<string, mixed> $data Data array.
      * @param \Cake\View\Form\ContextInterface $context The current form context.
      * @return string
      */
-    public function render(array $data, ContextInterface $context)
+    public function render(array $data, ContextInterface $context): string
     {
         $data += [
             'text' => '',
             'input' => '',
             'hidden' => '',
             'escape' => true,
-            'templateVars' => []
+            'templateVars' => [],
         ];
 
         return $this->_templates->format($this->_labelTemplate, [
@@ -89,9 +91,9 @@ class LabelWidget implements WidgetInterface
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
-    public function secureFields(array $data)
+    public function secureFields(array $data): array
     {
         return [];
     }

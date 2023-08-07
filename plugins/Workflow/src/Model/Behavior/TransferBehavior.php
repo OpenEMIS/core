@@ -15,7 +15,7 @@ class TransferBehavior extends Behavior
     private $transferWorkflowIds = [];
     private $institutionTypeOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -41,7 +41,7 @@ class TransferBehavior extends Behavior
         ];
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.afterAction'] = 'indexAfterAction';
@@ -52,7 +52,7 @@ class TransferBehavior extends Behavior
         return $events;
     }
 
-    public function validationTransferWorkflow(Validator $validator)
+    public function validationTransferWorkflow(Validator $validator) : Validator
     {
         $validator = $this->_table->validationDefault($validator);
         return $validator->notEmpty('institution_owner');

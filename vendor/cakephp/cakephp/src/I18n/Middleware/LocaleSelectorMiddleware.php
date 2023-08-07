@@ -1,15 +1,17 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.3.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\I18n\Middleware;
 
@@ -17,13 +19,15 @@ use Cake\I18n\I18n;
 use Locale;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * Sets the runtime default locale for the request based on the
  * Accept-Language header. The default will only be set if it
  * matches the list of passed valid locales.
  */
-class LocaleSelectorMiddleware
+class LocaleSelectorMiddleware implements MiddlewareInterface
 {
     /**
      * List of valid locales for the request
@@ -44,21 +48,25 @@ class LocaleSelectorMiddleware
     }
 
     /**
-     * @param ServerRequestInterface $request  The request.
-     * @param ResponseInterface $response The response.
-     * @param callable $next The next middleware to call.
+     * Set locale based on request headers.
+     *
+     * @param \Psr\Http\Message\ServerRequestInterface $request The request.
+     * @param \Psr\Http\Server\RequestHandlerInterface $handler The request handler.
      * @return \Psr\Http\Message\ResponseInterface A response.
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, $next)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $locale = Locale::acceptFromHttp($request->getHeaderLine('Accept-Language'));
         if (!$locale) {
-            return $next($request, $response);
+            return $handler->handle($request);
         }
-        if (in_array($locale, $this->locales) || $this->locales === ['*']) {
-            I18n::locale($locale);
+        if ($this->locales !== ['*']) {
+            $locale = Locale::lookup($this->locales, $locale, true);
+        }
+        if ($locale || $this->locales === ['*']) {
+            I18n::setLocale($locale);
         }
 
-        return $next($request, $response);
+        return $handler->handle($request);
     }
 }

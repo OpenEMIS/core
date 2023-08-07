@@ -23,7 +23,7 @@ class ThemesController extends PageController
         $this->Page->disable(['add', 'delete']);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.Page.onRenderValue'] = 'onRenderValue';

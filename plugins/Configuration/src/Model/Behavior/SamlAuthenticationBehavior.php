@@ -22,7 +22,7 @@ class SamlAuthenticationBehavior extends Behavior
         $this->model = $this->_table;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = [
             'ControllerAction.Model.beforeAction' => 'beforeAction',

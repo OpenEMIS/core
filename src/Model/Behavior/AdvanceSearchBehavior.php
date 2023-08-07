@@ -25,7 +25,7 @@ class AdvanceSearchBehavior extends Behavior
         'showOnLoad' => 0
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->_table->addBehavior('Area.Area');
     }
@@ -36,7 +36,7 @@ class AdvanceSearchBehavior extends Behavior
 ** Link/Map ControllerActionComponent events
 **
 ******************************************************************************************************************/
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [];

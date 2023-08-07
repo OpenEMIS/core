@@ -1,16 +1,16 @@
 <?php
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         1.2.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Test\Fixture;
 
@@ -19,9 +19,8 @@ use Cake\TestSuite\Fixture\TestFixture;
 /**
  * UuiditemFixture
  */
-class UuiditemsFixture extends TestFixture
+class UuidItemsFixture extends TestFixture
 {
-
     /**
      * fields property
      *
@@ -31,7 +30,7 @@ class UuiditemsFixture extends TestFixture
         'id' => ['type' => 'uuid'],
         'published' => ['type' => 'boolean', 'null' => false],
         'name' => ['type' => 'string', 'null' => false],
-        '_constraints' => ['primary' => ['type' => 'primary', 'columns' => ['id']]]
+        '_constraints' => ['primary' => ['type' => 'primary', 'columns' => ['id']]],
     ];
 
     /**
@@ -45,6 +44,6 @@ class UuiditemsFixture extends TestFixture
         ['id' => '482b7756-8da0-419a-b21f-27da40cf8569', 'published' => 0, 'name' => 'Item 3'],
         ['id' => '482cfd4b-0e7c-4ea3-9582-4cec40cf8569', 'published' => 0, 'name' => 'Item 4'],
         ['id' => '4831181b-4020-4983-a29b-131440cf8569', 'published' => 0, 'name' => 'Item 5'],
-        ['id' => '483798c8-c7cc-430e-8cf9-4fcc40cf8569', 'published' => 0, 'name' => 'Item 6']
+        ['id' => '483798c8-c7cc-430e-8cf9-4fcc40cf8569', 'published' => 0, 'name' => 'Item 6'],
     ];
 }

@@ -9,7 +9,7 @@ use Cake\Event\Event;
 
 class ViewBehavior extends Behavior
 {
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.view'] = 'view';

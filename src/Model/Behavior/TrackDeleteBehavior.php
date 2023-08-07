@@ -18,7 +18,7 @@ class TrackDeleteBehavior extends Behavior
 ** Link/Map ControllerActionComponent events
 **
 ******************************************************************************************************************/
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [

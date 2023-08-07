@@ -104,7 +104,7 @@ class LabelsTable extends AppTable
         return $this->defaultConfig;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

@@ -18,7 +18,7 @@ class StudentVisitBehavior extends Behavior {
         'Students' => 'Student.Students.name',
     ];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 100];

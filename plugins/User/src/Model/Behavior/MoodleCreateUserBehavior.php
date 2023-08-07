@@ -14,7 +14,7 @@ use Cake\ORM\TableRegistry;
 class MoodleCreateUserBehavior extends Behavior
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
 
     }

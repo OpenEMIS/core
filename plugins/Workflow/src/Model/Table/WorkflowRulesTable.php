@@ -23,7 +23,7 @@ class WorkflowRulesTable extends ControllerActionTable
     private $excludedModels = ['Cases.InstitutionCases'];
     private $ruleTypes = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
@@ -35,7 +35,7 @@ class WorkflowRulesTable extends ControllerActionTable
         //$this->addBehavior('Workflow.RuleStudentBehaviours');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $eventMap = [

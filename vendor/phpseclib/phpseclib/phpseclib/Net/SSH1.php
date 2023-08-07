@@ -205,6 +205,10 @@ class SSH1
      * Dumps the content real-time to a file
      */
     const LOG_REALTIME_FILE = 4;
+    /**
+     * Make sure that the log never gets larger than this
+     */
+    const LOG_MAX_SIZE = 1048576; // 1024 * 1024
     /**#@-*/
 
     /**#@+
@@ -360,7 +364,7 @@ class SSH1
      * @var array
      * @access private
      */
-    var $protocol_flag_log = array();
+    var $protocol_flags_log = array();
 
     /**
      * Message Log
@@ -406,6 +410,18 @@ class SSH1
      * @access private
      */
     var $interactiveBuffer = '';
+
+    /**
+     * Current log size
+     *
+     * Should never exceed self::LOG_MAX_SIZE
+     *
+     * @see self::_send_binary_packet()
+     * @see self::_get_binary_packet()
+     * @var int
+     * @access private
+     */
+    var $log_size;
 
     /**
      * Timeout
@@ -812,6 +828,7 @@ class SSH1
      * @see self::interactiveRead()
      * @see self::interactiveWrite()
      * @param string $cmd
+     * @param bool $block
      * @return mixed
      * @access public
      */
@@ -916,7 +933,7 @@ class SSH1
     /**
      * Returns the output of an interactive shell when there's a match for $expect
      *
-     * $expect can take the form of a string literal or, if $mode == self::READ__REGEX,
+     * $expect can take the form of a string literal or, if $mode == self::READ_REGEX,
      * a regular expression.
      *
      * @see self::write()
@@ -925,7 +942,7 @@ class SSH1
      * @return bool
      * @access public
      */
-    function read($expect, $mode = self::READ__SIMPLE)
+    function read($expect, $mode = self::READ_SIMPLE)
     {
         if (!($this->bitmap & self::MASK_LOGIN)) {
             user_error('Operation disallowed prior to login()');
@@ -939,7 +956,7 @@ class SSH1
 
         $match = $expect;
         while (true) {
-            if ($mode == self::READ__REGEX) {
+            if ($mode == self::READ_REGEX) {
                 preg_match($expect, $this->interactiveBuffer, $matches);
                 $match = isset($matches[0]) ? $matches[0] : '';
             }
@@ -1124,6 +1141,9 @@ class SSH1
 
         while ($length > 0) {
             $temp = fread($this->fsock, $length);
+            if (strlen($temp) != $length) {
+                return false;
+            }
             $raw.= $temp;
             $length-= strlen($temp);
         }
@@ -1382,7 +1402,6 @@ class SSH1
      * named constants from it, using the value as the name of the constant and the index as the value of the constant.
      * If any of the constants that would be defined already exists, none of the constants will be defined.
      *
-     * @param array $array
      * @access private
      */
     function _define_array()
@@ -1415,7 +1434,7 @@ class SSH1
 
         switch (NET_SSH1_LOGGING) {
             case self::LOG_SIMPLE:
-                return $this->message_number_log;
+                return $this->protocol_flags_log;
                 break;
             case self::LOG_COMPLEX:
                 return $this->_format_log($this->message_log, $this->protocol_flags_log);
@@ -1581,7 +1600,8 @@ class SSH1
      *
      * Makes sure that only the last 1MB worth of packets will be logged
      *
-     * @param string $data
+     * @param int $protocol_flags
+     * @param string $message
      * @access private
      */
     function _append_log($protocol_flags, $message)

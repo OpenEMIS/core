@@ -30,7 +30,7 @@ class GuardianStudentBehavior extends Behavior {
 			;
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$newEvents = [
 			'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',

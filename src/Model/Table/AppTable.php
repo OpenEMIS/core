@@ -15,6 +15,8 @@ use Cake\Validation\Validator;
 use ControllerAction\Model\Traits\UtilityTrait;
 use ControllerAction\Model\Traits\ControllerActionTrait;
 use Page\Traits\OptionListTrait;
+use Cake\I18n\I18n;
+use Cake\Database\Schema\TableSchema;
 
 class AppTable extends Table
 {
@@ -23,10 +25,13 @@ class AppTable extends Table
     use LogTrait;
     use OptionListTrait;
     const OpenEMIS = 'OpenEMIS ID';
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        Time::$defaultLocale = 'en_US';
-        Date::$defaultLocale = 'en_US';
+        //Time::$defaultLocale = 'en_US';
+        //Date::$defaultLocale = 'en_US';
+
+        $defaultLocale = Time::getDefaultLocale();
+        Time::setDefaultLocale('en_US');
 
         $_config = [
             'Modified' => true,
@@ -35,7 +40,7 @@ class AppTable extends Table
         $_config = array_merge($_config, $config);
         parent::initialize($config);
 
-        $schema = $this->schema();
+        $schema = $this->getSchema();
         $columns = $schema->columns();
 
         if (in_array('modified', $columns) || in_array('created', $columns)) {
@@ -68,9 +73,9 @@ class AppTable extends Table
         $dateFields = [];
         $timeFields = [];
         foreach ($columns as $column) {
-            if ($schema->columnType($column) == 'date') {
+            if ($schema->getColumnType($column) == 'date') {
                 $dateFields[] = $column;
-            } elseif ($schema->columnType($column) == 'time') {
+            } elseif ($schema->getColumnType($column) == 'time') {
                 $timeFields[] = $column;
             }
         }
@@ -92,7 +97,7 @@ class AppTable extends Table
         $this->_controllerActionEvents['Restful.Model.onRenderTime'] = 'onRestfulRenderTime';
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $schema = $this->schema();
         $columns = $schema->columns();

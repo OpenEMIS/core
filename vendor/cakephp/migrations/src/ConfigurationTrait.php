@@ -1,22 +1,28 @@
 <?php
+declare(strict_types=1);
+
 /**
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
+ * @license       https://www.opensource.org/licenses/mit-license.php MIT License
  */
 namespace Migrations;
 
+use Cake\Core\Configure;
+use Cake\Database\Driver\Mysql;
+use Cake\Database\Driver\Postgres;
+use Cake\Database\Driver\Sqlite;
+use Cake\Database\Driver\Sqlserver;
 use Cake\Datasource\ConnectionManager;
 use Migrations\Util\UtilTrait;
 use Phinx\Config\Config;
-use Symfony\Component\Console\Input\InputArgument;
+use Phinx\Config\ConfigInterface;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Contains a set of methods designed as overrides for
@@ -26,13 +32,12 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 trait ConfigurationTrait
 {
-
     use UtilTrait;
 
     /**
      * The configuration object that phinx uses for connecting to the database
      *
-     * @var \Phinx\Config\Config
+     * @var \Phinx\Config\Config|null
      */
     protected $configuration;
 
@@ -46,60 +51,101 @@ trait ConfigurationTrait
     /**
      * The console input instance
      *
-     * @var \Symfony\Component\Console\Input\Input
+     * @var \Symfony\Component\Console\Input\InputInterface|null
      */
     protected $input;
+
+    /**
+     * @return \Symfony\Component\Console\Input\InputInterface
+     */
+    protected function input(): InputInterface
+    {
+        if ($this->input === null) {
+            throw new \RuntimeException('Input not set');
+        }
+
+        return $this->input;
+    }
+
+    /**
+     * Overrides the original method from phinx to just always return true to
+     * avoid calling loadConfig method which will throw an exception as we rely on
+     * the overridden getConfig method.
+     *
+     * @return bool
+     */
+    public function hasConfig(): bool
+    {
+        return true;
+    }
 
     /**
      * Overrides the original method from phinx in order to return a tailored
      * Config object containing the connection details for the database.
      *
-     * @param bool $forceRefresh
-     * @return \Phinx\Config\Config
+     * @param bool $forceRefresh Refresh config.
+     * @return \Phinx\Config\ConfigInterface
      */
-    public function getConfig($forceRefresh = false)
+    public function getConfig($forceRefresh = false): ConfigInterface
     {
         if ($this->configuration && $forceRefresh === false) {
             return $this->configuration;
         }
 
-        $migrationsPath = $this->getOperationsPath($this->input);
-        $seedsPath = $this->getOperationsPath($this->input, 'Seeds');
-        $plugin = $this->getPlugin($this->input);
+        $migrationsPath = $this->getOperationsPath($this->input());
+        $seedsPath = $this->getOperationsPath($this->input(), 'Seeds');
+        $plugin = $this->getPlugin($this->input());
 
         if (!is_dir($migrationsPath)) {
+            if (!Configure::read('debug')) {
+                throw new \RuntimeException(sprintf(
+                    'Migrations path `%s` does not exist and cannot be created because `debug` is disabled.',
+                    $migrationsPath
+                ));
+            }
             mkdir($migrationsPath, 0777, true);
         }
 
-        if (!is_dir($seedsPath)) {
+        if (Configure::read('debug') && !is_dir($seedsPath)) {
             mkdir($seedsPath, 0777, true);
         }
 
         $phinxTable = $this->getPhinxTable($plugin);
 
-        $connection = $this->getConnectionName($this->input);
+        $connection = $this->getConnectionName($this->input());
 
-        $connectionConfig = ConnectionManager::config($connection);
+        $connectionConfig = (array)ConnectionManager::getConfig($connection);
+
         $adapterName = $this->getAdapterName($connectionConfig['driver']);
+        $dsnOptions = $this->extractDsnOptions($adapterName, $connectionConfig);
+
+        $templatePath = dirname(__DIR__) . DS . 'templates' . DS;
         $config = [
             'paths' => [
                 'migrations' => $migrationsPath,
                 'seeds' => $seedsPath,
             ],
+            'templates' => [
+                'file' => $templatePath . 'Phinx' . DS . 'create.php.template',
+            ],
+            'migration_base_class' => 'Migrations\AbstractMigration',
             'environments' => [
                 'default_migration_table' => $phinxTable,
-                'default_database' => 'default',
+                'default_environment' => 'default',
                 'default' => [
                     'adapter' => $adapterName,
-                    'host' => isset($connectionConfig['host']) ? $connectionConfig['host'] : null,
-                    'user' => isset($connectionConfig['username']) ? $connectionConfig['username'] : null,
-                    'pass' => isset($connectionConfig['password']) ? $connectionConfig['password'] : null,
-                    'port' => isset($connectionConfig['port']) ? $connectionConfig['port'] : null,
+                    'host' => $connectionConfig['host'] ?? null,
+                    'user' => $connectionConfig['username'] ?? null,
+                    'pass' => $connectionConfig['password'] ?? null,
+                    'port' => $connectionConfig['port'] ?? null,
                     'name' => $connectionConfig['database'],
-                    'charset' => isset($connectionConfig['encoding']) ? $connectionConfig['encoding'] : null,
-                    'unix_socket' => isset($connectionConfig['unix_socket']) ? $connectionConfig['unix_socket'] : null,
-                ]
-            ]
+                    'charset' => $connectionConfig['encoding'] ?? null,
+                    'unix_socket' => $connectionConfig['unix_socket'] ?? null,
+                    'suffix' => '',
+                    'dsn_options' => $dsnOptions,
+                ],
+            ],
+            'feature_flags' => $this->featureFlags(),
         ];
 
         if ($adapterName === 'pgsql') {
@@ -119,7 +165,37 @@ trait ConfigurationTrait
             }
         }
 
+        if ($adapterName === 'sqlite') {
+            if (!empty($connectionConfig['cache'])) {
+                $config['environments']['default']['cache'] = $connectionConfig['cache'];
+            }
+            if (!empty($connectionConfig['mode'])) {
+                $config['environments']['default']['mode'] = $connectionConfig['mode'];
+            }
+        }
+
+        if (!empty($connectionConfig['flags'])) {
+            $config['environments']['default'] +=
+                $this->translateConnectionFlags($connectionConfig['flags'], $adapterName);
+        }
+
         return $this->configuration = new Config($config);
+    }
+
+    /**
+     * The following feature flags are disabled by default to keep BC.
+     * The next major will turn them on. You can do so on your own before already.
+     *
+     * @return array<string, bool>
+     */
+    protected function featureFlags(): array
+    {
+        $defaults = [
+            'unsigned_primary_keys' => false,
+            'column_null_default' => false,
+        ];
+
+        return (array)Configure::read('Migrations') + $defaults;
     }
 
     /**
@@ -127,98 +203,29 @@ trait ConfigurationTrait
      * that was configured for the configuration.
      *
      * @param string $driver The driver name as configured for the CakePHP app.
-     * @return \Phinx\Config\Config
-     * @throws \InvalidArgumentexception when it was not possible to infer the information
+     * @return string Name of the adapter.
+     * @throws \InvalidArgumentException when it was not possible to infer the information
      * out of the provided database configuration
+     * @phpstan-param class-string $driver
      */
     public function getAdapterName($driver)
     {
         switch ($driver) {
-            case 'Cake\Database\Driver\Mysql':
-            case is_subclass_of($driver, 'Cake\Database\Driver\Mysql'):
+            case Mysql::class:
+            case is_subclass_of($driver, Mysql::class):
                 return 'mysql';
-            case 'Cake\Database\Driver\Postgres':
-            case is_subclass_of($driver, 'Cake\Database\Driver\Postgres'):
+            case Postgres::class:
+            case is_subclass_of($driver, Postgres::class):
                 return 'pgsql';
-            case 'Cake\Database\Driver\Sqlite':
-            case is_subclass_of($driver, 'Cake\Database\Driver\Sqlite'):
+            case Sqlite::class:
+            case is_subclass_of($driver, Sqlite::class):
                 return 'sqlite';
-            case 'Cake\Database\Driver\Sqlserver':
-            case is_subclass_of($driver, 'Cake\Database\Driver\Sqlserver'):
+            case Sqlserver::class:
+            case is_subclass_of($driver, Sqlserver::class):
                 return 'sqlsrv';
         }
 
-        throw new \InvalidArgumentexception('Could not infer database type from driver');
-    }
-
-    /**
-     * Overrides the action execute method in order to vanish the idea of environments
-     * from phinx. CakePHP does not believe in the idea of having in-app environments
-     *
-     * @param \Symfony\Component\Console\Input\InputInterface $input the input object
-     * @param \Symfony\Component\Console\Output\OutputInterface $output the output object
-     * @return void
-     */
-    protected function execute(InputInterface $input, OutputInterface $output)
-    {
-        $this->beforeExecute($input, $output);
-        parent::execute($input, $output);
-    }
-
-    /**
-     * Overrides the action execute method in order to vanish the idea of environments
-     * from phinx. CakePHP does not believe in the idea of having in-app environments
-     *
-     * @param \Symfony\Component\Console\Input\InputInterface $input the input object
-     * @param \Symfony\Component\Console\Output\OutputInterface $output the output object
-     * @return void
-     */
-    protected function beforeExecute(InputInterface $input, OutputInterface $output)
-    {
-        $this->setInput($input);
-        $this->addOption('--environment', '-e', InputArgument::OPTIONAL);
-        $input->setOption('environment', 'default');
-    }
-
-    /**
-     * Sets the input object that should be used for the command class. This object
-     * is used to inspect the extra options that are needed for CakePHP apps.
-     *
-     * @param \Symfony\Component\Console\Input\InputInterface $input the input object
-     * @return void
-     */
-    public function setInput(InputInterface $input)
-    {
-        $this->input = $input;
-    }
-
-    /**
-     * A callback method that is used to inject the PDO object created from phinx into
-     * the CakePHP connection. This is needed in case the user decides to use tables
-     * from the ORM and executes queries.
-     *
-     * @param \Symfony\Component\Console\Input\InputInterface $input the input object
-     * @param \Symfony\Component\Console\Output\OutputInterface $output the output object
-     * @return void
-     */
-    public function bootstrap(InputInterface $input, OutputInterface $output)
-    {
-        parent::bootstrap($input, $output);
-        $name = $this->getConnectionName($input);
-        $this->connection = $name;
-        ConnectionManager::alias($name, 'default');
-        $connection = ConnectionManager::get($name);
-
-        $manager = $this->getManager();
-
-        if (!$manager instanceof CakeManager) {
-            $this->setManager(new CakeManager($this->getConfig(), $input, $output));
-        }
-        $env = $this->getManager()->getEnvironment('default');
-        $adapter = $env->getAdapter();
-        if (!$adapter instanceof CakeAdapter) {
-            $env->setAdapter(new CakeAdapter($adapter, $connection));
-        }
+        throw new \InvalidArgumentException('Could not infer database type from driver');
     }
 
     /**
@@ -226,13 +233,101 @@ trait ConfigurationTrait
      *
      * @param \Symfony\Component\Console\Input\InputInterface $input the input object
      * @return string
+     * @psalm-suppress InvalidReturnType
      */
     protected function getConnectionName(InputInterface $input)
     {
-        $connection = 'default';
-        if ($input->getOption('connection')) {
-            $connection = $input->getOption('connection');
+        return $input->getOption('connection') ?: 'default';
+    }
+
+    /**
+     * Translates driver specific connection flags (PDO attributes) to
+     * Phinx compatible adapter options.
+     *
+     * Currently Phinx supports of the following flags:
+     *
+     * - *Most* of `PDO::ATTR_*`
+     * - `PDO::MYSQL_ATTR_*`
+     * - `PDO::PGSQL_ATTR_*`
+     * - `PDO::SQLSRV_ATTR_*`
+     *
+     * ### Example:
+     *
+     * ```
+     * [
+     *     \PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+     *     \PDO::SQLSRV_ATTR_DIRECT_QUERY => true,
+     *     // ...
+     * ]
+     * ```
+     *
+     * will be translated to:
+     *
+     * ```
+     * [
+     *     'mysql_attr_ssl_verify_server_cert' => false,
+     *     'sqlsrv_attr_direct_query' => true,
+     *     // ...
+     * ]
+     * ```
+     *
+     * @param array $flags An array of connection flags.
+     * @param string $adapterName The adapter name, eg `mysql` or `sqlsrv`.
+     * @return array An array of Phinx compatible connection attribute options.
+     */
+    protected function translateConnectionFlags(array $flags, $adapterName)
+    {
+        $pdo = new \ReflectionClass(\PDO::class);
+        $constants = $pdo->getConstants();
+
+        $attributes = [];
+        foreach ($constants as $name => $value) {
+            $name = strtolower($name);
+            if (strpos($name, "{$adapterName}_attr_") === 0 || strpos($name, 'attr_') === 0) {
+                $attributes[$value] = $name;
+            }
         }
-        return $connection;
+
+        $options = [];
+        foreach ($flags as $flag => $value) {
+            if (isset($attributes[$flag])) {
+                $options[$attributes[$flag]] = $value;
+            }
+        }
+
+        return $options;
+    }
+
+    /**
+     * Extracts DSN options from the connection configuration.
+     *
+     * @param string $adapterName The adapter name.
+     * @param array $config The connection configuration.
+     * @return array
+     */
+    protected function extractDsnOptions(string $adapterName, array $config): array
+    {
+        $dsnOptionsMap = [];
+
+        // SQLServer is currently the only Phinx adapter that supports DSN options
+        if ($adapterName === 'sqlsrv') {
+            $dsnOptionsMap = [
+                'connectionPooling' => 'ConnectionPooling',
+                'failoverPartner' => 'Failover_Partner',
+                'loginTimeout' => 'LoginTimeout',
+                'multiSubnetFailover' => 'MultiSubnetFailover',
+                'encrypt' => 'Encrypt',
+                'trustServerCertificate' => 'TrustServerCertificate',
+            ];
+        }
+
+        $suppliedDsnOptions = array_intersect_key($dsnOptionsMap, $config);
+
+        $dsnOptions = [];
+        foreach ($suppliedDsnOptions as $alias => $option) {
+            $dsnOptions[$option] = $config[$alias];
+        }
+
+        return $dsnOptions;
     }
 }

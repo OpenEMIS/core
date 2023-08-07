@@ -14,9 +14,9 @@ use Cake\Validation\Validator;
 class SpecialNeedsAssessmentsTable extends ControllerActionTable
 {
     const COMMENT_MAX_LENGTH = 350;
-    public function initialize(array $config)
+    public function initialize(array $config): array
     {
-        $this->table('user_special_needs_assessments');
+        $this->SetTable('user_special_needs_assessments');
         parent::initialize($config);
 
         $this->belongsTo('SpecialNeedsTypes', ['className' => 'SpecialNeeds.SpecialNeedsTypes', 'foreignKey' => 'special_need_type_id', 'conditions' => array('SpecialNeedsTypes.type' => 2, )]);
@@ -45,7 +45,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -58,7 +58,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             ->allowEmpty('file_content');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';

@@ -1,15 +1,17 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Utility;
 
@@ -19,7 +21,6 @@ namespace Cake\Utility;
  */
 trait MergeVariablesTrait
 {
-
     /**
      * Merge the list of $properties with all parent classes of the current class.
      *
@@ -28,13 +29,13 @@ trait MergeVariablesTrait
      * - `associative` - A list of properties that should be treated as associative arrays.
      *   Properties in this list will be passed through Hash::normalize() before merging.
      *
-     * @param array $properties An array of properties and the merge strategy for them.
-     * @param array $options The options to use when merging properties.
+     * @param array<string> $properties An array of properties and the merge strategy for them.
+     * @param array<string, mixed> $options The options to use when merging properties.
      * @return void
      */
-    protected function _mergeVars($properties, $options = [])
+    protected function _mergeVars(array $properties, array $options = []): void
     {
-        $class = get_class($this);
+        $class = static::class;
         $parents = [];
         while (true) {
             $parent = get_parent_class($class);
@@ -60,16 +61,17 @@ trait MergeVariablesTrait
      * Merge a single property with the values declared in all parent classes.
      *
      * @param string $property The name of the property being merged.
-     * @param array $parentClasses An array of classes you want to merge with.
-     * @param array $options Options for merging the property, see _mergeVars()
+     * @param array<string> $parentClasses An array of classes you want to merge with.
+     * @param array<string, mixed> $options Options for merging the property, see _mergeVars()
      * @return void
      */
-    protected function _mergeProperty($property, $parentClasses, $options)
+    protected function _mergeProperty(string $property, array $parentClasses, array $options): void
     {
         $thisValue = $this->{$property};
         $isAssoc = false;
-        if (isset($options['associative']) &&
-            in_array($property, (array)$options['associative'])
+        if (
+            isset($options['associative']) &&
+            in_array($property, (array)$options['associative'], true)
         ) {
             $isAssoc = true;
         }
@@ -96,10 +98,10 @@ trait MergeVariablesTrait
      *
      * @param array $current The current merged value.
      * @param array $parent The parent class' value.
-     * @param bool $isAssoc Whether or not the merging should be done in associative mode.
-     * @return mixed The updated value.
+     * @param bool $isAssoc Whether the merging should be done in associative mode.
+     * @return array The updated value.
      */
-    protected function _mergePropertyData($current, $parent, $isAssoc)
+    protected function _mergePropertyData(array $current, array $parent, bool $isAssoc)
     {
         if (!$isAssoc) {
             return array_merge($parent, $current);

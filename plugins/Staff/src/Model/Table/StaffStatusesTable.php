@@ -6,7 +6,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class StaffStatusesTable extends ControllerActionTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->hasMany('Staff', ['className' => 'Institution.Staff', 'foreignKey' => 'staff_status_id']);
 	}

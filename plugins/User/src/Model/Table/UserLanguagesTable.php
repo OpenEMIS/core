@@ -10,10 +10,10 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ConnectionManager;
 
 class UserLanguagesTable extends ControllerActionTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 
-        $this->behaviors()->get('ControllerAction')->config('actions.search', false);
+        $this->behaviors()->get('ControllerAction')->getConfig('actions.search', false);
         $this->addBehavior('User.SetupTab');
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
@@ -59,7 +59,7 @@ class UserLanguagesTable extends ControllerActionTable {
 		// END POCOR-4824
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 
 		return $validator

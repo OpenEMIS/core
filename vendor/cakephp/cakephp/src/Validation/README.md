@@ -22,11 +22,11 @@ $validator
         'message' => 'E-mail must be valid'
     ])
     ->requirePresence('name')
-    ->notEmpty('name', 'We need your name.')
+    ->notEmptyString('name', 'We need your name.')
     ->requirePresence('comment')
-    ->notEmpty('comment', 'You need to give a comment.');
+    ->notEmptyString('comment', 'You need to give a comment.');
 
-$errors = $validator->errors($_POST);
+$errors = $validator->validate($_POST);
 if (!empty($errors)) {
     // display errors.
 }
@@ -34,4 +34,4 @@ if (!empty($errors)) {
 
 ## Documentation
 
-Please make sure you check the [official documentation](http://book.cakephp.org/3.0/en/core-libraries/validation.html)
+Please make sure you check the [official documentation](https://book.cakephp.org/4/en/core-libraries/validation.html)

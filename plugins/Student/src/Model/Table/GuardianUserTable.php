@@ -18,7 +18,7 @@ class GuardianUserTable extends UserTable {
         parent::initialize($config);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Guardian.afterSave'] = 'guardianAfterSave';

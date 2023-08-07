@@ -8,7 +8,7 @@ use ArrayObject;
 
 class ModificationBehavior extends Behavior
 {
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events =  [
             'Model.beforeSave' => ['callable' => 'beforeSave', 'priority' => 5]
         ];

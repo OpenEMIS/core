@@ -5,11 +5,12 @@ namespace Angular\Controller;
 use Angular\Controller\AppController;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Http\ServerRequest;
 
 class AngularController extends AppController
 {
     public $helpers = ['ControllerAction.HtmlField'];
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
     }

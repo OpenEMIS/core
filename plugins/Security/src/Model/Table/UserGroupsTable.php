@@ -19,9 +19,9 @@ class UserGroupsTable extends ControllerActionTable
     use MessagesTrait;
     use HtmlTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_groups');
+        $this->setTable('security_groups');
         parent::initialize($config);
 
         $this->belongsToMany('Users', [
@@ -63,7 +63,7 @@ class UserGroupsTable extends ControllerActionTable
         // $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [

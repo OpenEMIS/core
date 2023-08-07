@@ -1,30 +1,35 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Database\Expression;
 
 use Cake\Database\ExpressionInterface;
 use Cake\Database\ValueBinder;
+use Closure;
 
 /**
- * Represents a single identifier name in the database
+ * Represents a single identifier name in the database.
  *
- * @internal
+ * Identifier values are unsafe with user supplied data.
+ * Values will be quoted when identifier quoting is enabled.
+ *
+ * @see \Cake\Database\Query::identifier()
  */
 class IdentifierExpression implements ExpressionInterface
 {
-
     /**
      * Holds the identifier string
      *
@@ -33,13 +38,20 @@ class IdentifierExpression implements ExpressionInterface
     protected $_identifier;
 
     /**
+     * @var string|null
+     */
+    protected $collation;
+
+    /**
      * Constructor
      *
      * @param string $identifier The identifier this expression represents
+     * @param string|null $collation The identifier collation
      */
-    public function __construct($identifier)
+    public function __construct(string $identifier, ?string $collation = null)
     {
         $this->_identifier = $identifier;
+        $this->collation = $collation;
     }
 
     /**
@@ -48,7 +60,7 @@ class IdentifierExpression implements ExpressionInterface
      * @param string $identifier The identifier
      * @return void
      */
-    public function setIdentifier($identifier)
+    public function setIdentifier(string $identifier): void
     {
         $this->_identifier = $identifier;
     }
@@ -58,30 +70,50 @@ class IdentifierExpression implements ExpressionInterface
      *
      * @return string
      */
-    public function getIdentifier()
+    public function getIdentifier(): string
     {
         return $this->_identifier;
     }
 
     /**
-     * Converts the expression to its string representation
+     * Sets the collation.
      *
-     * @param \Cake\Database\ValueBinder $generator Placeholder generator object
-     * @return string
-     */
-    public function sql(ValueBinder $generator)
-    {
-        return $this->_identifier;
-    }
-
-    /**
-     * This method is a no-op, this is a leaf type of expression,
-     * hence there is nothing to traverse
-     *
-     * @param callable $callable The callable to traverse with.
+     * @param string $collation Identifier collation
      * @return void
      */
-    public function traverse(callable $callable)
+    public function setCollation(string $collation): void
     {
+        $this->collation = $collation;
+    }
+
+    /**
+     * Returns the collation.
+     *
+     * @return string|null
+     */
+    public function getCollation(): ?string
+    {
+        return $this->collation;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function sql(ValueBinder $binder): string
+    {
+        $sql = $this->_identifier;
+        if ($this->collation) {
+            $sql .= ' COLLATE ' . $this->collation;
+        }
+
+        return $sql;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function traverse(Closure $callback)
+    {
+        return $this;
     }
 }

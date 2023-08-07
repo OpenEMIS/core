@@ -1,49 +1,23 @@
 <?php
+
 /**
- * Phinx
- *
- * (The MIT license)
- * Copyright (c) 2015 Rob Morgan
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated * documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- *
- * @package    Phinx
- * @subpackage Phinx\Config
+ * MIT License
+ * For full license information, please view the LICENSE file that was distributed with this source code.
  */
+
 namespace Phinx\Config;
+
+use ArrayAccess;
+use Psr\Container\ContainerInterface;
 
 /**
  * Phinx configuration interface.
  *
  * @package Phinx
- * @author  Woody Gilk
+ * @author Woody Gilk
  */
-interface ConfigInterface extends \ArrayAccess
+interface ConfigInterface extends ArrayAccess
 {
-    /**
-     * Class Constructor
-     *
-     * @param array $configArray Config Array
-     * @param string $configFilePath Optional File Path
-     */
-    public function __construct(array $configArray, $configFilePath = null);
-
     /**
      * Returns the configuration for each environment.
      *
@@ -51,7 +25,7 @@ interface ConfigInterface extends \ArrayAccess
      *
      * @return array|null
      */
-    public function getEnvironments();
+    public function getEnvironments(): ?array;
 
     /**
      * Returns the configuration for a given environment.
@@ -59,18 +33,18 @@ interface ConfigInterface extends \ArrayAccess
      * This method returns <code>null</code> if the specified environment
      * doesn't exist.
      *
-     * @param string $name
+     * @param string $name Environment Name
      * @return array|null
      */
-    public function getEnvironment($name);
+    public function getEnvironment(string $name): ?array;
 
     /**
      * Does the specified environment exist in the configuration file?
      *
      * @param string $name Environment Name
-     * @return boolean
+     * @return bool
      */
-    public function hasEnvironment($name);
+    public function hasEnvironment(string $name): bool;
 
     /**
      * Gets the default environment name.
@@ -78,37 +52,52 @@ interface ConfigInterface extends \ArrayAccess
      * @throws \RuntimeException
      * @return string
      */
-    public function getDefaultEnvironment();
+    public function getDefaultEnvironment(): string;
+
+    /**
+     * Get the aliased value from a supplied alias.
+     *
+     * @param string $alias Alias
+     * @return string|null
+     */
+    public function getAlias(string $alias): ?string;
+
+    /**
+     * Get all the aliased values.
+     *
+     * @return string[]
+     */
+    public function getAliases(): array;
 
     /**
      * Gets the config file path.
      *
-     * @return string
+     * @return string|null
      */
-    public function getConfigFilePath();
+    public function getConfigFilePath(): ?string;
 
     /**
-     * Gets the path of the migration files.
+     * Gets the paths to search for migration files.
      *
-     * @return string
+     * @return string[]
      */
-    public function getMigrationPath();
+    public function getMigrationPaths(): array;
 
     /**
-     * Gets the path of the seed files.
+     * Gets the paths to search for seed files.
      *
-     * @return string
+     * @return string[]
      */
-    public function getSeedPath();
+    public function getSeedPaths(): array;
 
-     /**
+    /**
      * Get the template file name.
      *
      * @return string|false
      */
-     public function getTemplateFile();
+    public function getTemplateFile();
 
-     /**
+    /**
      * Get the template class name.
      *
      * @return string|false
@@ -116,10 +105,67 @@ interface ConfigInterface extends \ArrayAccess
     public function getTemplateClass();
 
     /**
-     * Gets the base class name for migrations.
+     * Get the template style to use, either change or up_down.
      *
-     * @param boolean $dropNamespace Return the base migration class name without the namespace.
      * @return string
      */
-    public function getMigrationBaseClassName($dropNamespace = true);
+    public function getTemplateStyle(): string;
+
+    /**
+     * Get the user-provided container for instantiating seeds
+     *
+     * @return \Psr\Container\ContainerInterface|null
+     */
+    public function getContainer(): ?ContainerInterface;
+
+    /**
+     * Get the data domain array.
+     *
+     * @return array
+     */
+    public function getDataDomain(): array;
+
+    /**
+     * Get the version order.
+     *
+     * @return string
+     */
+    public function getVersionOrder(): string;
+
+    /**
+     * Is version order creation time?
+     *
+     * @return bool
+     */
+    public function isVersionOrderCreationTime(): bool;
+
+    /**
+     * Get the bootstrap file path
+     *
+     * @return string|false
+     */
+    public function getBootstrapFile();
+
+    /**
+     * Gets the base class name for migrations.
+     *
+     * @param bool $dropNamespace Return the base migration class name without the namespace.
+     * @return string
+     */
+    public function getMigrationBaseClassName(bool $dropNamespace = true): string;
+
+    /**
+     * Gets the base class name for seeders.
+     *
+     * @param bool $dropNamespace Return the base seeder class name without the namespace.
+     * @return string
+     */
+    public function getSeedBaseClassName(bool $dropNamespace = true): string;
+
+    /**
+     * Get the seeder template file name or null if not set.
+     *
+     * @return string|null
+     */
+    public function getSeedTemplateFile(): ?string;
 }

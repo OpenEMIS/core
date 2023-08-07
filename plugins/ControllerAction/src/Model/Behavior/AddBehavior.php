@@ -13,7 +13,7 @@ use ControllerAction\Model\Traits\EventTrait;
 class AddBehavior extends Behavior {
     use EventTrait;
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.add'] = 'add';
         return $events;

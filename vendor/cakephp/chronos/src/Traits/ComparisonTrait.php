@@ -1,14 +1,16 @@
 <?php
+declare(strict_types=1);
+
 /**
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  * @copyright     Copyright (c) Brian Nesbitt <brian@nesbot.com>
- * @link          http://cakephp.org CakePHP(tm) Project
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @link          https://cakephp.org CakePHP(tm) Project
+ * @license       https://www.opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Chronos\Traits;
 
@@ -34,7 +36,7 @@ trait ComparisonTrait
      *
      * @return array
      */
-    public static function getWeekendDays()
+    public static function getWeekendDays(): array
     {
         return static::$weekendDays;
     }
@@ -45,7 +47,7 @@ trait ComparisonTrait
      * @param array $days Which days are 'weekends'.
      * @return void
      */
-    public static function setWeekendDays($days)
+    public static function setWeekendDays(array $days): void
     {
         static::$weekendDays = $days;
     }
@@ -56,9 +58,20 @@ trait ComparisonTrait
      * @param \Cake\Chronos\ChronosInterface $dt The instance to compare with.
      * @return bool
      */
-    public function eq(ChronosInterface $dt)
+    public function eq(ChronosInterface $dt): bool
     {
         return $this == $dt;
+    }
+
+    /**
+     * Determines if the instance is equal to another
+     *
+     * @param \Cake\Chronos\ChronosInterface $dt The instance to compare with.
+     * @return bool
+     */
+    public function equals(ChronosInterface $dt)
+    {
+        return $this->eq($dt);
     }
 
     /**
@@ -67,9 +80,20 @@ trait ComparisonTrait
      * @param \Cake\Chronos\ChronosInterface $dt The instance to compare with.
      * @return bool
      */
-    public function ne(ChronosInterface $dt)
+    public function ne(ChronosInterface $dt): bool
     {
         return !$this->eq($dt);
+    }
+
+    /**
+     * Determines if the instance is not equal to another
+     *
+     * @param \Cake\Chronos\ChronosInterface $dt The instance to compare with.
+     * @return bool
+     */
+    public function notEquals(ChronosInterface $dt)
+    {
+        return $this->ne($dt);
     }
 
     /**
@@ -78,9 +102,20 @@ trait ComparisonTrait
      * @param \Cake\Chronos\ChronosInterface $dt The instance to compare with.
      * @return bool
      */
-    public function gt(ChronosInterface $dt)
+    public function gt(ChronosInterface $dt): bool
     {
         return $this > $dt;
+    }
+
+    /**
+     * Determines if the instance is greater (after) than another
+     *
+     * @param \Cake\Chronos\ChronosInterface $dt The instance to compare with.
+     * @return bool
+     */
+    public function greaterThan(ChronosInterface $dt)
+    {
+        return $this->gt($dt);
     }
 
     /**
@@ -89,9 +124,20 @@ trait ComparisonTrait
      * @param \Cake\Chronos\ChronosInterface $dt The instance to compare with.
      * @return bool
      */
-    public function gte(ChronosInterface $dt)
+    public function gte(ChronosInterface $dt): bool
     {
         return $this >= $dt;
+    }
+
+    /**
+     * Determines if the instance is greater (after) than or equal to another
+     *
+     * @param \Cake\Chronos\ChronosInterface $dt The instance to compare with.
+     * @return bool
+     */
+    public function greaterThanOrEquals(ChronosInterface $dt)
+    {
+        return $this->gte($dt);
     }
 
     /**
@@ -100,9 +146,20 @@ trait ComparisonTrait
      * @param \Cake\Chronos\ChronosInterface $dt The instance to compare with.
      * @return bool
      */
-    public function lt(ChronosInterface $dt)
+    public function lt(ChronosInterface $dt): bool
     {
         return $this < $dt;
+    }
+
+    /**
+     * Determines if the instance is less (before) than another
+     *
+     * @param \Cake\Chronos\ChronosInterface $dt The instance to compare with.
+     * @return bool
+     */
+    public function lessThan(ChronosInterface $dt)
+    {
+        return $this->lt($dt);
     }
 
     /**
@@ -111,9 +168,20 @@ trait ComparisonTrait
      * @param \Cake\Chronos\ChronosInterface $dt The instance to compare with.
      * @return bool
      */
-    public function lte(ChronosInterface $dt)
+    public function lte(ChronosInterface $dt): bool
     {
         return $this <= $dt;
+    }
+
+    /**
+     * Determines if the instance is less (before) or equal to another
+     *
+     * @param \Cake\Chronos\ChronosInterface $dt The instance to compare with.
+     * @return bool
+     */
+    public function lessThanOrEquals(ChronosInterface $dt)
+    {
+        return $this->lte($dt);
     }
 
     /**
@@ -124,7 +192,7 @@ trait ComparisonTrait
      * @param bool $equal Indicates if a > and < comparison should be used or <= or >=
      * @return bool
      */
-    public function between(ChronosInterface $dt1, ChronosInterface $dt2, $equal = true)
+    public function between(ChronosInterface $dt1, ChronosInterface $dt2, bool $equal = true): bool
     {
         if ($dt1->gt($dt2)) {
             $temp = $dt1;
@@ -146,7 +214,7 @@ trait ComparisonTrait
      * @param \Cake\Chronos\ChronosInterface $dt2 The instance to compare with.
      * @return \Cake\Chronos\ChronosInterface
      */
-    public function closest(ChronosInterface $dt1, ChronosInterface $dt2)
+    public function closest(ChronosInterface $dt1, ChronosInterface $dt2): ChronosInterface
     {
         return $this->diffInSeconds($dt1) < $this->diffInSeconds($dt2) ? $dt1 : $dt2;
     }
@@ -158,7 +226,7 @@ trait ComparisonTrait
      * @param \Cake\Chronos\ChronosInterface $dt2 The instance to compare with.
      * @return \Cake\Chronos\ChronosInterface
      */
-    public function farthest(ChronosInterface $dt1, ChronosInterface $dt2)
+    public function farthest(ChronosInterface $dt1, ChronosInterface $dt2): ChronosInterface
     {
         return $this->diffInSeconds($dt1) > $this->diffInSeconds($dt2) ? $dt1 : $dt2;
     }
@@ -167,11 +235,11 @@ trait ComparisonTrait
      * Get the minimum instance between a given instance (default now) and the current instance.
      *
      * @param \Cake\Chronos\ChronosInterface|null $dt The instance to compare with.
-     * @return static
+     * @return \Cake\Chronos\ChronosInterface
      */
-    public function min(ChronosInterface $dt = null)
+    public function min(?ChronosInterface $dt = null): ChronosInterface
     {
-        $dt = ($dt === null) ? static::now($this->tz) : $dt;
+        $dt = $dt ?? static::now($this->tz);
 
         return $this->lt($dt) ? $this : $dt;
     }
@@ -180,11 +248,11 @@ trait ComparisonTrait
      * Get the maximum instance between a given instance (default now) and the current instance.
      *
      * @param \Cake\Chronos\ChronosInterface|null $dt The instance to compare with.
-     * @return static
+     * @return \Cake\Chronos\ChronosInterface
      */
-    public function max(ChronosInterface $dt = null)
+    public function max(?ChronosInterface $dt = null): ChronosInterface
     {
-        $dt = ($dt === null) ? static::now($this->tz) : $dt;
+        $dt = $dt ?? static::now($this->tz);
 
         return $this->gt($dt) ? $this : $dt;
     }
@@ -194,7 +262,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isWeekday()
+    public function isWeekday(): bool
     {
         return !$this->isWeekend();
     }
@@ -204,7 +272,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isWeekend()
+    public function isWeekend(): bool
     {
         return in_array($this->dayOfWeek, self::$weekendDays, true);
     }
@@ -214,7 +282,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isYesterday()
+    public function isYesterday(): bool
     {
         return $this->toDateString() === static::yesterday($this->tz)->toDateString();
     }
@@ -224,7 +292,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isToday()
+    public function isToday(): bool
     {
         return $this->toDateString() === static::now($this->tz)->toDateString();
     }
@@ -234,7 +302,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isTomorrow()
+    public function isTomorrow(): bool
     {
         return $this->toDateString() === static::tomorrow($this->tz)->toDateString();
     }
@@ -244,9 +312,9 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isNextWeek()
+    public function isNextWeek(): bool
     {
-        return $this->weekOfYear === static::now($this->tz)->addWeek()->weekOfYear;
+        return $this->format('W o') === static::now($this->tz)->addWeek()->format('W o');
     }
 
     /**
@@ -254,9 +322,9 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isLastWeek()
+    public function isLastWeek(): bool
     {
-        return $this->weekOfYear === static::now($this->tz)->subWeek()->weekOfYear;
+        return $this->format('W o') === static::now($this->tz)->subWeek()->format('W o');
     }
 
     /**
@@ -264,9 +332,9 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isNextMonth()
+    public function isNextMonth(): bool
     {
-        return $this->month === static::now($this->tz)->addMonth()->month;
+        return $this->format('m Y') === static::now($this->tz)->addMonth()->format('m Y');
     }
 
     /**
@@ -274,9 +342,9 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isLastMonth()
+    public function isLastMonth(): bool
     {
-        return $this->month === static::now($this->tz)->subMonth()->month;
+        return $this->format('m Y') === static::now($this->tz)->subMonth()->format('m Y');
     }
 
     /**
@@ -284,7 +352,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isNextYear()
+    public function isNextYear(): bool
     {
         return $this->year === static::now($this->tz)->addYear()->year;
     }
@@ -294,7 +362,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isLastYear()
+    public function isLastYear(): bool
     {
         return $this->year === static::now($this->tz)->subYear()->year;
     }
@@ -304,7 +372,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isFuture()
+    public function isFuture(): bool
     {
         return $this->gt(static::now($this->tz));
     }
@@ -314,7 +382,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isPast()
+    public function isPast(): bool
     {
         return $this->lt(static::now($this->tz));
     }
@@ -324,7 +392,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isLeapYear()
+    public function isLeapYear(): bool
     {
         return $this->format('L') === '1';
     }
@@ -335,7 +403,7 @@ trait ComparisonTrait
      * @param \Cake\Chronos\ChronosInterface $dt The instance to check against.
      * @return bool
      */
-    public function isSameDay(ChronosInterface $dt)
+    public function isSameDay(ChronosInterface $dt): bool
     {
         return $this->toDateString() === $dt->toDateString();
     }
@@ -345,7 +413,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isSunday()
+    public function isSunday(): bool
     {
         return $this->dayOfWeek === ChronosInterface::SUNDAY;
     }
@@ -355,7 +423,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isMonday()
+    public function isMonday(): bool
     {
         return $this->dayOfWeek === ChronosInterface::MONDAY;
     }
@@ -365,7 +433,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isTuesday()
+    public function isTuesday(): bool
     {
         return $this->dayOfWeek === ChronosInterface::TUESDAY;
     }
@@ -375,7 +443,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isWednesday()
+    public function isWednesday(): bool
     {
         return $this->dayOfWeek === ChronosInterface::WEDNESDAY;
     }
@@ -385,7 +453,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isThursday()
+    public function isThursday(): bool
     {
         return $this->dayOfWeek === ChronosInterface::THURSDAY;
     }
@@ -395,7 +463,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isFriday()
+    public function isFriday(): bool
     {
         return $this->dayOfWeek === ChronosInterface::FRIDAY;
     }
@@ -405,7 +473,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isSaturday()
+    public function isSaturday(): bool
     {
         return $this->dayOfWeek === ChronosInterface::SATURDAY;
     }
@@ -415,7 +483,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isThisWeek()
+    public function isThisWeek(): bool
     {
         return static::now($this->getTimezone())->format('W o') === $this->format('W o');
     }
@@ -425,7 +493,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isThisMonth()
+    public function isThisMonth(): bool
     {
         return static::now($this->getTimezone())->format('m Y') === $this->format('m Y');
     }
@@ -435,7 +503,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isThisYear()
+    public function isThisYear(): bool
     {
         return static::now($this->getTimezone())->format('Y') === $this->format('Y');
     }
@@ -444,13 +512,11 @@ trait ComparisonTrait
      * Check if its the birthday. Compares the date/month values of the two dates.
      *
      * @param \Cake\Chronos\ChronosInterface|null $dt The instance to compare with or null to use current day.
-     * @return static
+     * @return bool
      */
-    public function isBirthday(ChronosInterface $dt = null)
+    public function isBirthday(?ChronosInterface $dt = null): bool
     {
-        if ($dt === null) {
-            $dt = static::now($this->tz);
-        }
+        $dt = $dt ?? static::now($this->tz);
 
         return $this->format('md') === $dt->format('md');
     }
@@ -462,7 +528,7 @@ trait ComparisonTrait
      *    Example of valid types: 6 hours, 2 days, 1 minute.
      * @return bool
      */
-    public function wasWithinLast($timeInterval)
+    public function wasWithinLast($timeInterval): bool
     {
         $now = new static();
         $interval = $now->copy()->modify('-' . $timeInterval);
@@ -478,7 +544,7 @@ trait ComparisonTrait
      *    Example of valid types: 6 hours, 2 days, 1 minute.
      * @return bool
      */
-    public function isWithinNext($timeInterval)
+    public function isWithinNext($timeInterval): bool
     {
         $now = new static();
         $interval = $now->copy()->modify('+' . $timeInterval);
@@ -492,7 +558,7 @@ trait ComparisonTrait
      *
      * @return bool
      */
-    public function isMutable()
+    public function isMutable(): bool
     {
         return $this instanceof DateTime;
     }

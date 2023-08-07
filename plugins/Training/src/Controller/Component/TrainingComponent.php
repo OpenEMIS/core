@@ -8,7 +8,7 @@ class TrainingComponent extends Component
 {
     private $controller;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->controller = $this->_registry->getController();
     }

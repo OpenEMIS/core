@@ -12,7 +12,7 @@ class HighChartBehavior extends Behavior
         '#D5AA68'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
     }
 

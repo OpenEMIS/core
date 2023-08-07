@@ -28,7 +28,7 @@ class StudentReportCardsTable extends ControllerActionTable
         $this->toggle('search', false);
     }
     //POCOR-7321 start
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.viewPDF'] = 'viewPDF';//POCOR-7321

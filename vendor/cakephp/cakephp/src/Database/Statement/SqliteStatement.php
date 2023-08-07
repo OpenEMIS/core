@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Database\Statement;
 
@@ -21,14 +23,12 @@ namespace Cake\Database\Statement;
  */
 class SqliteStatement extends StatementDecorator
 {
-
     use BufferResultsTrait;
 
     /**
-     * {@inheritDoc}
-     *
+     * @inheritDoc
      */
-    public function execute($params = null)
+    public function execute(?array $params = null): bool
     {
         if ($this->_statement instanceof BufferedStatement) {
             $this->_statement = $this->_statement->getInnerStatement();
@@ -46,15 +46,23 @@ class SqliteStatement extends StatementDecorator
      *
      * @return int
      */
-    public function rowCount()
+    public function rowCount(): int
     {
-        if (preg_match('/^(?:DELETE|UPDATE|INSERT)/i', $this->_statement->queryString)) {
+        /** @psalm-suppress NoInterfaceProperties */
+        if (
+            $this->_statement->queryString &&
+            preg_match('/^(?:DELETE|UPDATE|INSERT)/i', $this->_statement->queryString)
+        ) {
             $changes = $this->_driver->prepare('SELECT CHANGES()');
             $changes->execute();
-            $count = $changes->fetch()[0];
+            $row = $changes->fetch();
             $changes->closeCursor();
 
-            return (int)$count;
+            if (!$row) {
+                return 0;
+            }
+
+            return (int)$row[0];
         }
 
         return parent::rowCount();

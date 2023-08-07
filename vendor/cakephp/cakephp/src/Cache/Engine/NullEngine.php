@@ -1,117 +1,115 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Cache\Engine;
 
 use Cake\Cache\CacheEngine;
 
 /**
- * Null cache engine, all operations return false.
+ * Null cache engine, all operations appear to work, but do nothing.
  *
  * This is used internally for when Cache::disable() has been called.
  */
 class NullEngine extends CacheEngine
 {
-
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
-    public function init(array $config = [])
+    public function init(array $config = []): bool
     {
         return true;
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
-    public function gc($expires = null)
+    public function set($key, $value, $ttl = null): bool
     {
-        return false;
+        return true;
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
-    public function write($key, $value)
+    public function setMultiple($values, $ttl = null): bool
     {
+        return true;
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
-    public function writeMany($data)
+    public function get($key, $default = null)
     {
+        return $default;
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
-    public function read($key)
-    {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function readMany($keys)
+    public function getMultiple($keys, $default = null): iterable
     {
         return [];
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
-    public function increment($key, $offset = 1)
+    public function increment(string $key, int $offset = 1)
     {
+        return 1;
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
-    public function decrement($key, $offset = 1)
+    public function decrement(string $key, int $offset = 1)
     {
+        return 0;
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
-    public function delete($key)
+    public function delete($key): bool
     {
+        return true;
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
-    public function deleteMany($keys)
+    public function deleteMultiple($keys): bool
     {
-        return [];
+        return true;
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
-    public function clear($check)
+    public function clear(): bool
     {
-        return false;
+        return true;
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
-    public function clearGroup($group)
+    public function clearGroup(string $group): bool
     {
-        return false;
+        return true;
     }
 }

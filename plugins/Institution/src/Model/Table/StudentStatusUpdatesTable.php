@@ -16,9 +16,9 @@ class StudentStatusUpdatesTable extends ControllerActionTable
     const MAX_PROCESSES = 1;
     const NOT_EXECUTED = 1;
     const EXECUTED = 2;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_status_updates');
+        $this->setTable('student_status_updates');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -31,7 +31,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Students.afterDelete'] = 'studentsAfterDelete';
@@ -90,22 +90,23 @@ class StudentStatusUpdatesTable extends ControllerActionTable
 
     public function getStudentWithdrawalRecords($first = false)
     {
-        $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
-        $academicPeriodDetail = $this->AcademicPeriods->get($currentAcademicPeriod);
+
+        $academicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $currentAcademicPeriod = $academicPeriod->getCurrent();
+        $academicPeriodDetail = $academicPeriod->get($currentAcademicPeriod);
         $academicPeriodEffectiveDate = $academicPeriodDetail->start_date->format('Y-m-d');
         $academicPeriodEndDate = $academicPeriodDetail->end_date->format('Y-m-d');
-       
         $studentWithdrawRecords = [];
         $today = Time::now();
         $today = $today->format('Y-m-d');
-        
+      
         if($academicPeriodEndDate >= $today && $academicPeriodEffectiveDate <= $today){
-            Log::write('debug', 'End date');
+            /*Log::write('debug', 'End date');
             Log::write('debug', $academicPeriodEndDate);
              Log::write('debug', 'Start date');
              Log::write('debug', $academicPeriodEffectiveDate);
              Log::write('debug', 'Today date');
-             Log::write('debug', $today);
+             Log::write('debug', $today);*/
             $query = $this
                 ->find()
                 ->where([
@@ -117,10 +118,11 @@ class StudentStatusUpdatesTable extends ControllerActionTable
                 $studentWithdrawRecords = $query->first();
             } else {
                 $studentWithdrawRecords = $query->toArray();
-            }        
+            }
+           
         }
-        
         return $studentWithdrawRecords;
+        
     }
 
     public function triggerUpdateStudentStatusShell()
@@ -172,6 +174,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
 
     public function checkRequireUpdate()
     {
+
         $today = date('Y-m-d');
         $lastExectuedDate = null;
         $dir = new Folder(ROOT . DS . 'logs');
@@ -183,12 +186,12 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         if (is_null($lastExectuedDate) || $today > $lastExectuedDate) {
             $recordsToUpdate = count($this->getStudentWithdrawalRecords());
             if ($recordsToUpdate > 0) {
-                $this->triggerUpdateStudentStatusShell();
+                //$this->triggerUpdateStudentStatusShell();
             } else {
-                Log::write('debug', 'No records to update');
+                //Log::write('debug', 'No records to update');
             }
         } else {
-            Log::write('debug', 'UpdateStudentStatusShell last executed on '.$lastExectuedDate);
+            //Log::write('debug', 'UpdateStudentStatusShell last executed on '.$lastExectuedDate);
         }
     }
 

@@ -98,7 +98,7 @@ class MandatoryBehavior extends Behavior
             }
 
             if (empty($defaultIdentityType)) {
-                $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+                $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
                 $defaultIdentityTypeEntity = $IdentityTypes->find()
                     ->where([$IdentityTypes->aliasField('default') => 1])
                     ->first();
@@ -237,7 +237,7 @@ class MandatoryBehavior extends Behavior
         $nationality = $Nationalities->findById($nationalityId)->first();
         $defaultIdentityType = (!empty($nationality))? $nationality->identity_type_id: null;
         if (empty($defaultIdentityType)) {
-            $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+            $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
             $defaultIdentityType = $IdentityTypes->find()
                 ->where([$IdentityTypes->aliasField('default') => 1])
                 ->first();
@@ -334,7 +334,7 @@ class MandatoryBehavior extends Behavior
             }
         }
 
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identityTypeOptions = $IdentityTypes->getList();
         $attr['type'] = 'select';
         $attr['fieldName'] = $this->_table->alias().'.identities.0.identity_type_id';

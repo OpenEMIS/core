@@ -1,30 +1,45 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Core\Configure\Engine;
 
 use Cake\Core\Configure\ConfigEngineInterface;
 use Cake\Core\Configure\FileConfigTrait;
-use Cake\Core\Exception\Exception;
+use Cake\Core\Exception\CakeException;
 
 /**
  * JSON engine allows Configure to load configuration values from
  * files containing JSON strings.
+ *
+ * An example JSON file would look like::
+ *
+ * ```
+ * {
+ *     "debug": false,
+ *     "App": {
+ *         "namespace": "MyApp"
+ *     },
+ *     "Security": {
+ *         "salt": "its-secret"
+ *     }
+ * }
+ * ```
  */
 class JsonConfig implements ConfigEngineInterface
 {
-
     use FileConfigTrait;
 
     /**
@@ -39,7 +54,7 @@ class JsonConfig implements ConfigEngineInterface
      *
      * @param string|null $path The path to read config files from. Defaults to CONFIG.
      */
-    public function __construct($path = null)
+    public function __construct(?string $path = null)
     {
         if ($path === null) {
             $path = CONFIG;
@@ -56,24 +71,24 @@ class JsonConfig implements ConfigEngineInterface
      * @param string $key The identifier to read from. If the key has a . it will be treated
      *   as a plugin prefix.
      * @return array Parsed configuration values.
-     * @throws \Cake\Core\Exception\Exception When files don't exist or when
+     * @throws \Cake\Core\Exception\CakeException When files don't exist or when
      *   files contain '..' (as this could lead to abusive reads) or when there
      *   is an error parsing the JSON string.
      */
-    public function read($key)
+    public function read(string $key): array
     {
         $file = $this->_getFilePath($key, true);
 
         $values = json_decode(file_get_contents($file), true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception(sprintf(
-                "Error parsing JSON string fetched from config file \"%s.json\": %s",
+            throw new CakeException(sprintf(
+                'Error parsing JSON string fetched from config file "%s.json": %s',
                 $key,
                 json_last_error_msg()
             ));
         }
         if (!is_array($values)) {
-            throw new Exception(sprintf(
+            throw new CakeException(sprintf(
                 'Decoding JSON config file "%s.json" did not return an array',
                 $key
             ));
@@ -91,7 +106,7 @@ class JsonConfig implements ConfigEngineInterface
      * @param array $data Data to dump.
      * @return bool Success
      */
-    public function dump($key, array $data)
+    public function dump(string $key, array $data): bool
     {
         $filename = $this->_getFilePath($key);
 

@@ -12,9 +12,9 @@ use ArrayObject;
 
 class NationalitiesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('nationalities');
+        $this->setTable('nationalities');
         parent::initialize($config);
 
         $this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);

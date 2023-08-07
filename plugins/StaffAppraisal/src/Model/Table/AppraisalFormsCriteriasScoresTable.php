@@ -44,7 +44,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Appraisal.add.afterSave'] = 'updateAppraisalScore';

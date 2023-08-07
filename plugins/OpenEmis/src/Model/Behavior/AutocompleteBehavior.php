@@ -7,7 +7,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 
 class AutocompleteBehavior extends Behavior {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 	}
 

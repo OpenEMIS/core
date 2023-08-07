@@ -1,25 +1,25 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         1.2.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\I18n;
 
-use Aura\Intl\FormatterLocator;
-use Aura\Intl\PackageLocator;
 use Cake\Cache\Cache;
+use Cake\I18n\Exception\I18nException;
 use Cake\I18n\Formatter\IcuFormatter;
 use Cake\I18n\Formatter\SprintfFormatter;
-use Cake\I18n\TranslatorFactory;
 use Locale;
 
 /**
@@ -27,25 +27,24 @@ use Locale;
  */
 class I18n
 {
-
     /**
      * Default locale
      *
      * @var string
      */
-    const DEFAULT_LOCALE = 'en_US';
+    public const DEFAULT_LOCALE = 'en_US';
 
     /**
      * The translators collection
      *
-     * @var \Aura\Intl\TranslatorLocator
+     * @var \Cake\I18n\TranslatorRegistry|null
      */
     protected static $_collection;
 
     /**
      * The environment default locale
      *
-     * @var string
+     * @var string|null
      */
     protected static $_defaultLocale;
 
@@ -54,96 +53,105 @@ class I18n
      * for getting specific translators based of their name and locale
      * or to configure some aspect of future translations that are not yet constructed.
      *
-     * @return \Aura\Intl\TranslatorLocator The translators collection.
+     * @return \Cake\I18n\TranslatorRegistry The translator collection.
      */
-    public static function translators()
+    public static function translators(): TranslatorRegistry
     {
         if (static::$_collection !== null) {
             return static::$_collection;
         }
 
         static::$_collection = new TranslatorRegistry(
-            new PackageLocator,
+            new PackageLocator(),
             new FormatterLocator([
-                'sprintf' => function () {
-                    return new SprintfFormatter();
-                },
-                'default' => function () {
-                    return new IcuFormatter();
-                },
+                'default' => IcuFormatter::class,
+                'sprintf' => SprintfFormatter::class,
             ]),
-            new TranslatorFactory,
-            static::locale()
+            static::getLocale()
         );
 
-        if (class_exists('Cake\Cache\Cache')) {
-            static::$_collection->setCacher(Cache::engine('_cake_core_'));
+        if (class_exists(Cache::class)) {
+            static::$_collection->setCacher(Cache::pool('_cake_core_'));
         }
 
         return static::$_collection;
     }
 
     /**
-     * Returns an instance of a translator that was configured for the name and passed
-     * locale. If no locale is passed then it takes the value returned by the `locale()` method.
+     * Sets a translator.
      *
-     * This method can be used to configure future translators, this is achieved by passing a callable
+     * Configures future translators, this is achieved by passing a callable
      * as the last argument of this function.
      *
      * ### Example:
      *
      * ```
-     *  I18n::translator('default', 'fr_FR', function () {
-     *      $package = new \Aura\Intl\Package();
+     *  I18n::setTranslator('default', function () {
+     *      $package = new \Cake\I18n\Package();
      *      $package->setMessages([
      *          'Cake' => 'Gâteau'
      *      ]);
      *      return $package;
-     *  });
+     *  }, 'fr_FR');
      *
-     *  $translator = I18n::translator('default', 'fr_FR');
+     *  $translator = I18n::getTranslator('default', 'fr_FR');
      *  echo $translator->translate('Cake');
      * ```
      *
      * You can also use the `Cake\I18n\MessagesFileLoader` class to load a specific
      * file from a folder. For example for loading a `my_translations.po` file from
-     * the `src/Locale/custom` folder, you would do:
+     * the `resources/locales/custom` folder, you would do:
      *
      * ```
-     * I18n::translator(
+     * I18n::setTranslator(
      *  'default',
-     *  'fr_FR',
-     *  new MessagesFileLoader('my_translations', 'custom', 'po');
+     *  new MessagesFileLoader('my_translations', 'custom', 'po'),
+     *  'fr_FR'
      * );
      * ```
      *
      * @param string $name The domain of the translation messages.
+     * @param callable $loader A callback function or callable class responsible for
+     *   constructing a translations package instance.
      * @param string|null $locale The locale for the translator.
-     * @param callable|null $loader A callback function or callable class responsible for
-     * constructing a translations package instance.
-     * @return \Aura\Intl\Translator|null The configured translator.
+     * @return void
      */
-    public static function translator($name = 'default', $locale = null, callable $loader = null)
+    public static function setTranslator(string $name, callable $loader, ?string $locale = null): void
     {
-        if ($loader !== null) {
-            $locale = $locale ?: static::locale();
+        $locale = $locale ?: static::getLocale();
 
-            $loader = static::translators()->setLoaderFallback($name, $loader);
+        $translators = static::translators();
+        $loader = $translators->setLoaderFallback($name, $loader);
+        $packages = $translators->getPackages();
+        $packages->set($name, $locale, $loader);
+    }
 
-            $packages = static::translators()->getPackages();
-            $packages->set($name, $locale, $loader);
-
-            return null;
-        }
-
+    /**
+     * Returns an instance of a translator that was configured for the name and locale.
+     *
+     * If no locale is passed then it takes the value returned by the `getLocale()` method.
+     *
+     * @param string $name The domain of the translation messages.
+     * @param string|null $locale The locale for the translator.
+     * @return \Cake\I18n\Translator The configured translator.
+     * @throws \Cake\I18n\Exception\I18nException
+     */
+    public static function getTranslator(string $name = 'default', ?string $locale = null): Translator
+    {
         $translators = static::translators();
 
         if ($locale) {
             $currentLocale = $translators->getLocale();
-            static::translators()->setLocale($locale);
+            $translators->setLocale($locale);
         }
 
         $translator = $translators->get($name);
+        if ($translator === null) {
+            throw new I18nException(sprintf(
+                'Translator for domain "%s" could not be found.',
+                $name
+            ));
+        }
 
         if (isset($currentLocale)) {
             $translators->setLocale($currentLocale);
@@ -164,14 +172,14 @@ class I18n
      *
      * Loader objects will receive two arguments: The domain name that needs to be
      * built, and the locale that is requested. These objects can assemble the messages
-     * from any source, but must return an `Aura\Intl\Package` object.
+     * from any source, but must return an `Cake\I18n\Package` object.
      *
      * ### Example:
      *
      * ```
      *  use Cake\I18n\MessagesFileLoader;
      *  I18n::config('my_domain', function ($name, $locale) {
-     *      // Load src/Locale/$locale/filename.po
+     *      // Load resources/locales/$locale/filename.po
      *      $fileLoader = new MessagesFileLoader('filename', $locale, 'po');
      *      return $fileLoader();
      *  });
@@ -180,7 +188,7 @@ class I18n
      * You can also assemble the package object yourself:
      *
      * ```
-     *  use Aura\Intl\Package;
+     *  use Cake\I18n\Package;
      *  I18n::config('my_domain', function ($name, $locale) {
      *      $package = new Package('default');
      *      $messages = (...); // Fetch messages for locale from external service.
@@ -195,7 +203,7 @@ class I18n
      * instance to be used for assembling a new translator.
      * @return void
      */
-    public static function config($name, callable $loader)
+    public static function config(string $name, callable $loader): void
     {
         static::translators()->registerLoader($name, $loader);
     }
@@ -204,25 +212,27 @@ class I18n
      * Sets the default locale to use for future translator instances.
      * This also affects the `intl.default_locale` PHP setting.
      *
-     * When called with no arguments it will return the currently configure
-     * locale as stored in the `intl.default_locale` PHP setting.
-     *
-     * @param string|null $locale The name of the locale to set as default.
-     * @return string|null The name of the default locale.
+     * @param string $locale The name of the locale to set as default.
+     * @return void
      */
-    public static function locale($locale = null)
+    public static function setLocale(string $locale): void
     {
-        static::defaultLocale();
-
-        if (!empty($locale)) {
-            Locale::setDefault($locale);
-            if (isset(static::$_collection)) {
-                static::translators()->setLocale($locale);
-            }
-
-            return null;
+        static::getDefaultLocale();
+        Locale::setDefault($locale);
+        if (isset(static::$_collection)) {
+            static::translators()->setLocale($locale);
         }
+    }
 
+    /**
+     * Will return the currently configure locale as stored in the
+     * `intl.default_locale` PHP setting.
+     *
+     * @return string The name of the default locale.
+     */
+    public static function getLocale(): string
+    {
+        static::getDefaultLocale();
         $current = Locale::getDefault();
         if ($current === '') {
             $current = static::DEFAULT_LOCALE;
@@ -233,13 +243,15 @@ class I18n
     }
 
     /**
+     * Returns the default locale.
+     *
      * This returns the default locale before any modifications, i.e.
      * the value as stored in the `intl.default_locale` PHP setting before
      * any manipulation by this class.
      *
      * @return string
      */
-    public static function defaultLocale()
+    public static function getDefaultLocale(): string
     {
         if (static::$_defaultLocale === null) {
             static::$_defaultLocale = Locale::getDefault() ?: static::DEFAULT_LOCALE;
@@ -249,18 +261,26 @@ class I18n
     }
 
     /**
-     * Sets the name of the default messages formatter to use for future
-     * translator instances. By default the `default` and `sprintf` formatters
-     * are available.
+     * Returns the currently configured default formatter.
      *
-     * If called with no arguments, it will return the currently configured value.
-     *
-     * @param string|null $name The name of the formatter to use.
      * @return string The name of the formatter.
      */
-    public static function defaultFormatter($name = null)
+    public static function getDefaultFormatter(): string
     {
-        return static::translators()->defaultFormatter($name);
+        return static::translators()->defaultFormatter();
+    }
+
+    /**
+     * Sets the name of the default messages formatter to use for future
+     * translator instances. By default, the `default` and `sprintf` formatters
+     * are available.
+     *
+     * @param string $name The name of the formatter to use.
+     * @return void
+     */
+    public static function setDefaultFormatter(string $name): void
+    {
+        static::translators()->defaultFormatter($name);
     }
 
     /**
@@ -269,7 +289,7 @@ class I18n
      * @param bool $enable flag to enable or disable fallback
      * @return void
      */
-    public static function useFallback($enable = true)
+    public static function useFallback(bool $enable = true): void
     {
         static::translators()->useFallback($enable);
     }
@@ -280,7 +300,7 @@ class I18n
      *
      * @return void
      */
-    public static function clear()
+    public static function clear(): void
     {
         static::$_collection = null;
     }

@@ -1,29 +1,32 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\View;
 
 use BadMethodCallException;
 use Cake\Cache\Cache;
 use Cake\Datasource\ModelAwareTrait;
+use Cake\Event\EventDispatcherInterface;
 use Cake\Event\EventDispatcherTrait;
-use Cake\Event\EventManager;
-use Cake\Network\Request;
-use Cake\Network\Response;
+use Cake\Event\EventManagerInterface;
+use Cake\Http\Response;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Utility\Inflector;
-use Cake\View\Exception\MissingCellViewException;
+use Cake\View\Exception\MissingCellTemplateException;
 use Cake\View\Exception\MissingTemplateException;
 use Error;
 use Exception;
@@ -33,93 +36,65 @@ use ReflectionMethod;
 /**
  * Cell base.
  */
-abstract class Cell
+#[\AllowDynamicProperties]
+abstract class Cell implements EventDispatcherInterface
 {
-
     use EventDispatcherTrait;
     use LocatorAwareTrait;
     use ModelAwareTrait;
     use ViewVarsTrait;
 
     /**
+     * Constant for folder name containing cell templates.
+     *
+     * @var string
+     */
+    public const TEMPLATE_FOLDER = 'cell';
+
+    /**
      * Instance of the View created during rendering. Won't be set until after
-     * Cell::__toString() is called.
+     * Cell::__toString()/render() is called.
      *
      * @var \Cake\View\View
-     * @deprecated 3.1.0 Use createView() instead.
      */
-    public $View;
+    protected $View;
 
     /**
-     * Name of the template that will be rendered.
-     * This property is inflected from the action name that was invoked.
-     *
-     * @var string
-     */
-    public $template;
-
-    /**
-     * Automatically set to the name of a plugin.
-     *
-     * @var string
-     */
-    public $plugin = null;
-
-    /**
-     * An instance of a Cake\Network\Request object that contains information about the current request.
+     * An instance of a Cake\Http\ServerRequest object that contains information about the current request.
      * This object contains all the information about a request and several methods for reading
      * additional information about the request.
      *
-     * @var \Cake\Network\Request
+     * @var \Cake\Http\ServerRequest
      */
-    public $request;
+    protected $request;
 
     /**
      * An instance of a Response object that contains information about the impending response
      *
-     * @var \Cake\Network\Response
+     * @var \Cake\Http\Response
      */
-    public $response;
-
-    /**
-     * The helpers this cell uses.
-     *
-     * This property is copied automatically when using the CellTrait
-     *
-     * @var array
-     */
-    public $helpers = [];
+    protected $response;
 
     /**
      * The cell's action to invoke.
      *
      * @var string
      */
-    public $action;
+    protected $action;
 
     /**
      * Arguments to pass to cell's action.
      *
      * @var array
      */
-    public $args = [];
-
-    /**
-     * These properties can be set directly on Cell and passed to the View as options.
-     *
-     * @var array
-     * @see \Cake\View\View
-     */
-    protected $_validViewOptions = [
-        'viewPath'
-    ];
+    protected $args = [];
 
     /**
      * List of valid options (constructor's fourth arguments)
-     * Override this property in subclasses to whitelist
+     * Override this property in subclasses to allow
      * which options you want set as properties in your Cell.
      *
-     * @var array
+     * @var array<string>
      */
     protected $_validCellOptions = [];
 
@@ -133,21 +108,23 @@ abstract class Cell
     /**
      * Constructor.
      *
-     * @param \Cake\Network\Request|null $request The request to use in the cell.
-     * @param \Cake\Network\Response|null $response The response to use in the cell.
-     * @param \Cake\Event\EventManager|null $eventManager The eventManager to bind events to.
-     * @param array $cellOptions Cell options to apply.
+     * @param \Cake\Http\ServerRequest $request The request to use in the cell.
+     * @param \Cake\Http\Response $response The response to use in the cell.
+     * @param \Cake\Event\EventManagerInterface|null $eventManager The eventManager to bind events to.
+     * @param array<string, mixed> $cellOptions Cell options to apply.
      */
     public function __construct(
-        Request $request = null,
-        Response $response = null,
-        EventManager $eventManager = null,
+        ServerRequest $request,
+        Response $response,
+        ?EventManagerInterface $eventManager = null,
         array $cellOptions = []
     ) {
-        $this->eventManager($eventManager);
+        if ($eventManager !== null) {
+            $this->setEventManager($eventManager);
+        }
         $this->request = $request;
         $this->response = $response;
-        $this->modelFactory('Table', [$this->tableLocator(), 'get']);
+        $this->modelFactory('Table', [$this->getTableLocator(), 'get']);
 
         $this->_validCellOptions = array_merge(['action', 'args'], $this->_validCellOptions);
         foreach ($this->_validCellOptions as $var) {
@@ -158,6 +135,20 @@ abstract class Cell
         if (!empty($cellOptions['cache'])) {
             $this->_cache = $cellOptions['cache'];
         }
+
+        $this->initialize();
+    }
+
+    /**
+     * Initialization hook method.
+     *
+     * Implement this method to avoid having to overwrite
+     * the constructor and calling parent::__construct().
+     *
+     * @return void
+     */
+    public function initialize(): void
+    {
     }
 
     /**
@@ -166,9 +157,11 @@ abstract class Cell
      * @param string|null $template Custom template name to render. If not provided (null), the last
      * value will be used. This value is automatically set by `CellTrait::cell()`.
      * @return string The rendered cell.
-     * @throws \Cake\View\Exception\MissingCellViewException When a MissingTemplateException is raised during rendering.
+     * @throws \Cake\View\Exception\MissingCellTemplateException
+     *   When a MissingTemplateException is raised during rendering.
+     * @throws \BadMethodCallException
      */
-    public function render($template = null)
+    public function render(?string $template = null): string
     {
         $cache = [];
         if ($this->_cache) {
@@ -182,38 +175,41 @@ abstract class Cell
             } catch (ReflectionException $e) {
                 throw new BadMethodCallException(sprintf(
                     'Class %s does not have a "%s" method.',
-                    get_class($this),
+                    static::class,
                     $this->action
                 ));
             }
 
             $builder = $this->viewBuilder();
 
-            if ($template !== null &&
-                strpos($template, '/') === false &&
-                strpos($template, '.') === false
-            ) {
-                $template = Inflector::underscore($template);
+            if ($template !== null) {
+                $builder->setTemplate($template);
             }
-            if ($template === null) {
-                $template = $builder->template() ?: $this->template;
-            }
-            $builder->layout(false)
-                ->template($template);
 
-            $className = get_class($this);
+            $className = static::class;
             $namePrefix = '\View\Cell\\';
+            /** @psalm-suppress PossiblyFalseOperand */
             $name = substr($className, strpos($className, $namePrefix) + strlen($namePrefix));
             $name = substr($name, 0, -4);
-            if (!$builder->templatePath()) {
-                $builder->templatePath('Cell' . DIRECTORY_SEPARATOR . str_replace('\\', DIRECTORY_SEPARATOR, $name));
+            if (!$builder->getTemplatePath()) {
+                $builder->setTemplatePath(
+                    static::TEMPLATE_FOLDER . DIRECTORY_SEPARATOR . str_replace('\\', DIRECTORY_SEPARATOR, $name)
+                );
             }
+            $template = $builder->getTemplate();
 
-            $this->View = $this->createView();
+            $view = $this->createView();
             try {
-                return $this->View->render($template);
+                return $view->render($template, false);
             } catch (MissingTemplateException $e) {
-                throw new MissingCellViewException(['file' => $template, 'name' => $name]);
+                $attributes = $e->getAttributes();
+                throw new MissingCellTemplateException(
+                    $name,
+                    $attributes['file'],
+                    $attributes['paths'],
+                    null,
+                    $e
+                );
             }
         };
 
@@ -233,22 +229,23 @@ abstract class Cell
      * @param string|null $template The name of the template to be rendered.
      * @return array The cache configuration.
      */
-    protected function _cacheConfig($action, $template = null)
+    protected function _cacheConfig(string $action, ?string $template = null): array
     {
         if (empty($this->_cache)) {
             return [];
         }
-        $template = $template ?: "default";
-        $key = 'cell_' . Inflector::underscore(get_class($this)) . '_' . $action . '_' . $template;
+        $template = $template ?: 'default';
+        $key = 'cell_' . Inflector::underscore(static::class) . '_' . $action . '_' . $template;
         $key = str_replace('\\', '_', $key);
         $default = [
             'config' => 'default',
-            'key' => $key
+            'key' => $key,
         ];
         if ($this->_cache === true) {
             return $default;
         }
 
+        /** @psalm-suppress PossiblyFalseOperand */
         return $this->_cache + $default;
     }
 
@@ -263,34 +260,42 @@ abstract class Cell
      * @return string Rendered cell
      * @throws \Error Include error details for PHP 7 fatal errors.
      */
-    public function __toString()
+    public function __toString(): string
     {
         try {
             return $this->render();
         } catch (Exception $e) {
-            trigger_error(sprintf('Could not render cell - %s [%s, line %d]', $e->getMessage(), $e->getFile(), $e->getLine()), E_USER_WARNING);
+            trigger_error(sprintf(
+                'Could not render cell - %s [%s, line %d]',
+                $e->getMessage(),
+                $e->getFile(),
+                $e->getLine()
+            ), E_USER_WARNING);
 
             return '';
         } catch (Error $e) {
-            throw new Error(sprintf('Could not render cell - %s [%s, line %d]', $e->getMessage(), $e->getFile(), $e->getLine()));
+            throw new Error(sprintf(
+                'Could not render cell - %s [%s, line %d]',
+                $e->getMessage(),
+                $e->getFile(),
+                $e->getLine()
+            ), 0, $e);
         }
     }
 
     /**
      * Debug info.
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function __debugInfo()
+    public function __debugInfo(): array
     {
         return [
-            'plugin' => $this->plugin,
             'action' => $this->action,
             'args' => $this->args,
-            'template' => $this->template,
-            'viewClass' => $this->viewClass,
             'request' => $this->request,
             'response' => $this->response,
+            'viewBuilder' => $this->viewBuilder(),
         ];
     }
 }

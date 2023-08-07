@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         2.4.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Auth;
 
@@ -21,7 +23,6 @@ use Cake\Core\InstanceConfigTrait;
  */
 abstract class AbstractPasswordHasher
 {
-
     use InstanceConfigTrait;
 
     /**
@@ -29,38 +30,37 @@ abstract class AbstractPasswordHasher
      *
      * These are merged with user-provided config when the object is used.
      *
-     * @var array
+     * @var array<string, mixed>
      */
     protected $_defaultConfig = [];
 
     /**
      * Constructor
      *
-     * @param array $config Array of config.
+     * @param array<string, mixed> $config Array of config.
      */
     public function __construct(array $config = [])
     {
-        $this->config($config);
+        $this->setConfig($config);
     }
 
     /**
      * Generates password hash.
      *
-     * @param string|array $password Plain text password to hash or array of data
-     *   required to generate password hash.
-     * @return string Password hash
+     * @param string $password Plain text password to hash.
+     * @return string|false Either the password hash string or false
      */
-    abstract public function hash($password);
+    abstract public function hash(string $password);
 
     /**
      * Check hash. Generate hash from user provided password string or data array
      * and check against existing hash.
      *
-     * @param string|array $password Plain text password to hash or data array.
+     * @param string $password Plain text password to hash.
      * @param string $hashedPassword Existing hashed password.
      * @return bool True if hashes match else false.
      */
-    abstract public function check($password, $hashedPassword);
+    abstract public function check(string $password, string $hashedPassword): bool;
 
     /**
      * Returns true if the password need to be rehashed, due to the password being
@@ -72,7 +72,7 @@ abstract class AbstractPasswordHasher
      * @param string $password The password to verify
      * @return bool
      */
-    public function needsRehash($password)
+    public function needsRehash(string $password): bool
     {
         return password_needs_rehash($password, PASSWORD_DEFAULT);
     }

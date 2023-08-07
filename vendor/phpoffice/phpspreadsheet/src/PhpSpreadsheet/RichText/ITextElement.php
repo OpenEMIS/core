@@ -14,7 +14,7 @@ interface ITextElement
     /**
      * Set text.
      *
-     * @param $text string Text
+     * @param string $text Text
      *
      * @return ITextElement
      */
@@ -23,7 +23,7 @@ interface ITextElement
     /**
      * Get font.
      *
-     * @return \PhpOffice\PhpSpreadsheet\Style\Font
+     * @return null|\PhpOffice\PhpSpreadsheet\Style\Font
      */
     public function getFont();
 

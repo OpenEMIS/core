@@ -7,7 +7,7 @@ use Cake\ORM\TableRegistry;
 
 class SecurityRoleFunctionsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);

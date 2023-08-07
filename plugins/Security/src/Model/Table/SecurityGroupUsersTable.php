@@ -17,7 +17,7 @@ class SecurityGroupUsersTable extends AppTable {
     const IN_PROGRESS = 2;
     const DONE = 3;
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
         parent::initialize($config);
         $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
         $this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
@@ -27,7 +27,7 @@ class SecurityGroupUsersTable extends AppTable {
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];

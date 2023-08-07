@@ -35,7 +35,7 @@ class ArchivedAbsencesTable extends ControllerActionTable
         $this->toggle('edit', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [

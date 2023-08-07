@@ -10,7 +10,7 @@ use App\Model\Traits\OptionsTrait;
 class VisibleBehavior extends Behavior {
 	use OptionsTrait;
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.afterAction'] = 'afterAction';
 		$events['ControllerAction.Model.add.beforeAction'] = 'addBeforeAction';

@@ -174,7 +174,7 @@ trait ControllerActionTrait {
 		return $this->_controllerActionEvents;
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
         $events = parent::implementedEvents();
 
         $controllerActionEvents = $this->getControllerActionEvents();

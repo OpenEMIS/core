@@ -2,7 +2,11 @@
 
 namespace PhpOffice\PhpSpreadsheet\Reader;
 
+use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
+use PhpOffice\PhpSpreadsheet\Reader\Exception as ReaderException;
+use PhpOffice\PhpSpreadsheet\Reader\Security\XmlScanner;
 use PhpOffice\PhpSpreadsheet\Shared\File;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 abstract class BaseReader implements IReader
 {
@@ -36,7 +40,7 @@ abstract class BaseReader implements IReader
      * Restrict which sheets should be loaded?
      * This property holds an array of worksheet names to be loaded. If null, then all worksheets will be loaded.
      *
-     * @var array of string
+     * @var null|string[]
      */
     protected $loadSheetsOnly;
 
@@ -47,132 +51,71 @@ abstract class BaseReader implements IReader
      */
     protected $readFilter;
 
+    /** @var resource */
     protected $fileHandle;
 
     /**
-     * Read data only?
-     *        If this is true, then the Reader will only read data values for cells, it will not read any formatting information.
-     *        If false (the default) it will read data and formatting.
-     *
-     * @return bool
+     * @var ?XmlScanner
      */
+    protected $securityScanner;
+
+    public function __construct()
+    {
+        $this->readFilter = new DefaultReadFilter();
+    }
+
     public function getReadDataOnly()
     {
         return $this->readDataOnly;
     }
 
-    /**
-     * Set read data only
-     *        Set to true, to advise the Reader only to read data values for cells, and to ignore any formatting information.
-     *        Set to false (the default) to advise the Reader to read both data and formatting for cells.
-     *
-     * @param bool $pValue
-     *
-     * @return IReader
-     */
-    public function setReadDataOnly($pValue)
+    public function setReadDataOnly($readCellValuesOnly)
     {
-        $this->readDataOnly = (bool) $pValue;
+        $this->readDataOnly = (bool) $readCellValuesOnly;
 
         return $this;
     }
 
-    /**
-     * Read empty cells?
-     *        If this is true (the default), then the Reader will read data values for all cells, irrespective of value.
-     *        If false it will not read data for cells containing a null value or an empty string.
-     *
-     * @return bool
-     */
     public function getReadEmptyCells()
     {
         return $this->readEmptyCells;
     }
 
-    /**
-     * Set read empty cells
-     *        Set to true (the default) to advise the Reader read data values for all cells, irrespective of value.
-     *        Set to false to advise the Reader to ignore cells containing a null value or an empty string.
-     *
-     * @param bool $pValue
-     *
-     * @return IReader
-     */
-    public function setReadEmptyCells($pValue)
+    public function setReadEmptyCells($readEmptyCells)
     {
-        $this->readEmptyCells = (bool) $pValue;
+        $this->readEmptyCells = (bool) $readEmptyCells;
 
         return $this;
     }
 
-    /**
-     * Read charts in workbook?
-     *        If this is true, then the Reader will include any charts that exist in the workbook.
-     *      Note that a ReadDataOnly value of false overrides, and charts won't be read regardless of the IncludeCharts value.
-     *        If false (the default) it will ignore any charts defined in the workbook file.
-     *
-     * @return bool
-     */
     public function getIncludeCharts()
     {
         return $this->includeCharts;
     }
 
-    /**
-     * Set read charts in workbook
-     *        Set to true, to advise the Reader to include any charts that exist in the workbook.
-     *      Note that a ReadDataOnly value of false overrides, and charts won't be read regardless of the IncludeCharts value.
-     *        Set to false (the default) to discard charts.
-     *
-     * @param bool $pValue
-     *
-     * @return IReader
-     */
-    public function setIncludeCharts($pValue)
+    public function setIncludeCharts($includeCharts)
     {
-        $this->includeCharts = (bool) $pValue;
+        $this->includeCharts = (bool) $includeCharts;
 
         return $this;
     }
 
-    /**
-     * Get which sheets to load
-     * Returns either an array of worksheet names (the list of worksheets that should be loaded), or a null
-     *        indicating that all worksheets in the workbook should be loaded.
-     *
-     * @return mixed
-     */
     public function getLoadSheetsOnly()
     {
         return $this->loadSheetsOnly;
     }
 
-    /**
-     * Set which sheets to load.
-     *
-     * @param mixed $value
-     *        This should be either an array of worksheet names to be loaded, or a string containing a single worksheet name.
-     *        If NULL, then it tells the Reader to read all worksheets in the workbook
-     *
-     * @return IReader
-     */
-    public function setLoadSheetsOnly($value)
+    public function setLoadSheetsOnly($sheetList)
     {
-        if ($value === null) {
+        if ($sheetList === null) {
             return $this->setLoadAllSheets();
         }
 
-        $this->loadSheetsOnly = is_array($value) ? $value : [$value];
+        $this->loadSheetsOnly = is_array($sheetList) ? $sheetList : [$sheetList];
 
         return $this;
     }
 
-    /**
-     * Set all sheets to load
-     *        Tells the Reader to load all worksheets from the workbook.
-     *
-     * @return IReader
-     */
     public function setLoadAllSheets()
     {
         $this->loadSheetsOnly = null;
@@ -180,78 +123,84 @@ abstract class BaseReader implements IReader
         return $this;
     }
 
-    /**
-     * Read filter.
-     *
-     * @return IReadFilter
-     */
     public function getReadFilter()
     {
         return $this->readFilter;
     }
 
-    /**
-     * Set read filter.
-     *
-     * @param IReadFilter $pValue
-     *
-     * @return IReader
-     */
-    public function setReadFilter(IReadFilter $pValue)
+    public function setReadFilter(IReadFilter $readFilter)
     {
-        $this->readFilter = $pValue;
+        $this->readFilter = $readFilter;
 
         return $this;
     }
 
+    public function getSecurityScanner(): ?XmlScanner
+    {
+        return $this->securityScanner;
+    }
+
+    public function getSecurityScannerOrThrow(): XmlScanner
+    {
+        if ($this->securityScanner === null) {
+            throw new ReaderException('Security scanner is unexpectedly null');
+        }
+
+        return $this->securityScanner;
+    }
+
+    protected function processFlags(int $flags): void
+    {
+        if (((bool) ($flags & self::LOAD_WITH_CHARTS)) === true) {
+            $this->setIncludeCharts(true);
+        }
+        if (((bool) ($flags & self::READ_DATA_ONLY)) === true) {
+            $this->setReadDataOnly(true);
+        }
+        if (((bool) ($flags & self::SKIP_EMPTY_CELLS) || (bool) ($flags & self::IGNORE_EMPTY_CELLS)) === true) {
+            $this->setReadEmptyCells(false);
+        }
+    }
+
+    protected function loadSpreadsheetFromFile(string $filename): Spreadsheet
+    {
+        throw new PhpSpreadsheetException('Reader classes must implement their own loadSpreadsheetFromFile() method');
+    }
+
+    /**
+     * Loads Spreadsheet from file.
+     *
+     * @param int $flags the optional second parameter flags may be used to identify specific elements
+     *                       that should be loaded, but which won't be loaded by default, using these values:
+     *                            IReader::LOAD_WITH_CHARTS - Include any charts that are defined in the loaded file
+     */
+    public function load(string $filename, int $flags = 0): Spreadsheet
+    {
+        $this->processFlags($flags);
+
+        try {
+            return $this->loadSpreadsheetFromFile($filename);
+        } catch (ReaderException $e) {
+            throw $e;
+        }
+    }
+
     /**
      * Open file for reading.
-     *
-     * @param string $pFilename
-     *
-     * @throws Exception
      */
-    protected function openFile($pFilename)
+    protected function openFile(string $filename): void
     {
-        File::assertFile($pFilename);
+        $fileHandle = false;
+        if ($filename) {
+            File::assertFile($filename);
 
-        // Open file
-        $this->fileHandle = fopen($pFilename, 'r');
-        if ($this->fileHandle === false) {
-            throw new Exception('Could not open file ' . $pFilename . ' for reading.');
+            // Open file
+            $fileHandle = fopen($filename, 'rb');
         }
-    }
-
-    /**
-     * Scan theXML for use of <!ENTITY to prevent XXE/XEE attacks.
-     *
-     * @param string $xml
-     *
-     * @throws Exception
-     *
-     * @return string
-     */
-    public function securityScan($xml)
-    {
-        $pattern = '/\\0?' . implode('\\0?', str_split('<!DOCTYPE')) . '\\0?/';
-        if (preg_match($pattern, $xml)) {
-            throw new Exception('Detected use of ENTITY in XML, spreadsheet file load() aborted to prevent XXE/XEE attacks');
+        if ($fileHandle === false) {
+            throw new ReaderException('Could not open file ' . $filename . ' for reading.');
         }
 
-        return $xml;
-    }
-
-    /**
-     * Scan theXML for use of <!ENTITY to prevent XXE/XEE attacks.
-     *
-     * @param string $filestream
-     *
-     * @throws Exception
-     *
-     * @return string
-     */
-    public function securityScanFile($filestream)
-    {
-        return $this->securityScan(file_get_contents($filestream));
+        $this->fileHandle = $fileHandle;
     }
 }

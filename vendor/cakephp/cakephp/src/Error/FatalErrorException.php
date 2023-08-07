@@ -1,36 +1,44 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Error;
 
-use Cake\Core\Exception\Exception;
+use Cake\Core\Exception\CakeException;
+use Throwable;
 
 /**
  * Represents a fatal error
  */
-class FatalErrorException extends Exception
+class FatalErrorException extends CakeException
 {
-
     /**
      * Constructor
      *
      * @param string $message Message string.
-     * @param int $code Code.
+     * @param int|null $code Code.
      * @param string|null $file File name.
      * @param int|null $line Line number.
+     * @param \Throwable|null $previous The previous exception.
      */
-    public function __construct($message, $code = 500, $file = null, $line = null)
-    {
-        parent::__construct($message, $code);
+    public function __construct(
+        string $message,
+        ?int $code = null,
+        ?string $file = null,
+        ?int $line = null,
+        ?Throwable $previous = null
+    ) {
+        parent::__construct($message, $code, $previous);
         if ($file) {
             $this->file = $file;
         }

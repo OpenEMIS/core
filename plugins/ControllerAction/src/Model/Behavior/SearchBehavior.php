@@ -11,7 +11,7 @@ class SearchBehavior extends Behavior {
 		'orderField' => 'order'
 	];
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 5];
 		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 11];

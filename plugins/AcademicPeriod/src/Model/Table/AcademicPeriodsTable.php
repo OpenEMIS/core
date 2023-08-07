@@ -19,7 +19,7 @@ class AcademicPeriodsTable extends AppTable
 {
     private $_fieldOrder = ['visible', 'current', 'editable', 'code', 'name', 'start_date', 'end_date', 'academic_period_level_id'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Parents', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -92,7 +92,7 @@ class AcademicPeriodsTable extends AppTable
         $this->addBehavior('Institution.Calendar');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $additionalParameters = ['editable = 1 AND visible > 0'];

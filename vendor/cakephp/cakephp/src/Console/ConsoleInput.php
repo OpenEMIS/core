@@ -1,25 +1,28 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         2.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Console;
+
+use Cake\Console\Exception\ConsoleException;
 
 /**
  * Object wrapper for interacting with stdin
  */
 class ConsoleInput
 {
-
     /**
      * Input value.
      *
@@ -43,29 +46,34 @@ class ConsoleInput
      *
      * @param string $handle The location of the stream to use as input.
      */
-    public function __construct($handle = 'php://stdin')
+    public function __construct(string $handle = 'php://stdin')
     {
-        $this->_canReadline = extension_loaded('readline') && $handle === 'php://stdin' ? true : false;
-        $this->_input = fopen($handle, 'r');
+        $this->_canReadline = (extension_loaded('readline') && $handle === 'php://stdin');
+        $this->_input = fopen($handle, 'rb');
     }
 
     /**
      * Read a value from the stream
      *
-     * @return mixed The value of the stream
+     * @return string|null The value of the stream. Null on EOF.
      */
-    public function read()
+    public function read(): ?string
     {
         if ($this->_canReadline) {
             $line = readline('');
-            if (strlen($line) > 0) {
+
+            if ($line !== false && $line !== '') {
                 readline_add_history($line);
             }
-
-            return $line;
+        } else {
+            $line = fgets($this->_input);
         }
 
-        return fgets($this->_input);
+        if ($line === false) {
+            return null;
+        }
+
+        return $line;
     }
 
     /**
@@ -74,11 +82,25 @@ class ConsoleInput
      * @param int $timeout An optional time to wait for data
      * @return bool True for data available, false otherwise
      */
-    public function dataAvailable($timeout = 0)
+    public function dataAvailable(int $timeout = 0): bool
     {
         $readFds = [$this->_input];
-        $readyFds = stream_select($readFds, $writeFds, $errorFds, $timeout);
+        $writeFds = null;
+        $errorFds = null;
 
-        return ($readyFds > 0);
+        /** @var string|null $error */
+        $error = null;
+        set_error_handler(function (int $code, string $message) use (&$error) {
+            $error = "stream_select failed with code={$code} message={$message}.";
+
+            return true;
+        });
+        $readyFds = stream_select($readFds, $writeFds, $errorFds, $timeout);
+        restore_error_handler();
+        if ($error !== null) {
+            throw new ConsoleException($error);
+        }
+
+        return $readyFds > 0;
     }
 }

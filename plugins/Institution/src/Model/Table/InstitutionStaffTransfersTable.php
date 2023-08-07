@@ -29,7 +29,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     // fte options
     public $fteOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->table('institution_staff_transfers');
         parent::initialize($config);
@@ -67,7 +67,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         ]
     ];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Workflow.getEvents'] = 'getWorkflowEvents';

@@ -1,17 +1,19 @@
 <?php
+declare(strict_types=1);
+
 /**
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
+ * @license       https://www.opensource.org/licenses/mit-license.php MIT License
  */
 namespace Migrations;
 
-use Migrations\Command;
+use Migrations\Command\Phinx;
 use Symfony\Component\Console\Application;
 
 /**
@@ -21,8 +23,22 @@ use Symfony\Component\Console\Application;
 class MigrationsDispatcher extends Application
 {
     /**
-     * Class Constructor.
-     *
+     * @var array<string, string>
+     * @psalm-var array<string, class-string<\Phinx\Console\Command\AbstractCommand>|class-string<\Migrations\Command\Phinx\BaseCommand>>
+     */
+    public static $phinxCommands = [
+        'Create' => Phinx\Create::class,
+        'Dump' => Phinx\Dump::class,
+        'MarkMigrated' => Phinx\MarkMigrated::class,
+        'Migrate' => Phinx\Migrate::class,
+        'Rollback' => Phinx\Rollback::class,
+        'Seed' => Phinx\Seed::class,
+        'Status' => Phinx\Status::class,
+        'CacheBuild' => Phinx\CacheBuild::class,
+        'CacheClear' => Phinx\CacheClear::class,
+    ];
+
+    /**
      * Initialize the Phinx console application.
      *
      * @param string $version The Application Version
@@ -30,13 +46,9 @@ class MigrationsDispatcher extends Application
     public function __construct($version)
     {
         parent::__construct('Migrations plugin, based on Phinx by Rob Morgan.', $version);
-        $this->add(new Command\Create());
-        $this->add(new Command\Dump());
-        $this->add(new Command\MarkMigrated());
-        $this->add(new Command\Migrate());
-        $this->add(new Command\Rollback());
-        $this->add(new Command\Seed());
-        $this->add(new Command\Status());
+        foreach (static::$phinxCommands as $value) {
+            $this->add(new $value());
+        }
         $this->setCatchExceptions(false);
     }
 }

@@ -42,13 +42,13 @@ class ControllerActionBehavior extends Behavior
             'paging'
         ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->attachActions();
         $this->initializeFields();
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
 
@@ -57,10 +57,10 @@ class ControllerActionBehavior extends Behavior
         return $events;
     }
 
-    public function buildValidator(Event $event, Validator $validator, $name)
+    public function buildValidator(Event $event, Validator $validator, $name): Validator
     {
         if ($name == 'default') {
-            $schema = $this->_table->schema();
+            $schema = $this->_table->getSchema();
 
             $columns = $schema->columns();
             foreach ($columns as $col) {
@@ -79,7 +79,7 @@ class ControllerActionBehavior extends Behavior
                     }
                 } else {
                     if (array_key_exists('null', $attr)) {
-                        $ignoreFields = $this->config('fields.excludes');
+                        $ignoreFields = $this->getConfig('fields.excludes');
                         if ($attr['null'] === false // not nullable
                             && (array_key_exists('default', $attr) && strlen($attr['default']) == 0) // don't have a default value in database
                             && $col !== 'id' // not a primary key
@@ -99,13 +99,13 @@ class ControllerActionBehavior extends Behavior
     public function excludeDefaultValidations($fields)
     {
         if (!empty($fields)) {
-            $this->config('fields.excludes', $fields);
+            $this->getConfig('fields.excludes', $fields);
         }
     }
 
     private function attachActions()
     {
-        $actions = $this->config('actions');
+        $actions = $this->getConfig('actions');
         $model = $this->_table;
 
         foreach ($this->_defaultConfig['actions'] as $action => $value) {
@@ -113,7 +113,7 @@ class ControllerActionBehavior extends Behavior
                 $behavior = ucfirst($action);
                 if (file_exists(__DIR__ . DS . $behavior . 'Behavior.php')) {
                     if ($action == 'reorder' && !$this->isColumnExists($value['orderField'])) {
-                        $this->config('actions.reorder', false);
+                        $this->getConfig('actions.reorder', false);
                         continue;
                     }
                     if (is_array($value)) {
@@ -132,9 +132,9 @@ class ControllerActionBehavior extends Behavior
 
     private function initializeFields()
     {
-        $alias = $this->_table->alias();
-        $className = $this->_table->registryAlias();
-        $schema = $this->_table->schema();
+        $alias = $this->_table->getAlias();
+        $className = $this->_table->getRegistryAlias();
+        $schema = $this->_table->getSchema();
 
         $columns = $schema->columns();
         $fields = [];
@@ -142,7 +142,7 @@ class ControllerActionBehavior extends Behavior
         $order = 10;
 
         foreach ($columns as $i => $col) {
-            $attr = $schema->column($col);
+            $attr = $schema->getColumn($col);
             $attr['model'] = $alias;
             $attr['className'] = $className;
             $attr['visible'] = $col != 'password' ? $visibility : false;
@@ -151,7 +151,7 @@ class ControllerActionBehavior extends Behavior
 
             $fields[$col] = $attr;
         }
-        $primaryKey = $this->_table->primaryKey();
+        $primaryKey = $this->_table->getPrimaryKey();
 
         if (!is_array($primaryKey) && array_key_exists($primaryKey, $fields)) { // not composite primary keys
             $fields[$primaryKey]['type'] = 'hidden';
@@ -164,7 +164,7 @@ class ControllerActionBehavior extends Behavior
             }
         }
 
-        $excludedFields = $this->config('fields.excludes');
+        $excludedFields = $this->getConfig('fields.excludes');
         foreach ($excludedFields as $field) {
             if (array_key_exists($field, $fields)) {
                 $fields[$field]['visible']['index'] = false;
@@ -180,7 +180,7 @@ class ControllerActionBehavior extends Behavior
     public function isColumnExists($field)
     {
         $model = $this->_table;
-        $schema = $model->schema();
+        $schema = $model->getSchema();
         $columns = $schema->columns();
 
         return in_array($field, $columns);
@@ -188,7 +188,7 @@ class ControllerActionBehavior extends Behavior
 
     public function actions($action = null)
     {
-        $actions = $this->config('actions');
+        $actions = $this->getConfig('actions');
 
         $data = false;
         if (is_null($action)) {
@@ -209,7 +209,7 @@ class ControllerActionBehavior extends Behavior
     {
         $strategies = ['cascade', 'restrict'];
         if (in_array($strategy, $strategies)) {
-            $this->config('actions.remove', $strategy);
+            $this->getConfig('actions.remove', $strategy);
         }
     }
 
@@ -244,7 +244,7 @@ class ControllerActionBehavior extends Behavior
 
     public function toggle($action, $enabled)
     {
-        $actions = $this->config('actions');
+        $actions = $this->getConfig('actions');
 
         if (array_key_exists($action, $actions)) {
             $flag = $actions[$action];
@@ -259,7 +259,7 @@ class ControllerActionBehavior extends Behavior
         } else {
             Log::write('debug', __METHOD__ . ': ' . $action . ' does not exists!');
         }
-        $this->config('actions', $actions);
+        $this->getConfig('actions', $actions);
     }
 
     private function mergeRequestParams(array &$url)

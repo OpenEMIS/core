@@ -1,31 +1,10 @@
 <?php
+
 /**
- * Phinx
- *
- * (The MIT license)
- * Copyright (c) 2015 Rob Morgan
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated * documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- *
- * @package    Phinx
- * @subpackage Phinx\Migration
+ * MIT License
+ * For full license information, please view the LICENSE file that was distributed with this source code.
  */
+
 namespace Phinx\Migration;
 
 use Symfony\Component\Console\Input\InputInterface;
@@ -34,43 +13,41 @@ use Symfony\Component\Console\Output\OutputInterface;
 abstract class AbstractTemplateCreation implements CreationInterface
 {
     /**
-     * @var InputInterface
+     * @var \Symfony\Component\Console\Input\InputInterface
      */
     protected $input;
 
     /**
-     * @var OutputInterface
+     * @var \Symfony\Component\Console\Output\OutputInterface
      */
     protected $output;
 
     /**
-     * Class Constructor.
-     *
-     * @param InputInterface|null  $input
-     * @param OutputInterface|null $output
+     * @param \Symfony\Component\Console\Input\InputInterface|null $input Input
+     * @param \Symfony\Component\Console\Output\OutputInterface|null $output Output
      */
-    public function __construct(InputInterface $input = null, OutputInterface $output = null)
+    public function __construct(?InputInterface $input = null, ?OutputInterface $output = null)
     {
-        if (!is_null($input)) {
+        if ($input !== null) {
             $this->setInput($input);
         }
-        if (!is_null($output)) {
+        if ($output !== null) {
             $this->setOutput($output);
         }
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function getInput()
+    public function getInput(): InputInterface
     {
         return $this->input;
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function setInput(InputInterface $input)
+    public function setInput(InputInterface $input): CreationInterface
     {
         $this->input = $input;
 
@@ -78,17 +55,17 @@ abstract class AbstractTemplateCreation implements CreationInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function getOutput()
+    public function getOutput(): OutputInterface
     {
         return $this->output;
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function setOutput(OutputInterface $output)
+    public function setOutput(OutputInterface $output): CreationInterface
     {
         $this->output = $output;
 

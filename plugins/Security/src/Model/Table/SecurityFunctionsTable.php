@@ -7,7 +7,7 @@ use Cake\Core\Configure;
 
 class SecurityFunctionsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 

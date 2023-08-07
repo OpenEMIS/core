@@ -18,14 +18,14 @@ class PasswordBehavior extends Behavior {
 	private $passwordAllowEmpty = false;
 	private $createRetype = false;
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
         $events['Model.buildValidator'] = ['callable' => 'buildValidator', 'priority' => 5];
 		return $events;
 	}
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		$this->targetField = $config['field'];
 		$this->checkOwnPassword = (array_key_exists('checkOwnPassword', $config))? $config['checkOwnPassword']: $this->checkOwnPassword;
 		$this->passwordAllowEmpty = (array_key_exists('passwordAllowEmpty', $config))? $config['passwordAllowEmpty']: $this->passwordAllowEmpty;

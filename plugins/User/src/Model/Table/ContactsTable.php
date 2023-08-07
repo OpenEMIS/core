@@ -20,9 +20,9 @@ class ContactsTable extends ControllerActionTable
     private $ContactOptionsTable;
     private $contactOptionsArray;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_contacts');
+        $this->setTable('user_contacts');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
@@ -258,7 +258,7 @@ class ContactsTable extends ControllerActionTable
     // 	$options->exchangeArray($arrayOptions);
     // }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator->remove('value', 'notBlank');

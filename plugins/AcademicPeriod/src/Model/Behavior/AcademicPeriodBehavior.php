@@ -11,7 +11,7 @@ use Cake\ORM\Entity;
 
 class AcademicPeriodBehavior extends Behavior {
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'ControllerAction.Model.edit.afterAction' => 'editAfterAction',
@@ -26,7 +26,7 @@ class AcademicPeriodBehavior extends Behavior {
 			$newEvent['ControllerAction.Model.afterAction'] = 'afterAction';
 		}
 
-		$tableAlias = $this->_table->alias();
+		$tableAlias = $this->_table->getAlias();
 
 		switch ($tableAlias) {
 			case 'InstitutionAssessments':

@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.2.9
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\ORM\Rule;
 
@@ -23,11 +25,10 @@ use Countable;
  */
 class ValidCount
 {
-
     /**
      * The field to check
      *
-     * @var array
+     * @var string
      */
     protected $_field;
 
@@ -36,7 +37,7 @@ class ValidCount
      *
      * @param string $field The field to check the count on.
      */
-    public function __construct($field)
+    public function __construct(string $field)
     {
         $this->_field = $field;
     }
@@ -45,10 +46,10 @@ class ValidCount
      * Performs the count check
      *
      * @param \Cake\Datasource\EntityInterface $entity The entity from where to extract the fields.
-     * @param array $options Options passed to the check.
+     * @param array<string, mixed> $options Options passed to the check.
      * @return bool True if successful, else false.
      */
-    public function __invoke(EntityInterface $entity, array $options)
+    public function __invoke(EntityInterface $entity, array $options): bool
     {
         $value = $entity->{$this->_field};
         if (!is_array($value) && !$value instanceof Countable) {

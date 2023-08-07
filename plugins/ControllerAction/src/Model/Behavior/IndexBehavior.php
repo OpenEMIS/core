@@ -18,7 +18,7 @@ class IndexBehavior extends Behavior
         'pageOptions' => [10, 20, 30, 40, 50]
     ];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index'] = 'index';

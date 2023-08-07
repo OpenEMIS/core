@@ -1,36 +1,39 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         2.2.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 
 namespace Cake\Cache\Engine;
 
 use Cake\Cache\CacheEngine;
+use Cake\Log\Log;
 use Redis;
 use RedisException;
+use RuntimeException;
 
 /**
  * Redis storage engine for cache.
  */
 class RedisEngine extends CacheEngine
 {
-
     /**
      * Redis wrapper.
      *
      * @var \Redis
      */
-    protected $_Redis = null;
+    protected $_Redis;
 
     /**
      * The default config used unless overridden by runtime configuration
@@ -44,13 +47,12 @@ class RedisEngine extends CacheEngine
      * - `port` port number to the Redis server.
      * - `prefix` Prefix appended to all entries. Good for when you need to share a keyspace
      *    with either another cache config or another application.
-     * - `probability` Probability of hitting a cache gc cleanup. Setting to 0 will disable
-     *    cache::gc from ever being called automatically.
-     * - `server` URL or ip to the Redis server host.
+     * - `scanCount` Number of keys to ask for each scan (default: 10)
+     * - `server` URL or IP to the Redis server host.
      * - `timeout` timeout in seconds (float).
      * - `unix_socket` Path to the unix socket file (default: false)
      *
-     * @var array
+     * @var array<string, mixed>
      */
     protected $_defaultConfig = [
         'database' => 0,
@@ -60,11 +62,11 @@ class RedisEngine extends CacheEngine
         'persistent' => true,
         'port' => 6379,
         'prefix' => 'cake_',
-        'probability' => 100,
         'host' => null,
         'server' => '127.0.0.1',
         'timeout' => 0,
         'unix_socket' => false,
+        'scanCount' => 10,
     ];
 
     /**
@@ -72,13 +74,13 @@ class RedisEngine extends CacheEngine
      *
      * Called automatically by the cache frontend
      *
-     * @param array $config array of setting for the engine
+     * @param array<string, mixed> $config array of setting for the engine
      * @return bool True if the engine has been successfully initialized, false if not
      */
-    public function init(array $config = [])
+    public function init(array $config = []): bool
     {
         if (!extension_loaded('redis')) {
-            return false;
+            throw new RuntimeException('The `redis` extension must be enabled to use RedisEngine.');
         }
 
         if (!empty($config['host'])) {
@@ -95,26 +97,39 @@ class RedisEngine extends CacheEngine
      *
      * @return bool True if Redis server was connected
      */
-    protected function _connect()
+    protected function _connect(): bool
     {
         try {
             $this->_Redis = new Redis();
             if (!empty($this->_config['unix_socket'])) {
                 $return = $this->_Redis->connect($this->_config['unix_socket']);
             } elseif (empty($this->_config['persistent'])) {
-                $return = $this->_Redis->connect($this->_config['server'], $this->_config['port'], $this->_config['timeout']);
+                $return = $this->_Redis->connect(
+                    $this->_config['server'],
+                    (int)$this->_config['port'],
+                    (int)$this->_config['timeout']
+                );
             } else {
                 $persistentId = $this->_config['port'] . $this->_config['timeout'] . $this->_config['database'];
-                $return = $this->_Redis->pconnect($this->_config['server'], $this->_config['port'], $this->_config['timeout'], $persistentId);
+                $return = $this->_Redis->pconnect(
+                    $this->_config['server'],
+                    (int)$this->_config['port'],
+                    (int)$this->_config['timeout'],
+                    $persistentId
+                );
             }
         } catch (RedisException $e) {
+            if (class_exists(Log::class)) {
+                Log::error('RedisEngine could not connect. Got error: ' . $e->getMessage());
+            }
+
             return false;
         }
         if ($return && $this->_config['password']) {
             $return = $this->_Redis->auth($this->_config['password']);
         }
         if ($return) {
-            $return = $this->_Redis->select($this->_config['database']);
+            $return = $this->_Redis->select((int)$this->_config['database']);
         }
 
         return $return;
@@ -125,71 +140,80 @@ class RedisEngine extends CacheEngine
      *
      * @param string $key Identifier for the data
      * @param mixed $value Data to be cached
+     * @param \DateInterval|int|null $ttl Optional. The TTL value of this item. If no value is sent and
+     *   the driver supports TTL then the library may set a default value
+     *   for it or let the driver take care of that.
      * @return bool True if the data was successfully cached, false on failure
      */
-    public function write($key, $value)
+    public function set($key, $value, $ttl = null): bool
     {
         $key = $this->_key($key);
+        $value = $this->serialize($value);
 
-        if (!is_int($value)) {
-            $value = serialize($value);
-        }
-
-        $duration = $this->_config['duration'];
+        $duration = $this->duration($ttl);
         if ($duration === 0) {
             return $this->_Redis->set($key, $value);
         }
 
-        return $this->_Redis->setex($key, $duration, $value);
+        return $this->_Redis->setEx($key, $duration, $value);
     }
 
     /**
      * Read a key from the cache
      *
      * @param string $key Identifier for the data
-     * @return mixed The cached data, or false if the data doesn't exist, has expired, or if there was an error fetching it
+     * @param mixed $default Default value to return if the key does not exist.
+     * @return mixed The cached data, or the default if the data doesn't exist, has
+     *   expired, or if there was an error fetching it
      */
-    public function read($key)
+    public function get($key, $default = null)
     {
+        $value = $this->_Redis->get($this->_key($key));
+        if ($value === false) {
+            return $default;
+        }
+
+        return $this->unserialize($value);
+    }
+
+    /**
+     * Increments the value of an integer cached key & update the expiry time
+     *
+     * @param string $key Identifier for the data
+     * @param int $offset How much to increment
+     * @return int|false New incremented value, false otherwise
+     */
+    public function increment(string $key, int $offset = 1)
+    {
+        $duration = $this->_config['duration'];
         $key = $this->_key($key);
 
-        $value = $this->_Redis->get($key);
-        if (preg_match('/^[-]?\d+$/', $value)) {
-            return (int)$value;
-        }
-        if ($value !== false && is_string($value)) {
-            return unserialize($value);
+        $value = $this->_Redis->incrBy($key, $offset);
+        if ($duration > 0) {
+            $this->_Redis->expire($key, $duration);
         }
 
         return $value;
     }
 
     /**
-     * Increments the value of an integer cached key
-     *
-     * @param string $key Identifier for the data
-     * @param int $offset How much to increment
-     * @return bool|int New incremented value, false otherwise
-     */
-    public function increment($key, $offset = 1)
-    {
-        $key = $this->_key($key);
-
-        return (int)$this->_Redis->incrBy($key, $offset);
-    }
-
-    /**
-     * Decrements the value of an integer cached key
+     * Decrements the value of an integer cached key & update the expiry time
      *
      * @param string $key Identifier for the data
      * @param int $offset How much to subtract
-     * @return bool|int New decremented value, false otherwise
+     * @return int|false New decremented value, false otherwise
      */
-    public function decrement($key, $offset = 1)
+    public function decrement(string $key, int $offset = 1)
     {
+        $duration = $this->_config['duration'];
         $key = $this->_key($key);
 
-        return (int)$this->_Redis->decrBy($key, $offset);
+        $value = $this->_Redis->decrBy($key, $offset);
+        if ($duration > 0) {
+            $this->_Redis->expire($key, $duration);
+        }
+
+        return $value;
     }
 
     /**
@@ -198,28 +222,86 @@ class RedisEngine extends CacheEngine
      * @param string $key Identifier for the data
      * @return bool True if the value was successfully deleted, false if it didn't exist or couldn't be removed
      */
-    public function delete($key)
+    public function delete($key): bool
     {
         $key = $this->_key($key);
 
-        return $this->_Redis->delete($key) > 0;
+        return $this->_Redis->del($key) > 0;
+    }
+
+    /**
+     * Delete a key from the cache asynchronously
+     *
+     * Just unlink a key from the cache. The actual removal will happen later asynchronously.
+     *
+     * @param string $key Identifier for the data
+     * @return bool True if the value was successfully deleted, false if it didn't exist or couldn't be removed
+     */
+    public function deleteAsync(string $key): bool
+    {
+        $key = $this->_key($key);
+
+        return $this->_Redis->unlink($key) > 0;
     }
 
     /**
      * Delete all keys from the cache
      *
-     * @param bool $check If true will check expiration, otherwise delete all.
      * @return bool True if the cache was successfully cleared, false otherwise
      */
-    public function clear($check)
+    public function clear(): bool
     {
-        if ($check) {
-            return true;
-        }
-        $keys = $this->_Redis->getKeys($this->_config['prefix'] . '*');
-        $this->_Redis->del($keys);
+        $this->_Redis->setOption(Redis::OPT_SCAN, (string)Redis::SCAN_RETRY);
 
-        return true;
+        $isAllDeleted = true;
+        $iterator = null;
+        $pattern = $this->_config['prefix'] . '*';
+
+        while (true) {
+            $keys = $this->_Redis->scan($iterator, $pattern, (int)$this->_config['scanCount']);
+
+            if ($keys === false) {
+                break;
+            }
+
+            foreach ($keys as $key) {
+                $isDeleted = ($this->_Redis->del($key) > 0);
+                $isAllDeleted = $isAllDeleted && $isDeleted;
+            }
+        }
+
+        return $isAllDeleted;
+    }
+
+    /**
+     * Delete all keys from the cache by a blocking operation
+     *
+     * Faster than clear() using unlink method.
+     *
+     * @return bool True if the cache was successfully cleared, false otherwise
+     */
+    public function clearBlocking(): bool
+    {
+        $this->_Redis->setOption(Redis::OPT_SCAN, (string)Redis::SCAN_RETRY);
+
+        $isAllDeleted = true;
+        $iterator = null;
+        $pattern = $this->_config['prefix'] . '*';
+
+        while (true) {
+            $keys = $this->_Redis->scan($iterator, $pattern, (int)$this->_config['scanCount']);
+
+            if ($keys === false) {
+                break;
+            }
+
+            foreach ($keys as $key) {
+                $isDeleted = ($this->_Redis->unlink($key) > 0);
+                $isAllDeleted = $isAllDeleted && $isDeleted;
+            }
+        }
+
+        return $isAllDeleted;
     }
 
     /**
@@ -229,20 +311,16 @@ class RedisEngine extends CacheEngine
      * @param string $key Identifier for the data.
      * @param mixed $value Data to be cached.
      * @return bool True if the data was successfully cached, false on failure.
-     * @link https://github.com/phpredis/phpredis#setnx
+     * @link https://github.com/phpredis/phpredis#set
      */
-    public function add($key, $value)
+    public function add(string $key, $value): bool
     {
         $duration = $this->_config['duration'];
         $key = $this->_key($key);
+        $value = $this->serialize($value);
 
-        if (!is_int($value)) {
-            $value = serialize($value);
-        }
-
-        // setnx() doesn't have an expiry option, so overwrite the key with one
-        if ($this->_Redis->setnx($key, $value)) {
-            return $this->_Redis->setex($key, $duration, $value);
+        if ($this->_Redis->set($key, $value, ['nx', 'ex' => $duration])) {
+            return true;
         }
 
         return false;
@@ -253,15 +331,15 @@ class RedisEngine extends CacheEngine
      * If the group initial value was not found, then it initializes
      * the group accordingly.
      *
-     * @return array
+     * @return array<string>
      */
-    public function groups()
+    public function groups(): array
     {
         $result = [];
         foreach ($this->_config['groups'] as $group) {
             $value = $this->_Redis->get($this->_config['prefix'] . $group);
             if (!$value) {
-                $value = 1;
+                $value = $this->serialize(1);
                 $this->_Redis->set($this->_config['prefix'] . $group, $value);
             }
             $result[] = $group . $value;
@@ -277,9 +355,43 @@ class RedisEngine extends CacheEngine
      * @param string $group name of the group to be cleared
      * @return bool success
      */
-    public function clearGroup($group)
+    public function clearGroup(string $group): bool
     {
         return (bool)$this->_Redis->incr($this->_config['prefix'] . $group);
+    }
+
+    /**
+     * Serialize value for saving to Redis.
+     *
+     * This is needed instead of using Redis' in built serialization feature
+     * as it creates problems incrementing/decrementing intially set integer value.
+     *
+     * @param mixed $value Value to serialize.
+     * @return string
+     * @link https://github.com/phpredis/phpredis/issues/81
+     */
+    protected function serialize($value): string
+    {
+        if (is_int($value)) {
+            return (string)$value;
+        }
+
+        return serialize($value);
+    }
+
+    /**
+     * Unserialize string value fetched from Redis.
+     *
+     * @param string $value Value to unserialize.
+     * @return mixed
+     */
+    protected function unserialize(string $value)
+    {
+        if (preg_match('/^[-]?\d+$/', $value)) {
+            return (int)$value;
+        }
+
+        return unserialize($value);
     }
 
     /**

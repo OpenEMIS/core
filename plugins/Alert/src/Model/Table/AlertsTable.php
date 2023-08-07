@@ -21,7 +21,7 @@ class AlertsTable extends ControllerActionTable
 
     private $statusTypes = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -32,7 +32,7 @@ class AlertsTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.process'] = 'process';

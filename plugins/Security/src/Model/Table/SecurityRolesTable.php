@@ -20,7 +20,7 @@ class SecurityRolesTable extends ControllerActionTable
 
     private $types = ['user', 'system'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
@@ -51,11 +51,11 @@ class SecurityRolesTable extends ControllerActionTable
         ]);
 
         if ($this->behaviors()->has('Reorder')) {
-            $this->behaviors()->get('Reorder')->config([
+            /*$this->behaviors()->get('Reorder')->getConfig([
                 'filter' => 'security_group_id'
-            ]);
+            ]);*/
         }
-        $this->SecurityRolesTable = TableRegistry::get('Security.SecurityRolesTable');//POCOR-6878
+        //$this->SecurityRolesTable = TableRegistry::getTableLocator()->get('Security.SecurityRolesTable');//POCOR-6878
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Permissions' => ['view', 'edit']
         ]);
@@ -74,7 +74,7 @@ class SecurityRolesTable extends ControllerActionTable
                
             ];
           
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             //if ($this->Auth->user()) { // creating issue while adding new permission //POCOR-6878
                 $Webhooks->triggerShell('role_create', [], $createRole);
             //}
@@ -92,7 +92,7 @@ class SecurityRolesTable extends ControllerActionTable
                
             ];
           
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
 			// if ($this->Auth->user()) { commented because it's giving error while updting permission in POCOR-6154
 			// if ($this->Auth->user()) { commented because its causing error while updating permission
             // if ($this->Auth->user()) { commented because its causing error while updating the permission
@@ -115,14 +115,14 @@ class SecurityRolesTable extends ControllerActionTable
         $deleteBody = [
             'role_id' => $entity->id
         ];
-        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
         if($this->Auth->user()){
             $Webhooks->triggerShell('role_delete', [], $deleteBody);
         }
         // Webhook role delete -- Ends
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

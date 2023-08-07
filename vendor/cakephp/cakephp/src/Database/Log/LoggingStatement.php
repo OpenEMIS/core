@@ -1,21 +1,26 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Database\Log;
 
+use Cake\Core\Configure;
+use Cake\Database\Exception\DatabaseException;
 use Cake\Database\Statement\StatementDecorator;
 use Exception;
+use Psr\Log\LoggerInterface;
 
 /**
  * Statement decorator used to
@@ -24,20 +29,33 @@ use Exception;
  */
 class LoggingStatement extends StatementDecorator
 {
-
     /**
      * Logger instance responsible for actually doing the logging task
      *
-     * @var \Cake\Database\Log\QueryLogger
+     * @var \Psr\Log\LoggerInterface
      */
     protected $_logger;
 
     /**
      * Holds bound params
      *
-     * @var array
+     * @var array<array>
      */
     protected $_compiledParams = [];
+
+    /**
+     * Query execution start time.
+     *
+     * @var float
+     */
+    protected $startTime = 0.0;
+
+    /**
+     * Logged query
+     *
+     * @var \Cake\Database\Log\LoggedQuery|null
+     */
+    protected $loggedQuery;
 
     /**
      * Wrapper for the execute function to calculate time spent
@@ -47,22 +65,92 @@ class LoggingStatement extends StatementDecorator
      * @return bool True on success, false otherwise
      * @throws \Exception Re-throws any exception raised during query execution.
      */
-    public function execute($params = null)
+    public function execute(?array $params = null): bool
     {
-        $t = microtime(true);
-        $query = new LoggedQuery();
+        $this->startTime = microtime(true);
+
+        $this->loggedQuery = new LoggedQuery();
+        $this->loggedQuery->driver = $this->_driver;
+        $this->loggedQuery->params = $params ?: $this->_compiledParams;
 
         try {
             $result = parent::execute($params);
+            $this->loggedQuery->took = (int)round((microtime(true) - $this->startTime) * 1000, 0);
         } catch (Exception $e) {
-            $e->queryString = $this->queryString;
-            $query->error = $e;
-            $this->_log($query, $params, $t);
+            $this->loggedQuery->error = $e;
+            $this->_log();
+
+            if (Configure::read('Error.convertStatementToDatabaseException', false) === true) {
+                $code = $e->getCode();
+                if (!is_int($code)) {
+                    $code = null;
+                }
+
+                throw new DatabaseException([
+                    'message' => $e->getMessage(),
+                    'queryString' => $this->queryString,
+                ], $code, $e);
+            }
+
+            if (version_compare(PHP_VERSION, '8.2.0', '<')) {
+                deprecationWarning(
+                    '4.4.12 - Having queryString set on exceptions is deprecated.' .
+                    'If you are not using this attribute there is no action to take.' .
+                    'Otherwise, enable Error.convertStatementToDatabaseException.'
+                );
+                /** @psalm-suppress UndefinedPropertyAssignment */
+                $e->queryString = $this->queryString;
+            }
+
             throw $e;
         }
 
-        $query->numRows = $this->rowCount();
-        $this->_log($query, $params, $t);
+        if (preg_match('/^(?!SELECT)/i', $this->queryString)) {
+            $this->rowCount();
+        }
+
+        return $result;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function fetch($type = self::FETCH_TYPE_NUM)
+    {
+        $record = parent::fetch($type);
+
+        if ($this->loggedQuery) {
+            $this->rowCount();
+        }
+
+        return $record;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function fetchAll($type = self::FETCH_TYPE_NUM)
+    {
+        $results = parent::fetchAll($type);
+
+        if ($this->loggedQuery) {
+            $this->rowCount();
+        }
+
+        return $results;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function rowCount(): int
+    {
+        $result = parent::rowCount();
+
+        if ($this->loggedQuery) {
+            $this->loggedQuery->numRows = $result;
+            $this->_log();
+        }
 
         return $result;
     }
@@ -71,17 +159,18 @@ class LoggingStatement extends StatementDecorator
      * Copies the logging data to the passed LoggedQuery and sends it
      * to the logging system.
      *
-     * @param \Cake\Database\Log\LoggedQuery $query The query to log.
-     * @param array $params List of values to be bound to query.
-     * @param float $startTime The microtime when the query was executed.
      * @return void
      */
-    protected function _log($query, $params, $startTime)
+    protected function _log(): void
     {
-        $query->took = round((microtime(true) - $startTime) * 1000, 0);
-        $query->params = $params ?: $this->_compiledParams;
-        $query->query = $this->queryString;
-        $this->logger()->log($query);
+        if ($this->loggedQuery === null) {
+            return;
+        }
+
+        $this->loggedQuery->query = $this->queryString;
+        $this->getLogger()->debug((string)$this->loggedQuery, ['query' => $this->loggedQuery]);
+
+        $this->loggedQuery = null;
     }
 
     /**
@@ -93,9 +182,10 @@ class LoggingStatement extends StatementDecorator
      * @param string|int|null $type PDO type or name of configured Type class
      * @return void
      */
-    public function bindValue($column, $value, $type = 'string')
+    public function bindValue($column, $value, $type = 'string'): void
     {
         parent::bindValue($column, $value, $type);
+
         if ($type === null) {
             $type = 'string';
         }
@@ -106,18 +196,23 @@ class LoggingStatement extends StatementDecorator
     }
 
     /**
-     * Sets the logger object instance. When called with no arguments
-     * it returns the currently setup logger instance
+     * Sets a logger
      *
-     * @param object|null $instance Logger object instance.
-     * @return object Logger instance
+     * @param \Psr\Log\LoggerInterface $logger Logger object
+     * @return void
      */
-    public function logger($instance = null)
+    public function setLogger(LoggerInterface $logger): void
     {
-        if ($instance === null) {
-            return $this->_logger;
-        }
+        $this->_logger = $logger;
+    }
 
-        return $this->_logger = $instance;
+    /**
+     * Gets the logger object
+     *
+     * @return \Psr\Log\LoggerInterface logger instance
+     */
+    public function getLogger(): LoggerInterface
+    {
+        return $this->_logger;
     }
 }

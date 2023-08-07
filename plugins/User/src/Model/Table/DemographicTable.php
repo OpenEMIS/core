@@ -11,9 +11,9 @@ use Cake\ORM\Query;
 
 class DemographicTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_demographics');
+        $this->setTable('user_demographics');
         parent::initialize($config);
 
         $this->belongsTo('DemographicTypes', ['className' => 'Student.DemographicTypes', 'foreignKey' => 'demographic_types_id']);

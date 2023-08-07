@@ -10,7 +10,7 @@ use Cake\ORM\Entity;
 use App\Model\Table\ControllerActionTable;
 
 class AcademicPeriodLevelsTable extends ControllerActionTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->hasMany('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}

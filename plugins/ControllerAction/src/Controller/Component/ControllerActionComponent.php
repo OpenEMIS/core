@@ -116,7 +116,7 @@ class ControllerActionComponent extends Component
         ];
 
     // Is called before the controller's beforeFilter method.
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         if (array_key_exists('templates', $config)) {
             $this->templatePath = $config['templates'];
@@ -130,7 +130,9 @@ class ControllerActionComponent extends Component
         $this->ctpFolder = $controller->name;
 
         $this->controller = $controller;
-        $this->Session = $this->request->session();
+        $this->session = $this->getController()->getRequest()->getSession();
+        $this->Session = $this->session;
+        
         $this->config = new ArrayObject([]);
 
         $this->debug = Configure::read('debug');
@@ -150,7 +152,7 @@ class ControllerActionComponent extends Component
                 // Trigger event to model to modify defaultActions
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onUpdateDefaultActions');
                 $event = new Event('ControllerAction.Model.onUpdateDefaultActions', $this);
-                $event = $this->model->eventManager()->dispatch($event);
+                $event = $this->model->getEventManager()->dispatch($event);
                 if ($event->isStopped()) {
                     return $event->result;
                 }
@@ -188,7 +190,7 @@ class ControllerActionComponent extends Component
                         $this->model($attr['className'], $actions, $_options);
                         $this->model->alias = $name;
                         $this->currentAction = $currentAction;
-                        $this->ctpFolder = $this->model->alias();
+                        $this->ctpFolder = $this->model->getAlias();
                         $this->request->params['action'] = 'ComponentAction';
                         $this->initComponentsForModel();
 
@@ -364,7 +366,7 @@ class ControllerActionComponent extends Component
             }
             $this->plugin = $this->getPlugin($model);
             $this->model = $this->controller->loadModel($model);
-            $this->model->alias = $this->model->alias();
+            $this->model->alias = $this->model->getAlias();
             $this->getFields($this->model);
         }
     }
@@ -1950,11 +1952,11 @@ class ControllerActionComponent extends Component
 
     public function getSchema($model)
     {
-        $schema = $model->schema();
+        $schema = $model->getSchema();
         $columns = $schema->columns();
         $fields = [];
         foreach ($columns as $col) {
-            $fields[$col] = $schema->column($col);
+            $fields[$col] = $schema->getColumn($col);
         }
         return $fields;
     }
@@ -2020,7 +2022,7 @@ class ControllerActionComponent extends Component
     public function getFields($model)
     {
         $ignoreFields = $this->ignoreFields;
-        $className = $model->alias();
+        $className = $model->getAlias();
         if (!empty($this->plugin)) {
             $className = $this->plugin . '.' . $className;
         }
@@ -2032,7 +2034,7 @@ class ControllerActionComponent extends Component
             $fields[$key]['order'] = $i++;
             $fields[$key]['visible'] = $visibility;
             $fields[$key]['field'] = $key;
-            $fields[$key]['model'] = $model->alias();
+            $fields[$key]['model'] = $model->getAlias();
             $fields[$key]['className'] = $className;
 
             if ($key == 'password') {
@@ -2045,15 +2047,15 @@ class ControllerActionComponent extends Component
             */
         }
 
-        if (is_array($model->primaryKey())) {
+        if (is_array($model->getPrimaryKey())) {
             if (array_key_exists('id', $fields)) {
                 $fields['id']['type'] = 'hidden';
             }
-            foreach ($model->primaryKey() as $value) {
+            foreach ($model->getPrimaryKey() as $value) {
                 $fields[$value]['type'] = 'hidden';
             }
         } else {
-            $fields[$model->primaryKey()]['type'] = 'hidden';
+            $fields[$model->getPrimaryKey()]['type'] = 'hidden';
         }
 
         foreach ($ignoreFields as $field) {

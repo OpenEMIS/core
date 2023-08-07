@@ -48,7 +48,7 @@ class GuardiansTable extends ControllerActionTable
         ;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';

@@ -63,14 +63,14 @@ class FileUploadBehavior extends Behavior
 
     private $_validator;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->config(array_merge($this->_defaultConfig, $config));
+        //$this->getConfig(array_merge($this->_defaultConfig, $config));
         $this->fileTypesMap = array_merge($this->fileImagesMap, $this->fileDocumentsMap);
 
-        if ($this->config('allowable_file_types')=='image') {
+        if ($this->getConfig('allowable_file_types')=='image') {
             $this->allowableFileTypes = $this->fileImagesMap;
-        } else if ($this->config('allowable_file_types')=='document') {
+        } else if ($this->getConfig('allowable_file_types')=='document') {
             $this->allowableFileTypes = $this->fileDocumentsMap;
         } else {
             $this->allowableFileTypes = $this->fileTypesMap;
@@ -83,7 +83,7 @@ class FileUploadBehavior extends Behavior
 ** Link/Map ControllerActionComponent events
 **
 ******************************************************************************************************************/
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -120,26 +120,26 @@ class FileUploadBehavior extends Behavior
 
     public function afterAction(Event $event)
     {
-        if (isset($this->_table->fields[$this->config('content')])) {
+        if (isset($this->_table->fields[$this->getConfig('content')])) {
             // pr();
-            $comment = '* ' . sprintf(__('File size should not be larger than %s.'), $this->config('size'));
+            $comment = '* ' . sprintf(__('File size should not be larger than %s.'), $this->getConfig('size'));
             $comment .= '<br/>* ' . sprintf(__('Format Supported: %s'), $this->fileTypesForView());
-            $this->_table->fields[$this->config('content')]['comment'] = $comment ;
+            $this->_table->fields[$this->getConfig('content')]['comment'] = $comment ;
         }
     }
 
     public function editBeforeAction(Event $event)
     {
-        if (!$this->config('contentEditable')) {
-            unset($this->_table->fields[$this->config('content')]);
+        if (!$this->getConfig('contentEditable')) {
+            unset($this->_table->fields[$this->getConfig('content')]);
         }
     }
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (!$this->config('contentEditable')) {
-            if (isset($data[$this->_table->aliasField($this->config('content'))])) {
-                unset($data[$this->_table->aliasField($this->config('content'))]);
+        if (!$this->getConfig('contentEditable')) {
+            if (isset($data[$this->_table->aliasField($this->getConfig('content'))])) {
+                unset($data[$this->_table->aliasField($this->getConfig('content'))]);
             }
         }
     }
@@ -150,9 +150,9 @@ class FileUploadBehavior extends Behavior
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
 
-        $fileNameField = $this->config('name');
-        $fileContentField = $this->config('content');
-        $contentEditable = $this->config('contentEditable');
+        $fileNameField = $this->getConfig('name');
+        $fileContentField = $this->getConfig('content');
+        $contentEditable = $this->getConfig('contentEditable');
         $fileContentFieldRules = $this->_table->validator()->field($fileContentField);
         $model = $this->_table;
         $session = $model->request->session();
@@ -167,7 +167,7 @@ class FileUploadBehavior extends Behavior
                         $session->write($model->registryAlias().'.parseUpload', $parseUploadData);
                         $data = $this->parseUploadInput($data, $parseUploadData);
                     } else {
-                        $entity->errors($fileContentField, [sprintf(__('File size should not be larger than %s.'), $this->config('size'))]);
+                        $entity->errors($fileContentField, [sprintf(__('File size should not be larger than %s.'), $this->getConfig('size'))]);
                         unset($data[$model->alias()][$fileContentField]);
                     }
                 } else {
@@ -260,8 +260,8 @@ class FileUploadBehavior extends Behavior
          */
 
         $model = $this->_table;
-        $fileNameField = $this->config('name');
-        $fileContentField = $this->config('content');
+        $fileNameField = $this->getConfig('name');
+        $fileContentField = $this->getConfig('content');
 
         if (isset($data[$model->alias()][$fileNameField])) {
             unset($data[$model->alias()][$fileNameField]);
@@ -302,19 +302,19 @@ class FileUploadBehavior extends Behavior
         $GIGA = $MEGA * 1024;
         $TERA = $GIGA * 1024;
 
-        if (substr_count(strtolower($this->config('size')), 'kb')) {
-            $size = intval(str_replace('kb', '', (strtolower($this->config('size')))));
+        if (substr_count(strtolower($this->getConfig('size')), 'kb')) {
+            $size = intval(str_replace('kb', '', (strtolower($this->getConfig('size')))));
             return $size * $KILO;
         }
-        if (substr_count(strtolower($this->config('size')), 'mb')) {
-            $size = intval(str_replace('mb', '', (strtolower($this->config('size')))));
+        if (substr_count(strtolower($this->getConfig('size')), 'mb')) {
+            $size = intval(str_replace('mb', '', (strtolower($this->getConfig('size')))));
             return $size * $MEGA;
         }
-        if (substr_count(strtolower($this->config('size')), 'gb')) {
-            $size = intval(str_replace('gb', '', (strtolower($this->config('size')))));
+        if (substr_count(strtolower($this->getConfig('size')), 'gb')) {
+            $size = intval(str_replace('gb', '', (strtolower($this->getConfig('size')))));
             return $size * $GIGA;
         }
-        $size = intval($this->config('size'));
+        $size = intval($this->getConfig('size'));
         return $size * $TERA;
     }
 
@@ -344,7 +344,7 @@ class FileUploadBehavior extends Behavior
     private function parseUpload($file = null)
     {
         if (!is_null($file)) {
-            if ($this->config('useDefaultName')) {
+            if ($this->getConfig('useDefaultName')) {
                 $fileName = $file['name'];
             } else {
                 $pathInfo = pathinfo($file['name']);
@@ -360,8 +360,8 @@ class FileUploadBehavior extends Behavior
 
     private function parseUploadInput($data, $nameContentArray)
     {
-        $fileNameField = $this->config('name');
-        $fileContentField = $this->config('content');
+        $fileNameField = $this->getConfig('name');
+        $fileContentField = $this->getConfig('content');
         $model = $this->_table;
         $data[$model->alias()][$fileNameField] = $nameContentArray['fileName'];
         $data[$model->alias()][$fileContentField] = $nameContentArray['fileContent'];

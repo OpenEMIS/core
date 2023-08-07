@@ -33,13 +33,13 @@ class ContactExcelBehavior extends Behavior
         'auto_contain' => true
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
+        $this->getConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
         if (!array_key_exists('filename', $config)) {
-            $this->config('filename', $this->_table->alias());
+            $this->getConfig('filename', $this->_table->getAlias());
         }
-        $folder = WWW_ROOT . $this->config('folder');
+        $folder = WWW_ROOT . $this->getConfig('folder');
 
         if (!file_exists($folder)) {
             umask(0);
@@ -53,9 +53,9 @@ class ContactExcelBehavior extends Behavior
             //  $this->deleteOldFiles($folder, $format);
             // }
         }
-        $pages = $this->config('pages');
+        $pages = $this->getConfig('pages');
         if ($pages !== false && empty($pages)) {
-            $this->config('pages', ['index', 'view']);
+            $this->getConfig('pages', ['index', 'view']);
         }
     }
 
@@ -102,8 +102,8 @@ class ContactExcelBehavior extends Behavior
     public function generateXLXS($settings = [])
     {
         $_settings = [
-            'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
-            'path' => WWW_ROOT . $this->config('folder') . DS,
+            'file' => $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
+            'path' => WWW_ROOT . $this->getConfig('folder') . DS,
             'download' => true,
             'purge' => true
         ];
@@ -206,13 +206,13 @@ class ContactExcelBehavior extends Behavior
                 }
             }
 
-            if ($this->config('auto_contain')) {
+            if ($this->getConfig('auto_contain')) {
                 $this->contain($query, $fields, $table);
             }
 
             // To auto include the default fields. Using select will turn off autoFields by default
             // This is set so that the containable data will still be in the array.
-            $autoFields = $this->config('autoFields');
+            $autoFields = $this->getConfig('autoFields');
 
             if (!isset($autoFields) || $autoFields == true) {
                 $query->autoFields(true);
@@ -223,24 +223,24 @@ class ContactExcelBehavior extends Behavior
             $sheetCount = 1;
             $sheetRowCount = 0;
             $percentCount = intval($count / 100);
-            $pages = ceil($count / $this->config('limit'));
+            $pages = ceil($count / $this->getConfig('limit'));
 
             // Debugging 
             $pages = 1;
 
             if (isset($sheet['orientation'])) {
                 if ($sheet['orientation'] == 'landscape') {
-                    $this->config('orientation', 'landscape');
+                    $this->getConfig('orientation', 'landscape');
                 } else {
-                    $this->config('orientation', 'portrait');
+                    $this->getConfig('orientation', 'portrait');
                 }
             } elseif ($count == 1) {
-                $this->config('orientation', 'portrait');
+                $this->getConfig('orientation', 'portrait');
             }
 
             $this->dispatchEvent($table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count], true);
             $this->onEvent($table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
-            if ($this->config('orientation') == 'landscape') {
+            if ($this->getConfig('orientation') == 'landscape') {
                 $headerRow = [];
                 $headerStyle = [];
                 $headerFormat = [];
@@ -308,7 +308,7 @@ class ContactExcelBehavior extends Behavior
                 // process every page based on the limit
                 for ($pageNo=0; $pageNo<$pages; $pageNo++) {
                     $resultSet = $query
-                    ->limit($this->config('limit'))
+                    ->limit($this->getConfig('limit'))
                     ->page($pageNo+1)
                     ->all();
 
@@ -320,7 +320,7 @@ class ContactExcelBehavior extends Behavior
 
                     // process each row based on the result set
                     foreach ($resultSet as $entity) {
-                        if ($sheetRowCount >= $this->config('sheet_limit')) {
+                        if ($sheetRowCount >= $this->getConfig('sheet_limit')) {
                             $sheetCount++;
                             $sheetName = $baseSheetName . '_' . $sheetCount;
 
@@ -386,22 +386,22 @@ class ContactExcelBehavior extends Behavior
 
     private function getFields($table, $settings)
     {
-        $schema = $table->schema();
+        $schema = $table->getSchema();
         $columns = $schema->columns();
-        $excludes = $this->config('excludes');
+        $excludes = $this->getConfig('excludes');
 
         if (!is_array($table->primaryKey())) { //if not composite key
             $excludes[] = $table->primaryKey();
         }
 
         $fields = new ArrayObject();
-        $module = $table->alias();
+        $module = $table->getAlias();
         $language = I18n::locale();
         $excludedTypes = ['binary'];
         $columns = array_diff($columns, $excludes);
 
         foreach ($columns as $col) {
-            $field = $schema->column($col);
+            $field = $schema->getColumn($col);
             if (!in_array($field['type'], $excludedTypes)) {
                 $label = $table->aliasField($col);
 
@@ -600,7 +600,7 @@ class ContactExcelBehavior extends Behavior
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 0];
@@ -620,7 +620,7 @@ class ContactExcelBehavior extends Behavior
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $action = $this->_table->action;
-        if (in_array($action, $this->config('pages'))) {
+        if (in_array($action, $this->getConfig('pages'))) {
             $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
             $toolbarAttr = [
                 'class' => 'btn btn-xs btn-default',
@@ -659,7 +659,7 @@ class ContactExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if (in_array($action, $pages)) {
                 $toolbarButtons['export'] = $export;
             }
@@ -676,7 +676,7 @@ class ContactExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if ($pages != false) {
                 if (in_array($action, $pages)) {
                     $toolbarButtons['export'] = $export;

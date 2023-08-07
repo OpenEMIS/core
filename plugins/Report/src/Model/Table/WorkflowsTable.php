@@ -43,7 +43,7 @@ class WorkflowsTable extends AppTable
         ]
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->table("workflow_models");
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
