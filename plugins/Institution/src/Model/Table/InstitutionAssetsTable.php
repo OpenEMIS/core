@@ -635,7 +635,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeAssetTypeId(Event $event, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeAssetTypeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $this->request->data[$this->alias()]['asset_type_id'] = $entity->asset_type_id;
     }
