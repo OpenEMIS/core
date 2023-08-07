@@ -52,6 +52,13 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        //POCOR-7367::Start
+        $workflows = TableRegistry::get('workflows');
+        $workflowSteps = TableRegistry::get('workflow_steps');
+        $wfData = $workflows->find()->where(['name' => 'Cases - General'])->first();
+        $WFSdata = $workflowSteps->find()->where(['name' => 'Open','workflow_id'=>$wfData->id])->first();
+        $entity->status_id = $WFSdata->id;
+        //POCOR-7367::end
         if ($entity->isNew()) {
             $autoGenerateCaseNumber = $this->getAutoGenerateCaseNumber($entity->institution_id);
             $entity->case_number = $autoGenerateCaseNumber;
