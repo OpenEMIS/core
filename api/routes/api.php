@@ -216,6 +216,16 @@ Route::group(
         Route::delete('institutions/{institutionId}/students/{studentId}/behaviours/{behaviourId}', 'InstitutionController@deleteStudentBehaviour');
 
         // POCOR-7546 starts
+        // POCOR-7368 starts
+        Route::get('textbooks-statuses', 'TextbookController@getTextbookStatuses');
+        Route::get('textbooks-dimensions', 'TextbookController@getTextbookDimensions');
+        Route::get('textbooks-conditions', 'TextbookController@getTextbookConditions');
+        Route::get('textbooks/{textbookId}', 'TextbookController@getTextbookByID');
+        Route::get('institutions/{institutionId}/textbooks/{textbookId}', 'TextbookController@getInstitutionTextbookdata');
+        
+        Route::post('textbooks', 'TextbookController@addTextbooks');
+        Route::post('institutions/{institutionId}/textbooks', 'TextbookController@addInstitutionTextbooks');
+        // POCOR-7368 ends
 
     }
 );
