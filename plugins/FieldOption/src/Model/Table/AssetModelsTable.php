@@ -30,7 +30,7 @@ class AssetModelsTable extends ControllerActionTable
 
     public function afterAction(Event $event, ArrayObject $extra) 
     {
-        $this->field('asset_type_id', [
+        $this->field('asset_make_id', [
             'type' => 'select', 
             'after' => 'name',
             'entity' => $extra['entity']
