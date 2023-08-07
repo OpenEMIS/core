@@ -2316,10 +2316,11 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ,subq1.report_card_name
                 ,subq1.start_date
                 ,subq1.end_date
-                ,ROUND(subq1.gpa_per_student_report_card_period / (not_null_counter + null_counter), 2) gpa_per_student_report_card_period
+                ,ROUND(subq1.gpa_per_student_report_card_period / (not_null_counter + IFNULL(null_counter, 0)), 2) gpa_per_student_report_card_period
             FROM 
             (
-                SELECT student_info.report_card_code
+                SELECT 'a' joining_column
+                    ,student_info.report_card_code
                     ,student_info.report_card_name
                     ,student_info.start_date
                     ,student_info.end_date
@@ -2419,9 +2420,10 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ,student_info.student_id
                     ,student_info.report_card_id
             ) subq1
-            INNER JOIN 
+            LEFT JOIN 
             (
-                SELECT student_info.report_card_code
+                SELECT 'a' joining_column
+                    ,student_info.report_card_code
                     ,student_info.report_card_name
                     ,student_info.start_date
                     ,student_info.end_date
@@ -2482,7 +2484,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                         ON report_cards.academic_period_id = assessments.academic_period_id
                         AND report_cards.education_grade_id = assessments.education_grade_id
                         AND assessment_periods.end_date BETWEEN report_cards.start_date AND report_cards.end_date
-
                         INNER JOIN education_subjects
                         ON education_subjects.id = assessment_item_results.education_subject_id
                         INNER JOIN assessment_items_grading_types
@@ -2491,7 +2492,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                         AND assessment_items_grading_types.assessment_period_id = assessment_item_results.assessment_period_id
                         WHERE assessment_item_results.student_id = $studentId
                         AND assessment_item_results.academic_period_id = $selectedAcademicPeriodId
-                        
                         GROUP BY assessment_item_results.academic_period_id
                             ,assessment_item_results.education_subject_id
                             ,assessment_item_results.education_grade_id
@@ -2521,7 +2521,10 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ,student_info.education_grade_id
                     ,student_info.student_id
                     ,student_info.report_card_id
-            ) subq2");
+            ) subq2
+            ON subq2.joining_column = subq1.joining_column
+
+            ");
         $statement->execute();
         $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
