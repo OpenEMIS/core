@@ -108,7 +108,7 @@ class InstitutionsTable extends AppTable
 
         /*POCOR-6333 starts*/
         $feature = $this->request->data[$this->alias()]['feature'];
-        if (in_array($feature, ['Report.Institutions','Report.StudentAbsencesPerDays'])) {
+        if (in_array($feature, ['Report.Institutions','Report.StaffBehaviours','Report.StudentAbsencesPerDays'])) {
             $validator = $validator
                     ->notEmpty('area_level_id')
                     ->notEmpty('area_education_id');
@@ -313,6 +313,7 @@ class InstitutionsTable extends AppTable
         } elseif ($data[$this->alias()]['feature'] == 'Report.StaffLeave') { //POCOR-5762
             $options['validate'] = 'StaffLeave';
         }
+       
         elseif ($data[$this->alias()]['feature'] == 'Report.StudentAbsencesPerDays') { //POCOR-7276
             $options['validate'] = 'StudentAbsencesPerDays';
         }
@@ -328,6 +329,7 @@ class InstitutionsTable extends AppTable
             switch ($feature) {
                 /*POCOR-6176 Starts*/
                 case 'Report.Institutions':
+                case 'Report.StaffBehaviours':
                     $fieldsOrder[] = 'area_level_id';
                     $fieldsOrder[] = 'area_education_id';
                     $fieldsOrder[] = 'institution_filter';
@@ -565,7 +567,7 @@ class InstitutionsTable extends AppTable
     }
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
-    {
+    { 
 
         $requestData = json_decode($settings['process']['params']);
         $feature = $requestData->feature;
@@ -670,7 +672,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
-            if ($feature == 'Report.Institutions') {
+            if ($feature == 'Report.Institutions'||$feature == 'Report.StaffBehaviours') {
                 $option[self::NO_FILTER] = __('All Institutions');
                 $option[self::NO_STUDENT] = __('Institutions with No Students');
                 $option[self::NO_STAFF] = __('Institutions with No Staff');
@@ -940,7 +942,7 @@ class InstitutionsTable extends AppTable
 
 
                          ]
-                    )) ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
+                    )) ||(((in_array($feature, ['Report.Institutions'])||in_array($feature, ['Report.StaffBehaviours'])) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
 
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
@@ -990,7 +992,8 @@ class InstitutionsTable extends AppTable
                 'Report.Income',
                 'Report.Expenditure',
                 'Report.InstitutionPositionsSummaries',
-                'Report.StudentAbsencesPerDays' //POCOR-7276
+                'Report.StudentAbsencesPerDays',
+                'Report.StaffBehaviours' //POCOR-7276
             ]))) {
                 $Areas = TableRegistry::get('AreaLevel.AreaLevels');
                 $entity = $attr['entity'];
@@ -1004,9 +1007,9 @@ class InstitutionsTable extends AppTable
                     $attr['attr']['multiple'] = false;
                     $attr['select'] = true;
                     if($feature == "Report.InstitutionSummaryReport"){ 
-                        $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $areaOptions->toArray();
+                        $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $areaOptions->toArray();
                     }else{
-                        $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas Level')] + $areaOptions->toArray();
+                        $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas Level')] + $areaOptions->toArray();
                     }
                     
                     $attr['onChangeReload'] = true;
@@ -1053,7 +1056,8 @@ class InstitutionsTable extends AppTable
                     'Report.Income',
                     'Report.Expenditure',
                     'Report.InstitutionPositionsSummaries',
-                    'Report.StudentAbsencesPerDays' //POCOR-7276
+                    'Report.StudentAbsencesPerDays' ,
+                    'Report.StaffBehaviours'//POCOR-7276
                 ]))) {
                 $Areas = TableRegistry::get('Area.Areas');
                 $entity = $attr['entity'];
@@ -1073,9 +1077,9 @@ class InstitutionsTable extends AppTable
                     $attr['select'] = true;
                     /*POCOR-6333 starts*/
                     if (count($areaOptions) > 1) {
-                        $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas')] + $areaOptions;
+                        $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas')] + $areaOptions;
                     } else {
-                        $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $areaOptions;
+                        $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $areaOptions;
                     }
                     /*POCOR-6333 ends*/
                     $attr['onChangeReload'] = true;
@@ -1146,9 +1150,9 @@ class InstitutionsTable extends AppTable
                 $attr['select'] = false;
                 /*POCOR-6337 starts*/
                 if (count($programmeOptions) > 1) {
-                    $attr['options'] = ['' => '-- ' . _('Select') . ' --', 0 => _('All Programmes')] + $programmeOptions;
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --', 0 => __('All Programmes')] + $programmeOptions;
                 } else {
-                    $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $programmeOptions;
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $programmeOptions;
                 }
                 /*POCOR-6337 starts*/
                 $attr['onChangeReload'] = true;
@@ -1840,6 +1844,7 @@ class InstitutionsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+      
         $requestData = json_decode($settings['process']['params']);
         $filter = $requestData->institution_filter;
         $areaId = $requestData->area_education_id;
@@ -2233,9 +2238,9 @@ class InstitutionsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 if (count($levelOptions) > 1) {
-                    $attr['options'] = ['' => '-- ' . _('Select') . ' --', 0 => _('All Level')] + $levelOptions;
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --', 0 => __('All Level')] + $levelOptions;
                 } else {
-                    $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $levelOptions;
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $levelOptions;
                 }
                 /*POCOR-6337 starts*/
                 $attr['onChangeReload'] = true;
