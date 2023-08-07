@@ -10,15 +10,15 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use ArrayObject;
 
-class AssetMakesTable extends ControllerActionTable
+class AssetModelsTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
         $i = 1/0;
-        $this->table('asset_makes');
+        $this->table('asset_models');
         parent::initialize($config);
 
-        $this->belongsTo('AssetTypes', ['className' => 'FieldOption.AssetTypes']);
+        $this->belongsTo('AssetMakes', ['className' => 'FieldOption.AssetMakes']);
 //        $this->hasMany('UserNationalities', ['className' => 'User.UserNationalities', 'foreignKey' => 'nationality_id']);
 
         $this->addBehavior('FieldOption.FieldOption');
@@ -38,13 +38,13 @@ class AssetMakesTable extends ControllerActionTable
 
     }
 
-    public function onUpdateFieldAssetTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssetMakeId(Event $event, array $attr, $action, Request $request)
     {
-        $identityTypes = $this->AssetTypes
+        $assetMakes = $this->AssetMakes
             ->find('list')
             ->toArray();
 
-        $attr['options'] = $identityTypes;
+        $attr['options'] = $assetMakes;
 
         return $attr;
     }
