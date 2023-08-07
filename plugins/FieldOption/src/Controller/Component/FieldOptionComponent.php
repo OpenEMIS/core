@@ -182,6 +182,8 @@ class FieldOptionComponent extends Component
             return "SpecialNeeds.SpecialNeedsDiagnosticsDegree";
         }elseif($key== "AssetMakes" ){
             return "FieldOption.AssetMakes";
+        }elseif($key== "AssetModels" ){
+            return "FieldOption.AssetModels";
         }else{
            $className =  $FieldOptions->category.".".$key;
            return $className;
