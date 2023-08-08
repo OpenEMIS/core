@@ -1000,7 +1000,8 @@ class RecordBehavior extends Behavior
                         if (!in_array($obj->section, $sectionName)) {
                             $sectionName[$key] = $obj->section;
                             $fieldName = "section_".$key."_header";
-                            if (!empty($sectionName)) {
+                            
+                            if (!empty($sectionName)&&$model->request->params['action']!="Surveys") {
                                 $ControllerAction->field($fieldName, ['type' => 'section', 'title' => $sectionName[$key]]);
                                 $fieldOrder[++$order] = $fieldName;
                                // echo "<pre>";print_r($customFields);die;
