@@ -2,6 +2,7 @@
 
 namespace Institution\Model\Table;
 
+use Cake\Datasource\Exception\RecordNotFoundException;
 use DateTime;
 use ArrayObject;
 
@@ -28,7 +29,6 @@ use Cake\Utility\Hash;
 
 class StaffTable extends ControllerActionTable
 {
-    private $_dynamicFieldName = 'custom_field_data';
     use OptionsTrait;
 
     private $assigned;
@@ -46,6 +46,9 @@ class StaffTable extends ControllerActionTable
     const PENDING_RELEASEOUT = -5;
 
     private $dashboardQuery = null;
+    private $institution_id;
+    private $academic_period_id;
+    private $_dynamicFieldName = 'custom_field_data';
 
     public function initialize(array $config)
     {
@@ -275,156 +278,171 @@ class StaffTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $userContacts = TableRegistry::get('user_contacts');
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $query->where([$this->aliasField('institution_id') => $institutionId]);
         $periodId = $this->request->query['academic_period_id'];
-        if ($periodId > 0) {
-            $query->find('academicPeriod', ['academic_period_id' => $periodId]);
+        if (!$periodId) {
+            $periodId = $this->AcademicPeriods->getCurrent();
         }
-        $res = $query
-            ->contain([
-                'Users' => [
-                    'fields' => [
-                        'id',
-                        'openemis_no',
-                        'first_name',
-                        'middle_name',
-                        'third_name',
-                        'last_name',
-                        'preferred_name',
-                        'gender_id'
-                    ]
-                ],
-                'Positions' => [
-                    'fields' => [
-                        'id',
-                        'status_id',
-                        'position_no',
-                        'staff_position_title_id',
-                        'institution_id'
-                    ]
-                ],
-                'Users.IdentityTypes' => [
-                    'fields' => [
-                        'identity_type' => 'IdentityTypes.name',
-                        'identity_number' => 'Users.identity_number'
-                    ]
-                ],
 
-                'StaffTypes' => [
-                    'fields' => [
-                        'staff_type_name' => 'StaffTypes.name',
-                    ]
-                ],
-                'StaffStatuses' => [
-                    'fields' => [
-                        'staff_status_name' => 'StaffStatuses.name',
-                    ]
-                ],
-                'Institutions' => [
-                    'fields' => [
-                        'institution_name' => 'Institutions.name',
-                    ]
-                ],
-                'Positions.StaffPositionTitles' => [
-                    'fields' => [
-                        'position_title_teaching' => 'StaffPositionTitles.type',
-                    ]
-                ]
-            ])
-            ->select([
-                'openemis_no' => 'Users.openemis_no',
-                'staff_id' => 'Users.id',
-                'institution_position_id' => 'Staff.institution_position_id',
-                'FTE' => 'Staff.FTE',
-                'start_date' => 'Staff.start_date',
-                'end_date' => 'Staff.end_date',
-            ]);
+        $this->institution_id = $institutionId;
+        $this->academic_period_id = $periodId;
 
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+        $query = $this->setBasicQuery($query);
 
-            return $results->map(function ($row) {
+        $query = $this->addInstitutionFields($query);
 
-                // POCOR-6130 custome fields code
-                $userContacts = TableRegistry::get('user_contacts');
-                $contact = $userContacts->find()->select(['contact_number' => 'group_concat(DISTINCT(user_contacts.value))'])->where(['security_user_id' => $row->staff_id, 'preferred' => 1])->group('security_user_id')->first();
-                $row['contact_number'] = $contact['contact_number'];
-                $Guardians = TableRegistry::get('staff_custom_field_values');
-                $staffCustomFieldOptions = TableRegistry::get('staff_custom_field_options');
-                $staffCustomFields = TableRegistry::get('staff_custom_fields');
-                $staffCustomFormsFields = TableRegistry::get('staff_custom_forms_fields');
+        $query = $this->addStaffStatusField($query);
 
-                $guardianData = $Guardians->find()
-                    ->select([
-                        'id'                             => $Guardians->aliasField('id'),
-                        'staff_id'                     => $Guardians->aliasField('staff_id'),
-                        'staff_custom_field_id'        => $Guardians->aliasField('staff_custom_field_id'),
-                        'text_value'                     => $Guardians->aliasField('text_value'),
-                        'number_value'                   => $Guardians->aliasField('number_value'),
-                        'decimal_value'                  => $Guardians->aliasField('decimal_value'),
-                        'textarea_value'                 => $Guardians->aliasField('textarea_value'),
-                        'date_value'                     => $Guardians->aliasField('date_value'),
-                        'time_value'                     => $Guardians->aliasField('time_value'),
-                        'checkbox_value_text'            => 'staffCustomFieldOptions.name',
-                        'question_name'                  => 'staffCustomField.name',
-                        'field_type'                     => 'staffCustomField.field_type',
-                        'field_description'              => 'staffCustomField.description',
-                        'question_field_type'            => 'staffCustomField.field_type',
-                    ])->leftJoin(
-                        ['staffCustomField' => 'staff_custom_fields'],
-                        [
-                            'staffCustomField.id = ' . $Guardians->aliasField('staff_custom_field_id')
-                        ]
-                    )->leftJoin(
-                        ['staffCustomFieldOptions' => 'staff_custom_field_options'],
-                        [
-                            'staffCustomFieldOptions.id = ' . $Guardians->aliasField('number_value')
-                        ]
-                    )
-                    ->where([
-                        $Guardians->aliasField('staff_id') => $row->user['id'],
-                    ])->toArray();
-                //print_r($guardianData); exit;
-                $existingCheckboxValue = '';
-                foreach ($guardianData as $guadionRow) {
-                    $fieldType = $guadionRow->field_type;
+        $query->contain(['Users']);
 
-                    if ($fieldType == 'TEXT') {
-                        //die($guadionRow->text_value);
-                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = $guadionRow->text_value;
-                    } else if ($fieldType == 'CHECKBOX') {
-                        $existingCheckboxValue = trim($row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id], ',') . ',' . $guadionRow->checkbox_value_text;
-                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = trim($existingCheckboxValue, ',');
-                    } else if ($fieldType == 'NUMBER') {
-                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = $guadionRow->number_value;
-                    } else if ($fieldType == 'DECIMAL') {
-                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = $guadionRow->decimal_value;
-                    } else if ($fieldType == 'TEXTAREA') {
-                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = $guadionRow->textarea_value;
-                    } else if ($fieldType == 'DROPDOWN') {
-                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = $guadionRow->checkbox_value_text;
-                    } else if ($fieldType == 'DATE') {
-                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
-                    } else if ($fieldType == 'TIME') {
-                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = date('h:i A', strtotime($guadionRow->time_value));
-                    } else if ($fieldType == 'COORDINATES') {
-                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = $guadionRow->text_value;
-                    } else if ($fieldType == 'NOTE') {
-                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = $guadionRow->field_description;
-                    }
-                }
-                // POCOR-6130 custome fields code
-                return $row;
-            });
-        });
+        $query = $this->addUserBasicFields($query);
+
+        $query = $this->addStaffContactFields($query);
+
+//        $userContacts = TableRegistry::get('user_contacts');
+//
+//        $res = $query
+//            ->contain([
+//                'Users' => [
+//                    'fields' => [
+//                        'id',
+//                        'openemis_no',
+//                        'first_name',
+//                        'middle_name',
+//                        'third_name',
+//                        'last_name',
+//                        'preferred_name',
+//                        'gender_id'
+//                    ]
+//                ],
+//                'Positions' => [
+//                    'fields' => [
+//                        'id',
+//                        'status_id',
+//                        'position_no',
+//                        'staff_position_title_id',
+//                        'institution_id'
+//                    ]
+//                ],
+//                'Users.IdentityTypes' => [
+//                    'fields' => [
+//                        'identity_type' => 'IdentityTypes.name',
+//                        'identity_number' => 'Users.identity_number'
+//                    ]
+//                ],
+//
+//                'StaffTypes' => [
+//                    'fields' => [
+//                        'staff_type_name' => 'StaffTypes.name',
+//                    ]
+//                ],
+//                'StaffStatuses' => [
+//                    'fields' => [
+//                        'staff_status_name' => 'StaffStatuses.name',
+//                    ]
+//                ],
+//                'Institutions' => [
+//                    'fields' => [
+//                        'institution_name' => 'Institutions.name',
+//                    ]
+//                ],
+//                'Positions.StaffPositionTitles' => [
+//                    'fields' => [
+//                        'position_title_teaching' => 'StaffPositionTitles.type',
+//                    ]
+//                ]
+//            ])
+//            ->select([
+//                'openemis_no' => 'Users.openemis_no',
+//                'staff_id' => 'Users.id',
+//                'institution_position_id' => 'Staff.institution_position_id',
+//                'FTE' => 'Staff.FTE',
+//                'start_date' => 'Staff.start_date',
+//                'end_date' => 'Staff.end_date',
+//            ]);
+
+//        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+//
+//            return $results->map(function ($row) {
+//
+//                // POCOR-6130 custome fields code
+//                $userContacts = TableRegistry::get('user_contacts');
+//                $contact = $userContacts->find()->select(['contact_number' => 'group_concat(DISTINCT(user_contacts.value))'])->where(['security_user_id' => $row->staff_id, 'preferred' => 1])->group('security_user_id')->first();
+//                $row['contact_number'] = $contact['contact_number'];
+//                $Guardians = TableRegistry::get('staff_custom_field_values');
+//                $staffCustomFieldOptions = TableRegistry::get('staff_custom_field_options');
+//                $staffCustomFields = TableRegistry::get('staff_custom_fields');
+//                $staffCustomFormsFields = TableRegistry::get('staff_custom_forms_fields');
+//
+//                $guardianData = $Guardians->find()
+//                    ->select([
+//                        'id'                             => $Guardians->aliasField('id'),
+//                        'staff_id'                     => $Guardians->aliasField('staff_id'),
+//                        'staff_custom_field_id'        => $Guardians->aliasField('staff_custom_field_id'),
+//                        'text_value'                     => $Guardians->aliasField('text_value'),
+//                        'number_value'                   => $Guardians->aliasField('number_value'),
+//                        'decimal_value'                  => $Guardians->aliasField('decimal_value'),
+//                        'textarea_value'                 => $Guardians->aliasField('textarea_value'),
+//                        'date_value'                     => $Guardians->aliasField('date_value'),
+//                        'time_value'                     => $Guardians->aliasField('time_value'),
+//                        'checkbox_value_text'            => 'staffCustomFieldOptions.name',
+//                        'question_name'                  => 'staffCustomField.name',
+//                        'field_type'                     => 'staffCustomField.field_type',
+//                        'field_description'              => 'staffCustomField.description',
+//                        'question_field_type'            => 'staffCustomField.field_type',
+//                    ])->leftJoin(
+//                        ['staffCustomField' => 'staff_custom_fields'],
+//                        [
+//                            'staffCustomField.id = ' . $Guardians->aliasField('staff_custom_field_id')
+//                        ]
+//                    )->leftJoin(
+//                        ['staffCustomFieldOptions' => 'staff_custom_field_options'],
+//                        [
+//                            'staffCustomFieldOptions.id = ' . $Guardians->aliasField('number_value')
+//                        ]
+//                    )
+//                    ->where([
+//                        $Guardians->aliasField('staff_id') => $row->user['id'],
+//                    ])->toArray();
+//                //print_r($guardianData); exit;
+//                $existingCheckboxValue = '';
+//                foreach ($guardianData as $guadionRow) {
+//                    $fieldType = $guadionRow->field_type;
+//
+//                    if ($fieldType == 'TEXT') {
+//                        //die($guadionRow->text_value);
+//                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = $guadionRow->text_value;
+//                    } else if ($fieldType == 'CHECKBOX') {
+//                        $existingCheckboxValue = trim($row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id], ',') . ',' . $guadionRow->checkbox_value_text;
+//                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = trim($existingCheckboxValue, ',');
+//                    } else if ($fieldType == 'NUMBER') {
+//                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = $guadionRow->number_value;
+//                    } else if ($fieldType == 'DECIMAL') {
+//                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = $guadionRow->decimal_value;
+//                    } else if ($fieldType == 'TEXTAREA') {
+//                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = $guadionRow->textarea_value;
+//                    } else if ($fieldType == 'DROPDOWN') {
+//                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = $guadionRow->checkbox_value_text;
+//                    } else if ($fieldType == 'DATE') {
+//                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
+//                    } else if ($fieldType == 'TIME') {
+//                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = date('h:i A', strtotime($guadionRow->time_value));
+//                    } else if ($fieldType == 'COORDINATES') {
+//                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = $guadionRow->text_value;
+//                    } else if ($fieldType == 'NOTE') {
+//                        $row[$this->_dynamicFieldName . '_' . $guadionRow->staff_custom_field_id] = $guadionRow->field_description;
+//                    }
+//                }
+//                // POCOR-6130 custome fields code
+//                return $row;
+//            });
+//        });
     }
 
     public function onExcelGetFTE(Event $event, Entity $entity)
     {
         return ($entity->FTE * 100) . '%';
     }
-
 
 
     public function onExcelGetPositionTitleTeaching(Event $event, Entity $entity)
@@ -438,55 +456,62 @@ class StaffTable extends ControllerActionTable
         //redeclare fields for sorting purpose.
         $extraField[] = [
             'key' => 'Users.openemis_no',
-            'field' => 'openemis_no',
+            'field' => 'staff_openemis_no',
             'type' => 'string',
             'label' => __('OpenEMIS ID')
         ];
 
         $extraField[] = [
-            'key' => 'Staff.staff_id',
-            'field' => 'name',
+            'key' => 'staff_name',
+            'field' => 'staff_name',
             'type' => 'string',
             'label' => __('Staff')
         ];
 
         $extraField[] = [
-            'key' => 'Staff.institution_position_id',
-            'field' => 'institution_position_id',
-            'type' => 'integer',
+            'key' => 'staff_position',
+            'field' => 'staff_position',
+            'type' => 'string',
             'label' => __('Position')
         ];
 
         $extraField[] = [
-            'key' => 'StaffTypes.name',
-            'field' => 'staff_type_name',
+            'key' => 'staff_type',
+            'field' => 'staff_type',
             'type' => 'integer',
             'label' => __('Staff Type')
         ];
 
         $extraField[] = [
-            'key' => 'Staff.FTE',
+            'key' => 'FTE',
             'field' => 'FTE',
-            'type' => 'decimal',
+            'type' => 'string',
             'label' => __('FTE')
         ];
 
         $extraField[] = [
-            'key' => 'StaffPositionTitles.type',
-            'field' => 'position_title_teaching',
+            'key' => 'staff_teaching',
+            'field' => 'staff_teaching',
             'type' => 'string',
             'label' => __('Teaching')
         ];
 
         $extraField[] = [
-            'key' => 'user_contacts.value',
-            'field' => 'contact_number',
+            'key' => 'staff_contact_type',
+            'field' => 'staff_contact_type',
+            'type' => 'string',
+            'label' => __('Contact Type')
+        ];
+
+        $extraField[] = [
+            'key' => 'staff_contact',
+            'field' => 'staff_contact',
             'type' => 'string',
             'label' => __('Contact Number')
         ];
 
         $extraField[] = [
-            'key' => 'StaffStatuses.name',
+            'key' => 'staff_status_name',
             'field' => 'staff_status_name',
             'type' => 'string',
             'label' => __('Staff Status')
@@ -514,45 +539,34 @@ class StaffTable extends ControllerActionTable
         ];
 
         $extraField[] = [
-            'key' => 'Users.identity_type',
+            'key' => 'Institutions.code',
+            'field' => 'institution_code',
+            'type' => 'string',
+            'label' => __('Institution Code')
+        ];
+
+        $extraField[] = [
+            'key' => 'identity_type',
             'field' => 'identity_type',
             'type' => 'string',
             'label' => __('Identity Type')
         ];
 
         $extraField[] = [
-            'key' => 'Users.identity_number',
+            'key' => 'identity_number',
             'field' => 'identity_number',
             'type' => 'string',
             'label' => __('Identity Number')
         ];
 
-        $InfrastructureCustomFields = TableRegistry::get('staff_custom_fields');
-        $staffCustomFormsFields = TableRegistry::get('staff_custom_forms_fields');
-        $customFieldData = $InfrastructureCustomFields->find()->select([
-            'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
-            'custom_field' => $InfrastructureCustomFields->aliasfield('name')
-        ])->innerJoin(
-            ['staffCustomFormsFields' => 'staff_custom_forms_fields'],
-            [
-                'staffCustomFormsFields.staff_custom_field_id = ' . $InfrastructureCustomFields->aliasField('id')
-            ]
-        )->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
+        $extraField[] = [
+            'key' => 'nationality',
+            'field' => 'nationality',
+            'type' => 'string',
+            'label' => __('Identity Number')
+        ];
 
-        if (!empty($customFieldData)) {
-            // echo "<pre>"; print_r($customFieldData); exit;
-            foreach ($customFieldData as $data) {
-                $custom_field_id = $data->custom_field_id;
-                $custom_field = $data->custom_field;
-                $extraField[] = [
-                    'key' => '',
-                    'field' => $this->_dynamicFieldName . '_' . $custom_field_id,
-                    'type' => 'string',
-                    'label' => __($custom_field)
-                ];
-            }
-        }
-
+        //todo custom fields
         // $newFields = array_merge($fieldArray, $extraField);
         $fields->exchangeArray($extraField);
     }
@@ -3802,4 +3816,390 @@ class StaffTable extends ControllerActionTable
         return $staffShiftsData;
 
     }
+
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function setBasicQuery(Query $query)
+    {
+
+        $condition = [
+            $this->aliasField('institution_id') => $this->institution_id,
+        ];
+
+        $query->find('academicPeriod', ['academic_period_id' =>$this->academic_period_id])
+            ->select(
+                [
+                    $this->aliasField('id'),
+                    $this->aliasField('staff_id'),
+                    $this->aliasField('FTE'),
+                    $this->aliasField('staff_status_id'),
+                    $this->aliasField('staff_type_id'),
+                    $this->aliasField('is_homeroom'),
+                    $this->aliasField('start_date'),
+                    $this->aliasField('end_date'),
+                ]
+            )
+            ->where([
+                $condition
+            ])
+            ->group($this->aliasField('staff_id'))
+            ->order([$this->aliasField('created') => 'DESC']);
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addInstitutionFields(Query $query)
+    {
+        $institutionId = $this->institution_id;
+        $institution = self::getRelatedRecord('institutions', $institutionId);
+        $institution_code = $institution['code'];
+        $institution_name = $institution['name'];
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+        use ($institution_name, $institution_code) {
+            return $results->map(function ($row) use ($institution_name, $institution_code) {
+                $row['institution_code'] = $institution_code;
+                $row['institution_name'] = $institution_name;
+                return $row;
+            });
+        });
+        return $query;
+    }
+
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addStaffStatusField(Query $query)
+    {
+        $statuses = self::getRelatedOptions('staff_statuses', '`id`');
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+        use ($statuses) {
+            return $results->map(function ($row) use ($statuses) {
+                $row['staff_status'] = $statuses[$row->staff_status_id];
+                return $row;
+            });
+        });
+        return $query;
+    }
+
+    private function addStaffGenderField(Query $query)
+    {
+        $genders = self::getRelatedOptions('genders');
+        $query->select(['staff_gender_id' => 'Users.gender_id']);
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+        use ($genders) {
+            return $results->map(function ($row) use ($genders) {
+                $row['staff_gender'] = $genders[$row->staff_gender_id];
+                return $row;
+            });
+        });
+        return $query;
+    }
+
+    private function addStaffBirthplaceAreaField(Query $query)
+    {
+        $options = self::getRelatedOptions('area_administratives');
+        $source_field = 'staff_birthplace_area_id';
+        $destination_field = 'staff_birthplace_area';
+        $query->select([$source_field => 'Users.birthplace_area_id']);
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+        use ($options, $source_field, $destination_field) {
+            return $results->map(function ($row) use ($options, $source_field, $destination_field) {
+                $row[$destination_field] = $options[$row[$source_field]];
+                return $row;
+            });
+        });
+        return $query;
+    }
+
+    private function addStaffIdentityTypeField(Query $query)
+    {
+        $table = 'identity_types';
+        $options = self::getRelatedOptions($table);
+        $source_field = 'staff_identity_type_id';
+        $destination_field = 'staff_identity_type';
+        $query->select([$source_field => 'Users.identity_type_id']);
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+        use ($options, $source_field, $destination_field) {
+            return $results->map(function ($row) use ($options, $source_field, $destination_field) {
+                $row[$destination_field] = $options[$row[$source_field]];
+                return $row;
+            });
+        });
+        return $query;
+    }
+
+    private function addStaffNationalityField(Query $query)
+    {
+
+        $table = 'nationalities';
+        $options = self::getRelatedOptions($table);
+        $source_field = 'staff_nationality_id';
+        $destination_field = 'staff_nationality';
+        $query->select([$source_field => 'Users.nationality_id']);
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+        use ($options, $source_field, $destination_field) {
+            return $results->map(function ($row) use ($options, $source_field, $destination_field) {
+                $row[$destination_field] = $options[$row[$source_field]];
+                return $row;
+            });
+        });
+        return $query;
+    }
+
+    private function addStaffClassField(Query $query)
+    {
+        $classes = TableRegistry::get('institution_classes');
+        $class_staffs = TableRegistry::get('institution_class_staffs');
+        $query->leftJoin([$class_staffs->alias() => $class_staffs->table()], [
+            $class_staffs->aliasField('staff_id = ') . $this->aliasField('staff_id'),
+            $class_staffs->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+            $class_staffs->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+            $class_staffs->aliasField('staff_status_id = ') . $this->aliasField('staff_status_id'),
+            $class_staffs->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
+        ])
+            ->leftJoin([$classes->alias() => $classes->table()], [
+                $classes->aliasField('id = ') . $class_staffs->aliasField('institution_class_id')
+            ]);
+        $query = $query->select([
+            'staff_class' => $classes->aliasField('name')]);
+
+        return $query;
+    }
+
+    private function addStaffGuardianFields(Query $query)
+    {
+        $guardians = TableRegistry::get('security_users');
+        $staff_guardians = TableRegistry::get('staff_guardians');
+        $guardian_relations = TableRegistry::get('guardian_relations');
+        $guardian_contacts = TableRegistry::get('user_contacts');
+        $guardians->alias('guardians');
+        $staff_guardians->alias('staff_guardians');
+        $guardian_relations->alias('guardian_relations');
+        $guardian_contacts->alias('guardian_contacts');
+        $query
+            ->leftJoin([$staff_guardians->alias() => $staff_guardians->table()], [
+                $staff_guardians->aliasField('staff_id = ') . $this->aliasField('staff_id')
+            ])
+            ->leftJoin([$guardians->alias() => $guardians->table()], [
+                $guardians->aliasField('id = ') . $staff_guardians->aliasField('guardian_id')
+            ])
+            ->leftJoin([$guardian_relations->alias() => $guardian_relations->table()], [
+                $guardian_relations->aliasField('id = ') . $staff_guardians->aliasField('guardian_relation_id')
+            ])
+            ->leftJoin([$guardian_contacts->alias() => $guardian_contacts->table()], [
+                $guardian_contacts->aliasField('security_user_id = ') . $guardians->aliasField('id'),
+            ])
+            ->orderAsc($guardian_relations->aliasField('order'))
+            ->orderDesc($guardian_contacts->aliasField('preferred'));
+        $guardian_first_name = $guardians->aliasField('first_name');
+        $guardian_last_name = $guardians->aliasField('last_name');
+        $query = $query->select([
+            'guardian_name' => "CONCAT($guardian_first_name, ' ', $guardian_last_name)",
+            'guardian_relation' => $guardian_relations->aliasField('name'),
+            'guardian_contact' => $guardian_contacts->aliasField('value'),
+        ]);
+
+        return $query;
+    }
+
+    private function addStaffContactFields(Query $query)
+    {
+        $staff_contacts = TableRegistry::get('user_contacts');
+        $contact_types = TableRegistry::get('contact_types');
+        $contact_options = TableRegistry::get('contact_options');
+        $staff_contacts->alias('staff_contacts');
+        $contact_types->alias('contact_types');
+        $contact_options->alias('contact_options');
+        $query
+            ->leftJoin([$staff_contacts->alias() => $staff_contacts->table()], [
+                $staff_contacts->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
+            ])
+            ->leftJoin([$contact_types->alias() => $contact_types->table()], [
+                $contact_types->aliasField('id = ')
+                . $staff_contacts->aliasField('contact_type_id'),
+            ])
+            ->leftJoin([$contact_options->alias() => $contact_options->table()], [
+                $contact_options->aliasField('id = ')
+                . $contact_types->aliasField('contact_option_id'),
+            ])
+            ->orderDesc($staff_contacts->aliasField('preferred'));
+        $contact_type = $contact_types->aliasField('name');
+        $contact_option = $contact_options->aliasField('name');
+        $query = $query->select([
+            'staff_contact' => $staff_contacts->aliasField('value'),
+            'staff_contact_type' => "CONCAT($contact_option, ' - ', $contact_type)",
+        ]);
+        return $query;
+    }
+
+    private function addStaffCustomFields(Query $query)
+    {
+        $institution_staffs = TableRegistry::get('institution_staffs');
+        $the_staffs = $institution_staffs
+            ->find('all')
+            ->select('staff_id')
+            ->distinct('staff_id')
+            ->where(['academic_period_id' => $this->academic_period_id,
+                'institution_id' => $this->institution_id])->toArray();
+        $staff_ids = array_column($the_staffs, 'staff_id');
+        if (empty($staff_ids)) {
+            return;
+        }
+        $custom_field_values = TableRegistry::get('staff_custom_field_values');
+        $custom_field_options = TableRegistry::get('staff_custom_field_options');
+        $custom_fields = TableRegistry::get('staff_custom_fields');
+        $custom_options = self::getRelatedOptions('staff_custom_field_options');
+        $custom_values = $custom_field_values->find('all')->select([
+            'staff_id' => $custom_field_values->aliasField('staff_id'),
+            'custom_field_id' => $custom_fields->aliasField('id'),
+            'custom_field_value_id' => $custom_field_values->aliasField('id'),
+            'custom_text_value' => $custom_field_values->aliasField('text_value'),
+            'custom_number_value' => $custom_field_values->aliasField('number_value'),
+            'custom_decimal_value' => $custom_field_values->aliasField('decimal_value'),
+            'custom_textarea_value' => $custom_field_values->aliasField('textarea_value'),
+            'custom_date_value' => $custom_field_values->aliasField('date_value'),
+            'custom_time_value' => $custom_field_values->aliasField('time_value'),
+            'custom_field_name' => $custom_fields->aliasField('name'),
+            'custom_field_type' => $custom_fields->aliasField('field_type'),
+            'custom_field_description' => $custom_fields->aliasField('description'),
+        ])->where([$custom_field_values->aliasField('staff_id IN') => $staff_ids])
+            ->leftJoin(
+                [$custom_fields->alias() => $custom_fields->table()],
+                [
+                    $custom_fields->aliasField('id = ') . $custom_field_values->aliasField('staff_custom_field_id')
+                ]
+            )->toArray();
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+        use ($custom_options, $custom_values) {
+            return $results->map(function ($row) use ($custom_options, $custom_values) {
+                foreach ($custom_values as $custom_row) {
+                    if ($custom_row->staff_id == $row->staff_id) {
+                        $fieldType = $custom_row->custom_field_type;
+                        if ($fieldType == 'TEXT') {
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_text_value;
+                        }
+                        if ($fieldType == 'CHECKBOX') {
+                            $id = $custom_row->custom_number_value;
+                            $custom_option = $custom_options[$id];
+                            if (empty($row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id])) {
+                                $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_option;
+                            } else {
+                                $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] .= ', ' . $custom_option;
+                            }
+                        }
+                        if ($fieldType == 'NUMBER') {
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_number_value;
+                        }
+                        if ($fieldType == 'DECIMAL') {
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_decimal_value;
+                        }
+                        if ($fieldType == 'TEXTAREA') {
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_textarea_value;
+                        }
+                        if ($fieldType == 'DROPDOWN') {
+                            $id = $custom_row->custom_number_value;
+                            $custom_option = $custom_options[$id];
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_option;
+                        }
+                        if ($fieldType == 'DATE') {
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = date('Y-m-d', strtotime($custom_row->custom_date_value));
+                        }
+                        if ($fieldType == 'TIME') {
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = date('h:i A', strtotime($custom_row->custom_time_value));
+                        }
+                        if ($fieldType == 'COORDINATES') {
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_text_value;
+                        }
+                        if ($fieldType == 'NOTE') {
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_field_description;
+                        }
+                    }
+                }
+                return $row;
+            });
+        });
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addUserBasicFields(Query $query)
+    {
+
+        $query = $query->select([
+            'staff_name' => 'CONCAT(`Users`.`first_name`, " ", `Users`.`last_name`)',
+            'staff_openemis_no' => 'Users.openemis_no',
+            'staff_username' => 'Users.username',
+            'staff_date_of_birth' => 'Users.date_of_birth',
+            'staff_address' => 'Users.address',
+            'staff_identity_number' => 'Users.identity_number',
+        ]);
+        return $query;
+    }
+
+    private function addEducationGradeField(Query $query)
+    {
+        $query->contain(['EducationGrades']);
+        $query = $query->select([
+            'staff_education_grade' => 'EducationGrades.name',
+        ]);
+        return $query;
+    }
+
+    /**
+     * common proc to show related field with id in the index table
+     * @param $tableName
+     * @param $relatedField
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getRelatedRecord($tableName, $relatedField)
+    {
+        if (!$relatedField) {
+            null;
+        }
+        $Table = TableRegistry::get($tableName);
+        try {
+            $related = $Table->get($relatedField);
+            return $related->toArray();
+        } catch (RecordNotFoundException $e) {
+            null;
+        }
+        return null;
+    }
+
+    /**
+     * @param $tableName
+     * @param string $order
+     * @param array $where
+     * @return array|null
+     */
+    private static function getRelatedOptions($tableName, $order = '`order`', $where = [])
+    {
+        $Table = TableRegistry::get($tableName);
+        try {
+            $related = $Table->find('list')
+                ->select(['id', 'name'])
+                ->where($where)
+                ->orderAsc($order);
+            $options = $related->toArray();
+            $options = array_unique($options);
+            return $options;
+        } catch (RecordNotFoundException $e) {
+            null;
+        }
+        return null;
+    }
+
+
 }
