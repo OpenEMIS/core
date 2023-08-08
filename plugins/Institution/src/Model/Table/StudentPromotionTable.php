@@ -752,17 +752,13 @@ class StudentPromotionTable extends AppTable
                                                    INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
                                                    WHERE academic_periods.id=  $academicPeriodId and education_grades.name = '".$data->grade_name."'
                                                    ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC;";
-                       
-                        $newOption[$entity['grade_id']] = $entity['programme_name'] . ' - ' .$entity['grade_name'];
-                          
+                        $result=$connection->execute($sql)->fetch('assoc');
+                        $newOption=[];                       
+                        $newOption[$result['grade_id']] = $result['programme_name'] . ' - ' .$result['grade_name'];
+                        
                         if($data->same_grade_promotion==1){
                             $options =   $newOption;
                         }
-                       $newOption = [];
-                       $newOption[$data->id] = $data->programme . ' - ' .$data->grade_name;
-                       if($data->same_grade_promotion=="yes"){
-                            $options =   $newOption;
-                       }
                         else{
                             $options = $toGradeOptionPromoted;
                         }
@@ -940,7 +936,6 @@ class StudentPromotionTable extends AppTable
                         $gradeId = $this->Session->read('grade_id');
                         $nextClasses = $InstitutionClassesTable->getClassOptions($selectedNextPeriod, $institutionId, $gradeId);
                     }
-
                     $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
                     $StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
                     $StudentTransfersTable = TableRegistry::get('Institution.InstitutionStudentTransfers');
