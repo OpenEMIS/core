@@ -90,6 +90,7 @@ class ReportsController extends AppController
                 'Report.StaffAttendances' => __('Staff Attendance'),
                 'Report.StaffLeave' => __('Staff Leave'),
                 'Report.StaffTransfers' => __('Staff Transfer'),
+                'Report.StaffBehaviours' => __('Staff Behaviours'),
                 'Report.InstitutionCases' => __('Cases'),
                 'Report.ClassAttendanceNotMarkedRecords' => __('Class Attendance Marked'),
                 //'Report.InstitutionSpecialNeedsStudents' => __('Special Needs Students'),

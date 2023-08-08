@@ -46,11 +46,11 @@ class LinkAllExamCentresShell extends Shell {
             }
 
             if (isset($paramsObj)) {
-                if (isset($paramsObj['examination_items']) && !empty($paramsObj['examination_items'])) {
-                    $obj['examination_items'] = [];
-                    foreach($paramsObj['examination_items'] as $examItem) {
-                        $obj['examination_items'][] = [
-                            'id' => $examItem['examination_item_id'],
+                if (isset($paramsObj['examination_subjects']) && !empty($paramsObj['examination_subjects'])) {
+                    $obj['examination_subjects'] = [];
+                    foreach($paramsObj['examination_subjects'] as $examItem) {
+                        $obj['examination_subjects'][] = [
+                            'id' => $examItem['examination_subject_id'],
                             '_joinData' => [
                                 'education_subject_id' => $examItem['education_subject_id']
                             ]
@@ -79,7 +79,7 @@ class LinkAllExamCentresShell extends Shell {
 
                     $patchOptions = [
                         'validate' => false,
-                        'associated' => ['ExaminationItems._joinData' => ['validate' => false]]
+                        'associated' => ['ExaminationSubjects._joinData' => ['validate' => false]]
                     ];
 
                     $newEntities = [];

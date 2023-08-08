@@ -47,5 +47,5 @@ if (!empty($attributes)) {
         echo '<p>The SessionIndex of the IdP is: '.$_SESSION['IdPSessionIndex'].'</p>';
     }
 } else {
-    echo _('Attributes not found');
+    echo __('Attributes not found');
 }
