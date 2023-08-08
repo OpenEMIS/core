@@ -70,7 +70,7 @@ class UserRepository extends Controller
         try {
             $params = $request->all();
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];

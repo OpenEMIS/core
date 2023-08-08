@@ -46,7 +46,24 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                 ->requirePresence('first_name_mapping')
                 ->requirePresence('last_name_mapping')
                 ->requirePresence('gender_mapping');
-        }else{//POCOR-6930 Ends
+        }
+        //POCOR-7531 start
+        else if($this->request['data']['ConfigExternalDataSourceExam']['value'] == 'OpenEMIS Exams'){
+            return $validator
+                ->requirePresence('url')
+                ->requirePresence('username')
+                ->requirePresence('password');
+        }
+        //POCOR-7531 end
+         //POCOR-7533 start
+         else if($this->request['data']['ConfigExternalDataSourceExam']['value'] == 'CXC'){
+            return $validator
+                ->requirePresence('url')
+                ->requirePresence('username')
+                ->requirePresence('password');
+        }
+        //POCOR-7533 end
+        else{//POCOR-6930 Ends
             return $validator
                 ->requirePresence('client_id')
                 ->requirePresence('url')
@@ -125,6 +142,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         if ($entity->value != 'None') {
             $this->field('attributes', ['type' => 'custom_external_source']);
         }
+        $this->field('value_selection', ['type' => 'hidden']);//POCOR-7533
     }
 
     public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = [])
@@ -149,11 +167,13 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
             unset($attributes['private_key']);
         }
 
-        if ($entity->value == 'OpenEMIS Exams') {
+        if ($entity->value == 'OpenEMIS Exams'||$entity->value == 'CXC') {//POCOR-7533
             $newAttributes = [];
-            $newAttributes['client_id'] = $attributes['client_id'];
+            // $newAttributes['client_id'] = $attributes['client_id'];  //POCOR-7531 
             $newAttributes['url'] = $attributes['url'];
-            $newAttributes['public_key'] = $attributes['public_key'];
+            $newAttributes['username'] = $attributes['username'];//POCOR-7531
+            $newAttributes['password'] = str_repeat('*',strlen($this->decrypt($attributes['password'],Security::salt())));//POCOR-7531
+            // $newAttributes['public_key'] = $attributes['public_key']; //POCOR-7531 
             $attributes = $newAttributes;
         }
 
@@ -192,6 +212,11 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                     ])
                     ->toArray();
                 foreach ($attributes as $key => $value) {
+                     //POCOR-7531 start
+                    if ($key == 'password') {
+                        $value = $this->decrypt($value,Security::salt());
+                    }
+                     //POCOR-7531 end
                     if ($key == 'private_key') {
                         $keyAndSecret = explode('.', $value);
                         if (count($keyAndSecret) == 2) {
@@ -226,7 +251,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
     {
-        if ($requestData[$this->alias()]['value'] == 'OpenEMIS Exams') {
+        if ($requestData[$this->alias()]['value'] == 'OpenEMIS Exams'||$requestData[$this->alias()]['value'] =='CXC') {//POCOR-7533
             $url = rtrim(trim($requestData[$this->alias()]['url']), "/");
             $requestData[$this->alias()]['url'] = $url;
             $requestData[$this->alias()]['scope'] = 'Student';
@@ -246,6 +271,11 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
             $requestData[$this->alias()]['record_uri'] = $url .'/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]&_flatten=1';
             $requestData[$this->alias()]['user_endpoint_uri'] = $url .'/api/restful/Users/{external_reference}.json?_contain=Genders,MainIdentityType,MainNationality&_flatten=1';
             $patchOption['validate'] = 'OpenEMISIdentity';
+             //POCOR-7531 start
+            if (!empty($requestData[$this->alias()]['password'])){
+                $requestData[$this->alias()]['password']=$this->encrypt($requestData[$this->alias()]['password'], Security::salt());
+            }
+             //POCOR-7531 end
         } elseif ($requestData[$this->alias()]['value'] == 'None') {
             $patchOption['validate'] = false;
         } elseif ($requestData[$this->alias()]['value'] == 'Custom') {
@@ -321,9 +351,11 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         switch ($value) {
             case 'OpenEMIS Exams':
                 $this->field('url');
+                $this->field('username');//POCOR-7531 
+                $this->field('password',['type'=>'password']);//POCOR-7531 start
                 $this->field('token_uri', ['type' => 'hidden']);
                 $this->field('record_uri', ['type' => 'hidden']);
-                $this->field('client_id');
+                // $this->field('client_id'); //POCOR-7531 
                 $this->field('scope', ['type' => 'hidden']);
                 $this->field('first_name_mapping', ['type' => 'hidden']);
                 $this->field('middle_name_mapping', ['type' => 'hidden']);
@@ -338,10 +370,35 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                 $this->field('address_mapping', ['type' => 'hidden']);
                 $this->field('postal_mapping', ['type' => 'hidden']);
                 $this->field('user_endpoint_uri', ['type' => 'hidden']);
-                $this->field('private_key', ['type' => 'text']);
-                $this->field('public_key', ['type' => 'text']);
+                $this->field('value_selection', ['type' => 'hidden']);//POCOR-7531 
+                // $this->field('private_key', ['type' => 'text']);//POCOR-7531 
+                // $this->field('public_key', ['type' => 'text']);//POCOR-7531 
                 break;
-
+                //POCOR-7533 start
+                case 'CXC':
+                    $this->field('url');
+                    $this->field('username'); 
+                    $this->field('password',['type'=>'password']);
+                    $this->field('token_uri', ['type' => 'hidden']);
+                    $this->field('record_uri', ['type' => 'hidden']);
+                  
+                    $this->field('scope', ['type' => 'hidden']);
+                    $this->field('first_name_mapping', ['type' => 'hidden']);
+                    $this->field('middle_name_mapping', ['type' => 'hidden']);
+                    $this->field('third_name_mapping', ['type' => 'hidden']);
+                    $this->field('last_name_mapping', ['type' => 'hidden']);
+                    $this->field('date_of_birth_mapping', ['type' => 'hidden']);
+                    $this->field('external_reference_mapping', ['type' => 'hidden']);
+                    $this->field('gender_mapping', ['type' => 'hidden']);
+                    $this->field('identity_type_mapping', ['type' => 'hidden']);
+                    $this->field('identity_number_mapping', ['type' => 'hidden']);
+                    $this->field('nationality_mapping', ['type' => 'hidden']);
+                    $this->field('address_mapping', ['type' => 'hidden']);
+                    $this->field('postal_mapping', ['type' => 'hidden']);
+                    $this->field('user_endpoint_uri', ['type' => 'hidden']);
+                    $this->field('value_selection', ['type' => 'hidden']);
+                    break;
+                 //POCOR-7533 end
             case 'Custom':
                 $this->field('token_uri');
                 $this->field('record_uri');
@@ -385,4 +442,25 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                 break;
         }
     }
+    //POCOR-7531 start
+    public  function encrypt($pure_string, $secretHash) {
+       
+        $iv = substr($secretHash, 0, 16);
+        $encryptedMessage = openssl_encrypt($pure_string, "AES-256-CBC", $secretHash, $raw_input = false, $iv);
+        $encrypted = base64_encode(
+            $encryptedMessage
+        );
+     
+        return $encrypted;
+    }
+    public function decrypt($encrypted_string, $secretHash) {
+        $iv = substr($secretHash, 0, 16);
+        $data = base64_decode($encrypted_string);
+        $decryptedMessage = openssl_decrypt($data, "AES-256-CBC", $secretHash, $raw_input = false, $iv);
+        $decrypted = rtrim(
+            $decryptedMessage
+        );
+        return $decrypted;
+    }
+    //POCOR-7531 end
 }

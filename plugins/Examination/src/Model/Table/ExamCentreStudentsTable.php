@@ -37,7 +37,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
             'className' => 'Examination.ExaminationCentresExaminationsSubjects',
             'joinTable' => 'examination_centres_examinations_subjects_students',
             'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
-            'targetForeignKey' => ['examination_centre_id', 'examination_item_id'],
+            'targetForeignKey' => ['examination_centre_id', 'examination_subject_id'],
             'through' => 'Examination.ExaminationCentresExaminationsSubjectsStudents',
             'dependent' => true,
             'cascadeCallbacks' => true
@@ -432,10 +432,10 @@ class ExamCentreStudentsTable extends ControllerActionTable {
     public function findResults(Query $query, array $options) {
         $Users = $this->Users;
         $SubjectStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsSubjectsStudents');
-        $ItemResults = TableRegistry::get('Examination.ExaminationItemResults');
+        $ItemResults = TableRegistry::get('Examination.ExaminationStudentSubjectResults');
         $examinationId = $options['examination_id'];
         $examinationCentreId = $options['examination_centre_id'];
-        $examinationItemId = $options['examination_item_id'];
+        $examinationItemId = $options['examination_subject_id'];
 
         $query
             ->select([
@@ -461,7 +461,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
                     $SubjectStudents->aliasField('examination_id = ') . $this->aliasField('examination_id'),
                     $SubjectStudents->aliasField('examination_centre_id = ') . $this->aliasField('examination_centre_id'),
                     $SubjectStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
-                    $SubjectStudents->aliasField('examination_item_id = ') . $examinationItemId
+                    $SubjectStudents->aliasField('examination_subject_id = ') . $examinationItemId
                 ]
             )
             ->leftJoin(
@@ -469,7 +469,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
                 [
                     $ItemResults->aliasField('examination_id = ') . $this->aliasField('examination_id'),
                     $ItemResults->aliasField('examination_centre_id = ') . $this->aliasField('examination_centre_id'),
-                    $ItemResults->aliasField('examination_item_id = ') . $SubjectStudents->aliasField('examination_item_id'),
+                    $ItemResults->aliasField('examination_subject_id = ') . $SubjectStudents->aliasField('examination_subject_id'),
                     $ItemResults->aliasField('student_id = ') . $this->aliasField('student_id')
                 ]
             )
