@@ -3,7 +3,6 @@
 namespace User\Model\Table;
 
 use ArrayObject;
-use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Query;
@@ -63,40 +62,29 @@ class UserLanguagesTable extends ControllerActionTable
 
     }
 
-    public function getGradeOptions(Query $query, array $options)
+
+    public function getGradeOptions()
     {
+        // Start POCOR-4824
 
+        // $gradeOptions = array();
+        // for ($i = 0; $i < 8; $i++) {
+        // 	$gradeOptions[$i] = $i;
+        // }
+        // return $gradeOptions;
 
-        $institutionClasses = TableRegistry::get('language_proficiencies');
-        $query = $institutionClasses
-            ->find('all')
-            ->select('id','name')
-            ->orderAsc('order')->toArray();
-
-        return [];
+        $connection = ConnectionManager::get('default');
+        $res = $connection->execute('Select * from language_proficiencies order by `order` ASC');
+        $rows = $res->fetchAll('assoc');
+        $lp = [];
+        if (!empty($rows)) {
+            foreach ($rows as $key => $value) {
+                $lp[$value['id']] = $value['name'];
+            }
+        }
+        return $lp;
+        // END POCOR-4824
     }
-//    public function getGradeOptions()
-//    {
-//        // Start POCOR-4824
-//
-//        // $gradeOptions = array();
-//        // for ($i = 0; $i < 8; $i++) {
-//        // 	$gradeOptions[$i] = $i;
-//        // }
-//        // return $gradeOptions;
-//
-//        $connection = ConnectionManager::get('default');
-//        $res = $connection->execute('Select * from language_proficiencies order by name ASC');
-//        $rows = $res->fetchAll('assoc');
-//        $lp = [];
-//        if (!empty($rows)) {
-//            foreach ($rows as $key => $value) {
-//                $lp[$value['id']] = $value['name'];
-//            }
-//        }
-//        return $lp;
-//        // END POCOR-4824
-//    }
 
     /**
      * @param Validator $validator
