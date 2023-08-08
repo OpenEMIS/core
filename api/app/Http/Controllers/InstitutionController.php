@@ -1260,7 +1260,9 @@ class InstitutionController extends Controller
             $data = $this->institutionService->addStudentAssessmentItemResult($request);
             
             if($data == 1){
-                return $this->sendErrorResponse("Student assessment mark is added/updated successfully.");
+                return $this->sendErrorResponse("Student assessment mark is added successfully.");
+            } elseif($data == 2){
+                return $this->sendErrorResponse("Student assessment mark is updated successfully.");
             } else {
                 return $this->sendSuccessResponse("The update of student assessment mark could not be completed successfully.");
             }

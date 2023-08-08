@@ -1740,8 +1740,8 @@ class InstitutionRepository extends Controller
         try {
             $params = $request->all();
             
-            $lists = AssessmentItemResults::where('institution_id', $institutionId)->where('student_id', $studentId)->get()->toArray();
-
+            $lists = AssessmentItemResults::with('assessmentGradingOption')->where('institution_id', $institutionId)->where('student_id', $studentId)->get()->toArray();
+            
             return $lists;
             
         } catch (\Exception $e) {
@@ -2394,23 +2394,48 @@ class InstitutionRepository extends Controller
         try {
             $data = $request->all();
 
-            $store['id'] = Str::uuid();
-            $store['marks'] = $data['marks']??Null;
-            $store['assessment_grading_option_id'] = $data['assessment_grading_option_id']??Null;
-            $store['student_id'] = $data['student_id'];
-            $store['assessment_id'] = $data['assessment_id'];
-            $store['education_subject_id'] = $data['education_subject_id'];
-            $store['education_grade_id'] = $data['education_grade_id'];
-            $store['academic_period_id'] = $data['academic_period_id'];
-            $store['assessment_period_id'] = $data['assessment_period_id'];
-            $store['institution_id'] = $data['institution_id'];
-            $store['institution_classes_id'] = $data['institution_classes_id'];
-            $store['created_user_id'] = JWTAuth::user()->id;
-            $store['created'] = Carbon::now()->toDateTimeString();
+            $check = AssessmentItemResults::where('student_id', $data['student_id'])
+                    ->where('assessment_id', $data['assessment_id'])
+                    ->where('education_subject_id', $data['education_subject_id'])
+                    ->where('education_grade_id', $data['education_grade_id'])
+                    ->where('academic_period_id', $data['academic_period_id'])
+                    ->where('assessment_period_id', $data['assessment_period_id'])
+                    ->where('institution_classes_id', $data['institution_classes_id'])
+                    ->first();
+            if($check){
+                $data['modified_user_id'] = JWTAuth::user()->id;
+                $data['modified'] = Carbon::now()->toDateTimeString();
 
-            $insert = AssessmentItemResults::insert($store);
+                $update = AssessmentItemResults::where('student_id', $data['student_id'])
+                    ->where('assessment_id', $data['assessment_id'])
+                    ->where('education_subject_id', $data['education_subject_id'])
+                    ->where('education_grade_id', $data['education_grade_id'])
+                    ->where('academic_period_id', $data['academic_period_id'])
+                    ->where('assessment_period_id', $data['assessment_period_id'])
+                    ->where('institution_classes_id', $data['institution_classes_id'])
+                    ->update($data);
+                    $resp = 2;
+            } else {
+                $store['id'] = Str::uuid();
+                $store['marks'] = $data['marks']??Null;
+                $store['assessment_grading_option_id'] = $data['assessment_grading_option_id']??Null;
+                $store['student_id'] = $data['student_id'];
+                $store['assessment_id'] = $data['assessment_id'];
+                $store['education_subject_id'] = $data['education_subject_id'];
+                $store['education_grade_id'] = $data['education_grade_id'];
+                $store['academic_period_id'] = $data['academic_period_id'];
+                $store['assessment_period_id'] = $data['assessment_period_id'];
+                $store['institution_id'] = $data['institution_id'];
+                $store['institution_classes_id'] = $data['institution_classes_id'];
+                $store['created_user_id'] = JWTAuth::user()->id;
+                $store['created'] = Carbon::now()->toDateTimeString();
+
+                $insert = AssessmentItemResults::insert($store);
+                $resp = 1;
+            }
+            
             DB::commit();
-            return 1;
+            return $resp;
             
         } catch (\Exception $e) {
             DB::rollback();
