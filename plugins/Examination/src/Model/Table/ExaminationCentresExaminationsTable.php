@@ -20,15 +20,16 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
+      
         parent::initialize($config);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsToMany('ExaminationItems', [
-            'className' => 'Examination.ExaminationItems',
+        $this->belongsToMany('ExaminationSubjects', [
+            'className' => 'Examination.ExaminationSubjects',
             'joinTable' => 'examination_centres_examinations_subjects',
             'foreignKey' => ['examination_centre_id', 'examination_id'],
-            'targetForeignKey' => 'examination_item_id',
+            'targetForeignKey' => 'examination_subject_id',
             'through' => 'Examination.ExaminationCentresExaminationsSubjects',
             'dependent' => true,
             'cascadeCallbacks' => true
@@ -361,11 +362,11 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
 
         // Subjects logic
         $examinationId = $requestData[$this->alias()]['examination_id'];
-        $examinationItems = $this->ExaminationItems->getExaminationItemSubjects($examinationId);
+        $ExaminationSubjects = $this->ExaminationSubjects->getExaminationSubjectsubjects($examinationId);
 
         $examinationCentreSubjects = [];
-        if (is_array($examinationItems)) {
-            foreach($examinationItems as $item) {
+        if (is_array($ExaminationSubjects)) {
+            foreach($ExaminationSubjects as $item) {
                 $examinationCentreSubjects[] = [
                     'id' => $item->item_id,
                     '_joinData' => [
@@ -375,39 +376,42 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
             }
         }
 
-        $requestData[$this->alias()]['examination_items'] = $examinationCentreSubjects;
-        $patchOptions['associated'] = ['ExaminationItems._joinData' => ['validate' => false]];
+        $requestData[$this->alias()]['examination_subjects'] = $examinationCentreSubjects;
+        $patchOptions['associated'] = ['ExaminationSubjects._joinData' => ['validate' => false]];
     }
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
+        
         $process = function ($model, $entity) use ($requestData) {
             if (isset($requestData[$model->alias()]['examination_centres']) && !empty($requestData[$model->alias()]['examination_centres'])) {
+              
                 $examCentreIds = $requestData[$model->alias()]['examination_centres'];
                 $newEntities = [];
 
                 if (is_array($examCentreIds)) {
-                    $patchOptions['associated'] = ['ExaminationItems._joinData' => ['validate' => false]];
+                    $patchOptions['associated'] = ['ExaminationSubjects._joinData' => ['validate' => false]];
 
                     foreach ($examCentreIds as $centreId) {
                         $requestData[$model->alias()]['examination_centre_id'] = $centreId;
                         $newEntities[] = $model->newEntity($requestData->getArrayCopy(), $patchOptions);
                     }
                 }
-
+         
                 return $model->saveMany($newEntities);
 
             } else if (isset($requestData[$model->alias()]['link_all_examination_centres']) && $requestData[$model->alias()]['link_all_examination_centres'] == 1) {
+             
                 if (!empty($requestData[$this->alias()]['examination_id'])) {
                     $examinationId = $requestData[$model->alias()]['examination_id'];
                     $academicPeriodId = $requestData[$model->alias()]['academic_period_id'];
                     $examCentreTypeId = !empty($requestData[$model->alias()]['examination_centre_type']) ? $requestData[$model->alias()]['examination_centre_type'] : '';
 
                     $examItems = [];
-                    if (isset($requestData[$model->alias()]['examination_items'])) {
-                        foreach($requestData[$model->alias()]['examination_items'] as $obj) {
+                    if (isset($requestData[$model->alias()]['examination_subjects'])) {
+                        foreach($requestData[$model->alias()]['examination_subjects'] as $obj) {
                             $examItems[] = [
-                                'examination_item_id' => $obj['id'],
+                                'examination_subject_id' => $obj['id'],
                                 'education_subject_id' => $obj['_joinData']['education_subject_id']
                             ];
                         }
@@ -419,7 +423,7 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
                     $pid = '';
                     $processModel = $model->registryAlias();
                     $eventName = '';
-                    $passArray = ['examination_items' => $examItems];
+                    $passArray = ['examination_subjects' => $examItems];
                     $params = json_encode($passArray);
                     $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
 
@@ -448,7 +452,7 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         $entity->showDeletedValueAs = $exam->code_name;
 
         $extra['excludedModels'] = [
-            $this->LinkedInstitutions->alias(), $this->ExaminationItems->alias()
+            $this->LinkedInstitutions->alias(), $this->ExaminationSubjects->alias()
         ];
     }
 

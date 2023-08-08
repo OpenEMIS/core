@@ -11,7 +11,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         ExaminationCentresExaminationsSubjectsTable: 'Examination.ExaminationCentresExaminationsSubjects',
         ExaminationCentresExaminationsTable: 'Examination.ExaminationCentresExaminations',
         ExaminationCentreStudentsTable: 'Examination.ExamCentreStudents',
-        ExaminationItemResultsTable: 'Examination.ExaminationItemResults',
+        ExaminationStudentSubjectResultsTable: 'Examination.ExaminationStudentSubjectResults',
     };
 
     var service = {
@@ -81,9 +81,9 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
 
         return ExaminationCentresExaminationsSubjectsTable
             .select()
-            .contain(['ExaminationItems.ExaminationGradingTypes.GradingOptions', 'EducationSubjects'])
+            .contain(['ExaminationSubjects.ExaminationGradingTypes.GradingOptions', 'EducationSubjects'])
             .where({examination_id: examinationId, examination_centre_id: examinationCentreId})
-            .order(['EducationSubjects.order', 'ExaminationItems.code', 'ExaminationItems.name'])
+            .order(['EducationSubjects.order', 'ExaminationSubjects.code', 'ExaminationSubjects.name'])
             .ajax({success: success, defer: true});
     };
 
@@ -423,13 +423,13 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
 
                         if (isMarksType) {
                             studentResults['weight'] = itemWeight;
-                            var marks = parseFloat(subjectStudent.ExaminationItemResults.marks);
+                            var marks = parseFloat(subjectStudent.ExaminationStudentSubjectResults.marks);
                             if (!isNaN(marks)) {
                                 studentResults['mark'] = marks;
                             }
                         } else {
-                            if (subjectStudent.ExaminationItemResults.examination_grading_option_id != null) {
-                                studentResults['mark'] = subjectStudent.ExaminationItemResults.examination_grading_option_id;
+                            if (subjectStudent.ExaminationStudentSubjectResults.examination_grading_option_id != null) {
+                                studentResults['mark'] = subjectStudent.ExaminationStudentSubjectResults.examination_grading_option_id;
                             }
                         }
                     }, rowData);
@@ -449,7 +449,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         var finderOptions = {
             examination_id: examinationId,
             examination_centre_id: examinationCentreId,
-            examination_item_id: subject.id,
+            examination_subject_id: subject.id,
         };
 
         for (var field in filterModel) {
@@ -527,13 +527,13 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
                     "academic_period_id" : academicPeriodId,
                     "examination_id" : examinationId,
                     "education_subject_id" : educationSubjectId,
-                    "examination_item_id" : examinationItemId,
+                    "examination_subject_id" : examinationItemId,
                     "examination_centre_id" : examinationCentreId,
                     "institution_id" : institutionId,
                     "student_id" : parseInt(studentId)
                 };
 
-                promises.push(ExaminationItemResultsTable.save(data));
+                promises.push(ExaminationStudentSubjectResultsTable.save(data));
             }, this);
         }, this);
 
