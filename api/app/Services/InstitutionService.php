@@ -1706,4 +1706,178 @@ class InstitutionService extends Controller
         }
     }
 
+    // POCOR-7546 starts
+
+    public function getBehaviourCategories($request)
+    {
+        try {
+            $data = $this->institutionRepository->getBehaviourCategories($request);
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Behaviour Categories Option List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Behaviour Categories List.');
+        }
+    }
+
+    public function getInstitutionStudentBehaviour($institutionId, $studentId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionStudentBehaviour($institutionId, $studentId);
+            if($data){
+                return $data; 
+            }
+            return null;
+
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Student Behaviour.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Student Behaviour.');
+        }
+    }
+
+    public function addStudentAssessmentItemResult($request)
+    {
+        try {
+            $data = $this->institutionRepository->addStudentAssessmentItemResult($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'The update of student assessment mark could not be completed successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('The update of student assessment mark could not be completed successfully.');
+        }
+    }
+
+    public function addStudentBehaviour($request)
+    {
+        try {
+            $data = $this->institutionRepository->addStudentBehaviour($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'The update of student behaviour could not be completed successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('The update of student behaviour could not be completed successfully.');
+        }
+    }
+
+    public function getInstitutionClassEducationGradeStudents($institutionId, $institutionClassId, $educationGradeId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionClassEducationGradeStudents($institutionId, $institutionClassId, $educationGradeId);
+
+            $resp = [];
+
+            if(count($data) > 0){
+                foreach($data as $k => $l){
+                    $resp[$k]['institution_class_id'] = $l['id'];
+                    $resp[$k]['institution_class_name'] = $l['name'];
+                    $resp[$k]['institution_id'] = $l['institution_id'];
+                    $resp[$k]['student_id'] = $l['students'];
+
+                    $studentIds = [];
+
+                    if(count($resp[$k]['student_id']) > 0){
+                        $students = $resp[$k]['student_id'];
+
+                        foreach($students as $s){
+                            $studentIds[] = $s['student_id'];
+                        }
+                    }
+
+                    $resp[$k]['student_id'] = $studentIds;
+                }
+            }
+
+            return $resp;
+            
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Students List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get Students List.');
+        }
+    }
+
+    public function getInstitutionEducationSubjectStudents($institutionId, $educationGradeId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionEducationSubjectStudents($institutionId, $educationGradeId);
+            // return $data;
+
+            $resp = [];
+
+            if(count($data) > 0){
+                foreach($data as $k => $l){
+                    $resp[$k]['institution_subject_id'] = $l['id'];
+                    $resp[$k]['institution_subject_name'] = $l['name'];
+                    $resp[$k]['education_subject_code'] = $l['education_subjects']['code'];
+                    $resp[$k]['education_subject_name'] = $l['education_subjects']['name'];
+                    $resp[$k]['institution_id'] = $l['institution_id'];
+                    $resp[$k]['student_id'] = $l['students'];
+
+                    $studentIds = [];
+
+                    if(count($resp[$k]['student_id']) > 0){
+                        $students = $resp[$k]['student_id'];
+
+                        foreach($students as $s){
+                            $studentIds[] = $s['student_id'];
+                        }
+                    }
+
+                    $resp[$k]['student_id'] = $studentIds;
+                }
+            }
+
+            return $resp;
+            
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Students List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+        
+            return $this->sendErrorResponse('Failed to get Students List.');
+        }
+    }
+
+    public function deleteStudentBehaviour($institutionId, $studentId, $behaviourId)
+    {
+        try {
+            $data = $this->institutionRepository->deleteStudentBehaviour($institutionId, $studentId, $behaviourId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'The deletion of student behaviour could not be completed successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('The deletion of student behaviour could not be completed successfully.');
+        }
+    }
+
+// POCOR-7546 ends
+
 }

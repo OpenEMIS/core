@@ -793,7 +793,19 @@ class ApplicationsTable extends ControllerActionTable
             $isLoan = $FinancialAssistanceTypesTable->is($entity->financial_assistance_type_id, 'LOAN');
         } elseif ($entity->has('scholarship') && $entity->scholarship->has('scholarship_financial_assistance_type_id')) {
             // for view and edit
-            $isLoan = $FinancialAssistanceTypesTable->is($entity->scholarship->scholarship_financial_assistance_type_id, 'LOAN');
+            // $isLoan = $FinancialAssistanceTypesTable->is($entity->scholarship->scholarship_financial_assistance_type_id, 'LOAN');
+            // Start POCOR-7570
+            $isLoan = false;
+            $is_loan_exist = $FinancialAssistanceTypesTable->find()
+            ->where([
+                $FinancialAssistanceTypesTable->aliasField('id') => $entity->scholarship->scholarship_financial_assistance_type_id,
+                $FinancialAssistanceTypesTable->aliasField('name') => 'LOAN'
+            ])
+            ->first();
+            if(!empty($is_loan_exist)){
+                $isLoan = true;
+            }
+            // END POCOR-7570
         }
 
         $this->field('financial_assistance_type_id', [

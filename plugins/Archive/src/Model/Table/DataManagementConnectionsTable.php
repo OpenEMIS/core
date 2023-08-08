@@ -341,4 +341,323 @@ class DataManagementConnectionsTable extends ControllerActionTable
         );
         return $encrypted;
     }
+
+    /**
+     * helper function to generate a short random string
+     * @param int $length
+     * @return bool|string
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function generateRandomString($length = 4)
+    {
+        $bytes = random_bytes($length);
+        return substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $length);
+    }
+
+    /**
+     * a common function to check whether there is an archive table or not.
+     * If the archive table is absent it is created.
+     * If the archive table is present or successfully created, the func returns the name of the archive table
+     * If the archive table can not be created, then "" string is returned
+     * @param $sourceTableName
+     * @param string $db_name
+     * @return string
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function hasArchiveTable($sourceTableName, $db_name = 'default')
+    {
+
+        $targetTableName = $sourceTableName . '_archived';
+        $archive_connection = ConnectionManager::get($db_name);
+        $default_connection = ConnectionManager::get('default');
+        $archiveSchemaCollection = new \Cake\Database\Schema\Collection($archive_connection);
+        $defaultSchemaCollection = new \Cake\Database\Schema\Collection($default_connection);
+        $existingTables = $archiveSchemaCollection->listTables();
+        $tableExists = in_array($targetTableName, $existingTables);
+
+        if ($tableExists) {
+            return $targetTableName;
+        }
+
+        $sourceTableSchema = $defaultSchemaCollection->describe($sourceTableName);
+
+        // Create a new table schema for the target table
+        $targetTableSchema = new \Cake\Database\Schema\Table($targetTableName);
+
+        // Copy the columns from the source table to the target table
+        foreach ($sourceTableSchema->columns() as $column) {
+            $columnDefinition = $sourceTableSchema->column($column);
+            $targetTableSchema->addColumn($column, $columnDefinition);
+        }
+        $randomString = self::generateRandomString();
+        // Copy the indexes from the source table to the target table
+        foreach ($sourceTableSchema->indexes() as $index) {
+            $indexDefinition = $sourceTableSchema->index($index);
+            $targetTableSchema->addIndex($index . $randomString, $indexDefinition);
+        }
+
+        // Copy the constraints from the source table to the target table
+        // FIX for random FK name
+
+        foreach ($sourceTableSchema->constraints() as $constraint) {
+            $constraintDefinition = $sourceTableSchema->constraint($constraint);
+            if ($constraintDefinition['type'] !== \Cake\Database\Schema\Table::CONSTRAINT_FOREIGN) {
+                // If it's not a foreign key constraint, proceed with adding it to the destination table
+                $constraintname = $constraint != 'primary' ? $constraint . $randomString : $constraint;
+                $targetTableSchema->addConstraint($constraintname, $constraintDefinition);
+            }
+//            Log::write('debug', '$constraintDefinition');
+//            Log::write('debug', $constraintname);
+//            Log::write('debug', $constraintDefinition);
+        }
+
+
+        // Generate the SQL statement to create the target table
+        $createTableSql = $targetTableSchema->createSql($archive_connection);
+
+        // Execute the SQL statement to create the target table
+        foreach ($createTableSql as $sql) {
+            $archive_connection->execute($sql);
+        }
+
+        // Check if the target table was created successfully
+        $existingTables = $archiveSchemaCollection->listTables();
+        $tableExists = in_array($targetTableName, $existingTables);
+        if ($tableExists) {
+            return $targetTableName;
+        }
+
+        return ""; // Return blank string if the table couldn't be created
+    }
+
+    /**
+     * common function to know if there are some archive records, using base table name and $where criteria
+     * @param string $table_name
+     * @param array $where
+     * @return bool
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function hasArchiveRecords(string $table_name, array $where = [])
+    {
+        $is_archive_exists = false;
+        $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
+        $targetTableName = $targetTableNameAndConnection[0];
+        $targetTableConnection = $targetTableNameAndConnection[1];
+        $archiveConnection = ConnectionManager::get($targetTableConnection);
+        $tableArchived = TableRegistry::get($targetTableName, [
+            'connection' => $archiveConnection,
+        ]);
+        $count = $tableArchived->find('all')
+//            ->select('*')// POCOR-7339-HINDOL
+            ->where($where)->first();
+//        Log::write('debug', 'hasArchiveRecords');
+//        Log::write('debug', $count);
+        if ($count) {
+            $is_archive_exists = true;
+        }
+        if (!$count) {
+            $is_archive_exists = false;
+        }
+        return $is_archive_exists;
+    }
+
+    /**
+     * common function to get archive table name and connection
+     * @param $sourceTableName
+     * @return array
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function getArchiveTableAndConnection($sourceTableName)
+    {
+        $db_name = 'default';
+        $archiveConnection = self::hasArchiveConnection();
+        if ($archiveConnection) {
+//            $db_name = self::getRemoteArchiveDatabase();
+        }
+        if ($db_name === "") {
+            $db_name = 'default';
+        }
+        $archive_table_name = self::hasArchiveTable($sourceTableName, $db_name);
+        return [$archive_table_name, $db_name];
+    }
+
+    /**
+     * @return bool
+     * @throws \Exception
+     */
+    public static function hasArchiveConnection()
+    {
+        $archiveConnection = false;
+//        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+//        $archiveConnection = $ConfigItems->value('remote_archive_data_connection');
+//        if ($archiveConnection) {
+//            $archiveConnection = ($archiveConnection == "1") ? true : false;
+//        }
+        return $archiveConnection;
+    }
+
+    /**
+     * proc to get unique list of academic periods having archived records
+     * @param string $table_name - name of the base table
+     * @param array $where - parameters, like institution_id, institution_class_id etc
+     * @return array
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function getArchiveYears(string $table_name, array $where)
+    {
+        $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
+        $targetTableName = $targetTableNameAndConnection[0];
+        $targetTableConnection = $targetTableNameAndConnection[1];
+        $remoteConnection = ConnectionManager::get($targetTableConnection);
+        $tableArchived = TableRegistry::get($targetTableName, [
+            'connection' => $remoteConnection,
+        ]);
+//        Log::write('debug', 'getArchiveYears');
+//        Log::write('debug', $where);
+        $distinctYears = $tableArchived->find('all')
+            ->where($where)
+            ->select(['academic_period_id'])
+            ->distinct(['academic_period_id'])
+            ->toArray();
+        $distinctYearValues = array_column($distinctYears, 'academic_period_id');
+//        Log::write('debug', '$distinctYearValues');
+//        Log::write('debug', $distinctYearValues);
+        $uniqu_array = array_unique($distinctYearValues);
+
+        return $uniqu_array;
+    }
+
+    /**
+     * @param string $table_name
+     * @param array $where
+     * @return array
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function getArchiveAssessments(string $table_name, array $where)
+    {
+        $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
+        $targetTableName = $targetTableNameAndConnection[0];
+        $targetTableConnection = $targetTableNameAndConnection[1];
+        $remoteConnection = ConnectionManager::get($targetTableConnection);
+        $tableArchived = TableRegistry::get($targetTableName, [
+            'connection' => $remoteConnection,
+        ]);
+        $distinctResults = $tableArchived->find('all')
+            ->where($where)
+            ->select(['assessment_id'])
+            ->distinct(['assessment_id'])
+            ->toArray();
+
+        $distinctResultsValues = array_column($distinctResults, 'assessment_id');
+
+        $uniqu_array = array_unique($distinctResultsValues);
+
+        return $uniqu_array;
+    }
+
+    /**
+     * @param string $table_name
+     * @param array $where
+     * @return array
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function getArchiveAssessmentPeriods(string $table_name, array $where)
+    {
+        $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
+        $targetTableName = $targetTableNameAndConnection[0];
+        $targetTableConnection = $targetTableNameAndConnection[1];
+        $remoteConnection = ConnectionManager::get($targetTableConnection);
+        $tableArchived = TableRegistry::get($targetTableName, [
+            'connection' => $remoteConnection,
+        ]);
+        $distinctResults = $tableArchived->find('all')
+            ->where($where)
+            ->select(['assessment_period_id'])
+            ->distinct(['assessment_period_id'])
+            ->toArray();
+
+        $distinctResultsValues = array_column($distinctResults, 'assessment_period_id');
+
+        $uniqu_array = array_unique($distinctResultsValues);
+
+        return $uniqu_array;
+    }
+
+    /**
+     * @param string $table_name
+     * @param array $where
+     * @return array
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function getArchiveStudents(string $table_name, array $where)
+    {
+        $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
+        $targetTableName = $targetTableNameAndConnection[0];
+        $targetTableConnection = $targetTableNameAndConnection[1];
+        $remoteConnection = ConnectionManager::get($targetTableConnection);
+        $tableArchived = TableRegistry::get($targetTableName, [
+            'connection' => $remoteConnection,
+        ]);
+        $distinctResults = $tableArchived->find('all')
+            ->where($where)
+            ->select(['student_id'])
+            ->distinct(['student_id'])
+            ->toArray();
+
+        $distinctResultsValues = array_column($distinctResults, 'student_id');
+
+        $uniqu_array = array_unique($distinctResultsValues);
+
+        return $uniqu_array;
+    }
+
+    /**
+     * @param string $table_name
+     * @param array $where
+     * @return array
+     * @throws \Exception
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function getArchiveClasses(string $table_name, array $where)
+    {
+        $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
+        $targetTableName = $targetTableNameAndConnection[0];
+        $targetTableConnection = $targetTableNameAndConnection[1];
+        $remoteConnection = ConnectionManager::get($targetTableConnection);
+        $tableArchived = TableRegistry::get($targetTableName, [
+            'connection' => $remoteConnection,
+        ]);
+//        Log::write('debug', 'getArchiveYears');
+//        Log::write('debug', $where);
+
+        if($table_name == 'assessment_item_results'){
+            $distinctResults = $tableArchived->find('all')
+                ->where($where)
+                ->select(['institution_class_id' => 'institution_classes_id'])
+                ->distinct(['institution_class_id'])
+                ->toArray();
+        }else{
+            $distinctResults = $tableArchived->find('all')
+                ->where($where)
+                ->select(['institution_class_id'])
+                ->distinct(['institution_class_id'])
+                ->toArray();
+        }
+
+        $distinctResultsValues = array_column($distinctResults, 'institution_class_id');
+//        Log::write('debug', '$distinctResultsValues');
+//        Log::write('debug', $distinctResultsValues);
+        $uniqu_array = array_unique($distinctResultsValues);
+
+        return $uniqu_array;
+    }
+
 }

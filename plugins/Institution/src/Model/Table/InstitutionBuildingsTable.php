@@ -143,6 +143,16 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        //Start:POCOR-7597
+        if(!empty($entity['institution_land_id'])){
+            $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
+            $InstitutionLand = $InstitutionLands->get($entity['institution_land_id']);
+        }
+        if($entity['area'] >= $InstitutionLand['area']){
+            $this->Alert->warning('InstitutionBuildings.sizeGreater', ['reset' => true]);
+            return false;
+        }
+        //End:POCOR-7597
         if (!$entity->isNew() && $entity->has('change_type')) {
             $editType = $entity->change_type;
             $statuses = $this->BuildingStatuses->find('list', ['keyField' => 'id', 'valueField' => 'code'])->toArray();
