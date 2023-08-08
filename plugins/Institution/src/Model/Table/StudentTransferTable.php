@@ -143,6 +143,9 @@ class StudentTransferTable extends ControllerActionTable
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
+        $this->log('addBeforeSave', 'debug');
+        $this->log($requestData[$this->alias()], 'debug');
+
         if (array_key_exists($this->alias(), $requestData)) {
             $nextAcademicPeriodId = null;
             $currentAcademicPeriodId = null;
@@ -150,6 +153,7 @@ class StudentTransferTable extends ControllerActionTable
             $nextInstitutionId = null;
             $studentTransferReasonId = null;
             $currentEducationGradeId = null;
+            $AssigneeId = null;
 
             if (array_key_exists('next_academic_period_id', $requestData[$this->alias()])) {
                 $nextAcademicPeriodId = $requestData[$this->alias()]['next_academic_period_id'];
@@ -169,8 +173,17 @@ class StudentTransferTable extends ControllerActionTable
             if (array_key_exists('education_grade_id', $requestData[$this->alias()])) {
                 $currentEducationGradeId = $requestData[$this->alias()]['education_grade_id'];
             }
+            if (array_key_exists('assignee_id', $requestData[$this->alias()])) {
+                $AssigneeId = $requestData[$this->alias()]['assignee_id'];
+            }
 
-            if (!empty($nextAcademicPeriodId) && !empty($currentAcademicPeriodId) && !empty($nextEducationGradeId) && !empty($nextInstitutionId) && !empty($studentTransferReasonId) && !empty($currentEducationGradeId)) {
+            if (!empty($nextAcademicPeriodId)
+                && !empty($AssigneeId)
+                && !empty($currentAcademicPeriodId)
+                && !empty($nextEducationGradeId)
+                && !empty($nextInstitutionId)
+                && !empty($studentTransferReasonId)
+                && !empty($currentEducationGradeId)) {
                 if (array_key_exists('students', $requestData[$this->alias()])) {
                     $StudentTransferOut = TableRegistry::get('Institution.StudentTransferOut');
                     $institutionId = $requestData[$this->alias()]['institution_id'];
@@ -187,6 +200,7 @@ class StudentTransferTable extends ControllerActionTable
                             $studentObj['previous_academic_period_id'] = $currentAcademicPeriodId;
                             $studentObj['previous_education_grade_id'] = $currentEducationGradeId;
                             $studentObj['student_transfer_reason_id'] = $studentTransferReasonId;
+                            $studentObj['assignee_id'] = $AssigneeId;
 
                             $nextPeriod = $this->AcademicPeriods->get($nextAcademicPeriodId);
                             $studentObj['requested_date'] = new Date();
@@ -212,6 +226,8 @@ class StudentTransferTable extends ControllerActionTable
                 }
             }
         }
+        $this->log('addBeforeSaveAfter', 'debug');
+
     }
 
     public function onUpdateFieldFromAcademicPeriodId(Event $event, array $attr, $action, Request $request)
