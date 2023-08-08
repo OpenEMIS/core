@@ -681,7 +681,6 @@ class DataManagementCopyTable extends ControllerActionTable
                         'created'=> $InstitutionLandDataa->created,
 
                     ]);
-                    
                     if($saveLandEntity = $InstitutionLands->save($newLandEntity)){
                         
                         $InstitutionBuildingData = $InstitutionBuildings
@@ -689,7 +688,10 @@ class DataManagementCopyTable extends ControllerActionTable
                         ->where(['institution_land_id ' => $InstitutionLandDataa->id])
                         ->toArray();
                         foreach($InstitutionBuildingData as $kei=> $building){
-
+                            if($building->area >= $newLandEntity->area){//POOR-7567
+                                $this->Alert->warning('InstitutionBuildings.sizeGreater', ['reset' => true]);
+                                return false;
+                            }
                             $newBuildingEntity = $InstitutionBuildings->newEntity([
                                 'code'=>$this->codeGenerateB($Insti->code,$k+1,$kei+1),
                                 'name'=>$building->name,
@@ -717,7 +719,7 @@ class DataManagementCopyTable extends ControllerActionTable
                                 'created'=>$building->created
 
                             ]);
-
+                            
                             if($saveBuilding = $InstitutionBuildings->save($newBuildingEntity)){
                                 $InstitutionFloorData = $InstitutionFloors
                                 ->find('all')
@@ -725,6 +727,10 @@ class DataManagementCopyTable extends ControllerActionTable
                                 ->toArray();
 
                                 foreach($InstitutionFloorData as $kkey => $floor){
+                                    if($floor->area >= $newBuildingEntity->area){//POCOR-7567
+                                        $this->Alert->warning('InstitutionFloors.sizeGreater', ['reset' => true]);
+                                        return false;
+                                    }
                                     $newFloorEntity = $InstitutionFloors->newEntity([
 
                                         'code'=>$this->codeGenerateF($Insti->code,$k+1,$kei+1,$kkey+1),
@@ -760,6 +766,10 @@ class DataManagementCopyTable extends ControllerActionTable
                                         ->toArray();
 
                                         foreach($InstitutionRoomData as $no=>$room){
+                                            if($room->area >= $newFloorEntity->area){//POCOR-7567
+                                                $this->Alert->warning('InstitutionRooms.sizeGreater', ['reset' => true]);
+                                                return false;
+                                            }
                                             $newRoomEntity = $InstitutionRooms->newEntity([
                                                 'code'=>$this->codeGenerateR($Insti->code,$k+1,$kei+1,$kkey+1,$no+1),
                                                 'name'=>$room->name,
