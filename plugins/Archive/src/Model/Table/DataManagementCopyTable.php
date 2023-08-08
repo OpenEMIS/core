@@ -688,7 +688,7 @@ class DataManagementCopyTable extends ControllerActionTable
                         ->where(['institution_land_id ' => $InstitutionLandDataa->id])
                         ->toArray();
                         foreach($InstitutionBuildingData as $kei=> $building){
-                            if($building->area >= $newLandEntity->area){//POOR-7567
+                            if($building->area > $newLandEntity->area){//POOR-7567
                                 $this->Alert->warning('InstitutionBuildings.sizeGreater', ['reset' => true]);
                                 return false;
                             }
@@ -727,7 +727,7 @@ class DataManagementCopyTable extends ControllerActionTable
                                 ->toArray();
 
                                 foreach($InstitutionFloorData as $kkey => $floor){
-                                    if($floor->area >= $newBuildingEntity->area){//POCOR-7567
+                                    if($floor->area > $newBuildingEntity->area){//POCOR-7567
                                         $this->Alert->warning('InstitutionFloors.sizeGreater', ['reset' => true]);
                                         return false;
                                     }
@@ -766,7 +766,7 @@ class DataManagementCopyTable extends ControllerActionTable
                                         ->toArray();
 
                                         foreach($InstitutionRoomData as $no=>$room){
-                                            if($room->area >= $newFloorEntity->area){//POCOR-7567
+                                            if($room->area > $newFloorEntity->area){//POCOR-7567
                                                 $this->Alert->warning('InstitutionRooms.sizeGreater', ['reset' => true]);
                                                 return false;
                                             }
