@@ -2457,23 +2457,24 @@ class InstitutionRepository extends Controller
             $store['description'] = $data['description'];
             $store['action'] = $data['action'];
             $store['date_of_behaviour'] = $data['date_of_behaviour'];
-            $store['time_of_behaviour'] = $data['time_of_behaviour'];
-            $store['academic_period_id'] = $data['academic_period_id'];
+            $store['time_of_behaviour'] = $data['time_of_behaviour']??Null;
+            $store['academic_period_id'] = $data['academic_period_id']??Null;
             $store['student_id'] = $data['student_id'];
             $store['institution_id'] = $data['institution_id'];
-            $store['status_id'] = $data['status_id'];
+            $store['status_id'] = $data['status_id']??Null;
             $store['student_behaviour_category_id'] = $data['student_behaviour_category_id'];
             $store['assignee_id'] = $data['assignee_id']??Null;
             $store['created_user_id'] = JWTAuth::user()->id;
             $store['created'] = Carbon::now()->toDateTimeString();
             $store['student_behaviour_classification_id'] = $data['student_behaviour_classification_id']??Null;
-
+            
             $insert = StudentBehaviours::insert($store);
             DB::commit();
             return 1;
             
         } catch (\Exception $e) {
             DB::rollback();
+            
             Log::error(
                 'The update of student behaviour could not be completed successfully.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
