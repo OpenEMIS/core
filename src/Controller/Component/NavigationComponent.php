@@ -1700,12 +1700,14 @@ class NavigationComponent extends Component
                     'Profiles.StaffLicenses',
                     'Profiles.StaffAwards']
             ],
+            //POCOR-7439 start
             'Profiles.Cases' => [
                 'title' => 'Cases',
                 'parent' => 'Profiles.Personal',
                 'params' => ['plugin' => 'Profile'],
             
             ],
+             //POCOR-7439 end
             'Profiles.SpecialNeedsReferrals' => [
                 'title' => 'Special Needs',
                 'parent' => 'Profiles.Personal',
