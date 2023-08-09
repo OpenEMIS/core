@@ -33,7 +33,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
         $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Dashboard' => ['index',]
+            'Dashboard' => ['index']
         ]);
 
         // $this->toggle('add', false);
@@ -53,10 +53,20 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->isNew()) {
+        //POCOR-7439 start
+        if($entity->institution_id==-1){//for entering multiple entries for institution
+            $entity->institution_id=1;
             $autoGenerateCaseNumber = $this->getAutoGenerateCaseNumber($entity->institution_id);
             $entity->case_number = $autoGenerateCaseNumber;
+            $options['all_institution_cases']=1;
+          }
+        else{//POCOR-7439 end
+            if ($entity->isNew()) {
+                $autoGenerateCaseNumber = $this->getAutoGenerateCaseNumber($entity->institution_id);
+                $entity->case_number = $autoGenerateCaseNumber;
             }
+         }
+       
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
@@ -84,6 +94,60 @@ class InstitutionCasesTable extends ControllerActionTable
                 $linkedRecord->save($newEntity);                
             }
         }
+        //POCOR-7439 start
+        if($options['all_institution_cases']==1){//for entering multiple entries for institution
+            $newEntities=[];
+            $institutionList = $this->Institutions
+                                ->find('list', [
+                                    'keyField' => 'id',
+                                    'valueField' => 'code_name'
+                                ])
+                                ->where([
+                                    $this->Institutions->aliasField('institution_status_id') => self::ACTIVE
+                                ])
+                                ->order([
+                                    $this->Institutions->aliasField('code') => 'ASC',
+                                    $this->Institutions->aliasField('name') => 'ASC'
+                                ])
+                                ->toArray();
+            $insIds=array_keys($institutionList);
+            $istId=array_shift($insIds);
+            $result=$entity->toArray();
+                foreach($insIds as $id){
+                        $autoGenerateCaseNumber = $this->getAutoGenerateCaseNumber($id);
+                        $value=$result;
+                        $newData=array('institution_id' => $id,
+                                            'title'=>$value['title'],
+                                            'description'=>$value['description'],
+                                            'status_id'=>$value['status_id'],
+                                            'assignee_id'=>$value['assignee_id'],
+                                            'created_user_id'=>$value['created_user_id'],
+                                            'created'=>$value['created'],
+                                            'case_number'=>$autoGenerateCaseNumber);
+                        $institutionCases=TableRegistry::get('Institution.InstitutionCases');
+                        $caseEntity = $institutionCases->newEntity($newData);
+                        if($institutionCases->save($caseEntity)){
+                            $newCaseNumber =  $caseEntity->case_number . "-" .  $caseEntity->id;
+                            $this->updateAll(
+                                ['case_number' => $newCaseNumber],
+                                ['id' =>  $caseEntity->id]
+                            );
+                            if ($this->request->query('feature')==-1) {
+                                    $params['feature'] = 'StudentAttendances';
+                            }
+                            $params['feature'] = $features;
+                            $params['institution_case_id'] =  $caseEntity->id;
+                            $params['record_id'] =  0;
+                            $params['id'] = Text::uuid();
+                            $params['created_user_id'] =$caseEntity->created_user_id;
+                            $params['created'] = date('Y-m-d H:i:s');
+                            $newEntity = $linkedRecord->newEntity($params);
+                            $linkedRecord->save($newEntity);   
+                    }
+                }
+                
+       }
+       //POCOR-7439 end
     }
 
     public function linkedRecordAfterSave(Event $event, Entity $linkedRecordEntity)
