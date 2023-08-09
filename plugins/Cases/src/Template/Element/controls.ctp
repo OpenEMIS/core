@@ -1,4 +1,6 @@
-<?php if (!empty($featureOptions)) : ?>
+<?php if (!empty($featureOptions)) :
+    if($this->request->params['controller']!="Profiles"&&$this->request->params['action']!="Cases"):?>
+   
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
@@ -23,4 +25,5 @@
             ?>
         </div>
     </div>
+    <?php endif ?>
 <?php endif ?>
