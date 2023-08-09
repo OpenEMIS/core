@@ -55,7 +55,6 @@ class ProfilesController extends AppController
             // 'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
             'StudentBehaviours'     => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             //'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],//POCOR-6700
-            'Cases'        => ['className' => 'Cases.InstitutionCases', 'actions' => ['index', 'view','add']],
             // Staff
             'StaffPositions'        => ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
             'StaffSections'         => ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
@@ -391,7 +390,7 @@ class ProfilesController extends AppController
                     $model->toggle('add', false);
                     $model->toggle('edit', false);
                     $model->toggle('remove', false);
-                    $enabledEditOperation = ['Profiles', 'Demographic', 'Identities', 'UserNationalities', 'UserLanguages', 'Attachments'];
+                    $enabledEditOperation = ['Profiles', 'Demographic', 'Identities',  'InstitutionCases','UserNationalities', 'UserLanguages', 'Attachments'];
                     if (in_array($alias, $enabledEditOperation)) {
                         $model->toggle('edit', true);
                         $model->toggle('add', true);
@@ -985,9 +984,10 @@ class ProfilesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffCurriculars']);
     }
+    //POCOR-7439 start
     public function Cases()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Cases.InstitutionCases']);
     }
-
+    //POCOR-7439 end
 }

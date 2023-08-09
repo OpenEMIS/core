@@ -20,7 +20,8 @@ class InstitutionCasesTable extends ControllerActionTable
     use OptionsTrait;
 
     private $features = [];
-
+    const ACTIVE = 1;//POCOR-7439 for institution active
+    const INACTIVE = 1;//POCOR-7439 for institution inactive
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -55,7 +56,7 @@ class InstitutionCasesTable extends ControllerActionTable
         if ($entity->isNew()) {
             $autoGenerateCaseNumber = $this->getAutoGenerateCaseNumber($entity->institution_id);
             $entity->case_number = $autoGenerateCaseNumber;
-        }
+            }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
@@ -153,8 +154,7 @@ class InstitutionCasesTable extends ControllerActionTable
         }
         
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Profiles'){ 
-		$is_manual_exist = $this->getManualUrl('Personal','Cases','Cases');       
+        $is_manual_exist = $this->getManualUrl('Institutions','Cases','Cases');   
         if(!empty($is_manual_exist)){
            
             $btnAttr = [
@@ -174,7 +174,7 @@ class InstitutionCasesTable extends ControllerActionTable
         
     
 		// End POCOR-5188
-        }}}
+        }}
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -190,6 +190,39 @@ class InstitutionCasesTable extends ControllerActionTable
         //     $userId = $session->read('Auth.User.id');
         // }
         $userId = $session->read('Auth.User.id');
+        //POCOR-7437 start
+        if($this->request->params['controller']=="Profiles"){
+            $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('case_number'),
+                $this->aliasField('title'),
+                $this->aliasField('description'),
+                $this->aliasField('status_id'),
+                $this->aliasField('assignee_id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('modified_user_id'),
+                $this->aliasField('modified'),
+                $this->aliasField('created_user_id'),
+                $this->aliasField('created'),
+                $this->Assignees->aliasField('first_name'),
+                $this->Assignees->aliasField('middle_name'),
+                $this->Assignees->aliasField('last_name'),
+                $this->Assignees->aliasField('third_name'),
+                $this->Assignees->aliasField('preferred_name')
+            ])
+            ->contain(['LinkedRecords'])
+            ->innerJoin(
+                [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                [
+                    [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
+                    //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+                ]
+            )
+            ->where([$this->aliasField('assignee_id') =>$userId]) //start POCOR-6210
+            ->group($this->aliasField('id'));
+        }
+        else{//POCOR-7437 end
         if ($selectedFeature != -1 ) { //start POCOR-6210
              $query
             ->select([
@@ -250,10 +283,10 @@ class InstitutionCasesTable extends ControllerActionTable
                 ]
             )
             ->group($this->aliasField('id'));
+
         }
-       
-
-
+    }
+     
         // $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
             if ($selectedFeature != 'StudentAttendances') {
                $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
@@ -701,10 +734,71 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {    
+        $this->field('institution_id');//POCOR-7437 
         $this->field('case_number',['visible' => false]);
         $this->setFieldOrder([
             'title', 'description', 'assignee_id'
         ]);
     }
-
+    //POCOR-7437 start
+    public function indexAfterAction(Event $event, $data){
+        if($this->request->controller=="Profiles"){
+            $this->field('case_number',['visible' => true]);
+            $this->field('status_id',['visible' => true,'after'=>'created']);
+            $this->field('modified',['visible' => true]);
+            $this->fields['modified']['sort'] = false;
+            $this->field('description',['visible' => false]);
+            $this->field('assignee_id',['visible' => false]);
+            $this->field('linked_records',['visible' => false]);
+            $this->field('institution_id',['visible' => false]);
+            $this->fields['created']['sort'] = false;
+            $this->fields['status_id']['sort'] = true;
+            $this->setFieldOrder([
+                'case_number','created','modified','title','status_id'
+            ]);
+        }
+       
+    }
+    public function addEditAfterAction(Event $event, $data){
+        if($this->request->controller=="Profiles"){
+         
+            $this->setFieldOrder([
+                'institution_id','title','description'
+            ]);
+        }
+       
+    }
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request){
+       
+        if($request->params['controller']=="Profiles"){
+            
+            $institutionList = $this->Institutions
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'code_name'
+            ])
+            ->where([
+                $this->Institutions->aliasField('institution_status_id') => self::ACTIVE
+            ])
+            ->order([
+                $this->Institutions->aliasField('code') => 'ASC',
+                $this->Institutions->aliasField('name') => 'ASC'
+            ])
+            ->toArray();
+            if (count($institutionList) > 1) {
+             
+                    $institutionOptions = ['' => __('-- Select --')]+['-1' => __('All Institutions')] + $institutionList;
+            } else {
+                $institutionOptions =  $institutionList;
+            }
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = false;
+            $attr['options'] = $institutionOptions;
+            if($action=="edit"){
+                $attr['type'] = 'readOnly';
+            }
+        }
+      return $attr;
+    }
+    //POCOR-7437 end
 }
