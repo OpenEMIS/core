@@ -447,7 +447,7 @@ class Pocor7459 extends AbstractMigration
             ],
         ];
         try {
-        $this->insert('field_options', $data);
+            $this->insert('field_options', $data);
         } catch (\Exception $e) {
 
         }
@@ -568,7 +568,7 @@ class Pocor7459 extends AbstractMigration
             'comment' => 'This is a field option table containing the list of user-defined asset models (brands) used by institution assets'
         ]);
         try{
-        $table->create();
+            $table->create();
         }catch (\Exception $e){
 
         }
@@ -636,7 +636,7 @@ class Pocor7459 extends AbstractMigration
             ->addIndex('asset_make_id')
             ->save();
         try {
-            $this->execute("ALTER TABLE asset_models ADD CONSTRAINT `asset_model_fk_asset_make_id` FOREIGN KEY (`asset_make_id`) REFERENCES asset_types(`id`)");
+            $this->execute("ALTER TABLE asset_models ADD CONSTRAINT `asset_model_fk_asset_make_id` FOREIGN KEY (`asset_make_id`) REFERENCES asset_makes(`id`)");
         } catch (\Exception $e) {
 
         }
