@@ -370,7 +370,7 @@ class WorkflowBehavior extends Behavior
         if (empty($entity->assignee_id)) {
             $value = '<span>&lt;'.$model->getMessage('general.unassigned').'&gt;</span>';
         }elseif($entity->assignee_id == -1){ //POCOR-7025
-            $value = _('Auto Assign');
+            $value = __('Auto Assign');
         }
 
         return $value;
