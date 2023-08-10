@@ -3,7 +3,7 @@ namespace App\Test\Fixture;
 
 use Cake\TestSuite\Fixture\TestFixture;
 
-class ExaminationItemsFixture extends TestFixture
+class ExaminationSubjectsFixture extends TestFixture
 {
     public $import = ['table' => 'examination_items'];
     public $records = [

@@ -1,3 +1,22 @@
+### [3.91.0] - 2023-08-04
+- Implemented: Develop changed to the Institution > Examinations > Students page
+- Implemented: Develop changed to the Administration > Examinations > Students page
+- Implemented: Develop Staff Behaviour Report
+- Implemented: Develop "External Data Source - Exams" config page for CXC
+- Implemented: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 3
+- Bug Fixed: Administrations > Communications > Alerts : Duplicated values are showing
+- Bug Fixed: Administration > Custom Fields > Institutions: The custom field got mixed up when editing/adding an existing custom field
+- Bug Fixed: Institutions>Students>Academic>Textbook: 404 error when viewing 
+- Bug Fixed: Institutions > Performances > Report Cards : System should calculate GPA based on assessment periods that is in start and end date of report card
+- Bug Fixed: Institutions > General > Overview > Edit: The system is checking against validation for mandatory coordinates and the length
+- Bug Fixed: Reports > Workflow: The OpenEMIS ID column is not showing any data
+- Bug Fixed: Institutions > Infrastructures > Overview: Error message is confusing
+- Bug Fixed: Reports > Staff: The column Identity Type is showing the Identity Type Code
+
+### [3.90.2] - 2023-08-01
+- Implemented: Develop APIs for the Textbook feature
+- Bug Fixed: Institutions>Student>Academic>Assessment: Archive button should be present even if student does not have archive
+
 ### [3.90.1] - 2023-07-27
 - Bug Fixed: Institutions>Performance>Assessments: Assessment is showing sql error message
 - Bug Fixed: Institutions > Students > Academic > Curriculars: Bugs

@@ -12,7 +12,7 @@ use Cake\Utility\Security;
 
 use App\Model\Table\AppTable;
 
-class ExaminationItemResultsTable extends AppTable
+class ExaminationStudentSubjectResultsTable extends AppTable
 {
     public function initialize(array $config)
     {
@@ -20,7 +20,7 @@ class ExaminationItemResultsTable extends AppTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-        $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
+        $this->belongsTo('ExaminationSubjects', ['className' => 'Examination.ExaminationSubjects']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('ExaminationGradingOptions', ['className' => 'Examination.ExaminationGradingOptions']);
@@ -74,16 +74,16 @@ class ExaminationItemResultsTable extends AppTable
                 $this->aliasField('examination_grading_option_id'),
                 $this->aliasField('student_id'),
                 $this->aliasField('examination_id'),
-                $this->aliasField('examination_item_id'),
+                $this->aliasField('examination_subject_id'),
                 $this->aliasField('education_subject_id'),
                 $this->aliasField('institution_id'),
                 $this->aliasField('academic_period_id'),
                 $this->Examinations->aliasField('code'),
                 $this->Examinations->aliasField('name'),
                 $this->Examinations->aliasField('education_grade_id'),
-                $this->ExaminationItems->aliasField('code'),
-                $this->ExaminationItems->aliasField('name'),
-                $this->ExaminationItems->aliasField('weight'),
+                $this->ExaminationSubjects->aliasField('code'),
+                $this->ExaminationSubjects->aliasField('name'),
+                $this->ExaminationSubjects->aliasField('weight'),
                 $this->EducationSubjects->aliasField('code'),
                 $this->EducationSubjects->aliasField('name'),
                 $this->EducationSubjects->aliasField('order'),
@@ -94,30 +94,30 @@ class ExaminationItemResultsTable extends AppTable
             ->contain('ExaminationGradingOptions') //POCOR-6761
             ->contain('ExaminationGradingOptions.ExaminationGradingTypes') //POCOR-6761
             ->innerJoinWith('Examinations')
-            ->innerJoinWith('ExaminationItems')
+            ->innerJoinWith('ExaminationSubjects')
             ->leftJoinWith('EducationSubjects')
             //->innerJoinWith('ExaminationGradingOptions')
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('student_id') => $studentId,
-                $this->ExaminationItems->aliasField('weight > ') => 0
+                $this->ExaminationSubjects->aliasField('weight > ') => 0
             ])
             ->order([
                 $this->EducationSubjects->aliasField('order'),
-                $this->ExaminationItems->aliasField('code'),
-                $this->ExaminationItems->aliasField('name')
+                $this->ExaminationSubjects->aliasField('code'),
+                $this->ExaminationSubjects->aliasField('name')
             ]);
     }
 
     private function getExamGrading(Entity $entity)
     {
-        $ExaminationItems = TableRegistry::get('Examination.ExaminationItems');
-        $examItemEntity = $ExaminationItems
+        $ExaminationSubjects = TableRegistry::get('Examination.ExaminationSubjects');
+        $examItemEntity = $ExaminationSubjects
             ->find()
             ->contain(['ExaminationGradingTypes.GradingOptions'])
             ->where([
-                $ExaminationItems->aliasField('examination_id') => $entity->examination_id,
-                $ExaminationItems->aliasField('id') => $entity->examination_item_id
+                $ExaminationSubjects->aliasField('examination_id') => $entity->examination_id,
+                $ExaminationSubjects->aliasField('id') => $entity->examination_subject_id
             ])
             ->first();
 
@@ -138,7 +138,7 @@ class ExaminationItemResultsTable extends AppTable
         }
     }
 
-    public function getExaminationItemResults($academicPeriodId, $examinationId, $studentId) {
+    public function getExaminationStudentSubjectResults($academicPeriodId, $examinationId, $studentId) {
         $results = $this
             ->find()
             ->contain(['ExaminationGradingOptions'])
@@ -147,14 +147,14 @@ class ExaminationItemResultsTable extends AppTable
                 $this->aliasField('examination_id') => $examinationId,
                 $this->aliasField('student_id') => $studentId
             ])
-            ->select(['grade_name' => 'ExaminationGradingOptions.name', 'grade_code' => 'ExaminationGradingOptions.code', 'examination_item_id' => $this->aliasField('examination_item_id')])
+            ->select(['grade_name' => 'ExaminationGradingOptions.name', 'grade_code' => 'ExaminationGradingOptions.code', 'examination_subject_id' => $this->aliasField('examination_subject_id')])
             ->autoFields(true)
             ->hydrate(false)
             ->toArray();
 
         $returnArray = [];
         foreach ($results as $result) {
-            $returnArray[$studentId][$result['examination_item_id']] = [
+            $returnArray[$studentId][$result['examination_subject_id']] = [
                 'marks' => $result['marks'],
                 'grade_name' => $result['grade_name'],
                 'grade_code' => $result['grade_code']
