@@ -941,16 +941,16 @@ class InstitutionSurveysTable extends ControllerActionTable
                             break;
                         }
                     }
-
+                    //POCOR-7622 for removing expire condition
                     // Update all New Survey to Expired by Institution Id
-                    $this->updateAll(
-                        ['status_id' => self::EXPIRED],
-                        [
-                            'institution_id' => $institutionId,
-                            'survey_form_id' => $surveyFormId,
-                            'status_id' => $openStatusId
-                        ]
-                    );
+                    // $this->updateAll(
+                    //     ['status_id' => self::EXPIRED],
+                    //     [
+                    //         'institution_id' => $institutionId,
+                    //         'survey_form_id' => $surveyFormId,
+                    //         'status_id' => $openStatusId
+                    //     ]
+                    // );
 
                     $periodResults = $SurveyStatusPeriods
                     ->find()
@@ -1003,16 +1003,17 @@ class InstitutionSurveysTable extends ControllerActionTable
                                     Log::write('debug', $surveyEntity->errors());
                                 }
                             } else {
+                                //POCOR-7622 for removing expire condition
                                 // Update Expired Survey back to Open
-                                $this->updateAll(
-                                    ['status_id' => $openStatusId],
-                                    [
-                                        'academic_period_id' => $periodId,
-                                        'survey_form_id' => $surveyFormId,
-                                        'institution_id' => $institutionId,
-                                        'status_id' => self::EXPIRED
-                                    ]
-                                );
+                                // $this->updateAll(
+                                //     ['status_id' => $openStatusId],
+                                //     [
+                                //         'academic_period_id' => $periodId,
+                                //         'survey_form_id' => $surveyFormId,
+                                //         'institution_id' => $institutionId,
+                                //         'status_id' => self::EXPIRED
+                                //     ]
+                                // );
                             }
                         }
                     }
@@ -1090,16 +1091,16 @@ class InstitutionSurveysTable extends ControllerActionTable
                             break;
                         }
                     }
-
+                    //POCOR-7622 for removing expire condition
                     // Update all New Survey to Expired by Institution Id
-                    $this->updateAll(
-                        ['status_id' => self::EXPIRED],
-                        [
-                            'institution_id' => $institutionId,
-                            'survey_form_id' => $surveyFormId,
-                            'status_id' => $openStatusId
-                        ]
-                    );
+                    // $this->updateAll(
+                    //     ['status_id' => self::EXPIRED],
+                    //     [
+                    //         'institution_id' => $institutionId,
+                    //         'survey_form_id' => $surveyFormId,
+                    //         'status_id' => $openStatusId
+                    //     ]
+                    // );
 
                     $periodResults = $SurveyStatusPeriods
                     ->find()
@@ -1152,16 +1153,17 @@ class InstitutionSurveysTable extends ControllerActionTable
                                     Log::write('debug', $surveyEntity->errors());
                                 }
                             } else {
+                                //POCOR-7622 for removing expire condition
                                 // Update Expired Survey back to Open
-                                $this->updateAll(
-                                    ['status_id' => $openStatusId],
-                                    [
-                                        'academic_period_id' => $periodId,
-                                        'survey_form_id' => $surveyFormId,
-                                        'institution_id' => $institutionId,
-                                        'status_id' => self::EXPIRED
-                                    ]
-                                );
+                                // $this->updateAll(
+                                //     ['status_id' => $openStatusId],
+                                //     [
+                                //         'academic_period_id' => $periodId,
+                                //         'survey_form_id' => $surveyFormId,
+                                //         'institution_id' => $institutionId,
+                                //         'status_id' => self::EXPIRED
+                                //     ]
+                                // );
                             }
                         }
                     }
