@@ -63,57 +63,72 @@ class CommonArchiveShell extends Shell
         try {
             // Start a database transaction
             $whereCondition = ['academic_period_id' => $academicPeriodId];
-            $records_count = self::moveRecords($sourceTable, $targetTable, $whereCondition);
+            $records_count = self::moveRecords($sourceTable, $targetTable, $whereCondition, $table_name, $targetTableName, $targetTableConnection);
             return $records_count;
         } catch (\Exception $e) {
             Log::write('error', $e->getMessage());
+            throw $e;
 //            return -1;
         }
         return $records_count;
     }
 
 
-    public static function moveRecords($sourceTable, $targetTable, $whereCondition)
+    public static function moveRecords($sourceTable, $targetTable, $whereCondition, $table_name, $targetTableName, $targetTableConnection)
     {
         $affectedRecordsCount = 0;
-        $connection = ConnectionManager::get('default');
-//        Log::write('debug', "sourceTable");
-//        Log::write('debug', "targetTable");
+        Log::write('debug', "$table_name");
+        Log::write('debug', "$targetTableName");
 //        $connection->transactional(function ($connection) use ($sourceTable, $targetTable, $whereCondition, &$affectedRecordsCount) {
-            try {
-                $countInArchive = 0;
-                $sourceQuery = $sourceTable->find()->where($whereCondition);
-                $countToArchive = $sourceQuery->count();
-                $matchingRecords = $sourceQuery->all();
+        try {
+            $countInArchive = 0;
+            $sourceQuery = $sourceTable->find()->where($whereCondition);
+            $countToArchive = $sourceQuery->count();
+            $matchingRecords = $sourceQuery->all();
 //                $matchingRecordsCount = count($matchingRecords);
-//                Log::write('debug', '$matchingRecordsCount');
-//                Log::write('debug', $matchingRecordsCount);
+                Log::write('debug', '$matchingRecordsCount');
+                Log::write('debug', $countToArchive);
+            if ($targetTableConnection != 'default') {
                 foreach ($matchingRecords as $record) {
-//                    try {
+                    try {
                         $newRecord = $targetTable->newEntity($record->toArray());
                         $targetTable->save($newRecord);
-                    $countInArchive = $countInArchive + 1;
-//                    } catch (\Exception $e) {
-//                        Log::write('error', 'I have an exception: ' . $e->getMessage());
-//                    }
+                        $affectedRowsCount = $countInArchive + 1;
+                    } catch (\Exception $e) {
+                        Log::write('error', 'I have an exception: ' . $e->getMessage());
+                        throw $e;
+                    }
                 }
-
-//                $countInArchive = $targetTable->find()->where($whereCondition)->count();
-//                Log::write('debug', '$countToArchive');
-//                Log::write('debug', $countToArchive);
-//                Log::write('debug', '$countInArchive');
-//                Log::write('debug', $countInArchive);
-                if ($countInArchive >= $countToArchive) {
-                    $sourceTable->deleteAll($whereCondition);
-//                    $affectedRecordsCount = $countInArchive;
-                    return $countToArchive;
-                } else {
-                    return -1;
+            } else {
+                try {
+                    $connection = ConnectionManager::get('default');
+                    $academic_period_id = $whereCondition['academic_period_id'];
+                    $sql = "INSERT INTO $targetTableName SELECT * FROM $table_name where academic_period_id = $academic_period_id";
+                    $statement = $connection->execute($sql);
+                    $affectedRowsCount = $statement->rowCount();
+                } catch (\Exception $e) {
+                    Log::write('error', 'I have an exception: ' . $e->getMessage());
+                    throw $e;
                 }
-            } catch (\Exception $e) {
-                Log::write('error', 'I have BAD exception: ' . $e->getMessage());
-//                return false;
             }
+            Log::write('debug', '$affectedRowsCount');
+            Log::write('debug', $affectedRowsCount);
+            $countInArchive = $targetTable->find()->where($whereCondition)->count();
+            Log::write('debug', '$countToArchive');
+            Log::write('debug', $countToArchive);
+            Log::write('debug', '$countInArchive');
+            Log::write('debug', $countInArchive);
+            if ($countInArchive >= $countToArchive) {
+                $sourceTable->deleteAll($whereCondition);
+                return $countToArchive;
+            } else {
+                return -1;
+            }
+        } catch (\Exception $e) {
+            Log::write('error', 'I have BAD exception in move records: ' . $e->getMessage());
+            throw $e;
+//                return false;
+        }
 //        });
 
         return $affectedRecordsCount;
