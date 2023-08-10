@@ -780,10 +780,12 @@ class ProfilesController extends AppController
         } else if ($isStudent) {
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
+                'Qualifications' => ['text' => __('Qualifications')],
             ];
         } else {
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
+                'Qualifications' => ['text' => __('Qualifications')],
             ];
         }
         $tabElements = array_merge($tabElements, $professionalTabElements);
