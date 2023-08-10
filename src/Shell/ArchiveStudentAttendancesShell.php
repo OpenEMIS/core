@@ -24,6 +24,11 @@ use Cake\Datasource\ConnectionManager;
  */
 class ArchiveStudentAttendancesShell extends Shell
 {
+
+    public $pid;
+    public $processName;
+    public $systemProcessId;
+
     /**
      * POCOR-7521-KHINDOL
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
@@ -67,10 +72,13 @@ class ArchiveStudentAttendancesShell extends Shell
 //        $countOfArchivedRecords = 1;
         $recordsToArchive = 0;
         $tableRecordsCount = 0;
+        $this->pid = $pid;
+        $this->processName = $processName;
+        $this->systemProcessId = $systemProcessId;
         foreach ($tablesToArchive as $tableToArchive) {
             try {
                 $tableRecordsCount =
-                    CommonArchiveShell::moveRecordsToArchive($academicPeriodId, $tableToArchive);
+                    CommonArchiveShell::moveRecordsToArchive($academicPeriodId, $tableToArchive, $this);
             } catch (\Exception $e) {
                 $this->out("Error in $processName");
                 $this->out($e->getMessage());
