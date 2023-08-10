@@ -2324,7 +2324,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ,student_info.report_card_name
                     ,student_info.start_date
                     ,student_info.end_date
-                    ,ROUND(AVG(student_info.gpa_per_subject), 2) gpa_per_student_report_card_period
+                    ,ROUND(SUM(student_info.gpa_per_subject), 2) gpa_per_student_report_card_period
                     ,SUM(CASE WHEN report_card_code IS NOT NULL THEN 1 ELSE 0 END) not_null_counter
                 FROM 
                 (
@@ -2427,7 +2427,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ,student_info.report_card_name
                     ,student_info.start_date
                     ,student_info.end_date
-                    ,ROUND(AVG(student_info.gpa_per_subject), 2) gpa_per_student_report_card_period
+                    ,ROUND(SUM(student_info.gpa_per_subject), 2) gpa_per_student_report_card_period
                     ,SUM(CASE WHEN report_card_code IS NULL THEN 1 ELSE 0 END) null_counter
                 FROM 
                 (
