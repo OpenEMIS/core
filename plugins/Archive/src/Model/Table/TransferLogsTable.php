@@ -95,7 +95,7 @@ class TransferLogsTable extends ControllerActionTable
         $this->field('academic_period_id');
         $this->field('generated_on');
         $this->field('generated_by');
-        $this->field('p_id', ['visible' => true]);
+        $this->field('p_id', ['visible' => false]);
         $this->field('features', ['sort' => false]); // POCOR-6816
         $this->setFieldOrder(['academic_period_id', 'features', 'generated_on', 'generated_by']);
 
