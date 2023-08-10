@@ -9,7 +9,7 @@ class POCOR7439 extends AbstractMigration
         $this->execute('CREATE TABLE `z_7439_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `z_7439_security_functions` SELECT * FROM `security_functions`');
         $parentRow = $this->fetchRow("SELECT * FROM `security_functions` WHERE `module` = 'Personal' AND `name` = 'Overview' AND `category` = 'General' and `controller`='Profiles'");
-        $orderRow = $this->fetchRow("SELECT * FROM `security_functions` WHERE `module` = 'Personal' AND `name` = 'Download Students Profile' AND `category` = 'Profiles' and `controller`='Profiles'");
+        $orderRow = $this->fetchRow("SELECT * FROM `security_functions` WHERE `module` = 'Personal' AND `name` = 'Timetables' AND `category` = 'Staff - Timetables' and `controller`='Profiles'");
 
         $data = [ 
             [
@@ -23,7 +23,7 @@ class POCOR7439 extends AbstractMigration
                 '_add' => 'Cases.add',
                 '_delete' => 'Cases.remove',
                 '_execute' => 'Cases.excel',
-                'order' =>$orderRow['order']+1,
+                'order' =>$orderRow['order']-1,
                 'visible' =>1,
                 'modified_user_id' =>2,
                 'modified' => date('Y-m-d H:i:s'),
