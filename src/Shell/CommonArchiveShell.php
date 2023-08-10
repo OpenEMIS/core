@@ -45,10 +45,14 @@ class CommonArchiveShell extends Shell
      *
      */
     public static
-    function moveRecordsToArchive($academicPeriodId, $table_name)
+    function moveRecordsToArchive($academicPeriodId, $table_name, $caller)
     {
         //POCOR-7339-HINDOL
         $records_count = 0;
+
+        $pid = $caller->pid;
+        $processName = $caller->processName;
+        $systemProcessId = $caller->systemProcessId;
 
         $sourceTable = TableRegistry::get($table_name);
         $targetTableNameAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
@@ -63,10 +67,19 @@ class CommonArchiveShell extends Shell
         try {
             // Start a database transaction
             $whereCondition = ['academic_period_id' => $academicPeriodId];
-            $records_count = self::moveRecords($sourceTable, $targetTable, $whereCondition, $table_name, $targetTableName, $targetTableConnection);
+            $records_count =
+                self::moveRecords($sourceTable, $targetTable, $whereCondition,
+                    $table_name, $targetTableName, $targetTableConnection,
+                    $caller);
             return $records_count;
         } catch (\Exception $e) {
-            Log::write('error', $e->getMessage());
+//            Log::write('error', $e->getMessage());
+            $caller->out("Error in $processName");
+            $caller->out($e->getMessage());
+            $processedDateTime = CommonArchiveShell::setTransferLogsFailed($pid);
+            $caller->out("Transfer failed $processName:  $processedDateTime");
+            $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
+            $caller->out("System process failed $processName:  $processedDateTime");
             throw $e;
 //            return -1;
         }
@@ -74,20 +87,24 @@ class CommonArchiveShell extends Shell
     }
 
 
-    public static function moveRecords($sourceTable, $targetTable, $whereCondition, $table_name, $targetTableName, $targetTableConnection)
+    public static function moveRecords($sourceTable, $targetTable,
+                                       $whereCondition, $table_name,
+                                       $targetTableName, $targetTableConnection,
+                                       $caller)
     {
         $affectedRecordsCount = 0;
-        Log::write('debug', "$table_name");
-        Log::write('debug', "$targetTableName");
+        $pid = $caller->pid;
+        $processName = $caller->processName;
+        $systemProcessId = $caller->systemProcessId;
+
+//        Log::write('debug', "$table_name");
+//        Log::write('debug', "$targetTableName");
 //        $connection->transactional(function ($connection) use ($sourceTable, $targetTable, $whereCondition, &$affectedRecordsCount) {
         try {
             $countInArchive = 0;
             $sourceQuery = $sourceTable->find()->where($whereCondition);
             $countToArchive = $sourceQuery->count();
             $matchingRecords = $sourceQuery->all();
-//                $matchingRecordsCount = count($matchingRecords);
-                Log::write('debug', '$matchingRecordsCount');
-                Log::write('debug', $countToArchive);
             if ($targetTableConnection != 'default') {
                 foreach ($matchingRecords as $record) {
                     try {
@@ -96,6 +113,12 @@ class CommonArchiveShell extends Shell
                         $affectedRowsCount = $countInArchive + 1;
                     } catch (\Exception $e) {
                         Log::write('error', 'I have an exception: ' . $e->getMessage());
+                        $caller->out("Error in $processName");
+                        $caller->out($e->getMessage());
+                        $processedDateTime = CommonArchiveShell::setTransferLogsFailed($pid);
+                        $caller->out("Transfer failed $processName:  $processedDateTime");
+                        $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
+                        $caller->out("System process failed $processName:  $processedDateTime");
                         throw $e;
                     }
                 }
@@ -108,24 +131,41 @@ class CommonArchiveShell extends Shell
                     $affectedRowsCount = $statement->rowCount();
                 } catch (\Exception $e) {
                     Log::write('error', 'I have an exception: ' . $e->getMessage());
+                    $caller->out("Error in $processName");
+                    $caller->out($e->getMessage());
+                    $processedDateTime = CommonArchiveShell::setTransferLogsFailed($pid);
+                    $caller->out("Transfer failed $processName:  $processedDateTime");
+                    $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
+                    $caller->out("System process failed $processName:  $processedDateTime");
                     throw $e;
                 }
             }
-            Log::write('debug', '$affectedRowsCount');
-            Log::write('debug', $affectedRowsCount);
+//            Log::write('debug', '$affectedRowsCount');
+//            Log::write('debug', $affectedRowsCount);
             $countInArchive = $targetTable->find()->where($whereCondition)->count();
-            Log::write('debug', '$countToArchive');
-            Log::write('debug', $countToArchive);
-            Log::write('debug', '$countInArchive');
-            Log::write('debug', $countInArchive);
+//            Log::write('debug', '$countToArchive');
+//            Log::write('debug', $countToArchive);
+//            Log::write('debug', '$countInArchive');
+//            Log::write('debug', $countInArchive);
             if ($countInArchive >= $countToArchive) {
                 $sourceTable->deleteAll($whereCondition);
                 return $countToArchive;
             } else {
+                $caller->out("Error in $processName");
+                $processedDateTime = CommonArchiveShell::setTransferLogsFailed($pid);
+                $caller->out("Transfer failed $processName:  $processedDateTime");
+                $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
+                $caller->out("System process failed $processName:  $processedDateTime");
                 return -1;
             }
         } catch (\Exception $e) {
             Log::write('error', 'I have BAD exception in move records: ' . $e->getMessage());
+            $caller->out("Error in $processName");
+            $caller->out($e->getMessage());
+            $processedDateTime = CommonArchiveShell::setTransferLogsFailed($pid);
+            $caller->out("Transfer failed $processName:  $processedDateTime");
+            $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
+            $caller->out("System process failed $processName:  $processedDateTime");
             throw $e;
 //                return false;
         }
