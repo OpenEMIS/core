@@ -95,7 +95,7 @@ class ArchiveStudentAttendancesShell extends Shell
 
         if ($recordsToArchive >= 0) {
             try {
-                $processInfo = CommonArchiveShell::setTransferLogsCompleted($pid);
+                $processInfo = CommonArchiveShell::setTransferLogsCompleted($pid, $recordsToArchive);
                 $this->out("Transfer completed $processName:  $processInfo");
                 $processInfo = CommonArchiveShell::setSystemProcessCompleted($systemProcessId);
                 $this->out("System process completed $processName:  $processInfo");
