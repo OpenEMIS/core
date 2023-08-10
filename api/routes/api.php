@@ -196,6 +196,37 @@ Route::group(
 
         // POCOR-7394-S ends
 
+        // POCOR-7546 starts
+        Route::get('assessments/education-grades', 'AssessmentController@getEducationGradeList');
+        Route::get('assessments/items', 'AssessmentController@getAssessmentItemList');
+        Route::get('assessments/periods', 'AssessmentController@getAssessmentPeriodList');
+        Route::get('assessments/items/grading-types', 'AssessmentController@getAssessmentItemGradingTypeList');
+        Route::get('assessments/grading-options', 'AssessmentController@getAssessmentGradingOptionList');
+
+        Route::get('behaviours/categories', 'InstitutionController@getBehaviourCategories');
+        Route::get('institutions/{institutionId}/students/{studentId}/behaviours', 'InstitutionController@getInstitutionStudentBehaviour');
+
+
+        Route::get('institutions/{institutionId}/institution-classes/{institutionClassId}/education-grades/{educationGradeId}/students', 'InstitutionController@getInstitutionClassEducationGradeStudents');
+        Route::get('institutions/{institutionId}/education-grades/{educationGradeId}/institution-subjects/students', 'InstitutionController@getInstitutionEducationSubjectStudents');
+        
+        Route::post('institutions/students/assessment-item-results', 'InstitutionController@addStudentAssessmentItemResult');
+        Route::post('institutions/students/behaviours', 'InstitutionController@addStudentBehaviour');
+
+        Route::delete('institutions/{institutionId}/students/{studentId}/behaviours/{behaviourId}', 'InstitutionController@deleteStudentBehaviour');
+
+        // POCOR-7546 starts
+        // POCOR-7368 starts
+        Route::get('textbooks-statuses', 'TextbookController@getTextbookStatuses');
+        Route::get('textbooks-dimensions', 'TextbookController@getTextbookDimensions');
+        Route::get('textbooks-conditions', 'TextbookController@getTextbookConditions');
+        Route::get('textbooks/{textbookId}', 'TextbookController@getTextbookByID');
+        Route::get('institutions/{institutionId}/textbooks/{textbookId}', 'TextbookController@getInstitutionTextbookdata');
+        
+        Route::post('textbooks', 'TextbookController@addTextbooks');
+        Route::post('institutions/{institutionId}/textbooks', 'TextbookController@addInstitutionTextbooks');
+        // POCOR-7368 ends
+
     }
 );
 
