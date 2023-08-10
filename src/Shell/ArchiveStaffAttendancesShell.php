@@ -90,7 +90,7 @@ class ArchiveStaffAttendancesShell extends Shell
 
         if ($recordsToArchive >= 0) {
             try {
-                $processedDateTime = CommonArchiveShell::setTransferLogsCompleted($pid);
+                $processedDateTime = CommonArchiveShell::setTransferLogsCompleted($pid, $recordsToArchive);
                 $this->out("Transfer completed $processName:  $processedDateTime");
                 $processedDateTime = CommonArchiveShell::setSystemProcessCompleted($systemProcessId);
                 $this->out("System process completed $processName:  $processedDateTime");
