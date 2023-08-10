@@ -30,7 +30,7 @@ class InstitutionCasesTable extends ControllerActionTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->hasMany('LinkedRecords', ['className' => 'Cases.InstitutionCaseRecords', 'foreignKey' => 'institution_case_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-        $this->addBehavior('Workflow.Workflow');
+        $this->addBehavior('Workflow.WorkflowCase');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
@@ -52,6 +52,13 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        //POCOR-7367::Start
+        $workflows = TableRegistry::get('workflows');
+        $workflowSteps = TableRegistry::get('workflow_steps');
+        $wfData = $workflows->find()->where(['name' => 'Cases - General'])->first();
+        $WFSdata = $workflowSteps->find()->where(['name' => 'Open','workflow_id'=>$wfData->id])->first();
+        $entity->status_id = $WFSdata->id;
+        //POCOR-7367::end
         if ($entity->isNew()) {
             $autoGenerateCaseNumber = $this->getAutoGenerateCaseNumber($entity->institution_id);
             $entity->case_number = $autoGenerateCaseNumber;
@@ -259,7 +266,8 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['LinkedRecords']);
+        //$query->contain(['LinkedRecords']);
+        $this->field('case_number', ['visible' => true]);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -289,7 +297,10 @@ class InstitutionCasesTable extends ControllerActionTable
         if ($action == 'index') {
             if ($entity->has('linked_records')) {
                 if ($entity->linked_records[0]['record_id'] != 0) {//start POCOR-6210
-                    $attr['value'] = sizeof($entity->linked_records);
+                    //link Record count
+                    $caselinktable = TableRegistry::get('institution_case_links');
+                    $caseLinkCount = $caselinktable->find()->where(['parent_case_id'=>$entity->id])->count();
+                    $attr['value'] = $caseLinkCount;
                 }
             }
         } elseif ($action == 'view') {
