@@ -1,0 +1,542 @@
+<?php
+namespace App\Shell;
+
+use Cake\Datasource\ConnectionManager;
+use Cake\ORM\TableRegistry;
+use Cake\Console\Shell;
+
+class EducationStructureCopy extends Shell
+{
+    public function initialize()
+    {
+        parent::initialize();
+    }
+
+    public function main()
+    {
+        $this->out('Start Education Structure Copy Shell');
+        $copyFrom = $this->args[0];
+        $copyTo = $this->args[1];
+
+        $canCopy = $this->checkIfCanCopy($copyTo);
+        if ($canCopy) {
+            $this->copyProcess($copyFrom, $copyTo);
+        }
+        $this->out('End Risk Shell');
+    }
+
+    private function checkIfCanCopy($copyTo)
+    {
+        $canCopy = false;
+
+        $EducationSystemTable = TableRegistry::get('Education.EducationSystems');
+        $count =   $EducationSystemTable->find()->where([$EducationSystemTable->aliasField('academic_period_id') => $copyTo])->count();
+        if ($count == 0) {
+            $canCopy = true;
+        }
+        else if($count > 0){
+            $copiedRecords = $EducationSystemTable->find()->where([$EducationSystemTable->aliasField('academic_period_id') => $copyFrom])->count();
+            if($copiedRecords<$count){
+                $canCopy=true;
+             }
+        }
+        return $canCopy;
+    }
+
+    private function copyProcess($copyFrom, $copyTo)
+    {
+        try {
+            //copy education systems
+            $EducationSystemTable = TableRegistry::get('education_system');
+            $educationSystemPreviousRecords=$EducationSystemTable->find()->where([$EducationSystemTable->aliasField('academic_period_id') => $copyFrom])->toArray();
+            foreach( $educationSystemPreviousRecords as $key=>$educationsystem){
+                $existingRecord=$EducationSystemTable->find()->where([$EducationSystemTable->aliasField('academic_period_id') => $copyTo,
+                                                      $EducationSystemTable->aliasField('name')=>$educationsystem->name,
+                                                     ])->first();
+                    if(empty( $existingRecord)){
+                       
+                        $newRecord=$EducationSystemTable->newEntity(array(
+                                            'name'=> $educationsystem->name." ".$copyTo,
+                                            'academic_period_id'=>$copyTo,
+                                            'order'=>$educationsystem->order,
+                                            'visible'=>$educationsystem->visible,
+                                            'modified_user_id'=>'',
+                                            'modified'=>'',
+                                            'created_user_id'=>$educationsystem->created_user_id,
+                                            'created'=>$educationsystem->created));
+                        if($resEntity=$EducationSystemTable->save($newRecord)){
+                            $savedId=$resEntity->id;
+                             //copy education levels
+                                $education_levels = TableRegistry::get('education_levels');
+                                $educationLevelsData = $education_levels
+                                ->find()
+                                ->where([$education_levels->aliasField('education_system_id') =>$educationsystem->id])
+                                ->All()
+                                ->toArray();
+                                if(!empty($educationLevelsData)){
+                                            $level_data_arr = [];
+                                            $cycle_data_arr = [];
+                                            $prog_data_arr = [];
+                                            $grade_data_arr = [];
+                                            $sub_data_arr = [];
+                                            $newLevelEntites = $newCycleEntites = [];
+                                            foreach ($educationLevelsData as $level_key => $level_val) {
+                                                //level data
+                                                $level_data_arr[$level_key]['name'] = $level_val['name'];
+                                                $level_data_arr[$level_key]['order'] = $level_val['order'];
+                                                $level_data_arr[$level_key]['visible'] = $level_val['visible'];
+                                                $level_data_arr[$level_key]['education_system_id'] = $savedId;
+                                                $level_data_arr[$level_key]['education_level_isced_id'] = $level_val['education_level_isced_id'];
+                                                $level_data_arr[$level_key]['modified_user_id'] = '';
+                                                $level_data_arr[$level_key]['modified'] = '';
+                                                $level_data_arr[$level_key]['created_user_id'] = $session->read('Auth.User.id');
+                                                $level_data_arr[$level_key]['created'] = date("Y-m-d H:i:s");
+                                                //insert level data
+                                                $newLevelEntites = $education_levels->newEntity($level_data_arr[$level_key]);
+                                                $level_result = $education_levels->save($newLevelEntites);
+                                                   
+                                                 if(!empty($level_result)){
+                                                    //copy cycle data
+                                                    $education_cycles = TableRegistry::get('education_cycles');
+                                                    $educationCyclesData = $education_cycles
+                                                                            ->find()
+                                                                            ->where([$education_cycles->aliasField('education_level_id') => $level_val['id']])
+                                                                            ->all()
+                                                                            ->toArray();
+                                                    if(!empty($educationCyclesData)){
+                                                        foreach ($educationCyclesData as $cycle_key => $cycle_val) {
+                                                            $cycle_data_arr[$level_key][$cycle_key]['name'] = $cycle_val['name'];
+                                                            $cycle_data_arr[$level_key][$cycle_key]['admission_age'] = $cycle_val['admission_age'];
+                                                            $cycle_data_arr[$level_key][$cycle_key]['order'] = $cycle_val['order'];
+                                                            $cycle_data_arr[$level_key][$cycle_key]['visible'] = $cycle_val['visible'];
+                                                            $cycle_data_arr[$level_key][$cycle_key]['education_level_id'] = $level_result->id;
+                                                            $cycle_data_arr[$level_key][$cycle_key]['modified_user_id'] = '';
+                                                            $cycle_data_arr[$level_key][$cycle_key]['modified'] = '';
+                                                            $cycle_data_arr[$level_key][$cycle_key]['created_user_id'] = $session->read('Auth.User.id');
+                                                            $cycle_data_arr[$level_key][$cycle_key]['created'] = date("Y-m-d H:i:s");
+                                                            //insert cycle data
+                                                            $newCycleEntites = $education_cycles->newEntity($cycle_data_arr[$level_key][$cycle_key]);
+                                                            $cycle_result = $education_cycles->save($newCycleEntites);
+
+                                                            if(!empty($cycle_result)){
+                                                                //programmes data
+                                                                $education_programmes = TableRegistry::get('education_programmes');
+                                                                $educationProgrammesData = $education_programmes
+                                                                                            ->find()
+                                                                                            ->where([$education_programmes->aliasField('education_cycle_id') => $cycle_val['id']])
+                                                                                            ->All()
+                                                                                            ->toArray();
+                                                                if(!empty($educationProgrammesData)){
+                                                                    foreach ($educationProgrammesData as $prog_key => $prog_val) {
+                                                                        $prog_data_arr[$level_key][$cycle_key][$prog_key]['code'] = $prog_val['code'];
+                                                                        $prog_data_arr[$level_key][$cycle_key][$prog_key]['name'] = $prog_val['name'];
+                                                                        $prog_data_arr[$level_key][$cycle_key][$prog_key]['duration'] = $prog_val['duration'];
+                                                                        $prog_data_arr[$level_key][$cycle_key][$prog_key]['order'] = $prog_val['order'];
+                                                                        $prog_data_arr[$level_key][$cycle_key][$prog_key]['visible'] = $prog_val['visible'];
+                                                                        $prog_data_arr[$level_key][$cycle_key][$prog_key]['education_field_of_study_id'] = $prog_val['education_field_of_study_id'];
+                                                                        $prog_data_arr[$level_key][$cycle_key][$prog_key]['education_cycle_id'] = $cycle_result->id;
+                                                                        $prog_data_arr[$level_key][$cycle_key][$prog_key]['education_certification_id'] = $prog_val['education_certification_id'];
+                                                                        $prog_data_arr[$level_key][$cycle_key][$prog_key]['created_user_id'] = $session->read('Auth.User.id');
+                                                                        $prog_data_arr[$level_key][$cycle_key][$prog_key]['created'] = date("Y-m-d H:i:s");
+                                                                        //insert programmes data
+                                                                        $newProgEntites = $education_programmes->newEntity($prog_data_arr[$level_key][$cycle_key][$prog_key]);
+                                                                        $program_result = $education_programmes->save($newProgEntites);
+                                
+                                                                        if(!empty($program_result)){
+                                                                            if(!empty($program_result)){
+                                                                                //POCOR-6053 starts
+                                                                                //next programmes data
+                                                                                $EducationProgrammesNextProgrammesTable = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
+                                                                                $nextProgrammesData = $EducationProgrammesNextProgrammesTable->find()
+                                                                                                        ->where([$EducationProgrammesNextProgrammesTable->aliasField('education_programme_id') => $prog_val['id']])
+                                                                                                        ->toArray();
+                                    
+                                                                                if (!empty($nextProgrammesData)) {
+                                                                                    foreach ($nextProgrammesData as $nextProgramekey => $value) {
+                                                                                       $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['id'] = Text::uuid();
+                                                                                        $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['education_programme_id'] = $program_result->id;
+                                                                                       $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['next_programme_id'] = $value['next_programme_id'];
+                                                                                       
+                                                                                        //insert next programmes data
+                                                                                        $newNextProgramEntites = $EducationProgrammesNextProgrammesTable->newEntity($nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]);
+                                                                                        $nextProgramResult = $EducationProgrammesNextProgrammesTable->save($newNextProgramEntites);
+                                                                                    }
+                                                                                }
+                        
+                                                                                //grades data
+                                                                                $education_grades = TableRegistry::get('education_grades');
+                                                                                $educationGradesData = $education_grades
+                                                                                                            ->find()
+                                                                                                            ->where([$education_grades->aliasField('education_programme_id') => $prog_val['id']])
+                                                                                                            ->All()
+                                                                                                            ->toArray();
+                                    
+                                                                                if(!empty($educationGradesData)){
+                                                                                    foreach ($educationGradesData as $grade_key => $grade_val) {
+                                                                                        $grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['code'] = $grade_val['code'];
+                                                                                        $grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['name'] = $grade_val['name'];
+                                                                                        $grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['admission_age'] = $grade_val['admission_age'];
+                                                                                        $grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['order'] = $grade_val['order'];
+                                                                                        $grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['visible'] = $grade_val['visible'];
+                                                                                        $grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['education_stage_id'] = $grade_val['education_stage_id'];
+                                                                                        $grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['education_programme_id'] = $program_result->id;
+                                                                                        $grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['created_user_id'] = $session->read('Auth.User.id');
+                                                                                        $grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['created'] = date("Y-m-d H:i:s");
+                                                                                        //insert grades data
+                                                                                        $newGradeEntites = $education_grades->newEntity($grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]);
+                                                                                        $grade_result = $education_grades->save($newGradeEntites);
+                                    
+                                                                                        if(!empty($grade_result)){
+                                                                                            //grades subject data
+                                                                                            $education_grades_subjects = TableRegistry::get('education_grades_subjects');
+                                                                                            $educationGradesSubjects = $education_grades_subjects
+                                                                                                                        ->find()
+                                                                                                                        ->where([$education_grades_subjects->aliasField('education_grade_id') => $grade_val['id']])
+                                                                                                                        ->All()
+                                                                                                                        ->toArray();
+                                    
+                                                                                            if(!empty($educationGradesSubjects)){
+                                                                                                foreach ($educationGradesSubjects as $sub_key => $sub_val) {
+                                    
+                                                                                                    $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['id'] = Text::uuid();
+                                                                                                    $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['hours_required'] = $sub_val['hours_required'];
+                                                                                                    $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['visible'] = $sub_val['visible'];
+                                                                                                    $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['auto_allocation'] = $sub_val['auto_allocation'];
+                                                                                                    $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['education_grade_id'] = $grade_result->id;
+                                                                                                    $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['education_subject_id'] = $sub_val['education_subject_id'];
+                                                                                                    $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['created_user_id'] = $session->read('Auth.User.id');
+                                                                                                    $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['created'] = date("Y-m-d H:i:s");
+                                                                                                    //insert grades subject data
+                                                                                                    $newGradeSubEntites = $education_grades_subjects->newEntity($sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]);
+                                    
+                                                                                                    $sub_grade_result = $education_grades_subjects->save($newGradeSubEntites);
+                                                                                                }
+                                                                                            }// if educationGradesSubjects
+                                                                                        }//grade ends
+                                                                                    }
+                                                                                } // if educationGradesData
+                                                                            }//program ends
+                                                                        }
+                                                                    } // if educationProgrammesData
+                                                                }//cycle ends
+                                                            }
+                                                        } // if educationCyclesData
+                                                    }//level ends
+                                                }
+                                            } //if educationLevelsData         
+                                
+                                            }
+            
+                             }
+                      
+                        }
+
+                    }
+                }
+            }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		// if(!empty($educationLevelsData)){
+		// 	$level_data_arr = [];
+		// 	$cycle_data_arr = [];
+		// 	$prog_data_arr = [];
+		// 	$grade_data_arr = [];
+		// 	$sub_data_arr = [];
+		// 	$newLevelEntites = $newCycleEntites = [];
+		// 	foreach ($educationLevelsData as $level_key => $level_val) {
+		// 		//level data
+		// 		$level_data_arr[$level_key]['name'] = $level_val['name'];
+		// 		$level_data_arr[$level_key]['order'] = $level_val['order'];
+		// 		$level_data_arr[$level_key]['visible'] = $level_val['visible'];
+		// 		$level_data_arr[$level_key]['education_system_id'] = $entity->id;
+		// 		$level_data_arr[$level_key]['education_level_isced_id'] = $level_val['education_level_isced_id'];
+		// 		$level_data_arr[$level_key]['modified_user_id'] = '';
+		// 		$level_data_arr[$level_key]['modified'] = '';
+		// 		$level_data_arr[$level_key]['created_user_id'] = $session->read('Auth.User.id');
+		// 		$level_data_arr[$level_key]['created'] = date("Y-m-d H:i:s");
+		// 		//insert level data
+		// 		$newLevelEntites = $education_levels->newEntity($level_data_arr[$level_key]);
+		// 		$level_result = $education_levels->save($newLevelEntites);
+
+				// if(!empty($level_result)){
+				// 	//cycle data
+				// 	$education_cycles = TableRegistry::get('education_cycles');
+			    // 	$educationCyclesData = $education_cycles
+				// 						    ->find()
+				// 						    ->where([$education_cycles->aliasField('education_level_id') => $level_val['id']])
+				// 						    ->All()
+				// 	                        ->toArray();
+				// 	if(!empty($educationCyclesData)){
+				// 		foreach ($educationCyclesData as $cycle_key => $cycle_val) {
+				// 			$cycle_data_arr[$level_key][$cycle_key]['name'] = $cycle_val['name'];
+				// 			$cycle_data_arr[$level_key][$cycle_key]['admission_age'] = $cycle_val['admission_age'];
+				// 			$cycle_data_arr[$level_key][$cycle_key]['order'] = $cycle_val['order'];
+				// 			$cycle_data_arr[$level_key][$cycle_key]['visible'] = $cycle_val['visible'];
+				// 			$cycle_data_arr[$level_key][$cycle_key]['education_level_id'] = $level_result->id;
+				// 			$cycle_data_arr[$level_key][$cycle_key]['modified_user_id'] = '';
+				// 			$cycle_data_arr[$level_key][$cycle_key]['modified'] = '';
+				// 			$cycle_data_arr[$level_key][$cycle_key]['created_user_id'] = $session->read('Auth.User.id');
+				// 			$cycle_data_arr[$level_key][$cycle_key]['created'] = date("Y-m-d H:i:s");
+				// 			//insert cycle data
+				// 			$newCycleEntites = $education_cycles->newEntity($cycle_data_arr[$level_key][$cycle_key]);
+				// 			$cycle_result = $education_cycles->save($newCycleEntites);
+
+							// if(!empty($cycle_result)){
+							// 	//programmes data
+							// 	$education_programmes = TableRegistry::get('education_programmes');
+						    // 	$educationProgrammesData = $education_programmes
+							// 							    ->find()
+							// 							    ->where([$education_programmes->aliasField('education_cycle_id') => $cycle_val['id']])
+							// 							    ->All()
+							// 		                        ->toArray();
+							// 	if(!empty($educationProgrammesData)){
+							// 		foreach ($educationProgrammesData as $prog_key => $prog_val) {
+							// 			$prog_data_arr[$level_key][$cycle_key][$prog_key]['code'] = $prog_val['code'];
+							// 			$prog_data_arr[$level_key][$cycle_key][$prog_key]['name'] = $prog_val['name'];
+							// 			$prog_data_arr[$level_key][$cycle_key][$prog_key]['duration'] = $prog_val['duration'];
+							// 			$prog_data_arr[$level_key][$cycle_key][$prog_key]['order'] = $prog_val['order'];
+							// 			$prog_data_arr[$level_key][$cycle_key][$prog_key]['visible'] = $prog_val['visible'];
+							// 			$prog_data_arr[$level_key][$cycle_key][$prog_key]['education_field_of_study_id'] = $prog_val['education_field_of_study_id'];
+							// 			$prog_data_arr[$level_key][$cycle_key][$prog_key]['education_cycle_id'] = $cycle_result->id;
+							// 			$prog_data_arr[$level_key][$cycle_key][$prog_key]['education_certification_id'] = $prog_val['education_certification_id'];
+							// 			$prog_data_arr[$level_key][$cycle_key][$prog_key]['created_user_id'] = $session->read('Auth.User.id');
+							// 			$prog_data_arr[$level_key][$cycle_key][$prog_key]['created'] = date("Y-m-d H:i:s");
+							// 			//insert programmes data
+							// 			$newProgEntites = $education_programmes->newEntity($prog_data_arr[$level_key][$cycle_key][$prog_key]);
+							// 			$program_result = $education_programmes->save($newProgEntites);
+
+										if(!empty($program_result)){
+											//POCOR-6053 starts
+                                            //next programmes data
+                                            $EducationProgrammesNextProgrammesTable = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
+                                            $nextProgrammesData = $EducationProgrammesNextProgrammesTable->find()
+                                                                    ->where([$EducationProgrammesNextProgrammesTable->aliasField('education_programme_id') => $prog_val['id']])
+                                                                    ->toArray();
+
+                                            if (!empty($nextProgrammesData)) {
+                                                foreach ($nextProgrammesData as $nextProgramekey => $value) {
+                                                   $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['id'] = Text::uuid();
+                                                    $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['education_programme_id'] = $program_result->id;
+                                                   $nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]['next_programme_id'] = $value['next_programme_id'];
+                                                   
+                                                    //insert next programmes data
+                                                    $newNextProgramEntites = $EducationProgrammesNextProgrammesTable->newEntity($nextProgramme_data_arr[$level_key][$cycle_key][$prog_key][$nextProgramekey]);
+                                                    $nextProgramResult = $EducationProgrammesNextProgrammesTable->save($newNextProgramEntites);
+                                                }
+                                            }
+                                            //POCOR-6053 ends
+                                            //grades data
+											$education_grades = TableRegistry::get('education_grades');
+									    	$educationGradesData = $education_grades
+																	    ->find()
+																	    ->where([$education_grades->aliasField('education_programme_id') => $prog_val['id']])
+																	    ->All()
+												                        ->toArray();
+
+											if(!empty($educationGradesData)){
+												foreach ($educationGradesData as $grade_key => $grade_val) {
+													$grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['code'] = $grade_val['code'];
+													$grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['name'] = $grade_val['name'];
+													$grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['admission_age'] = $grade_val['admission_age'];
+													$grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['order'] = $grade_val['order'];
+													$grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['visible'] = $grade_val['visible'];
+													$grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['education_stage_id'] = $grade_val['education_stage_id'];
+													$grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['education_programme_id'] = $program_result->id;
+													$grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['created_user_id'] = $session->read('Auth.User.id');
+													$grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]['created'] = date("Y-m-d H:i:s");
+													//insert grades data
+													$newGradeEntites = $education_grades->newEntity($grade_data_arr[$level_key][$cycle_key][$prog_key][$grade_key]);
+													$grade_result = $education_grades->save($newGradeEntites);
+
+													if(!empty($grade_result)){
+														//grades subject data
+														$education_grades_subjects = TableRegistry::get('education_grades_subjects');
+												    	$educationGradesSubjects = $education_grades_subjects
+																				    ->find()
+																				    ->where([$education_grades_subjects->aliasField('education_grade_id') => $grade_val['id']])
+																				    ->All()
+															                        ->toArray();
+
+														if(!empty($educationGradesSubjects)){
+															foreach ($educationGradesSubjects as $sub_key => $sub_val) {
+
+														        $sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['id'] = Text::uuid();
+																$sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['hours_required'] = $sub_val['hours_required'];
+																$sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['visible'] = $sub_val['visible'];
+																$sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['auto_allocation'] = $sub_val['auto_allocation'];
+																$sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['education_grade_id'] = $grade_result->id;
+																$sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['education_subject_id'] = $sub_val['education_subject_id'];
+																$sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['created_user_id'] = $session->read('Auth.User.id');
+																$sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]['created'] = date("Y-m-d H:i:s");
+																//insert grades subject data
+																$newGradeSubEntites = $education_grades_subjects->newEntity($sub_data_arr[$level_key][$cycle_key][$prog_key][$grade_key][$sub_key]);
+
+																$sub_grade_result = $education_grades_subjects->save($newGradeSubEntites);
+															}
+														}// if educationGradesSubjects
+													}//grade ends
+												}
+											} // if educationGradesData
+										}//program ends
+									}
+								} // if educationProgrammesData
+							}//cycle ends
+						}
+					} // if educationCyclesData
+				}//level ends
+			}
+		} //if educationLevelsData 
+
+        /*POCOR-6544 starts*/
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $getNextProgrammeData = $EducationProgrammes->find()
+                                ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                                ->where([
+                                    'EducationSystems.academic_period_id' => $academic_period_id
+                                ])
+                                ->toArray();
+        $nextProgramme_arr = [];
+        if (!empty($getNextProgrammeData)) {
+            foreach ($getNextProgrammeData as $k => $val) {
+                $nextProgrammes = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
+                $nextProgrammesData = $nextProgrammes->find()->where([
+                                        $nextProgrammes->aliasField('education_programme_id') => $val->id
+                                    ])->toArray();
+                $nextIds = [];
+                if (!empty($nextProgrammesData)) {
+                    foreach ($nextProgrammesData as $next_programme_key => $next_programme_value) { 
+                        $nextIds[] = $next_programme_value->next_programme_id;
+                    }
+                    $allData = $EducationProgrammes->find()
+                                ->where([
+                                    $EducationProgrammes->aliasField('id IN') => $nextIds
+                                ])
+                                ->toArray();
+                    $name = [];
+                    foreach ($allData as $keys => $v) {
+                        $name[] = $v->name;
+                    }
+                    $condition = [];
+                    foreach ($name as $obj) {
+                        $condition[] = $EducationProgrammes->aliasField("name"). " LIKE '%$obj%'";
+                    }
+                    $latesNextProgIds = $EducationProgrammes->find()
+                                ->select([$EducationProgrammes->aliasField('id')])
+                                ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                                ->where([
+                                    'EducationSystems.academic_period_id' => $academic_period_id,
+                                    'OR' => $condition
+                                ]);
+                    $ids = [];
+                    foreach ($latesNextProgIds->toArray() as $proId) {
+                        $ids[] = $proId->id;
+                        $data = [
+                            'education_programme_id' => $val->id,
+                            'next_programme_id' =>  $proId->id
+                        ];
+
+                        $newEntites = $nextProgrammes->newEntity($data);
+                        $storeData = $nextProgrammes->save($newEntites);
+                    }
+                    $nextProgrammes->deleteAll([
+                            $nextProgrammes->aliasField('education_programme_id') => $val->id,
+                            $nextProgrammes->aliasField('next_programme_id IN') => $nextIds,
+                        ]);  
+                }
+            }
+        }
+        /*POCOR-6544 ends*/    		
+		// Webhook Education Structure System create starts
+		//POCOR-6085 starts
+		if($entity->isNew()) {
+
+			$educationStructure = [
+				'education_system_id' =>$entity->id,
+				'education_system_name' =>$entity->name,
+				'academic_period_id' =>$entity->academic_period_id
+			];
+
+			$Webhooks = TableRegistry::get('Webhook.Webhooks');
+			if ($this->Auth->user()) {
+				$Webhooks->triggerShell('education_structure_system_create', [], $educationStructure);
+			}
+		}
+		
+		//POCOR-6085 ends
+		// Webhook Education Structure System create ends
+
+		// POCOR-6086 starts
+		 //webhook education structure system update starts
+		 if(!$entity->isNew()) {
+            $body = array();
+            $educationUpdateArray = [
+				'education_system_id' =>$entity->id,
+				'education_system_name' =>$entity->name,
+				'visible' =>$entity->visible,
+				'academic_period_id' =>$entity->academic_period_id
+            ];
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('education_structure_system_update', [], $educationUpdateArray);
+            }
+        }
+		// POCOR-6086 ends
+
+        // webhook education structure system update ends
+
+
+
+            $RiskTable = TableRegistry::get('Institution.Risks');
+            $connection = ConnectionManager::get('default');     
+            $risk_res = $connection->execute('SELECT * FROM risks WHERE academic_period_id="'.$copyFrom.'"');
+            $risk_data = $risk_res->fetch('assoc');
+            $name = $risk_data['name'];
+            $risk_id = $risk_data['id'];
+            $created_user_id = $risk_data['created_user_id'];
+
+            $risk_arr['name'] = $name;
+            $risk_arr['academic_period_id'] = $copyTo;
+            $risk_arr['created_user_id'] = $created_user_id;
+            $risk_arr['created'] = time();
+
+            $newEntity = $RiskTable->newEntity($risk_arr);
+            $RiskTable->save($newEntity);
+
+            $risk_criteria_res = $connection->execute('SELECT * FROM risk_criterias WHERE risk_id='.$risk_id);
+            $risk_crieteria_data = $risk_criteria_res ->fetchAll('assoc');
+            if(!empty($risk_crieteria_data)){
+                foreach($risk_crieteria_data as $key => $value){
+                    $crieteria =  $value['criteria'];
+                    $operator =  $value['operator'];
+                    $threshold =  $value['threshold'];
+                    $risk_value =  $value['risk_value'];
+                    $created_user_id =  $value['created_user_id'];
+                    $connection->execute("INSERT INTO risk_criterias (`criteria`,`operator`,`threshold`,`risk_value`,`risk_id`,`created_user_id`,`created`) VALUES('".$crieteria."', $operator,$threshold,$risk_value,$newEntity->id,$created_user_id,NOW())");
+
+                }
+            }
+
+        } catch (Exception $e) {
+            pr($e->getMessage());
+        }
+    }
+}
