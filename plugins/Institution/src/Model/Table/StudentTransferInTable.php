@@ -118,6 +118,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+
         $this->field('requested_date', ['type' => 'hidden']);
         $this->field('end_date', ['type' => 'hidden']);
         $this->field('institution_id', ['type' => 'hidden']);
@@ -148,22 +149,74 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $toolbarButtonsArray['back']['url']['action'] = 'Students';
         $toolbarButtonsArray['back']['url'][0] = 'index';
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
-        // End
+//        $this->log('before_check');
+        if($this->checkUserAccess()) {
+            $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+            $url = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'BulkStudentTransferIn',
+                'edit'
+            ];
+            $toolbarButtonsArray['bulkAdmission'] = $this->getButtonTemplate();
+            $toolbarButtonsArray['bulkAdmission']['label'] = '<i class="fa kd-transfer"></i>';
+            $toolbarButtonsArray['bulkAdmission']['attr']['title'] = __('Bulk Student Transfer In');
+            $toolbarButtonsArray['bulkAdmission']['url'] = $url;
+            $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        }        // End bulk Student Transfer In button POCOR-5677 end
+    }
 
-        // Start bulk Student Transfer In button POCOR-5677 start
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        $url = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'BulkStudentTransferIn',
-            'edit'
-        ];
-        $toolbarButtonsArray['bulkAdmission'] = $this->getButtonTemplate();
-        $toolbarButtonsArray['bulkAdmission']['label'] = '<i class="fa kd-transfer"></i>';
-        $toolbarButtonsArray['bulkAdmission']['attr']['title'] = __('Bulk Student Transfer In');
-        $toolbarButtonsArray['bulkAdmission']['url'] = $url;
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
-        // End bulk Student Transfer In button POCOR-5677 end
+    /**
+     * @return bool
+     */
+    private function checkUserAccess()
+    {
+        $check = false;
+        $newQ = clone $this->query();
+        $session = $this->request->session();
+        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        $newQ->find('InstitutionStudentTransferIn', ['institution_id' => $institutionId]);
+        $newQ->where(['Statuses.category' => self::IN_PROGRESS]);
+        $one_req = $newQ->find('all')->first();
+        if($one_req){
+            $status_id = $one_req->status_id;
+//            $this->log($status_id, 'debug');
+        }else{
+            return false;
+        }
+        $session = $this->Session;
+        $superAdmin = $session->read('Auth.User.super_admin');
+        if($superAdmin){
+            return true;
+        }
+        $roleIds = [];
+        $event = $this->dispatchEvent('Workflow.onUpdateRoles', null, $this);
+        if ($event->result) {
+            $roleIds = $event->result;
+        } else {
+            $roles = $this->AccessControl->getRolesByUser()->toArray();
+            foreach ($roles as $key => $role) {
+                $roleIds[$role->security_role_id] = $role->security_role_id;
+            }
+        }
+        if (empty($roleIds)) {
+            $roleIds = [0];
+        }
+//        $this->log($roleIds);
+        $all_steps_and_roles = TableRegistry::get('workflow_steps_roles');
+        $distinct_step = $all_steps_and_roles->find()
+            ->select(['workflow_step_id'])
+            ->where(['workflow_step_id' => $status_id,
+                'security_role_id IN' => $roleIds])
+            ->distinct(['workflow_step_id'])
+            ->first();
+//        $this->log($distinct_step);
+        if ($distinct_step) {
+//            $this->log($distinct_step, 'debug');
+            $check = true;
+        }
+//        $this->log($check, 'debug');
+        return $check;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
