@@ -163,9 +163,18 @@ class DataManagementCopyTable extends ControllerActionTable
                 ->find('all')
                 ->where(['academic_period_id' => $entity->to_academic_period])
                 ->toArray();
+            //POCOR-7678
+            if($entity->features =="Education Structure"){
+                    if(!empty($EducationSystemsdata)){
+                        $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+                        return false;
+                    }
+            }
+            else{
             if(empty($EducationSystemsdata)){
                 $this->Alert->error('CopyData.nodataexisteducationsystem', ['reset' => true]);
                 return false;
+            }
             }
         }
         if($entity->features == 'Institution Programmes, Grades and Subjects'){
@@ -787,6 +796,13 @@ class DataManagementCopyTable extends ControllerActionTable
             $this->triggePerformanceCompetenciesShell('PerformanceCompetencies',$entity->from_academic_period, $entity->to_academic_period, $entity->competency_criterias_value, $entity->competency_templates_value, $entity->competency_items_value);
             $this->log(' <<<<<<<<<<======== After triggerPerformanceCompetenciesShell', 'debug');
         }
+        if($entity->features == "Education Structure"){
+            $from_academic_period = $entity->from_academic_period;
+            $to_academic_period = $entity->to_academic_period;
+            $copyFrom = $from_academic_period;
+            $copyTo = $to_academic_period;
+            $this->triggerCopyShell('EducationStructureCopy', $copyFrom, $copyTo);
+        }
     }
 
      /*
@@ -808,6 +824,7 @@ class DataManagementCopyTable extends ControllerActionTable
 
     public function getFeatureOptions(){
         $options = [
+            'Education Structure' => __('Education Structure'),
             'Institution Programmes, Grades and Subjects' => __('Institution Programmes, Grades and Subjects'),
             'Shifts' => __('Shifts'),
             'Infrastructure' => __('Infrastructure'),
