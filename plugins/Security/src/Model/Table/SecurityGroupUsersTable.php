@@ -290,15 +290,15 @@ class SecurityGroupUsersTable extends AppTable {
         $stepId = array_key_exists('workflow_step_id', $params) ? $params['workflow_step_id'] : null;
         $institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : $params['url_institution_id']; //POCOR-6619
 
-        Log::write('debug', 'Is School Based: ' . $isSchoolBased);
-        Log::write('debug', 'Workflow Step Id: ' . $stepId);
+//        Log::write('debug', 'Is School Based: ' . $isSchoolBased);
+//        Log::write('debug', 'Workflow Step Id: ' . $stepId);
 
         $assigneeOptions = [];
         if (!is_null($stepId)) {
             $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
             $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
-            Log::write('debug', 'Roles By Step:');
-            Log::write('debug', $stepRoles);
+//            Log::write('debug', 'Roles By Step:');
+//            Log::write('debug', $stepRoles);
 
             if (!empty($stepRoles)) {
                 $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
