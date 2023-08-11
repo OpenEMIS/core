@@ -1181,9 +1181,6 @@ class WorkflowBehavior extends Behavior
                     $assigneeOptions = $this->getFirstStepAssigneeOptions($entity, $isSchoolBased, $firstStepId, $request);
                 }
             }
-            if($model->url('index')['controller']=="Profiles"&&$model->url('index')['action']=="Cases"){//POCOR-7439
-                $assignToSelf = true;
-            }
             if (!$assignToSelf) {
                 if (isset($assigneeOptions) && !empty($assigneeOptions)) {
                     $assigneeOptions = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
@@ -1199,9 +1196,7 @@ class WorkflowBehavior extends Behavior
                 $attr['type'] = 'readonly';
                 $attr['value'] = $userEntity->id;
                 $attr['attr']['value'] = $userEntity->name_with_id;
-                if($model->url('index')['controller']=="Profiles"&&$model->url('index')['action']=="Cases"){//POCOR-7439
-                    $attr['type'] = 'hidden';
-                }
+              
             } 
             else if($request->data['StaffPositionProfiles']['staff_change_type_id'] == 1 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 2 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 3 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 4){
                 $attr['type'] = 'chosenSelect';
@@ -1232,9 +1227,6 @@ class WorkflowBehavior extends Behavior
             $attr['type'] = 'readonly';
             $attr['value'] = $assigneeId;
             $attr['attr']['value'] = $assigneeName;
-            if($model->url('index')['controller']=="Profiles"&&$model->url('index')['action']=="Cases"){//POCOR-7439
-                $attr['type'] = 'hidden';
-            }
         } elseif ($action == 'approve') {
             $attr['type'] = 'hidden';
         }
@@ -1319,7 +1311,6 @@ class WorkflowBehavior extends Behavior
         $order = 0;
         $fieldOrder = [];
         $fields = $this->_table->fields;
-        $model=$this->_table;//POCOR-7439
         uasort($fields, function ($a, $b) {
             return $a['order']-$b['order'];
         });
@@ -1336,12 +1327,8 @@ class WorkflowBehavior extends Behavior
 
         ksort($fieldOrder);
         array_unshift($fieldOrder, 'assignee_id');  // Set Status to second
-        if($model->url('index')['controller']=="Profiles"&&$model->url('index')['action']=="Cases"){//POCOR-7439
-            array_push($fieldOrder, 'status_id');
-        }
-        else{
         array_unshift($fieldOrder, 'status_id');    // Set Status to first
-        }
+
         if ($this->isCAv4()) {
             $this->_table->setFieldOrder($fieldOrder);
         } else {
