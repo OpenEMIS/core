@@ -94,25 +94,28 @@ class BulkStudentTransferInTable extends ControllerActionTable
         } else {
             $statusId = key($this->_stepsOptions);
         }
+        if($superAdmin || $this->checkUserAccess($statusId)){
+            $stepId = $statusId;
+        }else{
+            $stepId = 0;
+        }
 
+//        $this->log($distinctStepsArray, 'debug');
         $query->contain([
             'WorkflowActions',
             'WorkflowActions.NextWorkflowSteps',
-            'StudentTransferIn'=> function ($q) use ($superAdmin, $userId, $institutionId) {
+            'StudentTransferIn'=> function ($q) use ( $institutionId) {
                 $q->where(['StudentTransferIn.institution_id' => $institutionId])
                     ->contain(['Users', 'Assignees', 'AcademicPeriods', 'EducationGrades', 'InstitutionClasses', 'Statuses','PreviousInstitutions']);
-                if ($superAdmin) {
                     return $q;
-                } else {
-                    return $q->where(['StudentTransferIn.assignee_id'=> $userId]);
-                }
             },
-            'Workflows.WorkflowModels'
+            'Workflows.WorkflowModels',
         ])
         ->where([
             'WorkflowModels.model' => $this->_modelAlias,
-            $this->aliasField('id') => $statusId
+            $this->aliasField('id') => $stepId
         ], [], true);
+//        $this->log($query->sql(), 'debug');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -463,7 +466,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
             $session->delete($this->registryAlias() . '.confirm');
             $session->delete($this->registryAlias() . '.Data');
         } else {
-            $this->log($entity->errors(), 'debug');
+//            $this->log($entity->errors(), 'debug');
             $url['action'] = 'BulkStudentTransferIn';
             $url[0] = 'edit';
         }
@@ -525,5 +528,40 @@ class BulkStudentTransferInTable extends ControllerActionTable
         $this->field('assignee_id', ['entity' => $entity]);
         $this->field('comment', ['type' => 'text']);
         $this->field('bulk_student_transfer_in', ['entity' => $entity]);
+    }
+
+    /**
+     * @param Event $event
+     * @param $statusId
+     * @return int
+     */
+    private function checkUserAccess($statusId)
+    {
+        $userAccess = false;
+        $roleIds = [];
+        $event = $this->dispatchEvent('Workflow.onUpdateRoles', null, $this);
+        if ($event->result) {
+            $roleIds = $event->result;
+        } else {
+            $roles = $this->AccessControl->getRolesByUser()->toArray();
+            foreach ($roles as $key => $role) {
+                $roleIds[$role->security_role_id] = $role->security_role_id;
+            }
+        }
+        if (empty($roleIds)) {
+            $roleIds = [0];
+        }
+        $all_steps_and_roles = TableRegistry::get('workflow_steps_roles');
+        $distinct_step = $all_steps_and_roles->find()
+            ->select(['workflow_step_id'])
+            ->where(['workflow_step_id' => $statusId,
+                'security_role_id IN' => $roleIds])
+            ->distinct(['workflow_step_id'])
+            ->first();
+
+        if ($distinct_step) {
+            $userAccess = true;
+        }
+        return $userAccess;
     }
 }

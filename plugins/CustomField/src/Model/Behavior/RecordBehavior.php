@@ -995,12 +995,13 @@ class RecordBehavior extends Behavior
             foreach ($customFields as $key => $obj) {
                 // If tabSection is not set, setup Section Header
                 //POCOR-7600
-                if (!$this->config('tabSection')) {
+                if ((!$this->config('tabSection'))||$model->request->params['action']=="Surveys") {
                     if (isset($obj->section)) {
                         if (!in_array($obj->section, $sectionName)) {
                             $sectionName[$key] = $obj->section;
                             $fieldName = "section_".$key."_header";
-                            if (!empty($sectionName)) {
+                            
+                            if (!empty($sectionName)&&$model->request->params['action']!="Surveys") {
                                 $ControllerAction->field($fieldName, ['type' => 'section', 'title' => $sectionName[$key]]);
                                 $fieldOrder[++$order] = $fieldName;
                                // echo "<pre>";print_r($customFields);die;
