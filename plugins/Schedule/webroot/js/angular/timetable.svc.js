@@ -55,7 +55,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     }
 
     function getScheduleTimetableCustomizesTable(timetableId) {
-        var success = function(response, deferred) {
+        var success = function (response, deferred) {
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
             } else {
@@ -74,7 +74,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     }
 
     function getInstitutionRooms(institutionId, academicPeriodId) {
-        var success = function(response, deferred) {
+        var success = function (response, deferred) {
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
             } else {
@@ -86,8 +86,8 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
             .where({
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId
-                    //accessibility: 1,
-                    //end_year:new Date().getFullYear()
+                //accessibility: 1,
+                //end_year:new Date().getFullYear()
             })
             .ajax({
                 success: success,
@@ -96,7 +96,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     }
 
     function getInstitutionClassSubjects(institutionId, institutionClassId, academicPeriodId) {
-        var success = function(response, deferred) {
+        var success = function (response, deferred) {
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
             } else {
@@ -115,7 +115,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     }
 
     function getTimetable(timetableId) {
-        var success = function(response, deferred) {
+        var success = function (response, deferred) {
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
             } else {
@@ -133,9 +133,9 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     }
 
     function getTimeslots(scheduleIntervalId) {
-        console.log(scheduleIntervalId);
+        // console.log(scheduleIntervalId);
 
-        var success = function(response, deferred) {
+        var success = function (response, deferred) {
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
             } else {
@@ -155,8 +155,8 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     }
 
     function getTimetableLessons(timetableId) {
-        var success = function(response, deferred) {
-            console.log('response', response);
+        var success = function (response, deferred) {
+            // console.log('response', response);
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
             } else {
@@ -175,7 +175,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     }
 
     function getWorkingDayOfWeek() {
-        var success = function(response, deferred) {
+        var success = function (response, deferred) {
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
             } else {
@@ -192,7 +192,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     }
 
     function getLessonType() {
-        var success = function(response, deferred) {
+        var success = function (response, deferred) {
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
             } else {
@@ -209,7 +209,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     }
 
     function getTimetableStatus() {
-        var success = function(response, deferred) {
+        var success = function (response, deferred) {
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
             } else {
@@ -226,7 +226,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     }
 
     function getEducationGrade(institutionClassId) {
-        var success = function(response, deferred) {
+        var success = function (response, deferred) {
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
             } else {
@@ -246,7 +246,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
 
     // save events
     function saveOverviewData(timetableData) {
-        console.log('timetableData', timetableData);
+        // console.log('timetableData', timetableData);
         var saveData = {
             id: timetableData.id,
             name: timetableData.name,
@@ -262,7 +262,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
     }
 
     function saveLessonData(lessonData) {
-        console.log('lessonData', lessonData);
+        // console.log('lessonData', lessonData);
         var saveData = {
             day_of_week: lessonData.day_of_week,
             institution_schedule_timetable_id: lessonData.institution_schedule_timetable_id,
@@ -283,8 +283,8 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
             institution_subject_id: lessonDetailData.schedule_curriculum_lesson.institution_subject_id
         };
 
-        var success = function(response, deferred) {
-            console.log('Checkresponse', response);
+        var success = function (response, deferred) {
+            // console.log('Checkresponse', response);
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
             } else {
@@ -308,6 +308,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
         if (lessonDetailData.schedule_curriculum_lesson.code_only != 0) {
             codeOnly = 1;
         }
+        var room_id = 0;
         if (lessonDetailData.schedule_curriculum_lesson_room.institution_room_id) {
             room_id = lessonDetailData.schedule_curriculum_lesson_room.institution_room_id;
         } else {
@@ -318,10 +319,6 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
             institution_schedule_timeslot_id: lessonDetailData.institution_schedule_timeslot_id,
             institution_schedule_timetable_id: lessonDetailData.institution_schedule_timetable_id,
             lesson_type: lessonDetailData.lesson_type,
-            schedule_lesson_room: {
-                institution_schedule_lesson_detail_id: '1',
-                institution_room_id: room_id,
-            },
             schedule_curriculum_lesson: {
                 institution_subject_id: lessonDetailData.schedule_curriculum_lesson.institution_subject_id,
                 code_only: codeOnly,
@@ -331,6 +328,12 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
 
         if (angular.isDefined(lessonDetailData.id)) {
             saveData.id = lessonDetailData.id;
+        }
+        if (room_id > 0) {
+            saveData.schedule_lesson_room = {
+                institution_schedule_lesson_detail_id: '1',
+                institution_room_id: room_id,
+            };
         }
 
         return ScheduleLessonDetailsTable.save(saveData);
@@ -348,25 +351,25 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
             institution_schedule_timeslot_id: lessonDetailData.institution_schedule_timeslot_id,
             institution_schedule_timetable_id: lessonDetailData.institution_schedule_timetable_id,
             lesson_type: lessonDetailData.lesson_type,
-            schedule_lesson_room: {
-                institution_schedule_lesson_detail_id: '1',
-                institution_room_id: room_id,
-            },
             schedule_non_curriculum_lesson: {
                 name: lessonDetailData.schedule_non_curriculum_lesson.name
             }
         };
-
+        if (room_id > 0) {
+            saveData.schedule_lesson_room = {
+                institution_schedule_lesson_detail_id: '1',
+                institution_room_id: room_id,
+            };
+        }
         if (angular.isDefined(lessonDetailData.id)) {
             saveData.id = lessonDetailData.id;
         }
-
         return ScheduleLessonDetailsTable.save(saveData);
     }
 
     function saveTimetableCustomizeData(timetableId, institutionId, academicPeriodId, customizeData) {
-        var success = function(response, deferred) {
-            console.log('Checkresponse', response);
+        var success = function (response, deferred) {
+            // console.log('Checkresponse', response);
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
             } else {
@@ -382,7 +385,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
                 defer: true
             });
 
-        angular.forEach(customizeData, function(value, key) {
+        angular.forEach(customizeData, function (value, key) {
             var saveData = {
                 institution_schedule_timetable_id: timetableId,
                 institution_id: institutionId,
@@ -401,8 +404,8 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
             lession_id: lessionId
         };
 
-        var success = function(response, deferred) {
-            console.log('Checkresponse', response);
+        var success = function (response, deferred) {
+            // console.log('Checkresponse', response);
             if (angular.isDefined(response.data.data)) {
                 deferred.resolve(response.data.data);
             } else {
