@@ -284,7 +284,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
         if (dayListOptions.length > 1) {
             angular.forEach(dayListOptions, function(day) {
                 if (day.selected == true) {
-                   vm.selectedDay = -1;
+                   vm.selectedDay = (angular.isDefined(day.closed) && day.closed) ? -1 : day.id;
                    vm.selectedDayDate = day.date;
                    vm.selectedFormattedDayDate = day.name;
                    vm.schoolClosed = (angular.isDefined(day.closed) && day.closed) ? true : false;
@@ -293,7 +293,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
                 }
             });
         }
-        if (dayListOptions.length <= 1) {
+        if (dayListOptions.length < 1) {
             vm.selectedDay = -1;
             vm.gridOptions.context.date = vm.selectedDay;
         }
