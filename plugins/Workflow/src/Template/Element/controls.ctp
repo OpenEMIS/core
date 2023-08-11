@@ -1,6 +1,8 @@
 <?php if (!empty($filterOptions) || !empty($categoryOptions) ||  !empty($areaOptions) || !empty($periodsOptions) || !empty($monthOptions) ) :  ?>
-   <?php if($this->request->params['controller']!="Profiles"&&$this->request->params['action']!="Cases"):?>
-   
+   <?php if(($this->request->params['controller']=="Profiles") && ($this->request->params['action']=="Cases")){
+
+   }
+   else{?>
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
@@ -135,5 +137,5 @@
             ?>
         </div>
     </div>
-<?php endif ?>
-<?php endif ?>
+
+<?php }endif ?>
