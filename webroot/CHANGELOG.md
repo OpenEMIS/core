@@ -1,3 +1,12 @@
+### [3.92.0] - 2023-08-11
+- Implemented: Improvements to the Case feature to allow users to add/update cases from the Personal module
+- Bug Fixed: Institutions > Student/Staff > Export: The page goes to Bad Gateway
+- Bug Fixed: Administrations > Profiles: Sort Institution Name in Ascending order
+- Bug Fixed: Administration>Profile>Institutions: Number of classroom placeholder is not counting correctly
+- Bug Fixed: Institutions > Students/Staffs > General > Language: There is an error in adding languages
+- Bug Fixed: Institutions > Academic > Classes > Edit: The unit and course field has the asterisk "*" even though the fields are not mandatory
+- Bug Fixed: Administration>Security>Groups: System is picking up the newly created institutions and adding them to user groups
+
 ### [3.91.1] - 2023-08-10
 - Implemented: Improvements to the Case feature to allow adding comments to cases
 - Implemented: Develop "External Data Source - Exams" config page for PacSIMS
