@@ -163,14 +163,14 @@ class DataManagementCopyTable extends ControllerActionTable
                 ->find('all')
                 ->where(['academic_period_id' => $entity->to_academic_period])
                 ->toArray();
-            //POCOR-7678
+            //POCOR-7568 start
             if($entity->features =="Education Structure"){
                     if(!empty($EducationSystemsdata)){
-                        $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+                        $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);//if education structure data already exist
                         return false;
                     }
             }
-            else{
+            else{ //POCOR-7568 end
             if(empty($EducationSystemsdata)){
                 $this->Alert->error('CopyData.nodataexisteducationsystem', ['reset' => true]);
                 return false;
@@ -854,6 +854,15 @@ class DataManagementCopyTable extends ControllerActionTable
             $this->triggerCopyShell('Risk', $copyFrom, $copyTo);
         }
         // End POCOR-5337
+        //POCOR-7568 start
+        if($entity->features == "Education Structure"){
+            $from_academic_period = $entity->from_academic_period;
+            $to_academic_period = $entity->to_academic_period;
+            $copyFrom = $from_academic_period;
+            $copyTo = $to_academic_period;
+            $this->triggerCopyShell('EducationStructureCopy', $copyFrom, $copyTo);
+        }
+         //POCOR-7568 end
     }
     
     // public function afterSave(Event $event, Entity $entity, ArrayObject $data){
@@ -1272,6 +1281,9 @@ class DataManagementCopyTable extends ControllerActionTable
     public function triggerCopyShell($shellName, $copyFrom, $copyTo)
     {
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$copyFrom.' '.$copyTo;
+        if($shellName=="EducationStructureCopy"){//POCOR-7568
+            $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$copyFrom.' '.$copyTo.' '.$this->Auth->User('id');
+        }
         $logs = ROOT . DS . 'logs' . DS . $shellName.'_copy.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
         $pid = exec($shellCmd);
@@ -1281,7 +1293,7 @@ class DataManagementCopyTable extends ControllerActionTable
 
     public function getFeatureOptions(){
         $options = [
-            'Education Structure' => __('Education Structure'),
+            'Education Structure' => __('Education Structure'),//POCOR-7568
             'Institution Programmes, Grades and Subjects' => __('Institution Programmes, Grades and Subjects'),
             'Shifts' => __('Shifts'),
             'Infrastructure' => __('Infrastructure'),
