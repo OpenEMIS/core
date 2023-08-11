@@ -1201,36 +1201,28 @@ class InstitutionReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseRoomTypes(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $connection = ConnectionManager::get('default');//POCOR-7642 starts
-            $RoomTypesData = $connection->execute("SELECT subq.room_type_name, MAX(subq.nb_classrooms) nb_classrooms
-                                                    FROM 
-                                                    (
-                                                        SELECT land_area.room_type_name, land_area.nb_classrooms
-                                                        FROM institution_shifts
-                                                        LEFT JOIN
-                                                        (
-                                                            SELECT institution_rooms.institution_id, room_types.name room_type_name, COUNT(DISTINCT(institution_rooms.id)) nb_classrooms
-                                                            FROM institution_rooms
-                                                            INNER JOIN room_types
-                                                            ON room_types.id = institution_rooms.room_type_id
-                                                            WHERE institution_rooms.academic_period_id = ". $params['academic_period_id'] ." 
-                                                            AND institution_rooms.room_status_id = 1
-                                                            AND room_types.classification = 1
-                                                            GROUP BY institution_rooms.institution_id
-                                                        ) land_area
-                                                        ON land_area.institution_id = institution_shifts.institution_id
-                                                        WHERE institution_shifts.academic_period_id = ". $params['academic_period_id'] ."
-                                                        AND institution_shifts.location_institution_id = ". $params['institution_id'] ."
-                                                        GROUP BY institution_shifts.institution_id
-                                                            ,institution_shifts.location_institution_id
-                                                    ) subq")->fetchAll(\PDO::FETCH_ASSOC);//POCOR-7642 ends
+            $connection = ConnectionManager::get('default');
+            $RoomTypesData = $connection->execute("SELECT room_area.room_type_name, room_area.room_count
+                                FROM institution_shifts
+                                LEFT JOIN
+                                (
+                                    SELECT institution_rooms.room_type_id, institution_rooms.institution_id, room_types.name room_type_name, COUNT(DISTINCT(institution_rooms.id)) room_count
+                                    FROM institution_rooms
+                                    INNER JOIN room_types
+                                    ON room_types.id = institution_rooms.room_type_id
+                                    WHERE institution_rooms.academic_period_id = ". $params['academic_period_id'] ." AND institution_rooms.room_status_id = 1
+                                    GROUP BY institution_rooms.institution_id, institution_rooms.room_type_id
+                                ) room_area
+                                ON room_area.institution_id = institution_shifts.institution_id
+                                WHERE institution_shifts.academic_period_id = ". $params['academic_period_id'] ." AND institution_shifts.location_institution_id = ". $params['institution_id'] ."
+                                GROUP BY institution_shifts.institution_id, institution_shifts.location_institution_id, room_area.room_type_id")->fetchAll(\PDO::FETCH_ASSOC);
             $entity = $result = [];
             if (!empty($RoomTypesData)) {
                foreach ($RoomTypesData as $key => $data) {
                     $result = [
                         'id' => $key,
                         'room_type_name' => !empty($data['room_type_name']) ? $data['room_type_name'] : '',
-                        'room_count' => !empty($data['nb_classrooms']) ? $data['nb_classrooms'] : '',
+                        'room_count' => !empty($data['room_count']) ? $data['room_count'] : '',
                     ];
                     $entity[] = $result;
                }
@@ -2002,16 +1994,31 @@ class InstitutionReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutionClassRooms(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
-            $entity = $InstitutionRooms
-                ->find()
-                ->contain('RoomTypes')
-                ->where([$InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id']])
-                ->where([$InstitutionRooms->aliasField('institution_id') => $params['institution_id']])
-                ->where('RoomTypes.classification = 1')
-                ->count()
-            ;
-
+            $connection = ConnectionManager::get('default');//POCOR-7642 starts
+            $RoomTypesData = $connection->execute("SELECT MAX(subq.nb_classrooms) nb_classrooms
+                                                    FROM 
+                                                    (
+                                                        SELECT land_area.room_type_name, land_area.nb_classrooms
+                                                        FROM institution_shifts
+                                                        LEFT JOIN
+                                                        (
+                                                            SELECT institution_rooms.institution_id, room_types.name room_type_name, COUNT(DISTINCT(institution_rooms.id)) nb_classrooms
+                                                            FROM institution_rooms
+                                                            INNER JOIN room_types
+                                                            ON room_types.id = institution_rooms.room_type_id
+                                                            WHERE institution_rooms.academic_period_id = ". $params['academic_period_id'] ." 
+                                                            AND institution_rooms.room_status_id = 1
+                                                            AND room_types.classification = 1
+                                                            GROUP BY institution_rooms.institution_id
+                                                        ) land_area
+                                                        ON land_area.institution_id = institution_shifts.institution_id
+                                                        WHERE institution_shifts.academic_period_id = ". $params['academic_period_id'] ."
+                                                        AND institution_shifts.location_institution_id = ". $params['institution_id'] ."
+                                                        GROUP BY institution_shifts.institution_id
+                                                            ,institution_shifts.location_institution_id
+                                                    ) subq")->fetchAll(\PDO::FETCH_ASSOC);//POCOR-7642 ends
+            
+            $entity = ($RoomTypesData) ? $RoomTypesData[0]['nb_classrooms'] : 0;
             return $entity;
         }
     }
