@@ -19,7 +19,7 @@ use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 
-class WorkflowBehavior extends Behavior
+class WorkflowCaseBehavior extends Behavior
 {
     use OptionsTrait;
 
@@ -144,6 +144,8 @@ class WorkflowBehavior extends Behavior
             $events['ControllerAction.Model.index.beforeQuery']     = ['callable' => 'indexBeforeQuery', 'priority' => 1];
             $events['ControllerAction.Model.processWorkflow']       = ['callable' => 'processWorkflow', 'priority' => 5];
             $events['ControllerAction.Model.processReassign']       = ['callable' => 'processReassign', 'priority' => 5];
+            $events['ControllerAction.Model.processCaseLink']       = ['callable' => 'processCaseLink', 'priority' => 5];
+            $events['ControllerAction.Model.processComment']       = ['callable' => 'processComment', 'priority' => 5];
         } else {
             $events['ControllerAction.Model.index.beforePaginate']  = ['callable' => 'indexBeforePaginate', 'priority' => 1];
         }
@@ -370,7 +372,7 @@ class WorkflowBehavior extends Behavior
         if (empty($entity->assignee_id)) {
             $value = '<span>&lt;'.$model->getMessage('general.unassigned').'&gt;</span>';
         }elseif($entity->assignee_id == -1){ //POCOR-7025
-            $value = __('Auto Assign');
+            $value = _('Auto Assign');
         }
 
         return $value;
@@ -383,7 +385,7 @@ class WorkflowBehavior extends Behavior
         $this->model = $this->isCAv4() ? $this->_table : $this->controller->ControllerAction->model();
         $this->currentAction = $this->isCAv4() ? $this->_table->action : $this->controller->ControllerAction->action();
 
-        if (!is_null($this->model) && in_array($this->currentAction, ['index', 'view', 'remove', 'processWorkflow', 'processReassign'])) {
+        if (!is_null($this->model) && in_array($this->currentAction, ['index', 'view', 'remove', 'processWorkflow', 'processReassign','processCaseLink','processComment'])) {
             $this->attachWorkflow = true;
             $this->controller->Workflow->attachWorkflow = $this->attachWorkflow;
         }
@@ -835,6 +837,7 @@ class WorkflowBehavior extends Behavior
             $workflow = $this->getWorkflow($workflowModel, $entity);
 
             if (!empty($workflow)) {
+                //echo "<pre>";print_r($workflow);die;
                 $ControllerAction->field('status_id', ['visible' => false]);
 
                 // Workflow Status - extra field
@@ -846,7 +849,7 @@ class WorkflowBehavior extends Behavior
                 // Workflow Transitions - extra field
                 $tableHeaders[] = __('Transition') . '<i class="fa fa-history fa-lg"></i>';
                 $tableHeaders[] = __('Action') . '<i class="fa fa-ellipsis-h fa-2x"></i>';
-                $tableHeaders[] = __('Comment') . '<i class="fa fa-comments fa-lg"></i>';
+                //$tableHeaders[] = __('Comment') . '<i class="fa fa-comments fa-lg"></i>';
                 $tableHeaders[] = __('Last Executer') . '<i class="fa fa-user fa-lg"></i>';
                 $tableHeaders[] = __('Last Execution Date') . '<i class="fa fa-calendar fa-lg"></i>';
 
@@ -854,7 +857,7 @@ class WorkflowBehavior extends Behavior
 
                 //Get workflow model ids for those related workflow.Eg. StaffTransferIn and StaffTransferOut
                 $workflowModelIds = $this->getWorkflowModelIds($workflow->workflow_model_id);
-
+//echo "<pre>";print_r($entity);die;
                 $transitionResults = $this->WorkflowTransitions
                     ->find()
                     ->contain(['CreatedUser'])
@@ -881,7 +884,7 @@ class WorkflowBehavior extends Behavior
                         $rowData = [];
                         $rowData[] = $transitionDisplay;
                         $rowData[] = __($transition->workflow_action_name);
-                        $rowData[] = nl2br(htmlspecialchars($transition->comment));
+                       // $rowData[] = nl2br(htmlspecialchars($transition->comment));
                         $rowData[] = $transition->created_user->name;
                         $rowData[] = $transition->created->format('Y-m-d H:i:s');
 
@@ -889,16 +892,73 @@ class WorkflowBehavior extends Behavior
                     }
                 }
 
+                
+                // End
+
+
+
+                // Workflow Transitions Comments - extra field
+                $tableHeaderComments[0] = __('Comments');
+                $tableHeaderComments[1] = __('Creator');
+                $tableHeaderComments[2] = __('Created');
+                $tableHeaderComments[3] = __('Action');
+
+                $tableCellComments = [];
+
+                if (!$transitionResults->isEmpty()) {
+                    $transitions = $transitionResults->toArray();
+                    foreach ($transitions as $key1 => $transition) {
+                        $rowDataComment = [];
+                        $rowDataComment[] = $transition->comment;
+                        $rowDataComment[] = $transition->created_user->name;
+                        $rowDataComment[] = $transition->created->format('Y-m-d H:i:s');
+                        $rowDataComment[] = 'Action';
+
+                        $tableCellComments[$key1] = $rowDataComment;
+                    }
+                }
+
+                //Link Records
+                $caselinksTable = TableRegistry::get('institution_case_links');
+                $LInkRecords11=[];
+                $LInkRecords = $caselinksTable->find()
+                                ->select([
+                                    'case_number'=>'Cases.case_number',
+                                    'title'=>'Cases.title',
+                                    'status'=>'Status.name'
+                                ])
+                                ->innerJoin(['Cases' => 'institution_cases'], [
+                                    'Cases.id = ' . $caselinksTable->aliasField('child_case_id')
+                                ])
+                                ->innerJoin(['Status' => 'workflow_steps'], [
+                                    'Status.id = ' . 'Cases.status_id'
+                                ])
+                                ->where([
+                                    'parent_case_id' => $entity->id
+                                ])
+                                ->toArray();
+                
+                foreach($LInkRecords as $k=> $LInkRecords1){
+                    $LInkRecords11[$k]['case_number'] = $LInkRecords1->case_number;
+                    $LInkRecords11[$k]['title'] = $LInkRecords1->title;
+                    $LInkRecords11[$k]['status'] =$LInkRecords1->status;
+                }               
+
                 $ControllerAction->field('workflow_transitions', [
                     'type' => 'element',
-                    'element' => 'Workflow.transitions',
+                    'element' => 'Workflow.tabs',
                     'override' => true,
                     'rowClass' => 'transition-container',
                     'tableHeaders' => $tableHeaders,
-                    'tableCells' => $tableCells
+                    'tableCells' => $tableCells,
+                    'tableHeaderComments' => $tableHeaderComments,
+                    'tableCellComments' => $tableCellComments,
+                    'linkCells' => $LInkRecords11,
+                    'transitions' => $transitions
                 ]);
-                // End
 
+                // End
+              // $ControllerAction->set('tableCellComments', $tableCellComments);
                 // Reorder fields
                 $fieldOrder = [];
                 $fields = $model->fields;
@@ -908,9 +968,11 @@ class WorkflowBehavior extends Behavior
                     }
                 }
                 ksort($fieldOrder);
+                // echo "<pre>";print_r($fieldOrder);die;
                 array_unshift($fieldOrder, 'assignee_id');  // Set workflow_status to second
                 array_unshift($fieldOrder, 'workflow_status');  // Set workflow_status to first
                 $fieldOrder[] = 'workflow_transitions'; // Set workflow_transitions to last
+                //echo "<pre>";print_r($fieldOrder);die;
                 $ControllerAction->setFieldOrder($fieldOrder);
                 // End
             } else {
@@ -1181,6 +1243,9 @@ class WorkflowBehavior extends Behavior
                     $assigneeOptions = $this->getFirstStepAssigneeOptions($entity, $isSchoolBased, $firstStepId, $request);
                 }
             }
+            if($model->url('index')['controller']=="Profiles"&&$model->url('index')['action']=="Cases"){//POCOR-7439
+                $assignToSelf = true;
+            }
             if (!$assignToSelf) {
                 if (isset($assigneeOptions) && !empty($assigneeOptions)) {
                     $assigneeOptions = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
@@ -1196,7 +1261,9 @@ class WorkflowBehavior extends Behavior
                 $attr['type'] = 'readonly';
                 $attr['value'] = $userEntity->id;
                 $attr['attr']['value'] = $userEntity->name_with_id;
-              
+                if($model->url('index')['controller']=="Profiles"&&$model->url('index')['action']=="Cases"){//POCOR-7439
+                    $attr['type'] = 'hidden';
+                }
             } 
             else if($request->data['StaffPositionProfiles']['staff_change_type_id'] == 1 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 2 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 3 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 4){
                 $attr['type'] = 'chosenSelect';
@@ -1310,6 +1377,7 @@ class WorkflowBehavior extends Behavior
     {
         $order = 0;
         $fieldOrder = [];
+        $model=$this->_table;//POCOR-7439
         $fields = $this->_table->fields;
         uasort($fields, function ($a, $b) {
             return $a['order']-$b['order'];
@@ -1327,8 +1395,12 @@ class WorkflowBehavior extends Behavior
 
         ksort($fieldOrder);
         array_unshift($fieldOrder, 'assignee_id');  // Set Status to second
+        if($model->url('index')['controller']=="Profiles"&&$model->url('index')['action']=="Cases"){//POCOR-7439
+            array_push($fieldOrder, 'status_id');
+        }
+        else{
         array_unshift($fieldOrder, 'status_id');    // Set Status to first
-
+        }
         if ($this->isCAv4()) {
             $this->_table->setFieldOrder($fieldOrder);
         } else {
@@ -1579,6 +1651,175 @@ class WorkflowBehavior extends Behavior
         return null;
     }
 
+    public function getCommentModalOptions(Entity $entity)
+    {
+        //echo "<pre>";print_r($_SESSION['Auth']['User']['id']);die;
+        $model = $this->_table;
+        $step = $this->getWorkflowStep($entity);
+
+        $assigneeUrl = Router::url(['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'ajaxGetAssignees']);
+
+        if ($entity->has('assignee_id') && $entity->assignee_id != 0) {
+            $assigneeEntity = $this->getAssigneeEntity($entity->assignee_id);
+            $assigneeName = $assigneeEntity->name_with_id;
+            $assigneeId = $assigneeEntity->id;
+        } else {
+            $assigneeName = '<'.__('Unassigned').'>';
+            $assigneeId = 0;
+        }
+
+        if (!is_null($step)) {
+            $workflow = $step->_matchingData['Workflows'];
+
+            $fields = [
+                'id' => [
+                    'type' => 'hidden',
+                    'value' => $entity->id
+                ]
+            ];
+
+            $contentFields = new ArrayObject([
+                'status_id' => [
+                    'label' => __('Status'),
+                    'type' => 'string',
+                    'readonly' => 'readonly',
+                    'disabled' => 'disabled',
+                    'class'=> 'workflow-reassign-status',
+                    'value' => $entity->status->name
+                ],
+                'current_assignee_name' => [
+                    'label' => __('Current Assignee'),
+                    'type' => 'string',
+                    'readonly' => 'readonly',
+                    'disabled' => 'disabled',
+                    'class'=> 'workflow-reassign-current-assignee-name',
+                    'value' => $assigneeName
+                ],
+                'current_assignee_id' => [
+                    'type' => 'hidden',
+                    'class'=> 'workflow-reassign-current-assignee-id',
+                    'value' => $assigneeId
+                ],
+                'assignee_id' => [
+                    'label' => __('New Assignee'),
+                    'type' => 'hidden',
+                    'class'=> 'workflow-reassign-new-assignee',
+                    //'assignee-url' => $assigneeUrl,
+                    'value' => $_SESSION['Auth']['User']['id']
+                ],
+                'comment' => [
+                    'label' => __('Comment'),
+                    'type' => 'textarea',
+                    'class'=> 'workflow-reassign-comment'
+                ]
+            ]);
+
+            // $model->dispatchEvent('Workflow.addCustomModalFields', [$entity, $contentFields, $alias], $this);
+
+            $content = '';
+            $content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
+            $content .= '<div class="input string"><span class="button-label"></span>';
+                $content .= '<div class="workflow-reassign-assignee-loading">' . __('Loading') . '</div>';
+                $content .= '<div class="workflow-reassign-assignee-no_options">' . __('No options') . '</div>';
+                $content .= '<div class="workflow-reassign-assignee-error">' . __('This field cannot be left empty') . '</div>';
+                $content .= '<div class="workflow-reassign-assignee-same-error">' . __('New Assignee cannot be the same as Current Assignee') . '</div>';
+            $content .= '</div>';
+            $content .= '<div class="input string"><span class="button-label"></span><div class="workflow-reassign-assignee-sql-error error-message">' .$model->getMessage('general.error'). '</div></div>';
+            $buttons = [
+                '<button id="reassign-submit" type="submit" class="btn btn-default" onclick="return Workflow.onSubmit(\'reassign\');">' . __('Save') . '</button>'
+            ];
+
+            $modal = [
+                'id' => 'workflowReassign',
+                'title' => __('Comment'),
+                'content' => $content,
+                'contentFields' => $contentFields,
+                'form' => [
+                    'model' => $model,
+                    'formOptions' => [
+                        'class' => 'form-horizontal',
+                        'url' => $this->isCAv4() ? $model->url('processComment') : $model->ControllerAction->url('processComment'),
+                        'onSubmit' => 'document.getElementById("reassign-submit").disabled=true;'
+                    ],
+                    'fields' => $fields
+                ],
+                'buttons' => $buttons,
+                'cancelButton' => true
+            ];
+
+            return $modal;
+        } else {
+            return [];
+        }
+    }
+
+    public function getCaseLinksModalOptions(Entity $entity)
+    {
+        $model = $this->_table;
+        $step = $this->getWorkflowStep($entity);
+
+        $caseUrl = Router::url(['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'ajaxGetCases']);
+
+        if (!is_null($step)) {
+            $workflow = $step->_matchingData['Workflows'];
+
+            $fields = [
+                'id' => [
+                    'type' => 'hidden',
+                    'value' => $entity->id
+                ]
+            ];
+
+            $contentFields = new ArrayObject([
+               
+                'case_id' => [
+                    'label' => __('Case Number'),
+                    'type' => 'select',
+                    'class'=> 'workflow-case-link',
+                    'link-url' => $caseUrl
+                ]
+                
+            ]);
+
+            // $model->dispatchEvent('Workflow.addCustomModalFields', [$entity, $contentFields, $alias], $this);
+
+            $content = '';
+            $content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
+            $content .= '<div class="input string"><span class="button-label"></span>';
+                $content .= '<div class="workflow-caselink-loading">' . __('Loading') . '</div>';
+                $content .= '<div class="workflow-case-link-no_options">' . __('No options') . '</div>';
+                $content .= '<div class="workflow-case-link-error">' . __('This field cannot be left empty') . '</div>';
+                $content .= '<div class="workflow-reassign-assignee-same-error">' . __('New Assignee cannot be the same as Current Assignee') . '</div>';
+            $content .= '</div>';
+            $content .= '<div class="input string"><span class="button-label"></span><div class="workflow-reassign-assignee-sql-error error-message">' .$model->getMessage('general.error'). '</div></div>';
+            $buttons = [
+                '<button id="link-submit" type="submit" class="btn btn-default" onclick="return Workflow.onSubmit(\'caselink\');">' . __('Link') . '</button>'
+            ];
+
+            $modal = [
+                'id' => 'workflowCaseLinks',
+                'title' => __('Case Links'),
+                'content' => $content,
+                'contentFields' => $contentFields,
+                'form' => [
+                    'model' => $model,
+                    'formOptions' => [
+                        'class' => 'form-horizontal',
+                        'url' => $this->isCAv4() ? $model->url('processCaseLink') : $model->ControllerAction->url('processCaseLink'),
+                        'onSubmit' => 'document.getElementById("link-submit").disabled=true;'
+                    ],
+                    'fields' => $fields
+                ],
+                'buttons' => $buttons,
+                'cancelButton' => true
+            ];
+//echo "<pre>";print_r($modal);die;
+            return $modal;
+        } else {
+            return [];
+        }
+    }
+
     public function getReassignModalOptions(Entity $entity)
     {
         $model = $this->_table;
@@ -1685,6 +1926,7 @@ class WorkflowBehavior extends Behavior
         $step = $this->getWorkflowStep($entity);
 
         $assigneeUrl = Router::url(['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'ajaxGetAssignees']);
+        //$caseeUrl = Router::url(['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'ajaxGetCases']);
 
         if (!is_null($step)) {
             $workflow = $step->_matchingData['Workflows'];
@@ -1858,7 +2100,7 @@ class WorkflowBehavior extends Behavior
             } elseif ($action == 'view') {
                 $isEditable = false;
                 $isDeletable = false;
-
+                
                 $entity = $this->getRecord();
                 $workflowStep = $this->getWorkflowStep($entity);
               //  echo "<pre>";print_r($workflowStep);die;
@@ -1891,9 +2133,42 @@ class WorkflowBehavior extends Behavior
                                 'step_id' => $workflowStep->id,
                                 'is_school_based' => $isSchoolBased,
                                 'auto_assign_assignee' => 0,
+
                             ];
 
                             $json = json_encode($reassignJsonObject, JSON_NUMERIC_CHECK);
+
+                            $caseJsonObject = [
+                                'step_id' => $workflowStep->id,
+                                'is_school_based' => $isSchoolBased,
+                                'auto_assign_assignee' => 0,
+                                'case_id' => $entity->id,
+                                
+                            ];
+
+                            $json1 = json_encode($caseJsonObject, JSON_NUMERIC_CHECK);
+
+                            /*************************************************************
+                             * addButton
+                             */
+                            $addButtonAttr = [
+                                'escapeTitle' => false,
+                                'escape' => true,
+                                'onclick' => 'Workflow.init();Workflow.copy('.$json.', "comment");return false;',
+                                'data-toggle' => 'modal',
+                                'data-target' => '#workflowComment'
+                            ];
+                            $addButtonAttr = array_merge($attr, $addButtonAttr);
+                            $addButton = [];
+                            $addButton['type'] = 'button';
+                            $addButton['label'] = '<i class="fa kd-add"></i>';
+                            $addButton['url'] = '#';
+                            $addButton['attr'] = $addButtonAttr;
+                            $addButton['attr']['title'] = __('Comment');
+                            $toolbarButtons['add'] = $addButton;
+                            /***************
+                             * End
+                             */
 
                             $reassignButtonAttr = [
                                 'escapeTitle' => false,
@@ -1910,7 +2185,27 @@ class WorkflowBehavior extends Behavior
                             $reassignButton['attr'] = $reassignButtonAttr;
                             $reassignButton['attr']['title'] = __('Reassign');
                             $toolbarButtons['reassign'] = $reassignButton;
+////////////////////////////////////////////////////////////////////////////////////////////
+                            $LinkButtonAttr = [
+                                'escapeTitle' => false,
+                                'escape' => true,
+                                'onclick' => 'Workflow.init();Workflow.copy('.$json1.', "caselinks");return false;',
+                                'data-toggle' => 'modal',
+                                'data-target' => '#workflowCaseLinks'
+                            ];
+                            $LinkButtonAttr = array_merge($attr, $LinkButtonAttr);
+                            $LinkButton = [];
+                            $LinkButton['type'] = 'button';
+                            $LinkButton['label'] = '<i class="fa fa-link"></i>';
+                            $LinkButton['url'] = '#';
+                            $LinkButton['attr'] = $LinkButtonAttr;
+                            $LinkButton['attr']['title'] = __('Link');
+                            $toolbarButtons['link'] = $LinkButton;
 
+
+
+
+                            //echo "<pre>";print_r($toolbarButtons);die;
                             $modal = $this->getReassignModalOptions($entity);
                             if (!empty($modal)) {
                                 if (!isset($this->_table->controller->viewVars['modals'])) {
@@ -1920,6 +2215,35 @@ class WorkflowBehavior extends Behavior
                                     $this->_table->controller->set('modals', $modals);
                                 }
                             }
+
+                            $modal1 = $this->getCaseLinksModalOptions($entity);
+                            if (!empty($modal1)) {
+                                
+                                if (!isset($this->_table->controller->viewVars['modals'])) {
+                                    $this->_table->controller->set('modals', ['workflowCaseLinks' => $modal1]);
+                                    
+                                } else {
+                                    $modals = array_merge($this->_table->controller->viewVars['modals'], ['workflowCaseLinks' => $modal1]);
+                                    
+                                    
+                                    $this->_table->controller->set('modals', $modals);
+                                }
+                            }
+
+                            $modal2 = $this->getCommentModalOptions($entity);
+                            if (!empty($modal1)) {
+                                
+                                if (!isset($this->_table->controller->viewVars['modals'])) {
+                                    $this->_table->controller->set('modals', ['workflowComment' => $modal2]);
+                                    
+                                } else {
+                                    $modals = array_merge($this->_table->controller->viewVars['modals'], ['workflowComment' => $modal2]);
+                                    
+                                    
+                                    $this->_table->controller->set('modals', $modals);
+                                }
+                            }
+                           // echo "<pre>";print_r($this->_table->controller->viewVars);die;
                         }
                         // end
 
@@ -2274,6 +2598,7 @@ class WorkflowBehavior extends Behavior
         $entity = $model->find()->where([$model->aliasField('id') => $id])->first();
         $this->setAssigneeId($entity, $requestData);
     }
+    
 
     public function processWorkflow()
     {
@@ -2394,8 +2719,30 @@ class WorkflowBehavior extends Behavior
         }
     }
 
-    public function processReassign()
+    public function processCaseLink()
     {
+        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+        $request = $model->controller->request;
+
+        if ($request->is(['post', 'put'])) {
+            $requestData = $request->data;
+            $workflowModelEntity = $this->getWorkflowSetup($this->config('model'));
+            $pcaseId = $requestData['id'];
+            $caseId = $requestData['case_id'];
+            $caselinksTable = TableRegistry::get('institution_case_links');
+            $newEntity = $caselinksTable->newEntity([
+                'parent_case_id'=>$pcaseId,
+                'child_case_id' => $caseId,
+                'created' => date('Y-m-d H:i:s')
+            ]);
+            $caselinksTable->save($newEntity);
+            $url = $model->url('view');
+            return $this->_table->controller->redirect($url);
+        }
+    }
+
+    public function processReassign()
+    { 
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
         $request = $model->controller->request;
 
@@ -2417,6 +2764,38 @@ class WorkflowBehavior extends Behavior
                 $requestDataComment = $requestData['comment'];
             }
             $this->WorkflowTransitions->trackChanges($workflowModelEntity, $entity, $assigneeId, $requestDataComment);
+
+            $entity->assignee_id = $assigneeId;
+            $model->save($entity);
+
+            $url = $model->url('view');
+            return $this->_table->controller->redirect($url);
+        }
+    }
+
+    public function processComment()
+    { 
+        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+        $request = $model->controller->request;
+
+        if ($request->is(['post', 'put'])) {
+            $requestData = $request->data;
+
+            $workflowModelEntity = $this->getWorkflowSetup($this->config('model'));
+
+            $assigneeId = $requestData['assignee_id'];
+            $entity = $model
+                ->find()
+                ->contain(['Assignees', 'Statuses'])
+                ->where([
+                    $model->aliasField('id') => $requestData['id']
+                ])
+                ->first();
+            $requestDataComment = null;
+            if (isset($requestData['comment'])) {
+                $requestDataComment = $requestData['comment'];
+            }
+            $this->WorkflowTransitions->trackCommentChanges($workflowModelEntity, $entity, $assigneeId, $requestDataComment);
 
             $entity->assignee_id = $assigneeId;
             $model->save($entity);
