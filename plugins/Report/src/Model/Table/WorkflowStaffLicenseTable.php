@@ -46,9 +46,9 @@ class WorkflowStaffLicenseTable extends AppTable
 
     public function onExcelGetOpenemisNo(Event $event, Entity $entity)
     {
-        $this->log('onExcelGetOpenemisNo', 'debug');
-        $this->log($entity, 'debug');
-        $this->log($this->query()->sql(), 'debug');
+//        $this->log('onExcelGetOpenemisNo', 'debug');
+//        $this->log($entity, 'debug');
+//        $this->log($this->query()->sql(), 'debug');
         $security_user_id = $entity['security_user_id'];
         $user = self::getRelatedRecord('security_users', $security_user_id);
         $entity['security_user'] = $user['first_name'] . ' ' . $user['last_name'];
