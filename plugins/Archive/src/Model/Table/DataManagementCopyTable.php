@@ -484,58 +484,45 @@ class DataManagementCopyTable extends ControllerActionTable
                 foreach($institutions as $k => $Insti){ 
                         $InstitutionGradesdataValue = $InstitutionGrades
                                                         ->find()
+                                                        ->contain('EducationGrades')
                                                         ->where(['academic_period_id' => $from_academic_period,'institution_id'=> $Insti->id])
                                                         ->toArray();
+                   //for removing duplicate records POCOR-7657 start
                         if(!empty($InstitutionGradesdataValue)){
                             foreach($InstitutionGradesdataValue as $key=>$newData){
-                          
-                                try{
-                                    $statement = $connection->prepare('INSERT INTO institution_grades 
-                                    (
-                                                                    education_grade_id, 
-                                                                    academic_period_id,
-                                                                    start_date,
-                                                                    start_year,
-                                                                    end_date,
-                                                                    end_year,
-                                                                    institution_id,
-                                                                    modified_user_id,
-                                                                    modified,
-                                                                    created_user_id,
-                                                                    created)
-                                                                    VALUES (:education_grade_id,
-                                                                    :academic_period_id,
-                                                                    :start_date, 
-                                                                    :start_year,
-                                                                    :end_date,
-                                                                    :end_year,
-                                                                    :institution_id,
-                                                                    :modified_user_id,
-                                                                    :modified,
-                                                                    :created_user_id,
-                                                                    :created)');
-                
-                                    $statement->execute([
-                                    'education_grade_id' => $newData['education_grade_id'],
-                                    'academic_period_id' => $to_academic_period,
-                                    'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
-                                    'start_year' => $ToAcademicPeriodsData['start_year'],
-                                    'end_date' => null,
-                                    'end_year' => null,
-                                    'institution_id' =>$newData['institution_id'],
-                                    'modified_user_id' => 2,
-                                    'modified' => date('Y-m-d H:i:s'),
-                                    'created_user_id' => 2,
-                                    'created' => date('Y-m-d H:i:s')
-                                    ]);
-                                
-                                }catch (PDOException $e) {
-                                    echo "<pre>";print_r($e);die;
-                                }
+
+                                            $existingRecord = $InstitutionGrades
+                                                                            ->find()
+                                                                            ->contain('EducationGrades')
+                                                                            ->where(['academic_period_id' => $to_academic_period,
+                                                                                      'institution_id' => $Insti->id,
+                                                                                      'EducationGrades.name'=>$newData->education_grade->name])
+                                                                            ->first();
+                                            if(empty($existingRecord)){
+                                              $newRecord=array(
+                                                      'education_grade_id' => $newData['education_grade_id'],
+                                                      'academic_period_id' => $to_academic_period,
+                                                      'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
+                                                      'start_year' => $ToAcademicPeriodsData['start_year'],
+                                                       'end_date' => null,
+                                                       'end_year' => null,
+                                                       'institution_id' =>$newData['institution_id'],
+                                                       'modified_user_id' => 2,
+                                                        'modified' => date('Y-m-d H:i:s'),
+                                                       'created_user_id' => 2,
+                                                       'created' => date('Y-m-d H:i:s'),
+                                                       'programme'=> $newData->education_grade->education_programme_id
+                                              );
+                                            $newEntity= $InstitutionGrades->newEntity($newRecord) ;
+                                            $result=$InstitutionGrades->save($newEntity);
+                                         
+                                            }
+                         
                             } 
                         }
 
                 }
+                //POCOR-7657 end
             $from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
             $to_end_date = $ToAcademicPeriodsData['end_date']->format('Y-m-d');
             $to_start_year = $ToAcademicPeriodsData['start_year'];
