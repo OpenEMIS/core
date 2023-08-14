@@ -52,6 +52,9 @@ use App\Models\InstitutionStudentAbsenceDays;
 use App\Models\InstitutionStudentAbsenceDetails;
 use App\Models\StaffBehaviourCategories;
 use App\Models\StudentBehaviours;
+use App\Models\AcademicPeriod;
+use App\Models\StudentBehaviourCategory;
+use App\Models\SecurityUsers;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -2394,7 +2397,9 @@ class InstitutionRepository extends Controller
         try {
             $data = $request->all();
 
-            $check = AssessmentItemResults::where('student_id', $data['student_id'])
+            $isExists = InstitutionClassStudents::where('institution_class_id', $data['institution_classes_id'])->where('education_grade_id', $data['education_grade_id'])->where('academic_period_id', $data['academic_period_id'])->where('student_id', $data['student_id'])->first();
+            if($isExists){
+                $check = AssessmentItemResults::where('student_id', $data['student_id'])
                     ->where('assessment_id', $data['assessment_id'])
                     ->where('education_subject_id', $data['education_subject_id'])
                     ->where('education_grade_id', $data['education_grade_id'])
@@ -2402,37 +2407,43 @@ class InstitutionRepository extends Controller
                     ->where('assessment_period_id', $data['assessment_period_id'])
                     ->where('institution_classes_id', $data['institution_classes_id'])
                     ->first();
-            if($check){
-                $data['modified_user_id'] = JWTAuth::user()->id;
-                $data['modified'] = Carbon::now()->toDateTimeString();
+                if($check){
+                    $data['modified_user_id'] = JWTAuth::user()->id;
+                    $data['modified'] = Carbon::now()->toDateTimeString();
 
-                $update = AssessmentItemResults::where('student_id', $data['student_id'])
-                    ->where('assessment_id', $data['assessment_id'])
-                    ->where('education_subject_id', $data['education_subject_id'])
-                    ->where('education_grade_id', $data['education_grade_id'])
-                    ->where('academic_period_id', $data['academic_period_id'])
-                    ->where('assessment_period_id', $data['assessment_period_id'])
-                    ->where('institution_classes_id', $data['institution_classes_id'])
-                    ->update($data);
-                    $resp = 2;
+                    $update = AssessmentItemResults::where('student_id', $data['student_id'])
+                        ->where('assessment_id', $data['assessment_id'])
+                        ->where('education_subject_id', $data['education_subject_id'])
+                        ->where('education_grade_id', $data['education_grade_id'])
+                        ->where('academic_period_id', $data['academic_period_id'])
+                        ->where('assessment_period_id', $data['assessment_period_id'])
+                        ->where('institution_classes_id', $data['institution_classes_id'])
+                        ->update($data);
+                        $resp = 2;
+                } else {
+                    $store['id'] = Str::uuid();
+                    $store['marks'] = $data['marks']??Null;
+                    $store['assessment_grading_option_id'] = $data['assessment_grading_option_id']??Null;
+                    $store['student_id'] = $data['student_id'];
+                    $store['assessment_id'] = $data['assessment_id'];
+                    $store['education_subject_id'] = $data['education_subject_id'];
+                    $store['education_grade_id'] = $data['education_grade_id'];
+                    $store['academic_period_id'] = $data['academic_period_id'];
+                    $store['assessment_period_id'] = $data['assessment_period_id'];
+                    $store['institution_id'] = $data['institution_id'];
+                    $store['institution_classes_id'] = $data['institution_classes_id'];
+                    $store['created_user_id'] = JWTAuth::user()->id;
+                    $store['created'] = Carbon::now()->toDateTimeString();
+
+                    $insert = AssessmentItemResults::insert($store);
+                    $resp = 1;
+                }
             } else {
-                $store['id'] = Str::uuid();
-                $store['marks'] = $data['marks']??Null;
-                $store['assessment_grading_option_id'] = $data['assessment_grading_option_id']??Null;
-                $store['student_id'] = $data['student_id'];
-                $store['assessment_id'] = $data['assessment_id'];
-                $store['education_subject_id'] = $data['education_subject_id'];
-                $store['education_grade_id'] = $data['education_grade_id'];
-                $store['academic_period_id'] = $data['academic_period_id'];
-                $store['assessment_period_id'] = $data['assessment_period_id'];
-                $store['institution_id'] = $data['institution_id'];
-                $store['institution_classes_id'] = $data['institution_classes_id'];
-                $store['created_user_id'] = JWTAuth::user()->id;
-                $store['created'] = Carbon::now()->toDateTimeString();
-
-                $insert = AssessmentItemResults::insert($store);
-                $resp = 1;
+                $resp = 0;
             }
+
+
+            
             
             DB::commit();
             return $resp;
@@ -2453,6 +2464,27 @@ class InstitutionRepository extends Controller
         DB::beginTransaction();
         try {
             $data = $request->all();
+
+            $checkAcademicPeriod = AcademicPeriod::where('id', $data['academic_period_id']??0)->first();
+            if(empty($checkAcademicPeriod)){
+                return 2;
+            }
+
+            $checkInstitution = Institutions::where('id', $data['institution_id'])->first();
+            if(empty($checkInstitution)){
+                return 3;
+            }
+
+            $checkStudent = SecurityUsers::where('id', $data['student_id'])->first();
+            if(empty($checkStudent)){
+                return 4;
+            }
+
+            $checkBehaviourCat = StudentBehaviourCategory::where('id', $data['student_behaviour_category_id'])->first();
+
+            if(empty($checkBehaviourCat)){
+                return 5;
+            }
 
             $store['description'] = $data['description'];
             $store['action'] = $data['action'];
