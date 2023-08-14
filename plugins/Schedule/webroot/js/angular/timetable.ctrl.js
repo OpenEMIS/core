@@ -91,6 +91,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
 
     // error
     vm.error = function (error) {
+        UtilsSvc.isAppendLoader(false);
         AlertSvc.error($scope, error);
         //console.log('error', error);
         return $q.reject(error);
@@ -282,7 +283,7 @@ function TimetableController($scope, $q, $window, $http, UtilsSvc, AlertSvc, Tim
     };
 
     vm.onUpdateLessonData = function(key, lessonType) {
-        //console.log('saveLessonDetails', vm.currentLessonList[key]);
+        // console.log('saveLessonDetails', vm.currentLessonList[key]);
         vm.errorMessageCurriculum=[];
         vm.errorMessageNonCurriculum=[];
         vm.saveLessonDetails(vm.currentLessonList[key], lessonType, key);

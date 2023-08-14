@@ -1555,20 +1555,49 @@ trait MessagesTrait
             ],
             'Languages' => [
                 'language_id' => [
+                    'required' => 'Please select a Language'
+                ],
+                'listening' => [
+                    'required' => 'Please select an option'
+                ],
+                'speaking' => [
+                    'required' => 'Please select an option'
+                ],
+                'reading' => [
+                    'required' => 'Please select an option'
+                ],
+                'writing' => [
+                    'required' => 'Please select an option'
+                ],
+            ],
+            'UserLanguages' => [
+                'required' => [
                     'ruleNotBlank' => 'Please select a Language'
                 ],
                 'listening' => [
-                    'ruleNotBlank' => 'Please enter a number between 0 and 5'
+                    'required' => 'Please select an option'
                 ],
                 'speaking' => [
-                    'ruleNotBlank' => 'Please enter a number between 0 and 5'
+                    'required' => 'Please select an option'
                 ],
                 'reading' => [
-                    'ruleNotBlank' => 'Please enter a number between 0 and 5'
+                    'required' => 'Please select an option'
                 ],
                 'writing' => [
-                    'ruleNotBlank' => 'Please enter a number between 0 and 5'
+                    'required' => 'Please select an option'
                 ],
+//                'listening' => [
+//                    'ruleNotBlank' => 'Please enter a number between 0 and 5'
+//                ],
+//                'speaking' => [
+//                    'ruleNotBlank' => 'Please enter a number between 0 and 5'
+//                ],
+//                'reading' => [
+//                    'ruleNotBlank' => 'Please enter a number between 0 and 5'
+//                ],
+//                'writing' => [
+//                    'ruleNotBlank' => 'Please enter a number between 0 and 5'
+//                ],
             ],
             'Comments' => [
                 'title' => [
