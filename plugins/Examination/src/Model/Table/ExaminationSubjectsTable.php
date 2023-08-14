@@ -11,7 +11,7 @@ use Cake\Event\Event;
 
 use App\Model\Table\AppTable;
 
-class ExaminationItemsTable extends AppTable {
+class ExaminationSubjectsTable extends AppTable {
 
     public function initialize(array $config)
     {
@@ -22,7 +22,7 @@ class ExaminationItemsTable extends AppTable {
         $this->belongsToMany('ExaminationCentresExaminations', [
             'className' => 'Examination.ExaminationCentresExaminations',
             'joinTable' => 'examination_centres_examinations_subjects',
-            'foreignKey' => 'examination_item_id',
+            'foreignKey' => 'examination_subject_id',
             'targetForeignKey' => ['examination_centre_id', 'examination_id'],
             'through' => 'Examination.ExaminationCentresExaminationsSubjects',
             'dependent' => true,
@@ -31,7 +31,7 @@ class ExaminationItemsTable extends AppTable {
         $this->belongsToMany('Students', [
             'className' => 'User.Users',
             'joinTable' => 'examination_centres_examinations_subjects_students',
-            'foreignKey' => 'examination_item_id',
+            'foreignKey' => 'examination_subject_id',
             'targetForeignKey' => 'student_id',
             'through' => 'Examination.ExaminationCentresExaminationsSubjectsStudents',
             'dependent' => true,
@@ -39,15 +39,15 @@ class ExaminationItemsTable extends AppTable {
         ]);
         $this->belongsToMany('StudentResults', [
             'className' => 'User.Users',
-            'joinTable' => 'examination_item_results',
-            'foreignKey' => 'examination_item_id',
+            'joinTable' => 'examination_student_subject_results',
+            'foreignKey' => 'examination_subject_id',
             'targetForeignKey' => 'student_id',
-            'through' => 'Examination.ExaminationItemResults',
+            'through' => 'Examination.ExaminationStudentSubjectResults',
             'dependent' => true,
             'cascadeCallbacks' => true,
             'conditions' => ['OR' => [
-                'ExaminationItemResults.marks IS NOT NULL',
-                'ExaminationItemResults.examination_grading_option_id IS NOT NULL'
+                'ExaminationStudentSubjectResults.marks IS NOT NULL',
+                'ExaminationStudentSubjectResults.examination_grading_option_id IS NOT NULL'
             ]]
         ]);
     }
@@ -82,7 +82,7 @@ class ExaminationItemsTable extends AppTable {
         return $validator;
     }
 
-    public function getExaminationItemSubjects($examinationId)
+    public function getExaminationSubjectsubjects($examinationId)
     {
         $subjectList = $this
             ->find()

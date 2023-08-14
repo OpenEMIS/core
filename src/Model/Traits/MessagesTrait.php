@@ -183,7 +183,7 @@ trait MessagesTrait
             'change_in_building_type' => [
                 'restrictEdit' => 'Not allowed to change building type in the same day.'
             ],
-            'sizeGreater' => 'The size of building larger than the size of land.'
+            'sizeGreater' => 'Please adjust the building size to be smaller than the land size to proceed.'
         ],
         'InstitutionFloors' => [
             'noFloors' => 'No Floor found',
@@ -198,7 +198,7 @@ trait MessagesTrait
             'change_in_floor_type' => [
                 'restrictEdit' => 'Not allowed to change floor type in the same day.'
             ],
-            'sizeGreater' => 'The size of floor larger than the size of building.'
+            'sizeGreater' => 'Please adjust the floor size to be smaller than the building size to proceed.'
         ],
         'InstitutionRooms' => [
             'noRooms' => 'No Room found',
@@ -214,7 +214,7 @@ trait MessagesTrait
                 'restrictEdit' => 'Not allowed to change room type in the same day.'
             ],
             'select_subject' => 'Select Subject',
-            'sizeGreater' => 'The size of room larger than the size of floor.'
+            'sizeGreater' => 'Please adjust the room size to be smaller than the floor size to proceed.'
         ],
         'InfrastructureCustomFields' => [
             'infrastructure_level_id' => 'Level Name'
@@ -706,7 +706,7 @@ trait MessagesTrait
             'noGradingOptions' => 'There are no grading options for this grading type'
         ],
         'Examinations' => [
-            'noExaminationItems' => 'There are no examination items for this examination'
+            'noExaminationSubjects' => 'There are no examination items for this examination'
         ],
         'ExaminationCentres' => [
             'savingProcessStarted' => 'Examination centres are currently being added in the background'
@@ -1555,20 +1555,49 @@ trait MessagesTrait
             ],
             'Languages' => [
                 'language_id' => [
+                    'required' => 'Please select a Language'
+                ],
+                'listening' => [
+                    'required' => 'Please select an option'
+                ],
+                'speaking' => [
+                    'required' => 'Please select an option'
+                ],
+                'reading' => [
+                    'required' => 'Please select an option'
+                ],
+                'writing' => [
+                    'required' => 'Please select an option'
+                ],
+            ],
+            'UserLanguages' => [
+                'required' => [
                     'ruleNotBlank' => 'Please select a Language'
                 ],
                 'listening' => [
-                    'ruleNotBlank' => 'Please enter a number between 0 and 5'
+                    'required' => 'Please select an option'
                 ],
                 'speaking' => [
-                    'ruleNotBlank' => 'Please enter a number between 0 and 5'
+                    'required' => 'Please select an option'
                 ],
                 'reading' => [
-                    'ruleNotBlank' => 'Please enter a number between 0 and 5'
+                    'required' => 'Please select an option'
                 ],
                 'writing' => [
-                    'ruleNotBlank' => 'Please enter a number between 0 and 5'
+                    'required' => 'Please select an option'
                 ],
+//                'listening' => [
+//                    'ruleNotBlank' => 'Please enter a number between 0 and 5'
+//                ],
+//                'speaking' => [
+//                    'ruleNotBlank' => 'Please enter a number between 0 and 5'
+//                ],
+//                'reading' => [
+//                    'ruleNotBlank' => 'Please enter a number between 0 and 5'
+//                ],
+//                'writing' => [
+//                    'ruleNotBlank' => 'Please enter a number between 0 and 5'
+//                ],
             ],
             'Comments' => [
                 'title' => [
@@ -2115,7 +2144,7 @@ trait MessagesTrait
                     'ruleSeatsNumber' => 'Number of seats is out of range'
                 ]
             ],
-            'ExaminationItems' => [
+            'ExaminationSubjects' => [
                 'weight' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
                     'ruleWeightRange' => 'Value must be positive and less than 2.0'

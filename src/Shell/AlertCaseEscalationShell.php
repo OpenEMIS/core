@@ -32,9 +32,11 @@ class AlertCaseEscalationShell extends AlertShell
                 $thresholdArray = json_decode($threshold, true);
 
                 $data = $this->getAlertData($thresholdArray, $model);
+                
                 foreach ($data as $key => $vars) {
                     $vars=$vars->toArray();
                     $vars['threshold']['value'] = $thresholdArray['value'];
+                  
                     if (array_key_exists('institution', $vars)) {
                         $institutionId = $vars['institution']['id'];
                     }

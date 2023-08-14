@@ -232,7 +232,7 @@ class StaffTable extends AppTable  {
                     $attr['type'] = 'chosenSelect';
                     $attr['attr']['multiple'] = false;
                     $attr['select'] = true;
-                    $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas Level')] + $areaOptions->toArray();
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas Level')] + $areaOptions->toArray();
                     $attr['onChangeReload'] = true;
                 } else {
                     $attr['type'] = 'hidden';
@@ -272,9 +272,9 @@ class StaffTable extends AppTable  {
                         $attr['select'] = true;
                         /*POCOR-6333 starts*/
                         if (count($areaOptions) > 1) {
-                            $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas')] + $areaOptions;
+                            $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas')] + $areaOptions;
                         } else {
-                            $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $areaOptions;
+                            $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $areaOptions;
                         }
                         /*POCOR-6333 ends*/
                         $attr['onChangeReload'] = true;
