@@ -342,7 +342,9 @@ class ClassesProfilesTable extends ControllerActionTable
             $institutionOptions = $Institutions->find('list')
                                 ->where([
                                     $Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
-                                ])->toArray();
+                                ])
+                                ->order([$Institutions->aliasField('name') =>'ASC']) //POCOR-7641
+                                ->toArray();
         }else{
             //POCOR-6822 Anubhav's code starts
             $areaIds = [];
@@ -357,7 +359,9 @@ class ClassesProfilesTable extends ControllerActionTable
             $institutionOptions = $Institutions->find('list')
                                 ->where([ $Institutions->aliasField('area_id IN') => $allselectedAreas,
                                     $Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
-                                ])->toArray();
+                                ])
+                                ->order([$Institutions->aliasField('name') =>'ASC']) //POCOR-7641
+                                ->toArray();
         }
 
         if(!empty($institutionOptions)){

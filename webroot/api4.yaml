@@ -3876,6 +3876,74 @@ paths:
                 schema:
                   type: array
                   items:
+                    $ref: '#/components/schemas/Meal-Benefits'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Meal-Benefits'
+          '400':
+            description: Invalid status value
+  /api/v4/assessments/items:
+      get:
+        tags:
+          - Assessments
+        summary: Get Assessments Items List
+        description: Multiple Items List will be provided with comma separated strings
+        parameters:
+          - name: limit
+            in: header
+            description: This is to limit the number of result
+            required: false
+            schema:
+              type: integer
+          - name: order
+            in: header
+            description: This is to sort the results
+            required: false
+            schema:
+              type: string
+          - name: page
+            in: header
+            description: This is to display the results based on the page number
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Meal-Programmes'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Meal-Programmes'
+          '400':
+            description: Invalid status value
+
+# POCOR-7394-S Ends
+
+# POCOR-7546 starts
+
+  /api/v4/assessments/education-grades:
+      get:
+        tags:
+          - Assessments
+        summary: Get Assessments Education Grades
+        description: Multiple Education Grades will be provided with comma separated strings
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
                     $ref: '#/components/schemas/Assessments'         
               application/xml:
                 schema:

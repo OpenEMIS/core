@@ -1276,10 +1276,11 @@ class InstitutionsTable extends ControllerActionTable
             }
         // webhook institution update --end
         }
-
-        foreach ($dispatchTable as $model) {
-            $model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
-        }
+        //POCOR-7654 start
+        // foreach ($dispatchTable as $model) {
+        //     $model->dispatchEvent('Model.Institutions.afterSave', [$entity], $this);
+        // }
+        //POCOR-7654 end
 
     }
 
