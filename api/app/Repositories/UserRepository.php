@@ -134,6 +134,8 @@ class UserRepository extends Controller
         DB::beginTransaction();
         try {
             $param = $request->all();
+            
+            $param['is_diff_school'] = (array_key_exists('is_diff_school', $param)) ? $param['is_diff_school'] : 0;
 
             $start_date = Null;
             if(isset($param['start_date'])){
@@ -191,6 +193,7 @@ class UserRepository extends Controller
 
 
             if(isset($param['is_diff_school']) && ($param['is_diff_school'] == 1)){
+                
                 $workflows = Workflows::join('workflow_steps', 'workflow_steps.workflow_id', '=', 'workflows.id')
                     ->where('workflow_steps.name', 'Open')
                     ->where('workflows.name', 'Student Transfer - Receiving')
@@ -203,17 +206,17 @@ class UserRepository extends Controller
                     'start_date' => $start_date??null,
                     'end_date' => $end_date??null,
                     'requested_date' => null,
-                    'student_id' => $param['student_id']??null,
+                    'student_id' => $param['student_id']??0,
                     'status_id' => $workflows->workflowSteps_id,
                     'assignee_id' => JWTAuth::user()->id, //POCOR-7080
                     'institution_id' => $param['institution_id']??null,
                     'academic_period_id' => $param['academic_period_id']??null,
                     'education_grade_id' => $param['education_grade_id']??null,
                     'institution_class_id' => $param['institution_class_id']??null,
-                    'previous_institution_id' => $param['previous_institution_id']??null,
-                    'previous_academic_period_id' => $param['previous_academic_period_id']??null,
-                    'previous_education_grade_id' => $param['previous_education_grade_id']??null,
-                    'student_transfer_reason_id' => $param['student_transfer_reason_id']??null,
+                    'previous_institution_id' => $param['previous_institution_id']??0,
+                    'previous_academic_period_id' => $param['previous_academic_period_id']??0,
+                    'previous_education_grade_id' => $param['previous_education_grade_id']??0,
+                    'student_transfer_reason_id' => $param['student_transfer_reason_id']??0,
                     'comment' => $param['comment']??null,
                     'all_visible' => 1,
                     'modified_user_id' => null,
@@ -229,20 +232,20 @@ class UserRepository extends Controller
                 $openemis_no = $param['openemis_no']??0;
 
                 $checkStudentExist = SecurityUsers::where('openemis_no', $openemis_no)->first();
-
+                
                 $entityData = [
                     'openemis_no' => $openemis_no,
                     'first_name' => $param['first_name'],
-                    'middle_name' => $param['middle_name'],
-                    'third_name' => $param['third_name'],
+                    'middle_name' => $param['middle_name']??Null,
+                    'third_name' => $param['third_name']??Null,
                     'last_name' => $param['last_name'],
-                    'preferred_name' => $param['preferred_name'],
+                    'preferred_name' => $param['preferred_name']??Null,
                     'gender_id' => $param['gender_id'],
                     'date_of_birth' => $param['date_of_birth'],
-                    'nationality_id' => $nationalityId??"",
+                    'nationality_id' => $nationalityId??Null,
                     'preferred_language' => $pref_lang->value??"",
                     'username' => $param['username']??null,
-                    'password' => Hash::make($param['password']),
+                    'password' => Hash::make($param['password']??123456),
                     'address' => $param['address']??null,
                     'address_area_id' => $param['address_area_id']??null,
                     'birthplace_area_id' => $param['birthplace_area_id']??null,
@@ -263,7 +266,7 @@ class UserRepository extends Controller
 
                 if($securityUser){
                     $user_record_id = $securityUser->id;
-                    if($param['nationality_id'] || $param['nationality_name']){
+                    if(isset($param['nationality_id']) || isset($param['nationality_name'])){
                         if(isset($nationality->id)){
                             $checkUserNationality = UserNationalities::where('nationality_id', $nationality->id)->where('security_user_id', $user_record_id)->first();
 
@@ -304,7 +307,7 @@ class UserRepository extends Controller
                     if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id']){
                         $entityStudentsData = [
                             'id' => Str::uuid(),
-                            'student_status_id' => $param['student_status_id']??"",
+                            'student_status_id' => $param['student_status_id']??1,
                             'student_id' => $user_record_id,
                             'education_grade_id' => $param['education_grade_id'],
                             'academic_period_id' => $param['academic_period_id'],
@@ -362,8 +365,18 @@ class UserRepository extends Controller
                             'created_user_id' => JWTAuth::user()->id,
                             'created' => Carbon::now()->toDateTimeString()
                         ];
-
-                        $store = InstitutionClassStudents::insert($entityAdmissionData);
+                        $check = InstitutionClassStudents::where('student_id', $user_record_id)->where('institution_class_id', $param['institution_class_id'])->where('education_grade_id', $param['education_grade_id'])->first();
+                        if(!$check){
+                            $store = InstitutionClassStudents::insert($entityAdmissionData);
+                        } else {
+                            $update = InstitutionClassStudents::where('student_id', $user_record_id)
+                                ->where('institution_class_id', $param['institution_class_id'])
+                                ->where('education_grade_id', $param['education_grade_id'])
+                                ->update([
+                                    'modified' => Carbon::now()->toDateTimeString(),
+                                     'modified_user_id' => JWTAuth::user()->id]);
+                        }
+                        
                     }
 
 
@@ -511,7 +524,7 @@ class UserRepository extends Controller
                 $nationality_id = (array_key_exists('nationality_id', $requestData)) ? $requestData['nationality_id'] : null;
                 $nationalityName = (array_key_exists('nationality_name', $requestData)) ? $requestData['nationality_name'] : null;
                 $username = (array_key_exists('username', $requestData)) ? $requestData['username'] : null;
-                $password = (array_key_exists('password', $requestData)) ? Hash::make($requestData['password']) : null;
+                $password = (array_key_exists('password', $requestData)) ? Hash::make($requestData['password']) : Hash::make(123456);
                 $address = (array_key_exists('address', $requestData)) ? $requestData['address'] : null;
                 $postalCode = (array_key_exists('postal_code', $requestData)) ? $requestData['postal_code'] : null;
                 $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData)) ? $requestData['birthplace_area_id'] : null;
@@ -540,8 +553,30 @@ class UserRepository extends Controller
                 $staffId = (array_key_exists('staff_id', $requestData)) ? $requestData['staff_id'] : 0;
                 $previousInstitutionId = (array_key_exists('previous_institution_id', $requestData)) ? $requestData['previous_institution_id'] : 0;
                 $comment = (array_key_exists('comment', $requestData)) ? $requestData['comment'] : '';
-                $staff_position_grade_id = (array_key_exists('staff_position_grade_id', $requestData)) ? $requestData['staff_position_grade_id'] : '';
+                $staff_position_grade_id = (array_key_exists('staff_position_grade_id', $requestData)) ? $requestData['staff_position_grade_id'] : 0;
                 //when staff transfer in other institution end
+
+
+                //Checking if values exists start...
+
+                $staffType = StaffTypes::where('id', $staffTypeId)->first();
+                if(empty($staffType)){
+                    return 3; //Staff type don't exists...
+                }
+
+                
+                $staffPositionGrade = DB::table('staff_position_grades')->where('id', $staff_position_grade_id)->first();
+                if(empty($staffPositionGrade)){
+                    return 4; //Staff position grade don't exists...
+                }
+
+                
+                $institutionPosition = DB::table('institution_positions')->where('id', $institutionPositionId)->first();
+                if(empty($institutionPosition)){
+                    return 5; //Institution Position don't exists...
+                }
+                //Checking if values exists end...
+
 
 
                 //get academic period data
@@ -616,7 +651,7 @@ class UserRepository extends Controller
                             'preferred_name' => $preferredName,
                             'gender_id' => $genderId,
                             'date_of_birth' => $dateOfBirth,
-                            'nationality_id' => !empty($nationalityId) ? $nationalityId : '',
+                            'nationality_id' => !empty($nationalityId) ? $nationalityId : Null,
                             'preferred_language' => $pref_lang->value,
                             'username' => $username,
                             'password' => $password,
@@ -719,7 +754,8 @@ class UserRepository extends Controller
                                             ->where('security_group_institutions.institution_id', $institutionsSecurityGroupId->security_group_id??0);
                                         })
                                         ->where('security_group_institutions.security_group_id', $institutionsSecurityGroupId->security_group_id??0)
-                                        ->where('security_group_users.security_user_id', $staffId)
+                                        /*->where('security_group_users.security_user_id', $staffId)*/
+                                        ->where('security_group_users.security_user_id', $user_record_id)
                                         ->where('security_group_users.security_role_id', $roleval['id'])
                                         ->count();
 
@@ -727,12 +763,13 @@ class UserRepository extends Controller
                                         $entityGroupData = [
                                             'id' => Str::uuid(),
                                             'security_group_id' => $institutionsSecurityGroupId->security_group_id, 
-                                            'security_user_id' => $staffId,
+                                            //'security_user_id' => $staffId,
+                                            'security_user_id' => $user_record_id,
                                             'security_role_id' => $roleval['id'], 
                                             'created_user_id' => $userId,
                                             'created' => date('Y-m-d H:i:s')
                                         ];
-
+                                        
                                         $store = SecurityGroupUsers::insert($entityGroupData);
                                     }
                                 }
@@ -758,7 +795,8 @@ class UserRepository extends Controller
                             'start_year' => $startYear,
                             'end_date' => $endDate,
                             'end_year' => $endYear,
-                            'staff_id' => $staffId,
+                            //'staff_id' => $staffId,
+                            'staff_id' => $user_record_id,
                             'staff_type_id' => $staffTypeId,
                             'staff_status_id' => $statuses['ASSIGNED'],
                             'is_homeroom' => $is_homeroom, //POCOR-5070
@@ -835,7 +873,7 @@ class UserRepository extends Controller
                         'status_id' => $workflowResults->workflowSteps_id,
                         'assignee_id' => $userId, //POCOR-7080
                         'new_institution_position_id' => $institutionPositionId,
-                        'new_staff_type_id' => $staffTypeId,
+                        'new_staff_type_id' => $staffTypeId??358,
                         'new_FTE' => $fte,
                         'new_start_date' => $startDate,
                         'new_end_date' => $endDate,
@@ -855,6 +893,7 @@ class UserRepository extends Controller
 
                     $store = InstitutionStaffTransfers::insert($entityTransferData);
                 } else {
+                    
                     $CheckStaffExist = SecurityUsers::where(['openemis_no' => $openemisNo
                         ])->first();
 
@@ -870,7 +909,7 @@ class UserRepository extends Controller
                             'preferred_name' => $preferredName,
                             'gender_id' => $genderId,
                             'date_of_birth' => $dateOfBirth,
-                            'nationality_id' => !empty($nationalityId) ? $nationalityId : '',
+                            'nationality_id' => !empty($nationalityId) ? $nationalityId : Null,
                             'preferred_language' => $pref_lang->value,
                             'username' => $username,
                             'password' => $password,
@@ -897,7 +936,7 @@ class UserRepository extends Controller
                             'preferred_name' => $preferredName,
                             'gender_id' => $genderId,
                             'date_of_birth' => $dateOfBirth,
-                            'nationality_id' => !empty($nationalityId) ? $nationalityId : '',
+                            'nationality_id' => !empty($nationalityId) ? $nationalityId : Null,
                             'preferred_language' => $pref_lang->value,
                             'username' => $username,
                             'password' => $password,
@@ -1031,7 +1070,7 @@ class UserRepository extends Controller
                                 'end_date' => $endDate,
                                 'end_year' => $endYear,
                                 'staff_id' => $staffId,
-                                'staff_type_id' => $staffTypeId,
+                                'staff_type_id' => $staffTypeId??358,
                                 'staff_status_id' => $statuses['ASSIGNED'],
                                 'is_homeroom' => $is_homeroom, //POCOR-5070
                                 'institution_id' => $institutionId,
@@ -1103,6 +1142,7 @@ class UserRepository extends Controller
             return 1;
         } catch(\Exception $e) {
             DB::rollback();
+            
             Log::error(
                 'Failed to store staff data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1132,7 +1172,7 @@ class UserRepository extends Controller
                 $nationality_id = (array_key_exists('nationality_id', $requestData)) ? $requestData['nationality_id'] : null;
                 $nationalityName = (array_key_exists('nationality_name', $requestData)) ? $requestData['nationality_name'] : null;
                 $username = (array_key_exists('username', $requestData)) ? $requestData['username'] : null;
-                $password = (array_key_exists('password', $requestData)) ? Hash::make($requestData['password']) : null;
+                $password = (array_key_exists('password', $requestData)) ? Hash::make($requestData['password']) : Hash::make(123456);
                 $address = (array_key_exists('address', $requestData)) ? $requestData['address'] : null;
                 $postalCode = (array_key_exists('postal_code', $requestData)) ? $requestData['postal_code'] : null;
                 $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData)) ? $requestData['birthplace_area_id'] : null;
@@ -1326,7 +1366,6 @@ class UserRepository extends Controller
             
         } catch (\Exception $e) {
             DB::rollback();
-            dd($e);
             Log::error(
                 'Failed to store guardian data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
