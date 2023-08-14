@@ -33,7 +33,12 @@ class SaveStaffDataRequest extends FormRequest
             'last_name' => 'required',
             'gender_id' => 'required',
             'date_of_birth' => 'required',
-            'academic_period_id' => 'required'
+            'academic_period_id' => 'required',
+            'staff_type_id' => 'required',
+            'start_date' => 'required',
+            'end_date' => 'required',
+            'staff_position_grade_id' => ['required_unless:is_same_school,1'],
+            'institution_position_id' => ['required_unless:is_same_school,1']
         ];
     }
 

@@ -87,7 +87,13 @@ class UserController extends Controller
                 return $this->sendSuccessResponse("Staff data stored successfully.");
             } elseif($data == 2) {
                 return $this->sendErrorResponse("Invalid academic period.");
-            }else {
+            } elseif($data == 3) {
+                return $this->sendErrorResponse("Invalid staff type.");
+            } elseif($data == 4) {
+                return $this->sendErrorResponse("Invalid staff position grade.");
+            } elseif($data == 5) {
+                return $this->sendErrorResponse("Invalid institution position.");
+            } else {
                 return $this->sendErrorResponse("Staff data not stored.", $data);
             }
             
