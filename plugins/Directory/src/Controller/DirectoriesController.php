@@ -1033,6 +1033,7 @@ class DirectoriesController extends AppController
             $user=0;//POCOR-7528 
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
+                'Qualifications' => ['text' => __('Qualifications')],
                 'Licenses' => ['text' => __('Licenses')],
             ];
         }
