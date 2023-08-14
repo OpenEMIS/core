@@ -33,7 +33,7 @@ class ExaminationResultsTable extends AppTable
             'className' => 'Examination.ExaminationCentresExaminationsSubjects',
             'joinTable' => 'examination_centres_examinations_subjects_students',
             'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
-            'targetForeignKey' => ['examination_centre_id', 'examination_item_id'],
+            'targetForeignKey' => ['examination_centre_id', 'examination_subject_id'],
             'through' => 'Examination.ExaminationCentresExaminationsSubjectsStudents',
             'dependent' => true,
             'cascadeCallbacks' => true
@@ -140,15 +140,15 @@ class ExaminationResultsTable extends AppTable
         $selectedExam = $requestData->examination_id;
         $selectedAcademicPeriod = $requestData->academic_period_id;
 
-        $ExaminationItems = TableRegistry::get('Examination.ExaminationItems');
-        $examItems = $ExaminationItems
+        $ExaminationSubjects = TableRegistry::get('Examination.ExaminationSubjects');
+        $examItems = $ExaminationSubjects
             ->find()
             ->contain('ExaminationGradingTypes')
             ->where([
-                $ExaminationItems->aliasField('examination_id') => $selectedExam,
-                $ExaminationItems->aliasField('weight > ') => 0
+                $ExaminationSubjects->aliasField('examination_id') => $selectedExam,
+                $ExaminationSubjects->aliasField('weight > ') => 0
             ])
-            ->order([$ExaminationItems->aliasField('code')])
+            ->order([$ExaminationSubjects->aliasField('code')])
             ->toArray();
 
         foreach ($examItems as $item) {
@@ -237,10 +237,10 @@ class ExaminationResultsTable extends AppTable
         $resultType = $attr['resultType'];
         $weight = $attr['weight'];
 
-        $ExaminationItemResultsTable = TableRegistry::get('Examination.ExaminationItemResults');
+        $ExaminationStudentSubjectResultsTable = TableRegistry::get('Examination.ExaminationStudentSubjectResults');
         $results = $this->examinationResults;
         if (!(isset($results[$studentId]))) {
-            $results = $ExaminationItemResultsTable->getExaminationItemResults($academicPeriodId, $examinationId, $studentId);
+            $results = $ExaminationStudentSubjectResultsTable->getExaminationStudentSubjectResults($academicPeriodId, $examinationId, $studentId);
             $this->examinationResults = $results;
         }
 

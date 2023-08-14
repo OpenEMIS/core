@@ -1,3 +1,41 @@
+### [3.92.0] - 2023-08-11
+- Implemented: Improvements to the Case feature to allow users to add/update cases from the Personal module
+- Bug Fixed: Institutions > Student/Staff > Export: The page goes to Bad Gateway
+- Bug Fixed: Administrations > Profiles: Sort Institution Name in Ascending order
+- Bug Fixed: Administration>Profile>Institutions: Number of classroom placeholder is not counting correctly
+- Bug Fixed: Institutions > Students/Staffs > General > Language: There is an error in adding languages
+- Bug Fixed: Institutions > Academic > Classes > Edit: The unit and course field has the asterisk "*" even though the fields are not mandatory
+- Bug Fixed: Administration>Security>Groups: System is picking up the newly created institutions and adding them to user groups
+
+### [3.91.1] - 2023-08-10
+- Implemented: Improvements to the Case feature to allow adding comments to cases
+- Implemented: Develop "External Data Source - Exams" config page for PacSIMS
+- Implemented: Make the room field non mandatory on the timetable schedule page
+- Bug Fixed: Administration > Data Management > Copy: The system does not allow the copy as there is existing data. However, not all institutions have data updated.
+- Bug Fixed: Institutions>Survey>Forms: Survey_responses is not showing up in the interface
+- Bug Fixed: Administration>Performance>Report Card: GPA is not accounting for unmarked subjects
+- Bug Fixed: Develop permissions to allow the Qualifications tabs under the Professional menu for all users
+- Bug Fixed: Reports > Students: Student Out of School Report generates blank
+- Bug Fixed: Administration > Security > Roles: Even when permission for Administration > Trainings is enabled in Security > Role page, the user is unable to view the Trainings module under their profile
+- Bug Fixed: Institutions>Performance>Report Cards: Unable to generate all
+- Bug Fixed: Reports > Institutions>Guardians: The data in guardian reports is very few eventhough there is alot of students who has guardians linked
+- Bug Fixed: Institutions > Students > Bulk Transfer In: As a principal role, i am not able to see the list of students for bulk transfer
+
+### [3.91.0] - 2023-08-04
+- Implemented: Develop changed to the Institution > Examinations > Students page
+- Implemented: Develop changed to the Administration > Examinations > Students page
+- Implemented: Develop Staff Behaviour Report
+- Implemented: Develop "External Data Source - Exams" config page for CXC
+- Implemented: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 3
+- Bug Fixed: Administrations > Communications > Alerts : Duplicated values are showing
+- Bug Fixed: Administration > Custom Fields > Institutions: The custom field got mixed up when editing/adding an existing custom field
+- Bug Fixed: Institutions>Students>Academic>Textbook: 404 error when viewing 
+- Bug Fixed: Institutions > Performances > Report Cards : System should calculate GPA based on assessment periods that is in start and end date of report card
+- Bug Fixed: Institutions > General > Overview > Edit: The system is checking against validation for mandatory coordinates and the length
+- Bug Fixed: Reports > Workflow: The OpenEMIS ID column is not showing any data
+- Bug Fixed: Institutions > Infrastructures > Overview: Error message is confusing
+- Bug Fixed: Reports > Staff: The column Identity Type is showing the Identity Type Code
+
 ### [3.90.2] - 2023-08-01
 - Implemented: Develop APIs for the Textbook feature
 - Bug Fixed: Institutions>Student>Academic>Assessment: Archive button should be present even if student does not have archive

@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS `examination_item_results` (
   `marks` decimal(6,2) DEFAULT NULL,
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
-  `examination_item_id` int(11) NOT NULL COMMENT 'links to `examination_items.id',
+  `examination_subject_id` int(11) NOT NULL COMMENT 'links to `examination_items.id',
   `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `education_subject_id` int(11) NOT NULL COMMENT 'links to `education_subjects.id',
   `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
@@ -53,10 +53,10 @@ CREATE TABLE IF NOT EXISTS `examination_item_results` (
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
-  PRIMARY KEY (`academic_period_id`,`examination_id`,`examination_item_id`,`student_id`),
+  PRIMARY KEY (`academic_period_id`,`examination_id`,`examination_subject_id`,`student_id`),
   KEY `academic_period_id` (`academic_period_id`),
   KEY `examination_id` (`examination_id`),
-  KEY `examination_item_id` (`examination_item_id`),
+  KEY `examination_subject_id` (`examination_subject_id`),
   KEY `student_id` (`student_id`),
   KEY `education_subject_id` (`education_subject_id`),
   KEY `examination_centre_id` (`examination_centre_id`),
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS `examination_item_results` (
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all the examination results for an individual student in a particular examination';
 
-INSERT INTO `examination_item_results` (`id`, `marks`, `academic_period_id`, `examination_id`, `examination_item_id`, `student_id`, `education_subject_id`, `examination_centre_id`, `examination_grading_option_id`, `institution_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+INSERT INTO `examination_item_results` (`id`, `marks`, `academic_period_id`, `examination_id`, `examination_subject_id`, `student_id`, `education_subject_id`, `examination_centre_id`, `examination_grading_option_id`, `institution_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT sha2(CONCAT(`Results`.`academic_period_id`, ',', `Results`.`examination_id`, ',', `Items`.`id`, ',', `Results`.`student_id`), '256'), `Results`.`marks`, `Results`.`academic_period_id`, `Results`.`examination_id`, `Items`.`id`, `Results`.`student_id`, `Results`.`education_subject_id`, `Results`.`examination_centre_id`, `Results`.`examination_grading_option_id`, `Results`.`institution_id`, `Results`.`modified_user_id`, `Results`.`modified`, `Results`.`created_user_id`, `Results`.`created`
 FROM `z_3588_examination_item_results` `Results`
 INNER JOIN `examination_items` `Items`
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS `examination_centre_students` (
   `total_mark` decimal(6,2) DEFAULT NULL,
   `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
   `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
-  `examination_item_id` int(11) NOT NULL COMMENT 'links to `examination_items.id',
+  `examination_subject_id` int(11) NOT NULL COMMENT 'links to `examination_items.id',
   `education_subject_id` int(11) NOT NULL COMMENT 'links to `education_subjects.id',
   `institution_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to institutions.id',
   `education_grade_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to education_grades.id',
@@ -93,10 +93,10 @@ CREATE TABLE IF NOT EXISTS `examination_centre_students` (
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
-  PRIMARY KEY (`examination_centre_id`,`student_id`,`examination_item_id`),
+  PRIMARY KEY (`examination_centre_id`,`student_id`,`examination_subject_id`),
   KEY `examination_centre_id` (`examination_centre_id`),
   KEY `student_id` (`student_id`),
-  KEY `examination_item_id` (`examination_item_id`),
+  KEY `examination_subject_id` (`examination_subject_id`),
   KEY `education_subject_id` (`education_subject_id`),
   KEY `institution_id` (`institution_id`),
   KEY `education_grade_id` (`education_grade_id`),
@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS `examination_centre_students` (
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the students registered to an examination center for a particular examination';
 
-INSERT INTO `examination_centre_students` (`id`, `registration_number`, `total_mark`, `examination_centre_id`, `student_id`, `examination_item_id`, `education_subject_id`, `institution_id`, `education_grade_id`, `academic_period_id`, `examination_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+INSERT INTO `examination_centre_students` (`id`, `registration_number`, `total_mark`, `examination_centre_id`, `student_id`, `examination_subject_id`, `education_subject_id`, `institution_id`, `education_grade_id`, `academic_period_id`, `examination_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT sha2(CONCAT(`Students`.`examination_centre_id`, ',', `Students`.`student_id`, ',', `Items`.`id`), '256'), `Students`.`registration_number`, `Students`.`total_mark`, `Students`.`examination_centre_id`, `Students`.`student_id`, `Items`.`id`, `Students`.`education_subject_id`, `Students`.`institution_id`, `Students`.`education_grade_id`, `Students`.`academic_period_id`, `Students`.`examination_id`, `Students`.`modified_user_id`, `Students`.`modified`, `Students`.`created_user_id`, `Students`.`created`
 FROM `z_3588_examination_centre_students` `Students`
 INNER JOIN `examination_items` `Items`
@@ -120,7 +120,7 @@ DROP TABLE IF EXISTS `examination_centre_subjects`;
 CREATE TABLE IF NOT EXISTS `examination_centre_subjects` (
   `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
-  `examination_item_id` int(11) NOT NULL COMMENT 'links to `examination_items.id',
+  `examination_subject_id` int(11) NOT NULL COMMENT 'links to `examination_items.id',
   `education_subject_id` int(11) NOT NULL COMMENT 'links to education_subjects.id',
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
@@ -128,9 +128,9 @@ CREATE TABLE IF NOT EXISTS `examination_centre_subjects` (
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
-  PRIMARY KEY (`examination_centre_id`,`examination_item_id`),
+  PRIMARY KEY (`examination_centre_id`,`examination_subject_id`),
   KEY `examination_centre_id` (`examination_centre_id`),
-  KEY `examination_item_id` (`examination_item_id`),
+  KEY `examination_subject_id` (`examination_subject_id`),
   KEY `education_subject_id` (`education_subject_id`),
   KEY `academic_period_id` (`academic_period_id`),
   KEY `examination_id` (`examination_id`),
@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS `examination_centre_subjects` (
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the examination centres for a particular examination subject';
 
-INSERT INTO `examination_centre_subjects` (`id`, `examination_centre_id`, `examination_item_id`, `education_subject_id`, `academic_period_id`, `examination_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+INSERT INTO `examination_centre_subjects` (`id`, `examination_centre_id`, `examination_subject_id`, `education_subject_id`, `academic_period_id`, `examination_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT sha2(CONCAT(`CentreSubjects`.`examination_centre_id`, ',', `Items`.`id`), '256'), `CentreSubjects`.`examination_centre_id`, `Items`.`id`, `CentreSubjects`.`education_subject_id`, `CentreSubjects`.`academic_period_id`, `CentreSubjects`.`examination_id`, `CentreSubjects`.`modified_user_id`, `CentreSubjects`.`modified`, `CentreSubjects`.`created_user_id`, `CentreSubjects`.`created`
 FROM `z_3588_examination_centre_subjects` `CentreSubjects`
 INNER JOIN `examination_items` `Items`
@@ -147,6 +147,6 @@ AND `CentreSubjects`.`education_subject_id` = `Items`.`education_subject_id`);
 
 -- import_mapping
 UPDATE `import_mapping`
-SET `column_name` = 'examination_item_id', `description` = 'Id', `lookup_plugin` = 'Examination', `lookup_model` = 'ExaminationItems', `lookup_column` = 'id'
+SET `column_name` = 'examination_subject_id', `description` = 'Id', `lookup_plugin` = 'Examination', `lookup_model` = 'ExaminationItems', `lookup_column` = 'id'
 WHERE `model` = 'Examination.ExaminationItemResults' AND `column_name` = 'education_subject_id';
 
