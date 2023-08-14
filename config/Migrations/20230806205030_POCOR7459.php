@@ -3,7 +3,7 @@
 use Cake\ORM\TableRegistry;
 use Phinx\Migration\AbstractMigration;
 
-class Pocor7459 extends AbstractMigration
+class POCOR7459 extends AbstractMigration
 {
     /**
      * Change Method.
