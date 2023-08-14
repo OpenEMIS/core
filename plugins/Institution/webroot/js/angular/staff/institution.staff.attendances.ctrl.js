@@ -106,8 +106,8 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
         }, vm.error)
         .then(function(shiftListOptions) {
             vm.setShiftListOptions(shiftListOptions);
-            console.log("---PARAM---");
-            console.log(vm.getAllStaffAttendancesParams());
+            // console.log("---PARAM---");
+            // console.log(vm.getAllStaffAttendancesParams());
             return InstitutionStaffAttendancesSvc.getAllStaffAttendances(vm.getAllStaffAttendancesParams());
         }, vm.error)
         .then(function(allStaffAttendances) {
@@ -121,22 +121,31 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
 
     // error
     vm.error = function (error) {
-        console.log(error);
+        UtilsSvc.isAppendLoader(false);
+        console.error(error);
+        vm.initGrid();
+        vm.setGridData();
+        vm.setColumnDef();
         return $q.reject('There is an error retrieving the data.');
     }
 
     //onChange
     vm.changeAcademicPeriod = function() {
         UtilsSvc.isAppendLoader(true);
+        vm.initGrid();
         InstitutionStaffAttendancesSvc.getWeekListOptions(vm.selectedAcademicPeriod)
         .then(function(weekListOptions) {
             vm.gridOptions.context.period = vm.selectedAcademicPeriod;
             vm.setWeekList(weekListOptions);
-            return InstitutionStaffAttendancesSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId);
+            return InstitutionStaffAttendancesSvc.getDayListOptions(
+                vm.selectedAcademicPeriod,
+                vm.selectedWeek,
+                vm.institutionId);
         }, vm.error)
         .then(function(dayListOptions) {
             vm.setDayListOptions(dayListOptions);
-            return InstitutionStaffAttendancesSvc.getAllStaffAttendances(vm.getAllStaffAttendancesParams());
+            return InstitutionStaffAttendancesSvc.getAllStaffAttendances(
+                vm.getAllStaffAttendancesParams());
         }, vm.error)
         .then(function(allStaffAttendances) {
             vm.setAllStaffAttendances(allStaffAttendances);
@@ -150,6 +159,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
 
     vm.changeWeek = function() {
         UtilsSvc.isAppendLoader(true);
+        vm.initGrid();
         var weekObj = vm.weekListOptions.find(obj => obj.id == vm.selectedWeek);
         vm.selectedStartDate = weekObj.start_day;
         vm.selectedEndDate = weekObj.end_day;
@@ -170,6 +180,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
 
     vm.changeDay = function() {
         UtilsSvc.isAppendLoader(true);
+        vm.initGrid();
         var dayObj = vm.dayListOptions.find(obj => obj.id == vm.selectedDay);
         vm.selectedDayDate = dayObj.date;
         vm.selectedFormattedDayDate = dayObj.name;
@@ -189,6 +200,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
 
     vm.changeShift = function() {
         UtilsSvc.isAppendLoader(true);
+        vm.initGrid();
         var shiftObj = vm.shiftListOptions.find(obj => obj.id == vm.selectedShift);
         vm.gridOptions.context.date = vm.selectedShift;
         
@@ -231,6 +243,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
                 vm.gridReady = true;
             },
             function(error) {
+                console.error(error);
                 vm.gridReady = true;
             }
         );
@@ -263,11 +276,15 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
     }
 
     vm.setDayListOptions = function(dayListOptions) {
+        // console.log('setDayListOptions');
+        // console.log(dayListOptions);
+        // console.log(dayListOptions.length);
         vm.dayListOptions = dayListOptions;
-        if (dayListOptions.length > 0) {
+
+        if (dayListOptions.length > 1) {
             angular.forEach(dayListOptions, function(day) {
                 if (day.selected == true) {
-                   vm.selectedDay = day.id;
+                   vm.selectedDay = (angular.isDefined(day.closed) && day.closed) ? -1 : day.id;
                    vm.selectedDayDate = day.date;
                    vm.selectedFormattedDayDate = day.name;
                    vm.schoolClosed = (angular.isDefined(day.closed) && day.closed) ? true : false;
@@ -275,6 +292,10 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
                    vm.gridOptions.context.schoolClosed = vm.schoolClosed;
                 }
             });
+        }
+        if (dayListOptions.length < 1) {
+            vm.selectedDay = -1;
+            vm.gridOptions.context.date = vm.selectedDay;
         }
     }
 
