@@ -3397,7 +3397,7 @@ class StaffTable extends ControllerActionTable
             ])->first();
 
         return $staffShiftsData;
-        
+
     }
 
     /**
@@ -3425,10 +3425,10 @@ class StaffTable extends ControllerActionTable
 
     private function setWhereForLeaveTable($weekStartDate, $weekEndDate, $archive = false)
     {
-        if(!$archive){
-        $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+        if (!$archive) {
+            $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
         }
-        if($archive){
+        if ($archive) {
             $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
         }
         if ($weekEndDate == $weekStartDate) {
@@ -3532,19 +3532,19 @@ class StaffTable extends ControllerActionTable
      * @param $shiftId
      * @return array
      */
-    private function getAttendanceByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $shiftId, $archive=false)
+    private function getAttendanceByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $shiftId, $archive = false)
     {
-        if(!$archive){
+        if (!$archive) {
             $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
             $positions = TableRegistry::get('Institution.InstitutionPositions');
             $staff = TableRegistry::get('institution_staff');
             $allStaffAttendancesQuery = $InstitutionStaffAttendances
-            ->find('all')
-            ->where([
-                $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
-                $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
-                $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
-                $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
+                ->find('all')
+                ->where([
+                    $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
+                    $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
+                    $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
+                    $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
                 ]);
 
             if ($shiftId != -1) {
@@ -3558,7 +3558,7 @@ class StaffTable extends ControllerActionTable
                     ]);
             }
         }
-        if($archive){
+        if ($archive) {
             $InstitutionStaffAttendances = ArchiveConnections::getArchiveTable('institution_staff_attendances');
             $allStaffAttendancesQuery = $InstitutionStaffAttendances
                 ->find('all')
@@ -3586,10 +3586,10 @@ class StaffTable extends ControllerActionTable
      * @param $weekEndDate
      * @return array
      */
-    private function getLeaveByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $archive=false)
+    private function getLeaveByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $archive = false)
     {
         $whereForLeaveTable = $this->setWhereForLeaveTable($weekStartDate, $weekEndDate, $archive);
-        if(!$archive){
+        if (!$archive) {
             $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
             $allStaffLeaves = $StaffLeaveTable
                 ->find()
@@ -3603,7 +3603,7 @@ class StaffTable extends ControllerActionTable
                 ->hydrate(false)
                 ->toArray();
         }
-        if($archive){
+        if ($archive) {
             $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
             $allStaffLeaves = $StaffLeaveTable
                 ->find()
@@ -4180,26 +4180,6 @@ class StaffTable extends ControllerActionTable
         return $query;
     }
 
-    /**
-     * common proc to show related field with id in the index table
-     * @param $tableName
-     * @param $relatedField
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
-     */
-    private static function getRelatedRecord($tableName, $relatedField)
-    {
-        if (!$relatedField) {
-            null;
-        }
-        $Table = TableRegistry::get($tableName);
-        try {
-            $related = $Table->get($relatedField);
-            return $related->toArray();
-        } catch (RecordNotFoundException $e) {
-            null;
-        }
-        return null;
-    }
 
     /**
      * @param $tableName
