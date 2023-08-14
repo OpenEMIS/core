@@ -1,4 +1,5 @@
 <?php
+
 namespace Staff\Controller;
 
 use ArrayObject;
@@ -9,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use App\Controller\AppController;
 use Cake\Routing\Router;
+use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 
 class StaffController extends AppController
 {
@@ -33,7 +35,7 @@ class StaffController extends AppController
         // qualification
         'Employments',
         'Qualifications',
-        'Extracurriculars', 
+        'Extracurriculars',
 
         // finance
         'BankAccounts',
@@ -72,21 +74,21 @@ class StaffController extends AppController
         $this->ControllerAction->model('Staff.Staff');
 
         $this->ControllerAction->models = [
-            'Accounts'          => ['className' => 'Staff.Accounts', 'actions' => ['view', 'edit']],
-            'Nationalities'     => ['className' => 'User.Nationalities'],
-            'Positions'             => ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
-            'Duties'                => ['className' => 'Staff.Duties', 'actions' => ['index', 'view']],
-            'StaffAssociations'                => ['className' => 'Staff.InstitutionAssociationStaff', 'actions' => ['index', 'view']],
-            'Sections'          => ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
-            'Classes'           => ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
-            'Qualifications'    => ['className' => 'Staff.Qualifications'],
-            'Extracurriculars'  => ['className' => 'Staff.Extracurriculars', 'actions' => ['index', 'view', 'search']],
-            'History'           => ['className' => 'User.UserActivities', 'actions' => ['index']],
-            'ImportStaff'       => ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
-            'TrainingResults'   => ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
-            'Achievements'      => ['className' => 'Staff.Achievements'],
-            'ImportSalaries'    => ['className' => 'Staff.ImportSalaries', 'actions' => ['add']],
-            'ImportStaffQualifications'    => ['className' => 'Staff.ImportStaffQualifications', 'actions' => ['add']]
+            'Accounts' => ['className' => 'Staff.Accounts', 'actions' => ['view', 'edit']],
+            'Nationalities' => ['className' => 'User.Nationalities'],
+            'Positions' => ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
+            'Duties' => ['className' => 'Staff.Duties', 'actions' => ['index', 'view']],
+            'StaffAssociations' => ['className' => 'Staff.InstitutionAssociationStaff', 'actions' => ['index', 'view']],
+            'Sections' => ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
+            'Classes' => ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
+            'Qualifications' => ['className' => 'Staff.Qualifications'],
+            'Extracurriculars' => ['className' => 'Staff.Extracurriculars', 'actions' => ['index', 'view', 'search']],
+            'History' => ['className' => 'User.UserActivities', 'actions' => ['index']],
+            'ImportStaff' => ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
+            'TrainingResults' => ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
+            'Achievements' => ['className' => 'Staff.Achievements'],
+            'ImportSalaries' => ['className' => 'Staff.ImportSalaries', 'actions' => ['add']],
+            'ImportStaffQualifications' => ['className' => 'Staff.ImportStaffQualifications', 'actions' => ['add']]
         ];
 
         $this->loadComponent('Training.Training');
@@ -106,145 +108,170 @@ class StaffController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']);
     }
+
     public function Qualifications()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']);
     }
+
     public function Positions()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Positions']);
     }
+
     public function Duties()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Duties']);
     }
+
     public function StaffAssociations()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.InstitutionAssociationStaff']);
     }
+
     public function Classes()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffClasses']);
     }
+
     public function Subjects()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']);
     }
+
     public function EmploymentStatuses()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.EmploymentStatuses']);
     }
+
     public function Nationalities()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']);
     }
+
     public function Languages()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']);
     }
+
     public function Memberships()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']);
     }
+
     public function Licenses()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']);
     }
+
     public function Contacts()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']);
     }
+
     public function BankAccounts()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']);
     }
+
     public function Identities()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']);
     }
+
     public function Demographic()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']);
     }
+
     public function Awards()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']);
     }
+
     public function TrainingNeeds()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']);
     }
+
     public function Attachments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']);
     }
+
     public function Courses()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffTrainings']);
     }
+
     public function Salaries()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Salaries']);
     }
+
     public function Payslips()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Payslips']);
     }
+
     public function Behaviours()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']);
     }
- 
+
     // health
     public function Healths()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']);
     }
+
     public function HealthAllergies()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Allergies']);
     }
+
     public function HealthConsultations()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Consultations']);
     }
+
     public function HealthFamilies()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Families']);
     }
+
     public function HealthHistories()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Histories']);
     }
+
     public function HealthImmunizations()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Immunizations']);
     }
+
     public function HealthMedications()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Medications']);
     }
+
     public function HealthTests()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
     }
     // End Health
-    
+
     // Historical
     public function HistoricalStaffPositions()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Historical.HistoricalStaffPositions']);
     }
+
     // End Historical
 
     public function InstitutionStaffAttendanceActivities()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.InstitutionStaffAttendanceActivities']);
-    }
-
-    public function InstitutionStaffAttendancesArchive()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.InstitutionStaffAttendancesArchive']);
     }
 
     //POCOR-6138 - Add export Button
@@ -260,7 +287,7 @@ class StaffController extends AppController
 
     public function changeHealthHeader($model, $modelAlias, $userType)
     {
-        if($this->request->param('action') == 'StaffBodyMasses'){
+        if ($this->request->param('action') == 'StaffBodyMasses') {
             $session = $this->request->session();
             $institutionId = 0;
             if ($session->check('Institution.Institutions.id')) {
@@ -274,7 +301,7 @@ class StaffController extends AppController
                 $this->Navigation->addCrumb(__('Body Mass'));
                 $this->set('contentHeader', $header);
             }
-        } else if($this->request->param('action') == 'StaffInsurances'){
+        } else if ($this->request->param('action') == 'StaffInsurances') {
             $session = $this->request->session();
             $institutionId = 0;
             if ($session->check('Institution.Institutions.id')) {
@@ -293,60 +320,51 @@ class StaffController extends AppController
 
     //POCOR-6138 - Add export Button
 
+    //POCOR-6138 - Add export Button
+    /**
+     * common proc to check if there is an archive
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @return bool
+     */
+    private function isStaffAttendancesArchiveExists()
+    {
+        $staffId = $this->getStaffId();
+        $institutionId = $this->getInstitutionId();
+        $where = [
+            ['institution_id = '.  intval($institutionId)],
+            ['staff_id = ' . intval($staffId)]
+        ];
+        $table_name = 'institution_staff_attendances';
+        $is_archive_exists = ArchiveConnections::hasArchiveRecords($table_name, $where);
+        return $is_archive_exists;
+    }
     // AngularJS
     public function StaffAttendances()
     {
-        $_edit = $this->AccessControl->check(['Staff', 'StaffAttendances', 'edit']);
-        $_history = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
-        $_archive = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
-        if (!empty($this->request->param('institutionId'))) {
-            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
-        } else {
-            $session = $this->request->session();
-            $staffId = $session->read('Staff.Staff.id');
-            $institutionId = $session->read('Institution.Institutions.id');
-        }
-        $tabElements = $this->getCareerTabElements();
+        $this->setEditStaffAttendances();
 
-        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
-        $this->Navigation->addCrumb($crumbTitle);
+        $this->setStaffIdForTemplate();
 
-        $historyUrl = $this->ControllerAction->url('index');
-        $historyUrl['plugin'] = 'Staff';
-        $historyUrl['controller'] = 'Staff';
-        $historyUrl['action'] = 'InstitutionStaffAttendanceActivities';
+        $this->setInstitutionIdForTemplate();
 
-        $archiveUrl = $this->ControllerAction->url('index');
-        $archiveUrl['plugin'] = 'Staff';
-        $archiveUrl['controller'] = 'Staff';
-        $archiveUrl['action'] = 'InstitutionStaffAttendancesArchive';
+        $this->setTabElementsForTemplate();
 
-        $this->set('historyUrl', Router::url($historyUrl));
-        $this->set('_edit', $_edit);
-        $this->set('_history', $_history);
-        $this->set('_archive', $_archive);
-        $this->set('archiveUrl', Router::url($archiveUrl));
-        $this->set('institution_id', $institutionId);
-        $this->set('staff_id', $staffId);
-        $this->set('tabElements', $tabElements);
+        $this->setCrumbForTemplate();
+
+        $this->setHistoryStaffAttendances();
+
+        $this->setArchiveStaffAttendances();
+
         $this->set('selectedAction', 'StaffAttendances');
         $this->set('ngController', 'StaffAttendancesCtrl as $ctrl');
+        $this->setManualStaffAttendances();
 
 
-        // Start POCOR-5188
-        $manualTable = TableRegistry::get('Manuals');
-        $ManualContent =   $manualTable->find()->select(['url'])->where([
-                $manualTable->aliasField('function') => 'Attendances',
-                $manualTable->aliasField('module') => 'Institutions',
-                $manualTable->aliasField('category') => 'Staff - Career',
-                ])->first();
-        
-        if (!empty($ManualContent['url'])) {
-            $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
-        }else{
-            $this->set('is_manual_exist', []);
-        }
-        // End POCOR-5188
+    }
+
+    public function InstitutionStaffAttendancesArchive()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.InstitutionStaffAttendancesArchive']);
     }
 
     private function attachAngularModules()
@@ -367,28 +385,33 @@ class StaffController extends AppController
                 break;
         }
     }
-    
+
     // Special Needs
     public function SpecialNeedsReferrals()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsReferrals']);
     }
-	public function Profiles()
+
+    public function Profiles()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Profiles']);
     }
+
     public function SpecialNeedsAssessments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsAssessments']);
     }
+
     public function SpecialNeedsServices()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsServices']);
     }
+
     public function SpecialNeedsDevices()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDevices']);
     }
+
     public function SpecialNeedsPlans()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
@@ -433,13 +456,7 @@ class StaffController extends AppController
         /**
          * if student object is null, it means that student.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
          */
-        $userId = null;
-        $session = $this->request->session();
-        if (isset($this->request->query['user_id']) && $this->request->query['user_id']) {
-            $userId = $this->request->query['user_id'];
-        }else if ($session->check('Staff.Staff.id')) {
-            $userId = $session->read('Staff.Staff.id');
-        }
+        $userId = $this->getStaffId();
         if ($userId) {
             $header = '';
             // $userId = $session->read('Staff.Staff.id');
@@ -453,8 +470,8 @@ class StaffController extends AppController
 
             $alias = $model->alias;
             //POCOR-5890 starts
-            if($alias == 'HealthImmunizations'){
-                $alias = __('Vaccinations');     
+            if ($alias == 'HealthImmunizations') {
+                $alias = __('Vaccinations');
             }
             //POCOR-5890 ends
             $this->Navigation->addCrumb($model->getHeader($alias));
@@ -527,11 +544,8 @@ class StaffController extends AppController
         $session = $this->request->session();
 
         if ($model->alias() != 'Staff') {
-            if ($this->request->query('user_id') !== null) {
-                $userId = $this->request->query('user_id');
-            } else if ($session->check('Staff.Staff.id')) {
-                $userId = $session->read('Staff.Staff.id');
-            } else {
+            $userId = $this->getStaffId();
+            if (!$userId) {
                 $this->Alert->warning('general.noData');
                 $event->stopPropagation();
                 return $this->redirect(['action' => 'index']);
@@ -583,13 +597,12 @@ class StaffController extends AppController
     public function getCareerTabElements($options = [])
     {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-        $session = $this->request->session();
-        if ($session->check('Staff.Staff.id')) {
-            $userId = $session->read('Staff.Staff.id');
+        $userId = $this->getStaffId();
+        $institutionId = $this->getInstitutionId();
+        if ($userId) {
             $options['user_id'] = $userId;
         }
-        if ($session->check('Institution.Institutions.id')) {
-            $institutionId = $session->read('Institution.Institutions.id');
+        if ($institutionId) {
             $options['institution_id'] = $institutionId;
         }
         $tabElements = TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
@@ -599,9 +612,8 @@ class StaffController extends AppController
     public function getProfessionalTabElements($options = [])
     {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-        $session = $this->request->session();
-        if ($session->check('Staff.Staff.id')) {
-            $userId = $session->read('Staff.Staff.id');
+        $userId = $this->getStaffId();
+        if ($userId) {
             $options['user_id'] = $userId;
         }
         $tabElements = TableRegistry::get('Staff.Staff')->getProfessionalTabElements($options);
@@ -707,20 +719,18 @@ class StaffController extends AppController
             }
         }
     }
-    
+
     public function ScheduleTimetable()
-    { 
-        $session = $this->request->session();
-        if ($session->check('Staff.Staff.id')) {
-            $userId = $session->read('Staff.Staff.id');               
-        }else{
+    {
+        $userId = $this->getStaffId();
+        if (!$userId) {
             $userId = $this->Auth->user('id');
         }
-                
+
         $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $Institutions = TableRegistry::get('Institution.Institutions');
-        
-        
+
+
         $InstitutionStaff = $InstitutionStaff
             ->find()
             ->where([
@@ -729,9 +739,9 @@ class StaffController extends AppController
             ])
             ->hydrate(false)
             ->first();
-        
+
         $institutionId = $InstitutionStaff['institution_id'];
-        
+
         $selectedInstitutionOptions = $Institutions
             ->find('list', [
                 'keyField' => 'id',
@@ -745,22 +755,21 @@ class StaffController extends AppController
                 $Institutions->aliasField('id') => $institutionId,
             ])
             ->hydrate(false)
-            ->toArray();       
-        
+            ->toArray();
+
         $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
-                ->getCurrent();
-        $academicPeriodOptions =TableRegistry::get('AcademicPeriod.AcademicPeriods')
-                 ->getYearList();
-        
-       
-        
+            ->getCurrent();
+        $academicPeriodOptions = TableRegistry::get('AcademicPeriod.AcademicPeriods')
+            ->getYearList();
+
+
         $shiftOptions = TableRegistry::get('Schedule.ScheduleIntervals')
-                ->getShiftOptions($academicPeriodId, false, $institutionId);
-        
+            ->getShiftOptions($academicPeriodId, false, $institutionId);
+
         $this->set('userId', $userId);
-        $this->set('selectedInstitutionOptions', $selectedInstitutionOptions);        
-        $this->set('shiftOptions', $shiftOptions);        
-        $shiftDefaultId = (isset($this->request->query['shift']))?$this->request->query['shift']:key($shiftOptions);
+        $this->set('selectedInstitutionOptions', $selectedInstitutionOptions);
+        $this->set('shiftOptions', $shiftOptions);
+        $shiftDefaultId = (isset($this->request->query['shift'])) ? $this->request->query['shift'] : key($shiftOptions);
         $this->set('academicPeriodId', $academicPeriodId);
         $this->set('academicPeriodName', $academicPeriodOptions[$academicPeriodId]);
         $this->set('shiftDefaultId', $shiftDefaultId);
@@ -769,15 +778,15 @@ class StaffController extends AppController
 
         // Start POCOR-5188
         $manualTable = TableRegistry::get('Manuals');
-        $ManualContent =   $manualTable->find()->select(['url'])->where([
+        $ManualContent = $manualTable->find()->select(['url'])->where([
             $manualTable->aliasField('function') => 'Staff',
             $manualTable->aliasField('module') => 'Institutions',
             $manualTable->aliasField('category') => 'Timetable',
-                ])->first();
-        
+        ])->first();
+
         if (!empty($ManualContent['url'])) {
-            $this->set('is_manual_exist', ['status'=>'success', 'url'=>$ManualContent['url']]);
-        }else{
+            $this->set('is_manual_exist', ['status' => 'success', 'url' => $ManualContent['url']]);
+        } else {
             $this->set('is_manual_exist', []);
         }
         // End POCOR-5188
@@ -788,11 +797,122 @@ class StaffController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDiagnostics']);
     }
-    
+
     //POCOR-6673
     public function StaffCurriculars()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffCurriculars']);
     }
 
+    /**
+     * common function to get institution id
+     * @return string|null
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function getInstitutionId()
+    {
+        $institutionId = null;
+        $session = $this->request->session();
+        $institutionId = !empty($this->request->param('institutionId'))
+            ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id']
+            : $session->read('Institution.Institutions.id');
+        return $institutionId;
+    }
+
+    /**
+     * @return string|null
+     */
+    private function getStaffId()
+    {
+        $userId = null;
+        if (isset($this->request->query['user_id']) && $this->request->query['user_id']) {
+            $userId = $this->request->query['user_id'];
+        }
+        if (!$userId) {
+            $session = $this->request->session();
+            $userId = $session->read('Staff.Staff.id');
+        }
+        return $userId;
+    }
+
+    private function setManualStaffAttendances()
+    {
+// Start POCOR-5188
+        $manualTable = TableRegistry::get('Manuals');
+        $ManualContent = $manualTable->find()->select(['url'])->where([
+            $manualTable->aliasField('function') => 'Attendances',
+            $manualTable->aliasField('module') => 'Institutions',
+            $manualTable->aliasField('category') => 'Staff - Career',
+        ])->first();
+
+        if (!empty($ManualContent['url'])) {
+            $this->set('is_manual_exist', ['status' => 'success', 'url' => $ManualContent['url']]);
+        } else {
+            $this->set('is_manual_exist', []);
+        }
+        // End POCOR-5188
+    }
+
+    private function setEditStaffAttendances()
+    {
+        $_edit = $this->AccessControl->check(['Staff', 'StaffAttendances', 'edit']);
+        $this->set('_edit', $_edit);
+    }
+
+    private function setStaffIdForTemplate()
+    {
+        $staffId = $this->getStaffId();
+        $this->set('staff_id', $staffId);
+    }
+
+    private function setInstitutionIdForTemplate()
+    {
+        $institutionId = $this->getInstitutionId();
+        $this->set('institution_id', $institutionId);
+    }
+
+    private function setTabElementsForTemplate()
+    {
+        $tabElements = $this->getCareerTabElements();
+        $this->set('tabElements', $tabElements);
+    }
+
+    private function setCrumbForTemplate()
+    {
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $this->Navigation->addCrumb($crumbTitle);
+    }
+
+    private function setHistoryStaffAttendances()
+    {
+        $_history = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
+        $historyUrl = $this->ControllerAction->url('index');
+        $historyUrl['plugin'] = 'Staff';
+        $historyUrl['controller'] = 'Staff';
+        $historyUrl['action'] = 'InstitutionStaffAttendanceActivities';
+        $this->set('historyUrl', Router::url($historyUrl));
+        $this->set('_history', $_history);
+    }
+
+    private function setArchiveStaffAttendances()
+    {
+        $hasArchive = $this->isStaffAttendancesArchiveExists();
+        if(!$hasArchive){
+            $_archive = null;
+            $this->set('_archive', $_archive);
+            return;
+        }
+        $_archive = $this->AccessControl->check(['Staff', 'InstitutionStaffAttendanceActivities', 'index']);
+        $archiveUrl = $this->ControllerAction->url('index');
+        $archiveUrl['plugin'] = 'Staff';
+        $archiveUrl['controller'] = 'Staff';
+        $archiveUrl['action'] = 'ArchivedAttendances';
+        $this->set('_archive', $_archive);
+        $this->set('archiveUrl', Router::url($archiveUrl));
+    }
+
+    public function ArchivedAttendances()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.ArchivedAttendances']);
+    }
 }
