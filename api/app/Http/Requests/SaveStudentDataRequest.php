@@ -33,8 +33,12 @@ class SaveStudentDataRequest extends FormRequest
             'last_name' => 'required',
             'gender_id' => 'required',
             'date_of_birth' => 'required',
-            'is_diff_school' => 'required',
-            'academic_period_id' => 'required'
+            'academic_period_id' => 'required',
+            'education_grade_id' => 'required',
+            'institution_class_id' => 'required',
+            'start_date' => 'required',
+            'end_date' => 'required',
+            'student_id' => ['required_if:is_diff_school,1'],
         ];
     }
 
