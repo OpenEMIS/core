@@ -54,7 +54,7 @@ class ArchiveStaffAttendancesShell extends Shell
             'institution_staff_leave'
 
         ];
-        $processName = "Archive Staff Attendances";
+        $processName = "ArchiveStaffAttendances";
         if ($academicPeriodId === 0) {
             $this->out('No valid academic period given');
             return;
@@ -62,7 +62,7 @@ class ArchiveStaffAttendancesShell extends Shell
         $processedDateTime = date('d-m-Y H:i:s');
         $this->out("Initializing $processName:  $processedDateTime");
         $mypid = getmypid();
-        $systemProcessId = CommonArchiveShell::startArchiveTransferSystemProcess($academicPeriodId, $mypid, $processName);
+        $systemProcessId = CommonArchiveShell::startArchiveTransferSystemProcess($academicPeriodId, $mypid, $processName, $pid);
         $processedDateTime = CommonArchiveShell::setSystemProcessRunning($systemProcessId);
         $this->out($processedDateTime . ' - Running System PID:' . $systemProcessId);
 //        $countOfArchivedRecords = 1;

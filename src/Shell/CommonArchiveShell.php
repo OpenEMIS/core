@@ -39,7 +39,7 @@ class CommonArchiveShell extends Shell
     }
 
     public static
-    function setTransferLogsBatch($pid, $movedRecordsCount = 0)
+    function setTransferLogsBatch($pid, $movedRecordsCount = 0, $step = 0)
     {
         $TransferLogs = TableRegistry::get('Archive.TransferLogs');
         $transferlog = $TransferLogs
@@ -48,11 +48,14 @@ class CommonArchiveShell extends Shell
         $moved = $transferlog->features;
         if (strpos($moved, 'Moved') === false) {
             // If "Moved Records" string doesn't exist, add it with the batch number
-            $moved .= ' Moved: ' . $movedRecordsCount; // Replace 5000 with the actual number
+            $moved = trim($moved) . " Step: $step, Moved: $movedRecordsCount"; // Replace 5000 with the actual number
         } else {
             // If "Moved Records" string already exists, update the batch number
             $moved = preg_replace
             ('/Moved: (\d+)/', 'Moved: ' . $movedRecordsCount,
+                $moved, 1);
+            $moved = preg_replace
+            ('/Step: (\d+)/', 'Step: ' . $step,
                 $moved, 1);
         }
         $transferlog->features = $moved;
@@ -149,7 +152,6 @@ class CommonArchiveShell extends Shell
                         $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
                         $caller->out("System process failed $processName:  $processedDateTime");
                         throw $e;
-
                     }
                 }
             } else {
@@ -157,8 +159,15 @@ class CommonArchiveShell extends Shell
                     $connection = ConnectionManager::get('default');
                     $academic_period_id = $whereCondition['academic_period_id'];
                     $batchSize = 10000; // Number of records to process in each batch
+                    if($countToArchive > 1000000){
+                        $batchSize = intval(($countToArchive / 100) + 1);
+                    }
                     $totalRecords = $countToArchive;
                     $affectedRecordsCount = 0;
+                    $sql = "ALTER TABLE $table_name ENABLE KEYS";
+                    $sql = "ALTER TABLE $targetTableName DISABLE KEYS";
+                    $connection->execute($sql);
+                    $i = 1;
                     for ($offset = 0; $offset < $totalRecords; $offset += $batchSize) {
                         $sql = "INSERT IGNORE INTO $targetTableName SELECT * FROM $table_name where academic_period_id = $academic_period_id LIMIT $batchSize OFFSET $offset";
                         try {
@@ -169,7 +178,8 @@ class CommonArchiveShell extends Shell
                             $affectedBatchRows = $statement->rowCount();
                             $connection->commit(); // Commit the transaction
                             $affectedRecordsCount += $affectedBatchRows;
-                            self::setTransferLogsBatch($pid, $affectedRecordsCount);
+                            self::setTransferLogsBatch($pid, $affectedRecordsCount, $i);
+                            $i++;
                         } catch (\Exception $e) {
                             $connection->rollback(); // Rollback the transaction on error
                             $caller->out('errorError executing batch: ' . $e->getMessage());
@@ -179,9 +189,13 @@ class CommonArchiveShell extends Shell
                             $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
                             $caller->out("System process failed $processName:  $processedDateTime");
                             // Handle the error as needed
+                            $sql = "ALTER TABLE $targetTableName ENABLE KEYS";
+                            $connection->execute($sql);
                             throw $e;
                         }
                     }
+                    $sql = "ALTER TABLE $targetTableName ENABLE KEYS";
+                    $connection->execute($sql);
                 } catch (\Exception $e) {
                     Log::write('error', 'I have an exception: ' . $e->getMessage());
                     $caller->out("Error in $processName");
@@ -190,6 +204,8 @@ class CommonArchiveShell extends Shell
                     $caller->out("Transfer failed $processName:  $processedDateTime");
                     $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
                     $caller->out("System process failed $processName:  $processedDateTime");
+                    $sql = "ALTER TABLE $targetTableName ENABLE KEYS";
+                    $connection->execute($sql);
                     throw $e;
                 }
             }
@@ -233,10 +249,11 @@ class CommonArchiveShell extends Shell
      * @return array
      */
     public static
-    function startArchiveTransferSystemProcess($academicPeriodId, $mypid, $name)
+    function startArchiveTransferSystemProcess($academicPeriodId, $mypid, $name, $pid)
     {
         $param = [
             'academicPeriodId' => $academicPeriodId,
+            'pid' => $pid,
         ];
         $model = TableRegistry::get('Archive.TransferLogs');
         $eventName = '';
@@ -284,11 +301,11 @@ class CommonArchiveShell extends Shell
         $moved = $transferlog->features;
         if (strpos($moved, 'Moved') === false) {
             // If "Moved Records" string doesn't exist, add it with the batch number
-            $moved .= '. Finally: ' . $movedRecordsCount;
+            $moved = trim($moved) . '. Finally: ' . number_format($movedRecordsCount, 0, '', ' ');
         } else {
             // If "Moved Records" string already exists, update the batch number
             $moved = preg_replace
-            ('/(Moved: \d+)/', '. Finally: ' . $movedRecordsCount,
+            ('/(Moved: \d+)/', 'Finally: ' . number_format($movedRecordsCount, 0, '', ' '),
                 $moved, 1);
         }
 

@@ -3,6 +3,7 @@
 namespace Archive\Model\Table;
 
 use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\I18n\Time;
 use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -37,6 +38,28 @@ class TransferLogsTable extends ControllerActionTable
     CONST IN_PROGRESS = 1;
     CONST DONE = 2;
     CONST ERROR = 3;
+    public static $ArchiveVars = ['Tables' =>
+        ['StudentAttendances' => [
+            'institution_class_attendance_records',
+            'institution_student_absences',
+            'institution_student_absence_details',
+            'student_attendance_marked_records',
+            'student_attendance_mark_types',
+        ],
+            'StaffAttendances' => [
+                'institution_staff_attendances',
+                'institution_staff_leave',
+            ],
+            'StudentAssessments' => [
+                'assessment_item_results',
+            ]
+        ],
+        'Shell' =>
+            ['StudentAttendances' => 'ArchiveStudentAttendances',
+                'StaffAttendances' => 'ArchiveStaffAttendances',
+                'StudentAssessments' => 'ArchiveStudentAssessments']
+
+    ];
 
     public function initialize(array $config)
     {
@@ -253,7 +276,9 @@ class TransferLogsTable extends ControllerActionTable
 //            $this->Alert->error('Archive.notSuperAdmin');
 //            return false;
 //        }
+        $this->log('after save', 'debug');
         ini_set('memory_limit', '-1');
+        $this->log('after save' . $entity->features, 'debug');
         if ($entity->features == "Student Attendances") {
             $this->archiveStudentAttendances($entity);
         }
@@ -350,14 +375,8 @@ class TransferLogsTable extends ControllerActionTable
      */
     private function archiveStudentAttendances(Entity $entity)
     {
-        $tablesToArchive = [
-            'institution_class_attendance_records',
-            'institution_student_absences',
-            'institution_student_absence_details',
-            'student_attendance_marked_records',
-            'student_attendance_mark_types',
-        ];
-        $shellName = "ArchiveStudentAttendances";
+        $tablesToArchive = self::$ArchiveVars['Tables']['StudentAttendances'];
+        $shellName = self::$ArchiveVars['Shell']['StudentAttendances'];
         $this->archiveTableRecords($entity, $tablesToArchive, $shellName);
     }
 
@@ -372,11 +391,8 @@ class TransferLogsTable extends ControllerActionTable
      */
     private function archiveStaffAttendances(Entity $entity)
     {
-        $tablesToArchive = [
-            'institution_staff_attendances',
-            'institution_staff_leave',
-        ];
-        $shellName = "ArchiveStaffAttendances";
+        $tablesToArchive = self::$ArchiveVars['Tables']['StaffAttendances'];
+        $shellName = self::$ArchiveVars['Shell']['StaffAttendances'];
         $this->archiveTableRecords($entity, $tablesToArchive, $shellName);
     }
 
@@ -390,10 +406,11 @@ class TransferLogsTable extends ControllerActionTable
      */
     private function archiveStudentAssessments(Entity $entity)
     {
-        $tablesToArchive = [
-            'assessment_item_results',
-        ];
-        $shellName = "ArchiveStudentAssessments";
+        $tablesToArchive = self::$ArchiveVars['Tables']['StudentAssessments'];
+        $shellName = self::$ArchiveVars['Shell']['StudentAssessments'];
+        $this->log(self::$ArchiveVars, 'debug');
+        $this->log($tablesToArchive, 'debug');
+        $this->log($shellName, 'debug');
         $this->archiveTableRecords($entity, $tablesToArchive, $shellName);
     }
 
@@ -406,8 +423,37 @@ class TransferLogsTable extends ControllerActionTable
      */
     private function archiveTableRecords(Entity $entity, $tablesToArchive, $shellName)
     {
+        $this->log($shellName, 'debug');
         $session = $this->Session;
         $superAdmin = $session->read('Auth.User.super_admin');
+        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
+        foreach ($runningProcess as $key => $processData) {
+            $process_params = (array)json_decode($processData['params']);
+            $systemProcessId = $processData['id'];
+            $transfer_log_pid = isset($process_params['pid']) ? $process_params['pid'] : null;
+            $process_academic_period_id = isset($process_params['academic_period_id']) ? $process_params['academic_period_id'] : null;
+            $php_process_id = isset($processData['process_id']) ? $processData['process_id'] : 0;
+            $isPhpProcessRunning = self::isPhpProcessRunning($php_process_id);
+            if ($transfer_log_pid == null) {
+                $this->log("gonna kill $systemProcessId", 'debug');
+                if ($isPhpProcessRunning) {
+                    $SystemProcesses::killProcess($php_process_id);
+                    self::setSystemProcessFailed($systemProcessId);
+                }
+                if (!$isPhpProcessRunning) {
+                    self::setSystemProcessFailed($systemProcessId);
+                }
+            }
+            if ($transfer_log_pid != null) {
+                $this->log("not gonna kill $systemProcessId", 'debug');
+                if (!$isPhpProcessRunning) {
+                    self::setTransferLogsFailed($transfer_log_pid);
+                    self::setSystemProcessFailed($systemProcessId);
+                }
+            }
+        }
+
         if ($superAdmin == 1) {//POCOR-7399
             $academic_period_id = $entity->academic_period_id;
             $recordsToArchive = 0;
@@ -422,36 +468,70 @@ class TransferLogsTable extends ControllerActionTable
 
             if ($recordsToArchive == 0) {
                 $this->log($entity, 'debug');
-                $entity['process_status'] = 3;
-                $entity->features = $entity['features'] . ' ' . __('No Records');
+                $entity['process_status'] = self::DONE;
+                $entity->features = $entity['features'] . '. ' . __('No Records');
                 $this->save($entity);
                 $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
             }
             if ($recordsToArchive > 0) {
-                $todoing = $entity['features'] . '. To archive: ' . number_format($recordsToArchive, 0, '', ' ');
+                $todoing = trim($entity['features']) . '. To archive: ' . number_format($recordsToArchive, 0, '', ' ');
 
                 $alreadytransferring = $this->find('all')
                     ->where(['academic_period_id' => $entity->academic_perid_id,
                         'process_status' => self::IN_PROGRESS,
-                        'features' => $todoing,
                         'p_id !=' => $entity->p_id
                     ])
                     ->count();
                 if ($alreadytransferring > 0) {
-                    $entity['process_status'] = 3;
+                    $entity['process_status'] = self::ERROR;
                     $entity->features = $entity->features . ' Has another process running';
                     $this->save($entity);
                     $this->Alert->error('Has another process running', ['type' => 'string', 'reset' => true]);
                 }
-                $this->triggerArchiveShell($shellName, $academic_period_id, $entity->p_id);
-                $entity->features = $todoing;
-                $entity->process_status = self::IN_PROGRESS;
-                $this->save($entity);
+                if ($alreadytransferring == 0) {
+                    $this->triggerArchiveShell($shellName, $academic_period_id, $entity->p_id);
+                    $entity->features = $todoing;
+                    $entity->process_status = self::IN_PROGRESS;
+                    $this->save($entity);
+                }
             }
         }
         if ($superAdmin != 1) {
             $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
         }
+    }
+
+    public static
+    function setTransferLogsFailed($pid)
+    {
+        $TransferLogs = TableRegistry::get('Archive.TransferLogs');
+        $TransferLogs->updateAll(['process_status' => $TransferLogs::ERROR],
+            ['p_id' => $pid]
+        );
+        $processInfo = date('Y-m-d H:i:s');
+        return $processInfo;
+    }
+
+    /**
+     * @param $systemProcessId
+     */
+    public static
+    function setSystemProcessFailed($systemProcessId)
+    {
+        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::ERROR);
+    }
+
+    /**
+     * @param $systemProcessId
+     */
+    public static
+    function setSystemProcessCompleted($systemProcessId)
+    {
+        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::COMPLETED);
+        $processInfo = date('Y-m-d H:i:s');
+        return $processInfo;
     }
 
     /**
@@ -538,6 +618,15 @@ class TransferLogsTable extends ControllerActionTable
         $current_academic_period_id = $this->AcademicPeriods->getCurrent();
         $current = $academic_period_id == $current_academic_period_id;
         return $current;
+    }
+
+    /**
+     * @param $php_process_id
+     * @return bool
+     */
+    private static function isPhpProcessRunning($php_process_id)
+    {
+        return posix_kill($php_process_id, 0) && posix_getsid($php_process_id) !== false;
     }
 
 }
