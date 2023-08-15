@@ -78,6 +78,13 @@ class TransferLogsTable extends ControllerActionTable
         $this->toggle('view', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $alreadytransferring = $this->find('all')
+            ->where(['process_status' => self::IN_PROGRESS,
+            ])
+            ->count();
+        if ($alreadytransferring > 0) {
+            $this->toggle('add', false);
+        }
         $this->statusOptions = [
             self::IN_PROGRESS => __('Processing'),
             self::DONE => __('Completed'),
@@ -249,6 +256,15 @@ class TransferLogsTable extends ControllerActionTable
             $current = $this->isCurrent($entity);
             if ($current) {
                 $this->Alert->error('Archive.currentAcademic');
+                return false;
+            }
+            $alreadytransferring = $this->find('all')
+                ->where(['process_status' => self::IN_PROGRESS,
+                ])
+                ->count();
+            if ($alreadytransferring > 0) {
+                $this->Alert->error('Has another process running', ['type' => 'string', 'reset' => true]);
+                $event->stopPropagation();
                 return false;
             }
             $entity->p_id = random_int(100000, 999999);
