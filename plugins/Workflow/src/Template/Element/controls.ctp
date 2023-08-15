@@ -20,11 +20,28 @@
                     foreach ($this->request->query as $key => $value) {
                         //if (in_array($key, ['filter', 'category'])) continue; //POCOR-5695
                         if (in_array($key, ['filter'])){ //POCOR-5695
-                            echo $this->Form->hidden($key, [
-                                'value' => $value,
-                                'data-named-key' => $key
-                            ]);
-                            $dataNamedGroup[] = $key;
+                            if (empty($filterOptions)) {
+                                echo $this->Form->hidden($key, [
+                                    'value' => $value,
+                                    'data-named-key' => $key
+                                ]);
+                                $dataNamedGroup[] = $key;
+                            }
+                            if (!empty($filterOptions)) {
+                                $filterOptionsDefault = $value;
+                            }
+                        }
+                        if (in_array($key, ['category'])){ //POCOR-5695
+                            if (empty($categoryOptions)) {
+                                echo $this->Form->hidden($key, [
+                                    'value' => $value,
+                                    'data-named-key' => $key
+                                ]);
+                                $dataNamedGroup[] = $key;
+                            }
+                            if (!empty($categoryOptions)) {
+                                $categoryOptionsDefault = $value;
+                            }
                         }
                     }
                 }
@@ -43,8 +60,13 @@
                     ];
                     if (!empty($dataNamedGroup)) {
                         $inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-                        $dataNamedGroup[] = 'filter';
                     }
+                    if($filterOptionsDefault){
+                        $inputOptions['default'] = $filterOptionsDefault;
+                        $inputOptions['value'] = $filterOptionsDefault;
+                    }
+                    $dataNamedGroup[] = 'filter';
+//                    $this->log($inputOptions, 'debug');
                     echo $this->Form->input('filter', $inputOptions);
                 }
 
@@ -60,8 +82,13 @@
                     ];
                     if (!empty($dataNamedGroup)) {
                         $inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-                        $dataNamedGroup[] = 'category';
                     }
+                    if($categoryOptionsDefault){
+                        $inputOptions['default'] = $categoryOptionsDefault;
+                        $inputOptions['value'] = $categoryOptionsDefault;
+                    }
+
+                    $dataNamedGroup[] = 'category';
                     echo $this->Form->input('category', $inputOptions);
                 }
                 //POCOR-5695 starts
@@ -78,8 +105,8 @@
                         ];
                         if (!empty($dataNamedGroup)) {
                             $inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-                            $dataNamedGroup[] = 'level';
                         }
+                        $dataNamedGroup[] = 'level';
                         echo $this->Form->input('level', $inputOptions);
                     }
                     if (!empty($areaOptions)) {
@@ -94,8 +121,8 @@
                         ];
                         if (!empty($dataNamedGroup)) {
                             $inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-                            $dataNamedGroup[] = 'area';
                         }
+                        $dataNamedGroup[] = 'area';
                         echo $this->Form->input('area', $inputOptions);
                     }
 
@@ -111,8 +138,8 @@
                         ];
                         if (!empty($dataNamedGroup)) {
                             $inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-                            $dataNamedGroup[] = 'period';
                         }
+                        $dataNamedGroup[] = 'period';
                         echo $this->Form->input('period', $inputOptions);
                     }
 
@@ -128,8 +155,8 @@
                         ];
                         if (!empty($dataNamedGroup)) {
                             $inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-                            $dataNamedGroup[] = 'month';
                         }
+                        $dataNamedGroup[] = 'month';
                         echo $this->Form->input('month', $inputOptions);
                     }
                 }
