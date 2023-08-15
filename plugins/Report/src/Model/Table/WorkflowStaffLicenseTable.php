@@ -18,7 +18,8 @@ class WorkflowStaffLicenseTable extends AppTable
         parent::initialize($config);
 
         $this->belongsTo('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-        $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+        $this->belongsTo('InstitutionStaff', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('LicenseTypes', ['className' => 'FieldOption.LicenseTypes']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
         $this->belongsToMany('Classifications', [
@@ -30,29 +31,67 @@ class WorkflowStaffLicenseTable extends AppTable
             'dependent' => true
         ]);
 
-        $this->addBehavior('Report.ReportList');
-        $this->addBehavior('Report.WorkflowReport');
+        $this->belongsToMany('Staff', [
+            'className' => 'Institution.Staff',
+            'foreignKey' => 'staff_id',
+            'targetForeignKey' => 'security_user_id',
+            'through' => 'User.Users',
+            'dependent' => true
+        ]);
+
         $this->addBehavior('Excel', [
             'pages' => false,
             'autoFields' => false
         ]);
+        $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.WorkflowReport');
     }
 
     //POCOR-7637
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
         $query = $this->addInstitutionJoinToQuery($query);
+        $this->log($query->sql(), 'debug');
     }
 
     public function onExcelGetOpenemisNo(Event $event, Entity $entity)
     {
-//        $this->log('onExcelGetOpenemisNo', 'debug');
-//        $this->log($entity, 'debug');
-//        $this->log($this->query()->sql(), 'debug');
+
         $security_user_id = $entity['security_user_id'];
         $user = self::getRelatedRecord('security_users', $security_user_id);
-        $entity['security_user'] = $user['first_name'] . ' ' . $user['last_name'];
         return $user['openemis_no'];
+    }
+
+    public function onExcelGetSecurityUserId(Event $event, Entity $entity)
+    {
+//        $this->log($entity,'debug');
+        $security_user_id = $entity['security_user_id'];
+        $user = self::getRelatedRecord('security_users', $security_user_id);
+        return $user['first_name'] . ' ' . $user['last_name'];
+    }
+
+    public function onExcelGetAssigneeId(Event $event, Entity $entity)
+    {
+//        $this->log($entity,'debug');
+        $security_user_id = $entity['assignee_id'];
+        $user = self::getRelatedRecord('security_users', $security_user_id);
+        return $user['first_name'] . ' ' . $user['last_name'];
+    }
+
+    public function onExcelGetLicenseTypeId(Event $event, Entity $entity)
+    {
+//        $this->log($entity,'debug');
+        $security_user_id = $entity['license_type_id'];
+        $user = self::getRelatedRecord('license_types', $security_user_id);
+        return $user['name'];
+    }
+
+    public function onExcelGetStatusId(Event $event, Entity $entity)
+    {
+//        $this->log($entity,'debug');
+        $security_user_id = $entity['status_id'];
+        $user = self::getRelatedRecord('workflow_steps', $security_user_id);
+        return $user['name'];
     }
 
     /**
@@ -81,14 +120,20 @@ class WorkflowStaffLicenseTable extends AppTable
      */
     private function addInstitutionJoinToQuery($query)
     {
-        $InstitutionStaffTable = TableRegistry::get('Institution.InstitutionStaff');
+        $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
         $InstitutionsTable = TableRegistry::get('Institution.Institutions');
         $query
-            ->leftJoin([$InstitutionStaffTable->alias() => $InstitutionStaffTable->table()], [
-                $InstitutionStaffTable->aliasField('staff_id') => $this->aliasField('security_user_id')
-            ])->leftJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
-                $InstitutionsTable->aliasField('id') => $InstitutionStaffTable->aliasField('institution_id')
+            ->innerJoin([$InstitutionStaffTable->alias() => $InstitutionStaffTable->table()], [
+                $InstitutionStaffTable->aliasField('staff_id = ') . $this->aliasField('security_user_id')
             ]);
+        $this->log($query->sql(), 'debug');
+        $query
+            ->innerJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
+                $InstitutionStaffTable->aliasField('institution_id = ') . $InstitutionsTable->aliasField('id')]);
+        $this->log($query->sql(), 'debug');
+        $query->group([$this->aliasField('id')]);
+        $this->log($query->sql(), 'debug');
+        return $query;
     }
 
 }

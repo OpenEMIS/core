@@ -206,18 +206,15 @@ class WorkflowReportBehavior extends Behavior
                 $query->where([$newConditions]);
             }
         } else {
+            $query
+                ->contain('Statuses');
 
             $category = $requestData->category;
             if ($category != -1) {
-                $query
-                    ->contain('Statuses')
-                    ->leftJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()])//POCOR-7433
-                    ->where(['Statuses.category' => $category]);
-            } else { //POCOR-6296
-                $query
-                    ->contain(['Statuses'])
-                    ->leftJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()]);//POCOR-7433
-
+                $query->where(['Statuses.category' => $category]);
+            }
+            if ($requestData->model != 'Report.WorkflowStaffLicense') {
+                $query->leftJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()]);//POCOR-7433
             }
             //POCOR-7433(if condition)
             if ($conditions != []) {
