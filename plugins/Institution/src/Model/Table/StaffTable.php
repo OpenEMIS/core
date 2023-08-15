@@ -26,9 +26,11 @@ use App\Model\Traits\OptionsTrait;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Routing\Router;
 use Cake\Utility\Hash;
+use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 
 class StaffTable extends ControllerActionTable
 {
+
     use OptionsTrait;
 
     private $assigned;
@@ -498,7 +500,7 @@ class StaffTable extends ControllerActionTable
                 ];
             }
         }
-        
+
         $fields->exchangeArray($extraField);
     }
 
@@ -3143,556 +3145,204 @@ class StaffTable extends ControllerActionTable
         return $query;
     }
 
+
+    /**
+     * function to get a value from array or null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getFromArray($array, $key)
+    {
+        return isset($array[$key]) ? $array[$key] : null;
+    }
+
     public function findAllStaffAttendances(Query $query, array $options)
     {
-        $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
-        $InstitutionStaffShiftsTable = TableRegistry::get('Institution.InstitutionStaffShifts');
-        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
-        $institutionId = $options['institution_id'];
-        $academicPeriodId = $options['academic_period_id'];
-        $ownAttendanceView = $options['own_attendance_view'];
-        $otherAttendanceView = $options['other_attendance_view'];
-        $shiftId = $options['shift_id'];
-        $weekStartDate = $options['week_start_day'];
-        $weekEndDate = $options['week_end_day'];
+        //options
+        $institutionId = self::getFromArray($options, 'institution_id');
+        $academicPeriodId = self::getFromArray($options, 'academic_period_id');
+        $ownAttendanceView = self::getFromArray($options, 'own_attendance_view');
+        $otherAttendanceView = self::getFromArray($options, 'other_attendance_view');
+        $shiftId = self::getFromArray($options, 'shift_id');
+        $weekStartDate = self::getFromArray($options, 'week_start_day');
+        $weekEndDate = self::getFromArray($options, 'week_end_day');
+        $dayId = self::getFromArray($options, 'day_id');
+        //if -1 = that means all days of the week
+        $dayDate = self::getFromArray($options, 'day_date');
+        $superAdmin = $options['user']['super_admin'];
+        $user_id = $options['user']['id'];
 
-        $dayId = $options['day_id'];
-        $dayDate = $options['day_date'];
-        //POCOR-6971[START]
-        $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
-        $InstitutionShiftsTable = TableRegistry::get('Institution.InstitutionShifts');
-        $InstitutionStaffAttendancesData = TableRegistry::get('Staff.InstitutionStaffAttendances');
-        $positions = TableRegistry::get('Institution.InstitutionPositions');
-        $staff = TableRegistry::get('institution_staff');
-        $InstitutionShiftsData = $InstitutionShiftsTable->find()
-            ->select([$InstitutionShiftsTable->aliasField('start_time'), $InstitutionShiftsTable->aliasField('end_time'), $InstitutionShiftsTable->aliasField('id')])
-            ->where([
-                $InstitutionShiftsTable->aliasField('shift_option_id') => $shiftId, //add
-                $InstitutionShiftsTable->aliasField('academic_period_id') => $academicPeriodId, //add
-                $InstitutionShiftsTable->aliasField('institution_id') => $institutionId //add
-            ])->first();
-        //POCOR-6971[END]
-        $staffShiftStartTime = date("H:i:s", strtotime($InstitutionShiftsData['start_time']));
-        $staffShiftEndTime = date("H:i:s", strtotime($InstitutionShiftsData['end_time']));
+        $conditionQuery = [
+            $this->aliasField('institution_id') => $institutionId,
+//            $this->aliasField('staff_status_id') => 1,
+        ];
 
-        // one day
-        if ($dayId != -1) {
-            $weekStartDate = $dayDate;
-            $weekEndDate = $dayDate;
-            $where = [
-                $StaffLeaveTable->aliasField("date_to >= '") . $weekEndDate . "'",
-                $StaffLeaveTable->aliasField("date_from <= '") . $weekStartDate . "'"
-            ];
-        } else {
-            $where = [
-                'OR' => [
-                    [
-                        $StaffLeaveTable->aliasField("date_to <= '") . $weekEndDate . "'",
-                        $StaffLeaveTable->aliasField("date_from >= '") . $weekStartDate . "'"
-                    ],
-                    [
-                        $StaffLeaveTable->aliasField("date_to <= '") . $weekEndDate . "'",
-                        $StaffLeaveTable->aliasField("date_to >= '") . $weekStartDate . "'"
-                    ],
-                    [
-                        $StaffLeaveTable->aliasField("date_from <= '") . $weekEndDate . "'",
-                        $StaffLeaveTable->aliasField("date_from >= '") . $weekStartDate . "'"
-                    ],
-                    [
-                        $StaffLeaveTable->aliasField("date_from <= '") . $weekStartDate . "'",
-                        $StaffLeaveTable->aliasField("date_to >= '") . $weekEndDate . "'"
-                    ]
-                ]
-            ];
+        if ($superAdmin == 0) {
+            $conditionQuery = $this->setConditionQueryForUser($ownAttendanceView, $otherAttendanceView, $user_id, $conditionQuery);
+            if ($conditionQuery == null) {
+                $query->where("1 = 0");
+                return $query;
+            }
         }
+
+        //if $dayId != -1 then $weekStartDate = $weekEndDate
+        list($weekStartDate, $weekEndDate) =
+            $this->resetWeekStartEndForOneDaySearch($dayId, $dayDate, $weekStartDate, $weekEndDate);
+
+        $attendanceByStaffIdRecords = $this->getAttendanceByStaffIdRecordsArray(
+            $institutionId,
+            $academicPeriodId,
+            $weekStartDate,
+            $weekEndDate,
+            $shiftId);
+
+        $leaveByStaffIdRecords = $this->getLeaveByStaffIdRecordsArray(
+            $institutionId,
+            $academicPeriodId,
+            $weekStartDate,
+            $weekEndDate);
+
+        $conditionQuery = $this->setConditionQueryForDates($weekStartDate, $weekEndDate, $conditionQuery);
+        //POCOR-6971[START]
 
         //Gets all the days in the selected week based on its start date end date
-        $startDate = new DateTime($weekStartDate);
-        $endDate = new DateTime($weekEndDate);
-        $interval = new DateInterval('P1D');
-        $daterange = new DatePeriod($startDate, $interval, $endDate->modify('+1 day'));
-        // To get all the dates of the working days only
-        $workingDaysArr = [];
-        $workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
-        foreach ($daterange as $date) {
-            $dayText = $date->format('l');
-            if (in_array($dayText, $workingDays)) {
-                $workingDaysArr[] = $date;
-            }
-        }
-        if ($shiftId == -1) {
-            $allStaffAttendances = $InstitutionStaffAttendances
-                ->find('all')
-                ->leftJoin([$staff->alias() => $staff->table()],
-                    [$staff->aliasField('staff_id = ') . $InstitutionStaffAttendances->aliasField('staff_id')])
-                /*->leftJoin([$positions->alias() => $positions->table()],
-                            [$positions->aliasField('id = ') . $staff->aliasField('institution_position_id')])*/
-                ->where([
-                    $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
-                    $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
-                    $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
-                    $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
-                ])
-                ->hydrate(false)
-                ->toArray();
-        } else {
-            $allStaffAttendances = $InstitutionStaffAttendances
-                ->find('all')
-                ->leftJoin([$staff->alias() => $staff->table()],
-                    [$staff->aliasField('staff_id = ') . $InstitutionStaffAttendances->aliasField('staff_id')])
-                ->leftJoin([$positions->alias() => $positions->table()],
-                    [$positions->aliasField('id = ') . $staff->aliasField('institution_position_id')])
-                ->where([
-                    $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
-                    $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
-                    $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
-                    $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
-                    $positions->aliasField('shift_id') => $shiftId,
-                ])
-                ->hydrate(false)
-                ->toArray();
-        }
-        $allStaffLeaves = $StaffLeaveTable
-            ->find()
-            ->matching('StaffLeaveTypes')
-            // ->matching('Statuses')
-            ->where([
-                $StaffLeaveTable->aliasField('institution_id ') => $institutionId,
-                $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
-                $where
+        $workingDaysArr = $this->getWorkingDays($weekStartDate, $weekEndDate);
+
+        $query = $this->getQueryWithShiftId($query, $shiftId);
+        $query = $query
+            ->matching('Users')
+            ->where(
+                [
+                    $conditionQuery
+                ]
+            )
+            ->order([
+                $this->Users->aliasField('first_name')
             ])
-            ->hydrate(false)
-            ->toArray();
+            ->group([
+                $this->aliasField('staff_id')
+            ])
+            ->formatResults($this->getFormattedStaffAttendanceRow($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId));
 
-        $attendanceByStaffIdRecords = Hash::combine($allStaffAttendances, '{n}.id', '{n}', '{n}.staff_id');
-        $leaveByStaffIdRecords = Hash::combine($allStaffLeaves, '{n}.id', '{n}', '{n}.staff_id');
-
-        $conditionQuery = [];
-        if ($dayId == -1) {
-            $conditionQuery = [
-                $this->aliasField('start_date <= ') => $weekStartDate,
-                $this->aliasField('start_date <= ') => $weekEndDate,
-                'OR' => [
-                    $this->aliasField('end_date is ') => null,
-                    $this->aliasField('end_date >= ') => $weekEndDate
-                ]
-            ];
-        } else {
-            $conditionQuery = [
-                $this->aliasField('start_date <= ') => $dayDate,
-                'OR' => [
-                    $this->aliasField('end_date is ') => null,
-                    $this->aliasField('end_date >= ') => $dayDate
-                ]
-            ];
-        }
-        //POCOR-6971[START]
-        if ($shiftId == -1) {
-            //return 'yes';
-        } else {
-            /*$conditionQueryForTime = [
-                $InstitutionStaffAttendancesData->aliasField('time_in >= ') => $staffShiftStartTime,
-                'OR' => [
-                    $InstitutionStaffAttendancesData->aliasField('time_out is ') => null,
-                    $InstitutionStaffAttendancesData->aliasField('time_out <= ') => $staffShiftEndTime,
-                    $this->aliasField('end_date is ') => null,
-                    $this->aliasField('end_date >= ') => $dayDate
-                ]
-            ];*/
-        }
-        //POCOR-6971[END]
-
-        if ($options['user']['super_admin'] == 0) {
-            if ($ownAttendanceView == 1 && $otherAttendanceView == 0) {
-                $staffId = $options['user']['id'];
-                $conditionQuery[$this->aliasField('staff_id')] = $options['user']['id'];
-            } elseif ($ownAttendanceView == 0 && $otherAttendanceView == 1) {
-                $staffId = $options['user']['id'];
-                $conditionQuery[$this->aliasField('staff_id != ')] = $options['user']['id'];
-            } elseif ($ownAttendanceView == 0 && $otherAttendanceView == 0) {
-                $staffId = "";
-                $conditionQuery[$this->aliasField('staff_id = ')] = "";
-            }
-        }
-        //POCOR-6971[START]
-        //$conditionQuery = array_merge($conditionQuery, $conditionQueryForTime); 
-
-        if ($shiftId == -1) {
-            $query = $query
-                ->matching('Users')
-                // ->innerJoin(
-                //     [$InstitutionStaffShifts->alias() => $InstitutionStaffShifts->table()],
-                //     [
-                //         $InstitutionStaffShifts->aliasField('staff_id = ') . $this->aliasField('staff_id')
-                //     ]
-                //     )
-                ->where(
-                    [
-                        $this->aliasField('institution_id') => $institutionId,
-                        $this->aliasField('staff_status_id') => 1,
-
-                        $conditionQuery
-                    ]
-                )
-                ->order([
-                    $this->Users->aliasField('first_name')
-                ])
-                ->group([
-                    $this->aliasField('staff_id')
-                ])
-                ->formatResults(function (ResultSetInterface $results) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
-                    return $results->map(function ($row) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
-                        $staffId = $row->staff_id;
-                        $staffRecords = [];
-                        $staffLeaveRecords = [];
-
-                        if (!empty($row->_matchingData['Users']->photo_name)) {
-                            $row['photo_content'] = base64_encode(stream_get_contents($row->_matchingData['Users']->photo_content));
-                        }
-
-                        if (array_key_exists($staffId, $attendanceByStaffIdRecords)) {
-                            $staffRecords = $attendanceByStaffIdRecords[$staffId];
-                        }
-
-                        if (array_key_exists($staffId, $leaveByStaffIdRecords)) {
-                            $staffLeaveRecords = $leaveByStaffIdRecords[$staffId];
-                            $staffLeaveRecords = array_slice($staffLeaveRecords, 0, 2);
-                        }
-
-                        $staffTimeRecords = [];
-                        foreach ($workingDaysArr as $dateObj) {
-                            $dateStr = $dateObj->format('Y-m-d');
-                            $formattedDate = $this->formatDate($dateObj);
-
-                            $found = false;
-                            foreach ($staffRecords as $attendanceRecord) {
-                                $staffAttendanceDate = $attendanceRecord['date']->format('Y-m-d');
-
-                                if ($dateStr == $staffAttendanceDate) {
-                                    $found = true;
-                                    //isNew determines if record is existing data
-                                    $attendanceData = [
-                                        'dateStr' => $dateStr,
-                                        'date' => $this->formatDate($attendanceRecord['date']),
-                                        'time_in' => $this->formatTime($attendanceRecord['time_in']),
-                                        'time_out' => $this->formatTime($attendanceRecord['time_out']),
-                                        'comment' => $attendanceRecord['comment'],
-                                        'absence_type_id' => $attendanceRecord['absence_type_id'],
-                                        'isNew' => false
-                                    ];
-                                    break;
-                                }
-                            }
-                            if (!$found) {
-                                $attendanceData = [
-                                    'dateStr' => $dateStr,
-                                    'date' => $formattedDate,
-                                    'time_in' => null,
-                                    'time_out' => null,
-                                    'comment' => null,
-                                    'absence_type_id' => null,
-                                    'isNew' => true
-                                ];
-                            }
-                            $staffTimeRecords[$dateStr] = $attendanceData;
-                            if ($dayId != -1) {
-                                $row->date = $dateStr;
-                            }
-                            $historyUrl = Router::url([
-                                'plugin' => 'Staff',
-                                'controller' => 'Staff',
-                                'action' => 'InstitutionStaffAttendanceActivities',
-                                'index',
-                                'user_id' => $staffId
-                            ]);
-                            $row->historyUrl = $historyUrl;
-                        }
-                        // gets all the staff leave
-                        foreach ($staffTimeRecords as $key => $staffTimeRecord) {
-                            $leaveRecords = [];
-                            foreach ($staffLeaveRecords as $staffLeaveRecord) {
-                                $dateFrom = $staffLeaveRecord['date_from']->format('Y-m-d');
-                                $dateTo = $staffLeaveRecord['date_to']->format('Y-m-d');
-                                if ($dateFrom <= $key && $dateTo >= $key) {
-                                    $leaveRecord['isFullDay'] = $staffLeaveRecord['full_day'];
-                                    $leaveRecord['startTime'] = $this->formatTime($staffLeaveRecord['start_time']);
-                                    $leaveRecord['endTime'] = $this->formatTime($staffLeaveRecord['end_time']);
-                                    $leaveRecord['staffLeaveTypeName'] = $staffLeaveRecord['_matchingData']['StaffLeaveTypes']['name'];
-                                    $leaveRecords[] = $leaveRecord;
-                                }
-                            }
-                            $url = Router::url([
-                                'plugin' => 'Institution',
-                                'controller' => 'Institutions',
-                                'action' => 'StaffLeave',
-                                'index',
-                                'user_id' => $staffId
-                            ]);
-                            $staffTimeRecords[$key]['leave'] = $leaveRecords;
-                            $staffTimeRecords[$key]['url'] = $url;
-                        }
-                        $row->attendance = $staffTimeRecords;
-                        return $row;
-                    });
-                });
-
-            return $query;
-        } else {
-            $query = $query
-                ->matching('Users')
-                // ->innerJoin(
-                //     [$InstitutionStaffShiftsTable->alias() => $InstitutionStaffShiftsTable->table()],
-                //     [
-                //         $InstitutionStaffShiftsTable->aliasField('staff_id = ') . $this->aliasField('staff_id')
-                //     ]
-                //     )
-                ->leftJoin([$positions->alias() => $positions->table()],
-                    [$positions->aliasField('id = ') . $this->aliasField('institution_position_id')])
-                ->where(
-                    [
-                        $this->aliasField('institution_id') => $institutionId,
-                        $this->aliasField('staff_status_id') => 1,
-                        $positions->aliasField('shift_id') => $shiftId
-                    ]
-                )
-                ->order([
-                    $this->Users->aliasField('first_name')
-                ])
-                ->group([
-                    $this->aliasField('staff_id')
-                ])
-                ->formatResults(function (ResultSetInterface $results) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
-                    // echo "<pre>";print_r($results);die('ok');
-                    return $results->map(function ($row) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
-                        $staffId = $row->staff_id;
-                        $staffRecords = [];
-                        $staffLeaveRecords = [];
-
-                        if (!empty($row->_matchingData['Users']->photo_name)) {
-                            $row['photo_content'] = base64_encode(stream_get_contents($row->_matchingData['Users']->photo_content));
-                        }
-
-                        if (array_key_exists($staffId, $attendanceByStaffIdRecords)) {
-                            $staffRecords = $attendanceByStaffIdRecords[$staffId];
-                        }
-
-                        if (array_key_exists($staffId, $leaveByStaffIdRecords)) {
-                            $staffLeaveRecords = $leaveByStaffIdRecords[$staffId];
-                            $staffLeaveRecords = array_slice($staffLeaveRecords, 0, 2);
-                        }
-
-                        $staffTimeRecords = [];
-                        foreach ($workingDaysArr as $dateObj) {
-                            $dateStr = $dateObj->format('Y-m-d');
-                            $formattedDate = $this->formatDate($dateObj);
-
-                            $found = false;
-                            foreach ($staffRecords as $attendanceRecord) {
-                                $staffAttendanceDate = $attendanceRecord['date']->format('Y-m-d');
-
-                                if ($dateStr == $staffAttendanceDate) {
-                                    $found = true;
-                                    //isNew determines if record is existing data
-                                    $attendanceData = [
-                                        'dateStr' => $dateStr,
-                                        'date' => $this->formatDate($attendanceRecord['date']),
-                                        'time_in' => $this->formatTime($attendanceRecord['time_in']),
-                                        'time_out' => $this->formatTime($attendanceRecord['time_out']),
-                                        'comment' => $attendanceRecord['comment'],
-                                        'absence_type_id' => $attendanceRecord['absence_type_id'],
-                                        'isNew' => false
-                                    ];
-                                    break;
-                                }
-                            }
-                            if (!$found) {
-                                $attendanceData = [
-                                    'dateStr' => $dateStr,
-                                    'date' => $formattedDate,
-                                    'time_in' => null,
-                                    'time_out' => null,
-                                    'comment' => null,
-                                    'absence_type_id' => null,
-                                    'isNew' => true
-                                ];
-                            }
-                            $staffTimeRecords[$dateStr] = $attendanceData;
-                            if ($dayId != -1) {
-                                $row->date = $dateStr;
-                            }
-                            $historyUrl = Router::url([
-                                'plugin' => 'Staff',
-                                'controller' => 'Staff',
-                                'action' => 'InstitutionStaffAttendanceActivities',
-                                'index',
-                                'user_id' => $staffId
-                            ]);
-                            $row->historyUrl = $historyUrl;
-                        }
-                        // gets all the staff leave
-                        foreach ($staffTimeRecords as $key => $staffTimeRecord) {
-                            $leaveRecords = [];
-                            foreach ($staffLeaveRecords as $staffLeaveRecord) {
-                                $dateFrom = $staffLeaveRecord['date_from']->format('Y-m-d');
-                                $dateTo = $staffLeaveRecord['date_to']->format('Y-m-d');
-                                if ($dateFrom <= $key && $dateTo >= $key) {
-                                    $leaveRecord['isFullDay'] = $staffLeaveRecord['full_day'];
-                                    $leaveRecord['startTime'] = $this->formatTime($staffLeaveRecord['start_time']);
-                                    $leaveRecord['endTime'] = $this->formatTime($staffLeaveRecord['end_time']);
-                                    $leaveRecord['staffLeaveTypeName'] = $staffLeaveRecord['_matchingData']['StaffLeaveTypes']['name'];
-                                    $leaveRecords[] = $leaveRecord;
-                                }
-                            }
-                            $url = Router::url([
-                                'plugin' => 'Institution',
-                                'controller' => 'Institutions',
-                                'action' => 'StaffLeave',
-                                'index',
-                                'user_id' => $staffId
-                            ]);
-                            $staffTimeRecords[$key]['leave'] = $leaveRecords;
-                            $staffTimeRecords[$key]['url'] = $url;
-                        }
-                        $row->attendance = $staffTimeRecords;
-                        return $row;
-                    });
-                });
-            return $query;
-            //POCOR-6971[END]
-        }
-
+        return $query;
     }
 
     public function findAllStaffAttendancesArchived(Query $query, array $options)
     {
-        $InstitutionStaffAttendances = TableRegistry::get('Institution.InstitutionStaffAttendancesArchive');
-        $InstitutionStaffShiftsTable = TableRegistry::get('Institution.InstitutionStaffShifts');
-        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $StaffLeaveTable = TableRegistry::get('Institution.StaffLeaveArchived');
-        $institutionId = $options['institution_id'];
-        $academicPeriodId = $options['academic_period_id'];
-        $ownAttendanceView = $options['own_attendance_view'];
-        $otherAttendanceView = $options['other_attendance_view'];
-        $shiftId = $options['shift_id'];
-        $weekStartDate = $options['week_start_day'];
-        $weekEndDate = $options['week_end_day'];
 
-        $dayId = $options['day_id'];
-        $dayDate = $options['day_date'];
-        //POCOR-6971[START]
-        $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
-        $InstitutionShiftsTable = TableRegistry::get('Institution.InstitutionShifts');
-        $InstitutionStaffAttendancesData = TableRegistry::get('Institution.InstitutionStaffAttendancesArchive');
-        $positions = TableRegistry::get('Institution.InstitutionPositions');
-        $staff = TableRegistry::get('institution_staff');
-        $InstitutionShiftsData = $InstitutionShiftsTable->find()
-            ->select([$InstitutionShiftsTable->aliasField('start_time'), $InstitutionShiftsTable->aliasField('end_time'), $InstitutionShiftsTable->aliasField('id')])
-            ->where([
-                $InstitutionShiftsTable->aliasField('shift_option_id') => $shiftId, //add
-                $InstitutionShiftsTable->aliasField('academic_period_id') => $academicPeriodId, //add
-                $InstitutionShiftsTable->aliasField('institution_id') => $institutionId //add
-            ])->first();
-        //POCOR-6971[END]
-        $staffShiftStartTime = date("H:i:s", strtotime($InstitutionShiftsData['start_time']));
-        $staffShiftEndTime = date("H:i:s", strtotime($InstitutionShiftsData['end_time']));
-        // one day
-        if ($dayId != -1) {
-            $weekStartDate = $dayDate;
-            $weekEndDate = $dayDate;
-            $where = [
-                $InstitutionStaffAttendances->aliasField("date >= '") . $weekEndDate . "'",
-                $InstitutionStaffAttendances->aliasField("date <= '") . $weekStartDate . "'"
-            ];
-        } else {
-            $where = [
-                'OR' => [
-                    [
-                        $StaffLeaveTable->aliasField("date <= '") . $weekEndDate . "'",
-                        $StaffLeaveTable->aliasField("date >= '") . $weekStartDate . "'"
-                    ],
-                    [
-                        $StaffLeaveTable->aliasField("date <= '") . $weekEndDate . "'",
-                        $StaffLeaveTable->aliasField("date >= '") . $weekStartDate . "'"
-                    ],
-                    [
-                        $StaffLeaveTable->aliasField("date <= '") . $weekEndDate . "'",
-                        $StaffLeaveTable->aliasField("date >= '") . $weekStartDate . "'"
-                    ],
-                    [
-                        $StaffLeaveTable->aliasField("date <= '") . $weekStartDate . "'",
-                        $StaffLeaveTable->aliasField("date >= '") . $weekEndDate . "'"
-                    ]
-                ]
-            ];
-        }
+        $institutionId = self::getFromArray($options, 'institution_id');
+        $academicPeriodId = self::getFromArray($options, 'academic_period_id');
+        $ownAttendanceView = self::getFromArray($options, 'own_attendance_view');
+        $otherAttendanceView = self::getFromArray($options, 'other_attendance_view');
+        $shiftId = self::getFromArray($options, 'shift_id');
+        $weekStartDate = self::getFromArray($options, 'week_start_day');
+        $weekEndDate = self::getFromArray($options, 'week_end_day');
+        $dayId = self::getFromArray($options, 'day_id');
+        //if -1 = that means all days of the week
+        $dayDate = self::getFromArray($options, 'day_date');
+        $superAdmin = $options['user']['super_admin'];
+        $user_id = $options['user']['id'];
+        $archive = true;
+        $conditionQuery = [
+            $this->aliasField('institution_id') => $institutionId,
+//            $this->aliasField('staff_status_id') => 1,
+        ];
 
-        //Gets all the days in the selected week based on its start date end date
-        $startDate = new DateTime($weekStartDate);
-        $endDate = new DateTime($weekEndDate);
-        $interval = new DateInterval('P1D');
-        $daterange = new DatePeriod($startDate, $interval, $endDate->modify('+1 day'));
-        // To get all the dates of the working days only
-        $workingDaysArr = [];
-        $workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
-        foreach ($daterange as $date) {
-            // $dayText = $date->format('l');
-            $dayText = 'Friday';
-            if (in_array($dayText, $workingDays)) {
-                $workingDaysArr[] = $date;
+        if ($superAdmin == 0) {
+            $conditionQuery = $this->setConditionQueryForUser($ownAttendanceView, $otherAttendanceView, $user_id, $conditionQuery);
+            if ($conditionQuery == null) {
+                $query->where("1 = 0");
+                return $query;
             }
         }
 
-        // if($shiftId == -1){
-        //     $allStaffAttendances = $InstitutionStaffAttendances
-        //     ->find('all')
-        //     ->leftJoin([$staff->alias() => $staff->table()],
-        //                 [$staff->aliasField('staff_id = ') . $InstitutionStaffAttendances->aliasField('staff_id')])
-        //     /*->leftJoin([$positions->alias() => $positions->table()],
-        //                 [$positions->aliasField('id = ') . $staff->aliasField('institution_position_id')])*/
-        //     ->where([
-        //         $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
-        //         $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
-        //         $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'"
-        //     ])
-        //     ->hydrate(false)
-        //     ->toArray();
-        // }
-        // echo "<pre>";print_r($where);die;
-        if ($shiftId == -1) {
-            $Users = $this->Users;
-            $query = $query
-                ->select([
-                    $InstitutionStaffAttendances->aliasField('time_in'),
-                    $InstitutionStaffAttendances->aliasField('time_out'),
-                    $InstitutionStaffAttendances->aliasField('comment'),
-                    $Users->aliasField('openemis_no'),
-                    $Users->aliasField('first_name'),
-                    $Users->aliasField('middle_name'),
-                    $Users->aliasField('third_name'),
-                    $Users->aliasField('last_name'),
-                    $Users->aliasField('preferred_name')
-                ])
-                ->matching('Users')
-                ->leftJoin([$InstitutionStaffAttendances->alias() => $InstitutionStaffAttendances->table()],
-                    [$this->aliasField('staff_id = ') . $InstitutionStaffAttendances->aliasField('staff_id')])
-                ->where(
-                    [
-                        $InstitutionStaffAttendances->aliasField('institution_id ') => $institutionId,
-                        $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
-                        $where
-                    ]
-                )
-                ->order([
-                    $this->Users->aliasField('first_name')
-                ])
-                ->group([
-                    $this->aliasField('staff_id')
-                ]);
-            return $query;
-        }
+        //if $dayId != -1 then $weekStartDate = $weekEndDate
+        list($weekStartDate, $weekEndDate) =
+            $this->resetWeekStartEndForOneDaySearch($dayId, $dayDate, $weekStartDate, $weekEndDate);
+
+        $attendanceByStaffIdRecords = $this->getAttendanceByStaffIdRecordsArray(
+            $institutionId,
+            $academicPeriodId,
+            $weekStartDate,
+            $weekEndDate,
+            $shiftId,
+            $archive);
+
+        $leaveByStaffIdRecords = $this->getLeaveByStaffIdRecordsArray(
+            $institutionId,
+            $academicPeriodId,
+            $weekStartDate,
+            $weekEndDate,
+            $archive);
+
+        $conditionQuery = $this->setConditionQueryForDates($weekStartDate, $weekEndDate, $conditionQuery);
+        //POCOR-6971[START]
+
+        //Gets all the days in the selected week based on its start date end date
+        $workingDaysArr = $this->getWorkingDays($weekStartDate, $weekEndDate);
+
+//        $query = $this->getQueryWithShiftId($query, $shiftId);
+        $query = $query
+            ->matching('Users')
+            ->where(
+                [
+                    $conditionQuery
+                ]
+            )
+            ->order([
+                $this->Users->aliasField('first_name')
+            ])
+            ->group([
+                $this->aliasField('staff_id')
+            ])
+            ->formatResults($this->getFormattedStaffAttendanceArchivedRow($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $day_id));
+
+        return $query;
+
 
     }
+
+    /**
+     * common proc to show related field with id in the index table
+     * @param $tableName
+     * @param $relatedField
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function getRelatedRecord($tableName, $relatedField)
+    {
+        if (!$relatedField) {
+            return null;
+        }
+        $Table = TableRegistry::get($tableName);
+        try {
+            $related = $Table->get($relatedField);
+            return $related->toArray();
+        } catch (RecordNotFoundException $e) {
+            return null;
+        }
+        return null;
+    }
+
+    /**
+     * common proc to show related field with id in the index table
+     * @param $tableName
+     * @param $relatedField
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function getRelatedName($tableName, $relatedField)
+    {
+        if (!$relatedField) {
+            return null;
+        }
+        $Table = TableRegistry::get($tableName);
+        try {
+            $related = $Table->get($relatedField);
+            return $related->name;
+        } catch (RecordNotFoundException $e) {
+            return 'RecordNotFoundException';
+        }
+        return null;
+    }
+
 
     public function beforeFind(Event $event, Query $query, ArrayObject $options)
     {
@@ -3748,6 +3398,469 @@ class StaffTable extends ControllerActionTable
 
         return $staffShiftsData;
 
+    }
+
+    /**
+     * @param $dayId
+     * @param $dayDate
+     * @param $weekStartDate
+     * @param $weekEndDate
+     * @return array
+     */
+    private function resetWeekStartEndForOneDaySearch($dayId, $dayDate, $weekStartDate, $weekEndDate)
+    {
+        if ($dayId != -1) {
+            $weekStartDate = $dayDate;
+            $weekEndDate = $dayDate;
+        }
+        return array($weekStartDate, $weekEndDate);
+    }
+
+    /**
+     * @param $weekStartDate
+     * @param $weekEndDate
+     * @param bool $archive
+     * @return array
+     */
+
+    private function setWhereForLeaveTable($weekStartDate, $weekEndDate, $archive = false)
+    {
+        if (!$archive) {
+            $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+        }
+        if ($archive) {
+            $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
+        }
+        if ($weekEndDate == $weekStartDate) {
+            $whereForLeaveTable = [
+                $StaffLeaveTable->aliasField("date_to >= '") . $weekEndDate . "'",
+                $StaffLeaveTable->aliasField("date_from <= '") . $weekStartDate . "'"
+            ];
+        } else {
+            $whereForLeaveTable = [
+                'OR' => [
+                    [
+                        $StaffLeaveTable->aliasField("date_to <= '") . $weekEndDate . "'",
+                        $StaffLeaveTable->aliasField("date_from >= '") . $weekStartDate . "'"
+                    ],
+                    [
+                        $StaffLeaveTable->aliasField("date_to <= '") . $weekEndDate . "'",
+                        $StaffLeaveTable->aliasField("date_to >= '") . $weekStartDate . "'"
+                    ],
+                    [
+                        $StaffLeaveTable->aliasField("date_from <= '") . $weekEndDate . "'",
+                        $StaffLeaveTable->aliasField("date_from >= '") . $weekStartDate . "'"
+                    ],
+                    [
+                        $StaffLeaveTable->aliasField("date_from <= '") . $weekStartDate . "'",
+                        $StaffLeaveTable->aliasField("date_to >= '") . $weekEndDate . "'"
+                    ]
+                ]
+            ];
+        }
+        return $whereForLeaveTable;
+    }
+
+    /**
+     * Gets all the days in the selected week based on its start date end date
+     * @param $weekStartDate
+     * @param $weekEndDate
+     * @return array
+     * @throws \Exception
+     */
+    private function getWorkingDays($weekStartDate, $weekEndDate)
+    {
+        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $startDate = new DateTime($weekStartDate);
+        $endDate = new DateTime($weekEndDate);
+        $interval = new DateInterval('P1D');
+        $daterange = new DatePeriod($startDate, $interval, $endDate->modify('+1 day'));
+        // To get all the dates of the working days only
+        $workingDaysArr = [];
+        $workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
+        foreach ($daterange as $date) {
+            $dayText = $date->format('l');
+            if (in_array($dayText, $workingDays)) {
+                $workingDaysArr[] = $date;
+            }
+        }
+        return $workingDaysArr;
+    }
+
+    /**
+     * @param $ownAttendanceView
+     * @param $otherAttendanceView
+     * @param $user_id
+     * @param array $conditionQuery
+     * @return array|null
+     */
+    private function setConditionQueryForUser($ownAttendanceView, $otherAttendanceView, $user_id, array $conditionQuery)
+    {
+        if ($ownAttendanceView == 0 && $otherAttendanceView == 0) {
+            $conditionQuery = null;
+        }
+        if ($ownAttendanceView == 1 && $otherAttendanceView == 0) {
+            $conditionQuery[$this->aliasField('staff_id')] = $user_id;
+        } elseif ($ownAttendanceView == 0 && $otherAttendanceView == 1) {
+            $conditionQuery[$this->aliasField('staff_id != ')] = $user_id;
+        }
+        return $conditionQuery;
+    }
+
+    /**
+     * @param $weekStartDate
+     * @param $weekEndDate
+     * @param $conditionQuery
+     * @return array
+     */
+    private function setConditionQueryForDates($weekStartDate, $weekEndDate, $conditionQuery)
+    {
+        $conditionQuery[$this->aliasField('start_date <= ')] = $weekStartDate;
+        $conditionQuery[$this->aliasField('start_date <= ')] = $weekEndDate;
+        $conditionQuery['OR'] = [
+            $this->aliasField('end_date is ') => null,
+            $this->aliasField('end_date >= ') => $weekEndDate
+        ];
+        return $conditionQuery;
+    }
+
+    /**
+     * @param $institutionId
+     * @param $academicPeriodId
+     * @param $weekStartDate
+     * @param $weekEndDate
+     * @param $shiftId
+     * @return array
+     */
+    private function getAttendanceByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $shiftId, $archive = false)
+    {
+        if (!$archive) {
+            $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
+            $positions = TableRegistry::get('Institution.InstitutionPositions');
+            $staff = TableRegistry::get('institution_staff');
+            $allStaffAttendancesQuery = $InstitutionStaffAttendances
+                ->find('all')
+                ->where([
+                    $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
+                    $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
+                    $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
+                    $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
+                ]);
+
+            if ($shiftId != -1) {
+                $allStaffAttendancesQuery = $allStaffAttendancesQuery
+                    ->leftJoin([$staff->alias() => $staff->table()],
+                        [$staff->aliasField('staff_id = ') . $InstitutionStaffAttendances->aliasField('staff_id')])
+                    ->leftJoin([$positions->alias() => $positions->table()],
+                        [$positions->aliasField('id = ') . $staff->aliasField('institution_position_id')])
+                    ->where([
+                        $positions->aliasField('shift_id') => $shiftId,
+                    ]);
+            }
+        }
+        if ($archive) {
+            $InstitutionStaffAttendances = ArchiveConnections::getArchiveTable('institution_staff_attendances');
+            $allStaffAttendancesQuery = $InstitutionStaffAttendances
+                ->find('all')
+                ->where([
+                    $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
+                    $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
+                    $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
+                    $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
+                ]);
+
+        }
+
+        $allStaffAttendances = $allStaffAttendancesQuery
+            ->hydrate(false)
+            ->toArray();
+
+        $attendanceByStaffIdRecords = Hash::combine($allStaffAttendances, '{n}.id', '{n}', '{n}.staff_id');
+        return $attendanceByStaffIdRecords;
+    }
+
+    /**
+     * @param $institutionId
+     * @param $academicPeriodId
+     * @param $weekStartDate
+     * @param $weekEndDate
+     * @return array
+     */
+    private function getLeaveByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $archive = false)
+    {
+        $whereForLeaveTable = $this->setWhereForLeaveTable($weekStartDate, $weekEndDate, $archive);
+        if (!$archive) {
+            $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+            $allStaffLeaves = $StaffLeaveTable
+                ->find()
+                ->matching('StaffLeaveTypes')
+                // ->matching('Statuses')
+                ->where([
+                    $StaffLeaveTable->aliasField('institution_id ') => $institutionId,
+                    $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
+                    $whereForLeaveTable
+                ])
+                ->hydrate(false)
+                ->toArray();
+        }
+        if ($archive) {
+            $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
+            $allStaffLeaves = $StaffLeaveTable
+                ->find()
+//                ->matching('StaffLeaveTypes')
+//                // ->matching('Statuses')
+                ->where([
+                    $StaffLeaveTable->aliasField('institution_id ') => $institutionId,
+                    $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
+                    $whereForLeaveTable
+                ])
+                ->hydrate(false)
+                ->toArray();
+        }
+        $leaveByStaffIdRecords = Hash::combine($allStaffLeaves, '{n}.id', '{n}', '{n}.staff_id');
+        return $leaveByStaffIdRecords;
+    }
+
+    /**
+     * @param Query $query
+     * @param $shiftId
+     * @return Query
+     */
+    private function getQueryWithShiftId(Query $query, $shiftId)
+    {
+        $positions = TableRegistry::get('institution_positions');
+        if ($shiftId != -1) {
+            $query = $query
+                ->leftJoin([$positions->alias() => $positions->table()],
+                    [$positions->aliasField('id = ') . $this->aliasField('institution_position_id')])
+                ->where(
+                    [
+                        $positions->aliasField('shift_id') => $shiftId,
+                    ]
+                );
+        }
+        return $query;
+    }
+
+    /**
+     * @param array $attendanceByStaffIdRecords
+     * @param array $leaveByStaffIdRecords
+     * @param array $workingDaysArr
+     * @param $dayId
+     * @return \Closure
+     */
+    private function getFormattedStaffAttendanceRow(
+        array $attendanceByStaffIdRecords,
+        array $leaveByStaffIdRecords,
+        array $workingDaysArr,
+        $dayId)
+    {
+        return function (ResultSetInterface $results) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
+            return $results->map(function ($row) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
+                $staffId = $row->staff_id;
+                $staffRecords = [];
+                $staffLeaveRecords = [];
+
+                if (!empty($row->_matchingData['Users']->photo_name)) {
+                    $row['photo_content'] = base64_encode(stream_get_contents($row->_matchingData['Users']->photo_content));
+                }
+
+                if (array_key_exists($staffId, $attendanceByStaffIdRecords)) {
+                    $staffRecords = $attendanceByStaffIdRecords[$staffId];
+                }
+
+                if (array_key_exists($staffId, $leaveByStaffIdRecords)) {
+                    $staffLeaveRecords = $leaveByStaffIdRecords[$staffId];
+                    $staffLeaveRecords = array_slice($staffLeaveRecords, 0, 2);
+                }
+
+                $staffTimeRecords = [];
+                foreach ($workingDaysArr as $dateObj) {
+                    $dateStr = $dateObj->format('Y-m-d');
+                    $formattedDate = $this->formatDate($dateObj);
+
+                    $found = false;
+                    foreach ($staffRecords as $attendanceRecord) {
+                        $staffAttendanceDate = $attendanceRecord['date']->format('Y-m-d');
+
+                        if ($dateStr == $staffAttendanceDate) {
+                            $found = true;
+                            //isNew determines if record is existing data
+                            $attendanceData = [
+                                'dateStr' => $dateStr,
+                                'date' => $this->formatDate($attendanceRecord['date']),
+                                'time_in' => $this->formatTime($attendanceRecord['time_in']),
+                                'time_out' => $this->formatTime($attendanceRecord['time_out']),
+                                'comment' => $attendanceRecord['comment'],
+                                'absence_type_id' => $attendanceRecord['absence_type_id'],
+                                'isNew' => false
+                            ];
+                            break;
+                        }
+                    }
+                    if (!$found) {
+                        $attendanceData = [
+                            'dateStr' => $dateStr,
+                            'date' => $formattedDate,
+                            'time_in' => null,
+                            'time_out' => null,
+                            'comment' => null,
+                            'absence_type_id' => null,
+                            'isNew' => true
+                        ];
+                    }
+                    $staffTimeRecords[$dateStr] = $attendanceData;
+                    if ($dayId != -1) {
+                        $row->date = $dateStr;
+                    }
+                    $historyUrl = Router::url([
+                        'plugin' => 'Staff',
+                        'controller' => 'Staff',
+                        'action' => 'InstitutionStaffAttendanceActivities',
+                        'index',
+                        'user_id' => $staffId
+                    ]);
+                    $row->historyUrl = $historyUrl;
+                }
+                // gets all the staff leave
+                foreach ($staffTimeRecords as $key => $staffTimeRecord) {
+                    $leaveRecords = [];
+                    foreach ($staffLeaveRecords as $staffLeaveRecord) {
+                        $dateFrom = $staffLeaveRecord['date_from']->format('Y-m-d');
+                        $dateTo = $staffLeaveRecord['date_to']->format('Y-m-d');
+                        if ($dateFrom <= $key && $dateTo >= $key) {
+                            $leaveRecord['isFullDay'] = $staffLeaveRecord['full_day'];
+                            $leaveRecord['startTime'] = $this->formatTime($staffLeaveRecord['start_time']);
+                            $leaveRecord['endTime'] = $this->formatTime($staffLeaveRecord['end_time']);
+                            $leaveRecord['staffLeaveTypeName'] = $staffLeaveRecord['_matchingData']['StaffLeaveTypes']['name'];
+                            $leaveRecords[] = $leaveRecord;
+                        }
+                    }
+                    $url = Router::url([
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'StaffLeave',
+                        'index',
+                        'user_id' => $staffId
+                    ]);
+                    $staffTimeRecords[$key]['leave'] = $leaveRecords;
+                    $staffTimeRecords[$key]['url'] = $url;
+                }
+                $row->attendance = $staffTimeRecords;
+                return $row;
+            });
+        };
+    }
+
+    /**
+     * @param $attendanceByStaffIdRecords
+     * @param $leaveByStaffIdRecords
+     * @param $workingDaysArr
+     * @param $day_id
+     * @return \Closure
+     */
+    private function getFormattedStaffAttendanceArchivedRow($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $day_id)
+    {
+        return function (ResultSetInterface $results) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $day_id) {
+            return $results->map(function ($row) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
+                $staffId = $row->staff_id;
+                $staffRecords = [];
+                $staffLeaveRecords = [];
+
+                if (!empty($row->_matchingData['Users']->photo_name)) {
+                    $row['photo_content'] = base64_encode(stream_get_contents($row->_matchingData['Users']->photo_content));
+                }
+
+                if (array_key_exists($staffId, $attendanceByStaffIdRecords)) {
+                    $staffRecords = $attendanceByStaffIdRecords[$staffId];
+                }
+
+                if (array_key_exists($staffId, $leaveByStaffIdRecords)) {
+                    $staffLeaveRecords = $leaveByStaffIdRecords[$staffId];
+                    $staffLeaveRecords = array_slice($staffLeaveRecords, 0, 2);
+                }
+
+                $staffTimeRecords = [];
+                foreach ($workingDaysArr as $dateObj) {
+                    $dateStr = $dateObj->format('Y-m-d');
+                    $formattedDate = $this->formatDate($dateObj);
+
+                    $found = false;
+                    foreach ($staffRecords as $attendanceRecord) {
+                        $staffAttendanceDate = $attendanceRecord['date']->format('Y-m-d');
+
+                        if ($dateStr == $staffAttendanceDate) {
+                            $found = true;
+                            //isNew determines if record is existing data
+                            $attendanceData = [
+                                'dateStr' => $dateStr,
+                                'date' => $this->formatDate($attendanceRecord['date']),
+                                'time_in' => $this->formatTime($attendanceRecord['time_in']),
+                                'time_out' => $this->formatTime($attendanceRecord['time_out']),
+                                'comment' => $attendanceRecord['comment'],
+                                'absence_type_id' => $attendanceRecord['absence_type_id'],
+                                'isNew' => false
+                            ];
+                            break;
+                        }
+                    }
+                    if (!$found) {
+                        $attendanceData = [
+                            'dateStr' => $dateStr,
+                            'date' => $formattedDate,
+                            'time_in' => null,
+                            'time_out' => null,
+                            'comment' => null,
+                            'absence_type_id' => null,
+                            'isNew' => true
+                        ];
+                    }
+                    $staffTimeRecords[$dateStr] = $attendanceData;
+                    if ($dayId != -1) {
+                        $row->date = $dateStr;
+                    }
+                    $historyUrl = Router::url([
+                        'plugin' => 'Staff',
+                        'controller' => 'Staff',
+                        'action' => 'InstitutionStaffAttendanceActivities',
+                        'index',
+                        'user_id' => $staffId
+                    ]);
+                    $row->historyUrl = $historyUrl;
+                }
+                // gets all the staff leave
+                foreach ($staffTimeRecords as $key => $staffTimeRecord) {
+
+                    $leaveRecords = [];
+                    foreach ($staffLeaveRecords as $staffLeaveRecord) {
+                        $dateFrom = $staffLeaveRecord['date_from']->format('Y-m-d');
+                        $dateTo = $staffLeaveRecord['date_to']->format('Y-m-d');
+                        $tableName = 'staff_leave_types';
+                        $relatedField = $staffLeaveRecord['staff_leave_type_id'];
+                        $leaveTypeName = self::getRelatedName($tableName, $relatedField);
+
+                        if ($dateFrom <= $key && $dateTo >= $key) {
+                            $leaveRecord['isFullDay'] = $staffLeaveRecord['full_day'];
+                            $leaveRecord['startTime'] = $this->formatTime($staffLeaveRecord['start_time']);
+                            $leaveRecord['endTime'] = $this->formatTime($staffLeaveRecord['end_time']);
+                            $leaveRecord['staffLeaveTypeName'] = $leaveTypeName;
+                            $leaveRecords[] = $leaveRecord;
+                        }
+                    }
+                    $url = Router::url([
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'StaffLeave',
+                        'index',
+                        'user_id' => $staffId
+                    ]);
+                    $staffTimeRecords[$key]['leave'] = $leaveRecords;
+                    $staffTimeRecords[$key]['url'] = $url;
+                }
+                $row->attendance = $staffTimeRecords;
+                return $row;
+            });
+        };
     }
 
 
@@ -4067,26 +4180,6 @@ class StaffTable extends ControllerActionTable
         return $query;
     }
 
-    /**
-     * common proc to show related field with id in the index table
-     * @param $tableName
-     * @param $relatedField
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
-     */
-    private static function getRelatedRecord($tableName, $relatedField)
-    {
-        if (!$relatedField) {
-            null;
-        }
-        $Table = TableRegistry::get($tableName);
-        try {
-            $related = $Table->get($relatedField);
-            return $related->toArray();
-        } catch (RecordNotFoundException $e) {
-            null;
-        }
-        return null;
-    }
 
     /**
      * @param $tableName
