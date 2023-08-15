@@ -150,6 +150,7 @@ class TransferLogsTable extends ControllerActionTable
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
         // End POCOR-5188
+        $this->clearPendingProcesses();
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
@@ -442,33 +443,6 @@ class TransferLogsTable extends ControllerActionTable
         $this->log($shellName, 'debug');
         $session = $this->Session;
         $superAdmin = $session->read('Auth.User.super_admin');
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
-        $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
-        foreach ($runningProcess as $key => $processData) {
-            $process_params = (array)json_decode($processData['params']);
-            $systemProcessId = $processData['id'];
-            $transfer_log_pid = isset($process_params['pid']) ? $process_params['pid'] : null;
-            $process_academic_period_id = isset($process_params['academic_period_id']) ? $process_params['academic_period_id'] : null;
-            $php_process_id = isset($processData['process_id']) ? $processData['process_id'] : 0;
-            $isPhpProcessRunning = self::isPhpProcessRunning($php_process_id);
-            if ($transfer_log_pid == null) {
-                $this->log("gonna kill $systemProcessId", 'debug');
-                if ($isPhpProcessRunning) {
-                    $SystemProcesses::killProcess($php_process_id);
-                    self::setSystemProcessFailed($systemProcessId);
-                }
-                if (!$isPhpProcessRunning) {
-                    self::setSystemProcessFailed($systemProcessId);
-                }
-            }
-            if ($transfer_log_pid != null) {
-                $this->log("not gonna kill $systemProcessId", 'debug');
-                if (!$isPhpProcessRunning) {
-                    self::setTransferLogsFailed($transfer_log_pid);
-                    self::setSystemProcessFailed($systemProcessId);
-                }
-            }
-        }
 
         if ($superAdmin == 1) {//POCOR-7399
             $academic_period_id = $entity->academic_period_id;
@@ -643,6 +617,37 @@ class TransferLogsTable extends ControllerActionTable
     private static function isPhpProcessRunning($php_process_id)
     {
         return posix_kill($php_process_id, 0) && posix_getsid($php_process_id) !== false;
+    }
+
+    private function clearPendingProcesses()
+    {
+        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
+        foreach ($runningProcess as $key => $processData) {
+            $process_params = (array)json_decode($processData['params']);
+            $systemProcessId = $processData['id'];
+            $transfer_log_pid = isset($process_params['pid']) ? $process_params['pid'] : null;
+            $process_academic_period_id = isset($process_params['academic_period_id']) ? $process_params['academic_period_id'] : null;
+            $php_process_id = isset($processData['process_id']) ? $processData['process_id'] : 0;
+            $isPhpProcessRunning = self::isPhpProcessRunning($php_process_id);
+            if ($transfer_log_pid == null) {
+                $this->log("gonna kill $systemProcessId", 'debug');
+                if ($isPhpProcessRunning) {
+                    $SystemProcesses::killProcess($php_process_id);
+                    self::setSystemProcessFailed($systemProcessId);
+                }
+                if (!$isPhpProcessRunning) {
+                    self::setSystemProcessFailed($systemProcessId);
+                }
+            }
+            if ($transfer_log_pid != null) {
+                $this->log("not gonna kill $systemProcessId", 'debug');
+                if (!$isPhpProcessRunning) {
+                    self::setTransferLogsFailed($transfer_log_pid);
+                    self::setSystemProcessFailed($systemProcessId);
+                }
+            }
+        }
     }
 
 }
