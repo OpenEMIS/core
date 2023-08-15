@@ -198,14 +198,10 @@ class CommonArchiveShell extends Shell
             $caller->out("Transfer failed $processName:  $processedDateTime");
             $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
             $caller->out("System process failed $processName:  $processedDateTime");
-            try{
-                // Enable keys on target table
-                $connection->execute("ALTER TABLE $targetTableName ENABLE KEYS");
-                // Enable foreign key checks
-                $connection->execute("SET FOREIGN_KEY_CHECKS = 1");
-            }catch (\Exception $xe){
-
-            }
+            // Enable keys on target table
+            $connection->execute("ALTER TABLE $targetTableName ENABLE KEYS");
+            // Enable foreign key checks
+            $connection->execute("SET FOREIGN_KEY_CHECKS = 1");
             throw $e;
         }
         return $affectedRecordsCount;
@@ -271,11 +267,11 @@ class CommonArchiveShell extends Shell
         $moved = $transferlog->features;
         if (strpos($moved, 'Moved') === false) {
             // If "Moved Records" string doesn't exist, add it with the batch number
-            $moved = trim($moved) . '. Finally: ' . number_format($movedRecordsCount, 0, '', ' ') . ' at '. $processInfo;
+            $moved = trim($moved) . '. Finally: ' . number_format($movedRecordsCount, 0, '', ' ') . ' at ' . $processInfo;
         } else {
             // If "Moved Records" string already exists, update the batch number
             $moved = preg_replace
-            ('/(Moved: \d+)/', 'Finally: ' . number_format($movedRecordsCount, 0, '', ' ') . ' at '. $processInfo,
+            ('/(Moved: \d+)/', 'Finally: ' . number_format($movedRecordsCount, 0, '', ' ') . ' at ' . $processInfo,
                 $moved, 1);
         }
 
