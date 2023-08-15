@@ -47,7 +47,7 @@ class ArchiveStudentAssessmentsShell extends Shell
         $tablesToArchive = [
             'assessment_item_results',
         ];
-        $processName = "Archive Student Assessments";
+        $processName = "ArchiveStudentAssessments";
         if ($academicPeriodId === 0) {
             $this->out('No valid academic period given');
             return;
@@ -55,7 +55,7 @@ class ArchiveStudentAssessmentsShell extends Shell
         $processedDateTime = date('d-m-Y H:i:s');
         $this->out("Initializing $processName:  $processedDateTime");
         $mypid = getmypid();
-        $systemProcessId = CommonArchiveShell::startArchiveTransferSystemProcess($academicPeriodId, $mypid, $processName);
+        $systemProcessId = CommonArchiveShell::startArchiveTransferSystemProcess($academicPeriodId, $mypid, $processName, $pid);
 
         $processedDateTime = CommonArchiveShell::setSystemProcessRunning($systemProcessId);
         $this->out($processedDateTime . ' - Running System PID:' . $systemProcessId);
