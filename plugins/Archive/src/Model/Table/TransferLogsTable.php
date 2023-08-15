@@ -122,7 +122,7 @@ class TransferLogsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('academic_period_id');
+        $this->field('academic_period_id', ['sort' => true]);
         $this->field('generated_on');
         $this->field('generated_by');
         $this->field('p_id', ['visible' => false]);
