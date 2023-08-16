@@ -814,6 +814,11 @@ class DataManagementCopyTable extends ControllerActionTable
             $this->triggerCopyShell('Risk', $copyFrom, $copyTo);
         }
         // End POCOR-5337
+        if ($entity->features == "Performance Competencies") {
+            $this->log('=======>Before triggerPerformanceCompetenciesShell', 'debug');
+            $this->triggePerformanceCompetenciesShell('PerformanceCompetencies',$entity->from_academic_period, $entity->to_academic_period, $entity->competency_criterias_value, $entity->competency_templates_value, $entity->competency_items_value);
+            $this->log(' <<<<<<<<<<======== After triggerPerformanceCompetenciesShell', 'debug');
+        }
     }
     
     // public function afterSave(Event $event, Entity $entity, ArrayObject $data){
