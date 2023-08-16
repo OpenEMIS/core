@@ -51,7 +51,7 @@ class WorkflowStaffLicenseTable extends AppTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
         $query = $this->addInstitutionJoinToQuery($query);
-        $this->log($query->sql(), 'debug');
+//        $this->log($query->sql(), 'debug');
     }
 
     public function onExcelGetOpenemisNo(Event $event, Entity $entity)
@@ -75,7 +75,11 @@ class WorkflowStaffLicenseTable extends AppTable
 //        $this->log($entity,'debug');
         $security_user_id = $entity['assignee_id'];
         $user = self::getRelatedRecord('security_users', $security_user_id);
-        return $user['first_name'] . ' ' . $user['last_name'];
+        if (isset($user['first_name']) && isset($user['last_name'])) {
+            return $user['first_name'] . ' ' . $user['last_name'];
+        } else {
+            return $entity['assignee_id'];
+        }
     }
 
     public function onExcelGetLicenseTypeId(Event $event, Entity $entity)
@@ -126,13 +130,13 @@ class WorkflowStaffLicenseTable extends AppTable
             ->innerJoin([$InstitutionStaffTable->alias() => $InstitutionStaffTable->table()], [
                 $InstitutionStaffTable->aliasField('staff_id = ') . $this->aliasField('security_user_id')
             ]);
-        $this->log($query->sql(), 'debug');
+//        $this->log($query->sql(), 'debug');
         $query
             ->innerJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
                 $InstitutionStaffTable->aliasField('institution_id = ') . $InstitutionsTable->aliasField('id')]);
-        $this->log($query->sql(), 'debug');
+//        $this->log($query->sql(), 'debug');
         $query->group([$this->aliasField('id')]);
-        $this->log($query->sql(), 'debug');
+//        $this->log($query->sql(), 'debug');
         return $query;
     }
 
