@@ -918,6 +918,7 @@ class ClassesProfilesTable extends ControllerActionTable
     public function publish(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
+        unset($params['area_id']); //POCOR-7663
         $result = $this->ClassProfiles->updateAll(['status' => self::PUBLISHED], $params);
         $this->Alert->success('ReportCardStatuses.publish');
         $event->stopPropagation();
