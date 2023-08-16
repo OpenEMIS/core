@@ -20,6 +20,7 @@ class UserGroupsListTable extends ControllerActionTable
 {
     use MessagesTrait;
     use HtmlTrait;
+    private $userGroupId;
 
     public function initialize(array $config)
     {
@@ -126,7 +127,8 @@ class UserGroupsListTable extends ControllerActionTable
     }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $userGroupId = $this->request->query['userGroupId']; 
+        $userGroupId = $this->request->query['userGroupId'];
+        $this->userGroupId = $userGroupId;
         $query->contain(['Users','SecurityRoles'])
         ->where([$this->aliasField('security_group_id')=>$userGroupId])
         ->order([$this->aliasField('created DESC')]);
@@ -147,8 +149,9 @@ class UserGroupsListTable extends ControllerActionTable
     public function onUpdateFieldSecurityRoleId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
+            $userGroupId = $this->request->query['userGroupId'];
             $attr['type'] = 'select';
-            $attr['options'] = TableRegistry::get('Security.SecurityRoles')->getSystemRolesList();
+            $attr['options'] = TableRegistry::get('Security.SecurityRoles')->getUserRolesList($userGroupId);
         }
 
         return $attr;
@@ -241,7 +244,7 @@ class UserGroupsListTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
     {
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+//        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $userGroupId = $this->request->query['userGroupId'];    
         $entity->security_group_id = $userGroupId;
     }
