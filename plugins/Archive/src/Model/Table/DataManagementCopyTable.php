@@ -287,24 +287,6 @@ class DataManagementCopyTable extends ControllerActionTable
                 $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
                 return false;
             }else{
-                //POCOR-7567 start
-                $msg=$this->testInfrastructureData($entity->from_academic_period);
-                if($msg!=""){
-                    if($msg=="building"){
-                            $this->Alert->warning('InstitutionBuildings.sizeGreater', ['reset' => true]);
-                            return false;
-                        
-                    }
-                    else if($msg=="floor"){
-                            $this->Alert->warning('InstitutionFloors.sizeGreater', ['reset' => true]);
-                            return false;
-                        }
-                    else if($msg=="room"){
-                            $this->Alert->warning('InstitutionRooms.sizeGreater', ['reset' => true]);
-                            return false;
-                    }
-                }
-                //POCOR-7567 end
                 $existRecord = $this->find('all',['conditions'=>[
                     'from_academic_period'=>$entity->from_academic_period,
                     'to_academic_period' => $entity->to_academic_period,
@@ -546,8 +528,8 @@ class DataManagementCopyTable extends ControllerActionTable
             foreach($row AS $rowData){
                 $InstitutionGrades->updateAll(
                     ['education_grade_id' => $rowData['correct_grade_id']],    //field
-                    ['education_grade_id' => $rowData['education_grade_id'], 'institution_id'=>$rowData['institution_id'],  'start_date' => $final_from_start_date, 'start_year' => $to_start_year]
-                );
+                    ['education_grade_id' => $rowData['education_grade_id'], 'academic_period_id' => $rowData['academic_period_id'], 'institution_id'=>$rowData['institution_id'],  'start_date' => $final_from_start_date, 'start_year' => $to_start_year]
+                );//updated for checking academic_period_also
             }
 
 
@@ -1443,68 +1425,5 @@ class DataManagementCopyTable extends ControllerActionTable
         return $matches;
     }
     //POCOR-7576-institution programme end 
-    private function testInfrastructureData($copyFrom){
-    
-        $msg="";
-            $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
-            $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
-            $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
-            $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
-            $Institutions = TableRegistry::get('Institution.Institutions');
-            $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
-
-            $InstitutionLandsData = $InstitutionLands
-                ->find('all')
-                ->where(['academic_period_id ' => $copyFrom])
-                ->toArray();
-            $institutions = $Institutions->find('all')->toArray();
-            $InsIds = [];
-            foreach($InstitutionLandsData as $ke => $institutionLand){
-                $InsIds[] = $institutionLand->institution_id;
-            }
-            foreach($institutions as $k => $Insti){ 
-             
-                if (in_array($Insti->id, $InsIds)) {
-                   $InstitutionLandDataa = $InstitutionLands
-                   ->find('all')
-                   ->where(['academic_period_id ' => $copyFrom,'institution_id'=> $Insti->id])
-                   ->first();
-                        $InstitutionBuildingData = $InstitutionBuildings
-                        ->find('all')
-                        ->where(['institution_land_id ' => $InstitutionLandDataa->id])
-                        ->toArray();
-                        foreach($InstitutionBuildingData as $kei=> $building){
-                            if($building->area >= $InstitutionLandDataa->area){//POOR-7567
-                               $msg="building";
-                               return $msg;
-                            }
-                                $InstitutionFloorData = $InstitutionFloors
-                                ->find('all')
-                                ->where(['institution_building_id ' => $building->id])
-                                ->toArray();
-
-                                foreach($InstitutionFloorData as $kkey => $floor){
-                                    if($floor->area >= $building->area){//POCOR-7567
-                                        $msg="floor";
-                                        return $msg;
-                                    }
-                                        
-                                        $InstitutionRoomData = $InstitutionRooms
-                                        ->find('all')
-                                        ->where(['institution_floor_id ' => $floor->id])
-                                        ->toArray();
-
-                                        foreach($InstitutionRoomData as $no=>$room){
-                                            if($room->area >= $floor->area){//POCOR-7567
-                                                $msg="room";
-                                                return $msg;
-                                            }
-                                         }
-                                }
-                        }
-                    }
-            }
-       
-       return $msg;
-    }
+   
 }
