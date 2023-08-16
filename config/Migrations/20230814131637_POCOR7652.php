@@ -15,7 +15,7 @@ class POCOR7652 extends AbstractMigration
         // Backup table
         $this->execute('CREATE TABLE `z_7652_meal_institution_programmes` LIKE `meal_institution_programmes`');
         $this->execute('INSERT INTO `z_7652_meal_institution_programmes` SELECT * FROM `meal_institution_programmes`');
-        $this->execute("ALTER TABLE tst_core_dmo.meal_institution_programmes DROP FOREIGN KEY meal_insti_progr_fk_are_id");
+        $this->execute("ALTER TABLE meal_institution_programmes DROP FOREIGN KEY meal_insti_progr_fk_are_id");
     }
     public function down()
     { 
