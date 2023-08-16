@@ -50,94 +50,220 @@ class WorkflowStaffLicenseTable extends AppTable
     //POCOR-7637
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
-        $query = $this->addInstitutionJoinToQuery($query);
-//        $this->log($query->sql(), 'debug');
+        $query->contain(['Users', 'Assignees', 'LicenseTypes', 'WorkflowSteps']);
+        $query->select(['id', 'license_number', 'issue_date', 'expiry_date', 'issuer', 'comments']);
+        $query = $this->addInstitutionStaffToQuery($query);
+        $query = $this->addInstitutionToQuery($query);
+        $query = $this->addGroupingToQuery($query);
+        $query = $this->addUserBasicFields($query);
+        $query = $this->addAssigneeBasicFields($query);
+        $query = $this->addLicenseTypeField($query);
+        $query = $this->addWorkflowStepField($query);
+        $query = $this->addInstitutionFields($query);
+        $this->log($query, 'debug');
+        return $query;
+
     }
 
-    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addUserBasicFields(Query $query)
     {
 
-        $security_user_id = $entity['security_user_id'];
-        $user = self::getRelatedRecord('security_users', $security_user_id);
-        return $user['openemis_no'];
-    }
-
-    public function onExcelGetSecurityUserId(Event $event, Entity $entity)
-    {
-//        $this->log($entity,'debug');
-        $security_user_id = $entity['security_user_id'];
-        $user = self::getRelatedRecord('security_users', $security_user_id);
-        return $user['first_name'] . ' ' . $user['last_name'];
-    }
-
-    public function onExcelGetAssigneeId(Event $event, Entity $entity)
-    {
-//        $this->log($entity,'debug');
-        $security_user_id = $entity['assignee_id'];
-        $user = self::getRelatedRecord('security_users', $security_user_id);
-        if (isset($user['first_name']) && isset($user['last_name'])) {
-            return $user['first_name'] . ' ' . $user['last_name'];
-        } else {
-            return $entity['assignee_id'];
-        }
-    }
-
-    public function onExcelGetLicenseTypeId(Event $event, Entity $entity)
-    {
-//        $this->log($entity,'debug');
-        $security_user_id = $entity['license_type_id'];
-        $user = self::getRelatedRecord('license_types', $security_user_id);
-        return $user['name'];
-    }
-
-    public function onExcelGetStatusId(Event $event, Entity $entity)
-    {
-//        $this->log($entity,'debug');
-        $security_user_id = $entity['status_id'];
-        $user = self::getRelatedRecord('workflow_steps', $security_user_id);
-        return $user['name'];
+        $query = $query->select([
+            'staff_name' => 'CONCAT(Users.first_name, " ", Users.last_name)',
+            'staff_openemis_no' => 'Users.openemis_no',
+        ]);
+        return $query;
     }
 
     /**
-     * common proc to show related field with id in the index table
-     * @param $tableName
-     * @param $relatedField
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @param Query $query
+     * @return Query
      */
-    private static function getRelatedRecord($tableName, $relatedField)
+    private function addInstitutionFields(Query $query)
     {
-        if (!$relatedField) {
-            return null;
-        }
-        $Table = TableRegistry::get($tableName);
-        try {
-            $related = $Table->get($relatedField);
-            return $related->toArray();
-        } catch (RecordNotFoundException $e) {
-            return null;
-        }
-        return null;
+        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $query = $query->select([
+            'institution_name' => $InstitutionsTable->aliasField('name'),
+            'institution_code' => $InstitutionsTable->aliasField('code')
+        ]);
+        return $query;
     }
 
     /**
-     * @param $query
+     * @param Query $query
+     * @return Query
      */
-    private function addInstitutionJoinToQuery($query)
+    private function addAssigneeBasicFields(Query $query)
+    {
+
+        $query = $query->select([
+            'assignee_name' => 'CONCAT(Assignees.first_name, " ", Assignees.last_name)',
+            'assignee_openemis_no' => 'Assignees.openemis_no',
+        ]);
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addLicenseTypeField(Query $query)
+    {
+
+        $query = $query->select([
+            'license_type' => 'LicenseTypes.name',
+        ]);
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addWorkflowStepField(Query $query)
+    {
+
+        $query = $query->select([
+            'workflow_step' => 'WorkflowSteps.name',
+        ]);
+        return $query;
+    }
+
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addInstitutionStaffToQuery(Query $query)
     {
         $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
         $query
             ->innerJoin([$InstitutionStaffTable->alias() => $InstitutionStaffTable->table()], [
                 $InstitutionStaffTable->aliasField('staff_id = ') . $this->aliasField('security_user_id')
             ]);
-//        $this->log($query->sql(), 'debug');
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addInstitutionToQuery(Query $query)
+    {
+        $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
         $query
             ->innerJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
                 $InstitutionStaffTable->aliasField('institution_id = ') . $InstitutionsTable->aliasField('id')]);
-//        $this->log($query->sql(), 'debug');
         $query->group([$this->aliasField('id')]);
-//        $this->log($query->sql(), 'debug');
         return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addGroupingToQuery(Query $query)
+    {
+
+        $query->group([$this->aliasField('id')]);
+        return $query;
+
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        //redeclare fields for sorting purpose.
+        $extraField[] = [
+            'key' => '',
+            'field' => 'staff_openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
+
+        $extraField[] = [
+            'key' => '',
+            'field' => 'staff_name',
+            'type' => 'string',
+            'label' => __('Staff')
+        ];
+
+        $extraField[] = [
+            'key' => '',
+            'field' => 'workflow_step',
+            'type' => 'string',
+            'label' => __('Status')
+        ];
+
+        $extraField[] = [
+            'key' => '',
+            'field' => 'assignee_name',
+            'type' => 'string',
+            'label' => __('Assignee')
+        ];
+
+        $extraField[] = [
+            'key' => '',
+            'field' => 'license_number',
+            'type' => 'string',
+            'label' => __('License Number')
+        ];
+
+        $extraField[] = [
+            'key' => 'issue_date',
+            'field' => 'issue_date',
+            'type' => 'date',
+            'label' => __('Issue Date')
+        ];
+
+        $extraField[] = [
+            'key' => 'expiry_date',
+            'field' => 'expiry_date',
+            'type' => 'date',
+            'label' => __('Expiry')
+        ];
+
+        $extraField[] = [
+            'key' => 'issuer',
+            'field' => 'issuer',
+            'type' => 'string',
+            'label' => __('Issuer')
+        ];
+
+        $extraField[] = [
+            'key' => 'comments',
+            'field' => 'comments',
+            'type' => 'string',
+            'label' => __('Comments')
+        ];
+
+        $extraField[] = [
+            'key' => '',
+            'field' => 'license_type',
+            'type' => 'string',
+            'label' => __('License Type')
+        ];
+
+         $extraField[] = [
+            'key' => '',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => __('Institution Name')
+        ];
+
+        $extraField[] = [
+            'key' => '',
+            'field' => 'institution_code',
+            'type' => 'string',
+            'label' => __('Institution Code')
+        ];
+
+        $fields->exchangeArray($extraField);
     }
 
 }
