@@ -24,13 +24,14 @@ use Cake\Datasource\ConnectionManager;
  */
 class ArchiveStudentAttendancesShell extends Shell
 {
-
     public $pid;
     public $processName;
+    public $featureName;
     public $systemProcessId;
+    public $recordsToArchive;
+    public $recordsInArchive;
 
     /**
-     * POCOR-7521-KHINDOL
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     public function initialize()
@@ -50,7 +51,13 @@ class ArchiveStudentAttendancesShell extends Shell
         $args = $this->args;
         $academicPeriodId = !empty($args[0]) ? intval(trim($args[0])) : 0;
         $pid = !empty($args[1]) ? intval(trim($args[1])) : getmypid();
-        $this->out("academic period id: $academicPeriodId, process id : $pid");
+        $recordsToArchive = !empty($args[2]) ? intval(trim($args[2])) : 0;
+        $recordsInArchive = !empty($args[3]) ? intval(trim($args[3])) : 0;
+
+        $this->recordsInArchive = $recordsInArchive;
+        $this->recordsToArchive = $recordsToArchive;
+        $this->out("academic period id: $academicPeriodId, process id : $pid, recordsToArchive: $recordsToArchive, recordsInArchive: $recordsInArchive" );
+
         $tablesToArchive = [
             'institution_class_attendance_records',
             'institution_student_absences',
@@ -63,60 +70,61 @@ class ArchiveStudentAttendancesShell extends Shell
             $this->out('No valid academic period given');
             return;
         }
-        $processInfo = date('d-m-Y H:i:s');
-        $this->out("Initializing $processName:  $processInfo");
+        if ($pid === 0) {
+            $this->out('No valid pid given');
+            return;
+        }
+        $processedDateTime = date('d-m-Y H:i:s');
+        $this->out("Initializing $processName:  $processedDateTime");
         $mypid = getmypid();
         $systemProcessId = CommonArchiveShell::startArchiveTransferSystemProcess($academicPeriodId, $mypid, $processName, $pid);
-        $processInfo = CommonArchiveShell::setSystemProcessRunning($systemProcessId);
-        $this->out($processInfo . ' - Running System PID:' . $systemProcessId);
-//        $countOfArchivedRecords = 1;
-        $recordsToArchive = 0;
-        $tableRecordsCount = 0;
+        $processedDateTime = CommonArchiveShell::setSystemProcessRunning($systemProcessId);
+        $this->out($processedDateTime . ' - Running System PID:' . $systemProcessId);
+
         $this->pid = $pid;
         $this->processName = $processName;
+        $this->featureName = "Student Attendances";
         $this->systemProcessId = $systemProcessId;
+        $tableMovedOK = true;
         foreach ($tablesToArchive as $tableToArchive) {
             try {
-                $tableRecordsCount =
+                $tableMovedOK = $tableMovedOK &&
                     CommonArchiveShell::moveRecordsToArchive($academicPeriodId, $tableToArchive, $this);
             } catch (\Exception $e) {
                 $this->out("Error in $processName");
                 $this->out($e->getMessage());
-                $processInfo = CommonArchiveShell::setTransferLogsFailed($pid);
-                $this->out("Transfer failed $processName:  $processInfo");
-                $processInfo = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
-                $this->out("System process failed $processName:  $processInfo");
+                $this->out("Transfer failed $processName:  $processedDateTime");
+                $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
+                $this->out("System process failed $processName:  $processedDateTime");
             }
-            $this->out("Count of archived records for $tableToArchive: $tableRecordsCount");
-            $recordsToArchive = $recordsToArchive + $tableRecordsCount;
-            $tableRecordsCount = 0;
+            $this->out("Finished archiving records for $tableToArchive");
         }
-        $this->out("Count of archived records for $processName: $recordsToArchive");
 
-        if ($recordsToArchive >= 0) {
+        if ($tableMovedOK) {
             try {
-                $processInfo = CommonArchiveShell::setTransferLogsCompleted($pid, $recordsToArchive);
-                $this->out("Transfer completed $processName:  $processInfo");
-                $processInfo = CommonArchiveShell::setSystemProcessCompleted($systemProcessId);
-                $this->out("System process completed $processName:  $processInfo");
+                $processedDateTime = CommonArchiveShell::setTransferLogsCompleted($pid);
+                $this->out("Transfer completed $processName:  $processedDateTime");
+                $processedDateTime = CommonArchiveShell::setSystemProcessCompleted($systemProcessId);
+                $this->out("System process completed $processName:  $processedDateTime");
             } catch (\Exception $e) {
                 $this->out("Error in $processName");
                 $this->out($e->getMessage());
-                $processInfo = CommonArchiveShell::setTransferLogsFailed($pid);
-                $this->out("Transfer failed $processName:  $processInfo");
-                $processInfo = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
-                $this->out("System process failed $processName:  $processInfo");
+                $processedDateTime = CommonArchiveShell::setTransferLogsFailed($pid);
+                $this->out("Transfer failed $processName:  $processedDateTime");
+                $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
+                $this->out("System process failed $processName:  $processedDateTime");
+                throw $e;
             }
         }
 
-        if ($recordsToArchive < 0) {
-            $processInfo = CommonArchiveShell::setTransferLogsFailed($pid);
-            $this->out("Transfer failed $processName:  $processInfo");
-            $processInfo = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
-            $this->out("System process failed $processName:  $processInfo");
+        if (!$tableMovedOK) {
+            $processedDateTime = CommonArchiveShell::setTransferLogsFailed($pid);
+            $this->out("Transfer failed $processName:  $processedDateTime");
+            $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
+            $this->out("System process failed $processName:  $processedDateTime");
             $this->out("No records to update ");
         }
-        $this->out("Ended $processName:  $processInfo");
+        $this->out("Ended $processName:  $processedDateTime");
     }
 
 
