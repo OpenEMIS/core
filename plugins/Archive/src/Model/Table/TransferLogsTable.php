@@ -312,10 +312,10 @@ class TransferLogsTable extends ControllerActionTable
      * @param $shellName
      * @param null $academicPeriodId
      * @param null $pid
-     * POCOR-7521-KHINDOL
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
-     *
+     * @param int $recordsToArchive
+     * @param int $recordsInArchive
      */
+
 
     public function triggerArchiveShell($shellName, $academicPeriodId = null, $pid = null, $recordsToArchive = 0, $recordsInArchive = 0)
     {
