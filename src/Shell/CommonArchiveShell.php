@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
+use phpDocumentor\Reflection\Types\Boolean;
 
 /**
  * Class RemoteArchiveShell
@@ -39,26 +40,18 @@ class CommonArchiveShell extends Shell
     }
 
     public static
-    function setTransferLogsBatch($pid, $movedRecordsCount = 0, $step = 0)
+    function setTransferLogsBatch($caller, $step = 1, $proc = "")
     {
+        $recordsInArchive = number_format($caller->recordsInArchive, 0, '', ' ');
+        $recordsToArchive = number_format($caller->recordsToArchive, 0, '', ' ');
+        $featureName = $caller->featureName;
+        $pid = $caller->pid;
+
         $TransferLogs = TableRegistry::get('Archive.TransferLogs');
         $transferlog = $TransferLogs
             ->find('all')
             ->where(['p_id' => $pid])->first();
-        $moved = $transferlog->features;
-        $movedRecordsCountStr = number_format($movedRecordsCount, 0, '', ' ');
-        if (strpos($moved, 'Moved') === false) {
-            // If "Moved Records" string doesn't exist, add it with the batch number
-            $moved = trim($moved) . " Step: $step, Moved: $movedRecordsCount"; // Replace 5000 with the actual number
-        } else {
-            // If "Moved Records" string already exists, update the batch number
-            $moved = preg_replace
-            ('/Moved: (\d+)/', 'Moved: ' . $movedRecordsCount,
-                $moved, 1);
-            $moved = preg_replace
-            ('/Step: (\d+)/', 'Step: ' . $step,
-                $moved, 1);
-        }
+        $moved = "$featureName. $recordsToArchive / $recordsInArchive. $proc $step.";
         $transferlog->features = $moved;
         try {
             $TransferLogs->save($transferlog);
@@ -67,16 +60,16 @@ class CommonArchiveShell extends Shell
             throw $e;
         }
 
-        $processInfo = date('Y-m-d H:i:s');
-        return $processInfo;
     }
 
     /**
      * @param $academicPeriodId
      * @param $table_name
-     * @return int Records moved | -1 if error
-     *
+     * @param $caller
+     * @return bool|int
+     * @throws \Exception
      */
+
     public static
     function moveRecordsToArchive($academicPeriodId, $table_name, $caller)
     {
@@ -86,7 +79,6 @@ class CommonArchiveShell extends Shell
         $pid = $caller->pid;
         $processName = $caller->processName;
         $systemProcessId = $caller->systemProcessId;
-
         $sourceTable = TableRegistry::get($table_name);
         $targetTableNameAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
         $targetTableName = $targetTableNameAndConnection[0];
@@ -100,13 +92,10 @@ class CommonArchiveShell extends Shell
         try {
             // Start a database transaction
             $whereCondition = ['academic_period_id' => $academicPeriodId];
-            $records_count =
-                self::moveRecords($sourceTable, $targetTable, $whereCondition,
-                    $table_name, $targetTableName, $targetTableConnection,
-                    $caller);
-            return $records_count;
+            return self::moveRecords($sourceTable, $targetTable, $whereCondition,
+                $table_name, $targetTableName, $targetTableConnection,
+                $caller);
         } catch (\Exception $e) {
-//            Log::write('error', $e->getMessage());
             $caller->out("Error in $processName");
             $caller->out($e->getMessage());
             $processedDateTime = CommonArchiveShell::setTransferLogsFailed($pid);
@@ -114,26 +103,33 @@ class CommonArchiveShell extends Shell
             $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
             $caller->out("System process failed $processName:  $processedDateTime");
             throw $e;
-//            return -1;
         }
-        return $records_count;
     }
 
 
+    /**
+     * @param $sourceTable
+     * @param $targetTable
+     * @param $whereCondition
+     * @param $table_name
+     * @param $targetTableName
+     * @param $targetTableConnection
+     * @param $caller
+     * @return bool
+     * @throws \Exception
+     */
     public static function moveRecords($sourceTable, $targetTable,
                                        $whereCondition, $table_name,
                                        $targetTableName, $targetTableConnection,
-                                       $caller)
+                                       $caller): bool
     {
-        $affectedRecordsCount = 0;
         $pid = $caller->pid;
         $processName = $caller->processName;
         $systemProcessId = $caller->systemProcessId;
-
-        $totalRecords = $sourceTable->find()->where($whereCondition)->count();
+        $academic_period_id = $whereCondition['academic_period_id'];
+        $totalRecords = self::getTableRecordsCountForAcademicPeriod($table_name, $academic_period_id);
         try {
-            $connection = ConnectionManager::get('default');
-            $academic_period_id = $whereCondition['academic_period_id'];
+            $connection = ConnectionManager::get($targetTableConnection);
             $batchSize = intval(($totalRecords / 100) + 1);
             // Disable foreign key checks
             $connection->execute("SET FOREIGN_KEY_CHECKS = 0");
@@ -141,19 +137,17 @@ class CommonArchiveShell extends Shell
             // Disable keys on target table
             $connection->execute("ALTER TABLE $targetTableName DISABLE KEYS");
 
-            $affectedRecordsCount = 0;
             $i = 1;
             for ($offset = 0; $offset < $totalRecords; $offset += $batchSize) {
                 // Build and execute batch insert query
                 $sql = "INSERT IGNORE INTO $targetTableName SELECT * FROM $table_name where academic_period_id = $academic_period_id LIMIT $batchSize OFFSET $offset";
-                $affectedBatchRows = $connection->execute($sql)->rowCount();
-
+                $affectedRecordsCount = $connection->execute($sql)->rowCount();
+                $caller->recordsInArchive = $caller->recordsInArchive + $affectedRecordsCount;
                 // Commit transaction
-                $connection->commit();
-
-                // Update affected records count and log progress
-                $affectedRecordsCount += $affectedBatchRows;
-                self::setTransferLogsBatch($pid, $affectedRecordsCount, $i);
+                // Update affected records count and log progress;
+                $proc = "Copy step:";
+                self::setTransferLogsBatch($caller,
+                    $i, $proc);
                 $i++;
             }
 
@@ -161,35 +155,21 @@ class CommonArchiveShell extends Shell
             $connection->execute("ALTER TABLE $targetTableName ENABLE KEYS");
 
             // Enable foreign key checks
-            $countInArchive = $targetTable->find()->where($whereCondition)->count();
-            if ($countInArchive >= $totalRecords) {
-                $i = 1;
-                $left = $totalRecords;
-                for ($offset = 0; $offset < $totalRecords; $offset += $batchSize) {
+            $i = 1;
+            for ($offset = 0; $offset < $totalRecords; $offset += $batchSize) {
 
-//                    $sourceTable->deleteAll($whereCondition)
-//                        ->where($whereCondition)
-//                        ->limit($batchSize)
-//                        ->offset($offset - $batchSize)
-//                        ->execute();
-                    $sql = "DELETE FROM $table_name where academic_period_id = $academic_period_id LIMIT $batchSize";
-                    $affectedBatchRows = $connection->execute($sql)->rowCount();
-                    $left = $left - $affectedBatchRows;
-                    $i++;
-                    $caller->out("$i . Deleted $affectedBatchRows . Left $left");
-                }
-                $sourceTable->deleteAll($whereCondition);
-                $connection->execute("SET FOREIGN_KEY_CHECKS = 1");
-                return $totalRecords;
-            } else {
-                $caller->out("Error in $processName");
-                $processedDateTime = CommonArchiveShell::setTransferLogsFailed($pid);
-                $caller->out("Transfer failed $processName:  $processedDateTime");
-                $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
-                $caller->out("System process failed $processName:  $processedDateTime");
-                $connection->execute("ALTER TABLE $targetTableName ENABLE KEYS");
-                $connection->execute("SET FOREIGN_KEY_CHECKS = 1");
+                $sql = "DELETE FROM $table_name where academic_period_id = $academic_period_id LIMIT $batchSize";
+                $affectedBatchRows = $connection->execute($sql)->rowCount();
+                $caller->recordsToArchive = $caller->recordsToArchive - $affectedBatchRows;
+                $i++;
+                $proc = "Delete step:";
+                self::setTransferLogsBatch($caller,
+                    $i, $proc);
+                $i++;
             }
+            $sourceTable->deleteAll($whereCondition);
+            $connection->execute("SET FOREIGN_KEY_CHECKS = 1");
+            return true;
         } catch (\Exception $e) {
             Log::write('error', 'I have BAD exception in move records: ' . $e->getMessage());
             $caller->out("Error in $processName");
@@ -203,8 +183,9 @@ class CommonArchiveShell extends Shell
             // Enable foreign key checks
             $connection->execute("SET FOREIGN_KEY_CHECKS = 1");
             throw $e;
+            return false;
         }
-        return $affectedRecordsCount;
+        return false;
     }
 
 
@@ -257,7 +238,7 @@ class CommonArchiveShell extends Shell
      * @param $systemProcessId
      */
     public static
-    function setTransferLogsCompleted($pid, $movedRecordsCount = 0)
+    function setTransferLogsCompleted($pid)
     {
         $TransferLogs = TableRegistry::get('Archive.TransferLogs');
         $processInfo = date('Y-m-d H:i:s');
@@ -265,16 +246,7 @@ class CommonArchiveShell extends Shell
             ->find('all')
             ->where(['p_id' => $pid])->first();
         $moved = $transferlog->features;
-        if (strpos($moved, 'Moved') === false) {
-            // If "Moved Records" string doesn't exist, add it with the batch number
-            $moved = trim($moved) . '. Finally: ' . number_format($movedRecordsCount, 0, '', ' ') . ' at ' . $processInfo;
-        } else {
-            // If "Moved Records" string already exists, update the batch number
-            $moved = preg_replace
-            ('/(Moved: \d+)/', 'Finally: ' . number_format($movedRecordsCount, 0, '', ' ') . ' at ' . $processInfo,
-                $moved, 1);
-        }
-
+        $moved = trim($moved) . ' Finished at: ' . $processInfo;
         $transferlog->features = $moved;
         $transferlog->process_status = $TransferLogs::DONE;
         $TransferLogs->save($transferlog);
@@ -289,10 +261,14 @@ class CommonArchiveShell extends Shell
     function setTransferLogsFailed($pid)
     {
         $TransferLogs = TableRegistry::get('Archive.TransferLogs');
-        $TransferLogs->updateAll(['process_status' => $TransferLogs::ERROR],
-            ['p_id' => $pid]
-        );
         $processInfo = date('Y-m-d H:i:s');
+        $transferlog = $TransferLogs
+            ->find('all')
+            ->where(['p_id' => $pid])->first();
+        $moved = $transferlog->features;
+        $moved = trim($moved) . ' Stopped at: ' . $processInfo;
+        $transferlog->features = $moved;
+        $transferlog->process_status = $TransferLogs::ERROR;
         return $processInfo;
     }
 
@@ -305,5 +281,34 @@ class CommonArchiveShell extends Shell
         $SystemProcesses = TableRegistry::get('SystemProcesses');
         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::ERROR);
     }
+
+    /**
+     * @param $table_name
+     * @param $academic_period_id
+     * @return int
+     * POCOR-7521-KHINDOL
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * cleaner code
+     */
+    private static function getTableRecordsCountForAcademicPeriod($table_name, $academic_period_id)
+    {
+        $connectionName = 'default';
+        $fieldName = 'academic_period_id';
+        $RecordsCount = self::getSimpleCount(
+            $table_name,
+            $connectionName,
+            $fieldName,
+            $academic_period_id);
+        return intval($RecordsCount);
+    }
+
+    private static function getSimpleCount($tableName, $connectionName, $fieldName, $fieldValue)
+    {
+        $connection = ConnectionManager::get($connectionName);
+        $sql = "SELECT count(*) as count FROM $tableName WHERE $fieldName = :fieldValue";
+        $result = $connection->execute($sql, ['fieldValue' => $fieldValue])->fetch('assoc');
+        return intval($result['count']);
+    }
+
 
 }
