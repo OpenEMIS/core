@@ -120,26 +120,26 @@ class StaffOutOfSchoolTable extends AppTable  {
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
         
         $extraField[] = [
-            'key' => 'openemis_no',
+            'key' => 'StaffOutOfSchoolTable.openemis_no',
             'field' => 'openemisID',
             'type' => 'string',
             'label' => __('OpenEMIS ID')
         ];
         $extraField[] = [
-            'key' => 'staff_name',
+            'key' => 'StaffOutOfSchoolTable.staff_name',
             'field' => 'StaffName',
             'type' => 'string',
             'label' => __('Full Name')
         ];
         $extraField[] = [
-            'key' => 'preferred_name',
+            'key' => 'StaffOutOfSchoolTable.preferred_name',
             'field' => 'PreferredName',
             'type' => 'string',
             'label' => __('Preferred Name')
         ];
         
         $extraField[] = [
-            'key' => 'contacts',
+            'key' => 'StaffOutOfSchoolTable.contacts',
             'field' => 'Contacts',
             'type' => 'string',
             'label' => __('Contact')
@@ -147,53 +147,53 @@ class StaffOutOfSchoolTable extends AppTable  {
         ];
        
         $extraField[] = [
-            'key' => 'address',
+            'key' => 'StaffOutOfSchoolTable.address',
             'field' => 'Address',
             'type' => 'string'
         ];
         $extraField[] = [
-            'key' => 'postal_code',
+            'key' => 'StaffOutOfSchoolTable.postal_code',
             'field' => 'PostalCode',
             'type' => 'string',
             'label' => __('Postal Code')
         ];
         $extraField[] = [
-            'key' => 'address_area_id',
+            'key' => 'StaffOutOfSchoolTable.address_area_id',
             'field' => 'AddressArea',
             'type' => 'string',
             'label' => __('Address Area')
         ];
         $extraField[] = [
-            'key' => 'birthplace_area_id',
+            'key' => 'StaffOutOfSchoolTable.birthplace_area_id',
             'field' => 'BirthplaceArea',
             'type' => 'string',
             'label' => __('Birthplace Area')
         ];
         $extraField[] = [
-            'key' => 'gender_id',
+            'key' => 'StaffOutOfSchoolTable.gender_id',
             'field' => 'Gender',
             'type' => 'string'
         ];
         $extraField[] = [
-            'key' => 'date_of_birth',
+            'key' => 'StaffOutOfSchoolTable.date_of_birth',
             'field' => 'DateofBirth',
             'type' => 'string',
             'label' => __('Date Of Birth')
         ];
         $extraField[] = [
-            'key' => 'nationality_id',
+            'key' => 'StaffOutOfSchoolTable.nationality_id',
             'field' => 'Nationality',
             'type' => 'string'
         ];
         
         $extraField[] = [
-            'key' => 'identity_type_id',
+            'key' => 'StaffOutOfSchoolTable.identity_type_id',
             'field' => 'IdentityType',
             'type' => 'string',
             'label' => __('Identity Type')
         ];
         $extraField[] = [
-            'key' => 'identity_number',
+            'key' => 'StaffOutOfSchoolTable.identity_number',
             'field' => 'IdentityNumber',
             'type' => 'string',
             'label' => __('Identity Number')
