@@ -17,7 +17,7 @@ use Cake\Console\Shell;
  */
 class EmailAllExcelReportCardsShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('SystemProcesses');

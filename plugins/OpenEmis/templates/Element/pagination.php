@@ -20,16 +20,16 @@ $totalRecords = array_key_exists('count', $params) ? $params['count'] : 0;
 	<?php endif ?>
 	<div class="counter">
 		<?php
-		$defaultLocale = $this->ControllerAction->locale();
-		$this->ControllerAction->locale('en_US');
+		$defaultLocale = $this->ControllerAction->getLocale();
+		$this->ControllerAction->getLocale('en_US');
 		?>
 		<?php
-			$paginateCountString = $this->Paginator->counter([
+			$paginateCountString = $this->Paginator->counter((string) [
 				'format' => '{{start}} {{end}} {{count}}'
 			]);
 
 			$paginateCountArray = explode(' ', $paginateCountString);
-			$this->ControllerAction->locale($defaultLocale);
+			$this->ControllerAction->getLocale($defaultLocale);
 			echo sprintf(__('Showing %s to %s of %s records'), $paginateCountArray[0], $paginateCountArray[1], $paginateCountArray[2])
 		?>
 	</div>

@@ -29,7 +29,7 @@ class AlertLogsTable extends ControllerActionTable
 
     private $featureGrouping = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->featureGrouping = $this->getSelectOptions($this->aliasField('feature_grouping'));
@@ -38,7 +38,7 @@ class AlertLogsTable extends ControllerActionTable
         $this->toggle('edit', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Workflow.afterSave'] = 'alertAssigneeAfterSave';
@@ -297,8 +297,10 @@ class AlertLogsTable extends ControllerActionTable
     {
         $selectedFeature = $extra['selectedFeature'];
         $featureOptions = $this->getFeatureOptions();
-
-        if ($selectedFeature != 'AllFeatures') {
+        // if ($selectedFeature != 'AllFeatures') {
+        //     $query->where([$this->aliasField('feature') => $selectedFeature]);
+        // }
+        if (!empty($selectedFeature)) {
             $query->where([$this->aliasField('feature') => $selectedFeature]);
         }
     }

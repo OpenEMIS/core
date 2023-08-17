@@ -8,6 +8,8 @@ use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
+use Cake\Http\Session;
 
 use ControllerAction\Model\Traits\EventTrait;
 
@@ -57,14 +59,14 @@ class ControllerActionBehavior extends Behavior
         return $events;
     }
 
-    public function buildValidator(Event $event, Validator $validator, $name): Validator
+    public function buildValidator(Event $event, Validator $validator, $name)
     {
         if ($name == 'default') {
             $schema = $this->_table->getSchema();
 
             $columns = $schema->columns();
             foreach ($columns as $col) {
-                $attr = $schema->column($col);
+                $attr = $schema->getColumn($col);
 
                 if ($validator->hasField($col)) {
                     $set = $validator->field($col);
@@ -341,8 +343,8 @@ class ControllerActionBehavior extends Behavior
             'autoIncrement' => false,
             'visible' => true,
             'field' => $name,
-            'model' => $model->alias(),
-            'className' => $model->registryAlias()
+            'model' => $model->getAlias(),
+            'className' => $model->getRegistryAlias()
         ];
 
         if (array_key_exists($name, $model->fields)) {
@@ -355,11 +357,11 @@ class ControllerActionBehavior extends Behavior
 
         $method = 'onUpdateField' . Inflector::camelize($name);
         $eventKey = 'ControllerAction.Model.' . $method;
-
-        $params = [$attr, $model->action, $model->request];
+        $serverRequest = new ServerRequest();
+        $params = [$attr, $model->action, $serverRequest, /*$model->request*/];
         $event = $this->dispatchEvent($model, $eventKey, $method, $params, true);
-        if (is_array($event->result)) {
-            $model->fields[$name] = $event->result;
+        if (is_array($event->getResult())) {
+            $model->fields[$name] = $event->getResult();
         }
     }
 
@@ -422,7 +424,7 @@ class ControllerActionBehavior extends Behavior
         $model = $this->_table;
         foreach ($model->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     return true;
                 }
             }
@@ -441,10 +443,10 @@ class ControllerActionBehavior extends Behavior
 
         foreach ($this->_table->associations() as $assoc) {
             if ($assoc->type() == $associationTypes[$type]) { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     $model = $assoc;
                     break;
-                } elseif (is_array($assoc->foreignKey()) && in_array($field, $assoc->foreignKey())) {
+                } elseif (is_array($assoc->getForeignKey()) && in_array($field, $assoc->foreignKey())) {
                     $model = $assoc;
                     break;
                 }
@@ -458,7 +460,7 @@ class ControllerActionBehavior extends Behavior
         $associationKey = $this->getAssociatedModel($field);
         $associatedEntity = null;
         if (is_object($associationKey)) {
-            $associatedEntity = Inflector::underscore(Inflector::singularize($associationKey->alias()));
+            $associatedEntity = Inflector::underscore(Inflector::singularize($associationKey->getAlias()));
         } else {
             // die($field . '\'s association not found in ' . $this->model->alias());
             Log::write('debug', $field . '\'s association not found in ' . $this->_table->alias());
@@ -468,8 +470,11 @@ class ControllerActionBehavior extends Behavior
 
     public function getSearchKey()
     {
-        $session = $this->_table->request->session();
-        return $session->read($this->_table->registryAlias().'.search.key');
+        $request = new ServerRequest();
+        $session = new Session();
+        $session = $request->getSession();
+        // $session = $this->_table->request->session();
+        return $session->read($this->_table->getRegistryAlias().'.search.key');
     }
 
     public function getContains($type = 'belongsTo', ArrayObject $extra)
@@ -486,10 +491,10 @@ class ControllerActionBehavior extends Behavior
         foreach ($model->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
                 $fields = [];
-                if (array_key_exists($assoc->name(), $containFields)) {
-                    $fields = $containFields[$assoc->name()];
+                if (array_key_exists($assoc->getName(), $containFields)) {
+                    $fields = $containFields[$assoc->getName()];
                 }
-                $columns = $assoc->schema()->columns();
+                $columns = $assoc->getSchema()->columns();
                 if (in_array('name', $columns)) {
                     $fields = array_merge($fields, ['id', 'name']);
                     foreach ($columns as $col) {
@@ -497,11 +502,11 @@ class ControllerActionBehavior extends Behavior
                             $fields[] = $col;
                         }
                     }
-                    $contain[$assoc->name()] = ['fields' => $fields];
-                } elseif (in_array($assoc->name(), ['ModifiedUser', 'CreatedUser'])) {
-                    $contain[$assoc->name()] = ['fields' => ['id', 'first_name', 'last_name']];
+                    $contain[$assoc->getName()] = ['fields' => $fields];
+                } elseif (in_array($assoc->getName(), ['ModifiedUser', 'CreatedUser'])) {
+                    $contain[$assoc->getName()] = ['fields' => ['id', 'first_name', 'last_name']];
                 } else {
-                    $contain[$assoc->name()] = [];
+                    $contain[$assoc->getName()] = [];
                 }
             }
         }

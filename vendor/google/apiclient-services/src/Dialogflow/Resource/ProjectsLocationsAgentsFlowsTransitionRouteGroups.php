@@ -38,7 +38,8 @@ class ProjectsLocationsAgentsFlowsTransitionRouteGroups extends \Google\Service\
    * (transitionRouteGroups.create)
    *
    * @param string $parent Required. The flow to create an TransitionRouteGroup
-   * for. Format: `projects//locations//agents//flows/`.
+   * for. Format: `projects//locations//agents//flows/` or
+   * `projects//locations//agents/` for agent-level groups.
    * @param GoogleCloudDialogflowCxV3TransitionRouteGroup $postBody
    * @param array $optParams Optional parameters.
    *
@@ -65,7 +66,8 @@ class ProjectsLocationsAgentsFlowsTransitionRouteGroups extends \Google\Service\
    * (transitionRouteGroups.delete)
    *
    * @param string $name Required. The name of the TransitionRouteGroup to delete.
-   * Format: `projects//locations//agents//flows//transitionRouteGroups/`.
+   * Format: `projects//locations//agents//flows//transitionRouteGroups/` or
+   * `projects//locations//agents//transitionRouteGroups/`.
    * @param array $optParams Optional parameters.
    *
    * @opt_param bool force This field has no effect for transition route group
@@ -86,7 +88,8 @@ class ProjectsLocationsAgentsFlowsTransitionRouteGroups extends \Google\Service\
    * Retrieves the specified TransitionRouteGroup. (transitionRouteGroups.get)
    *
    * @param string $name Required. The name of the TransitionRouteGroup. Format:
-   * `projects//locations//agents//flows//transitionRouteGroups/`.
+   * `projects//locations//agents//flows//transitionRouteGroups/` or
+   * `projects//locations//agents//transitionRouteGroups/`.
    * @param array $optParams Optional parameters.
    *
    * @opt_param string languageCode The language to retrieve the transition route
@@ -110,7 +113,8 @@ class ProjectsLocationsAgentsFlowsTransitionRouteGroups extends \Google\Service\
    * (transitionRouteGroups.listProjectsLocationsAgentsFlowsTransitionRouteGroups)
    *
    * @param string $parent Required. The flow to list all transition route groups
-   * for. Format: `projects//locations//agents//flows/`.
+   * for. Format: `projects//locations//agents//flows/` or
+   * `projects//locations//agents/.
    * @param array $optParams Optional parameters.
    *
    * @opt_param string languageCode The language to list transition route groups
@@ -142,7 +146,7 @@ class ProjectsLocationsAgentsFlowsTransitionRouteGroups extends \Google\Service\
    * @param string $name The unique identifier of the transition route group.
    * TransitionRouteGroups.CreateTransitionRouteGroup populates the name
    * automatically. Format:
-   * `projects//locations//agents//flows//transitionRouteGroups/`.
+   * `projects//locations//agents//flows//transitionRouteGroups/` .
    * @param GoogleCloudDialogflowCxV3TransitionRouteGroup $postBody
    * @param array $optParams Optional parameters.
    *

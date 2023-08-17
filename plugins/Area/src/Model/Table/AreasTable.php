@@ -18,7 +18,7 @@ class AreasTable extends ControllerActionTable
 {
     private $fieldsOrder = ['visible', 'code', 'name', 'area_level_id'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AreaParents', ['className' => 'Area.Areas', 'foreignKey' => 'parent_id']);
@@ -37,9 +37,11 @@ class AreasTable extends ControllerActionTable
         ]);
         $this->addBehavior('Tree');
         if ($this->behaviors()->has('Reorder')) {
-            $this->behaviors()->get('Reorder')->config([
-                'filter' => 'parent_id',
-            ]);
+            // $this->behaviors()->get('Reorder')->config([
+            //     'filter' => 'parent_id',
+            // ]);
+            $reorderBehavior = $this->behaviors()->get('Reorder');
+            $reorderBehavior->setConfig('filter', 'parent_id');
         }
 
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -50,14 +52,14 @@ class AreasTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.synchronize'] = 'synchronize';
         return $events;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

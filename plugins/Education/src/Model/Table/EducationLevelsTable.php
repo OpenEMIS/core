@@ -13,7 +13,7 @@ use App\Model\Table\ControllerActionTable;
 
 class EducationLevelsTable extends ControllerActionTable
 {
-	public function initialize(array $config)
+	public function initialize(array $config): void
 	{
 		parent::initialize($config);
 		$this->belongsTo('EducationLevelIsced', ['className' => 'Education.EducationLevelIsced']);
@@ -21,9 +21,12 @@ class EducationLevelsTable extends ControllerActionTable
 		$this->hasMany('EducationCycles', ['className' => 'Education.EducationCycles']);
 
 		if ($this->behaviors()->has('Reorder')) {
-			$this->behaviors()->get('Reorder')->config([
-				'filter' => 'education_system_id',
-			]);
+			$reorderBehavior = $this->behaviors()->get('Reorder');
+        	$reorderBehavior->setConfig('filter', 'education_system_id');
+
+			// $this->behaviors()->get('Reorder')->config([
+			// 	'filter' => 'education_system_id',
+			// ]);
 		}
 
 		$this->setDeleteStrategy('restrict');

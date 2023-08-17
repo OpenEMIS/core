@@ -55,7 +55,7 @@ class AdvancedPositionSearchBehavior extends Behavior {
 		return $query;
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'AdvanceSearch.onSetupFormField' => 'onSetupFormField',

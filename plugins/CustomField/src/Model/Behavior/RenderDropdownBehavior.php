@@ -9,7 +9,7 @@ use CustomField\Model\Behavior\RenderBehavior;
 class RenderDropdownBehavior extends RenderBehavior {
 
     private $postedData = null;
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
         parent::initialize($config);
     }
 

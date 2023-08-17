@@ -43,9 +43,9 @@ class StudentAdmissionTable extends ControllerActionTable
         ]
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_admission');
+        $this->setTable('institution_student_admission');
 
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -67,7 +67,7 @@ class StudentAdmissionTable extends ControllerActionTable
         $this->toggle('add', true);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -270,7 +270,7 @@ class StudentAdmissionTable extends ControllerActionTable
     }
 
     // foreign key rules
-    public function buildRules(RulesChecker $rules)
+    public function buildRules(RulesChecker $rules): RulesChecker
     {
         $excludedFields = ['status_id', 'assignee_id'];
         foreach ($this->associations() as $assoc) {
@@ -285,7 +285,7 @@ class StudentAdmissionTable extends ControllerActionTable
         return $rules;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Students.afterSave'] = 'studentsAfterSave';

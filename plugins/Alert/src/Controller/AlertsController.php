@@ -8,7 +8,7 @@ use Cake\ORM\Table;
 
 class AlertsController extends AppController
 {
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 
     }

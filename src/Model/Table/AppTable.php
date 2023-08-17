@@ -14,7 +14,7 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use ControllerAction\Model\Traits\UtilityTrait;
 use ControllerAction\Model\Traits\ControllerActionTrait;
-use Page\Traits\OptionListTrait;
+// use Page\Traits\OptionListTrait;
 use Cake\I18n\I18n;
 use Cake\Database\Schema\TableSchema;
 
@@ -23,7 +23,7 @@ class AppTable extends Table
     use ControllerActionTrait;
     use UtilityTrait;
     use LogTrait;
-    use OptionListTrait;
+    // use OptionListTrait;
     const OpenEMIS = 'OpenEMIS ID';
     public function initialize(array $config): void
     {
@@ -99,12 +99,12 @@ class AppTable extends Table
 
     public function validationDefault(Validator $validator): Validator
     {
-        $schema = $this->schema();
+        $schema = $this->getSchema();
         $columns = $schema->columns();
 
         foreach ($columns as $column) {
-            if ($schema->columnType($column) == 'date') {
-                $attr = $schema->column($column);
+            if ($schema->getColumnType($column) == 'date') {
+                $attr = $schema->getColumn($column);
                 // check if is nullable
                 if (array_key_exists('null', $attr) && $attr['null'] === true) {
                     $validator->allowEmpty($column);
@@ -289,10 +289,11 @@ class AppTable extends Table
     // Event: 'ControllerAction.Model.onGetFieldLabel'
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
+        // echo "<pre>";print_r($event->getData()['module']);die;
         $Labels     = TableRegistry::get('Labels');
         $fieldLabel = $Labels->find()
                 ->select(['name'])
-                ->where(['module' => $event->data['module'],'field'=>'openemis_no'])
+                ->where(['module' => $event->getData()['module'],'field'=>'openemis_no'])
                 ->first();
        
         if ($field == 'openemis_no' && !empty($fieldLabel['name'])) {
@@ -1018,7 +1019,7 @@ class AppTable extends Table
         }
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     return true;
                 }
             }
@@ -1059,7 +1060,7 @@ class AppTable extends Table
 
     public function getEncodedKeys(Entity $entity)
     {
-        $primaryKey = $this->primaryKey();
+        $primaryKey = $this->getPrimaryKey();
         $primaryKeyValue = [];
         if (is_array($primaryKey)) {
             foreach ($primaryKey as $key) {
@@ -1090,18 +1091,19 @@ class AppTable extends Table
     // Start POCOR-5188
 	public function getManualUrl($module, $function, $category='')
     {
-        $manualTable = TableRegistry::get('Manuals');
+        $manualTable = TableRegistry::getTableLocator()->get('Manuals'); //TableRegistry::get('Manuals');
         if ($category == ''){
-            $ManualContent =   $manualTable->find()->select(['url'])->where([
-                    $manualTable->aliasField('function') => $function,
-                    $manualTable->aliasField('module') => $module
-                    ])->first();
+            // $ManualContent =   $manualTable->find()->select(['url'])->where([
+            //         $manualTable->aliasField('function') => $function,
+            //         $manualTable->aliasField('module') => $module
+            //         ])->first();
         }else{
-            $ManualContent =   $manualTable->find()->select(['url'])->where([
-                $manualTable->aliasField('function') => $function,
-                $manualTable->aliasField('module') => $module,
-                $manualTable->aliasField('category') => $category,
-                ])->first();
+            // $ManualContent =   $manualTable->find()->select(['url'])->where([
+            //     $manualTable->aliasField('function') => $function,
+            //     $manualTable->aliasField('module') => $module,
+            //     $manualTable->aliasField('category') => $category,
+            //     ])->first();
+            $ManualContent['url'] = '';
         }
         if (!empty($ManualContent['url'])) {
 			return ['status'=>'success', 'url'=>$ManualContent['url']];

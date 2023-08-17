@@ -8,7 +8,7 @@ use Cake\Console\Shell;
 use Cake\I18n\Time;
 
 class LinkAllExamCentresShell extends Shell {
-    public function initialize() {
+    public function initialize(): void {
         parent::initialize();
         $this->loadModel('Examination.ExaminationCentres');
         $this->loadModel('Examination.ExaminationCentresExaminations');

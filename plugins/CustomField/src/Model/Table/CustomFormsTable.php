@@ -37,7 +37,7 @@ class CustomFormsTable extends ControllerActionTable
     ];
     private $hasFilter = false;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         if (array_key_exists('extra', $config)) {
             $this->extra = array_merge($this->extra, $config['extra']);
@@ -58,7 +58,7 @@ class CustomFormsTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator;

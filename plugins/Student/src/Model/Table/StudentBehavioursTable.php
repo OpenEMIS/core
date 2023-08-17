@@ -12,7 +12,7 @@ use Cake\Network\Session;
 
 class StudentBehavioursTable extends AppTable {
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 
 		$this->belongsTo('Students', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);

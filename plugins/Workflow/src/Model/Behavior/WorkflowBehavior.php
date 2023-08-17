@@ -10,7 +10,8 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
-use Cake\Network\Session;
+// use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\Datasource\EntityInterface;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Log\Log;
@@ -100,25 +101,25 @@ class WorkflowBehavior extends Behavior
 
     private $workflowSetup = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
-        $models = $this->config('models');
-        if (is_null($this->config('model'))) {
-            $this->_config['model'] = $this->_table->registryAlias();
+        $models = $this->getConfig('models');
+        if (is_null($this->getConfig('model'))) {
+            $this->_config['model'] = $this->_table->getRegistryAlias();
         }
 
         foreach ($models as $key => $model) {
             if (!is_null($model)) {
                 $this->{$key} = TableRegistry::get($model);
-                $this->{lcfirst($key).'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->alias())) . '_id';
+                $this->{lcfirst($key).'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->getAlias())) . '_id';
             } else {
                 $this->{$key} = null;
             }
         }
 
         if ($this->isCAv4()) {
-            $actions = $this->config('actions');
+            $actions = $this->getConfig('actions');
             $model = $this->_table;
             foreach ($actions as $key => $value) {
                 $model->toggle($key, $value);
@@ -131,7 +132,7 @@ class WorkflowBehavior extends Behavior
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
 
         $events = parent::implementedEvents();
@@ -319,8 +320,8 @@ class WorkflowBehavior extends Behavior
 
         $workflowModelEntity = $entity->_matchingData['WorkflowModels'];
         // only trigger update assignee shell where the workflow step belongs to
-        if ($workflowModelEntity->model == $this->config('model')) {
-            $this->triggerUpdateAssigneeShell($this->config('model'), $id, $statusId);
+        if ($workflowModelEntity->model == $this->getConfig('model')) {
+            $this->triggerUpdateAssigneeShell($this->getConfig('model'), $id, $statusId);
         }
     }
 
@@ -440,7 +441,7 @@ class WorkflowBehavior extends Behavior
     public function indexBeforeAction(Event $event)
     {
         $WorkflowModels = $this->WorkflowModels;
-        $registryAlias = $this->config('model');
+        $registryAlias = $this->getConfig('model');
 
         // Find from workflows table
         $results = $this->Workflows
@@ -477,7 +478,7 @@ class WorkflowBehavior extends Behavior
 
             $filter = $workflowModel->filter;
             $model = $workflowModel->model;
-            $filterConfig = $this->config('filter');
+            $filterConfig = $this->getConfig('filter');
 
             if ($filterConfig['type'] && !empty($filter)) {
                 // Wofkflow Filter Options
@@ -568,7 +569,7 @@ class WorkflowBehavior extends Behavior
 
             if ($filterConfig['period']) {
                 // Year Options
-                $AcademicPeriods = TableRegistry::get('academic_periods');
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $periodsOptions = $AcademicPeriods
                             ->find('list', ['keyField' => 'start_year', 'valueField' => 'start_year'])
                             ->order([$AcademicPeriods->aliasField('start_year') => 'DESC']);
@@ -596,9 +597,9 @@ class WorkflowBehavior extends Behavior
     {
         $options = $this->isCAv4() ? $extra['options'] : $extra;
 
-        $registryAlias = $this->config('model');
+        $registryAlias = $this->getConfig('model');
         $workflowModel = $this->getWorkflowSetup($registryAlias);
-        $filterConfig = $this->config('filter');
+        $filterConfig = $this->getConfig('filter');
 
         $filter = $workflowModel->filter;
         if ($filterConfig['type'] && !empty($filter)) {
@@ -831,7 +832,7 @@ class WorkflowBehavior extends Behavior
                 $modelName = $workflowStep->_matchingData['WorkflowModels']->model;
             }
 
-            $workflowModel = isset($modelName) ? $modelName : $this->config('model');
+            $workflowModel = isset($modelName) ? $modelName : $this->getConfig('model');
             $workflow = $this->getWorkflow($workflowModel, $entity);
 
             if (!empty($workflow)) {
@@ -1157,7 +1158,7 @@ class WorkflowBehavior extends Behavior
         } elseif ($action == 'add') {
             $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
             $entity = $attr['entity'];
-            $registryAlias = $this->config('model');
+            $registryAlias = $this->getConfig('model');
             $workflowModelEntity = $this->getWorkflowSetup($registryAlias);
             // find the filter type column key
             $filterKey = null;
@@ -1850,7 +1851,7 @@ class WorkflowBehavior extends Behavior
     {
         // Unset edit buttons and add action buttons
         // POCOR-4529: Added disableWorkflow for view/index of features to view workflow pages without action buttons
-        if ($this->attachWorkflow && !$this->config('disableWorkflow')) {
+        if ($this->attachWorkflow && !$this->getConfig('disableWorkflow')) {
             if ($action == 'index') {
                 if ($this->hasWorkflow == false && $toolbarButtons->offsetExists('add')) {
                     unset($toolbarButtons['add']);
@@ -2118,7 +2119,7 @@ class WorkflowBehavior extends Behavior
         $model = $this->_table;
 
         if ($model->hasBehavior('Workflow')) {
-            $workflow = $this->getWorkflow($this->config('model'), $entity);
+            $workflow = $this->getWorkflow($this->getConfig('model'), $entity);
             if (!empty($workflow)) {
                 $workflowId = $workflow->id;
                 $workflowStep = $this->WorkflowSteps
@@ -2245,7 +2246,7 @@ class WorkflowBehavior extends Behavior
             // used to get correct workflow model for StaffTransferIn and StaffTransferOut
             $workflowModel = $workflowStep->_matchingData['WorkflowModels'];
         } else {
-            $workflowModel = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $this->config('model')])->first();
+            $workflowModel = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $this->getConfig('model')])->first();
         }
 
         $this->WorkflowTransitions->deleteAll([
@@ -2283,7 +2284,7 @@ class WorkflowBehavior extends Behavior
         if ($request->is(['post', 'put'])) {
             $requestData = $request->data;
 
-            $subject = $this->config('model') == null ? $this->_table : TableRegistry::get($this->config('model'));
+            $subject = $this->getConfig('model') == null ? $this->_table : TableRegistry::get($this->getConfig('model'));
             // Trigger workflow before save event here
             $event = $subject->dispatchEvent('Workflow.beforeTransition', [$requestData], $subject);
             if ($event->isStopped()) {
@@ -2402,7 +2403,7 @@ class WorkflowBehavior extends Behavior
         if ($request->is(['post', 'put'])) {
             $requestData = $request->data;
 
-            $workflowModelEntity = $this->getWorkflowSetup($this->config('model'));
+            $workflowModelEntity = $this->getWorkflowSetup($this->getConfig('model'));
 
             $assigneeId = $requestData['assignee_id'];
             $entity = $model
@@ -2455,14 +2456,14 @@ class WorkflowBehavior extends Behavior
             $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
             $results = $WorkflowModels
                 ->find()
-                ->where([$WorkflowModels->aliasField('model') => $this->config('model')])
+                ->where([$WorkflowModels->aliasField('model') => $this->getConfig('model')])
                 ->first();
 
             if (!empty($results) && !empty($results->filter)) {
                 $filterAlias = $results->filter;
-                $modelAlias = $this->config('model');
+                $modelAlias = $this->getConfig('model');
 
-                $filterKey = $this->getFilterKey($filterAlias, $this->config('model'));
+                $filterKey = $this->getFilterKey($filterAlias, $this->getConfig('model'));
                 if (empty($filterKey)) {
                     list($modelplugin, $modelAlias) = explode('.', $filterAlias, 2);
                     $filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
@@ -2493,7 +2494,7 @@ class WorkflowBehavior extends Behavior
 
     public function getPendingRecords(Event $event, $params = [])
     {
-        $institutionKey = $this->config('institution_key');
+        $institutionKey = $this->getConfig('institution_key');
         $model = $this->_table;
         $doneStatus = WorkflowSteps::DONE;
         $institutionId = $params['institution_id'];

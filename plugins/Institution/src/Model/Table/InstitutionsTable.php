@@ -59,9 +59,9 @@ class InstitutionsTable extends ControllerActionTable
     private $formatSupport = 'Format Supported: %s';
     private $defaultImgMsg = "<p>* %s <br>* %s</p>";
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institutions');
+        $this->setTable('institutions');
         parent::initialize($config);
 
         /**
@@ -246,7 +246,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->addBehavior('Institution.LatLong');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator = $this->LatLongValidation(); //POCOR-6625 incomment <vikas.rathore@mail.valocoders.com>
@@ -366,7 +366,7 @@ class InstitutionsTable extends ControllerActionTable
         return self::ACADEMIC;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';

@@ -21,7 +21,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
     private $features = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -43,7 +43,7 @@ class InstitutionCasesTable extends ControllerActionTable
         $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.LinkedRecord.afterSave'] = 'linkedRecordAfterSave';

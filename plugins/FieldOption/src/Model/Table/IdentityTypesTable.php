@@ -13,15 +13,15 @@ use Cake\Log\Log;
 
 class IdentityTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('identity_types');
+        $this->setTable('identity_types');
         parent::initialize($config);
 
         $this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'identity_type_id']);
         $this->hasMany('Nationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'identity_type_id']);
 
-        $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+        $this->behaviors()->get('ControllerAction')->getConfig('actions.remove', 'restrict');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index', 'add'],
             'Staff' => ['index', 'add']

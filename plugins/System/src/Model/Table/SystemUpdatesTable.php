@@ -13,12 +13,14 @@ use Cake\Mailer\Email;
 use Cake\I18n\Time;
 use Cake\Http\Client;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
+use Cake\Http\Response;
 
 use App\Model\Table\ControllerActionTable;
 
 class SystemUpdatesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -79,17 +81,28 @@ class SystemUpdatesTable extends ControllerActionTable
         $api = $domain . '/restful/v2/System-SystemUpdates.json?_fields=id,version,date_released&_limit=50&_order=-id';
 
         $http = new Client();
+
+        // New Code [START]
         $response = $http->get($api);
+        $response = $response->getBody()->getContents();
+        // New Code [END]
+
+        //Old Code[START]
+        // $response = $http->get($api);
+        //Old Code[END]
 
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $supportEmails = $ConfigItems->value('version_support_emails');
         $emails = explode(',', $supportEmails);
-
-        $host = $this->request->env('HTTP_HOST');
+        $request = new ServerRequest();
+        $get_response = new Response();
+        $host = $request->getUri()->getHost();
         $subject = 'Core Upgrade Request Failed - ' . $host;
 
-        if ($response->getStatusCode() == 200) {
-            $jsonResponse = json_decode($response->body(), true);
+        if ($get_response->getStatusCode() == 200) {
+            // $jsonResponse = json_decode($response->body(), true);
+            $jsonResponse = json_decode($response, true);
+            // echo "<pre>";print_r($jsonResponse);die;
             $data = array_reverse($jsonResponse['data']);
 
             foreach ($data as $item) {

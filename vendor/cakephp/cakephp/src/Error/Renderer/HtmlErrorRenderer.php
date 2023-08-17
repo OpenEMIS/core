@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 
-
 /**
  * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
  * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
@@ -15,13 +14,12 @@ declare(strict_types=1);
  * @since         4.4.0
  * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
-
 namespace Cake\Error\Renderer;
-ob_start();
+
 use Cake\Error\Debugger;
 use Cake\Error\ErrorRendererInterface;
 use Cake\Error\PhpError;
-
+ob_start();
 /**
  * Interactive HTML error rendering with a stack trace.
  *

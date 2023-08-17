@@ -28,7 +28,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
     private $trainingCourse = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -46,7 +46,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

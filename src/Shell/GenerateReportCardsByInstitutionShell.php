@@ -13,7 +13,7 @@ class GenerateReportCardsByInstitutionShell extends Shell
     CONST SLEEP_TIME = 10;
     CONST ACADEMIC_PERIOD_ID = 18;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('CustomExcel.ReportCards');

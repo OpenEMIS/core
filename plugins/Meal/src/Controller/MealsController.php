@@ -25,7 +25,7 @@ use Cake\Datasource\ConnectionManager;
 class MealsController extends AppController
 {
 
-    public function initialize(){
+    public function initialize(): void{
         parent::initialize();
     }
 

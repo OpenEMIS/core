@@ -31,7 +31,7 @@ class HistoricalBehavior extends Behavior
         'pages' => ['index']
     ];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = 'beforeAction';

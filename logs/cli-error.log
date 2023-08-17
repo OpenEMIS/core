@@ -8,3 +8,10 @@ Stack Trace:
 - C:\xampp-new\htdocs\openemis\pocor-openemis-core\vendor\cakephp\cakephp\src\Console\ShellDispatcher.php:130
 - C:\xampp-new\htdocs\openemis\pocor-openemis-core\bin\cake.php:34
 
+2023-08-11 10:06:40 error: [Cake\Console\Exception\MissingShellException] Shell class for "Server" could not be found. If you are trying to use a plugin shell, that was loaded via $this->addPlugin(), you may need to update bin/cake.php to match https://github.com/cakephp/app/tree/master/bin/cake.php in /Users/ehteramahmad/Sites/testingPurpose/repositories/openemis_core_version_4_2_2/pocor-openemis-core/vendor/cakephp/cakephp/src/Console/ShellDispatcher.php on line 327
+Stack Trace:
+- /Users/ehteramahmad/Sites/testingPurpose/repositories/openemis_core_version_4_2_2/pocor-openemis-core/vendor/cakephp/cakephp/src/Console/ShellDispatcher.php:227
+- /Users/ehteramahmad/Sites/testingPurpose/repositories/openemis_core_version_4_2_2/pocor-openemis-core/vendor/cakephp/cakephp/src/Console/ShellDispatcher.php:180
+- /Users/ehteramahmad/Sites/testingPurpose/repositories/openemis_core_version_4_2_2/pocor-openemis-core/vendor/cakephp/cakephp/src/Console/ShellDispatcher.php:130
+- /Users/ehteramahmad/Sites/testingPurpose/repositories/openemis_core_version_4_2_2/pocor-openemis-core/bin/cake.php:34
+

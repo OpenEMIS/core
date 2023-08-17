@@ -15,6 +15,7 @@ use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
 use App\Model\Traits\MessagesTrait;
 use Cake\I18n\Date;
+use Cake\Http\ServerRequest;
 
 /**
  * DeletedLogs Model
@@ -39,13 +40,13 @@ class DataManagementCopyTable extends ControllerActionTable
      * @param array $config The configuration for the Table.
      * @return void
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
-        $this->table('data_management_copy');
-        $this->displayField('id');
-        $this->primaryKey('id');
+        $this->setTable('data_management_copy');
+        $this->getDisplayField('id');
+        $this->getPrimaryKey('id');
 
         $this->belongsTo('AcademicPeriods', [
             'foreignKey' => 'from_academic_period',
@@ -58,7 +59,7 @@ class DataManagementCopyTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator->integer('id')->allowEmpty('id', 'create');
         $validator->requirePresence('from_academic_period', 'create')->notEmpty('from_academic_period');
@@ -95,25 +96,25 @@ class DataManagementCopyTable extends ControllerActionTable
 
     }
 
-    public function onUpdateFieldFromAcademicPeriod(Event $event, array $attr, $action, Request $request)
-    {
-        $condition = [];
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
-        $attr['options'] = $academicPeriodOptions;
-		$attr['onChangeReload'] = true;
-        return $attr;
-    }
+    // public function onUpdateFieldFromAcademicPeriod(Event $event, array $attr, $action, ServerRequest $request)
+    // {
+    //     $condition = [];
+    //     $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
+    //     $attr['options'] = $academicPeriodOptions;
+	// 	$attr['onChangeReload'] = true;
+    //     return $attr;
+    // }
 
-    public function onUpdateFieldToAcademicPeriod(Event $event, array $attr, $action, Request $request)
-    {
-        $condition = [$this->AcademicPeriods->aliasField('id').' <> ' => $request['data']['DataManagementCopy']['from_academic_period']];
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
-        // list($periodOptions, $selectedPeriod) = array_values($this->AcademicPeriods->getYearList(['conditions' => $condition]));
+    // public function onUpdateFieldToAcademicPeriod(Event $event, array $attr, $action, Request $request)
+    // {
+    //     $condition = [$this->AcademicPeriods->aliasField('id').' <> ' => $request['data']['DataManagementCopy']['from_academic_period']];
+    //     $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
+    //     // list($periodOptions, $selectedPeriod) = array_values($this->AcademicPeriods->getYearList(['conditions' => $condition]));
 
-        $attr['options'] = $academicPeriodOptions;
-        $attr['onChangeReload'] = true;
-        return $attr;
-    }
+    //     $attr['options'] = $academicPeriodOptions;
+    //     $attr['onChangeReload'] = true;
+    //     return $attr;
+    // }
 
     public function getAcademicPeriodOptions($querystringPeriod)
     {
@@ -831,7 +832,7 @@ class DataManagementCopyTable extends ControllerActionTable
 
     public function onGetToAcademicPeriod(Event $event, Entity $entity)
     {
-        $AcademicPeriodsData = TableRegistry::get('Academic.AcademicPeriods');
+        $AcademicPeriodsData = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods'); //TableRegistry::get('Academic.AcademicPeriods');
         $result = $AcademicPeriodsData
             ->find()
             ->select(['name'])

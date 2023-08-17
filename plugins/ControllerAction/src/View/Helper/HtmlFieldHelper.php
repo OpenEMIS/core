@@ -71,7 +71,8 @@ class HtmlFieldHelper extends Helper
     private function patchInvalidFields($data, $field, $options)
     {
         if (!is_null($data)) {
-            $invalid = $data->invalid();
+            
+            $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
                 $options['value'] = $data->invalid($field);
             }
@@ -91,10 +92,10 @@ class HtmlFieldHelper extends Helper
 
         if (!array_key_exists($eventKey, $eventMap) && !is_null($method)) {
             if (method_exists($subject, $method) || $subject->behaviors()->hasMethod($method)) {
-                $subject->eventManager()->on($eventKey, [], [$subject, $method]);
+                $subject->getEventManager()->on($eventKey, [], [$subject, $method]);
             }
         }
-        return $subject->eventManager()->dispatch($event);
+        return $subject->getEventManager()->dispatch($event);
     }
 
     public function render($type, $action, Entity $data, array $attr, array $options = [])
@@ -110,8 +111,8 @@ class HtmlFieldHelper extends Helper
         $eventKey = 'ControllerAction.Model.' . $method;
         $event = $this->dispatchEvent($this->table, $eventKey, $method, ['action' => $action, 'entity' => $data, 'attr' => $attr, 'options' => $options]);
 
-        if (isset($event->result)) {
-            $html = $event->result;
+        if ($event->getResult()) {
+            $html = $event->getResult();
         } else {
             if (method_exists($this, $type)) {
                 $html = $this->$type($action, $data, $attr, $options);
@@ -470,7 +471,8 @@ class HtmlFieldHelper extends Helper
             $options['type'] = 'text';
             $options['disabled'] = 'disabled';
             $field = $attr['field'];
-            $invalid = $data->invalid();
+            
+            $invalid = $data->getInvalid();
 
             if (isset($attr['options']) && !isset($attr['attr']['value'])) {
                 if (!empty($invalid) && array_key_exists($field, $invalid)) {
@@ -616,7 +618,8 @@ class HtmlFieldHelper extends Helper
 
         $field = $attr['field'];
         if (!is_null($data)) {
-            $invalid = $data->invalid();
+            
+            $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
                 $value = $data->invalid($field);
             } else {
@@ -628,9 +631,9 @@ class HtmlFieldHelper extends Helper
             if (!is_null($value)) {
                 $table = TableRegistry::get($attr['className']);
                 $event = new Event('ControllerAction.Model.onFormatDateTime', $this, compact('value'));
-                $event = $table->eventManager()->dispatch($event);
-                if (strlen($event->result) > 0) {
-                    $value = $event->result;
+                $event = $table->getEventManager()->dispatch($event);
+                if (strlen($event->getResult()) > 0) {
+                    $value = $event->getResult();
                 }
             }
         }
@@ -652,8 +655,8 @@ class HtmlFieldHelper extends Helper
 
         if (isset($attr['className'])) {
             $table = TableRegistry::get($attr['className']);
-            $schema = $table->schema();
-            $columnAttr = $schema->column($field);
+            $schema = $table->getSchema();
+            $columnAttr = $schema->getColumn($field);
             if ($columnAttr['null'] == true) {
                 $defaultDate = date('d-m-Y');
             }
@@ -668,7 +671,7 @@ class HtmlFieldHelper extends Helper
         }
 
         if (!is_null($data)) {
-            $invalid = $data->invalid();
+            $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
                 $value = $data->invalid($field);
             } else {
@@ -679,9 +682,9 @@ class HtmlFieldHelper extends Helper
         if ($action == 'index' || $action == 'view') {
             if (!is_null($value)) {
                 $event = new Event('ControllerAction.Model.onFormatDate', $this, compact('value'));
-                $event = $table->eventManager()->dispatch($event);
-                if (strlen($event->result) > 0) {
-                    $value = $event->result;
+                $event = $table->getEventManager()->dispatch($event);
+                if (strlen($event->getResult()) > 0) {
+                    $value = $event->getResult();
                 }
             }
         } elseif ($action == 'edit') {
@@ -743,7 +746,8 @@ class HtmlFieldHelper extends Helper
         $field = $attr['field'];
 
         if (!is_null($data)) {
-            $invalid = $data->invalid();
+            
+            $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
                 $value = $data->invalid($field);
             } else {
@@ -755,7 +759,7 @@ class HtmlFieldHelper extends Helper
             if (!is_null($value)) {
                 $table = TableRegistry::get($attr['className']);
                 $event = new Event('ControllerAction.Model.onFormatTime', $this, compact('value'));
-                $event = $table->eventManager()->dispatch($event);
+                $event = $table->getEventManager()->dispatch($event);
                 if (strlen($event->result) > 0) {
                     $value = $event->result;
                 }

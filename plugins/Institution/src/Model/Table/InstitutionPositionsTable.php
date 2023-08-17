@@ -26,7 +26,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     const IN_PROGRESS = 2;
     const DONE = 3;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -75,7 +75,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         );
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

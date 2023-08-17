@@ -9,7 +9,7 @@ use CustomField\Model\Behavior\SetupBehavior;
 
 class SetupCheckboxBehavior extends SetupBehavior
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }

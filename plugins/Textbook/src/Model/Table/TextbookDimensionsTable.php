@@ -7,11 +7,11 @@ use App\Model\Table\ControllerActionTable;
 
 class TextbookDimensionsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         
         parent::initialize($config);
-        $this->table('textbook_dimensions');
+        $this->setTable('textbook_dimensions');
 
         $this->addBehavior('FieldOption.FieldOption');
         

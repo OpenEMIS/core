@@ -14,7 +14,7 @@ use Cake\Log\Log;
 
 class StaffTransferInTable extends InstitutionStaffTransfersTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
@@ -26,13 +26,16 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
         $this->toggle('add', false);
         if ($this->behaviors()->has('Workflow')) {
-            $this->behaviors()->get('Workflow')->config([
-                'institution_key' => 'new_institution_id'
-            ]);
+            // $this->behaviors()->get('Workflow')->config([
+            //     'institution_key' => 'new_institution_id'
+            // ]);
+
+            $reorderBehavior = $this->behaviors()->get('Workflow');
+            $reorderBehavior->setConfig('institution_key', 'new_institution_id');
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -51,7 +54,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
             ->notEmpty(['new_institution_position_id', 'new_FTE', 'new_staff_type_id', 'new_start_date', 'workflow_assignee_id','assignee_id']);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['UpdateAssignee.onSetSchoolBasedConditions'] = 'onSetSchoolBasedConditions';

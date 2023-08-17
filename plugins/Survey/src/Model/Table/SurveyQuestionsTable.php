@@ -13,7 +13,7 @@ class SurveyQuestionsTable extends CustomFieldsTable
 {
     protected $fieldTypeFormat = ['OpenEMIS', 'OpenEMIS_Institution'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasMany('CustomFieldOptions', ['className' => 'Survey.SurveyQuestionChoices', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -34,7 +34,7 @@ class SurveyQuestionsTable extends CustomFieldsTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

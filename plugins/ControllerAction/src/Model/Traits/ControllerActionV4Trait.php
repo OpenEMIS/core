@@ -32,14 +32,14 @@ trait ControllerActionV4Trait {
 	}
 
 	private function _render($model) {
-		list($plugin, $alias) = pluginSplit($model->registryAlias());
+		list($plugin, $alias) = pluginSplit($model->getRegistryAlias());
 
 		if (empty($plugin)) {
 			$path = APP . 'Template' . DS . $this->controller->name . DS;
 		} else {
 			$path = ROOT . DS . 'plugins' . DS . $plugin . DS . 'src' . DS . 'Template' . DS;
 		}
-		$this->ctpFolder = $model->alias();
+		$this->ctpFolder = $model->getAlias();
 		$ctp = $this->ctpFolder . DS . $model->action;
 
 		if (file_exists($path . DS . $ctp . '.ctp')) {
@@ -241,11 +241,11 @@ trait ControllerActionV4Trait {
 		// dispatch event for specific action
 		$event = $model->dispatchEvent("ControllerAction.Model.$action", [$extra], $this);
 		if ($event->isStopped()) { return $event->result; }
-		if ($event->result instanceof Entity) {
-			$entity = $event->result;
-		} else if ($event->result instanceof Response) {
-			return $event->result;
-		} else if (is_null($event->result)) {
+		if ($event->getResult() instanceof Entity) {
+			$entity = $event->getResult();
+		} else if ($event->getResult() instanceof Response) {
+			return $event->getResult();
+		} else if (is_null($event->getResult())) {
 			throw new MissingActionException([
                 'controller' => $controller->name . "Controller",
                 'action' => $action,
@@ -268,7 +268,7 @@ trait ControllerActionV4Trait {
 		$extra['config']['table'] = $model;
 		$extra['config']['fields'] = $model->fields;
 
-		$this->deprecatedFunctions(['model' => $model->alias()]);
+		$this->deprecatedFunctions(['model' => $model->getAlias()]);
 
 		$controller->set('ControllerAction', $extra['config']);
 		$controller->set('elements', $elements);

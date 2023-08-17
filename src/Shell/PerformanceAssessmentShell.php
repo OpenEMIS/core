@@ -8,7 +8,7 @@ use Cake\Utility\Text;
 
 class PerformanceAssessmentShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
     }

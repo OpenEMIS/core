@@ -33,7 +33,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     public $openStatusId = null;
     public $closedStatusId = null;
     
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
       
         parent::initialize($config);
@@ -75,7 +75,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $this->toggle('add', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Workflow.getFilterOptions'] = 'getWorkflowFilterOptions';

@@ -17,9 +17,9 @@ class SurveyRulesTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('survey_rules');
+        $this->setTable('survey_rules');
         parent::initialize($config);
         $this->belongsTo('SurveyForms',                     ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id']);
         $this->belongsTo('SurveyQuestions',                 ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id']);

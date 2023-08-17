@@ -27,9 +27,9 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     const INCOMING = 1;
     const OUTGOING = 2;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_transfers');
+        $this->setTable('institution_student_transfers');
         parent::initialize($config);
 
         // Mandatory data
@@ -70,7 +70,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         ]
     ];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Workflow.getEvents'] = 'getWorkflowEvents';

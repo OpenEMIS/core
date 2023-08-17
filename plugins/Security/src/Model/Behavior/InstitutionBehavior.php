@@ -12,7 +12,7 @@ use Cake\Network\Request;
 
 class InstitutionBehavior extends Behavior
 {
-	public function implementedEvents()
+	public function implementedEvents(): array
 	{
 		$events = parent::implementedEvents();
 

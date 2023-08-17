@@ -14,16 +14,18 @@ use App\Model\Table\ControllerActionTable;
 
 class EducationCyclesTable extends ControllerActionTable
 {
-	public function initialize(array $config)
+	public function initialize(array $config): void
 	{
 		parent::initialize($config);
 		$this->belongsTo('EducationLevels', ['className' => 'Education.EducationLevels']);
         $this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
 
 		if ($this->behaviors()->has('Reorder')) {
-			$this->behaviors()->get('Reorder')->config([
-				'filter' => 'education_level_id',
-			]);
+			// $this->behaviors()->get('Reorder')->config([
+			// 	'filter' => 'education_level_id',
+			// ]);
+			$reorderBehavior = $this->behaviors()->get('Reorder');
+			$reorderBehavior->setConfig('filter', 'education_level_id');
 		}
 
 		$this->setDeleteStrategy('restrict');
@@ -59,7 +61,7 @@ class EducationCyclesTable extends ControllerActionTable
 		$query->where([$this->aliasField('education_level_id') => $entity->education_level_id]);
 	}
 
-	public function validationDefault(Validator $validator)
+	public function validationDefault(Validator $validator): Validator
 	{
 		$validator = parent::validationDefault($validator);
 		$validator

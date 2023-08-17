@@ -17,7 +17,7 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
 {
     CONST INSTITUTION_ACTIVE = 1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -28,13 +28,16 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
         $this->addBehavior('Institution.StaffProfile');
 
         if ($this->behaviors()->has('Workflow')) {
-            $this->behaviors()->get('Workflow')->config([
-                'institution_key' => 'previous_institution_id'
-            ]);
+            // $this->behaviors()->get('Workflow')->config([
+            //     'institution_key' => 'previous_institution_id'
+            // ]);
+
+            $workflowBehavior = $this->behaviors()->get('Workflow');
+            $workflowBehavior->setConfig('institution_key', 'previous_institution_id');
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator->notEmpty(['positions_held','previous_end_date', 'workflow_assignee_id'])

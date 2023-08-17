@@ -32,9 +32,9 @@ class StaffLeaveTable extends ControllerActionTable
     private $institutionId = null;
     private $staffId = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff_leave');
+        $this->setTable('institution_staff_leave');
         parent::initialize($config);
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -78,7 +78,7 @@ class StaffLeaveTable extends ControllerActionTable
         $this->fullDayOptions = $this->getSelectOptions('general.yesno');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -111,7 +111,7 @@ class StaffLeaveTable extends ControllerActionTable
             ->allowEmpty('file_content');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.InstitutionStaff.afterDelete'] = 'institutionStaffAfterDelete';

@@ -14,7 +14,7 @@ class SetupDecimalBehavior extends SetupBehavior
 {
     private $validationOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }

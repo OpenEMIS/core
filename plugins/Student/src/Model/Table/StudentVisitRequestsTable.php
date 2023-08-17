@@ -12,9 +12,9 @@ use Cake\ORM\TableRegistry;
 
 class StudentVisitRequestsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_visit_requests');
+        $this->setTable('institution_student_visit_requests');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -38,7 +38,7 @@ class StudentVisitRequestsTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

@@ -118,6 +118,15 @@ return [
             'url' => env('CACHE_CAKEMODEL_URL', null),
         ],
 
+        '_cake_routes_' => [
+            'className' => 'File',
+            'prefix' => 'myapp_cake_routes_',
+            'path' => CACHE . 'routes/',
+            'serialize' => true,
+            'duration' => '+2 minutes',
+            'url' => env('CACHE_CAKEMODEL_URL', null),
+        ],
+
         // Application specific labels cache
         'labels' => [
             'className' => 'File',

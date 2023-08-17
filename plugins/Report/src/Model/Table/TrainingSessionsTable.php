@@ -11,7 +11,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 // Ends POCOR-6593
 class TrainingSessionsTable extends AppTable  {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);

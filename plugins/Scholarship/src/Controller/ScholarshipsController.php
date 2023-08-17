@@ -7,12 +7,13 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\Utility\Inflector;
+use Cake\Http\ServerRequest;
 
 use App\Controller\AppController;
 
 class ScholarshipsController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('User.Users');
@@ -77,7 +78,7 @@ class ScholarshipsController extends AppController
         $this->Navigation->addCrumb('Scholarships', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Scholarships', 'index']);
 
         $header = __('Scholarships');
-        $alias = $model->alias();
+        $alias = $model->getAlias();
         if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
             $excludedModel = ['Scholarships', 'Applications', 'RecipientPaymentStructures', 'RecipientPayments'];
 
@@ -100,12 +101,13 @@ class ScholarshipsController extends AppController
 
         $persona = false;
         $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
-        $event = $model->eventManager()->dispatch($event);
+        $event = $model->getEventManager()->dispatch($event);
     }
 
     public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
     {
-        if (array_key_exists('queryString', $this->request->query)) {
+        $request = new ServerRequest();
+        if (array_key_exists('queryString', $request->getAttribute('query'))) {
             $applicantId = $this->ControllerAction->getQueryString('applicant_id');
 
             if ($model->hasField('security_user_id')) {

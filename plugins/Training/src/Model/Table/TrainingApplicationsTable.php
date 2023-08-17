@@ -20,9 +20,9 @@ class TrainingApplicationsTable extends ControllerActionTable
     const IN_PROGRESS = 2;
     const DONE = 3;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_training_applications');
+        $this->setTable('staff_training_applications');
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);

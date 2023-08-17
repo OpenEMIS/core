@@ -21,7 +21,7 @@ class SurveyFormsTable extends CustomFormsTable
     private $excludedCustomModules = ['Student', 'Staff'];
     private $isFilterSelectionEditable = true;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $config['extra'] = [
             'fieldClass' => [
@@ -56,7 +56,7 @@ class SurveyFormsTable extends CustomFormsTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

@@ -64,6 +64,7 @@ Router::scope('/', function (RouteBuilder $routes) {
 
     // Standardised login route
     $routes->connect('/Login', ['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+    $routes->connect('/', ['plugin' => 'System', 'controller' => 'Systems', 'action' => 'Updates']);
 
     /**
      * ...and connect the rest of 'Pages' controller's URLs.

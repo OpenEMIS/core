@@ -64,7 +64,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         ]
     ];
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -224,10 +224,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
         return $validator->requirePresence('effective_date');
     }
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
 //        print_r($config);die();
-        $this->table('institution_staff_position_profiles');
+        $this->setTable('institution_staff_position_profiles');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('StaffChangeTypes', ['className' => 'Staff.StaffChangeTypes', 'foreignKey' => 'staff_change_type_id']);
@@ -327,7 +327,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 //        $this->addBehavior('StaffProfileBehavior');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Workflow.getEvents'] = 'getWorkflowEvents';

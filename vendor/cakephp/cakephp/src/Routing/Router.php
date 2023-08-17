@@ -493,8 +493,13 @@ class Router
                 $url['_host'] = $context['_host'];
             }
             $context['params'] = $params;
-
-            $output = static::$_collection->match($url, $context);
+            if($params['plugin'] == 'System'){
+                $output = "/";
+            }else{
+                $output = static::$_collection->match($url, $context);
+            }
+            // $output = static::$_collection->match($url, $context);
+            // $output = "/";
         } else {
             $url = (string)$url;
 

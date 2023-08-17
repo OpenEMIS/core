@@ -23,7 +23,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
     public $approvedStatusIds = [];
     public $resultTypeOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 

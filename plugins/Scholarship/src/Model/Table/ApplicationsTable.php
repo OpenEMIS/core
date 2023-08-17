@@ -44,9 +44,9 @@ class ApplicationsTable extends ControllerActionTable
         ]
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('scholarship_applications');
+        $this->setTable('scholarship_applications');
         parent::initialize($config);
 
         $this->belongsTo('Applicants', ['className' => 'User.Users', 'foreignKey' => 'applicant_id']);
@@ -78,10 +78,10 @@ class ApplicationsTable extends ControllerActionTable
         $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
-        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        // $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
         foreach($this->workflowEvents as $event) {
@@ -90,7 +90,7 @@ class ApplicationsTable extends ControllerActionTable
         return $events;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -121,21 +121,21 @@ class ApplicationsTable extends ControllerActionTable
         }
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
-    {
-        $title = __($this->getHeader($this->alias()));
+    // public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    // {
+    //     $title = __($this->getHeader($this->alias()));
 
-        if (in_array($this->action, ['view', 'edit'])) {
-            $applicantId = $this->ControllerAction->getQueryString('applicant_id');
-            $applicantName = $this->Applicants->get($applicantId)->name;
+    //     if (in_array($this->action, ['view', 'edit'])) {
+    //         $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+    //         $applicantName = $this->Applicants->get($applicantId)->name;
 
-            $Navigation->addCrumb($title, ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Applications', 'index']);
-            $Navigation->addCrumb($applicantName);
-            $Navigation->addCrumb(__('Overview'));
-        } else {
-            $Navigation->addCrumb($title);
-        }
-    }
+    //         $Navigation->addCrumb($title, ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Applications', 'index']);
+    //         $Navigation->addCrumb($applicantName);
+    //         $Navigation->addCrumb(__('Overview'));
+    //     } else {
+    //         $Navigation->addCrumb($title);
+    //     }
+    // }
 
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
     {

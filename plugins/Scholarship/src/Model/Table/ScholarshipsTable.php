@@ -85,25 +85,25 @@ class ScholarshipsTable extends ControllerActionTable
         ]);
     }
 
-    public function implementedEvents(): array
-    {
-        $events = parent::implementedEvents();
-        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
-        return $events;
-    }
+    // public function implementedEvents(): array
+    // {
+    //     $events = parent::implementedEvents();
+    //     $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+    //     return $events;
+    // }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
-    {
-        if (in_array($this->action, ['view', 'edit'])) {
-            $scholarshipId = $this->ControllerAction->getQueryString('id');
-            $scholarshipName = $this->get($scholarshipId)->name;
+    // public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    // {
+    //     if (in_array($this->action, ['view', 'edit'])) {
+    //         $scholarshipId = $this->ControllerAction->getQueryString('id');
+    //         $scholarshipName = $this->get($scholarshipId)->name;
 
-            $Navigation->addCrumb($scholarshipName);
-            $Navigation->addCrumb(__('Overview'));
-        } else {
-            $Navigation->addCrumb(__('Details'));
-        }
-    }
+    //         $Navigation->addCrumb($scholarshipName);
+    //         $Navigation->addCrumb(__('Overview'));
+    //     } else {
+    //         $Navigation->addCrumb(__('Details'));
+    //     }
+    // }
 
     public function validationDefault(Validator $validator): Validator
     {
@@ -360,7 +360,7 @@ class ScholarshipsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->controller->set('contentHeader', __($this->getHeader($this->alias())) . ' - ' . __('Details'));
+        $this->controller->set('contentHeader', __($this->getHeader($this->getAlias())) . ' - ' . __('Details'));
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -571,28 +571,28 @@ class ScholarshipsTable extends ControllerActionTable
         return $attr;
     }
     //Start:POCOR-6839
-    public function onUpdateFieldScholarshipFinancialAssistanceTypeId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-            $attr['onChangeReload'] = 'changeScholarshipFinancialAssistanceId';
-        }
-        $code = $attr['entity']->scholarship_financial_assistance_type_id;
-        switch ($code) {
-            case '3':
-                // No implementation
-                break;
-            case '4':
-                $this->field('scholarship_financial_assistance_id', [
-                    'type' => 'hidden'
-                ]);
-            case '':
-                $this->field('scholarship_financial_assistance_id', [
-                    'type' => 'hidden'
-                ]);   
-                break;
-        }
-        return $attr;
-    }
+    // public function onUpdateFieldScholarshipFinancialAssistanceTypeId(Event $event, array $attr, $action, Request $request)
+    // {
+    //     if ($action == 'add' || $action == 'edit') {
+    //         $attr['onChangeReload'] = 'changeScholarshipFinancialAssistanceId';
+    //     }
+    //     $code = $attr['entity']->scholarship_financial_assistance_type_id;
+    //     switch ($code) {
+    //         case '3':
+    //             // No implementation
+    //             break;
+    //         case '4':
+    //             $this->field('scholarship_financial_assistance_id', [
+    //                 'type' => 'hidden'
+    //             ]);
+    //         case '':
+    //             $this->field('scholarship_financial_assistance_id', [
+    //                 'type' => 'hidden'
+    //             ]);   
+    //             break;
+    //     }
+    //     return $attr;
+    // }
     //END:POCOR-6839
     public function onUpdateFieldFieldOfStudies(Event $event, array $attr, $action, Request $request)
     {

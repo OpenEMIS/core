@@ -11,7 +11,8 @@
 				if (isset($modal['form']) && $modal['form']) {
 					$template = $this->ControllerAction->getFormTemplate();
 					$this->Form->templates($template);
-					echo $this->Form->create($modal['form']['model'], $modal['form']['formOptions']);
+					// echo $this->Form->create($modal['form']['model'], $modal['form']['formOptions']);
+					echo $this->Form->create(null, $modal['form']['formOptions']);
 					if (isset($modal['form']['fields'])) {
 						foreach ($modal['form']['fields'] as $name => $attr) {
 							if (isset($attr['unlockField'])) {

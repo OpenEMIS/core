@@ -15,20 +15,20 @@ use Cake\Core\Configure;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 
-use Page\Traits\EncodingTrait;
+// use Page\Traits\EncodingTrait;
 use App\Model\Traits\MessagesTrait;
 
 class StudentBehavioursTable extends ControllerActionTable
 {
     use OptionsTrait;
-    use EncodingTrait;
+    // use EncodingTrait;
     use MessagesTrait;
     // Workflow Steps - category
     const TO_DO = 1;
     const IN_PROGRESS = 2;
     const DONE = 3;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']); //POCOR-5186
@@ -61,7 +61,7 @@ class StudentBehavioursTable extends ControllerActionTable
         //if ($this->AccessControl->check(['Institutions', 'StudentBehaviours', 'Excel'])) { // to check execute permission
         ///}
         $roles = [1,2,3,4,5,6,7,8,9,10,11];
-        $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()
+        $QueryResult = TableRegistry::get('Security.SecurityRoleFunctions')->find()
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
@@ -78,7 +78,7 @@ class StudentBehavioursTable extends ControllerActionTable
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -90,7 +90,7 @@ class StudentBehavioursTable extends ControllerActionTable
         return $events;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator

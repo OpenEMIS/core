@@ -47,7 +47,7 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
         ]
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }

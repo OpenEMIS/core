@@ -72,10 +72,11 @@ class SpacesMessages extends \Google\Service\Resource
    * Specifying an existing request ID returns the message created with that ID
    * instead of creating a new message.
    * @opt_param string threadKey Optional. Deprecated: Use thread.thread_key
-   * instead. Opaque thread identifier. To start or add to a thread, create a
-   * message and specify a `threadKey` or the thread.name. For example usage, see
-   * [Start or reply to a message thread](https://developers.google.com/chat/api/g
-   * uides/crudl/messages#start_or_reply_to_a_message_thread).
+   * instead. ID for the thread. Supports up to 4000 characters. To start or add
+   * to a thread, create a message and specify a `threadKey` or the thread.name.
+   * For example usage, see [Start or reply to a message thread](https://developer
+   * s.google.com/chat/api/guides/crudl/messages#start_or_reply_to_a_message_threa
+   * d).
    * @return Message
    */
   public function create($parent, Message $postBody, $optParams = [])
@@ -95,7 +96,9 @@ class SpacesMessages extends \Google\Service\Resource
    * authentication](https://developers.google.com/chat/api/guides/auth/users).
    * [User
    * authentication](https://developers.google.com/chat/api/guides/auth/users)
-   * requires the `chat.messages` authorization scope. (messages.delete)
+   * requires the `chat.messages` authorization scope. Requests authenticated with
+   * service accounts can only delete messages created by the calling Chat app.
+   * (messages.delete)
    *
    * @param string $name Required. Resource name of the message that you want to
    * delete, in the form `spaces/messages` Example:
@@ -217,7 +220,9 @@ class SpacesMessages extends \Google\Service\Resource
    * authentication](https://developers.google.com/chat/api/guides/auth/users).
    * [User
    * authentication](https://developers.google.com/chat/api/guides/auth/users)
-   * requires the `chat.messages` authorization scope. (messages.patch)
+   * requires the `chat.messages` authorization scope. Requests authenticated with
+   * service accounts can only update messages created by the calling Chat app.
+   * (messages.patch)
    *
    * @param string $name Resource name in the form `spaces/messages`. Example:
    * `spaces/AAAAAAAAAAA/messages/BBBBBBBBBBB.BBBBBBBBBBB`
@@ -256,7 +261,9 @@ class SpacesMessages extends \Google\Service\Resource
    * authentication](https://developers.google.com/chat/api/guides/auth/users).
    * [User
    * authentication](https://developers.google.com/chat/api/guides/auth/users)
-   * requires the `chat.messages` authorization scope. (messages.update)
+   * requires the `chat.messages` authorization scope. Requests authenticated with
+   * service accounts can only update messages created by the calling Chat app.
+   * (messages.update)
    *
    * @param string $name Resource name in the form `spaces/messages`. Example:
    * `spaces/AAAAAAAAAAA/messages/BBBBBBBBBBB.BBBBBBBBBBB`

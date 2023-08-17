@@ -11,6 +11,8 @@ use Cake\Log\Log;
 use Cake\Core\Configure;
 use Cake\Network\Exception\NotFoundException;
 use Cake\ORM\TableRegistry;   //POCOR-5301
+use Cake\Http\Session;
+use Cake\Http\ServerRequest;
 
 class IndexBehavior extends Behavior
 {
@@ -35,6 +37,7 @@ class IndexBehavior extends Behavior
 
     public function index(Event $mainEvent, ArrayObject $extra)
     {     
+        $serverRequest = new ServerRequest();
         $model = $this->_table;
         $extra['pagination'] = true;
         $extra['options'] = [];
@@ -97,14 +100,15 @@ class IndexBehavior extends Behavior
             $defaults = 6;       
         }  
         if ($extra['pagination']) {
-            $alias = $model->registryAlias();
-            $session = $model->request->session();
+            $alias = $model->getRegistryAlias();
+            $session = new Session();
+            // $session = $model->request->session();
             $request = $model->request;
             $pageOptions = $extra['config']['pageOptions'];
 
             $limit = $session->check($alias.'.search.limit') ? $session->read($alias.'.search.limit') : $defaults;
         //END: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
-            if ($request->is(['post', 'put'])) {
+            if ($serverRequest->is(['post', 'put'])) {
                 if (isset($request->data['Search'])) {
                     if (array_key_exists('limit', $request->data['Search'])) {
                         $limit = $request->data['Search']['limit'];
@@ -121,10 +125,10 @@ class IndexBehavior extends Behavior
             $mainEvent->stopPropagation();
             return $event->result;
         }
-        if ($event->result instanceof Table) {
-            $query = $event->result->find();
-        } elseif ($event->result instanceof Query) {
-            $query = $event->result;
+        if ($event->getResult() instanceof Table) {
+            $query = $event->getResult()->find();
+        } elseif ($event->getResult() instanceof Query) {
+            $query = $event->getResult();
         }
 
         $event = $model->controller->dispatchEvent('ControllerAction.Controller.beforeQuery', [$model, $query, $extra], $this);
@@ -170,8 +174,8 @@ class IndexBehavior extends Behavior
             $mainEvent->stopPropagation();
             return $event->result;
         }
-        if ($event->result) {
-            $data = $event->result;
+        if ($event->getResult()) {
+            $data = $event->getResult();
         }
         $model->controller->set('data', $data);
         return true;

@@ -8,7 +8,7 @@ use Cake\Event\Event;
 use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderTableBehavior extends RenderBehavior {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
         parent::initialize($config);
     }
 

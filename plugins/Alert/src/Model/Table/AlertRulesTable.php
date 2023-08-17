@@ -14,6 +14,7 @@ use Cake\Log\Log;
 
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
+use Cake\Http\ServerRequest;
 
 class AlertRulesTable extends ControllerActionTable
 {
@@ -25,7 +26,7 @@ class AlertRulesTable extends ControllerActionTable
     private $alertTypeFeatures = [];
     private $featureList = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -52,7 +53,7 @@ class AlertRulesTable extends ControllerActionTable
         $this->addBehavior('Alert.AlertRuleScholarshipDisbursement');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -122,9 +123,10 @@ class AlertRulesTable extends ControllerActionTable
         if (!empty($featureOptions)) {
             $featureOptions = ['-1' => __('All Features')] + $featureOptions;
         }
-
+        $request = new ServerRequest();
         $selectedFeature = $this->queryString('feature', $featureOptions);
-        $extra['selectedFeature'] = $selectedFeature;
+        // $extra['selectedFeature'] = $selectedFeature;
+        $extra['selectedFeature'] = $featureOptions;
 
         $extra['elements']['control'] = [
             'name' => 'Alert/controls',
@@ -161,8 +163,10 @@ class AlertRulesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $selectedFeature = $extra['selectedFeature'];
-
-        if ($selectedFeature != -1) {
+        // if ($selectedFeature != -1) {
+        //     $query->where(['feature' => $selectedFeature]);
+        // }
+        if (!empty($selectedFeature)) {
             $query->where(['feature' => $selectedFeature]);
         }
     }
@@ -290,46 +294,46 @@ class AlertRulesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEnabled(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add') {
-            $attr['visible'] = false;
-        } else if ($action == 'edit') {
-            $attr['select'] = false;
-            $attr['options'] = $this->getSelectOptions('general.yesno');
-        }
+    // public function onUpdateFieldEnabled(Event $event, array $attr, $action, Request $request)
+    // {
+    //     if ($action == 'add') {
+    //         $attr['visible'] = false;
+    //     } else if ($action == 'edit') {
+    //         $attr['select'] = false;
+    //         $attr['options'] = $this->getSelectOptions('general.yesno');
+    //     }
 
-        return $attr;
-    }
+    //     return $attr;
+    // }
 
-    public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-            $entity = $attr['entity'];
+    // public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, Request $request)
+    // {
+    //     if ($action == 'add' || $action == 'edit') {
+    //         $entity = $attr['entity'];
 
-            if ($entity->has('feature')) {
-                $feature = $entity->feature;
+    //         if ($entity->has('feature')) {
+    //             $feature = $entity->feature;
 
-                if (in_array($feature, ['ScholarshipApplication'])) {
-                    $attr['type'] = 'disabled';
-                    $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
-                    $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
-                } else {
-                    $roleOptions = $this->SecurityRoles
-                        ->find('list')
-                        ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->primaryKey()), $this->SecurityRoles->aliasField('name')])
-                        ->find('visible')
-                        ->find('order')
-                        ->toArray();
+    //             if (in_array($feature, ['ScholarshipApplication'])) {
+    //                 $attr['type'] = 'disabled';
+    //                 $attr['value'] = self::ASSIGN_TO_ASSIGNEE;
+    //                 $attr['attr']['value'] = __(self::ASSIGNEE_ROLE);
+    //             } else {
+    //                 $roleOptions = $this->SecurityRoles
+    //                     ->find('list')
+    //                     ->select([$this->SecurityRoles->aliasField($this->SecurityRoles->primaryKey()), $this->SecurityRoles->aliasField('name')])
+    //                     ->find('visible')
+    //                     ->find('order')
+    //                     ->toArray();
 
-                    $attr['type'] = 'chosenSelect';
-                    $attr['options'] = $roleOptions;
-                }
-            }
-        }
+    //                 $attr['type'] = 'chosenSelect';
+    //                 $attr['options'] = $roleOptions;
+    //             }
+    //         }
+    //     }
 
-        return $attr;
-    }
+    //     return $attr;
+    // }
 
     public function onUpdateFieldThreshold(Event $event, array $attr, $action, Request $request)
     {
@@ -467,7 +471,7 @@ class AlertRulesTable extends ControllerActionTable
     }
      //POCOR-7558 start
     public function getLastRunDate(){
-        $systemProcess=TableRegistry::get('system_processes');
+        $systemProcess=TableRegistry::get('SystemProcesses');
         $data=$systemProcess->find()->select([
              'name'=> $systemProcess->aliasField('name'),
              'end_date'=> $systemProcess->aliasField('end_date'),
