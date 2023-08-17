@@ -157,11 +157,9 @@ class CommonArchiveShell extends Shell
             // Enable foreign key checks
             $i = 1;
             for ($offset = 0; $offset < $totalRecords; $offset += $batchSize) {
-
                 $sql = "DELETE FROM $table_name where academic_period_id = $academic_period_id LIMIT $batchSize";
                 $affectedBatchRows = $connection->execute($sql)->rowCount();
                 $caller->recordsToArchive = $caller->recordsToArchive - $affectedBatchRows;
-                $i++;
                 $proc = "Delete step:";
                 self::setTransferLogsBatch($caller,
                     $i, $proc);
