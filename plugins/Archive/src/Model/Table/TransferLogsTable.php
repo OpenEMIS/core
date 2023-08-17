@@ -294,9 +294,9 @@ class TransferLogsTable extends ControllerActionTable
 //            $this->Alert->error('Archive.notSuperAdmin');
 //            return false;
 //        }
-        $this->log('after save', 'debug');
+//        $this->log('after save', 'debug');
         ini_set('memory_limit', '-1');
-        $this->log('after save' . $entity->features, 'debug');
+//        $this->log('after save' . $entity->features, 'debug');
         if ($entity->features == "Student Attendances") {
             $this->archiveStudentAttendances($entity);
         }
