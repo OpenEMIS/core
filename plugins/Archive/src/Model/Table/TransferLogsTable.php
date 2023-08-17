@@ -323,8 +323,8 @@ class TransferLogsTable extends ControllerActionTable
         $args = '';
         $args .= !is_null($academicPeriodId) ? ' ' . $academicPeriodId : ' 0';
         $args .= !is_null($pid) ? ' ' . $pid : ' 0';
-        $args .= !is_null($recordsToArchive) ? ' ' . $pid : ' 0';
-        $args .= !is_null($recordsInArchive) ? ' ' . $pid : ' 0';
+        $args .= !is_null($recordsToArchive) ? ' ' . $recordsToArchive : ' 0';
+        $args .= !is_null($recordsInArchive) ? ' ' . $recordsInArchive : ' 0';
 
         $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $shellName . $args;
         $logs = ROOT . DS . 'logs' . DS . $shellName . '.log & echo $!';
@@ -452,7 +452,7 @@ class TransferLogsTable extends ControllerActionTable
             $recordsToArchive = 0;
             foreach ($tablesToArchive as $tableToArchive) {
                 $tableRecordsCount =
-                    $this->getTableRecordsCountForAcademicPeriod($tableToArchive,
+                    self::getTableRecordsCountForAcademicPeriod($tableToArchive,
                         $academic_period_id);
                 $recordsToArchive = $recordsToArchive + $tableRecordsCount;
             }
@@ -470,7 +470,7 @@ class TransferLogsTable extends ControllerActionTable
                 foreach ($tablesToArchive as $tableToArchive) {
                     $archive_table_name = ArchiveConnections::hasArchiveTable($tableToArchive);
                     $archiveTableRecordsCount =
-                        $this->getTableRecordsCountForAcademicPeriod($archive_table_name,
+                        self::getTableRecordsCountForAcademicPeriod($archive_table_name,
                             $academic_period_id);
                     $recordsInArchive = $recordsInArchive + $archiveTableRecordsCount;
                 }
@@ -538,12 +538,23 @@ class TransferLogsTable extends ControllerActionTable
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      * cleaner code
      */
-    private function getTableRecordsCountForAcademicPeriod($table_name, $academic_period_id)
+    private static function getTableRecordsCountForAcademicPeriod($table_name, $academic_period_id)
     {
-        $Table = TableRegistry::get($table_name);
-        $RecordsCount = $Table->find('all')
-            ->where(['academic_period_id' => $academic_period_id])->count();
+        $connectionName = 'default';
+        $fieldName = 'academic_period_id';
+        $RecordsCount = self::getSimpleCount(
+            $table_name,
+            $connectionName,
+            $fieldName,
+            $academic_period_id);
         return intval($RecordsCount);
+    }
+
+    private static function getSimpleCount($tableName, $connectionName, $fieldName, $fieldValue) {
+        $connection = ConnectionManager::get($connectionName);
+        $sql = "SELECT count(*) as count FROM $tableName WHERE $fieldName = :fieldValue";
+        $result = $connection->execute($sql, ['fieldValue' => $fieldValue])->fetch('assoc');
+        return intval($result['count']);
     }
 
 
