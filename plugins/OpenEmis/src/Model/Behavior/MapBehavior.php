@@ -45,7 +45,7 @@ use Cake\ORM\TableRegistry;
  */
 class MapBehavior extends Behavior
 {
-    public function implementedEvents() 
+    public function implementedEvents(): array 
     {
         $events = parent::implementedEvents();
         $newEvent = [

@@ -1,0 +1,979 @@
+/*
+Core Overwrites: v.1.0.12
+*/
+
+
+/* Homepage Background */
+
+.body-wrapper {
+    background-image: url('../../../img/core-login-bg.jpg') !important;
+}
+
+
+/* Tooltip */
+
+.tooltip-blue .tooltip {
+    margin-left: 53px !important;
+}
+
+tbody tr:first-child .tooltip-blue .tooltip {
+    margin-top: 20px !important;
+    margin-left: 80px !important;
+}
+
+.rtl .tooltip-blue .tooltip {
+    margin-left: -50px !important;
+}
+
+.rtl tbody tr:first-child .tooltip-blue .tooltip {
+    margin-left: -80px !important;
+}
+
+
+/* Tooltip Width to be larger in Import Page */
+
+.tooltip-inner {
+    max-width: 800px !important;
+}
+
+@media only screen and (max-width: 1024px) {
+    .tooltip-inner {
+        max-width: 450px !important;
+    }
+}
+
+@media only screen and (max-width: 480px) {
+    .tooltip-inner {
+        max-width: 250px !important;
+    }
+}
+
+
+/* Pagination */
+
+@media only screen and (max-width: 800px) {
+    .pagination-wrapper .counter {
+        clear: both !important;
+    }
+}
+
+
+/* Remove Underline */
+
+a.btn-red:hover,
+a.btn-green:hover {
+    text-decoration: none;
+}
+
+
+/* Highcharts */
+
+.highcharts-container {
+    position: relative !important;
+}
+
+
+/* Table Tfoot */
+
+.table-in-view tfoot td {
+    border-top: 1px solid #DDD !important;
+}
+
+.table-in-view tfoot td {
+    border-bottom: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+}
+
+
+/* Layout Splitter */
+
+.rtl .left-menu {
+    left: 0;
+}
+
+
+/* IE9 */
+
+.rtl .input-select-wrapper:before {
+    left: 22px !important;
+    top: 2px;
+}
+
+
+/* Add Class for Overflow Menu in Chrome */
+
+@media only screen and (max-width: 1024px) {
+    .enable-overflow {
+        overflow: hidden !important;
+    }
+}
+
+@media only screen and (max-width: 800px) {
+    .page-header h2:hover + .toolbar {
+        display: inline-block !important;
+    }
+}
+
+
+/* Scrollable Tabs */
+
+.scrolltabs .nav > li:hover {
+    font-weight: normal;
+}
+
+.scrolltabs.sticky-content .tab-content {
+    padding: 0;
+}
+
+.rtl .horizontal-tabs span a,
+.rtl .horizontal-tabs span a:focus,
+.rtl .horizontal-tabs span a:visited,
+.rtl .horizontal-tabs span.tab-active a,
+.rtl .horizontal-tabs span.tab-active a:hover,
+.rtl .horizontal-tabs span.tab-active a:focus {
+    height: 30px;
+    line-height: 31px;
+}
+
+
+/* About Page */
+
+.about-container {
+    border-top: 0 !important;
+}
+
+.about-wrapper {
+    background-color: #FFF;
+    border-top: 0;
+}
+
+
+/* RTL Table - Temporary Fix for the extra padding/margin within the table */
+
+.rtl .table-curved,
+.rtl .table {
+    border-collapse: collapse !important;
+}
+
+
+/* Fix RTL brackets */
+
+p,
+a,
+.breadcrumb.panel-breadcrumb li,
+.rtl .breadcrumb.panel-breadcrumb li {
+    unicode-bidi: plaintext;
+    unicode-bidi: -moz-plaintext;
+    unicode-bidi: -webkit-plaintext;
+}
+
+.breadcrumb.panel-breadcrumb li {
+    direction: ltr;
+}
+
+
+/* Fix header more menu icon alignment */
+
+.rtl .more-menu-item i {
+    float: right;
+}
+
+
+/* Fix Old Tabs Line Height */
+
+.rtl .horizontal-tabs span a {
+    line-height: 31px;
+}
+
+
+/* Ag-Grid Overwrites */
+
+.ag-fresh {
+    overflow: hidden;
+}
+
+.ag-fresh .ag-root {
+    min-height: 200px;
+}
+
+.ag-height-fixed {
+    height: 100%;
+    min-height: 200px;
+}
+
+.rtl .ag-fresh div.ag-header,
+.rtl .ag-body-viewport {
+    direction: ltr !important;
+}
+
+.ag-fresh .ag-header-cell .ag-header-cell-label {
+    padding: 10px 35px 10px 10px;
+    cursor: pointer;
+    line-height: normal;
+}
+
+.ag-fresh .ag-header-cell-text {
+    vertical-align: middle;
+}
+
+.ag-fresh .ag-cell {
+    padding: 8px !important;
+}
+
+.ag-fresh .ag-cell-focus {
+    outline: 0 !important;
+}
+
+.ag-fresh div.ag-header {
+    background: none;
+    border-bottom: 0px;
+}
+
+.ag-fresh .header-icon {
+    color: #999;
+    margin: 0 5px;
+}
+
+.ag-fresh .ag-sort-ascending-icon::after,
+.ag-sort-descending-icon::after {
+    vertical-align: middle;
+}
+
+.ag-fresh .ag-sort-none-icon {
+    vertical-align: middle;
+}
+
+.ag-fresh .oe-cell-highlight {
+    background-color: #FFF9CA !important;
+    border-color: transparent;
+}
+
+.ag-fresh .oe-cell-editable,
+.ag-fresh .oe-cell-editable select {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 36px;
+    background-color: #FFF9CA;
+    border: 0;
+    padding: 10px;
+    width: 100%;
+}
+
+.ag-fresh .ag-cell-edit-input {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    right: 0;
+    bottom: 0;
+    height: 30px;
+    background-color: #FFF9CA;
+    border: 0;
+    padding: 5px;
+    width: 97%;
+}
+
+.ag-header-icon {
+    display: inline;
+}
+
+.ag-fresh .ag-header-cell-menu-button {
+    line-height: 14px !important;
+    z-index: 1;
+    background-color: #F6F6F6;
+}
+
+.ag-fresh .ag-header-cell-menu-button,
+.ag-header-icon .ag-sort-ascending-icon,
+.ag-header-icon .ag-sort-descending-icon {
+    display: inline !important;
+}
+
+.ag-fresh .ag-header-cell-menu-button:hover {
+    background-color: #EEE;
+}
+
+.ag-header-cell-menu-button svg,
+.ag-sort-none-icon svg {
+    display: none;
+}
+
+.ag-sort-descending-icon:after,
+.ag-sort-none-icon:after,
+.ag-fresh .oe-cell-editable.oe-select-wrapper:after,
+.ag-fresh .ag-filter div div:after {
+    font-family: "FontAwesome";
+    font-size: 12px;
+    color: #555;
+    margin-right: 10px;
+}
+
+.ag-fresh .oe-cell-editable.oe-select-wrapper:after,
+.ag-fresh .ag-filter div div:after {
+    content: "\f0d7";
+    position: absolute;
+    right: 0;
+}
+
+.ag-fresh .oe-cell-editable.oe-select-wrapper:after {
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+    -moz-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    -o-transform: translateY(-50%);
+    transform: translateY(-50%);
+}
+
+.ag-fresh .ag-filter div div:after {
+    top: 10px;
+}
+
+.ag-fresh .oe-cell-editable select {
+    background-color: #FFF9CA;
+}
+
+.ag-sort-none-icon:after {
+    content: "\f0dc";
+}
+
+.ag-fresh .ag-header-row div.ag-header-cell {
+    border-color: #DDD;
+    border-style: solid;
+}
+
+.ag-fresh .ag-menu .ag-filter .ag-filter-select {
+    margin: 4px 0 0;
+    border: 0;
+    border-bottom: 1px solid #DDD;
+    border-radius: 0;
+}
+
+.ag-filter select {
+    -webkit-appearance: auto !important;
+    -moz-appearance: auto !important;
+    appearance: auto !important;
+}
+
+.ag-fresh .ag-cell:last-child {
+    border-right: 1px dotted #DDD !important;
+}
+
+.ag-fresh .ag-header-cell:last-child {
+    border-right: 1px solid #DDD !important;
+}
+
+.rtl .ag-fresh .ag-cell,
+.rtl .ag-fresh .ag-header-cell-text {
+    font-size: 14px;
+}
+
+.rtl .ag-fresh .ag-header-cell .ag-header-cell-label {
+    padding: 10px 10px 10px 35px;
+}
+
+.rtl .ag-fresh .ag-header-row {
+    direction: ltr;
+}
+
+.rtl .ag-fresh .ag-cell:last-child {
+    border-left: 1px dotted #DDD !important;
+}
+
+.rtl .ag-fresh .ag-header-cell:last-child {
+    border-left: 1px solid #DDD !important;
+}
+
+.rtl .ag-fresh .ag-header-icon {
+    float: right;
+}
+
+.rtl .ag-sort-descending-icon:after,
+.rtl .ag-sort-none-icon:after,
+.rtl .ag-fresh .oe-cell-editable.oe-select-wrapper:after,
+.rtl .ag-fresh .ag-filter div div:after,
+.rtl .ag-sort-ascending-icon:after,
+.rtl .ag-sort-descending-icon:after {
+    margin-right: 0;
+    margin-left: 10px;
+}
+
+.rtl .ag-fresh .oe-cell-editable.oe-select-wrapper:after,
+.rtl .ag-fresh .ag-filter div div:after {
+    right: auto !important;
+    left: 0;
+}
+
+.rtl .ag-fresh .ag-menu {
+    margin-left: 212px;
+}
+
+.rtl .ag-fresh .ag-header-cell-menu-button {
+    float: left;
+}
+
+/* Error message on the fileinput */
+
+.fileinput-preview {
+    width: 25% !important;
+}
+
+
+/* Advanced Search alignment */
+
+.adv-search {
+    margin: 14px 0 !important;
+}
+
+
+/* Set opacity to left pane */
+
+.left-pane {
+    opacity: 0;
+}
+
+
+/* Highcharts Border */
+
+.institution-dashboard .highcharts-background {
+    stroke-width: 1px;
+}
+
+
+/* Date/Time Picker inside Table */
+
+.table .input-group-addon {
+    position: absolute;
+    right: 0;
+    line-height: 0;
+    cursor: pointer;
+    font-size: 15px;
+    width: 52px;
+    height: 30px;
+}
+
+.rtl .table .input-group-addon {
+    left: 0;
+    right: auto !important;
+}
+
+
+/* Style for the coordinates; latitude and longitude */
+
+
+.input-value-wrapper {
+    display: inline-block;
+    margin-right: 15px;
+}
+
+.input-value-wrapper .status-grey-border {
+    border-left: 0;
+    border-color: #DDD;
+    -webkit-border-top-left-radius: 0 !important;
+    -moz-border-top-left-radius: 0 !important;
+    -ms-border-top-left-radius: 0 !important;
+    border-top-left-radius: 0 !important;
+    -webkit-border-bottom-left-radius: 0 !important;
+    -moz-border-bottom-left-radius: 0 !important;
+    -ms-border-bottom-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+.input-value-wrapper .past {
+    -webkit-border-top-right-radius: 0 !important;
+    -moz-border-top-right-radius: 0 !important;
+    -ms-border-top-right-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    -webkit-border-bottom-right-radius: 0 !important;
+    -moz-border-bottom-right-radius: 0 !important;
+    -ms-border-bottom-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+.rtl .input-value-wrapper {
+    margin-right: 0;
+    margin-left: 15px;
+}
+
+.rtl .input-value-wrapper .status-grey-border {
+    border-left: 1px solid #DDD;
+    border-right: 0;
+    border-color: #DDD;
+    -webkit-border-top-left-radius: 3px !important;
+    -moz-border-top-left-radius: 3px !important;
+    -ms-border-top-left-radius: 3px !important;
+    border-top-left-radius: 3px !important;
+    -webkit-border-bottom-left-radius: 3px !important;
+    -moz-border-bottom-left-radius: 3px !important;
+    -ms-border-bottom-left-radius: 3px !important;
+    border-bottom-left-radius: 3px !important;
+    -webkit-border-top-right-radius: 0 !important;
+    -moz-border-top-right-radius: 0 !important;
+    -ms-border-top-right-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    -webkit-border-bottom-right-radius: 0 !important;
+    -moz-border-bottom-right-radius: 0 !important;
+    -ms-border-bottom-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+.rtl .input-value-wrapper .past {
+    -webkit-border-top-right-radius: 3px !important;
+    -moz-border-top-right-radius: 3px !important;
+    -ms-border-top-right-radius: 3px !important;
+    border-top-right-radius: 3px !important;
+    -webkit-border-bottom-right-radius: 3px !important;
+    -moz-border-bottom-right-radius: 3px !important;
+    -ms-border-bottom-right-radius: 3px !important;
+    border-bottom-right-radius: 3px !important;
+    -webkit-border-top-left-radius: 0 !important;
+    -moz-border-top-left-radius: 0 !important;
+    -ms-border-top-left-radius: 0 !important;
+    border-top-left-radius: 0 !important;
+    -webkit-border-bottom-left-radius: 0 !important;
+    -moz-border-bottom-left-radius: 0 !important;
+    -ms-border-bottom-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+/* Fixed for POCOR-3001, select option order is not consistent in RTL */
+
+.rtl .form-horizontal option {
+    direction: ltr;
+}
+
+/* End of Fixed for POCOR-3001, select option order is not consistent in RTL */
+
+
+/* Enable Search for Chosen Select */
+
+.chosen-container-single .chosen-single abbr,
+.chosen-container-single .chosen-search {
+    display: block !important;
+}
+
+.form-horizontal .input-select-wrapper .chosen-container,
+.input-select-wrapper .chosen-container {
+    width: 100% !important;
+}
+
+.chosen-container-single .chosen-single div b {
+    display: none !important;
+}
+
+/* End of Enable Search for Chosen Select */
+
+/* Add style for text input in filter */
+
+.dropdown-filter .text input {
+    background-color: #FFF;
+    width: 100%;
+    min-width: 150px;
+    height: 25px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    border: 1px solid #CCC;
+    padding: 3px 25px 4px 5px!important;
+}
+
+.chrome .dropdown-filter .text input,
+.safari .dropdown-filter .text input {
+    padding: 4px 25px 4px 5px!important;
+}
+
+.dropdown-filter .text {
+    display: inline-block;
+    margin-right: 10px;
+    width: 15%;
+}
+
+/* End of Add style for text input in filter */
+
+/* Temporary fix for POCOR-1855 */
+
+.form-horizontal input[type="checkbox"],
+.form-horizontal input[type="radio"] {
+    width: 18px !important;
+    min-width: 18px !important;
+}
+
+/* End of Temporary fix for POCOR-1855 */
+
+/* For Checkbox iCheck - To be depreciate */
+
+.icheck-input[type="checkbox"],
+.icheck-input[type="radio"] {
+    z-index: -1 !important;
+}
+
+/* End of iCheck */
+
+
+/* Fixed Navigation Menu in RTL (Force font to always align right) */
+
+.rtl .left-menu .nav-level-1 i {
+    float: right;
+}
+
+/* End of Fixed Navigation Menu in RTL (Force font to always align right) */
+
+
+/* Temporary Overwrites (to remove after 2.5.1 new components is implemented) */
+
+.rtl .toolbar-wrapper .form-control {
+    height: 25px;
+    padding: 2px 6px 2px 25px !important;
+    font-size: 11px;
+    margin: 3px 0;
+}
+
+/* End of Temporary Overwrites (to remove after 2.5.1 new components is implemented) */
+
+/* Fix for Datepicker inside Filter - POCOR-2827 */
+
+.dropdown-filter .date {
+    position: relative;
+    display: inline-block;
+    margin-right: 10px;
+    margin-bottom: 15px !important;
+    margin-left: 5px;
+    width: 15%;
+    vertical-align: top;
+    min-width: 150px;
+}
+
+.dropdown-filter .date .input-group.date {
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+.dropdown-filter .date input {
+    background-color: #FFF;
+    width: 100%;
+    height: 25px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    border: 1px solid #CCC;
+    padding: 3px 25px 4px 5px!important;
+}
+
+.dropdown-filter .date .input-group-addon {
+    font-size: 12px;
+    position: absolute;
+    right: 0;
+    height: 25px;
+    width: 25px;
+    padding: 4px;
+    margin: 0 !important;
+    cursor: pointer;
+}
+
+.chrome .dropdown-filter .date input,
+.safari .dropdown-filter .date input {
+    padding: 4px 25px 4px 5px !important;
+}
+
+.datepicker table tr td span.active,
+.datepicker table tr td span.active:hover,
+.datepicker table tr td span.active.disabled,
+.datepicker table tr td span.active.disabled:hover {
+    background-image: none !important;
+}
+
+.sg-theme #btNext {
+    margin-left: 5px;
+}
+
+.sg-theme .ag-cell {
+    border-right: 1px dotted #DDD !important;
+}
+
+.sg-theme .selection-wrapper {
+    margin-top: -3px;
+    margin-left: -1px;
+}
+
+.sg-theme #south {
+    height: 42px;
+}
+
+.sg-theme #pageRowSummaryPanel {
+    display: inline-block;
+    margin: 7px 0;
+}
+
+.sg-theme .ag-paging-button {
+    background-color: #FFF;
+    border: 1px solid #CCC;
+    border-radius: 3px;
+}
+
+.sg-theme .ag-paging-button#btFirst,
+.sg-theme .ag-paging-button#btPrevious,
+.sg-theme .ag-paging-button#btNext,
+.sg-theme .ag-paging-button#btLast {
+    position: relative;
+    font-size: 0;
+    height: 30px;
+    width: 30px;
+    vertical-align: middle;
+    padding: 0;
+}
+
+.sg-theme .ag-paging-button#btFirst:before,
+.sg-theme .ag-paging-button#btPrevious:before,
+.sg-theme .ag-paging-button#btNext:before,
+.sg-theme .ag-paging-button#btLast:before {
+    font-family: "FontAwesome";
+    font-size: 14px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.sg-theme .ag-paging-button#btFirst {
+    margin: 0 5px 0 0;
+}
+
+.sg-theme .ag-paging-button#btFirst:before {
+    content: "\f100";
+}
+
+.sg-theme .ag-paging-button#btPrevious {
+    margin: 0 10px 0 0;
+}
+
+.sg-theme .ag-paging-button#btPrevious:before {
+    content: "\f104";
+}
+
+.sg-theme .ag-paging-button#btNext {
+    margin: 0 0 0 10px;
+}
+
+.sg-theme .ag-paging-button#btNext:before {
+    content: "\f105";
+}
+
+.sg-theme .ag-paging-button#btLast {
+    margin: 0 0 0 5px;
+}
+
+.sg-theme .ag-paging-button#btLast:before {
+    content: "\f101";
+}
+
+.sg-theme .ag-overlay-no-rows-center,
+.sg-theme .ag-overlay-loading-center {
+    padding: 10px;
+}
+
+.rtl .dropdown-filter .text,
+.rtl .dropdown-filter .date {
+    margin-right: 0 !important;
+    margin-left: 10px;
+}
+
+.rtl .dropdown-filter .date .input-group-addon {
+    right: auto !important;
+    left: 0;
+}
+
+.rtl.chrome .dropdown-filter .date input,
+.rtl.safari .dropdown-filter .date input,
+.rtl.chrome .dropdown-filter .text input,
+.rtl.safari .dropdown-filter .text input {
+    padding: 4px 5px 4px 25px !important;
+}
+
+.rtl .sg-theme .ag-paging-button#btFirst:before {
+    content: "\f101";
+}
+
+.rtl .sg-theme .ag-paging-button#btPrevious:before {
+    content: "\f105";
+}
+
+.rtl .sg-theme .ag-paging-button#btNext:before {
+    content: "\f104";
+}
+
+.rtl .sg-theme .ag-paging-button#btLast:before {
+    content: "\f100";
+}
+
+.rtl .sg-theme .ag-paging-button#btPrevious {
+    margin: 0 0 0 10px !important;
+}
+
+.rtl .sg-theme .ag-paging-button#btFirst {
+    margin: 0 0 0 5px !important;
+}
+
+.rtl .sg-theme .ag-paging-button#btNext {
+    margin: 0 10px 0 0 !important;
+}
+
+.rtl .sg-theme .ag-paging-button#btLast {
+    margin: 0 5px 0 0 !important;
+}
+
+@media only screen and (max-width: 1240px) {
+    .dropdown-filter .date,
+    .dropdown-filter .text {
+        width: 30%;
+    }
+}
+
+@media only screen and (max-width: 800px) {
+    .dropdown-filter .date,
+    .dropdown-filter .text {
+        width: 45%;
+    }
+
+    .sg-theme #south {
+        height: 80px;
+        padding: 5px;
+    }
+
+    .sg-theme .ag-paging-page-summary-panel {
+        width: 100%;
+        text-align: center;
+    }
+
+    .sg-theme #pageRowSummaryPanel {
+        display: block;
+        text-align: center;
+    }
+}
+
+@media only screen and (max-width: 480px) {
+    .dropdown-filter .date,
+    .dropdown-filter .text {
+        width: 100%;
+    }
+
+    .dropdown-filter .date {
+        margin-left: 0 !important;
+    }
+}
+/* End of Fix for Datepicker inside Filter - POCOR-2827 */
+
+/* Fix for POCOR-1908 */
+
+.rtl #workbench .list-group-item > .badge {
+    float: left;
+}
+
+#workbench .list-group-item:first-child,
+#workbench .list-group-item:last-child {
+    -webkit-border-radius: 0 !important;
+            border-radius: 0 !important;
+}
+
+#workbench .dashboard-content {
+    background-color: #FFF;
+}
+
+#workbench .list-group-item {
+    border-left: 0;
+    border-right: 0;
+    /* temp fixtd to add in the padding [vincent] */
+    /*padding: 10px;*/
+}
+
+#workbench .list-group-item:first-child {
+    border-top: 0;
+}
+
+.wrapper {
+    height: calc(100% - 76px);
+}
+
+.wrapper.no-breadcrumb {
+    height: calc(100% - 39px);
+    padding: 0;
+}
+
+.content-splitter.split-panes.horizontal > .split-handler,
+.rtl .content-splitter.split-panes.horizontal > .split-handler {
+    top: 0 !important;
+    bottom: 0 !important;
+}
+
+.split-content-header,
+.split-content-area {
+    padding: 0;
+}
+
+/* End of Fix for POCOR-1908 */
+
+/* Fix for POCOR-3658 */
+
+.rtl .treemap-breadcrumb li:not(:first-child) {
+    direction: ltr;
+}
+
+/* End of fix for POCOR-3658 */
+
+/* Temp fix by KK POCOR-3880 */
+
+.ag-fresh .ag-pinned-left-header,
+.ag-fresh .ag-pinned-right-header {
+    background: none !important;
+    background-color: rgba(204, 204, 204, 0.2) !important;
+    -webkit-box-shadow: inset 0 1px 0 #FFF;
+    -moz-box-shadow: inset 0 1px 0 #FFF;
+    box-shadow: inset 0 1px 0 #FFF;
+    border-bottom: 1px solid #DDD !important;
+}
+
+.ag-fresh .ag-pinned-left-header .ag-header-cell:last-child {
+    border-right: 1px solid #DDD !important;
+}
+
+.ag-fresh .ag-header-icon#agMenu {
+    display: block !important;
+}
+
+.ag-menu input.ag-filter-filter {
+    width: 89% !important;
+}
+
+.ag-fresh .ag-menu {
+    border: none !important;
+}
+/* End of fix for POCOR-3880 */
+
+/* Temp overwrite of last child of ag grid pinned POCOR-3961 */
+
+.ag-fresh .ag-pinned-left-cols-container .ag-cell.ag-cell-last-left-pinned {
+    border-right: 1px dotted #DDD !important;
+}
+
+/* End of temp fix for POCOR-3961 */
+
+/* Fix for normal table sorting issue in POCOR-2547 */
+
+.rtl .table-sortable th > a.asc:after {
+    content: "\f0dd";
+}
+
+.rtl .table-sortable th > a.desc:after {
+    content: "\f0de";
+}
+
+/* End of fix for normal table sorting */
+
+/* Temp fix for adding error border in ag Grid for task POCOR-4010 */
+
+.ag-fresh .ag-cell-no-focus.oe-cell-error,
+.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error {
+    border: 2px solid #CC5C5C !important;
+    border-radius: 0px !important;
+}
+
+/* End of fix for adding error border */

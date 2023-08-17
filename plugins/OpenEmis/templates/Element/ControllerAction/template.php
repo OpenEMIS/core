@@ -15,8 +15,8 @@ $this->start('panelBody');
 		if (is_array($ControllerAction['form'])) {
 			$formOptions = array_merge($formOptions, $ControllerAction['form']);
 		}
-		$entity = $ControllerAction['table']->newEntity();
-		if (isset($data) && $data instanceof Cake\ORM\Entity) {
+		$entity = $ControllerAction['table']->newEmptyEntity();
+		if (isset($data)) {
 			$entity = $data;
 		}
 		echo $this->Form->create($entity, $formOptions);

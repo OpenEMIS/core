@@ -18,9 +18,9 @@ class StaffAppraisalsTable extends ControllerActionTable
 {    
     public $staff;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff_appraisals');
+        $this->setTable('institution_staff_appraisals');
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
@@ -81,13 +81,13 @@ class StaffAppraisalsTable extends ControllerActionTable
         ]);
 
         // setting this up to be overridden in viewAfterAction(), this code is required for file download
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             true
         );
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         return $validator
             ->allowEmpty('file_content')

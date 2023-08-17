@@ -12,7 +12,7 @@ class UpdateAssigneeShell extends Shell
 	const IN_PROGRESS = 2;
 	const DONE = 3;
 
-	public function initialize()
+	public function initialize(): void
 	{
 		parent::initialize();
 		$this->loadModel('Workflow.WorkflowModels');

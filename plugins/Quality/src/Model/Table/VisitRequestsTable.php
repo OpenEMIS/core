@@ -22,10 +22,10 @@ class VisitRequestsTable extends ControllerActionTable
     const IN_PROGRESS = 2;
     const DONE = 3;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
        
-        $this->table('institution_visit_requests');
+        $this->setTable('institution_visit_requests');
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
@@ -47,14 +47,14 @@ class VisitRequestsTable extends ControllerActionTable
         $this->addBehavior('Quality.Visit');
         $this->addBehavior('Workflow.Workflow');
         // setting this up to be overridden in viewAfterAction(), this code is required
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             true
         );
         $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

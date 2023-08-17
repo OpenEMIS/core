@@ -8,11 +8,11 @@ use Cake\Event\Event;
 
 class InstitutionWorkflowAccessControlBehavior extends Behavior {
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
     	$this->Institutions = TableRegistry::get('Institution.Institutions');
     }
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$events['Workflow.onUpdateRoles'] = 'onWorkflowUpdateRoles';
 		return $events;

@@ -9,9 +9,9 @@ use App\Model\Table\ControllerActionTable;
 
 class ShiftOptionsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('shift_options');
+        $this->setTable('shift_options');
         parent::initialize($config);
         $this->hasMany('Shifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'shift_option_id']);
         $this->addBehavior('FieldOption.FieldOption');

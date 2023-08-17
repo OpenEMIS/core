@@ -9,13 +9,15 @@ use Cake\ORM\Entity;
 use ArrayObject;
 
 class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 
 		$this->belongsTo('CustomForms', ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id']);
 		$this->belongsTo('CustomFields', ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id']);
 
-		$this->removeBehavior('Reorder');
+
+		$this->addBehavior('Reorder', ['enabled' => false]);
+		// $this->removeBehavior('Reorder');
 		$this->addBehavior('Restful.RestfulAccessControl', [
             'Rules' => ['index']
         ]);

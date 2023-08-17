@@ -17,7 +17,7 @@ class EducationGradesTable extends ControllerActionTable
     private $_contain = ['EducationSubjects._joinData'];
     private $_fieldOrder = ['name', 'code', 'education_stage_id', 'admission_age', 'education_programme_id', 'visible'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -53,15 +53,17 @@ class EducationGradesTable extends ControllerActionTable
         ]);
 
         if ($this->behaviors()->has('Reorder')) {
-            $this->behaviors()->get('Reorder')->config([
-                'filter' => 'education_programme_id',
-            ]);
+            // $this->behaviors()->get('Reorder')->config([
+            //     'filter' => 'education_programme_id',
+            // ]);
+            $reorderBehavior = $this->behaviors()->get('Reorder');
+            $reorderBehavior->setConfig('filter', 'education_programme_id');
         }
 
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         if (isset($this->action) && $this->action == 'add') {
@@ -77,7 +79,7 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.afterReorder'] = 'afterReorder';

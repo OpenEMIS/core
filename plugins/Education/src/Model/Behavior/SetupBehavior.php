@@ -15,13 +15,13 @@ class SetupBehavior extends Behavior {
 		]
 	];
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
     	$events = parent::implementedEvents();
-    	$events = array_merge($events, $this->config('events'));
+    	$events = array_merge($events, $this->getConfig('events'));
     	return $events;
 	}
 

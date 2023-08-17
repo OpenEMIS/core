@@ -13,7 +13,7 @@ use Institution\Model\Table\InstitutionStudentTransfersTable;
 
 class StudentTransferInTable extends InstitutionStudentTransfersTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -23,15 +23,17 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         ]);
 
         if ($this->behaviors()->has('Workflow')) {
-            $this->behaviors()->get('Workflow')->config([
-                'institution_key' => 'institution_id'
-            ]);
+            // $this->behaviors()->get('Workflow')->config([
+            //     'institution_key' => 'institution_id'
+            // ]);
+            $workflowBehavior = $this->behaviors()->get('Workflow');
+            $workflowBehavior->setConfig('institution_key', 'institution_id');
         }
 
         $this->toggle('add', true);//POCOR-6925
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -101,7 +103,7 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         return $validator->remove('start_date', 'ruleCompareDateReverse');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Students.afterSave'] = 'studentsAfterSave';

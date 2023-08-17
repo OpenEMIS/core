@@ -11,7 +11,7 @@ use App\Controller\PageController;
 
 class ScholarshipRecipientsController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Scholarship.Scholarships');
@@ -22,7 +22,7 @@ class ScholarshipRecipientsController extends PageController
         $this->Page->loadElementsFromTable($this->ScholarshipRecipients);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderStatus'] = 'onRenderStatus';

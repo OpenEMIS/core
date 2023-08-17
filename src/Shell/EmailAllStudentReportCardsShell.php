@@ -12,7 +12,7 @@ use Cake\Console\Shell;
 class EmailAllStudentReportCardsShell extends Shell
 {
 	CONST EMAIL_TEMPLATE = 2;
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('SystemProcesses');

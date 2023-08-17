@@ -7,7 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Auth\DefaultPasswordHasher;
 
 class PasswordShell extends Shell {
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 	}
 

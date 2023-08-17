@@ -8,7 +8,7 @@ use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderCheckboxBehavior extends RenderBehavior
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }

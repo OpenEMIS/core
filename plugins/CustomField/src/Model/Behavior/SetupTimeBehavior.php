@@ -13,7 +13,7 @@ class SetupTimeBehavior extends SetupBehavior
 {
     private $rangeValidationOptions;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 

@@ -9,7 +9,7 @@ use CustomField\Model\Behavior\RenderBehavior;
 use Cake\Log\Log;
 
 class RenderStudentListBehavior extends RenderBehavior {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
         parent::initialize($config);
     }
 

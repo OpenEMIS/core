@@ -13,7 +13,7 @@ class RenderBehavior extends Behavior {
     private $surveyRules = null;
     private $SurveyRulesTable;
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
         parent::initialize($config);
 
         $class = basename(str_replace('\\', '/', get_class($this)));
@@ -26,7 +26,7 @@ class RenderBehavior extends Behavior {
         $this->SurveyRulesTable = TableRegistry::get('Survey.SurveyRules');
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
     	$events = parent::implementedEvents();
     	$eventMap = [
             'Render.on'.$this->fieldType.'Initialize' => 'on'.$this->fieldType.'Initialize',

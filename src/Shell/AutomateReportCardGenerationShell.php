@@ -16,7 +16,7 @@ class AutomateReportCardGenerationShell extends Shell
     CONST DEBUG = TRUE;
     CONST ACADEMIC_PERIOD_ID = 18;
 
-    public function initialize()
+    public function initialize(): void
     {
         if (self::DEBUG) {
             $this->out('initializing AutomateReportCardGenerationShell..' . ' (' . Time::now() .')');

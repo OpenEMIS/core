@@ -12,7 +12,7 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
 class StaffLeaveTable extends AppTable {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->table('institution_staff_leave');
         parent::initialize($config);

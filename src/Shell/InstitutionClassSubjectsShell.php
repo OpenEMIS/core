@@ -8,7 +8,7 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 use Report\Model\Table\ReportProgressTable as Process;
 
 class InstitutionClassSubjectsShell extends Shell {
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 		
 	}

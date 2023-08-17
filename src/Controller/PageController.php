@@ -1,5 +1,6 @@
 <?php
 namespace App\Controller;
+use Cake\Controller\Controller;
 
 use Cake\Event\Event;
 use Page\Controller\PageController as BaseController;
@@ -8,11 +9,11 @@ use Page\Model\Entity\PageElement;
 use Cake\Routing\Router;
 use Cake\ORM\TableRegistry;//POCOR-7534
 
-class PageController extends BaseController
+class PageController extends Controller
 {
     public $helpers = ['Page.Page'];
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
@@ -34,7 +35,7 @@ class PageController extends BaseController
         $this->loadComponent('RenderDatetime');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.beforeRender'] = ['callable' => 'beforeRender', 'priority' => 5];

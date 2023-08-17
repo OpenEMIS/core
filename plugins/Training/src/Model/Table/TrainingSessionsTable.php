@@ -33,7 +33,7 @@ class TrainingSessionsTable extends ControllerActionTable
     const OTHERS = 'Others';
     const SELECT_ALL_TARGET_POPULATIONS = '-1';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -63,7 +63,7 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->addBehavior('Area.Areapicker');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

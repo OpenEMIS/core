@@ -7,18 +7,20 @@ use Cake\ORM\Table;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use System\Controller\AppController;
+use Cake\Http\ServerRequest;
 
 class SystemsController extends AppController
 {
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
     }
 
     public function beforeFilter(Event $event) {
+		$request = new ServerRequest();
     	parent::beforeFilter($event);
 
 		$name = $this->name;
-		$action = $this->request->action;
+		$action = "Updates";
 		$actionName = __(Inflector::humanize($action));
 		$header = $name .' - '.$actionName;
 		$this->Navigation->addCrumb(__($name), ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $action]);

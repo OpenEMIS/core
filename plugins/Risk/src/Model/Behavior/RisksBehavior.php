@@ -13,7 +13,7 @@ use Cake\Validation\Validator;
 class RisksBehavior extends Behavior
 {
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;

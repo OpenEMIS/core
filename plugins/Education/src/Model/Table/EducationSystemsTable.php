@@ -14,7 +14,7 @@ use Cake\Utility\Text;
 
 class EducationSystemsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -36,7 +36,7 @@ class EducationSystemsTable extends ControllerActionTable
 
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
     	$validator = parent::validationDefault($validator);
     	if($this->request->action == 'CopySystems'){

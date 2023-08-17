@@ -21,9 +21,9 @@ class LicensesTable extends ControllerActionTable
     const IN_PROGRESS = 2;
     const DONE = 3;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_licenses');
+        $this->setTable('staff_licenses');
         parent::initialize($config);
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -53,7 +53,7 @@ class LicensesTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

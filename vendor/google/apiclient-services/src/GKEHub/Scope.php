@@ -39,6 +39,10 @@ class Scope extends \Google\Model
    * @var string
    */
   public $name;
+  /**
+   * @var string[]
+   */
+  public $namespaceLabels;
   protected $stateType = ScopeLifecycleState::class;
   protected $stateDataType = '';
   /**
@@ -119,6 +123,20 @@ class Scope extends \Google\Model
   public function getName()
   {
     return $this->name;
+  }
+  /**
+   * @param string[]
+   */
+  public function setNamespaceLabels($namespaceLabels)
+  {
+    $this->namespaceLabels = $namespaceLabels;
+  }
+  /**
+   * @return string[]
+   */
+  public function getNamespaceLabels()
+  {
+    return $this->namespaceLabels;
   }
   /**
    * @param ScopeLifecycleState

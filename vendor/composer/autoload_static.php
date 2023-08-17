@@ -7,10 +7,12 @@ namespace Composer\Autoload;
 class ComposerStaticInit72a01c504b78abcca347330aef43d827
 {
     public static $files = array (
-        'ec07570ca5a812141189b1fa81503674' => __DIR__ . '/..' . '/phpunit/phpunit/src/Framework/Assert/Functions.php',
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
         '320cde22f66dd4f5d3fd621d3e88b98f' => __DIR__ . '/..' . '/symfony/polyfill-ctype/bootstrap.php',
         'a4a119a56e50fbb293281d9a48007e0e' => __DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php',
+        '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
+        '7b11c4dc42b3b3023073cb14e519683c' => __DIR__ . '/..' . '/ralouphie/getallheaders/src/getallheaders.php',
+        '34122c0574b76bf21c9a8db62b5b9cf3' => __DIR__ . '/..' . '/cakephp/chronos/src/carbon_compat.php',
         '07d7f1a47144818725fd8d91a907ac57' => __DIR__ . '/..' . '/laminas/laminas-diactoros/src/functions/create_uploaded_file.php',
         'da94ac5d3ca7d2dbab84ce561ce72bfd' => __DIR__ . '/..' . '/laminas/laminas-diactoros/src/functions/marshal_headers_from_sapi.php',
         '3d97c8dcdfba8cb85d3b34f116bb248b' => __DIR__ . '/..' . '/laminas/laminas-diactoros/src/functions/marshal_method_from_sapi.php',
@@ -27,26 +29,24 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'cc8e14526dc240491e17a838cb78508c' => __DIR__ . '/..' . '/laminas/laminas-diactoros/src/functions/normalize_server.legacy.php',
         '786bf90caabc9e09b6ad4cc5ca8f0e30' => __DIR__ . '/..' . '/laminas/laminas-diactoros/src/functions/normalize_uploaded_files.legacy.php',
         '751a5a3f463e4be759be31748b61737c' => __DIR__ . '/..' . '/laminas/laminas-diactoros/src/functions/parse_cookie_header.legacy.php',
-        '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
-        '7b11c4dc42b3b3023073cb14e519683c' => __DIR__ . '/..' . '/ralouphie/getallheaders/src/getallheaders.php',
-        '34122c0574b76bf21c9a8db62b5b9cf3' => __DIR__ . '/..' . '/cakephp/chronos/src/carbon_compat.php',
         'c720f792236cd163ece8049879166850' => __DIR__ . '/..' . '/cakephp/cakephp/src/Core/functions.php',
         'ede59e3a405fb689cd1cebb7bb1db3fb' => __DIR__ . '/..' . '/cakephp/cakephp/src/Collection/functions.php',
         '90236b492da7ca2983a2ad6e33e4152e' => __DIR__ . '/..' . '/cakephp/cakephp/src/I18n/functions.php',
         '2cb76c05856dfb60ada40ef54138d49a' => __DIR__ . '/..' . '/cakephp/cakephp/src/Routing/functions.php',
         'b1fc73705e1bec51cd2b20a32cf1c60a' => __DIR__ . '/..' . '/cakephp/cakephp/src/Utility/bootstrap.php',
         '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
-        '23c18046f52bef3eea034657bafda50f' => __DIR__ . '/..' . '/symfony/polyfill-php81/bootstrap.php',
-        'decc78cc4436b1292c6c0d151b19445c' => __DIR__ . '/..' . '/phpseclib/phpseclib/phpseclib/bootstrap.php',
         '8825ede83f2f289127722d4e842cf7e8' => __DIR__ . '/..' . '/symfony/polyfill-intl-grapheme/bootstrap.php',
         'e69f7f6ee287b969198c3c9d6777bd38' => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer/bootstrap.php',
-        '667aeda72477189d0494fecd327c3641' => __DIR__ . '/..' . '/symfony/var-dumper/Resources/functions/dump.php',
         '0d59ee240a4cd96ddbb4ff164fccea4d' => __DIR__ . '/..' . '/symfony/polyfill-php73/bootstrap.php',
         'b6b991a57620e2fb6b2f66f03fe9ddc2' => __DIR__ . '/..' . '/symfony/string/Resources/functions.php',
-        '6124b4c8570aa390c21fafd04a26c69f' => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy/deep_copy.php',
+        'decc78cc4436b1292c6c0d151b19445c' => __DIR__ . '/..' . '/phpseclib/phpseclib/phpseclib/bootstrap.php',
+        '23c18046f52bef3eea034657bafda50f' => __DIR__ . '/..' . '/symfony/polyfill-php81/bootstrap.php',
         '1f87db08236948d07391152dccb70f04' => __DIR__ . '/..' . '/google/apiclient-services/autoload.php',
+        '6124b4c8570aa390c21fafd04a26c69f' => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy/deep_copy.php',
         '2cffec82183ee1cea088009cef9a6fc3' => __DIR__ . '/..' . '/ezyang/htmlpurifier/library/HTMLPurifier.composer.php',
         'a8d3953fd9959404dd22d3dfcd0a79f0' => __DIR__ . '/..' . '/google/apiclient/src/aliases.php',
+        '667aeda72477189d0494fecd327c3641' => __DIR__ . '/..' . '/symfony/var-dumper/Resources/functions/dump.php',
+        'ec07570ca5a812141189b1fa81503674' => __DIR__ . '/..' . '/phpunit/phpunit/src/Framework/Assert/Functions.php',
         '801c31d8ed748cfa537fa45402288c95' => __DIR__ . '/..' . '/psy/psysh/src/functions.php',
     );
 
@@ -76,11 +76,15 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         array (
             'Twig\\Extra\\Markdown\\' => 20,
             'Twig\\' => 5,
+            'Transport\\' => 10,
             'Training\\' => 9,
-            'Themes\\' => 7,
+            'Theme\\' => 6,
+            'Textbook\\' => 9,
         ),
         'S' => 
         array (
+            'System\\View\\Helper\\' => 19,
+            'System\\' => 7,
             'Symfony\\Polyfill\\Php81\\' => 23,
             'Symfony\\Polyfill\\Php80\\' => 23,
             'Symfony\\Polyfill\\Php73\\' => 23,
@@ -94,16 +98,32 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
             'Symfony\\Component\\Filesystem\\' => 29,
             'Symfony\\Component\\Console\\' => 26,
             'Symfony\\Component\\Config\\' => 25,
+            'Survey\\' => 7,
+            'Student\\' => 8,
+            'StudentCustomField\\' => 19,
+            'Staff\\' => 6,
+            'StaffCustomField\\' => 17,
+            'StaffAppraisal\\' => 15,
+            'SpecialNeeds\\' => 13,
             'Security\\' => 9,
             'Scholarship\\' => 12,
+            'Schedule\\' => 9,
             'SSO\\' => 4,
         ),
         'R' => 
         array (
+            'Rubric\\' => 7,
             'RobRichards\\XMLSecLibs\\' => 23,
+            'Risk\\' => 5,
             'Restful\\Test\\Fixture\\' => 21,
             'Restful\\' => 8,
-            'Report\\' => 7,
+            'Rest\\' => 5,
+            'ReportCard\\' => 11,
+            'ReProfilest\\' => 12,
+        ),
+        'Q' => 
+        array (
+            'Quality\\' => 8,
         ),
         'P' => 
         array (
@@ -115,7 +135,7 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
             'Psr\\Http\\Client\\' => 16,
             'Psr\\Container\\' => 14,
             'Psr\\Cache\\' => 10,
-            'Profile\\' => 8,
+            'ProfileTemplate\\' => 16,
             'PhpParser\\' => 10,
             'PhpOffice\\PhpSpreadsheet\\' => 25,
             'Phinx\\' => 6,
@@ -123,6 +143,7 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         ),
         'O' => 
         array (
+            'Outcome\\' => 8,
             'OpenEmis\\' => 9,
             'OneLogin\\' => 9,
             'OAuth\\Test\\' => 11,
@@ -133,12 +154,16 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
             'MyCLabs\\Enum\\' => 13,
             'Mpdf\\PsrLogAwareTrait\\' => 22,
             'Mpdf\\' => 5,
+            'MoodleApi\\' => 10,
             'Monolog\\' => 8,
             'Migrations\\' => 11,
+            'Meal\\' => 5,
             'Matrix\\' => 7,
+            'Map\\' => 4,
         ),
         'L' => 
         array (
+            'Log\\' => 4,
             'Localization\\' => 13,
             'League\\Container\\' => 17,
             'Laminas\\HttpHandlerRunner\\' => 26,
@@ -151,14 +176,24 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'I' => 
         array (
             'Institution\\' => 12,
+            'InstitutionRepeater\\' => 20,
+            'InstitutionCustomField\\' => 23,
             'Installer\\' => 10,
+            'Infrastructure\\' => 15,
             'Import\\' => 7,
+        ),
+        'H' => 
+        array (
+            'Historical\\' => 11,
+            'Health\\' => 7,
         ),
         'G' => 
         array (
             'GuzzleHttp\\Psr7\\' => 16,
             'GuzzleHttp\\Promise\\' => 19,
             'GuzzleHttp\\' => 11,
+            'Guardian\\' => 9,
+            'GuardianNav\\' => 12,
             'Google\\Service\\' => 15,
             'Google\\Auth\\' => 12,
             'Google\\' => 7,
@@ -166,24 +201,39 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'F' => 
         array (
             'Firebase\\JWT\\' => 13,
+            'FieldOption\\' => 12,
+        ),
+        'E' => 
+        array (
+            'Examination\\' => 12,
+            'Error\\' => 6,
+            'Email\\' => 6,
+            'Education\\' => 10,
         ),
         'D' => 
         array (
             'Doctrine\\Instantiator\\' => 22,
+            'Directory\\' => 10,
             'DeepCopy\\' => 9,
         ),
         'C' => 
         array (
+            'CustomField\\' => 12,
+            'CustomExcel\\' => 12,
+            'Counselling\\' => 12,
             'ControllerAction\\Test\\' => 22,
             'ControllerAction\\' => 17,
             'Configuration\\' => 14,
             'Composer\\CaBundle\\' => 18,
             'Complex\\' => 8,
+            'Competency\\' => 11,
+            'Cases\\' => 6,
             'Cake\\TwigView\\' => 14,
             'Cake\\Test\\' => 10,
             'Cake\\Composer\\' => 14,
             'Cake\\Chronos\\' => 13,
             'Cake\\' => 5,
+            'Cache\\' => 6,
         ),
         'B' => 
         array (
@@ -192,13 +242,17 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         ),
         'A' => 
         array (
+            'Attendance\\' => 11,
+            'Assessment\\' => 11,
             'Area\\' => 5,
             'Archive\\Test\\' => 13,
             'Archive\\' => 8,
             'App\\Test\\' => 9,
             'App\\' => 4,
             'Angular\\' => 8,
+            'Alert\\' => 6,
             'AcademicPeriod\\' => 15,
+            'API\\' => 4,
             'ADmad\\JwtAuth\\' => 14,
         ),
     );
@@ -236,13 +290,29 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         array (
             0 => __DIR__ . '/..' . '/twig/twig/src',
         ),
+        'Transport\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Transport/src',
+        ),
         'Training\\' => 
         array (
             0 => __DIR__ . '/../..' . '/plugins/Training/src',
         ),
-        'Themes\\' => 
+        'Theme\\' => 
         array (
             0 => __DIR__ . '/../..' . '/plugins/Theme/src',
+        ),
+        'Textbook\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Textbook/src',
+        ),
+        'System\\View\\Helper\\' => 
+        array (
+            0 => '/View/Helper',
+        ),
+        'System\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/System/src',
         ),
         'Symfony\\Polyfill\\Php81\\' => 
         array (
@@ -296,6 +366,34 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         array (
             0 => __DIR__ . '/..' . '/symfony/config',
         ),
+        'Survey\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Survey/src',
+        ),
+        'Student\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Student/src',
+        ),
+        'StudentCustomField\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/StudentCustomField/src',
+        ),
+        'Staff\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Staff/src',
+        ),
+        'StaffCustomField\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/StaffCustomField/src',
+        ),
+        'StaffAppraisal\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/StaffAppraisal/src',
+        ),
+        'SpecialNeeds\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/SpecialNeeds/src',
+        ),
         'Security\\' => 
         array (
             0 => __DIR__ . '/../..' . '/plugins/Security/src',
@@ -304,13 +402,26 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         array (
             0 => __DIR__ . '/../..' . '/plugins/Scholarship/src',
         ),
+        'Schedule\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Schedule/src',
+        ),
         'SSO\\' => 
         array (
-            0 => __DIR__ . '/..' . '/korditpteltd/iksso-cakephp-sso/src',
+            0 => __DIR__ . '/../..' . '/plugins/SSO/src',
+            1 => __DIR__ . '/..' . '/korditpteltd/iksso-cakephp-sso/src',
+        ),
+        'Rubric\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Rubric/src',
         ),
         'RobRichards\\XMLSecLibs\\' => 
         array (
             0 => __DIR__ . '/..' . '/robrichards/xmlseclibs/src',
+        ),
+        'Risk\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Risk/src',
         ),
         'Restful\\Test\\Fixture\\' => 
         array (
@@ -318,11 +429,24 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         ),
         'Restful\\' => 
         array (
-            0 => __DIR__ . '/..' . '/korditpteltd/ikrst-cakephp-restful/src',
+            0 => __DIR__ . '/../..' . '/plugins/Restful/src',
+            1 => __DIR__ . '/..' . '/korditpteltd/ikrst-cakephp-restful/src',
         ),
-        'Report\\' => 
+        'Rest\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/plugins/Report/src',
+            0 => __DIR__ . '/../..' . '/plugins/Rest/src',
+        ),
+        'ReportCard\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/ReportCard/src',
+        ),
+        'ReProfilest\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Profile/src',
+        ),
+        'Quality\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Quality/src',
         ),
         'Psy\\' => 
         array (
@@ -358,9 +482,9 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         array (
             0 => __DIR__ . '/..' . '/psr/cache/src',
         ),
-        'Profile\\' => 
+        'ProfileTemplate\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/plugins/Profile/src',
+            0 => __DIR__ . '/../..' . '/plugins/ProfileTemplate/src',
         ),
         'PhpParser\\' => 
         array (
@@ -377,6 +501,10 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'Page\\' => 
         array (
             0 => __DIR__ . '/..' . '/korditpteltd/ikpge-cakephp-page/src',
+        ),
+        'Outcome\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Outcome/src',
         ),
         'OpenEmis\\' => 
         array (
@@ -406,17 +534,34 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         array (
             0 => __DIR__ . '/..' . '/mpdf/mpdf/src',
         ),
+        'MoodleApi\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/MoodleApi/src',
+        ),
         'Monolog\\' => 
         array (
             0 => __DIR__ . '/..' . '/monolog/monolog/src/Monolog',
         ),
         'Migrations\\' => 
         array (
-            0 => __DIR__ . '/..' . '/cakephp/migrations/src',
+            0 => __DIR__ . '/../..' . '/Migrations',
+            1 => __DIR__ . '/..' . '/cakephp/migrations/src',
+        ),
+        'Meal\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Meal/src',
         ),
         'Matrix\\' => 
         array (
             0 => __DIR__ . '/..' . '/markbaker/matrix/classes/src',
+        ),
+        'Map\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Map/src',
+        ),
+        'Log\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Log/src',
         ),
         'Localization\\' => 
         array (
@@ -442,13 +587,33 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         array (
             0 => __DIR__ . '/../..' . '/plugins/Institution/src',
         ),
+        'InstitutionRepeater\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/InstitutionRepeater/src',
+        ),
+        'InstitutionCustomField\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/InstitutionCustomField/src',
+        ),
         'Installer\\' => 
         array (
             0 => __DIR__ . '/../..' . '/plugins/Installer/src',
         ),
+        'Infrastructure\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Infrastructure/src',
+        ),
         'Import\\' => 
         array (
             0 => __DIR__ . '/../..' . '/plugins/Import/src',
+        ),
+        'Historical\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Historical/src',
+        ),
+        'Health\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Health/src',
         ),
         'GuzzleHttp\\Psr7\\' => 
         array (
@@ -461,6 +626,14 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'GuzzleHttp\\' => 
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/guzzle/src',
+        ),
+        'Guardian\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Guardian/src',
+        ),
+        'GuardianNav\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/GuardianNav/src',
         ),
         'Google\\Service\\' => 
         array (
@@ -478,13 +651,49 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         array (
             0 => __DIR__ . '/..' . '/firebase/php-jwt/src',
         ),
+        'FieldOption\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/FieldOption/src',
+        ),
+        'Examination\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Examination/src',
+        ),
+        'Error\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Error/src',
+        ),
+        'Email\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Email/src',
+        ),
+        'Education\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Education/src',
+        ),
         'Doctrine\\Instantiator\\' => 
         array (
             0 => __DIR__ . '/..' . '/doctrine/instantiator/src/Doctrine/Instantiator',
         ),
+        'Directory\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Directory/src',
+        ),
         'DeepCopy\\' => 
         array (
             0 => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy',
+        ),
+        'CustomField\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/CustomField/src',
+        ),
+        'CustomExcel\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/CustomExcel/src',
+        ),
+        'Counselling\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Counselling/src',
         ),
         'ControllerAction\\Test\\' => 
         array (
@@ -506,6 +715,14 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         array (
             0 => __DIR__ . '/..' . '/markbaker/complex/classes/src',
         ),
+        'Competency\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Competency/src',
+        ),
+        'Cases\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Cases/src',
+        ),
         'Cake\\TwigView\\' => 
         array (
             0 => __DIR__ . '/..' . '/cakephp/twig-view/src',
@@ -526,6 +743,10 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         array (
             0 => __DIR__ . '/..' . '/cakephp/cakephp/src',
         ),
+        'Cache\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Cache/src',
+        ),
         'Brick\\VarExporter\\' => 
         array (
             0 => __DIR__ . '/..' . '/brick/varexporter/src',
@@ -533,6 +754,14 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'Bake\\' => 
         array (
             0 => __DIR__ . '/..' . '/cakephp/bake/src',
+        ),
+        'Attendance\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Attendance/src',
+        ),
+        'Assessment\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Assessment/src',
         ),
         'Area\\' => 
         array (
@@ -558,9 +787,17 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         array (
             0 => __DIR__ . '/../..' . '/plugins/Angular/src',
         ),
+        'Alert\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/Alert/src',
+        ),
         'AcademicPeriod\\' => 
         array (
             0 => __DIR__ . '/../..' . '/plugins/AcademicPeriod/src',
+        ),
+        'API\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/plugins/API/src',
         ),
         'ADmad\\JwtAuth\\' => 
         array (
@@ -923,7 +1160,7 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'PHPUnit\\Util\\ErrorHandler' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/ErrorHandler.php',
         'PHPUnit\\Util\\Exception' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/Exception.php',
         'PHPUnit\\Util\\ExcludeList' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/ExcludeList.php',
-        'PHPUnit\\Util\\FileLoader' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/FileLoader.php',
+        'PHPUnit\\Util\\FileLoader' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/Fileloader.php',
         'PHPUnit\\Util\\Filesystem' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/Filesystem.php',
         'PHPUnit\\Util\\Filter' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/Filter.php',
         'PHPUnit\\Util\\GlobalState' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/GlobalState.php',
@@ -949,7 +1186,7 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'PHPUnit\\Util\\Type' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/Type.php',
         'PHPUnit\\Util\\VersionComparisonOperator' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/VersionComparisonOperator.php',
         'PHPUnit\\Util\\XdebugFilterScriptGenerator' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/XdebugFilterScriptGenerator.php',
-        'PHPUnit\\Util\\Xml' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/Xml.php',
+        'PHPUnit\\Util\\Xml' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/XML.php',
         'PHPUnit\\Util\\XmlTestListRenderer' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/XmlTestListRenderer.php',
         'PHPUnit\\Util\\Xml\\Exception' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/Xml/Exception.php',
         'PHPUnit\\Util\\Xml\\FailedSchemaDetectionResult' => __DIR__ . '/..' . '/phpunit/phpunit/src/Util/Xml/FailedSchemaDetectionResult.php',

@@ -73,17 +73,17 @@ class RecordBehavior extends Behavior
     private $_customFieldOptions = [];
     private $_tableCellValues = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
-        if (is_null($this->config('moduleKey'))) {
-            $this->_table->belongsTo('CustomForms', $this->config('formClass'));
+        if (is_null($this->getConfig('moduleKey'))) {
+            $this->_table->belongsTo('CustomForms', $this->getConfig('formClass'));
         }
-        $this->_table->hasMany('CustomFieldValues', $this->config('fieldValueClass'));
+        $this->_table->hasMany('CustomFieldValues', $this->getConfig('fieldValueClass'));
         $this->CustomFieldValues = $this->_table->CustomFieldValues;
 
-        if (!is_null($this->config('tableCellClass'))) {
-            $this->_table->hasMany('CustomTableCells', $this->config('tableCellClass'));
+        if (!is_null($this->getConfig('tableCellClass'))) {
+            $this->_table->hasMany('CustomTableCells', $this->getConfig('tableCellClass'));
             $this->CustomTableCells = $this->_table->CustomTableCells;
         }
         $this->firstTabName = null;
@@ -93,8 +93,8 @@ class RecordBehavior extends Behavior
         $this->CustomFields = $this->CustomFieldValues->CustomFields;
         $this->CustomFieldOptions = $this->CustomFieldValues->CustomFields->CustomFieldOptions;
         $this->CustomForms = $this->CustomFields->CustomForms;
-        $this->CustomFormsFields = TableRegistry::get($this->config('formFieldClass.className'));
-        $this->CustomFormsFilters = TableRegistry::get($this->config('formFilterClass.className'));
+        $this->CustomFormsFields = TableRegistry::get($this->getConfig('formFieldClass.className'));
+        $this->CustomFormsFilters = TableRegistry::get($this->getConfig('formFilterClass.className'));
 
         // Each field type will have one behavior attached
         $this->_table->addBehavior('CustomField.RenderText');
@@ -114,13 +114,13 @@ class RecordBehavior extends Behavior
         // End
 
         // If tabSection is not set, added to handle Section Header
-        if (!$this->config('tabSection')) {
+        if (!$this->getConfig('tabSection')) {
             $this->_table->addBehavior('OpenEmis.Section');
         }
 
-        $model = $this->config('model');
+        $model = $this->getConfig('model');
         if (empty($model)) {
-            $this->config('model', $this->_table->registryAlias());
+            $this->getConfig('model', $this->_table->getRegistryAlias());
         }
     }
 
@@ -129,10 +129,10 @@ class RecordBehavior extends Behavior
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
-        $events = array_merge($events, $this->config('events'));
+        $events = array_merge($events, $this->getConfig('events'));
         return $events;
     }
 
@@ -1438,7 +1438,18 @@ class RecordBehavior extends Behavior
         return null;
     }
 
-    private function table($data, $fieldInfo, $options = [])
+    // private function table($data, $fieldInfo, $options = [])
+    // {
+    //     $id = $fieldInfo['id'];
+    //     $colId = $fieldInfo['col_id'];
+    //     $rowId = $fieldInfo['row_id'];
+    //     if (isset($data[$id][$colId][$rowId])) {
+    //         return $data[$id][$colId][$rowId];
+    //     }
+    //     return '';
+    // }
+
+    public function table($data, $fieldInfo, $options = []): Table
     {
         $id = $fieldInfo['id'];
         $colId = $fieldInfo['col_id'];

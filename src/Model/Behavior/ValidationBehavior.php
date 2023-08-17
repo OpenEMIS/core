@@ -23,7 +23,7 @@ class ValidationBehavior extends Behavior
     public function buildValidator(Event $event, Validator $validator, $name)
     {
         $properties = ['rule', 'on', 'last', 'message', 'provider', 'pass'];
-        $validator->provider('custom', get_class($this));
+        $validator->getProvider('custom', get_class($this));
 
         $this->attachDateValidation($validator);
 
@@ -34,7 +34,7 @@ class ValidationBehavior extends Behavior
                     $ruleAttr[$prop] = $rule->get($prop);
                 }
                 if (empty($ruleAttr['message'])) {
-                    $code = implode('.', [$this->_table->registryAlias(), $field, $ruleName]);
+                    $code = implode('.', [$this->_table->getRegistryAlias(), $field, $ruleName]);
                     if (array_key_exists($code, $this->validationCode)) {
                         $code = $this->validationCode[$code];
                     }
@@ -50,10 +50,10 @@ class ValidationBehavior extends Behavior
 
     private function attachDateValidation(Validator $validator)
     {
-        $schema = $this->_table->schema();
+        $schema = $this->_table->getSchema();
         $columns = $schema->columns();
         foreach ($columns as $column) {
-            $columnAttr = $schema->column($column);
+            $columnAttr = $schema->getColumn($column);
             if (array_key_exists('type', $columnAttr) && $columnAttr['type'] == 'date') {
                 // taking existing rules from behavior's parent and storing them
                 $rules = $validator->field($column)->rules();

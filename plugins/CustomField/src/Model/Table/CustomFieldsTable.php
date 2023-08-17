@@ -25,7 +25,7 @@ class CustomFieldsTable extends ControllerActionTable
     private $fieldTypeOptions = [];
     private $CustomFieldTypes = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         // belongsTo: CustomFieldTypes is not needed as code is store instead of id

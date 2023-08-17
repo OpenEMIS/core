@@ -6,7 +6,7 @@ use Cake\Event\Event;
 //ControllerActionComponent - Version 1.0.5
 $dataKeys = [];
 $table = $ControllerAction['table'];
-$tableHeaders = $this->ControllerAction->getTableHeaders($ControllerAction['fields'], $table->alias(), $dataKeys);
+$tableHeaders = $this->ControllerAction->getTableHeaders($ControllerAction['fields'], $table->getAlias(), $dataKeys);
 
 $displayAction = is_array($indexButtons) ? count($indexButtons) : $indexButtons->count() > 0;
 $displayReorder = isset($reorder) && $reorder && $data->count() > 1;
@@ -27,7 +27,7 @@ $this->ControllerAction->onEvent($table, $eventKey, 'onUpdateActionButtons');
 //trigger event to get which field need to be highlighted
 $searchableFields = new ArrayObject();
 $event = new Event('ControllerAction.Model.getSearchableFields', $this->ControllerAction, [$searchableFields]);
-$event = $table->eventManager()->dispatch($event);
+$event = $table->getEventManager()->dispatch($event);
 
 foreach ($data as $entity) {
 	$row = $this->ControllerAction->getTableRow($entity, $dataKeys, $searchableFields->getArrayCopy());
@@ -35,7 +35,7 @@ foreach ($data as $entity) {
 	if ($displayAction) {
 		$buttons = $indexButtons->getArrayCopy();
 		$event = $this->ControllerAction->dispatchEvent($table, $eventKey, null, [$entity, $indexButtons->getArrayCopy()]);
-		$buttons = $event->result;
+		$buttons = $event->getResult();
 
 		if (empty($buttons)) {
 			$row[] = '';
@@ -56,14 +56,13 @@ if (isset($tabElements)) {
 		$tableClass = 'table table-sortable table-checkable';
 	}
 }
-
 $url = [
-	'plugin' => $this->request->params['plugin'],
-	'controller' => $this->request->params['controller'],
-	'action' => $this->request->params['action']
+	'plugin' => $this->request->getParam('plugin'),
+	'controller' =>$this->request->getParam('controller'),
+	'action' => $this->request->getParam('action')
 ];
 
-if ($this->request->params['action'] == 'index') {
+if ( $this->request->getParam('action') == 'index') {
 	$url['action'] = 'reorder';
 } else {
 	$url[] = 'reorder';

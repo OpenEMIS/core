@@ -8,7 +8,7 @@ use App\Controller\PageController;
 class MoodleApiLogController extends PageController
 {
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->Page->disable(['add', 'edit', 'delete']);

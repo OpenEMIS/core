@@ -17,7 +17,7 @@ use Cake\Database\Schema\Table;
 
 class StudentAssessmentsShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         //POCOR-7339-HINDOL cleaned the code
         parent::initialize();

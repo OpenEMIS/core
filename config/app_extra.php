@@ -28,7 +28,6 @@ return [
         ]
     ],
 
-
     'Application' => [
         // Generate a private and public key pair using the command line by executing "openssl genrsa -out private.key 1024" and "openssl rsa -in private.key -pubout -out public.key"
         'private' => [
@@ -46,7 +45,7 @@ return [
             'host' => 'smtp.gmail.com',
             'port' => 587,
             'timeout' => 30,
-            'username' => 'app@openemis.org',
+            'username' => 'app@kordit.com',
             'password' => '',
             'client' => null,
             'tls' => true,
@@ -57,9 +56,9 @@ return [
     'Email' => [
         'openemis' => [
             'transport' => 'openemis',
-            'from' => ['app@openemis.org' => 'DoNotReply'],
+            'from' => ['app@kordit.com' => 'DoNotReply'],
             //'charset' => 'utf-8',
             //'headerCharset' => 'utf-8',
         ],
     ]
-];
+,'coreMode' => false];

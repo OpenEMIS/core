@@ -65,10 +65,10 @@ class OpenEmisBehavior extends Behavior
         $model = $this->_table;
         if ($model->action == 'index' || $model->action == 'view') {
             $modal = [];
-            if($model->getHeader($model->alias()) == 'Immunizations') {
+            if($model->getHeader($model->getAlias()) == 'Immunizations') {
                 $title = 'Vaccinations';
             }else {
-                $title = $model->getHeader($model->alias());
+                $title = $model->getHeader($model->getAlias());
             }
             $modal['title'] = $title; //$modal['title'] = $model->alias();
             $modal['content'] = __('All associated information related to this record will also be removed.');
@@ -201,7 +201,7 @@ class OpenEmisBehavior extends Behavior
     public function indexAfterAction(Event $event, Query $query, $resultSet, ArrayObject $extra)
     {
         if (count($resultSet) == 0) {
-            $this->_table->Alert->info('general.noData');
+            // $this->_table->Alert->info(); //'general.noData'
         }
         $extra['config']['form'] = ['class' => ''];
     }

@@ -12,7 +12,7 @@ use StaffAppraisal\Model\Table\AppraisalNumbersTable as AppraisalNumbers;
 
 class AppraisalCriteriasTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('FieldTypes', ['className' => 'FieldTypes', 'foreignKey' => 'field_type_id']);
@@ -45,7 +45,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         return $validator
             ->add('code', 'ruleUnique', [

@@ -8,7 +8,7 @@ class AlertShell extends Shell
     protected $processName;
     protected $featureName;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 

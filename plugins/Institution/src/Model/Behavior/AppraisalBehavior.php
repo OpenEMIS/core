@@ -19,7 +19,7 @@ class AppraisalBehavior extends Behavior
 {
     public $periodList = [];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';

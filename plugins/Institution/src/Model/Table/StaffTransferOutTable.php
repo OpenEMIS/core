@@ -18,7 +18,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     private $transferTypeOptions = [];
     private $transferType = 0;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -35,13 +35,15 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
         ];
 
         if ($this->behaviors()->has('Workflow')) {
-            $this->behaviors()->get('Workflow')->config([
-                'institution_key' => 'previous_institution_id'
-            ]);
+            // $this->behaviors()->get('Workflow')->config([
+            //     'institution_key' => 'previous_institution_id'
+            // ]);
+            $reorderBehavior = $this->behaviors()->get('Workflow');
+            $reorderBehavior->setConfig('institution_key', 'previous_institution_id');
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator->notEmpty(['transfer_type', 'new_institution_id', 'workflow_assignee_id']);
@@ -81,7 +83,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
             ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['UpdateAssignee.onSetSchoolBasedConditions'] = 'onSetSchoolBasedConditions';

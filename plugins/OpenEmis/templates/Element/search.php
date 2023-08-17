@@ -1,7 +1,7 @@
 <div class="search">
 	<div class="input-group">
 	<?php
-		$session = $this->request->session();
+		$session = $this->getRequest()->getSession();
 		$howManyStudents = $session->check('is_any_student') ? $session->read('is_any_student') : 1;
 		if ($howManyStudents > 0) {
 	?>
@@ -13,6 +13,7 @@
 			'placeholder' => __('Search'),
 			'onkeypress' => 'if (event.keyCode == 13) jsForm.submit()'
 		]);
+		$this->Form->create();
 		$this->Form->unlockField('Search.searchField');
 		?>
 		<span class="input-group-btn">

@@ -17,13 +17,14 @@ use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
+use Cake\Http\ServerRequest;
 
 class TextbooksTable extends ControllerActionTable {
     use MessagesTrait;
     use HtmlTrait;
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -44,7 +45,7 @@ class TextbooksTable extends ControllerActionTable {
         $this->EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
 
         return $validator
@@ -61,7 +62,8 @@ class TextbooksTable extends ControllerActionTable {
         $request = $this->request;
 
         //academic period filter
-        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+        $request = new ServerRequest();
+        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($request->getAttribute('query')['period']));
 
         $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noTextbooks')),
@@ -84,8 +86,8 @@ class TextbooksTable extends ControllerActionTable {
             $levelOptions = array(-1 => __('-- Select Education Level --')) + $levelOptions;
         }
 
-        if ($request->query('level')) {
-            $selectedLevel = $request->query('level');
+        if ($request->getAttribute('query')['level']) {
+            $selectedLevel =  $request->getAttribute('query')['level'];
         } else {
             $selectedLevel = -1;
         }
@@ -111,8 +113,8 @@ class TextbooksTable extends ControllerActionTable {
 
             $programmeOptions = array(-1 => __('-- Please Select Education Programme --')) + $programmeOptions;
 
-            if ($request->query('programme')) {
-                $selectedProgramme = $request->query('programme');
+            if ($request->getAttribute('query')['programme']) {
+                $selectedProgramme = $request->getAttribute('query')['programme'];
             } else {
                 $selectedProgramme = -1;
             }
@@ -146,8 +148,8 @@ class TextbooksTable extends ControllerActionTable {
 
             $subjectOptions = array(-1 => __('-- All Education Subject --')) + $subjectOptions;
 
-            if ($request->query('subject')) {
-                $selectedSubject = $request->query('subject');
+            if ($request->getAttribute('query')['subject']) {
+                $selectedSubject = $request->getAttribute('query')['subject'];
             } else {
                 $selectedSubject = -1;
             }
@@ -200,10 +202,10 @@ class TextbooksTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $hasSearchKey = $this->request->session()->read($this->registryAlias().'.search.key');
+        $serverRequest = new ServerRequest();
+        $hasSearchKey = $serverRequest->getSession()->read($this->getRegistryAlias().'.search.key');
 
         $conditions = [];
-
         if (!$hasSearchKey) {
             //filter
             if (array_key_exists('selectedPeriod', $extra)) {
@@ -233,7 +235,7 @@ class TextbooksTable extends ControllerActionTable {
                     $conditions[] = $this->aliasField('education_subject_id = ') . $gradeSubject[1];
                 }
             }
-
+            // echo "<pre>";print_r($query->toArray());die;
             $query->where([$conditions]);
         }
 
@@ -302,7 +304,7 @@ class TextbooksTable extends ControllerActionTable {
     }
     // POCOR-7362
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
@@ -405,7 +407,7 @@ class TextbooksTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
@@ -450,7 +452,7 @@ class TextbooksTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
@@ -489,13 +491,13 @@ class TextbooksTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldExpiryDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldExpiryDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['default_date'] = false;
         return $attr;
     }
 
-    public function onUpdateFieldYearPublished(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldYearPublished(Event $event, array $attr, $action, ServerRequest $request)
     {
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $lowestYear = $ConfigItems->value('lowest_year');
@@ -514,9 +516,9 @@ class TextbooksTable extends ControllerActionTable {
 
     // POCOR-7362
 
-    public function onUpdateFieldTextbookDimensionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTextbookDimensionId(Event $event, array $attr, $action, ServerRequest $request)
     {
-         $textbookdimensions = TableRegistry::get('textbook_dimensions');
+         $textbookdimensions = TableRegistry::get('Textbook.TextbookDimensions');
          if ($action == 'add' || $action == 'edit') {
          $dimension = $textbookdimensions->find('list')->toArray();
          

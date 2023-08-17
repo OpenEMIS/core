@@ -34,13 +34,13 @@ class TransferLogsTable extends ControllerActionTable
     CONST IN_PROGRESS = 1;
     CONST DONE = 2;
     CONST ERROR = 3;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         
-        $this->table('transfer_logs');
-        $this->displayField('id');
-        $this->primaryKey('id');
+        $this->setTable('transfer_logs');
+        $this->getDisplayField('id');
+        $this->getPrimaryKey('id');
 
         $this->belongsTo('AcademicPeriods', [
             'foreignKey' => 'academic_period_id',
@@ -64,7 +64,7 @@ class TransferLogsTable extends ControllerActionTable
      * @param \Cake\Validation\Validator $validator Validator instance.
      * @return \Cake\Validation\Validator
      */
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator->integer('id')->allowEmpty('id', 'create');
         $validator->dateTime('generated_on')->allowEmpty('generated_on', 'create');
@@ -79,7 +79,7 @@ class TransferLogsTable extends ControllerActionTable
      * @param \Cake\ORM\RulesChecker $rules The rules object to be modified.
      * @return \Cake\ORM\RulesChecker
      */
-    public function buildRules(RulesChecker $rules)
+    public function buildRules(RulesChecker $rules): RulesChecker
     {
         $rules->add($rules->existsIn(['academic_period_id'], 'AcademicPeriods'));
 

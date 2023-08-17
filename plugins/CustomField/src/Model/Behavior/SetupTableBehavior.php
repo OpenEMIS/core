@@ -15,7 +15,7 @@ class SetupTableBehavior extends SetupBehavior
     private $ruleOptions = [];
     private $numberValidationOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 

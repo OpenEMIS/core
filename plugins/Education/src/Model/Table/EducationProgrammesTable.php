@@ -19,7 +19,7 @@ class EducationProgrammesTable extends ControllerActionTable {
     private $_contain = ['EducationNextProgrammes._joinData'];
     private $_fieldOrder = ['code', 'name', 'duration', 'visible', 'education_field_of_study_id', 'education_cycle_id', 'education_certification_id'];
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
         parent::initialize($config);
         $this->belongsTo('EducationCycles', ['className' => 'Education.EducationCycles']);
         $this->belongsTo('EducationCertifications', ['className' => 'Education.EducationCertifications']);
@@ -36,15 +36,17 @@ class EducationProgrammesTable extends ControllerActionTable {
         ]);
 
         if ($this->behaviors()->has('Reorder')) {
-            $this->behaviors()->get('Reorder')->config([
-                'filter' => 'education_cycle_id',
-            ]);
+            // $this->behaviors()->get('Reorder')->config([
+            //     'filter' => 'education_cycle_id',
+            // ]);
+            $reorderBehavior = $this->behaviors()->get('Reorder');
+        	$reorderBehavior->setConfig('filter', 'education_cycle_id');
         }
 
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
         if (isset($this->action) && $this->action == 'add') {
             return $validator

@@ -41,12 +41,12 @@ class RenderFileBehavior extends RenderBehavior
         'png'   => 'image/png'
     );
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.downloadFile'] = 'downloadFile';

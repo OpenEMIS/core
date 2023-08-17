@@ -71,7 +71,7 @@ class AlertsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
          //POCOR-7558 start
-        $systemProcess=TableRegistry::get('system_processes');
+        $systemProcess=TableRegistry::get('SystemProcesses');
         $query->select([
             $this->aliasField('id'),
             $this->aliasField('name'),
@@ -84,7 +84,7 @@ class AlertsTable extends ControllerActionTable
             $this->aliasField('created'),
             "last_run_date"=>$systemProcess->aliasField('end_date'),]) 
         ->leftJoin(
-            [ $systemProcess->alias() => $systemProcess->table()],
+            [ $systemProcess->getAlias() => $systemProcess->getTable()],
             [
                 $systemProcess->aliasField('name = ') . $this->aliasField('name'),
             ])

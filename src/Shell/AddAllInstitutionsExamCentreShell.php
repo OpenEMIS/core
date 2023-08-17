@@ -8,7 +8,7 @@ use Cake\Console\Shell;
 use Cake\I18n\Time;
 
 class AddAllInstitutionsExamCentreShell extends Shell {
-    public function initialize() {
+    public function initialize(): void {
         parent::initialize();
         $this->loadModel('Examination.ExaminationCentres');
         $this->loadModel('Institution.Institutions');

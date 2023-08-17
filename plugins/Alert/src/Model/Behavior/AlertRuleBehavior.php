@@ -19,7 +19,7 @@ class AlertRuleBehavior extends Behavior
         'placeholder' => []
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -27,11 +27,11 @@ class AlertRuleBehavior extends Behavior
         $class = str_replace('AlertRule', '', $class);
         $class = str_replace('Behavior', '', $class);
 
-        $this->_table->addAlertRuleType($class, $this->config());
+        $this->_table->addAlertRuleType($class, $this->getConfig());
         $this->alertRule = $class;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $eventMap = [

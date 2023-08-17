@@ -31,7 +31,7 @@ class ArchivesController extends AppController
     use OptionsTrait;
     use UtilityTrait;
 
-    public function initialize(){
+    public function initialize(): void {
 
         parent::initialize();
     }
@@ -67,7 +67,7 @@ class ArchivesController extends AppController
         }
         $this->set('contentHeader', $header); 
 
-        $this->Security->config('unlockedActions', 'add');
+        $this->Security->getConfig('unlockedActions', 'add');
 
         $this->Auth->allow(['index', 'download']);
     }

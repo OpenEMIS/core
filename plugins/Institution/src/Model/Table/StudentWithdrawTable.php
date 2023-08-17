@@ -36,9 +36,9 @@ class StudentWithdrawTable extends ControllerActionTable
         ]
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_withdraw');
+        $this->setTable('institution_student_withdraw');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
@@ -66,7 +66,7 @@ class StudentWithdrawTable extends ControllerActionTable
         //POCOR-5986
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
@@ -384,7 +384,7 @@ class StudentWithdrawTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator->add('effective_date', 'ruleDateAfterEnrollment', [

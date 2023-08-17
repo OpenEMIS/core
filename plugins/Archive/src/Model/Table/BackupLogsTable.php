@@ -38,20 +38,20 @@ class BackupLogsTable extends ControllerActionTable
      * @param array $config The configuration for the Table.
      * @return void
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
-        $this->table('backup_logs');
-        $this->displayField('id');
-        $this->primaryKey('id');
+        $this->setTable('backup_logs');
+        $this->getDisplayField('id');
+        $this->getPrimaryKey('id');
 
         $this->toggle('view', true);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator->integer('id')->allowEmpty('id', 'create');
         $validator->allowEmpty('name', 'create');

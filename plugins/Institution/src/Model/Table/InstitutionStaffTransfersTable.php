@@ -31,7 +31,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
-        $this->table('institution_staff_transfers');
+        $this->setTable('institution_staff_transfers');
         parent::initialize($config);
 
         // Mandatory data

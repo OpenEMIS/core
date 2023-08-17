@@ -15,7 +15,7 @@ class AreasController extends AppController
 	use UtilityTrait;
 	use MessagesTrait;
 
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 		$this->loadComponent('Paginator');
 	}

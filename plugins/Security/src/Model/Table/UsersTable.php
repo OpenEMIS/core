@@ -26,9 +26,9 @@ class UsersTable extends AppTable
     const INACTIVE = 2;//PCOOR-6922 Ends
     public function initialize(array $config): void
     {
-        $this->table('security_users');
+        $this->setTable('security_users');
         parent::initialize($config);
-        $this->entityClass('User.User');
+        $this->getEntityClass('User.User');
 
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
         $this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
@@ -523,7 +523,7 @@ class UsersTable extends AppTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $BaseUsers = TableRegistry::get('User.Users');

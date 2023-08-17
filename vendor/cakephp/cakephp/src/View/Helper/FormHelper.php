@@ -1609,7 +1609,7 @@ class FormHelper extends Helper
         }
         $options = $params[1] ?? [];
         $options['type'] = $options['type'] ?? $method;
-        $options = $this->_initInputField($params[0], $options);
+        $options = $this->_initInputField((string) $params[0], $options);
 
         return $this->widget($options['type'], $options);
     }

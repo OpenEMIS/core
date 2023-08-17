@@ -15,7 +15,7 @@ use Institution\Model\Table\InstitutionStudentTransfersTable;
 
 class StudentTransferOutTable extends InstitutionStudentTransfersTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -24,15 +24,17 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         ]);
 
         if ($this->behaviors()->has('Workflow')) {
-            $this->behaviors()->get('Workflow')->config([
-                'institution_key' => 'previous_institution_id'
-            ]);
+            // $this->behaviors()->get('Workflow')->config([
+            //     'institution_key' => 'previous_institution_id'
+            // ]);
+            $workflowBehavior = $this->behaviors()->get('Workflow');
+            $workflowBehavior->setConfig('institution_key', 'previous_institution_id');
         }
 
         //$this->toggle('add', true);//POCOR-6925
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
 
         $validator = parent::validationDefault($validator);
@@ -72,14 +74,14 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             ]);
     }
 
-    public function validationBulkTransfer(Validator $validator)
+    public function validationBulkTransfer(Validator $validator): Validator
     {
         // requested_date is not relevent for transfer of promoted/graduated students
         $validator = $this->validationDefault($validator);
         return $validator->remove('requested_date');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['UpdateAssignee.onSetSchoolBasedConditions'] = 'onSetSchoolBasedConditions';

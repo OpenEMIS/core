@@ -7,7 +7,7 @@ use Cake\Cache\Cache;
 
 class VersionShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 

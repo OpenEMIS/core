@@ -6,7 +6,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
 
 class UpdateInstitutionShiftTypeShell extends Shell {
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 	}
 

@@ -10,7 +10,7 @@ use App\Shell\AlertShell;
 
 class AlertAttendanceShell extends AlertShell
 {
-    public function initialize()
+    public function initialize(): void 
     {
         parent::initialize();
 
