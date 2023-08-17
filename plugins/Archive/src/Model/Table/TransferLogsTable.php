@@ -79,18 +79,13 @@ class TransferLogsTable extends ControllerActionTable
         $this->toggle('view', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
-        $alreadytransferring = $this->find('all')
-            ->where(['process_status' => self::IN_PROGRESS,
-            ])
-            ->count();
-        if ($alreadytransferring > 0) {
-            $this->toggle('add', false);
-        }
         $this->statusOptions = [
             self::IN_PROGRESS => __('Processing'),
             self::DONE => __('Completed'),
             self::ERROR => __('Error')
         ];
+
+
     }
 
     /**
@@ -129,7 +124,16 @@ class TransferLogsTable extends ControllerActionTable
         $this->field('p_id', ['visible' => false]);
         $this->field('features', ['sort' => false]); // POCOR-6816
         $this->setFieldOrder(['academic_period_id', 'features', 'generated_on', 'generated_by']);
-
+        $alreadytransferring = $this->find('all')
+            ->where(['process_status' => self::IN_PROGRESS,
+            ])
+            ->count();
+        if ($alreadytransferring === 1) {
+            $this->Alert->warning('Has an archive process running', ['type' => 'string', 'reset' => true]);;
+        }
+        if ($alreadytransferring > 1) {
+            $this->Alert->warninf("Has $alreadytransferring archive processes running", ['type' => 'string', 'reset' => true]);;
+        }
         //$this->Alert->info('Archive.backupReminder', ['reset' => false]);
 
         // Start POCOR-5188
@@ -266,8 +270,8 @@ class TransferLogsTable extends ControllerActionTable
                 ->count();
             if ($alreadytransferring > 0) {
                 $this->Alert->error('Has another process running', ['type' => 'string', 'reset' => true]);
-                $event->stopPropagation();
-                return false;
+//                $event->stopPropagation();
+//                return false;
             }
             $entity->p_id = random_int(100000, 999999);
 //        $entity->process_status = 0;
