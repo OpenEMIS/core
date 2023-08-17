@@ -18,6 +18,7 @@ use Cake\Datasource\ConnectionManager;
 use Cake\Core\Exception\Exception;
 use Cake\Log\Log;
 use Cake\Utility\Security;
+use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 
 /**
  * Class TransferLogsTable
@@ -316,12 +317,14 @@ class TransferLogsTable extends ControllerActionTable
      *
      */
 
-    public function triggerArchiveShell($shellName, $academicPeriodId = null, $pid = null)
+    public function triggerArchiveShell($shellName, $academicPeriodId = null, $pid = null, $recordsToArchive = 0, $recordsInArchive = 0)
     {
         $this->log("=======>Before $shellName", 'debug');
         $args = '';
-        $args .= !is_null($academicPeriodId) ? ' ' . $academicPeriodId : '';
-        $args .= !is_null($pid) ? ' ' . $pid : '';
+        $args .= !is_null($academicPeriodId) ? ' ' . $academicPeriodId : ' 0';
+        $args .= !is_null($pid) ? ' ' . $pid : ' 0';
+        $args .= !is_null($recordsToArchive) ? ' ' . $pid : ' 0';
+        $args .= !is_null($recordsInArchive) ? ' ' . $pid : ' 0';
 
         $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $shellName . $args;
         $logs = ROOT . DS . 'logs' . DS . $shellName . '.log & echo $!';
@@ -447,24 +450,32 @@ class TransferLogsTable extends ControllerActionTable
         if ($superAdmin == 1) {//POCOR-7399
             $academic_period_id = $entity->academic_period_id;
             $recordsToArchive = 0;
-            $tableRecordsCount = 0;
             foreach ($tablesToArchive as $tableToArchive) {
                 $tableRecordsCount =
                     $this->getTableRecordsCountForAcademicPeriod($tableToArchive,
                         $academic_period_id);
                 $recordsToArchive = $recordsToArchive + $tableRecordsCount;
-                $tableRecordsCount = 0;
             }
 
             if ($recordsToArchive == 0) {
-                $this->log($entity, 'debug');
+//                $this->log($entity, 'debug');
                 $entity['process_status'] = self::DONE;
                 $entity->features = $entity['features'] . '. ' . __('No Records');
                 $this->save($entity);
                 $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
             }
+
             if ($recordsToArchive > 0) {
-                $todoing = trim($entity['features']) . '. To archive: ' . number_format($recordsToArchive, 0, '', ' ');
+                $recordsInArchive = 0;
+                foreach ($tablesToArchive as $tableToArchive) {
+                    $archive_table_name = ArchiveConnections::hasArchiveTable($tableToArchive);
+                    $archiveTableRecordsCount =
+                        $this->getTableRecordsCountForAcademicPeriod($archive_table_name,
+                            $academic_period_id);
+                    $recordsInArchive = $recordsInArchive + $archiveTableRecordsCount;
+                }
+
+                $todoing = trim($entity['features']) . '. ' . $recordsToArchive . '/' . $recordsInArchive;
 
                 $alreadytransferring = $this->find('all')
                     ->where(['academic_period_id' => $entity->academic_perid_id,
@@ -473,17 +484,12 @@ class TransferLogsTable extends ControllerActionTable
                     ])
                     ->count();
                 if ($alreadytransferring > 0) {
-                    $entity['process_status'] = self::ERROR;
-                    $entity->features = $entity->features . ' Has another process running';
-                    $this->save($entity);
                     $this->Alert->error('Has another process running', ['type' => 'string', 'reset' => true]);
                 }
-                if ($alreadytransferring == 0) {
-                    $this->triggerArchiveShell($shellName, $academic_period_id, $entity->p_id);
-                    $entity->features = $todoing;
-                    $entity->process_status = self::IN_PROGRESS;
-                    $this->save($entity);
-                }
+                $this->triggerArchiveShell($shellName, $academic_period_id, $entity->p_id, $recordsToArchive, $recordsInArchive);
+                $entity->features = $todoing;
+                $entity->process_status = self::IN_PROGRESS;
+                $this->save($entity);
             }
         }
         if ($superAdmin != 1) {
