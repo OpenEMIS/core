@@ -25,6 +25,7 @@ class DashboardController extends AppController
         if (!empty($workflowRules)) {
             //$this->triggerUnmarkedAttendanceShell(); //POCOR-7489 comment it for taking time and utlized the max cpu memory on server
         }
+
         //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
 
@@ -158,7 +159,7 @@ class DashboardController extends AppController
         Log::write('debug', $shellCmd);
 
     }
-
+    
     private function triggerInstitutionClassSubjectsShell()
     {
         $script = 'InstitutionClassSubjects';
