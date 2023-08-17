@@ -481,26 +481,33 @@ class DataManagementCopyTable extends ControllerActionTable
                                                                                       'EducationGrades.name'=>$newData->education_grade->name])
                                                                             ->first();
                                             if(empty($existingRecord)){
-                                              $newRecord=array(
-                                                      'education_grade_id' => $newData['education_grade_id'],
-                                                      'academic_period_id' => $to_academic_period,
-                                                      'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
-                                                      'start_year' => $ToAcademicPeriodsData['start_year'],
-                                                       'end_date' => null,
-                                                       'end_year' => null,
-                                                       'institution_id' =>$newData['institution_id'],
-                                                       'modified_user_id' => 2,
-                                                        'modified' => date('Y-m-d H:i:s'),
-                                                       'created_user_id' => 2,
-                                                       'created' => date('Y-m-d H:i:s'),
-                                                       'programme'=> $newData->education_grade->education_programme_id
-                                              );
-                                            $newEntity= $InstitutionGrades->newEntity($newRecord) ;
-                                            $result=$InstitutionGrades->save($newEntity);
-                                         
-                                            }
-                         
-                            } 
+                                                try {
+                                                 $statement = $connection->prepare('INSERT INTO institution_grades( education_grade_id, academic_period_id, 
+                                                                                  start_date, start_year, end_date, end_year, institution_id, modified_user_id, 
+                                                                                  modified, created_user_id, created)
+                                                                                  VALUES (:education_grade_id, :academic_period_id, :start_date,  
+                                                                                  :start_year, :end_date, :end_year, :institution_id, 
+                                                                                  :modified_user_id, :modified, :created_user_id, :created)');
+
+                                                                $statement->execute([
+                                                                'education_grade_id' => $newData['education_grade_id'],
+                                                                'academic_period_id' => $to_academic_period,
+                                                                'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
+                                                                'start_year' => $ToAcademicPeriodsData['start_year'],
+                                                                'end_date' => null,
+                                                                'end_year' => null,
+                                                                'institution_id' =>$newData['institution_id'],
+                                                                'modified_user_id' => 2,
+                                                                'modified' => date('Y-m-d H:i:s'),
+                                                                'created_user_id' => 2,
+                                                                'created' => date('Y-m-d H:i:s')
+                                                                ]);
+                
+                                                    }catch (\PDOException $e) {
+                                                        echo "<pre>";print_r($e);die;
+                                                    }
+                                            
+                                                } }
                         }
 
                 }
@@ -518,11 +525,11 @@ class DataManagementCopyTable extends ControllerActionTable
             INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
             INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
             INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
-            LEFT JOIN academic_periods ON institution_grades.start_date BETWEEN $from_start_date AND $to_end_date
+            LEFT JOIN academic_periods ON institution_grades.academic_period_id=academic_periods.id
             AND academic_periods.academic_period_level_id != -1
             AND education_systems.academic_period_id = academic_periods.id
             WHERE correct_grade.id != institution_grades.education_grade_id AND academic_periods.id=$to_academic_period");
-
+            
             $statement->execute();
             $row = $statement->fetchAll(\PDO::FETCH_ASSOC);
             foreach($row AS $rowData){
