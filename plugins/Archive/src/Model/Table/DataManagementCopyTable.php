@@ -542,8 +542,7 @@ class DataManagementCopyTable extends ControllerActionTable
 
             //to insert data in institution_program_grade_subjects[START]
             $conn = ConnectionManager::get('default');
-            $queryData = "INSERT INTO `institution_program_grade_subjects` (`institution_grade_id`, `education_grade_id`, `education_grade_subject_id`, `institution_id`, `created_user_id`, `created`)
-            SELECT subq3.new_inst_grade_id, subq3.new_ed_grade_id, subq2.subject_id, subq2.inst_id, '1', $currentData
+            $queryData="SELECT subq3.new_inst_grade_id, subq3.new_ed_grade_id, subq2.subject_id, subq2.inst_id, '1', $currentData
             FROM (SELECT
                 institutions.id institution_id,
                 education_grades.id edu_grade_id,
@@ -600,7 +599,45 @@ class DataManagementCopyTable extends ControllerActionTable
         INNER JOIN education_systems ON education_systems.id = education_levels.education_system_id
         INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
         WHERE academic_periods.id = $to_academic_period) subq1 ON subq1.new_edu_level_name = subq.old_edu_level_name AND subq1.new_edu_programme_name = subq.old_edu_programme_name AND subq1.new_edu_grade_code = subq.old_edu_grade_code AND subq1.new_edu_cycle_name = subq.old_edu_cycle_name AND subq1.new_institution_id = subq.old_institution_id) subq3 ON subq3.old_inst_grade_id = subq2.old_instit_grade_id";
-            $conn->execute($queryData);
+        //for not inserting duplicate records
+        $result=$conn->execute($queryData)->fetchAll('assoc');
+        $institutionGradeSubjects=TableRegistry::get('institution_program_grade_subjects');
+        foreach($result as $key =>$institutionGradeSubjectData) {
+
+          
+                $existingRecord =$institutionGradeSubjects->find()
+                    ->where([
+                        'institution_grade_id'=> $institutionGradeSubjectData['new_inst_grade_id'],
+                        'education_grade_id'=> $institutionGradeSubjectData['new_ed_grade_id'], 
+                        'education_grade_subject_id'=> $institutionGradeSubjectData['subject_id'],
+                        'institution_id'=> $institutionGradeSubjectData['inst_id'],
+                    ])
+                    ->first();
+                if (empty($existingRecord)) {
+                    try {
+                      
+                        $statement = $connection->prepare("INSERT INTO `institution_program_grade_subjects`
+                         (`institution_grade_id`, `education_grade_id`, `education_grade_subject_id`, 
+                         `institution_id`, `created_user_id`, `created`)
+                         VALUES (:institution_grade_id,:education_grade_id,:education_grade_subject_id,
+                          :institution_id, :created_user_id, :created)");
+                        $statement->execute([
+                            'institution_grade_id' => $institutionGradeSubjectData['new_inst_grade_id'],
+                            'education_grade_id' => $institutionGradeSubjectData['new_ed_grade_id'],
+                            'education_grade_subject_id' => $institutionGradeSubjectData['subject_id'],
+                            'institution_id' => $institutionGradeSubjectData['inst_id'],
+                            'created_user_id' => 2,
+                            'created' => date('Y-m-d H:i:s')
+                        ]);
+                        
+                    } catch (\PDOException $e) {
+                        echo "<pre>";
+                        print_r($e);
+                        die;
+                    }
+                }
+            }
+            
         }
         if($entity->features == "Shifts"){
             $from_academic_period = $entity->from_academic_period;
