@@ -1193,6 +1193,14 @@ class UserRepository extends Controller
                 //get prefered language
                 $pref_lang = ConfigItem::where(['code' => 'language','type' => 'System'])->first();
 
+                //Check guardian relation id...
+                if($guardianRelationId){
+                    $check = DB::table('guardian_relations')->where('id', $guardianRelationId)->first();
+                    if(empty($check)){
+                        return 3; //Guardian Relation Id is invalid...
+                    }
+                }
+
                 //get nationality data
                 $nationalities = '';
                 if (!empty($nationalityName)) {
@@ -1343,13 +1351,15 @@ class UserRepository extends Controller
                         $store = UserContacts::insert($entityContactData);
                     }
 
-                    //if relationship id and staudent openemis_no is not empty
-                    if (!empty($guardianRelationId) && !empty($studentOpenemisNo)) {
-                        $StudentData = SecurityUsers::where('openemis_no', $studentOpenemisNo)->first();
+                    //if relationship id and staudent id is not empty
+                    if (!empty($guardianRelationId) && !empty($studentId)) {
+                        //$StudentData = SecurityUsers::where('openemis_no', $studentOpenemisNo)->first();
+                        $StudentData = SecurityUsers::where('id', $studentId)->first();
                         if(!empty($StudentData)){
                             $entityGuardiansData = [
                                 'id' => Str::uuid(),
-                                'student_id' => $StudentData->id,
+                                //'student_id' => $StudentData->id,
+                                'student_id' => $studentId,
                                 'guardian_id' => $user_record_id,
                                 'guardian_relation_id' => $guardianRelationId,
                                 'created_user_id' => $userId,
@@ -1357,6 +1367,9 @@ class UserRepository extends Controller
                             ];
 
                             $store = StudentGuardians::insert($entityGuardiansData);
+                        } else {
+                            /*DB::commit();
+                            return 2;*/
                         }
                     }
                 }

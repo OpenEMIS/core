@@ -32,6 +32,7 @@ class SaveGuardianDataRequest extends FormRequest
             'last_name' => 'required',
             'gender_id' => 'required',
             'date_of_birth' => 'required',
+            'student_id' => 'required',
             //'academic_period_id' => 'required'
         ];
     }
