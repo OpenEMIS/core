@@ -309,7 +309,8 @@ trait MessagesTrait
             'allSubjectsAlreadyAdded' => 'All Subjects for the assigned grade already added previously',
             'noSubjectsInClass' => 'There are no subjects in the assigned grade',
             'noSubjectSelected' => 'There is no subject selected',
-            'noProgrammes' => 'There is no programme set for available Academic Period on this institution'
+            'noProgrammes' => 'There is no programme set for available Academic Period on this institution',
+            'SubjectAlreadyExist'=> 'Subject with the same name already exist. Please rename the Subject'
         ],
         'InstitutionFees' => [
             'fee_types' => 'Fee Types',
