@@ -341,7 +341,6 @@ class WorkflowCaseBehavior extends Behavior
         if ($entity->isNew() && $entity->status_id == self::STATUS_OPEN && $entity->staff_change_type_id != 5) {
             $this->setStatusAsOpen($entity);
         }
-
         if (!$entity->has('assignee_id') || $entity->assignee_id == self::AUTO_ASSIGN) {
             $this->autoAssignAssignee($entity);
         }
@@ -373,6 +372,8 @@ class WorkflowCaseBehavior extends Behavior
             $value = '<span>&lt;'.$model->getMessage('general.unassigned').'&gt;</span>';
         }elseif($entity->assignee_id == -1){ //POCOR-7025
             $value = _('Auto Assign');
+        }elseif(!empty($entity->assignee_id)) {//POCOR-7668 
+            $value= $entity->assignee_id;
         }
 
         return $value;
@@ -1243,9 +1244,6 @@ class WorkflowCaseBehavior extends Behavior
                     $assigneeOptions = $this->getFirstStepAssigneeOptions($entity, $isSchoolBased, $firstStepId, $request);
                 }
             }
-            if($model->url('index')['controller']=="Profiles"&&$model->url('index')['action']=="Cases"){//POCOR-7439
-                $assignToSelf = true;
-            }
             if (!$assignToSelf) {
                 if (isset($assigneeOptions) && !empty($assigneeOptions)) {
                     $assigneeOptions = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
@@ -1261,9 +1259,7 @@ class WorkflowCaseBehavior extends Behavior
                 $attr['type'] = 'readonly';
                 $attr['value'] = $userEntity->id;
                 $attr['attr']['value'] = $userEntity->name_with_id;
-                if($model->url('index')['controller']=="Profiles"&&$model->url('index')['action']=="Cases"){//POCOR-7439
-                    $attr['type'] = 'hidden';
-                }
+                
             } 
             else if($request->data['StaffPositionProfiles']['staff_change_type_id'] == 1 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 2 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 3 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 4){
                 $attr['type'] = 'chosenSelect';
@@ -1274,6 +1270,16 @@ class WorkflowCaseBehavior extends Behavior
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
                 $attr['options'] = $assigneeOptions;
+                //POCOR-7668 start
+                if ($model->url('index')['controller'] == "Profiles" && $model->url('index')['action'] == "Cases") { //POCOR-7439
+                    $attr['type'] = 'hidden';
+                    foreach($assigneeOptions as $key=>$value){
+                        if(!empty($key)){
+                        $attr['value'] = $key;
+                        }
+                    }
+                }
+                //POCOR-7668 end
             }
             else {
                 $attr['type'] = 'hidden';
