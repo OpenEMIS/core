@@ -12,8 +12,8 @@ $this->start('toolbar');
             <i class="fa kd-import"></i>
         </button>
     </a>
-</button>
-<?php endif; ?> 
+    </button>
+<?php endif; ?>
 <?php if ($_edit) : ?>
     <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && !$ctrl.schoolClosed && $ctrl.selectedDay != -1" ng-click="$ctrl.onEditClick()">
         <i class="fa kd-edit"></i>
@@ -28,34 +28,32 @@ $this->start('toolbar');
         <i class="fa kd-export" ></i>
     </button>
 <?php endif; ?>
-<?php 
+<?php
 $session = $this->Session;
 $superAdmin = $session->read('Auth.User.super_admin');
-$is_connection_is_online = $session->read('is_connection_stablished');
+
 ?>
 
-<?php if(($is_connection_is_online == 1 && $is_button_accesible == 1)) :  ?>
-<?php if ($archiveUrl) : ?>
+<?php if(($_archive && $archiveUrl)) :  ?>
     <a href="<?=$archiveUrl ?>" ng-show="$ctrl.action == 'view'">
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Archive') ?>" >
             <i class="fa fa-folder"></i>
         </button>
     </a>
-</button>
-<?php endif; ?>
+    </button>
 <?php endif; ?>
 <?php /*************** Start POCOR-5188 */ ?>
-    <?php 
-        if(!empty($is_manual_exist)):
+<?php
+if(!empty($is_manual_exist)):
     ?>
 
     <a href="<?php echo $is_manual_exist['url']; ?>" target="_blank">
         <button  class="btn btn-xs btn-default icon-big"  data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Help') ?>" >
-        <i class="fa fa-question-circle"></i>
+            <i class="fa fa-question-circle"></i>
         </button>
     </a>
-    <?php endif ?>
-    <?php /*************** End POCOR-5188 */ ?>
+<?php endif ?>
+<?php /*************** End POCOR-5188 */ ?>
 <?php
 $this->end();
 ?>
@@ -182,35 +180,35 @@ $institutionId = $paramsQuery['institution_id'];
 
     .mobile-split-btn button.btn-default{z-index:9999!important; bottom:40px; position:fixed !important; right:15px;}
 
-     @media screen and (max-width:667px){
-              .table-wrapper ::-webkit-scrollbar {
-                  -webkit-appearance: none;
-              }
+    @media screen and (max-width:667px){
+        .table-wrapper ::-webkit-scrollbar {
+            -webkit-appearance: none;
+        }
 
-              .table-wrapper ::-webkit-scrollbar:vertical {
-                  width: 8px;
-              }
+        .table-wrapper ::-webkit-scrollbar:vertical {
+            width: 8px;
+        }
 
-              .table-wrapper ::-webkit-scrollbar:horizontal {
-                  height: 8px;
-              }
+        .table-wrapper ::-webkit-scrollbar:horizontal {
+            height: 8px;
+        }
 
-              .table-wrapper ::-webkit-scrollbar-thumb {
-                  background-color: rgba(0, 0, 0, .3);
-                  border-radius: 10px;
-                  border: 2px solid #ffffff;
-              }
+        .table-wrapper ::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, .3);
+            border-radius: 10px;
+            border: 2px solid #ffffff;
+        }
 
-              .table-wrapper ::-webkit-scrollbar-track {
-                  border-radius: 10px;
-                  background-color: #ffffff;
-              }
-         }
+        .table-wrapper ::-webkit-scrollbar-track {
+            border-radius: 10px;
+            background-color: #ffffff;
+        }
+    }
 
 </style>
 <div class="panel">
-    <div class="panel-body" style="position: relative;">       
-		<bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>; $ctrl.excelUrl='<?= $excelUrl;?>'; $ctrl.history=<?= $_history ? $_history : 0 ?>;$ctrl.ownEdit=<?= $_ownEdit ? $_ownEdit : 0 ?>;$ctrl.ownView=<?= $_ownView ? $_ownView : 0 ?>;$ctrl.otherEdit=<?= $_otherEdit ? $_otherEdit : 0 ?>;$ctrl.otherView=<?= $_otherView ? $_otherView : 0 ?>;$ctrl.permissionStaffId=<?= $_permissionStaffId ? $_permissionStaffId : 0 ?>;" float-btn="false">
+    <div class="panel-body" style="position: relative;">
+        <bg-splitter orientation="horizontal" class="content-splitter" elements="getSplitterElements" ng-init="$ctrl.institutionId=<?= $institution_id ?>; $ctrl.excelUrl='<?= $excelUrl;?>'; $ctrl.history=<?= $_history ? $_history : 0 ?>;$ctrl.ownEdit=<?= $_ownEdit ? $_ownEdit : 0 ?>;$ctrl.ownView=<?= $_ownView ? $_ownView : 0 ?>;$ctrl.otherEdit=<?= $_otherEdit ? $_otherEdit : 0 ?>;$ctrl.otherView=<?= $_otherView ? $_otherView : 0 ?>;$ctrl.permissionStaffId=<?= $_permissionStaffId ? $_permissionStaffId : 0 ?>;" float-btn="false">
 
             <bg-pane class="main-content">
                 <div class="alert {{class}}" ng-hide="message == null">

@@ -660,4 +660,87 @@ class DataManagementConnectionsTable extends ControllerActionTable
         return $uniqu_array;
     }
 
+    /**
+     * @param $table_name
+     * @return Table
+     */
+    public static function getArchiveTable($table_name)
+    {
+        $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
+        $targetTableName = $targetTableNameAndConnection[0];
+        $targetTableConnection = $targetTableNameAndConnection[1];
+        $remoteConnection = ConnectionManager::get($targetTableConnection);
+        $tableArchived = TableRegistry::get($targetTableName, [
+            'connection' => $remoteConnection,
+        ]);
+        return $tableArchived;
+    }
+
+    public static function getArchiveDays(string $table_name, array $where = [])
+    {
+
+        $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
+        $targetTableName = $targetTableNameAndConnection[0];
+        $targetTableConnection = $targetTableNameAndConnection[1];
+        $remoteConnection = ConnectionManager::get($targetTableConnection);
+        $tableArchived = TableRegistry::get($targetTableName, [
+            'connection' => $remoteConnection,
+        ]);
+        $distinctDates = $tableArchived->find('all')
+            ->where($where)
+            ->select(['date'])
+            ->distinct(['date'])
+            ->toArray();
+        $distinctDateValues = array_column($distinctDates, 'date');
+        $distinctDateStringValues = array_map(function ($date) {
+            return $date->format('Y-m-d');
+        }, $distinctDateValues);
+//        Log::write('debug', '$distinctDateValues');
+//        Log::write('debug', $distinctDateValues);
+        return $distinctDateStringValues;
+    }
+
+    public static function getArchiveLeaveDays(string $table_name, array $where = [], $start_day = null, $end_day = null)
+    {
+
+        $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
+        $targetTableName = $targetTableNameAndConnection[0];
+        $targetTableConnection = $targetTableNameAndConnection[1];
+        $remoteConnection = ConnectionManager::get($targetTableConnection);
+        $tableArchived = TableRegistry::get($targetTableName, [
+            'connection' => $remoteConnection,
+        ]);
+//        Log::write('debug', 'getArchiveLeaveDays');
+//        Log::write('debug', '$where');
+//        Log::write('debug', $where);
+        $distinctDates = $tableArchived->find('all')
+            ->where($where)
+            ->select(['date_from', 'date_to'])
+            ->distinct(['date_from', 'date_to'])->toArray();
+//        Log::write('debug', '$distinctDates');
+//        Log::write('debug', $distinctDates);
+
+
+        $distinctDateValues = [];
+        foreach ($distinctDates as $distinctDate) {
+            $dateFrom = $distinctDate['date_from'];
+            $dateTo = $distinctDate['date_to'];
+            if ($start_day != null && $end_day != null) {
+                $start_date = new Date($start_day);
+                $end_date = new Date($end_day);
+                $dateFrom = $distinctDate['date_from'] < $start_date ? $start_date : $distinctDate['date_from'];
+                $dateTo = $distinctDate['date_to'] > $end_date ? $end_date : $distinctDate['date_to'];
+            }
+            do {
+//                Log::write('debug', '$dateFrom');
+//                Log::write('debug', $dateFrom);
+                $distinctDateValues[] = $dateFrom->format('Y-m-d');
+                $dateFrom->addDay();
+            } while ($dateFrom->lte($dateTo));
+        }
+//        Log::write('debug', '$distinctDateValues');
+//        Log::write('debug', $distinctDateValues);
+        return $distinctDateValues;
+    }
+
 }
