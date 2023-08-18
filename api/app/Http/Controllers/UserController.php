@@ -135,7 +135,9 @@ class UserController extends Controller
                 return $this->sendSuccessResponse("Guardian data stored successfully.");
             } elseif($data == 2) {
                 return $this->sendErrorResponse("Invalid academic period.");
-            }else {
+            } elseif($data == 3) {
+                return $this->sendErrorResponse("Guardian Relation Id is invalid.");
+            } else {
                 return $this->sendErrorResponse("Guardian data not stored.", $data);
             }
             
