@@ -1,3 +1,19 @@
+### [3.92.1] - 2023-08-18
+- Implemented: Develop changes to asset feature
+- Implemented: Develop a function to add Case Escalation emails to Alerts
+- Implemented: Move all textbook related field options under a separate textbook section heading
+- Implemented: Develop a "Bonded Organisation" field for the scholarship feature
+- Bug Fixed: Develop Institutions > Statistics > Standard: Student Attendance Summary Report(Rule to Calculate Daily Attendance/Absence)
+- Bug Fixed: CLONE - SAME DB ARCHIVE : Institutions > Attendance> Staff page: The page is not showing correctly
+- Bug Fixed: Swagger: Textbook api is not updated properly
+- Bug Fixed: Report>UIS Statistics: Error Message when inserting queries
+- Bug Fixed: Reports > Workflows: Report is stuck in progress
+- Bug Fixed: Administration > Security > Groups > User Group: User Roles configured are not showing in the list
+- Bug Fixed: Institutions > Students > General > Guardian: Not able to add guardian when adding via identity number
+- Bug Fixed: Institutions>Performance>Report Cards: Unable to generate all
+- Bug Fixed: Issues with copying the features in Administration > Data Management > Copy
+- Bug Fixed: Administration > Profiles > Classes: When publishing the class profile, the page navigates to 404 error
+
 ### [3.92.0] - 2023-08-11
 - Implemented: Improvements to the Case feature to allow users to add/update cases from the Personal module
 - Bug Fixed: Institutions > Student/Staff > Export: The page goes to Bad Gateway
