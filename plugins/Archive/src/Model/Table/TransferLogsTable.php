@@ -269,7 +269,7 @@ class TransferLogsTable extends ControllerActionTable
                 ])
                 ->count();
             if ($alreadytransferring > 0) {
-                $this->Alert->error('Has another process running', ['type' => 'string', 'reset' => true]);
+                $this->Alert->error('There is an archive process currently running. Please try again later', ['type' => 'string', 'reset' => true]);
 //                $event->stopPropagation();
 //                return false;
             }
@@ -490,7 +490,7 @@ class TransferLogsTable extends ControllerActionTable
                     ])
                     ->count();
                 if ($alreadytransferring > 0) {
-                    $this->Alert->error('Has another process running', ['type' => 'string', 'reset' => true]);
+                    $this->Alert->error('There is an archive process currently running. Please try again later', ['type' => 'string', 'reset' => true]);
                 }
                 $this->triggerArchiveShell($shellName, $academic_period_id, $entity->p_id, $recordsToArchive, $recordsInArchive);
                 $entity->features = $todoing;

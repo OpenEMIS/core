@@ -52,6 +52,8 @@ class CommonArchiveShell extends Shell
             ->find('all')
             ->where(['p_id' => $pid])->first();
         $moved = "$featureName. $recordsToArchive / $recordsInArchive. $proc $step.";
+        $caller->out($moved);
+        $moved = "$featureName. $recordsToArchive / $recordsInArchive.";
         $transferlog->features = $moved;
         try {
             $TransferLogs->save($transferlog);
