@@ -129,10 +129,10 @@ class TransferLogsTable extends ControllerActionTable
             ])
             ->count();
         if ($alreadytransferring === 1) {
-            $this->Alert->warning('Has an archive process running', ['type' => 'string', 'reset' => true]);;
+            $this->Alert->warning('There is an archive process currently running. Please try again later', ['type' => 'string', 'reset' => true]);;
         }
         if ($alreadytransferring > 1) {
-            $this->Alert->warninf("Has $alreadytransferring archive processes running", ['type' => 'string', 'reset' => true]);;
+            $this->Alert->warninf("There are $alreadytransferring archive processes currently running. Please try again later", ['type' => 'string', 'reset' => true]);;
         }
         //$this->Alert->info('Archive.backupReminder', ['reset' => false]);
 
