@@ -1294,6 +1294,7 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.InstitutionAssets',
                     'Institutions.InstitutionAssets.view',
                     'Institutions.ImportInstitutionAssets.add',
+                    'Institutions.ImportInstitutionAssets.results',
                     'Institutions.InstitutionAssets.add',
                     'Institutions.InstitutionAssets.edit',
                     'Institutions.InstitutionAssets.delete'],
