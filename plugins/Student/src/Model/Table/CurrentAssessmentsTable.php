@@ -10,6 +10,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
+use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -349,7 +350,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
     private function addArchiveButton($toolbarButtons)
     {
         $is_archive_exists = $this->isArchiveExists();
-        if ($is_archive_exists) {
+//        if ($is_archive_exists) {
             $customButtonName = 'archive';
             $customButtonUrl = [
                 'plugin' => 'Student',
@@ -359,34 +360,23 @@ class CurrentAssessmentsTable extends ControllerActionTable
             $customButtonLabel = '<i class="fa fa-folder"></i>';
             $customButtonTitle = __('Archive');
             $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl);
-        }
+//        }
     }
 
     private function isArchiveExists()
     {
-        $is_archive_exists = false;
+        $is_archive_exists = true;
         $institutionId = $this->institutionId;
         $studentId = $this->studentId;
         //POCOR-7526::Start
-        $connection = ConnectionManager::get('default');
-        $getArchiveData = $connection->query("SHOW TABLES LIKE 'assessment_item_results_archived' ");
-        $archiveDataArr = $getArchiveData->fetch();
-        if (!empty($archiveDataArr)) {
-            $AssessmentItemResultsArchived = TableRegistry::get('Institution.AssessmentItemResultsArchived');
-            $count = $AssessmentItemResultsArchived->find()
-                //            ->distinct([$AssessmentItemResultsArchived->aliasField('student_id')])// POCOR-7339-HINDOL
-                ->select([$AssessmentItemResultsArchived->aliasField('student_id')])// POCOR-7339-HINDOL
-                ->where([
-                    $AssessmentItemResultsArchived->aliasField('institution_id') => $institutionId,
-                    $AssessmentItemResultsArchived->aliasField('student_id') => $studentId,
-                ])->first();
-            if ($count) {
-                $is_archive_exists = true;
-            }
-            if (!$count) {
-                $is_archive_exists = false;
-            }
-        }
+
+        $where = [
+            ['institution_id = ' .  $institutionId,
+                'student_id =' . $studentId],
+        ];
+        $table_name = 'assessment_item_results';
+        $is_archive_exists = ArchiveConnections::hasArchiveRecords($table_name, $where);
+        return $is_archive_exists;
         //POCOR-7526::End
         return $is_archive_exists;
     }
@@ -408,7 +398,9 @@ class CurrentAssessmentsTable extends ControllerActionTable
             ->where(['student_id' => $this->studentId])
             ->toArray();
         $years_ids = array_column($years_arr, 'academic_period_id');
-
+        if(sizeof($years_ids) == 0){
+            $years_ids = [0];
+        }
         $academicPeriodOptions = $this->AcademicPeriods->getYearList([
             'isEditable' => true,
             'conditions' => [
@@ -435,7 +427,9 @@ class CurrentAssessmentsTable extends ControllerActionTable
             ->where(['student_id' => $this->studentId])
             ->toArray();
         $assessments_ids = array_column($assessments_arr, 'assessment_id');
-
+        if(sizeof($assessments_ids) == 0){
+            $assessments_ids = [0];
+        }
         $Assessments = TableRegistry::get('Assessment.Assessments');
         $assessmentOptions = $Assessments
             ->find('list')
@@ -464,7 +458,9 @@ class CurrentAssessmentsTable extends ControllerActionTable
             ->where(['student_id' => $this->studentId])
             ->toArray();
         $assessment_periods_ids = array_column($assessment_periods_arr, 'assessment_id');
-
+        if(sizeof($assessment_periods_ids) == 0){
+            $assessment_periods_ids = [0];
+        }
         $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
         $where = [$AssessmentPeriods->aliasField('id IN') => $assessment_periods_ids];
         if ($selectedAssessment != '-1') {

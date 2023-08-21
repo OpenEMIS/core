@@ -1327,7 +1327,7 @@ class ImportBehavior extends Behavior
             } else if ($mappingModel == 'Student.StudentGuardians' && $lookupColumnName == 'guardian_id' && $lookupColumn == 'openemis_no' && !empty($originalValue)) { //POCOR-5913 starts
                 $i = 1;
                 $columnName = 'guardian_id';
-                $userIdentities = TableRegistry::get('user_identities');
+                $userIdentities = TableRegistry::get('User.Identities');
                 $identityTypes = TableRegistry::get('identity_types');
                 $User = TableRegistry::get('security_users');
                 $securityUser = $User
@@ -1378,7 +1378,7 @@ class ImportBehavior extends Behavior
                 }
                 $k = 1;
                 $columnName = 'guardian_id';
-                $userIdentities = TableRegistry::get('user_identities');
+                $userIdentities = TableRegistry::get('User.Identities');
                 $identityTypes = TableRegistry::get('identity_types');
                 $User = TableRegistry::get('security_users');
                 $securityUser = $User

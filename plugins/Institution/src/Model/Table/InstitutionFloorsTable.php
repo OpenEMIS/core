@@ -14,7 +14,7 @@ use Cake\I18n\Date;
 use Cake\ORM\ResultSet;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
-
+use Cake\Routing\Router;
 class InstitutionFloorsTable extends ControllerActionTable
 {
     use OptionsTrait;
@@ -142,6 +142,19 @@ class InstitutionFloorsTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        //Start:POCOR-7597
+        if(!empty($entity['institution_building_id'])){
+            $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
+            $InstitutionBuilding = $InstitutionBuildings->get($entity['institution_building_id']);
+        }
+        if($entity['area'] >= $InstitutionBuilding['area']){
+            if (Router::getRequest()->params['action'] == "CopyData") {
+            } else {//POCOR_7657
+            $this->Alert->warning('InstitutionFloors.sizeGreater', ['reset' => true]);
+            return false;
+            }
+        }
+        //End:POCOR-7597
         if (!$entity->isNew() && $entity->has('change_type')) {
             $editType = $entity->change_type;
             $statuses = $this->FloorStatuses->find('list', ['keyField' => 'id', 'valueField' => 'code'])->toArray();

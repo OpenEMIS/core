@@ -26,7 +26,7 @@ class EducationSystemRepository extends Controller
         try {
             $params = $request->all();
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -70,7 +70,7 @@ class EducationSystemRepository extends Controller
         try {
             $params = $request->all();
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -114,7 +114,7 @@ class EducationSystemRepository extends Controller
         try {
             $params = $request->all();
             //dd($systemId, $levelId);
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -165,7 +165,7 @@ class EducationSystemRepository extends Controller
         try {
             $params = $request->all();
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -223,7 +223,7 @@ class EducationSystemRepository extends Controller
         try {
             $params = $request->all();
             
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -289,7 +289,7 @@ class EducationSystemRepository extends Controller
         try {
             $params = $request->all();
             
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -364,7 +364,7 @@ class EducationSystemRepository extends Controller
         try {
             $params = $request->all();
             
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -462,7 +462,7 @@ class EducationSystemRepository extends Controller
         try {
             $params = $request->all();
             
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];

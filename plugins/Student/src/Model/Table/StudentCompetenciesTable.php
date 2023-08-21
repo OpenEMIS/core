@@ -65,6 +65,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
+        $this->toggle('edit', false); //POCOR-7602
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)

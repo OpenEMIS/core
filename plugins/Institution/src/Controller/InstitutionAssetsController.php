@@ -11,7 +11,7 @@ class InstitutionAssetsController extends PageController
 {
     use OptionsTrait;
 
-    private $academicPeriodOptions = [];
+//    private $academicPeriodOptions = [];
     private $accessibilityOptions = [];
     private $purposeOptions = [];
 
@@ -21,7 +21,7 @@ class InstitutionAssetsController extends PageController
 
         $this->loadModel('Institution.InstitutionAssets');
         $this->loadModel('Institution.AssetTypes');
-        $this->loadModel('AcademicPeriod.AcademicPeriods');
+//        $this->loadModel('AcademicPeriod.AcademicPeriods');
     }
 
     public function implementedEvents()
@@ -65,7 +65,7 @@ class InstitutionAssetsController extends PageController
             ->setValue($institutionId);
 
         // get options
-        $this->academicPeriodOptions = $this->AcademicPeriods->getYearList();
+//        $this->academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $this->accessibilityOptions = $this->getSelectOptions($this->InstitutionAssets->aliasField('accessibility'));
         $this->purposeOptions = $this->getSelectOptions($this->InstitutionAssets->aliasField('purpose'));
     }
@@ -75,10 +75,10 @@ class InstitutionAssetsController extends PageController
         $page = $this->Page;
 
         // academic_period_id filter
-        $page->addFilter('academic_period_id')->setOptions($this->academicPeriodOptions);
+//        $page->addFilter('academic_period_id')->setOptions($this->academicPeriodOptions);
 
-        $academicPeriodId = !is_null($page->getQueryString('academic_period_id')) ? $page->getQueryString('academic_period_id') : $this->AcademicPeriods->getCurrent();
-        $page->setQueryString('academic_period_id', $academicPeriodId);
+//        $academicPeriodId = !is_null($page->getQueryString('academic_period_id')) ? $page->getQueryString('academic_period_id') : $this->AcademicPeriods->getCurrent();
+//        $page->setQueryString('academic_period_id', $academicPeriodId);
 
         // asset_type_id filter
         $assetTypes = $this->AssetTypes
@@ -112,8 +112,8 @@ class InstitutionAssetsController extends PageController
         $this->addEdit();
 
         // set default academic period
-        $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
-        $page->get('academic_period_id')->setValue($currentAcademicPeriod);
+//        $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
+//        $page->get('academic_period_id')->setValue($currentAcademicPeriod);
     }
 
     public function edit($id)
@@ -130,9 +130,9 @@ class InstitutionAssetsController extends PageController
         $page->get('asset_type_id')->setControlType('select');
         $page->get('asset_condition_id')->setControlType('select');
 
-        $page->get('academic_period_id')
-            ->setControlType('select')
-            ->setOptions($this->academicPeriodOptions, false);
+//        $page->get('academic_period_id')
+//            ->setControlType('select')
+//            ->setOptions($this->academicPeriodOptions, false);
 
         $page->get('purpose')
             ->setControlType('select')
@@ -142,7 +142,7 @@ class InstitutionAssetsController extends PageController
             ->setControlType('select')
             ->setOptions($this->accessibilityOptions);
 
-        $page->move('academic_period_id')->first();
+//        $page->move('academic_period_id')->first();
     }
 
     public function onRenderAccessibility(Event $event, Entity $entity, PageElement $element)
