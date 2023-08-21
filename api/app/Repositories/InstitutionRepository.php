@@ -50,6 +50,8 @@ use App\Models\StudentAttendanceMarkedRecords;
 use App\Models\InstitutionStudentAbsences;
 use App\Models\InstitutionStudentAbsenceDays;
 use App\Models\InstitutionStudentAbsenceDetails;
+use App\Models\StaffBehaviourCategories;
+use App\Models\StudentBehaviours;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -61,7 +63,7 @@ class InstitutionRepository extends Controller
         try {
             $params = $request->all();
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -123,7 +125,7 @@ class InstitutionRepository extends Controller
             $params = $request->all();
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -154,7 +156,7 @@ class InstitutionRepository extends Controller
         try {
             $params = $request->all();
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -224,7 +226,7 @@ class InstitutionRepository extends Controller
                 $classes = $classes->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -268,7 +270,7 @@ class InstitutionRepository extends Controller
                 $institutionClasses = $institutionClasses->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -339,7 +341,7 @@ class InstitutionRepository extends Controller
                 $subjects = $subjects->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -387,7 +389,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -451,7 +453,7 @@ class InstitutionRepository extends Controller
                 $shifts = $shifts->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -490,7 +492,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -550,7 +552,7 @@ class InstitutionRepository extends Controller
                 $areas = $areas->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -593,7 +595,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -659,7 +661,7 @@ class InstitutionRepository extends Controller
                 $summaries = $summaries->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -698,7 +700,7 @@ class InstitutionRepository extends Controller
                 $summaries = $summaries->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -737,7 +739,7 @@ class InstitutionRepository extends Controller
                 $summaries = $summaries->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -776,7 +778,7 @@ class InstitutionRepository extends Controller
                 $summaries = $summaries->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -833,7 +835,7 @@ class InstitutionRepository extends Controller
                 $nationalitySummaries = $nationalitySummaries->orderBy($col, $orderBy);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -873,7 +875,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -913,7 +915,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -953,7 +955,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -992,7 +994,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1027,7 +1029,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1062,7 +1064,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1118,7 +1120,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1153,7 +1155,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1224,7 +1226,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1283,7 +1285,7 @@ class InstitutionRepository extends Controller
                 $roomType = $roomType->where("academic_period_id", $academic_period_id);
             }
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1317,7 +1319,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1854,7 +1856,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1887,7 +1889,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1920,7 +1922,7 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -2154,7 +2156,7 @@ class InstitutionRepository extends Controller
                 $params = $request->all();
 
 
-                $limit = config('constants.defaultPaginateLimit');
+                $limit = config('constantvalues.defaultPaginateLimit');
 
                 if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -2187,7 +2189,7 @@ class InstitutionRepository extends Controller
 
                 $mealProgrammes = new MealProgrammes();
 
-            $limit = config('constants.defaultPaginateLimit');
+            $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -2253,8 +2255,13 @@ class InstitutionRepository extends Controller
             }
 
             $check2 = $delete2->exists();
+
+            if(!$check1 && !$check2){
+                DB::commit();
+                return 2;
+            }
             
-            if($check1 && $check2){
+            if($check1 || $check2){
                 $delete1 = $delete1->delete();
                 $delete2 = $delete2->delete();
 
@@ -2328,6 +2335,229 @@ class InstitutionRepository extends Controller
         }
     }
 
+    // POCOR-7546 starts
+
+    public function getBehaviourCategories($request)
+    {
+        try {
+            $params = $request->all();
+            $staffBehaviourCategories = new StaffBehaviourCategories();
+            
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $staffBehaviourCategories = $staffBehaviourCategories->orderBy($col, $orderBy);
+            }
+
+
+            $limit = config('constants.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $list = $staffBehaviourCategories->paginate($limit)->toArray();
+            
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Room Type Summaries List Not Found');
+        }
+    }
+
+    public function getInstitutionStudentBehaviour($institutionId, $studentId)
+    {
+        try {
+
+            $studentBehaviours = StudentBehaviours::where('institution_id', $institutionId)->where('student_id', $studentId)->get()->toArray();
+            return $studentBehaviours;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Student Behaviour from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution Student Behaviour Not Found');
+        }
+    }
+
+    public function addStudentAssessmentItemResult($request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+
+            $store['id'] = Str::uuid();
+            $store['marks'] = $data['marks']??Null;
+            $store['assessment_grading_option_id'] = $data['assessment_grading_option_id']??Null;
+            $store['student_id'] = $data['student_id'];
+            $store['assessment_id'] = $data['assessment_id'];
+            $store['education_subject_id'] = $data['education_subject_id'];
+            $store['education_grade_id'] = $data['education_grade_id'];
+            $store['academic_period_id'] = $data['academic_period_id'];
+            $store['assessment_period_id'] = $data['assessment_period_id'];
+            $store['institution_id'] = $data['institution_id'];
+            $store['institution_classes_id'] = $data['institution_classes_id'];
+            $store['created_user_id'] = JWTAuth::user()->id;
+            $store['created'] = Carbon::now()->toDateTimeString();
+
+            $insert = AssessmentItemResults::insert($store);
+            DB::commit();
+            return 1;
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'The update of student assessment mark could not be completed successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('The update of student assessment mark could not be completed successfully.');
+        }
+    }
+
+    public function addStudentBehaviour($request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+
+            $store['description'] = $data['description'];
+            $store['action'] = $data['action'];
+            $store['date_of_behaviour'] = $data['date_of_behaviour'];
+            $store['time_of_behaviour'] = $data['time_of_behaviour'];
+            $store['academic_period_id'] = $data['academic_period_id'];
+            $store['student_id'] = $data['student_id'];
+            $store['institution_id'] = $data['institution_id'];
+            $store['status_id'] = $data['status_id'];
+            $store['student_behaviour_category_id'] = $data['student_behaviour_category_id'];
+            $store['assignee_id'] = $data['assignee_id']??Null;
+            $store['created_user_id'] = JWTAuth::user()->id;
+            $store['created'] = Carbon::now()->toDateTimeString();
+            $store['student_behaviour_classification_id'] = $data['student_behaviour_classification_id']??Null;
+
+            $insert = StudentBehaviours::insert($store);
+            DB::commit();
+            return 1;
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'The update of student behaviour could not be completed successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('The update of student behaviour could not be completed successfully.');
+        }
+    }
+
+    public function getInstitutionClassEducationGradeStudents($institutionId, $institutionClassId, $educationGradeId)
+    {
+        try {
+
+            $studentsId = InstitutionClasses::with([
+                'students' => function ($q) use ($institutionId, $institutionClassId, $educationGradeId) {
+                    $q->where('institution_id', $institutionId)
+                        ->where('institution_class_id', $institutionClassId)
+                        ->where('education_grade_id', $educationGradeId);
+                        // ->pluck('student_id');
+                }
+            ])
+            ->where('institution_id', $institutionId)
+                    ->where('id', $institutionClassId);
+
+
+            $list = $studentsId->get();
+
+            return $list;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Students List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Students List.');
+        }
+    }
+
+    public function getInstitutionEducationSubjectStudents($institutionId, $educationGradeId)
+    {
+        try {
+
+            $studentsId = InstitutionSubjects::with([
+                'educationSubjects',
+                'students' => function ($q) use ($institutionId, $educationGradeId) {
+                    $q->where('institution_id', $institutionId)
+                        ->where('education_grade_id', $educationGradeId);
+                        // ->pluck('student_id');
+                }
+
+            ])
+            ->where('institution_id', $institutionId)
+            ->where('education_grade_id', $educationGradeId);
+            
+            $list = $studentsId->get()->toArray();
+            // dd(count($list));
+           
+
+            return $list;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Students List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Students List.');
+        }
+    }
+
+
+    public function deleteStudentBehaviour($institutionId, $studentId, $behaviourId)
+    {
+        DB::beginTransaction();
+        try {
+            
+            $isExists = StudentBehaviours::where([
+                'institution_id' => $institutionId,
+                'student_id' => $studentId,
+                'id' => $behaviourId
+            ])
+            ->first();
+
+            if($isExists){
+                $studentBehaviours = StudentBehaviours::where([
+                    'institution_id' => $institutionId,
+                    'student_id' => $studentId,
+                    'id' => $behaviourId
+                ])->delete();
+                DB::commit();
+                return 1;
+            }
+            else{
+                DB::commit();
+                return 2;
+            }
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'Failed to delete student attendance.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to delete student attendance.');
+        }
+    }
+    // POCOR-7546 ends
 
 }
 

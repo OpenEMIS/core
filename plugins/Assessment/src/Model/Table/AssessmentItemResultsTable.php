@@ -14,6 +14,7 @@ use Cake\Event\Event;
 use Cake\Utility\Text;
 use Cake\Core\Configure;
 use Cake\Log\Log;
+use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 
 class AssessmentItemResultsTable extends AppTable
 {
@@ -669,10 +670,10 @@ class AssessmentItemResultsTable extends AppTable
      * @param $options
      * @return float|null
      */
-    public static function getLastMark($options)
+    public static function getLastMark($options, $archive=false)
     {
 //        echo('$options');
-//        print_r($options);
+//        Log::write('debug', $options);
         $id = $options['id'];
         $student_id = self::getFromArray($options,'student_id');
         $academic_period_id = self::getFromArray($options,'academic_period_id');
@@ -756,8 +757,15 @@ class AssessmentItemResultsTable extends AppTable
         }
 
         $select = rtrim($select, ', ');
+        $assessment_item_results_table_name = 'assessment_item_results';
+        $connection_name = 'default';
+        if($archive){
+            $archiveTableAndConnection = ArchiveConnections::getArchiveTableAndConnection($assessment_item_results_table_name);
+            $assessment_item_results_table_name = $archiveTableAndConnection[0];
+            $connection_name = $archiveTableAndConnection[1];
+        }
         $sql = "SELECT $select
-FROM assessment_item_results all_results
+FROM $assessment_item_results_table_name all_results
 INNER JOIN
 (
     SELECT latest_grades.student_id
@@ -765,7 +773,7 @@ INNER JOIN
         ,latest_grades.education_subject_id
         ,latest_grades.assessment_period_id
         ,MAX(latest_grades.created) latest_created
-    FROM assessment_item_results latest_grades
+    FROM $assessment_item_results_table_name latest_grades
     $where    
     GROUP BY latest_grades.student_id
         ,latest_grades.assessment_id
@@ -785,7 +793,7 @@ GROUP BY all_results.student_id
 //        Log::write('debug', 'marks_sql');
 //        Log::write('debug', $sql);
 //        echo $sql;
-        $connection = ConnectionManager::get('default');
+        $connection = ConnectionManager::get($connection_name);
         $marks = $connection->execute($sql)->fetchAll('assoc');
         if (isset($marks)) {
             return $marks;

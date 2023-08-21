@@ -13,7 +13,7 @@ class LoginController extends Controller {
 	}
 
 	public function login() {
-        Log::write('debug', $this->request);
+//        Log::write('debug', $this->request);
 		if ($this->request->is('post')) {
 			$username = $this->request->data('username');
             $sessionId = $this->request->data('session_id');

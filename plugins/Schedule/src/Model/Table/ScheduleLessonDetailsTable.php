@@ -8,6 +8,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 
 class ScheduleLessonDetailsTable extends ControllerActionTable
@@ -59,6 +60,14 @@ class ScheduleLessonDetailsTable extends ControllerActionTable
                 'validate' => 'addCurriculumLesson'
             ];
         }
+    }
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+//        $this->log('beforeSave');
+//        $this->log($event);
+//        $this->log($entity);
+//        $this->log($options);
+        $options = null;
     }
 
     public function validationDefault(Validator $validator)
