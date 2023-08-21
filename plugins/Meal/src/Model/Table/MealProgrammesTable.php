@@ -118,17 +118,16 @@ class MealProgrammesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        // $institutionId = $entity->institution_id;
-        // $entity->institution_id = $institutionId;
         $InstitutionTable = TableRegistry::get('institutions');
         $Areas = TableRegistry::get('Area.Areas');
-        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+        $MealInstitutionProgrammes = TableRegistry::get('meal_institution_programmes');
         $result=$this->find('all',['fields'=>'id'])->last();
 
         //START : POCOR-6608
         $areaIdsData = $entity['area_id']['_ids'];
         $areaIdsData = $areaIdsData[0];//POCOR-6882
-        $record_id=$result->id;
+        //$record_id=$result->id;
+        $record_id=$entity->id;//POCOR-7652
         $institutionIds = $entity->institution_id;
         $institutionIdsData = $institutionIds['_ids'];
         $institutionData = $InstitutionTable->find()
@@ -141,14 +140,21 @@ class MealProgrammesTable extends ControllerActionTable
         if($institutionIdsData[0] == 0){
             foreach ($institutionData as $institution) {
                 try{
-                    $data = $MealInstitutionProgrammes->newEntity([
+                    $existData = $MealInstitutionProgrammes->find('all',['conditions'=>[
                         'meal_programme_id' => $record_id,
-                        'institution_id' => $institution->id,
-                        'area_id'=> $areaIdsData,
-                        'created_user_id' => 2
-                    ]);
-        
-                    $saveData = $MealInstitutionProgrammes->save($data);
+                            'institution_id' => $institution->id,
+                            'area_id' => $areaIdsData
+                    ]])->first();
+                    if(!$existData){
+                        $data = $MealInstitutionProgrammes->newEntity([
+                            'meal_programme_id' => $record_id,
+                            'institution_id' => $institution->id,
+                            'area_id'=> $areaIdsData,
+                            'created_user_id' => $this->Auth->user('id') //POCOR-7652
+                        ]);
+            
+                        $saveData = $MealInstitutionProgrammes->save($data);
+                    }
                 }
                 catch (PDOException $e) {
                     echo "<pre>";print_r($e);die;
@@ -498,14 +504,13 @@ class MealProgrammesTable extends ControllerActionTable
         //START: POCOR-6608
         $InstitutionTable = TableRegistry::get('institutions');
         $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
-
         $conditions1 = [
             $MealInstitutionProgrammes->aliasField('meal_programme_id') => $extra['MealProgrammes']['id']
         ];    
 
         $MealInstitutionProgrammes->deleteAll($conditions1);
-
-
+        $MealInstitutionProgrammesNew = TableRegistry::get('meal_institution_programmes');
+        
         $areaIdsData = $entity['area_id']['_ids'];
         $areaIdsData = $areaIdsData[0];//POCOR-6882
         $institutionIds = $entity->institution_id;
@@ -516,17 +521,26 @@ class MealProgrammesTable extends ControllerActionTable
             ])
             ->where($where)
             ->toArray();
-        if($institutionIdsData[0] == 0){
+        if($institutionIdsData[0] == 0 || $institutionIdsData[0] == ''){
+            
             foreach ($institutionData as $institution) {
-                try{
-                    $data = $MealInstitutionProgrammes->newEntity([
+                try{ 
+                    $existData = $MealInstitutionProgrammesNew->find('all',['conditions'=>[
                         'meal_programme_id' => $extra['MealProgrammes']['id'],
-                        'institution_id' => $institution->id,
-                        'area_id' => $areaIdsData,
-                        'created_user_id' => 2
-                    ]);
-        
-                    $saveData = $MealInstitutionProgrammes->save($data);
+                            'institution_id' => $institution->id,
+                            'area_id' => $institution->area_id,
+                    ]])->first();
+                    if(!$existData){
+                        $data = $MealInstitutionProgrammesNew->newEntity([
+                            'meal_programme_id' => $extra['MealProgrammes']['id'],
+                            'institution_id' => $institution->id,
+                            'area_id' => $institution->area_id,
+                            'created_user_id' => $this->Auth->user('id')
+                        ]);
+                        
+                        $saveData = $MealInstitutionProgrammesNew->save($data);
+                    }  
+                    
                 }
                 catch (PDOException $e) {
                     echo "<pre>";print_r($e);die;
@@ -557,12 +571,13 @@ class MealProgrammesTable extends ControllerActionTable
                 }
             }
         }
-
-        if($areaIdsData[0] == -1){
-            $MealInstitutionProgrammes->updateAll(
-                ['area_id' => $areaIdsData[0]],    
+        
+        if($areaIdsData == -1){  //update $areaIdsData[0] to $areaIdsData
+            $MealInstitutionProgrammesNew->updateAll(
+                ['area_id' => $areaIdsData],    
                 ['meal_programme_id' =>  $extra['MealProgrammes']['id']]
             );
+            
         }else{
             foreach($institutionIdsData AS $key => $value){
                 $where[$InstitutionTable->aliasField('id')] = $value;
@@ -583,7 +598,7 @@ class MealProgrammesTable extends ControllerActionTable
         $conditions = [
             $MealNutritions->aliasField('meal_programmes_id') => $extra['MealProgrammes']['id']
         ];    
-
+        
         $MealNutritions->deleteAll($conditions);
         $MealNutritions->newEntity();
     }
