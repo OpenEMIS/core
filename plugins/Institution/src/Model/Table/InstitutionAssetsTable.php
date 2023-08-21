@@ -554,9 +554,9 @@ class InstitutionAssetsTable extends ControllerActionTable
     public function onGetPurpose(Event $event, Entity $entity)
     {
         if ($entity->purpose) {
-            $purpose = 'Non-Teaching';
-        } else {
             $purpose = 'Teaching';
+        } else {
+            $purpose = 'Non-Teaching';
         }
         return $purpose;
     }
