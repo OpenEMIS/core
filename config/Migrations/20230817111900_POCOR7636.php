@@ -12,6 +12,9 @@ class POCOR7636 extends AbstractMigration
      */
     public function up()
     {
+        // Add table that do not exist in some environments
+        $this->execute('CREATE TABLE IF NOT EXISTS `summary_area_institution_grade_attendances`( `academic_period_id` int DEFAULT NULL, `academic_period_name` varchar(150) DEFAULT NULL, `area_id` int DEFAULT NULL, `area_code` varchar(150) DEFAULT NULL, `area_name` varchar(150) DEFAULT NULL, `institution_id` int DEFAULT NULL, `institution_code` varchar(150) DEFAULT NULL, `institution_name` varchar(150) DEFAULT NULL, `education_grade_id` int DEFAULT NULL, `education_grade_code` varchar(150) DEFAULT NULL, `education_grade_name` varchar(150) DEFAULT NULL, `attendance_date` date DEFAULT NULL, `marked_classes` int DEFAULT NULL, `total_classes` int DEFAULT NULL, `female_count` int DEFAULT NULL, `male_count` int DEFAULT NULL, `total_count` int DEFAULT NULL, `present_female_count` int DEFAULT NULL, `present_male_count` int DEFAULT NULL, `present_total_count` int DEFAULT NULL, `absent_female_count` int DEFAULT NULL, `absent_male_count` int DEFAULT NULL, `absent_total_count` int DEFAULT NULL, `late_female_count` int DEFAULT NULL, `late_male_count` int DEFAULT NULL, `late_total_count` int DEFAULT NULL, `created` datetime DEFAULT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 ROW_FORMAT=COMPACT');
+
         // Backup affected tables
         $this->execute('CREATE TABLE `zz_7636_summary_area_institution_grade_attendances` LIKE `summary_area_institution_grade_attendances`');
         $this->execute('INSERT INTO `zz_7636_summary_area_institution_grade_attendances` SELECT * FROM `summary_area_institution_grade_attendances`');
