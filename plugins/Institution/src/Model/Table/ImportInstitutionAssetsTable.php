@@ -29,6 +29,10 @@ class ImportInstitutionAssetsTable extends AppTable
         ]);
     }
 
+    /**
+     * @return array
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
@@ -65,58 +69,107 @@ class ImportInstitutionAssetsTable extends AppTable
         return $events;
     }
 
-
+    /**
+     * @param Event $event
+     * @param $cellValue
+     * @return |null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onImportGetAssetTypesId(Event $event, $cellValue)
     {
         $table_name = 'asset_types';
         $result = $this->checkLookupIdFromTable($cellValue, $table_name);
-        $this->log('onImportGetAssetTypesId', 'debug');
-        $this->log($result, 'debug');
         return $result;
     }
 
+    /**
+     * @param Event $event
+     * @param $cellValue
+     * @return |null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onImportGetAssetMakesId(Event $event, $cellValue)
     {
         $table_name = 'asset_makes';
         return $this->checkLookupIdFromTable($cellValue, $table_name);
     }
 
+    /**
+     * @param Event $event
+     * @param $cellValue
+     * @return |null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onImportGetAssetModelsId(Event $event, $cellValue)
     {
         $table_name = 'asset_models';
         return $this->checkLookupIdFromTable($cellValue, $table_name);
     }
 
+    /**
+     * @param Event $event
+     * @param $cellValue
+     * @return |null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onImportGetAssetStatusesId(Event $event, $cellValue)
     {
         $table_name = 'asset_statuses';
         return $this->checkLookupIdFromTable($cellValue, $table_name);
     }
 
+    /**
+     * @param Event $event
+     * @param $cellValue
+     * @return |null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onImportGetAssetConditionsId(Event $event, $cellValue)
     {
         $table_name = 'asset_conditions';
         return $this->checkLookupIdFromTable($cellValue, $table_name);
     }
 
+    /**
+     * @param Event $event
+     * @param $cellValue
+     * @return |null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onImportGetInstitutionRoomsId(Event $event, $cellValue)
     {
         $table_name = 'institution_rooms';
         return $this->checkLookupIdFromTable($cellValue, $table_name);
     }
 
+    /**
+     * @param Event $event
+     * @param $cellValue
+     * @return int|string|null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onImportGetAccessibilityId(Event $event, $cellValue)
     {
         $code = "InstitutionAssets.accessibility";
         return $this->checkLookupIdFromOptions($cellValue, $code);
     }
 
+    /**
+     * @param Event $event
+     * @param $cellValue
+     * @return int|string|null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onImportGetPurposeId(Event $event, $cellValue)
     {
         $code = "InstitutionAssets.purpose";
         return $this->checkLookupIdFromOptions($cellValue, $code);
     }
 
+    /**
+     * @param $event
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function beforeAction($event)
     {
         $session = $this->request->session();
@@ -125,6 +178,16 @@ class ImportInstitutionAssetsTable extends AppTable
         }
     }
 
+    /**
+     * @param Event $event
+     * @param $lookupPlugin
+     * @param $lookupModel
+     * @param $lookupColumn
+     * @param $translatedCol
+     * @param ArrayObject $data
+     * @param $columnOrder
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onImportPopulateAccessibilityData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $Label = 'Accessibility';
@@ -132,6 +195,16 @@ class ImportInstitutionAssetsTable extends AppTable
         $data = $this->populateLookupOptions($data, $columnOrder, $Label, $code);
     }
 
+    /**
+     * @param Event $event
+     * @param $lookupPlugin
+     * @param $lookupModel
+     * @param $lookupColumn
+     * @param $translatedCol
+     * @param ArrayObject $data
+     * @param $columnOrder
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onImportPopulatePurposeData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $Label = 'Purpose';
@@ -139,6 +212,17 @@ class ImportInstitutionAssetsTable extends AppTable
         $data = $this->populateLookupOptions($data, $columnOrder, $Label, $code);
     }
 
+    /**
+     * @param Event $event
+     * @param $lookupPlugin
+     * @param $lookupModel
+     * @param $lookupColumn
+     * @param $translatedCol
+     * @param ArrayObject $data
+     * @param $columnOrder
+     * @return bool
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onImportPopulateInstitutionRoomsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $translatedReadableCol = $this->getExcelLabel('InstitutionRooms', 'name');
@@ -165,6 +249,16 @@ class ImportInstitutionAssetsTable extends AppTable
         }
     }
 
+    /**
+     * @param Event $event
+     * @param $lookupPlugin
+     * @param $lookupModel
+     * @param $lookupColumn
+     * @param $translatedCol
+     * @param ArrayObject $data
+     * @param $columnOrder
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onImportPopulateSelectData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $tableName = $lookupPlugin . '.' . $lookupModel;
@@ -209,6 +303,15 @@ class ImportInstitutionAssetsTable extends AppTable
 //        die;
     }
 
+    /**
+     * @param Event $event
+     * @param $module
+     * @param $field
+     * @param $language
+     * @param bool $autoHumanize
+     * @return mixed|string|null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'AssetStatuses') {
@@ -226,6 +329,16 @@ class ImportInstitutionAssetsTable extends AppTable
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
+    /**
+     * @param Event $event
+     * @param $lookupPlugin
+     * @param $lookupModel
+     * @param $lookupColumn
+     * @param $translatedCol
+     * @param ArrayObject $data
+     * @param $columnOrder
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onImportPopulateRemoveData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         unset($data[$columnOrder]);
@@ -233,6 +346,9 @@ class ImportInstitutionAssetsTable extends AppTable
 
     // POCOR-7362 starts
 
+    /**
+     * @return array
+     */
     public function getAssignedStaffId()
     {
 
@@ -269,6 +385,9 @@ class ImportInstitutionAssetsTable extends AppTable
         return $assignedStaffIds;
     }
 
+    /**
+     * @return array
+     */
     public function getEnrolledStudentId()
     {
 
@@ -307,7 +426,15 @@ class ImportInstitutionAssetsTable extends AppTable
 
     // POCOR-7362 ends
 
-
+    /**
+     * @param Event $event
+     * @param $references
+     * @param ArrayObject $tempRow
+     * @param ArrayObject $originalRow
+     * @param ArrayObject $rowInvalidCodeCols
+     * @return bool|mixed
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         $result = true;
@@ -328,6 +455,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param $cellValue
      * @param $table_name
      * @return |null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function checkLookupIdFromTable($cellValue, $table_name)
     {
@@ -342,22 +470,16 @@ class ImportInstitutionAssetsTable extends AppTable
             ->select(['id', $lookupField])
             ->where($where)
             ->toArray();
-//        $this->log('$modelOptions', 'debug');
-//        $this->log($modelOptions, 'debug');
         if (!empty($modelOptions)) {
             foreach ($modelOptions as $row) {
                 if ($cellValue == $row['id']) {
-//                    $this->log('$cellValue == $row[\'id\']', 'debug');
-//                    $this->log($row['id'], 'debug');
                     return $row['id'];
                 }
                 if ($cellValue == $row[$lookupField]) {
-//                    $this->log('$cellValue == $row[$lookupField]', 'debug');
-//                    $this->log($row['id'], 'debug');
                     return $row['id'];
                 }
             }
-            $this->log("$table_name cellValue ???", 'debug');
+
         }
         return null;
     }
@@ -368,6 +490,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param $Label
      * @param $code
      * @return ArrayObject
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function populateLookupOptions(ArrayObject $data, $columnOrder, $Label, $code)
     {
@@ -388,6 +511,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param $cellValue
      * @param $code
      * @return int|string|null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function checkLookupIdFromOptions($cellValue, $code)
     {
@@ -408,6 +532,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param ArrayObject $rowInvalidCodeCols
      * @param $result
      * @return array
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function checkFinalUser(ArrayObject $tempRow, ArrayObject $rowInvalidCodeCols, $result)
     {
@@ -430,6 +555,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param ArrayObject $rowInvalidCodeCols
      * @param $result
      * @return array
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function checkFinalInstitution(ArrayObject $tempRow, ArrayObject $rowInvalidCodeCols, $result)
     {
@@ -449,6 +575,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param ArrayObject $rowInvalidCodeCols
      * @param $result
      * @return array
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function checkFinalMakeModel(ArrayObject $tempRow, ArrayObject $rowInvalidCodeCols, $result)
     {
