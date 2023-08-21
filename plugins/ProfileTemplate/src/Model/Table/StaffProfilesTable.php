@@ -345,13 +345,31 @@ class StaffProfilesTable extends ControllerActionTable
 
         // Institution filter
 		$Institutions = TableRegistry::get('Institutions');
-
+        
 		$institutionOptions = [];
-		$institutionOptions = $Institutions->find('list')
-							->where([
-								$Institutions->aliasField('area_id') => $selectedArea
-							])
+        if($selectedArea == "-1"){
+            $institutionOptions = $Institutions->find('list')
+                            ->order([$Institutions->aliasField('name') =>'ASC']) //POCOR-7641
 							->toArray();
+        }else{ 
+            //POCOR-7641
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }
+            $institutionOptions = $Institutions->find('list')
+							->where([
+								$Institutions->aliasField('area_id in') => $allselectedAreas
+							])
+                            ->order([$Institutions->aliasField('name') =>'ASC']) 
+							->toArray();
+            //POCOR-7641
+        }
+		
        
         $institutionOptions = ['-1' => '-- '.__('Select Institution').' --'] + $institutionOptions;
         $selectedInstitution = !is_null($this->request->query('institution_id')) ? $this->request->query('institution_id') : -1;
@@ -434,7 +452,21 @@ class StaffProfilesTable extends ControllerActionTable
             $extra['OR'] = $nameConditions; // to be merged with auto_search 'OR' conditions
         }
     }
-
+    //POCOR-7641
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                            ->where([
+                                $Areas->aliasField('parent_id') => $id
+                            ]) 
+                             ->toArray();
+        foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
+    }
+    //POCOR-7641
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $reportCardId = $this->request->query('staff_profile_template_id');
