@@ -22,7 +22,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $model = $this->_table;
 
         $model->addBehavior('User.AdvancedNameSearch');
-        $model->toggle('edit', false);
+        $model->toggle('edit', true);//POCOR-7512
         $model->toggle('remove', false);
 	}
 
@@ -33,9 +33,10 @@ class RegisteredStudentsBehavior extends Behavior {
         $events['ControllerAction.Model.index.beforeQuery'] = 'indexBeforeQuery';
         $events['ControllerAction.Model.index.afterAction'] = 'indexAfterAction';
         $events['ControllerAction.Model.viewEdit.beforeQuery'] = 'viewEditBeforeQuery';
+        // $events['ControllerAction.Model.edit.beforeAction' ] = 'editBeforeAction';//POCOR-7512
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
-        $events['ControllerAction.Model.edit.beforeSave'] = 'editBeforeSave';
-        $events['ControllerAction.Model.edit.afterSave'] = 'editAfterSave';
+        // $events['ControllerAction.Model.edit.beforeSave'] = 'editBeforeSave';//POCOR-7512
+        // $events['ControllerAction.Model.edit.afterSave'] = 'editAfterSave';//POCOR-7512
         $events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
         $events['ControllerAction.Model.unregister'] = 'unregister';
         $events['ControllerAction.Model.onGetFormButtons'] = 'onGetFormButtons';
@@ -279,23 +280,36 @@ class RegisteredStudentsBehavior extends Behavior {
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
         $model = $this->_table;
-
         $query
             ->contain([
                 'Users.SpecialNeeds.SpecialNeedsTypes', 
                 'Users.Genders', 
                 'Institutions', 
                 'Users.Nationalities.NationalitiesLookUp',
-                'Users.MainIdentityTypes'
+                'Users.Identities',//POCOR-7512
+                'Users.Identities.IdentityTypes',//POCOR-7512
+                'Users.Identities.Nationalities'//POCOR-7512
             ])
             ->matching('AcademicPeriods')
-            ->matching('Examinations');
-    }
-
+            ->matching('Examinations');  //POCOR-7512  
+       }
+   //POCOR-7512 start
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-        $model = $this->_table;
-        $todayDate = Time::now();
-
+         $subjectTable=TableRegistry::get('examination_student_subjects');
+         $subjectData=$subjectTable->find('all')
+                                   ->select([
+                                        'id'=> 'ExaminationSubjects.id',
+                                        'name'=> 'ExaminationSubjects.name',
+                                        'code'=>'ExaminationSubjects.code'
+                                     ])->leftJoin(
+                                            ['ExaminationSubjects' => 'examination_subjects'],
+                                            [
+                                                'ExaminationSubjects.id = '.  $subjectTable->aliasField('examination_subject_id')
+                                            ])
+                                    ->where([$subjectTable->aliasField('student_id')=>$entity->student_id])
+                                    ->toArray();
+         $entity['examination_subjects']=$subjectData;
+        //POCOR-7512 end
         if ($entity->has('examination')) {
             $registrationStartDate = $entity->examination->registration_start_date;
             $registrationEndDate = $entity->examination->registration_end_date;
@@ -542,7 +556,7 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'unregister') {
+        if ($action == 'unregister'||$action=="edit") {//POCOR-7512 
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
@@ -555,7 +569,7 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function onUpdateFieldExaminationId(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'unregister') {
+        if ($action == 'unregister'||$action=="edit") {//POCOR-7512 
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
@@ -568,7 +582,7 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'unregister') {
+        if ($action == 'unregister'||$action=="edit") {//POCOR-7512 
             $entity = $attr['entity'];
 
             $openemisNo = $entity->user->openemis_no;
@@ -582,7 +596,7 @@ class RegisteredStudentsBehavior extends Behavior {
     }
 
     public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request) {
-        if ($action == 'unregister') {
+        if ($action == 'unregister'||$action=="edit") {//POCOR-7512 
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
@@ -692,29 +706,36 @@ class RegisteredStudentsBehavior extends Behavior {
 
     public function setupFields(Entity $entity, ArrayObject $extra) {
         $model = $this->_table;
+        //POCOR-7512 start
+        $model->field('examination_section', ['type' => 'section', 'title' => __('Examination'), 'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => false]]);
+        $model->field('information_section', ['type' => 'section', 'title' => __('Information'), 'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => false]]);
+        $model->field('identity_section', ['type' => 'section', 'title' => __('Identities / Nationalities'), 'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => false]]);
+        $model->field('examination_subjects', [
+                'type' => 'element',
+                'element' => 'Examination.examination_subjects',
+                'data'=>$entity
+        ]);
+        //POCOR-7512 end
         $model->field('examination_centre_id', ['visible' => false]);
         $model->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
         $model->field('examination_id', ['type' => 'select', 'entity' => $entity]);
         $model->field('openemis_no', ['entity' => $entity]);
         $model->field('student_id', ['type' => 'integer', 'entity' => $entity]);
-        $model->field('date_of_birth', ['type' => 'date', 'entity' => $entity]);
-        $model->field('gender_id', ['entity' => $entity]);
-        $model->field('institution_id', ['type' => 'select', 'entity' => $entity]);
-        $model->field('special_needs', ['type' => 'string', 'entity' => $entity]);
+        $model->field('date_of_birth', ['type' => 'date', 'entity' => $entity,'visible' => [ 'edit' => false]]);
+        $model->field('gender_id', ['entity' => $entity,'visible' => [ 'edit' => false]]);
+        $model->field('institution_id', ['type' => 'select', 'entity' => $entity,'visible' => [ 'edit' => false]]);
+        $model->field('special_needs', ['type' => 'string', 'entity' => $entity,'visible' => [ 'edit' => false]]);
         $model->field('registration_number', ['type' => 'string', 'entity' => $entity]);
-
-        $model->field('identity_number');
-        $model->field('repeated');
-        $model->field('transferred');
-
-        $model->field('nationalities', [
-            'type' => 'element',
-            'element' => 'Examination.nationalities',
-            'visible' => ['view'=>true],
-            'data' => $entity->user->nationalities
-        ]);
-
-        $model->setFieldOrder(['registration_number', 'academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'institution_id', 'special_needs', 'nationalities', 'identity_number', 'repeated', 'transferred']);
+        // $model->field('identity_number');
+        $model->field('repeated',['visible' => [ 'edit' => false]]);
+        $model->field('transferred',['visible' => [ 'edit' => false]]);
+        $model->field('details', [
+             'type' => 'element',
+             'element' => 'Examination.nationalities',
+             'visible' => ['view'=>true],
+             'data'=>$entity->user ]);
+       
+        $model->setFieldOrder(['examination_section', 'academic_period_id','examination_id', 'registration_number','subject_id','information_section', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'institution_id',  'transferred', 'repeated','special_needs','identity_section', 'details', 'identity_number']);
     }
 
     public function extractSpecialNeeds(Entity $entity) {
@@ -727,4 +748,10 @@ class RegisteredStudentsBehavior extends Behavior {
 
         return $specialNeeds;
     }
+    //POCOR-7512 start
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($entity,$extra);
+    }
+    //POCOR-7512 end
 }

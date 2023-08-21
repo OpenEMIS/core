@@ -10,6 +10,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
+use Cake\Datasource\ResultSetInterface;
 
 class StaffTable extends AppTable  {
     use MessagesTrait; //POCOR-5185
@@ -25,6 +26,8 @@ class StaffTable extends AppTable  {
 
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
+        $this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']); //POCOR-7590
+        $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);//POCOR-7590
         $this->addBehavior('Excel', [
             'excludes' => ['is_student', 'is_staff', 'is_guardian', 'photo_name', 'super_admin', 'status'],
             'pages' => false
@@ -229,7 +232,7 @@ class StaffTable extends AppTable  {
                     $attr['type'] = 'chosenSelect';
                     $attr['attr']['multiple'] = false;
                     $attr['select'] = true;
-                    $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas Level')] + $areaOptions->toArray();
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas Level')] + $areaOptions->toArray();
                     $attr['onChangeReload'] = true;
                 } else {
                     $attr['type'] = 'hidden';
@@ -269,9 +272,9 @@ class StaffTable extends AppTable  {
                         $attr['select'] = true;
                         /*POCOR-6333 starts*/
                         if (count($areaOptions) > 1) {
-                            $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas')] + $areaOptions;
+                            $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas')] + $areaOptions;
                         } else {
-                            $attr['options'] = ['' => '-- ' . _('Select') . ' --'] + $areaOptions;
+                            $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $areaOptions;
                         }
                         /*POCOR-6333 ends*/
                         $attr['onChangeReload'] = true;
@@ -381,31 +384,270 @@ class StaffTable extends AppTable  {
             $conditions[$InstitutionsTable->aliasField('area_id')] = $areaId; 
         }
         $query
+            ->select([
+               'user_id' =>$this->aliasField('id'),
+               'username' =>  $this->aliasField('username'),
+               'first_name' =>  $this->aliasField('first_name'),
+               'middle_name' =>  $this->aliasField('middle_name'),
+               'third_name' =>  $this->aliasField('third_name'),
+               'last_name' =>  $this->aliasField('last_name'),
+               'last_name' =>  $this->aliasField('last_name'),
+               'preferred_name' =>  $this->aliasField('preferred_name'),
+               'email' =>  $this->aliasField('email'),
+               'address' =>  $this->aliasField('address'),
+               'postal_code' =>  $this->aliasField('postal_code'),
+               'birth_date' =>  $this->aliasField('date_of_birth'),
+               'death_date' =>  $this->aliasField('date_of_death'),
+               'external_reference' =>  $this->aliasField('external_reference'),
+               'preferred_language' =>  $this->aliasField('preferred_language'),
+               'last_login' =>  $this->aliasField('last_login'),
+                
+            ])
+            ->contain([
+                'AddressAreas' => [
+                    'fields' => [
+                        'address_area' => 'AddressAreas.name',
+                    ]
+                ],
+                'BirthplaceAreas'  => [
+                    'fields' => [
+                        'birth_area' => 'BirthplaceAreas.name',
+                    ]
+                ],
+
+                'Genders'  => [
+                    'fields' => [
+                        'gender_name' => 'Genders.name',
+                    ]
+                ],
+                'BirthplaceAreas'  => [
+                    'fields' => [
+                        'birth_area' => 'BirthplaceAreas.name',
+                    ]
+                ],
+                'MainNationalities'  => [
+                    'fields' => [
+                        'nationality_name' => 'MainNationalities.name',
+                    ]
+                ],
+            ])
             ->innerJoin(['InstitutionStaff' => 'institution_staff'], [
                 'InstitutionStaff.staff_id = ' . $this->aliasField('id')
             ])
             ->leftJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
                 $InstitutionsTable->aliasField('id = ') . 'InstitutionStaff.institution_id'
             ])
+
             ->where([$this->aliasField('is_staff') => 1, $conditions]);
+    }
+
+    public function onExcelGetBirthcertificateNumber(Event $event, Entity $entity)
+    {
+        
+        $userTable = TableRegistry::get('security_users');
+        $userIdentities = TableRegistry::get('user_identities');
+        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $birth_certificate_result = $IdentityType->find('all')
+                                     ->select('id')   
+                                     ->where([$IdentityType->aliasField('name') => 'Birth Certificate'])
+                                     ->first();
+        $birth_certificate_id = 0;
+        if(!empty($birth_certificate_result)){
+            $birth_certificate_id = $birth_certificate_result->id; 
+        }
+       $data = $userTable->find()
+                ->select(['birth_certificate' => $userIdentities->aliasField('number')])
+                ->leftJoin([$userIdentities->alias() => $userIdentities->table()], [
+                    $userIdentities->aliasField('security_user_id = ') . $userTable->aliasField('id'),
+                ])
+                ->leftJoin([$IdentityType->alias() => $IdentityType->table()], [
+                $IdentityType->aliasField('id = ') . $userIdentities->aliasField('identity_type_id')
+            ])
+            ->where([$userIdentities->aliasField('identity_type_id') => $birth_certificate_id,
+                     $userIdentities->aliasField('security_user_id') => $entity->user_id])->first();
+            $getbirthCertificate = $data->birth_certificate;
+            return $getbirthCertificate;
+    }
+
+    public function onExcelGetOtherIdentityType(Event $event, Entity $entity)
+    {
+        $userTable = TableRegistry::get('security_users');
+        $userIdentities = TableRegistry::get('user_identities');
+        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $birth_certificate_result = $IdentityType->find('all')
+                                     ->select('id')   
+                                     ->where([$IdentityType->aliasField('name') => 'Birth Certificate'])
+                                     ->first();
+        $birth_certificate_id = 0;
+        if(!empty($birth_certificate_result)){
+            $birth_certificate_id = $birth_certificate_result->id; 
+        }
+       $data = $userTable->find()
+                ->select(['IdentityTypes' => $IdentityType->aliasField('name'), 'number' => $userIdentities->aliasField('number')])
+                ->leftJoin([$userIdentities->alias() => $userIdentities->table()], [
+                    $userIdentities->aliasField('security_user_id = ') . $userTable->aliasField('id'),
+                ])
+                ->leftJoin([$IdentityType->alias() => $IdentityType->table()], [
+                $IdentityType->aliasField('id = ') . $userIdentities->aliasField('identity_type_id')
+            ])
+            ->where([$userIdentities->aliasField('identity_type_id IS NOT') => $birth_certificate_id,
+                     $userIdentities->aliasField('security_user_id') => $entity->user_id])->toArray();
+        
+        $entity->getIdentityTypes = '';
+        $entity->getIdentitynumber = '';
+        if(!empty($data)){
+            foreach($data as $result){
+                $entity->getIdentityTypes = $result->IdentityTypes;
+                $entity->getIdentitynumber = $result->number;
+            }
+        }
+         return $entity->getIdentityTypes;
+    }
+
+    public function onExcelGetOtherIdentityNumber(Event $event, Entity $entity)
+    {
+        return $entity->getIdentitynumber;
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
         $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
+         $newFields[] = [
+            'key' => 'username',
+            'field' => 'username',
+            'type' => 'string',
+            'label' => __('Username')
+        ];
+        $newFields[] = [
+            'key' => 'openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'integer',
+            'label' => __('OpenEMIS ID')
+        ];
+        $newFields[] = [
+            'key' => 'first_name',
+            'field' => 'first_name',
+            'type' => 'string',
+            'label' => __('First Names')
+        ];
+        $newFields[] = [
+            'key' => 'middle_name',
+            'field' => 'middle_name',
+            'type' => 'string',
+            'label' => __('Middle Names')
+        ];
+        $newFields[] = [
+            'key' => 'third_name',
+            'field' => 'third_name',
+            'type' => 'string',
+            'label' => __('Third Names')
+        ];
+        $newFields[] = [
+            'key' => 'last_name',
+            'field' => 'last_name',
+            'type' => 'string',
+            'label' => __('Last Names')
+        ];
+        $newFields[] = [
+            'key' => 'preferred_name',
+            'field' => 'preferred_name',
+            'type' => 'string',
+            'label' => __('Preferred Names')
+        ];
+        $newFields[] = [
+            'key' => 'email',
+            'field' => 'email',
+            'type' => 'string',
+            'label' => __('Email')
+        ];
+        $newFields[] = [
+            'key' => 'address',
+            'field' => 'address',
+            'type' => 'string',
+            'label' => __('Address')
+        ];
+        $newFields[] = [
+            'key' => 'postal_code',
+            'field' => 'postal_code',
+            'type' => 'string',
+            'label' => __('Postal Code')
+        ];
+        $newFields[] = [
+            'key' => 'address_area',
+            'field' => 'address_area',
+            'type' => 'string',
+            'label' => __('Address Area')
+        ];
+        $newFields[] = [
+            'key' => 'birth_area',
+            'field' => 'birth_area',
+            'type' => 'string',
+            'label' => __('Birthplace Area')
+        ];
+        $newFields[] = [
+            'key' => 'gender_name',
+            'field' => 'gender_name',
+            'type' => 'string',
+            'label' => __('Gender')
+        ];
+        $newFields[] = [
+            'key' => 'birth_date',
+            'field' => 'birth_date',
+            'type' => 'date',
+            'label' => __('Date of Birth')
+        ];
+        $newFields[] = [
+            'key' => 'death_date',
+            'field' => 'death_date',
+            'type' => 'date',
+            'label' => __('Date of death')
+        ];
+        $newFields[] = [
+            'key' => 'nationality_name',
+            'field' => 'nationality_name',
+            'type' => 'string',
+            'label' => __('Nationality')
+        ];
 
-        foreach ($fields as $key => $field) {
-            //get the value from the table, but change the label to become default identity type.
-            if ($field['field'] == 'identity_number') {
-                $fields[$key] = [
-                    'key' => 'Staff.identity_number',
-                    'field' => 'identity_number',
-                    'type' => 'string',
-                    'label' => __($identity->name)
-                ];
-                break;
-            }
-        }
+        $newFields[] = [
+            'key' => 'birth_certificate_number',
+            'field' => 'birth_certificate_number',
+            'type' => 'string',
+            'label' => __('Birth Certificate')
+        ];
+        $newFields[] = [
+            'key' => 'other_identity_type',
+            'field' => 'other_identity_type',
+            'type' => 'string',
+            'label' => __('Other Identity Type')
+        ];
+        $newFields[] = [
+            'key' => 'other_identity_number',
+            'field' => 'other_identity_number',
+            'type' => 'string',
+            'label' => __('Other Identity Number')
+        ];
+
+        $newFields[] = [
+            'key' => 'external_reference',
+            'field' => 'external_reference',
+            'type' => 'string',
+            'label' => __('External Reference')
+        ];
+        $newFields[] = [
+            'key' => 'last_login',
+            'field' => 'last_login',
+            'type' => 'datetime',
+            'label' => __('Last Login')
+        ];
+        $newFields[] = [
+            'key' => 'preferred_language',
+            'field' => 'preferred_language',
+            'type' => 'string',
+            'label' => __('Preferred Language')
+        ];
+
+        $fields->exchangeArray($newFields);
     }
 
     public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
@@ -789,4 +1031,8 @@ class StaffTable extends AppTable  {
             ->range('upper_tolerance', [0, 99999999], $this->getMessage('StaffRequirements.upperTolerance'));
     }
     //POCOR-5185[end]
+
+    
+
+   
 }

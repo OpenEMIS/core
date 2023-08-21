@@ -9,7 +9,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
-
+use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 use App\Model\Table\ControllerActionTable;
 
 class ArchivedAssessmentsTable extends ControllerActionTable
@@ -308,31 +308,45 @@ class ArchivedAssessmentsTable extends ControllerActionTable
      * @param $institutionId
      * @param $studentId
      */
-
-    private function setAcademicPeriodOptions($institutionId, $studentId, $selectedAcademicPeriod)
+    private function setAcademicPeriodOptions($selectedAcademicPeriod)
     {
 // Academic Periods filter
-        $AssessmentItemResultsArchived = TableRegistry::get('Institution.AssessmentItemResultsArchived');
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
-
-        $selectedAcademicPeriod = $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod, [
+        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 //
-            'message' => '{{label}} - No Archived Assessments ',
-            'callable' => function ($id) use ($institutionId, $AssessmentItemResultsArchived, $studentId) {
-                return $AssessmentItemResultsArchived
-                    ->find()
-                    ->distinct([$AssessmentItemResultsArchived->aliasField('academic_period_id')])
-                    ->where([
-                        $AssessmentItemResultsArchived->aliasField('student_id') => $studentId,
-                        $AssessmentItemResultsArchived->aliasField('institution_id') => $institutionId,
-                        $AssessmentItemResultsArchived->aliasField('academic_period_id') => $id
-                    ])
-                    ->count();
+        $institutionId = $this->institutionId;
+        $studentId = $this->studentId;
+
+        $academicPeriodStudentAttendanceArray = ArchiveConnections::getArchiveYears('assessment_item_results',
+            ['institution_id' => $institutionId,
+                'student_id' => $studentId]);
+        if (!$selectedAcademicPeriod) {
+            $selectedYear = end($academicPeriodStudentAttendanceArray);
+        } else {
+            $selectedYear = $selectedAcademicPeriod;
+        }
+        if (sizeof($academicPeriodStudentAttendanceArray) == 0) {
+            $academicPeriodStudentAttendanceArray = [0];
+            $selectedYear = null;
+        }
+//        $this->log('uniqu_array', 'debug');
+//        $this->log($academicPeriodStudentAttendanceArray, 'debug');
+        $conditions = [
+            'current !=' => 1,
+            'id IN' => $academicPeriodStudentAttendanceArray
+        ];
+        if (sizeof($academicPeriodStudentAttendanceArray) > 0) {
+            $academicPeriodOptions = $AcademicPeriod->getYearList(['conditions' => $conditions]);
+            if (empty($this->request->query['academic_period'])) {
+                $this->request->query['academic_period'] = $selectedYear;
             }
-        ]);
-        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        return $selectedAcademicPeriod;
+        }
+        $selectedPeriod = $this->request->query['academic_period'];
+
+        $this->advancedSelectOptions($academicPeriodOptions, $selectedPeriod);
+        $this->controller->set(compact('academicPeriodOptions', 'selectedPeriod'));
+        return $selectedPeriod;
+
     }
 
     /**
@@ -342,32 +356,66 @@ class ArchivedAssessmentsTable extends ControllerActionTable
     private function setAssessmentOptions($selectedAcademicPeriod, $selectedAssessment = -1)
     {
         $Assessments = TableRegistry::get('Assessment.Assessments');
+        $this->AcademicPeriodId = $selectedAcademicPeriod;
+        $whereArchive = ['academic_period_id' => $selectedAcademicPeriod,
+            'institution_id' => $this->institutionId,
+            'student_id' => $this->studentId];
+        $archived_assessment_array =
+            ArchiveConnections::getArchiveAssessments('assessment_item_results',
+                $whereArchive);
+        $assessment_array = [0];
+        if (sizeof($archived_assessment_array) > 0) {
+            $assessment_array = $archived_assessment_array;
+        }
+//        $this->log('assessments_array', 'debug');
+//        $this->log($assessment_array, 'debug');
+        $where = [$Assessments->aliasField('academic_period_id') => $selectedAcademicPeriod,
+            $Assessments->aliasField('id IN') => $assessment_array];
+
         $assessmentOptions = $Assessments
             ->find('list')
-            ->where([$Assessments->aliasField('academic_period_id') => $selectedAcademicPeriod])
+            ->where($where)
             ->toArray();
         $assessmentOptions = ['-1' => __('All Assessments')] + $assessmentOptions;
         $selectedAssessment = $this->advancedSelectOptions($assessmentOptions, $selectedAssessment);
         $this->controller->set(compact('assessmentOptions', 'selectedAssessment'));
-        //Assessment[End]
         return $selectedAssessment;
+
     }
 
     private function setAssessmentPeriodOptions($selectedAssessment = -1, $selectedAssessmentPeriod = -1)
     {
         $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
-        $where = [];
-        if ($selectedAssessment != '-1') {
-            $where = [$AssessmentPeriods->aliasField('assessment_id') => $selectedAssessment];
+//        $where = [];
+        $whereArchive = [
+            'academic_period_id' => $this->AcademicPeriodId,
+            'institution_id' => $this->institutionId,
+            'student_id' => $this->studentId];
+        if ($selectedAssessment > 0) {
+            $whereArchive['assessment_id'] = $selectedAssessment;
         }
+        $archived_assessment_period_array =
+            ArchiveConnections::getArchiveAssessmentPeriods('assessment_item_results',
+                $whereArchive);
+        $assessment_period_array = [0];
+        if (sizeof($archived_assessment_period_array) > 0) {
+            $assessment_period_array = $archived_assessment_period_array;
+        }
+//        $this->log('assessment_period_array', 'debug');
+//        $this->log($whereArchive, 'debug');
+//        $this->log($assessment_period_array, 'debug');
+        $where = [$AssessmentPeriods->aliasField('id IN') => $assessment_period_array];
+
         $AssessmentPeriodsOptions = $AssessmentPeriods
             ->find('list')
             ->where($where)
             ->toArray();
+
         $AssessmentPeriodsOptions = ['-1' => __('All Assessment Periods')] + $AssessmentPeriodsOptions;
         $selectedAssessmentPeriod = $this->advancedSelectOptions($AssessmentPeriodsOptions, $selectedAssessmentPeriod);
         $this->controller->set(compact('AssessmentPeriodsOptions', 'selectedAssessmentPeriod'));
         return $selectedAssessmentPeriod;
     }
+
 
 }
