@@ -1033,6 +1033,7 @@ class DirectoriesController extends AppController
             $user=0;//POCOR-7528 
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
+                'Qualifications' => ['text' => __('Qualifications')],
                 'Licenses' => ['text' => __('Licenses')],
             ];
         }
@@ -1129,6 +1130,7 @@ class DirectoriesController extends AppController
         $identity_types_result = $identity_types
             ->find()
             ->select(['id','name'])
+            ->order(['order'])
             ->toArray();
         foreach($identity_types_result AS $result){
             $result_array[] = array("id" => $result['id'], "name"=> $result['name']);

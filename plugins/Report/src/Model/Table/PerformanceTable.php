@@ -150,7 +150,7 @@ class PerformanceTable extends AppTable
                     $attr['type'] = 'chosenSelect';
                     $attr['attr']['multiple'] = false;
                     $attr['select'] = true;
-                    $attr['options'] = ['' => '-- ' . _('Select') . ' --', 0 => _('All Areas Level')] + $areaOptions->toArray();
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --', 0 => __('All Areas Level')] + $areaOptions->toArray();
                     $attr['onChangeReload'] = true;
                 } else {
                     $attr['type'] = 'hidden';
@@ -182,7 +182,7 @@ class PerformanceTable extends AppTable
                             ->toArray();
             $attr['type'] = 'select';
             $attr['select'] = false;
-            $attr['options'] = ['' => '-- ' . _('Select') . ' --', 0 => _('All Areas')] + $areaOptions;
+            $attr['options'] = ['' => '-- ' . __('Select') . ' --', 0 => __('All Areas')] + $areaOptions;
             $attr['onChangeReload'] = true;
         }
         return $attr;
@@ -222,7 +222,7 @@ class PerformanceTable extends AppTable
             $attr['select'] = false;
 
             if (count($institutionList) > 1) {
-                $institutionOptions = ['' => '-- ' . _('Select') . ' --', 0 => _('All Institutions')] + $institutionList;
+                $institutionOptions = ['' => '-- ' . __('Select') . ' --', 0 => __('All Institutions')] + $institutionList;
             } else {
                 $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
             }
@@ -286,7 +286,7 @@ class PerformanceTable extends AppTable
         $attr['type'] = 'select';
         $attr['select'] = false;
         if (count($gradeOptions) > 1) {
-            $grades = ['' => '-- ' . _('Select') . ' --', 0 => _('All Grades')] + $gradeOptions;
+            $grades = ['' => '-- ' . __('Select') . ' --', 0 => __('All Grades')] + $gradeOptions;
         } else {
             $grades = ['' => '-- ' . __('Select') . ' --'] + $gradeOptions;
         }
@@ -326,7 +326,7 @@ class PerformanceTable extends AppTable
         $attr['type'] = 'select';
         $attr['select'] = false;
         if (count($assessmentPeriodList) > 1) {
-            $assessmentPeriodOption = ['' => '-- ' . _('Select') . ' --', 0 => _('All Periods')] + $assessmentPeriodList;
+            $assessmentPeriodOption = ['' => '-- ' . __('Select') . ' --', 0 => __('All Periods')] + $assessmentPeriodList;
         } else {
             $assessmentPeriodOption = ['' => '-- ' . __('Select') . ' --'] + $assessmentPeriodList;
         }
@@ -363,7 +363,7 @@ class PerformanceTable extends AppTable
         $attr['type'] = 'select';
         $attr['select'] = false;
         if (count($academicTermList) > 1) {
-            $assessmentTermOption = ['' => '-- ' . _('Select') . ' --', 0 => _('All Terms')] + $academicTermList;
+            $assessmentTermOption = ['' => '-- ' . __('Select') . ' --', 0 => __('All Terms')] + $academicTermList;
         } else {
             $assessmentTermOption = ['' => '-- ' . __('Select') . ' --'] + $academicTermList;
         }
