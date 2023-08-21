@@ -307,30 +307,12 @@ class ImportInstitutionAssetsTable extends AppTable
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-        $tempRow['security_user_id'] = $tempRow['user_id'];
-        // POCOR-7362 starts
-
-        // In institutionTextbooksTable staff is also added to studentoptions and hence in temprow['student_id'] staff Ids also populate, following methods checks if student or staff id are enrolled/assigned
-
-        $enrolledStudent = $this->getEnrolledStudentId();
-        $assignedStaff = $this->getAssignedStaffId();
-
-        $users = array_merge($enrolledStudent, $assignedStaff);
-        if (isset($tempRow['security_user_id'])){
-            if (!in_array($tempRow['security_user_id'], $users)) {
-                $rowInvalidCodeCols['user_id'] = __('Not a enrolled/assigned user');
-                return false;
-            }
-        }
+        $result = true;
+        list($tempRow, $rowInvalidCodeCols, $result) = $this->checkFinalUser($tempRow, $rowInvalidCodeCols);
 
         // POCOR-7362 ends
 
-        if (!$this->institutionId) {
-            $rowInvalidCodeCols['institution_id'] = __('No active institution');
-            $tempRow['institution_id'] = false;
-            return false;
-        }
-        $tempRow['institution_id'] = $this->institutionId;
+        list($tempRow, $rowInvalidCodeCols, $result) = $this->checkFinalInstitution($tempRow, $rowInvalidCodeCols, $result);
 
 //        if ($tempRow->offsetExists('textbook_id') && !empty($tempRow['textbook_id'])) {
 //            $Textbooks = TableRegistry::get('Textbook.Textbooks');
@@ -378,7 +360,7 @@ class ImportInstitutionAssetsTable extends AppTable
 //            }
 //        }
 
-        return true;
+        return $result;
     }
 
     /**
@@ -452,5 +434,45 @@ class ImportInstitutionAssetsTable extends AppTable
             }
         }
         return null;
+    }
+
+    /**
+     * @param ArrayObject $tempRow
+     * @param ArrayObject $rowInvalidCodeCols
+     * @return array
+     */
+    private function checkFinalUser(ArrayObject $tempRow, ArrayObject $rowInvalidCodeCols)
+    {
+        $tempRow['security_user_id'] = $tempRow['user_id'];
+        $enrolledStudent = $this->getEnrolledStudentId();
+        $assignedStaff = $this->getAssignedStaffId();
+
+        $users = array_merge($enrolledStudent, $assignedStaff);
+        if (isset($tempRow['security_user_id'])) {
+            if (!in_array($tempRow['security_user_id'], $users)) {
+                $rowInvalidCodeCols['user_id'] = __('Not a enrolled/assigned user');
+                $result = false;
+            }
+        }
+        return array($tempRow, $rowInvalidCodeCols, $result);
+    }
+
+    /**
+     * @param ArrayObject $tempRow
+     * @param ArrayObject $rowInvalidCodeCols
+     * @param $result
+     * @return array
+     */
+    private function checkFinalInstitution(ArrayObject $tempRow, ArrayObject $rowInvalidCodeCols, $result)
+    {
+        if ($result && !$this->institutionId) {
+            $rowInvalidCodeCols['institution_id'] = __('No active institution');
+            $tempRow['institution_id'] = false;
+            $result = false;
+        }
+        if ($result) {
+            $tempRow['institution_id'] = $this->institutionId;
+        }
+        return array($tempRow, $rowInvalidCodeCols, $result);
     }
 }
