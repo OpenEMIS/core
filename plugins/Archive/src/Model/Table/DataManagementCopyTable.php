@@ -872,6 +872,15 @@ class DataManagementCopyTable extends ControllerActionTable
             $this->triggePerformanceCompetenciesShell('PerformanceCompetencies',$entity->from_academic_period, $entity->to_academic_period, $entity->competency_criterias_value, $entity->competency_templates_value, $entity->competency_items_value);
             $this->log(' <<<<<<<<<<======== After triggerPerformanceCompetenciesShell', 'debug');
         }
+        //POCOR-7568 start
+        if ($entity->features == "Education Structure") {
+            $from_academic_period = $entity->from_academic_period;
+            $to_academic_period = $entity->to_academic_period;
+            $copyFrom = $from_academic_period;
+            $copyTo = $to_academic_period;
+            $this->triggerCopyShell('EducationStructureCopy', $copyFrom, $copyTo);
+        }
+         //POCOR-7568 end
     }
     
     // public function afterSave(Event $event, Entity $entity, ArrayObject $data){

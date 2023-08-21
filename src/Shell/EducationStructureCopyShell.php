@@ -52,7 +52,7 @@ class EducationStructureCopyShell extends Shell
                 if(empty($existingRecord)){
                         
                         $newRecord=$EducationSystemTable->newEntity(array(
-                                            'name'=> $educationsystem->name." ".$copyTo,
+                                            'name'=> $educationsystem->name,
                                             'academic_period_id'=>$copyTo,
                                             'order'=>$educationsystem->order,
                                             'visible'=>$educationsystem->visible,
