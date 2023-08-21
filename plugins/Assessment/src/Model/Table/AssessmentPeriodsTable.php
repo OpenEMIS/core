@@ -138,6 +138,20 @@ class AssessmentPeriodsTable extends ControllerActionTable
         }
     }
 
+    //Start:POCOR-7387
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {  
+        if (preg_match('/\ & \b/', $entity['academic_term'])) {
+            $this->Alert->warning('general.specialChar', ['reset' => true]);
+            return false;
+        }   
+        if (preg_match('/\&\b/', $entity['academic_term'])) {
+            $this->Alert->warning('general.specialChar', ['reset' => true]);
+            return false;
+        }   
+    }
+    //End:POCOR-7387
+
     public function onGetAssessmentPeriodsElement(Event $event, $action, $entity, $attr, $options = [])
     {
         $tableHeaders = [__('Name') , __('Start Date'), __('End Date'), __('Academic Term')];
