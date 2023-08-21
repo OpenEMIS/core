@@ -41,6 +41,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         $this->belongsTo('AssetConditions', ['className' => 'Institution.AssetConditions']);
         $this->belongsTo('InstitutionRooms', ['className' => 'Institution.InstitutionRooms']);
 
+        $this->addBehavior('Import.ImportLink');
         // POCOR-6152 export button <vikas.rathore@mail.valuecoders.com>
         $this->addBehavior('Excel', [
             'excludes' => [
