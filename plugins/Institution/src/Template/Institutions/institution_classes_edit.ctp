@@ -58,7 +58,7 @@ $this->start('panelBody');
         </div>
     </div>
 
-    <div class="input select required error">
+    <div class="input select error">
         <label><?= __('Unit') ?></label>
         <div class="input-select-wrapper">
             <select name="InstitutionClasses[institution_unit_id]" id="institutionclasses-institution-unit-id"
@@ -74,7 +74,7 @@ $this->start('panelBody');
         </div>
     </div>
 
-    <div class="input select required error">
+    <div class="input select error">
         <label><?= __('Course') ?></label>
         <div class="input-select-wrapper">
             <select name="InstitutionClasses[institution_course_id]" id="institutionclasses-institution-course-id"

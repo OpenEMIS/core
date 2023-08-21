@@ -951,7 +951,8 @@ class NavigationComponent extends Component
                 'parent' => 'Institution.Attendance',
                 'selected' => ['Institutions.StudentAttendances',
                     'Institutions.StudentAbsences',
-                    'Institutions.ImportStudentAttendances', 'Institutions.StudentArchive',
+                    'Institutions.ImportStudentAttendances',
+                    'Institutions.StudentArchive',
                     'Institutions.InstitutionStudentAbsencesArchived'],
                 'params' => ['plugin' => 'Institution']
             ],
@@ -960,7 +961,8 @@ class NavigationComponent extends Component
                 'title' => 'Staff',
                 'parent' => 'Institution.Attendance',
                 'selected' => ['Institutions.InstitutionStaffAttendances',
-                    'Institutions.ImportStaffAttendances', 'Institutions.InstitutionStaffAttendancesArchive'],
+                    'Institutions.ImportStaffAttendances',
+                    'Institutions.StaffAttendancesArchived'],
                 'params' => ['plugin' => 'Institution']
             ],
 
@@ -1025,9 +1027,10 @@ class NavigationComponent extends Component
                 'parent' => 'Institution.Performance',
                 'selected' => ['Institutions.Assessments',
                     'Institutions.Results',
-                    'Institutions.AssessmentsArchive',
+                    'Institutions.AssessmentArchives',
                     'Institutions.ImportAssessmentItemResults.add',
-                    'Institutions.ImportAssessmentItemResults.results', 'Institutions.AssessmentItemResultsArchived',
+                    'Institutions.ImportAssessmentItemResults.results',
+                    'Institutions.AssessmentItemResultsArchived',
                     'Institutions.reportCardGenerate'],
                 'params' => ['plugin' => 'Institution'],
             ],
@@ -1651,6 +1654,7 @@ class NavigationComponent extends Component
                     'Staff.Subjects',
                     'Staff.Absences',
                     'Staff.StaffAttendances',
+                    'Staff.ArchivedAttendances',
                     'Staff.InstitutionStaffAttendanceActivities',
                     'Institutions.StaffLeave',
                     'Institutions.ArchivedStaffLeave',
@@ -1661,8 +1665,8 @@ class NavigationComponent extends Component
                     'Institutions.StaffPositionProfiles.add',
                     'Institutions.StaffAppraisals',
                     'Institutions.ImportStaffLeave',
-                    'Staff.Duties','Staff.StaffAssociations',
-                    'Staff.InstitutionStaffAttendancesArchive',
+                    'Staff.Duties',
+                    'Staff.StaffAssociations',
                     'Staff.StaffCurriculars'],
             ],
             'Staff.Employments' => [
@@ -1807,6 +1811,14 @@ class NavigationComponent extends Component
                     'Profiles.StaffLicenses',
                     'Profiles.StaffAwards']
             ],
+            //POCOR-7439 start
+            'Profiles.Cases' => [
+                'title' => 'Cases',
+                'parent' => 'Profiles.Personal',
+                'params' => ['plugin' => 'Profile'],
+            
+            ],
+             //POCOR-7439 end
             'Profiles.SpecialNeedsReferrals' => [
                 'title' => 'Special Needs',
                 'parent' => 'Profiles.Personal',

@@ -296,24 +296,6 @@ class DataManagementCopyTable extends ControllerActionTable
                 $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
                 return false;
             }else{
-                //POCOR-7567 start
-                $msg=$this->testInfrastructureData($entity->from_academic_period);
-                if($msg!=""){
-                    if($msg=="building"){
-                            $this->Alert->warning('InstitutionBuildings.sizeGreater', ['reset' => true]);
-                            return false;
-                        
-                    }
-                    else if($msg=="floor"){
-                            $this->Alert->warning('InstitutionFloors.sizeGreater', ['reset' => true]);
-                            return false;
-                        }
-                    else if($msg=="room"){
-                            $this->Alert->warning('InstitutionRooms.sizeGreater', ['reset' => true]);
-                            return false;
-                    }
-                }
-                //POCOR-7567 end
                 $existRecord = $this->find('all',['conditions'=>[
                     'from_academic_period'=>$entity->from_academic_period,
                     'to_academic_period' => $entity->to_academic_period,
@@ -493,58 +475,52 @@ class DataManagementCopyTable extends ControllerActionTable
                 foreach($institutions as $k => $Insti){ 
                         $InstitutionGradesdataValue = $InstitutionGrades
                                                         ->find()
+                                                        ->contain('EducationGrades')
                                                         ->where(['academic_period_id' => $from_academic_period,'institution_id'=> $Insti->id])
                                                         ->toArray();
+                   //for removing duplicate records POCOR-7657 start
                         if(!empty($InstitutionGradesdataValue)){
                             foreach($InstitutionGradesdataValue as $key=>$newData){
-                          
-                                try{
-                                    $statement = $connection->prepare('INSERT INTO institution_grades 
-                                    (
-                                                                    education_grade_id, 
-                                                                    academic_period_id,
-                                                                    start_date,
-                                                                    start_year,
-                                                                    end_date,
-                                                                    end_year,
-                                                                    institution_id,
-                                                                    modified_user_id,
-                                                                    modified,
-                                                                    created_user_id,
-                                                                    created)
-                                                                    VALUES (:education_grade_id,
-                                                                    :academic_period_id,
-                                                                    :start_date, 
-                                                                    :start_year,
-                                                                    :end_date,
-                                                                    :end_year,
-                                                                    :institution_id,
-                                                                    :modified_user_id,
-                                                                    :modified,
-                                                                    :created_user_id,
-                                                                    :created)');
+
+                                            $existingRecord = $InstitutionGrades
+                                                                            ->find()
+                                                                            ->contain('EducationGrades')
+                                                                            ->where(['academic_period_id' => $to_academic_period,
+                                                                                      'institution_id' => $Insti->id,
+                                                                                      'EducationGrades.name'=>$newData->education_grade->name])
+                                                                            ->first();
+                                            if(empty($existingRecord)){
+                                                try {
+                                                 $statement = $connection->prepare('INSERT INTO institution_grades( education_grade_id, academic_period_id, 
+                                                                                  start_date, start_year, end_date, end_year, institution_id, modified_user_id, 
+                                                                                  modified, created_user_id, created)
+                                                                                  VALUES (:education_grade_id, :academic_period_id, :start_date,  
+                                                                                  :start_year, :end_date, :end_year, :institution_id, 
+                                                                                  :modified_user_id, :modified, :created_user_id, :created)');
+
+                                                                $statement->execute([
+                                                                'education_grade_id' => $newData['education_grade_id'],
+                                                                'academic_period_id' => $to_academic_period,
+                                                                'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
+                                                                'start_year' => $ToAcademicPeriodsData['start_year'],
+                                                                'end_date' => null,
+                                                                'end_year' => null,
+                                                                'institution_id' =>$newData['institution_id'],
+                                                                'modified_user_id' => 2,
+                                                                'modified' => date('Y-m-d H:i:s'),
+                                                                'created_user_id' => 2,
+                                                                'created' => date('Y-m-d H:i:s')
+                                                                ]);
                 
-                                    $statement->execute([
-                                    'education_grade_id' => $newData['education_grade_id'],
-                                    'academic_period_id' => $to_academic_period,
-                                    'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
-                                    'start_year' => $ToAcademicPeriodsData['start_year'],
-                                    'end_date' => null,
-                                    'end_year' => null,
-                                    'institution_id' =>$newData['institution_id'],
-                                    'modified_user_id' => 2,
-                                    'modified' => date('Y-m-d H:i:s'),
-                                    'created_user_id' => 2,
-                                    'created' => date('Y-m-d H:i:s')
-                                    ]);
-                                
-                                }catch (PDOException $e) {
-                                    echo "<pre>";print_r($e);die;
-                                }
-                            } 
+                                                    }catch (\PDOException $e) {
+                                                        echo "<pre>";print_r($e);die;
+                                                    }
+                                            
+                                                } }
                         }
 
                 }
+                //POCOR-7657 end
             $from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
             $to_end_date = $ToAcademicPeriodsData['end_date']->format('Y-m-d');
             $to_start_year = $ToAcademicPeriodsData['start_year'];
@@ -558,25 +534,24 @@ class DataManagementCopyTable extends ControllerActionTable
             INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
             INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
             INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
-            LEFT JOIN academic_periods ON institution_grades.start_date BETWEEN $from_start_date AND $to_end_date
+            LEFT JOIN academic_periods ON institution_grades.academic_period_id=academic_periods.id
             AND academic_periods.academic_period_level_id != -1
             AND education_systems.academic_period_id = academic_periods.id
             WHERE correct_grade.id != institution_grades.education_grade_id AND academic_periods.id=$to_academic_period");
-
+            
             $statement->execute();
             $row = $statement->fetchAll(\PDO::FETCH_ASSOC);
             foreach($row AS $rowData){
                 $InstitutionGrades->updateAll(
                     ['education_grade_id' => $rowData['correct_grade_id']],    //field
-                    ['education_grade_id' => $rowData['education_grade_id'], 'institution_id'=>$rowData['institution_id'],  'start_date' => $final_from_start_date, 'start_year' => $to_start_year]
-                );
+                    ['education_grade_id' => $rowData['education_grade_id'], 'academic_period_id' => $rowData['academic_period_id'], 'institution_id'=>$rowData['institution_id'],  'start_date' => $final_from_start_date, 'start_year' => $to_start_year]
+                );//updated for checking academic_period_also
             }
 
 
             //to insert data in institution_program_grade_subjects[START]
             $conn = ConnectionManager::get('default');
-            $queryData = "INSERT INTO `institution_program_grade_subjects` (`institution_grade_id`, `education_grade_id`, `education_grade_subject_id`, `institution_id`, `created_user_id`, `created`)
-            SELECT subq3.new_inst_grade_id, subq3.new_ed_grade_id, subq2.subject_id, subq2.inst_id, '1', $currentData
+            $queryData="SELECT subq3.new_inst_grade_id, subq3.new_ed_grade_id, subq2.subject_id, subq2.inst_id, '1', $currentData
             FROM (SELECT
                 institutions.id institution_id,
                 education_grades.id edu_grade_id,
@@ -633,7 +608,45 @@ class DataManagementCopyTable extends ControllerActionTable
         INNER JOIN education_systems ON education_systems.id = education_levels.education_system_id
         INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
         WHERE academic_periods.id = $to_academic_period) subq1 ON subq1.new_edu_level_name = subq.old_edu_level_name AND subq1.new_edu_programme_name = subq.old_edu_programme_name AND subq1.new_edu_grade_code = subq.old_edu_grade_code AND subq1.new_edu_cycle_name = subq.old_edu_cycle_name AND subq1.new_institution_id = subq.old_institution_id) subq3 ON subq3.old_inst_grade_id = subq2.old_instit_grade_id";
-            $conn->execute($queryData);
+        //for not inserting duplicate records
+        $result=$conn->execute($queryData)->fetchAll('assoc');
+        $institutionGradeSubjects=TableRegistry::get('institution_program_grade_subjects');
+        foreach($result as $key =>$institutionGradeSubjectData) {
+
+          
+                $existingRecord =$institutionGradeSubjects->find()
+                    ->where([
+                        'institution_grade_id'=> $institutionGradeSubjectData['new_inst_grade_id'],
+                        'education_grade_id'=> $institutionGradeSubjectData['new_ed_grade_id'], 
+                        'education_grade_subject_id'=> $institutionGradeSubjectData['subject_id'],
+                        'institution_id'=> $institutionGradeSubjectData['inst_id'],
+                    ])
+                    ->first();
+                if (empty($existingRecord)) {
+                    try {
+                      
+                        $statement = $connection->prepare("INSERT INTO `institution_program_grade_subjects`
+                         (`institution_grade_id`, `education_grade_id`, `education_grade_subject_id`, 
+                         `institution_id`, `created_user_id`, `created`)
+                         VALUES (:institution_grade_id,:education_grade_id,:education_grade_subject_id,
+                          :institution_id, :created_user_id, :created)");
+                        $statement->execute([
+                            'institution_grade_id' => $institutionGradeSubjectData['new_inst_grade_id'],
+                            'education_grade_id' => $institutionGradeSubjectData['new_ed_grade_id'],
+                            'education_grade_subject_id' => $institutionGradeSubjectData['subject_id'],
+                            'institution_id' => $institutionGradeSubjectData['inst_id'],
+                            'created_user_id' => 2,
+                            'created' => date('Y-m-d H:i:s')
+                        ]);
+                        
+                    } catch (\PDOException $e) {
+                        echo "<pre>";
+                        print_r($e);
+                        die;
+                    }
+                }
+            }
+            
         }
         if($entity->features == "Shifts"){
             $from_academic_period = $entity->from_academic_period;
@@ -854,15 +867,11 @@ class DataManagementCopyTable extends ControllerActionTable
             $this->triggerCopyShell('Risk', $copyFrom, $copyTo);
         }
         // End POCOR-5337
-        //POCOR-7568 start
-        if($entity->features == "Education Structure"){
-            $from_academic_period = $entity->from_academic_period;
-            $to_academic_period = $entity->to_academic_period;
-            $copyFrom = $from_academic_period;
-            $copyTo = $to_academic_period;
-            $this->triggerCopyShell('EducationStructureCopy', $copyFrom, $copyTo);
+        if ($entity->features == "Performance Competencies") {
+            $this->log('=======>Before triggerPerformanceCompetenciesShell', 'debug');
+            $this->triggePerformanceCompetenciesShell('PerformanceCompetencies',$entity->from_academic_period, $entity->to_academic_period, $entity->competency_criterias_value, $entity->competency_templates_value, $entity->competency_items_value);
+            $this->log(' <<<<<<<<<<======== After triggerPerformanceCompetenciesShell', 'debug');
         }
-         //POCOR-7568 end
     }
     
     // public function afterSave(Event $event, Entity $entity, ArrayObject $data){
@@ -1478,68 +1487,5 @@ class DataManagementCopyTable extends ControllerActionTable
         return $matches;
     }
     //POCOR-7576-institution programme end 
-    private function testInfrastructureData($copyFrom){
-    
-        $msg="";
-            $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
-            $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
-            $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
-            $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
-            $Institutions = TableRegistry::get('Institution.Institutions');
-            $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
-
-            $InstitutionLandsData = $InstitutionLands
-                ->find('all')
-                ->where(['academic_period_id ' => $copyFrom])
-                ->toArray();
-            $institutions = $Institutions->find('all')->toArray();
-            $InsIds = [];
-            foreach($InstitutionLandsData as $ke => $institutionLand){
-                $InsIds[] = $institutionLand->institution_id;
-            }
-            foreach($institutions as $k => $Insti){ 
-             
-                if (in_array($Insti->id, $InsIds)) {
-                   $InstitutionLandDataa = $InstitutionLands
-                   ->find('all')
-                   ->where(['academic_period_id ' => $copyFrom,'institution_id'=> $Insti->id])
-                   ->first();
-                        $InstitutionBuildingData = $InstitutionBuildings
-                        ->find('all')
-                        ->where(['institution_land_id ' => $InstitutionLandDataa->id])
-                        ->toArray();
-                        foreach($InstitutionBuildingData as $kei=> $building){
-                            if($building->area >= $InstitutionLandDataa->area){//POOR-7567
-                               $msg="building";
-                               return $msg;
-                            }
-                                $InstitutionFloorData = $InstitutionFloors
-                                ->find('all')
-                                ->where(['institution_building_id ' => $building->id])
-                                ->toArray();
-
-                                foreach($InstitutionFloorData as $kkey => $floor){
-                                    if($floor->area >= $building->area){//POCOR-7567
-                                        $msg="floor";
-                                        return $msg;
-                                    }
-                                        
-                                        $InstitutionRoomData = $InstitutionRooms
-                                        ->find('all')
-                                        ->where(['institution_floor_id ' => $floor->id])
-                                        ->toArray();
-
-                                        foreach($InstitutionRoomData as $no=>$room){
-                                            if($room->area >= $floor->area){//POCOR-7567
-                                                $msg="room";
-                                                return $msg;
-                                            }
-                                         }
-                                }
-                        }
-                    }
-            }
-       
-       return $msg;
-    }
+   
 }
