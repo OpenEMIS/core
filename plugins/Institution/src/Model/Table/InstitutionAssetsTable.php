@@ -630,7 +630,13 @@ class InstitutionAssetsTable extends ControllerActionTable
 
     public function onUpdateFieldAssetTypeId(Event $event, array $attr, $action, $request)
     {
+        $optionsTable = TableRegistry::get('asset_types');
+        $getOptions = $optionsTable->find('list')->select(['id','name'])->toArray();
         if ($action == 'add' || $action == 'edit') {
+            $attr['type'] = 'select';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = false;
+            $attr['options'] = $getOptions;
             $attr['onChangeReload'] = 'changeAssetTypeId';
         }
         return $attr;
@@ -643,8 +649,41 @@ class InstitutionAssetsTable extends ControllerActionTable
 
     public function onUpdateFieldAssetMakeId(Event $event, array $attr, $action, $request)
     {
+        $data = isset($this->request->data) ? $this->request->data : null;
+        $data = isset($data[$this->alias()]) ? $data[$this->alias()] : null;
+        $where = ["1=1"];
+        $option = isset($data['asset_type_id']) ? $data['asset_type_id'] : null;
+        $optionsTable = TableRegistry::get('asset_makes');
+        if($option){
+            $where = [$optionsTable->aliasField('asset_type_id') => $option];
+        }
+        $getOptions = $optionsTable->find('list')->select(['id','name'])->where($where)->toArray();
         if ($action == 'add' || $action == 'edit') {
-            $attr['onChangeReload'] = 'changeAssetMakeId';
+            $attr['type'] = 'select';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = true;
+            $attr['options'] = $getOptions;
+            $attr['onChangeReload'] = 'changeAssetTypeId';
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldAssetModelId(Event $event, array $attr, $action, $request)
+    {
+        $data = isset($this->request->data) ? $this->request->data : null;
+        $data = isset($data[$this->alias()]) ? $data[$this->alias()] : null;
+        $where = ["1=1"];
+        $option = isset($data['asset_make_id']) ? $data['asset_make_id'] : null;
+        $optionsTable = TableRegistry::get('asset_models');
+        if($option){
+            $where = [$optionsTable->aliasField('asset_make_id') => $option];
+        }
+        $getOptions = $optionsTable->find('list')->select(['id','name'])->where($where)->toArray();
+        if ($action == 'add' || $action == 'edit') {
+            $attr['type'] = 'select';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = true;
+            $attr['options'] = $getOptions;
         }
         return $attr;
     }
