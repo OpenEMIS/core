@@ -6,6 +6,7 @@ use App\Model\Traits\OptionsTrait;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\Collection\Collection;
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -42,7 +43,6 @@ class ImportInstitutionAssetsTable extends AppTable
         $events['Model.import.onImportGetAssetModelsId'] = 'onImportGetAssetModelsId';
 
         $events['Model.import.onImportPopulateUsersData'] = 'onImportPopulateRemoveData';
-//        $events['Model.import.onImportGetAssetTypesId'] = 'onImportGetAssetTypesId';
 
         $events['Model.import.onImportPopulateAssetStatusesData'] = 'onImportPopulateSelectData';
         $events['Model.import.onImportGetAssetStatusesId'] = 'onImportGetAssetStatusesId';
@@ -69,7 +69,10 @@ class ImportInstitutionAssetsTable extends AppTable
     public function onImportGetAssetTypesId(Event $event, $cellValue)
     {
         $table_name = 'asset_types';
-        return $this->checkLookupIdFromTable($cellValue, $table_name);
+        $result = $this->checkLookupIdFromTable($cellValue, $table_name);
+        $this->log('onImportGetAssetTypesId', 'debug');
+        $this->log($result, 'debug');
+        return $result;
     }
 
     public function onImportGetAssetMakesId(Event $event, $cellValue)
@@ -202,7 +205,7 @@ class ImportInstitutionAssetsTable extends AppTable
                 ];
             }
         }
-        $this->log($data, 'debug');
+//        $this->log($modelData, 'debug');
 //        die;
     }
 
@@ -308,57 +311,15 @@ class ImportInstitutionAssetsTable extends AppTable
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         $result = true;
-        list($tempRow, $rowInvalidCodeCols, $result) = $this->checkFinalUser($tempRow, $rowInvalidCodeCols);
+        list($tempRow, $rowInvalidCodeCols, $result) = $this->checkFinalUser($tempRow, $rowInvalidCodeCols, $result);
 
         // POCOR-7362 ends
 
         list($tempRow, $rowInvalidCodeCols, $result) = $this->checkFinalInstitution($tempRow, $rowInvalidCodeCols, $result);
 
-//        if ($tempRow->offsetExists('textbook_id') && !empty($tempRow['textbook_id'])) {
-//            $Textbooks = TableRegistry::get('Textbook.Textbooks');
-//            $textbookResults = $Textbooks
-//                ->find()
-//                ->where([$Textbooks->aliasField('id') => $tempRow['textbook_id']])
-//                ->all();
-//
-//            if ($textbookResults->isEmpty()) {
-//                $rowInvalidCodeCols['textbook_id'] = $this->getExcelLabel('Import', 'value_not_in_list');
-//                return false;
-//            } else {
-//                $textbookEntity = $textbookResults->first();
-//                $tempRow['academic_period_id'] = $textbookEntity->academic_period_id;
-//                $tempRow['education_subject_id'] = $textbookEntity->education_subject_id;
-//                $tempRow['education_grade_id'] = $textbookEntity->education_grade_id;
-//                //check for student being assigned 2 same book.
-//                $InstitutionTextbooks = TableRegistry::get('Institution.InstitutionTextbooks');
-//
-//                if ($tempRow->offsetExists('code') && empty($tempRow['code'])) {
-//                    $InstitutionTextbookData = $InstitutionTextbooks->find('all', [
-//                                'order' => [$InstitutionTextbooks->aliasField('id') => 'DESC']
-//                            ])->first();
-//                    $tempRow['code'] = $textbookEntity->code . '-' . ($InstitutionTextbookData->id + 1);
-//                }
-//
-//                if ($tempRow->offsetExists('security_user_id')) {
-//                    if (!empty($tempRow['security_user_id'])) {
-//                        $query = $InstitutionTextbooks->find()
-//                                ->where([
-//                                    $InstitutionTextbooks->aliasField('security_user_id') => $tempRow['security_user_id'],
-//                                    $InstitutionTextbooks->aliasField('textbook_id') => $tempRow['textbook_id'],
-//                                    $InstitutionTextbooks->aliasField('institution_id') => $tempRow['institution_id'],
-//                                    $InstitutionTextbooks->aliasField('academic_period_id') => $tempRow['academic_period_id'],
-//                                    $InstitutionTextbooks->aliasField('education_subject_id') => $tempRow['education_subject_id'],
-//                                    $InstitutionTextbooks->aliasField('education_grade_id') => $tempRow['education_grade_id']
-//                                ])
-//                                ->count();
-//                        if ($query > 0) { //student assigned to same book before
-//                            $rowInvalidCodeCols['student_id'] = __('Textbook already assigned to the same student before.');
-//                            return false;
-//                        }
-//                    }
-//                }
-//            }
-//        }
+        list($tempRow, $rowInvalidCodeCols, $result) = $this->checkFinalMakeModel($tempRow, $rowInvalidCodeCols, $result);
+
+        //todo add maker and model check
 
         return $result;
     }
@@ -372,7 +333,7 @@ class ImportInstitutionAssetsTable extends AppTable
     {
         $lookedUpTable = TableRegistry::get($table_name);
         $lookupField = 'name';
-        $where = [];
+        $where = ['1 = 1'];
         if ($table_name == 'institution_rooms') {
             $lookupField = 'code';
             $where = [$lookedUpTable->aliasField('institution_id') => $this->institutionId];
@@ -381,16 +342,22 @@ class ImportInstitutionAssetsTable extends AppTable
             ->select(['id', $lookupField])
             ->where($where)
             ->toArray();
-
+//        $this->log('$modelOptions', 'debug');
+//        $this->log($modelOptions, 'debug');
         if (!empty($modelOptions)) {
             foreach ($modelOptions as $row) {
                 if ($cellValue == $row['id']) {
+//                    $this->log('$cellValue == $row[\'id\']', 'debug');
+//                    $this->log($row['id'], 'debug');
                     return $row['id'];
                 }
                 if ($cellValue == $row[$lookupField]) {
+//                    $this->log('$cellValue == $row[$lookupField]', 'debug');
+//                    $this->log($row['id'], 'debug');
                     return $row['id'];
                 }
             }
+            $this->log("$table_name cellValue ???", 'debug');
         }
         return null;
     }
@@ -439,9 +406,10 @@ class ImportInstitutionAssetsTable extends AppTable
     /**
      * @param ArrayObject $tempRow
      * @param ArrayObject $rowInvalidCodeCols
+     * @param $result
      * @return array
      */
-    private function checkFinalUser(ArrayObject $tempRow, ArrayObject $rowInvalidCodeCols)
+    private function checkFinalUser(ArrayObject $tempRow, ArrayObject $rowInvalidCodeCols, $result)
     {
         $tempRow['security_user_id'] = $tempRow['user_id'];
         $enrolledStudent = $this->getEnrolledStudentId();
@@ -475,4 +443,52 @@ class ImportInstitutionAssetsTable extends AppTable
         }
         return array($tempRow, $rowInvalidCodeCols, $result);
     }
+
+    /**
+     * @param ArrayObject $tempRow
+     * @param ArrayObject $rowInvalidCodeCols
+     * @param $result
+     * @return array
+     */
+    private function checkFinalMakeModel(ArrayObject $tempRow, ArrayObject $rowInvalidCodeCols, $result)
+    {
+        if ($result) {
+            $asset_make_id = $tempRow['asset_make_id'];
+            $asset_model_id = $tempRow['asset_model_id'];
+            if($asset_model_id){
+                $model = self::getRelatedRecord('asset_models', $asset_model_id);
+                $asset_make_id = $model['asset_make_id'];
+                $tempRow['asset_make_id'] = $asset_make_id;
+            }
+
+            if($asset_make_id){
+                $make = self::getRelatedRecord('asset_makes', $asset_make_id);
+                $asset_type_id = $make['asset_type_id'];
+                $tempRow['asset_type_id'] = $asset_type_id;
+            }
+        }
+        return array($tempRow, $rowInvalidCodeCols, $result);
+    }
+
+    /**
+     * common proc to show related field with id in the index table
+     * @param $tableName
+     * @param $relatedField
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getRelatedRecord($tableName, $relatedField)
+    {
+        if (!$relatedField) {
+            return null;
+        }
+        $Table = TableRegistry::get($tableName);
+        try {
+            $related = $Table->get($relatedField);
+            return $related->toArray();
+        } catch (RecordNotFoundException $e) {
+            return null;
+        }
+        return null;
+    }
+
 }

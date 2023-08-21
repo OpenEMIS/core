@@ -1639,12 +1639,12 @@ class ImportBehavior extends Behavior
             $tempRow['userId'] = $userId;
             $tempRow['superAdmin'] = $superAdmin;
         }
-
+        Log::write('debug', $tempRow);
         if ($rowPass) {
             $rowPassEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);
             $rowPass = $rowPassEvent->result;
         }
-
+        Log::write('debug', $tempRow);
         return $rowPass;
     }
 
