@@ -975,8 +975,9 @@ class InstitutionsTable extends ControllerActionTable
     }
 
     /**
-     * function checks if there is a security group institution record, and if not - creates it
      * @param Entity $entity
+     * @return bool
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function checkSecurityGroupInstitution(Entity $entity)
     {
@@ -2355,6 +2356,7 @@ class InstitutionsTable extends ControllerActionTable
     /**
      * @param Entity $entity
      * @return mixed|null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function createSecurityGroup(Entity $entity)
     {
@@ -2380,6 +2382,7 @@ class InstitutionsTable extends ControllerActionTable
     /**
      * @param Entity $entity
      * @return bool|\Cake\Datasource\EntityInterface|mixed|null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function createSecurityGroupInstitution(Entity $entity)
     {
@@ -2406,6 +2409,7 @@ class InstitutionsTable extends ControllerActionTable
     /**
      * @param Entity $entity
      * @return bool
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function checkSecurityGroupId(Entity $entity)
     {
