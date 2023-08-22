@@ -534,6 +534,12 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'infrastructure_level';
                     $fieldsOrder[] = 'format';
                     break;
+                case 'Report.InstitutionAssets':
+                    $fieldsOrder[] = 'area_level_id';
+                    $fieldsOrder[] = 'area_education_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'format';
+                    break;
                 case 'Report.InstitutionClasses':
                     $fieldsOrder[] = 'academic_period_id';
                     $fieldsOrder[] = 'area_level_id';
@@ -985,6 +991,7 @@ class InstitutionsTable extends AppTable
                 'Report.WashReports',
                 'Report.Guardians',
                 'Report.InstitutionInfrastructures',
+                'Report.InstitutionAssets',
                 'Report.SpecialNeedsFacilities',
                 'Report.InstitutionCommittees',
                 'Report.ClassAttendanceMarkedSummaryReport',
@@ -1049,6 +1056,7 @@ class InstitutionsTable extends AppTable
                     'Report.WashReports',
                     'Report.Guardians',
                     'Report.InstitutionInfrastructures',
+                    'Report.InstitutionAssets',
                     'Report.SpecialNeedsFacilities',
                     'Report.InstitutionCommittees',
                     'Report.ClassAttendanceMarkedSummaryReport',
@@ -1281,7 +1289,18 @@ class InstitutionsTable extends AppTable
                 $attr['type'] = 'select';
                 $attr['onChangeReload'] = true; 
 
-                if($feature == 'Report.StudentAbsences' || $feature == 'Report.StudentAttendanceSummary' || $feature == 'Report.SpecialNeedsFacilities' || $feature == 'Report.WashReports' || $feature == 'Report.InstitutionSubjects' || $feature == 'Report.Guardians' || $feature == 'Report.InstitutionInfrastructures') {
+                if(in_array($feature,
+                    [
+                        'Report.StudentAbsences',
+                        'Report.StudentAttendanceSummary',
+                        'Report.SpecialNeedsFacilities',
+                        'Report.WashReports',
+                        'Report.InstitutionSubjects',
+                        'Report.Guardians',
+                        'Report.InstitutionInfrastructures',
+                        'Report.InstitutionAssets',
+                    ])
+                    ) {
                     $attr['options'] = ['0' => __('All Types')] +  $typeOptions;
                 } else {
                     $attr['options'] = $typeOptions;
@@ -1383,6 +1402,7 @@ class InstitutionsTable extends AppTable
                 'Report.WashReports',
                 'Report.Guardians',
                 'Report.InstitutionInfrastructures',
+                'Report.InstitutionAssets',
                 'Report.InstitutionClasses',
                 'Report.StudentWithdrawalReport',
                 'Report.SpecialNeedsFacilities',
@@ -1528,7 +1548,21 @@ class InstitutionsTable extends AppTable
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 } else {
-                    if (in_array($feature, ['Report.BodyMasses', 'Report.InstitutionSubjects', 'Report.InstitutionClasses','Report.StudentWithdrawalReport','Report.StudentAbsences','Report.InstitutionSubjectsClasses', 'Report.SpecialNeedsFacilities', 'Report.Income', 'Report.Expenditure', 'Report.WashReports','Report.InstitutionInfrastructures', 'Report.StudentAttendanceSummary','Report.StudentAbsences'])) {
+                    if (in_array($feature, [
+                        'Report.BodyMasses',
+                        'Report.InstitutionSubjects',
+                        'Report.InstitutionClasses',
+                        'Report.StudentWithdrawalReport',
+                        'Report.StudentAbsences',
+                        'Report.InstitutionSubjectsClasses',
+                        'Report.SpecialNeedsFacilities',
+                        'Report.Income',
+                        'Report.Expenditure',
+                        'Report.WashReports',
+                        'Report.InstitutionInfrastructures',
+                        'Report.InstitutionAssets',
+                        'Report.StudentAttendanceSummary',
+                        'Report.StudentAbsences'])) {
                         /*POCOR-6304 Starts*/
                         if (count($institutionList) > 1) {
                            $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
