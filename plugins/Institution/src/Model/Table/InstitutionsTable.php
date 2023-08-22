@@ -871,7 +871,7 @@ class InstitutionsTable extends ControllerActionTable
         if (!$hasSecurityGroupId) {
             $id = $this->createSecurityGroup($entity); //POCOR-7166
             $entity->security_group_id = $id;
-            $this->log('createSecurityGroup', 'debug');
+//            $this->log('createSecurityGroup', 'debug');
         }
 
         // adding debug log to monitor when there was a different between date_opened's year and year_opened
@@ -2397,7 +2397,7 @@ class InstitutionsTable extends ControllerActionTable
         $SecurityGroups = $SecurityGroupsInstitutionsTable->newEntity($SecurityGroupsInstitutionsEntity);
         $SecurityGroupInstitutionsResult = null;
         if ($SecurityGroupInstitutionsResult = $SecurityGroupsInstitutionsTable->save($SecurityGroups)) {
-            $this->log('security_group_institution created', 'debug');
+//            $this->log('security_group_institution created', 'debug');
             return $SecurityGroupInstitutionsResult;
         }
         return $SecurityGroupInstitutionsResult;
