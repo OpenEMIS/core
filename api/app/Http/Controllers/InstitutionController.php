@@ -1260,7 +1260,11 @@ class InstitutionController extends Controller
             $data = $this->institutionService->addStudentAssessmentItemResult($request);
             
             if($data == 1){
-                return $this->sendErrorResponse("Student assessment mark is added/updated successfully.");
+                return $this->sendErrorResponse("Student assessment mark is added successfully.");
+            } elseif($data == 2){
+                return $this->sendErrorResponse("Student assessment mark is updated successfully.");
+            } elseif($data == 0){
+                return $this->sendErrorResponse("Invalid parameters.");
             } else {
                 return $this->sendSuccessResponse("The update of student assessment mark could not be completed successfully.");
             }
@@ -1282,6 +1286,14 @@ class InstitutionController extends Controller
             
             if($data == 1){
                 return $this->sendErrorResponse("Student Behaviour is added/updated successfully..");
+            } elseif($data == 2) {
+                return $this->sendErrorResponse("Invalid academic period.");
+            } elseif($data == 3) {
+                return $this->sendErrorResponse("Invalid institution.");
+            } elseif($data == 4) {
+                return $this->sendErrorResponse("Invalid student.");
+            } elseif($data == 5) {
+                return $this->sendErrorResponse("Invalid student behaviour category.");
             } else {
                 return $this->sendSuccessResponse("The update of student behaviour could not be completed successfully.");
             }

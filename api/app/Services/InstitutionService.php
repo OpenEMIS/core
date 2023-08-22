@@ -1149,8 +1149,10 @@ class InstitutionService extends Controller
 
             if(count($lists) > 0){
                 foreach($lists as $k => $l){
+                    $resp[$k]['id'] = $l['id'];
                     $resp[$k]['academic_period_id'] = $l['academic_period_id'];
                     $resp[$k]['assessment_grading_option_id'] = $l['assessment_grading_option_id'];
+                    $resp[$k]['assessment_grading_option_name'] = $l['assessment_grading_option']['name']??"";
                     $resp[$k]['assessment_id'] = $l['assessment_id'];
                     $resp[$k]['assessment_period_id'] = $l['assessment_period_id'];
                     $resp[$k]['education_grade_id'] = $l['education_grade_id'];
@@ -1158,6 +1160,10 @@ class InstitutionService extends Controller
                     $resp[$k]['institution_id'] = $l['institution_id'];
                     $resp[$k]['marks'] = $l['marks'];
                     $resp[$k]['student_id'] = $l['student_id'];
+                    $resp[$k]['modified_user_id'] = $l['modified_user_id'];
+                    $resp[$k]['modified'] = $l['modified'];
+                    $resp[$k]['created_user_id'] = $l['created_user_id'];
+                    $resp[$k]['created'] = $l['created'];
                 }
             }
 

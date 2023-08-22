@@ -52,6 +52,9 @@ use App\Models\InstitutionStudentAbsenceDays;
 use App\Models\InstitutionStudentAbsenceDetails;
 use App\Models\StaffBehaviourCategories;
 use App\Models\StudentBehaviours;
+use App\Models\AcademicPeriod;
+use App\Models\StudentBehaviourCategory;
+use App\Models\SecurityUsers;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -1740,8 +1743,8 @@ class InstitutionRepository extends Controller
         try {
             $params = $request->all();
             
-            $lists = AssessmentItemResults::where('institution_id', $institutionId)->where('student_id', $studentId)->get()->toArray();
-
+            $lists = AssessmentItemResults::with('assessmentGradingOption')->where('institution_id', $institutionId)->where('student_id', $studentId)->get()->toArray();
+            
             return $lists;
             
         } catch (\Exception $e) {
@@ -2394,23 +2397,56 @@ class InstitutionRepository extends Controller
         try {
             $data = $request->all();
 
-            $store['id'] = Str::uuid();
-            $store['marks'] = $data['marks']??Null;
-            $store['assessment_grading_option_id'] = $data['assessment_grading_option_id']??Null;
-            $store['student_id'] = $data['student_id'];
-            $store['assessment_id'] = $data['assessment_id'];
-            $store['education_subject_id'] = $data['education_subject_id'];
-            $store['education_grade_id'] = $data['education_grade_id'];
-            $store['academic_period_id'] = $data['academic_period_id'];
-            $store['assessment_period_id'] = $data['assessment_period_id'];
-            $store['institution_id'] = $data['institution_id'];
-            $store['institution_classes_id'] = $data['institution_classes_id'];
-            $store['created_user_id'] = JWTAuth::user()->id;
-            $store['created'] = Carbon::now()->toDateTimeString();
+            $isExists = InstitutionClassStudents::where('institution_class_id', $data['institution_classes_id'])->where('education_grade_id', $data['education_grade_id'])->where('academic_period_id', $data['academic_period_id'])->where('student_id', $data['student_id'])->first();
+            if($isExists){
+                $check = AssessmentItemResults::where('student_id', $data['student_id'])
+                    ->where('assessment_id', $data['assessment_id'])
+                    ->where('education_subject_id', $data['education_subject_id'])
+                    ->where('education_grade_id', $data['education_grade_id'])
+                    ->where('academic_period_id', $data['academic_period_id'])
+                    ->where('assessment_period_id', $data['assessment_period_id'])
+                    ->where('institution_classes_id', $data['institution_classes_id'])
+                    ->first();
+                if($check){
+                    $data['modified_user_id'] = JWTAuth::user()->id;
+                    $data['modified'] = Carbon::now()->toDateTimeString();
 
-            $insert = AssessmentItemResults::insert($store);
+                    $update = AssessmentItemResults::where('student_id', $data['student_id'])
+                        ->where('assessment_id', $data['assessment_id'])
+                        ->where('education_subject_id', $data['education_subject_id'])
+                        ->where('education_grade_id', $data['education_grade_id'])
+                        ->where('academic_period_id', $data['academic_period_id'])
+                        ->where('assessment_period_id', $data['assessment_period_id'])
+                        ->where('institution_classes_id', $data['institution_classes_id'])
+                        ->update($data);
+                        $resp = 2;
+                } else {
+                    $store['id'] = Str::uuid();
+                    $store['marks'] = $data['marks']??Null;
+                    $store['assessment_grading_option_id'] = $data['assessment_grading_option_id']??Null;
+                    $store['student_id'] = $data['student_id'];
+                    $store['assessment_id'] = $data['assessment_id'];
+                    $store['education_subject_id'] = $data['education_subject_id'];
+                    $store['education_grade_id'] = $data['education_grade_id'];
+                    $store['academic_period_id'] = $data['academic_period_id'];
+                    $store['assessment_period_id'] = $data['assessment_period_id'];
+                    $store['institution_id'] = $data['institution_id'];
+                    $store['institution_classes_id'] = $data['institution_classes_id'];
+                    $store['created_user_id'] = JWTAuth::user()->id;
+                    $store['created'] = Carbon::now()->toDateTimeString();
+
+                    $insert = AssessmentItemResults::insert($store);
+                    $resp = 1;
+                }
+            } else {
+                $resp = 0;
+            }
+
+
+            
+            
             DB::commit();
-            return 1;
+            return $resp;
             
         } catch (\Exception $e) {
             DB::rollback();
@@ -2429,26 +2465,48 @@ class InstitutionRepository extends Controller
         try {
             $data = $request->all();
 
+            $checkAcademicPeriod = AcademicPeriod::where('id', $data['academic_period_id']??0)->first();
+            if(empty($checkAcademicPeriod)){
+                return 2;
+            }
+
+            $checkInstitution = Institutions::where('id', $data['institution_id'])->first();
+            if(empty($checkInstitution)){
+                return 3;
+            }
+
+            $checkStudent = SecurityUsers::where('id', $data['student_id'])->first();
+            if(empty($checkStudent)){
+                return 4;
+            }
+
+            $checkBehaviourCat = StudentBehaviourCategory::where('id', $data['student_behaviour_category_id'])->first();
+
+            if(empty($checkBehaviourCat)){
+                return 5;
+            }
+
             $store['description'] = $data['description'];
             $store['action'] = $data['action'];
             $store['date_of_behaviour'] = $data['date_of_behaviour'];
-            $store['time_of_behaviour'] = $data['time_of_behaviour'];
-            $store['academic_period_id'] = $data['academic_period_id'];
+            $store['time_of_behaviour'] = $data['time_of_behaviour']??Null;
+            $store['academic_period_id'] = $data['academic_period_id']??Null;
             $store['student_id'] = $data['student_id'];
             $store['institution_id'] = $data['institution_id'];
-            $store['status_id'] = $data['status_id'];
+            $store['status_id'] = $data['status_id']??Null;
             $store['student_behaviour_category_id'] = $data['student_behaviour_category_id'];
             $store['assignee_id'] = $data['assignee_id']??Null;
             $store['created_user_id'] = JWTAuth::user()->id;
             $store['created'] = Carbon::now()->toDateTimeString();
             $store['student_behaviour_classification_id'] = $data['student_behaviour_classification_id']??Null;
-
+            
             $insert = StudentBehaviours::insert($store);
             DB::commit();
             return 1;
             
         } catch (\Exception $e) {
             DB::rollback();
+            
             Log::error(
                 'The update of student behaviour could not be completed successfully.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
