@@ -2536,7 +2536,6 @@ class WorkflowCaseBehavior extends Behavior
     public function setStatusId(Entity $entity, $requestData)
     {
         $model = $this->_table;
-        if ($model->hasBehavior('Workflow')) {
             if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
                 if (array_key_exists('workflow_step_id', $requestData[$this->WorkflowTransitions->alias()])) {
                     $statusId = $requestData[$this->WorkflowTransitions->alias()]['workflow_step_id'];
@@ -2544,7 +2543,13 @@ class WorkflowCaseBehavior extends Behavior
                         // change to save instead of update all to trigger after save function.
                         $entity->status_id = $statusId;
                         //echo "<pre>";print_r($entity);die();
-                        $model->save($entity);
+                        //$model->save($entity);
+                        //POCOR-7668 changed to updateAll because status is not changing on save
+                        $res = $model->updateAll(
+                            ['status_id' => $statusId],
+                            ['id' => $entity->id]
+                        );
+                        //POCOR-7668 end
                     }
                 }
             }
@@ -2563,7 +2568,7 @@ class WorkflowCaseBehavior extends Behavior
                 $model->save($entity);
             }
             //POCOR-5677 & POCOR-6028 ends
-        }
+        
     }
 
     public function deleteWorkflowTransitions(Entity $entity)
