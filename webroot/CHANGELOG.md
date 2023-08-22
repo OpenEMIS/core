@@ -1,3 +1,15 @@
+### [3.92.2] - 2023-08-22
+- Bug Fixed: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 3 Fixes
+- Bug Fixed: Administration > System Setup > Field Options > Extracurricular Types: Extracurricular should be removed
+- Bug Fixed: Administrative > Meals: A 404 error is showing when adding the meal programme
+- Bug Fixed: Institutions > Survey > Forms: There is no date field type displaying for student_list questions even when it is a date field
+- Bug Fixed: Reports > Staff: Staff Out of School: Report is stuck in progress
+- Bug Fixed: Institutions > General > Shifts: Periods field dropdown is showing all periods that have been configured even though some periods is not in the date enabled and date disabled
+- Bug Fixed: Administration > System Setup > Custom Field > Student: When deleting options for the checkbox field type under the student custom field, the page gives a successful message but records were not deleted
+- Bug Fixed: Institutions > Academic > Subjects: The user is unable to add the same subject more than 1 time
+- Bug Fixed: Institutions>Academic>Classes: User is not able to assign homeroom teachers
+- Bug Fixed: API: Endpoint is not showing the label academic period and institution
+
 ### [3.92.1] - 2023-08-18
 - Implemented: Develop changes to asset feature
 - Implemented: Develop a function to add Case Escalation emails to Alerts
