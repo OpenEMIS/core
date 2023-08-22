@@ -7484,6 +7484,11 @@ class InstitutionsController extends AppController
                         echo json_encode(['user_exist' => 1, 'status_code' => 200, 'message' => $message]);
                         die;
                     } else {
+                        $externalsearch = $this->checkConfigurationForExternalSearch();
+                        if($externalsearch['showExternalSearch'] == true){
+                            echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => '']);
+                            die;
+                        }
                         if ($first_name === null
                             || $last_name === null
                             || $gender_id === null
