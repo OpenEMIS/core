@@ -3,6 +3,7 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
@@ -26,6 +27,7 @@ class InstitutionAssetsTable extends AppTable
     const NO_FILTER = 0;
     const NO_STUDENT = 1;
     const NO_STAFF = 2;
+    public $currency = '';
 
     public function initialize(array $config)
     {
@@ -60,16 +62,32 @@ class InstitutionAssetsTable extends AppTable
 
         $newFields[] = [
             'key' => '',
-            'field' => 'region_name',
+            'field' => 'parent_area_name',
             'type' => 'string',
-            'label' => 'Region Name'
+            'label' => 'Parent Area Code'
+        ];
+
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'parent_area_name',
+            'type' => 'string',
+            'label' => 'Parent Area'
+        ];
+
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'area_code',
+            'type' => 'string',
+            'label' => 'Area Code'
         ];
 
         $newFields[] = [
             'key' => '',
             'field' => 'area_name',
             'type' => 'string',
-            'label' => __('Area Name')
+            'label' => 'Area'
         ];
 
         $newFields[] = [
@@ -88,14 +106,12 @@ class InstitutionAssetsTable extends AppTable
 
         $newFields[] = [
             'key' => '',
-            'field' => 'institution_status_name',
+            'field' => 'institution_status',
             'type' => 'string',
             'label' => __('Institution Status')
         ];
 
         /**end here */
-
-
         $newFields[] = [
             'key' => '',
             'field' => 'asset_code',
@@ -148,13 +164,6 @@ class InstitutionAssetsTable extends AppTable
 
         $newFields[] = [
             'key' => '',
-            'field' => 'cost',
-            'type' => 'money',
-            'label' => __('Cost')
-        ];
-
-        $newFields[] = [
-            'key' => '',
             'field' => 'stocktake_date',
             'type' => 'date',
             'label' => __('Stocktake Date')
@@ -163,8 +172,106 @@ class InstitutionAssetsTable extends AppTable
         $newFields[] = [
             'key' => '',
             'field' => 'lifespan',
-            'type' => 'numeric',
+            'type' => 'string',
+            'label' => __('Lifespan')
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'institution_room',
+            'type' => 'string',
+            'label' => __('Location')
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'user_name',
+            'type' => 'string',
+            'label' => __('User')
+        ];
+
+       $newFields[] = [
+            'key' => '',
+            'field' => 'accessibility',
+            'type' => 'string',
             'label' => __('Accessibility')
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'purpose',
+            'type' => 'string',
+            'label' => __('Purpose')
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'asset_status',
+            'type' => 'string',
+            'label' => __('Asset Status')
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'asset_condition',
+            'type' => 'string',
+            'label' => __('Condition')
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'purchase_date',
+            'type' => 'date',
+            'label' => __('Purchase Date')
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'cost',
+            'type' => 'string',
+            'label' => __('Cost')
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'salvage_value',
+            'type' => 'string',
+            'label' => __('Salvage Value')
+        ];
+
+//        $newFields[] = [
+//            'key' => '',
+//            'field' => 'salvage_value',
+//            'type' => 'string',
+//            'label' => __('Salvage Value')
+//        ];
+//
+       $newFields[] = [
+            'key' => '',
+            'field' => 'monthly_depreciation',
+            'type' => 'string',
+            'label' => __('Monthly Depreciation')
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'prior_year_accumulated_depreciation',
+            'type' => 'string',
+            'label' => __('Prior Year Accumulated Depreciation')
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'accumulated_depreciation',
+            'type' => 'string',
+            'label' => __('Accumulated Depreciation')
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'book_value',
+            'type' => 'string',
+            'label' => __('Book Value')
         ];
 
         $fields->exchangeArray($newFields);
@@ -172,293 +279,30 @@ class InstitutionAssetsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        $ConfigItems = TableRegistry::get('config_items');
+        $this->currency = $ConfigItems->find('all')->where(['code' => 'currency'])->select(['value'])->first()->value;
+//        $this->log('$this->currency', 'debug');
+//        $this->log($this->currency, 'debug');
 
         $requestData = json_decode($settings['process']['params']);
         $institutionId = $requestData->institution_id;
         $institutionTypeId = $requestData->institution_type_id;
         $areaId = $requestData->area_education_id;
 
-        $infrastructureCondition = TableRegistry::get('infrastructure_conditions');
-        $infrastructureStatus = TableRegistry::get('infrastructure_statuses');
-        $institutionStatus = TableRegistry::get('institution_statuses');
-        $infrastructureOwnerships = TableRegistry::get('infrastructure_ownerships');
-        $infrastructureLevels = TableRegistry::get('infrastructure_levels');
-        $areas = TableRegistry::get('areas');
-
         $query = $this->getBasicQuery($query, $institutionId, $institutionTypeId, $areaId);
-        $this->log($query->sql(), 'debug');
+        $query = $this->getInstitutionAreaQuery($query);
+        $query = $this->getInstitutionParentAreaQuery($query);
+        $query = $this->getInstitutionStatusQuery($query);
+        $query = $this->getAssetTypeQuery($query);
+        $query = $this->getAssetMakeQuery($query);
+        $query = $this->getAssetModelQuery($query);
+        $query = $this->getAssetStatusQuery($query);
+        $query = $this->getAssetConditionQuery($query);
+        $query = $this->getAssetLocationQuery($query);
+        $query = $this->getAssetUserQuery($query);
+        $query = $this->getCalculatedFieldsQuery($query);
+//        $this->log($query->sql(), 'debug');
         return $query;
-
-        $conditions = [];
-        $institutions = TableRegistry::get('Institution.Institutions');
-        $institutionIds = $institutions->find('list', [
-            'keyField' => 'id',
-            'valueField' => 'id'
-        ])
-            ->where(['institution_type_id' => $institutionTypeId])
-            ->toArray();
-
-        if (!empty($institutionTypeId)) {
-            $conditions['Institution' . $level . '.' . 'institution_id IN'] = $institutionIds;
-
-        }
-
-        if ($infrastructureLevel == 1 || $infrastructureLevel == 2) {
-            $query
-                ->select(['land_infrastructure_code' => 'Institution' . $level . '.' . 'code',
-                    'land_infrastructure_name' => 'Institution' . $level . '.' . 'name',
-                    'area_id' => 'Institutions.area_id',
-                    'area_code' => $areas->aliasField('code'),
-                    'area_name' => $areas->aliasField('name'),
-                    'level_id' => 'Institution' . $level . '.' . 'id',
-                    'land_start_date' => 'Institution' . $level . '.' . 'start_date',
-                    'area' => 'Institution' . $level . '.' . 'area',
-                    'year_acquired' => 'Institution' . $level . '.' . 'year_acquired',
-                    'year_disposed' => 'Institution' . $level . '.' . 'year_disposed',
-                    'land_infrastructure_type' => 'InfrastructureTypes.name',
-                    'land_infrastructure_condition' => $infrastructureCondition->aliasField('name'),
-                    'land_infrastructure_status' => $infrastructureStatus->aliasField('name'),
-                    //POCOR-5698 two new columns added here
-                    'shift_name' => 'ShiftOptions.name',
-                    'institution_status_name' => 'InstitutionStatuses.name',
-                    //POCOR-5698 ends here
-                    'land_infrastructure_ownership' => $infrastructureOwnerships->aliasField('name'),
-                    'land_infrastructure_accessibility' => 'Institution' . $level . '.' . 'accessibility',
-                ])
-                ->LeftJoin(['Institution' . $level => 'institution_' . lcfirst($level)], [
-                    'Institution' . $level . '.' . 'institution_id = ' . $this->aliasField('id'),
-                ])
-                ->LeftJoin(['InfrastructureTypes' => $type . '_types'], [
-                    'InfrastructureTypes.id = ' . $type . '_type_id',
-                ])
-                ->LeftJoin([$infrastructureCondition->alias() => $infrastructureCondition->table()], ['Institution' . $level . '.' . 'infrastructure_condition_id = ' . $infrastructureCondition->aliasField('id'),
-                ])
-                ->LeftJoin([$infrastructureStatus->alias() => $infrastructureStatus->table()], [
-                    'Institution' . $level . '.' . $type . '_status_id = ' . $infrastructureStatus->aliasField('id'),
-                ])
-                //POCOR-5698 two new columns added here
-                //status
-                ->LeftJoin(['Institutions' => $institutions->table()], [
-                    'Institution' . $level . '.' . 'institution_id = Institutions.id',
-                ])
-                ->LeftJoin([$areas->alias() => $areas->table()], [
-                    'Institutions.area_id = ' . $areas->aliasField('id'),
-                ])
-                ->LeftJoin(['InstitutionStatuses' => $institutionStatus->table()], [
-                    'InstitutionStatuses.id = Institutions.institution_status_id',
-                ])
-                //shift
-                ->LeftJoin(['InstitutionShifts' => 'institution_shifts'], [
-                    'Institution' . $level . '.' . 'institution_id = InstitutionShifts.institution_id',
-                    'Institution' . $level . '.' . 'academic_period_id = InstitutionShifts.academic_period_id'
-                ])
-                ->LeftJoin(['ShiftOptions' => 'shift_options'], [
-                    'ShiftOptions.id = InstitutionShifts.shift_option_id'
-                ])
-                //POCOR-5698 two new columns ends here
-                ->LeftJoin([$infrastructureOwnerships->alias() => $infrastructureOwnerships->table()], [
-                    'Institution' . $level . '.' . $type . '_status_id = ' . $infrastructureOwnerships->aliasField('id'),
-                ])
-                ->where($conditions);
-        } else if ($infrastructureLevel == 3) {
-            $query
-                ->select(['land_infrastructure_code' => 'Institution' . $level . '.' . 'code',
-                    'land_infrastructure_name' => 'Institution' . $level . '.' . 'name',
-                    'area_id' => 'Institutions.area_id',
-                    'area_code' => $areas->aliasField('code'),
-                    'area_name' => $areas->aliasField('name'),
-                    'level_id' => 'Institution' . $level . '.' . 'id',
-                    'land_start_date' => 'Institution' . $level . '.' . 'start_date',
-                    'area' => 'Institution' . $level . '.' . 'area',
-                    'land_infrastructure_type' => 'InfrastructureTypes.name',
-                    'land_infrastructure_condition' => $infrastructureCondition->aliasField('name'),
-                    'land_infrastructure_status' => $infrastructureStatus->aliasField('name'),
-                    //POCOR-5698 two new columns added here
-                    'shift_name' => 'ShiftOptions.name',
-                    'institution_status_name' => 'InstitutionStatuses.name',
-                    //POCOR-5698 ends here
-                    'land_infrastructure_ownership' => $infrastructureOwnerships->aliasField('name'),
-                    'land_infrastructure_accessibility' => 'Institution' . $level . '.' . 'accessibility',
-                ])
-                ->LeftJoin(['Institution' . $level => 'institution_' . lcfirst($level)], [
-                    'Institution' . $level . '.' . 'institution_id = ' . $this->aliasField('id'),
-                ])
-                ->LeftJoin(['InfrastructureTypes' => $type . '_types'], [
-                    'InfrastructureTypes.id = ' . $type . '_type_id',
-                ])
-                ->LeftJoin([$infrastructureCondition->alias() => $infrastructureCondition->table()], ['Institution' . $level . '.' . 'infrastructure_condition_id = ' . $infrastructureCondition->aliasField('id'),
-                ])
-                ->LeftJoin([$infrastructureStatus->alias() => $infrastructureStatus->table()], [
-                    'Institution' . $level . '.' . $type . '_status_id = ' . $infrastructureStatus->aliasField('id'),
-                ])
-                //POCOR-5698 two new columns added here
-                //status
-                ->LeftJoin(['Institutions' => $institutions->table()], [
-                    'Institution' . $level . '.' . 'institution_id = Institutions.id',
-                ])
-                ->LeftJoin([$areas->alias() => $areas->table()], [
-                    'Institutions.area_id = ' . $areas->aliasField('id'),
-                ])
-                ->LeftJoin(['InstitutionStatuses' => $institutionStatus->table()], [
-                    'InstitutionStatuses.id = Institutions.institution_status_id',
-                ])
-                //shift
-                ->LeftJoin(['InstitutionShifts' => 'institution_shifts'], [
-                    'Institution' . $level . '.' . 'institution_id = InstitutionShifts.institution_id',
-                    'Institution' . $level . '.' . 'academic_period_id = InstitutionShifts.academic_period_id'
-                ])
-                ->LeftJoin(['ShiftOptions' => 'shift_options'], [
-                    'ShiftOptions.id = InstitutionShifts.shift_option_id'
-                ])
-                //POCOR-5698 two new columns ends here
-                ->LeftJoin([$infrastructureOwnerships->alias() => $infrastructureOwnerships->table()], [
-                    'Institution' . $level . '.' . $type . '_status_id = ' . $infrastructureOwnerships->aliasField('id'),
-                ])
-                ->where($conditions);
-        } else {
-            $query
-                ->select(['land_infrastructure_code' => 'Institution' . $level . '.' . 'code',
-                    'land_infrastructure_name' => 'Institution' . $level . '.' . 'name',
-                    'area_id' => 'Institutions.area_id',
-                    'area_code' => $areas->aliasField('code'),
-                    'area_name' => $areas->aliasField('name'),
-                    'level_id' => 'Institution' . $level . '.' . 'id',
-                    'land_start_date' => 'Institution' . $level . '.' . 'start_date',
-                    'land_infrastructure_type' => 'InfrastructureTypes.name',
-                    'land_infrastructure_condition' => $infrastructureCondition->aliasField('name'),
-                    'land_infrastructure_status' => $infrastructureStatus->aliasField('name'),
-                    //POCOR-5698 two new columns added here
-                    'shift_name' => 'ShiftOptions.name',
-                    'institution_status_name' => 'InstitutionStatuses.name',
-                    //POCOR-5698 ends here
-                    'land_infrastructure_ownership' => $infrastructureOwnerships->aliasField('name'),
-                    'land_infrastructure_accessibility' => 'Institution' . $level . '.' . 'accessibility',
-                ])
-                ->LeftJoin(['Institution' . $level => 'institution_' . lcfirst($level)], [
-                    'Institution' . $level . '.' . 'institution_id = ' . $this->aliasField('id'),
-                ])
-                ->LeftJoin(['InfrastructureTypes' => $type . '_types'], [
-                    'InfrastructureTypes.id = ' . $type . '_type_id',
-                ])
-                ->LeftJoin([$infrastructureCondition->alias() => $infrastructureCondition->table()], ['Institution' . $level . '.' . 'infrastructure_condition_id = ' . $infrastructureCondition->aliasField('id'),
-                ])
-                ->LeftJoin([$infrastructureStatus->alias() => $infrastructureStatus->table()], [
-                    'Institution' . $level . '.' . $type . '_status_id = ' . $infrastructureStatus->aliasField('id'),
-                ])
-                //POCOR-5698 two new columns added here
-                //status
-                ->LeftJoin(['Institutions' => $institutions->table()], [
-                    'Institution' . $level . '.' . 'institution_id = Institutions.id',
-                ])
-                ->LeftJoin([$areas->alias() => $areas->table()], [
-                    'Institutions.area_id = ' . $areas->aliasField('id'),
-                ])
-                ->LeftJoin(['InstitutionStatuses' => $institutionStatus->table()], [
-                    'InstitutionStatuses.id = Institutions.institution_status_id',
-                ])
-                //shift
-                ->LeftJoin(['InstitutionShifts' => 'institution_shifts'], [
-                    'Institution' . $level . '.' . 'institution_id = InstitutionShifts.institution_id',
-                    'Institution' . $level . '.' . 'academic_period_id = InstitutionShifts.academic_period_id'
-                ])
-                ->LeftJoin(['ShiftOptions' => 'shift_options'], [
-                    'ShiftOptions.id = InstitutionShifts.shift_option_id'
-                ])
-                //POCOR-5698 two new columns ends here
-                ->LeftJoin([$infrastructureOwnerships->alias() => $infrastructureOwnerships->table()], [
-                    'Institution' . $level . '.' . $type . '_status_id = ' . $infrastructureOwnerships->aliasField('id'),
-                ])
-                ->where($conditions);
-        }
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($type) {
-            return $results->map(function ($row) use ($type) {
-
-                $areas1 = TableRegistry::get('areas');
-                $areasData = $areas1
-                    ->find()
-                    ->where([$areas1->alias('code') => $row->area_code])
-                    ->first();
-                $row['region_code'] = '';
-                $row['region_name'] = '';
-                if (!empty($areasData)) {
-                    $areas = TableRegistry::get('areas');
-                    $areaLevels = TableRegistry::get('area_levels');
-                    $institutions = TableRegistry::get('institutions');
-                    $val = $areas
-                        ->find()
-                        ->select([
-                            $areas1->aliasField('code'),
-                            $areas1->aliasField('name'),
-                        ])
-                        ->leftJoin(
-                            [$areaLevels->alias() => $areaLevels->table()],
-                            [
-                                $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
-                            ]
-                        )
-                        ->leftJoin(
-                            [$institutions->alias() => $institutions->table()],
-                            [
-                                $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
-                            ]
-                        )
-                        ->where([
-                            $areaLevels->aliasField('level !=') => 1,
-                            $areas->aliasField('id') => $areasData->parent_id
-                        ])->first();
-
-                    if (!empty($val->name) && !empty($val->code)) {
-                        $row['region_code'] = $val->code;
-                        $row['region_name'] = $val->name;
-                    }
-                }
-
-                $InfrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
-                if (!empty($row['level_id'])) {
-                    $customFieldData = $InfrastructureCustomFields->find()
-                        ->select([
-                            'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
-                            'custom_field' => $InfrastructureCustomFields->aliasfield('name'),
-                            'text_value' => 'CustomFieldValues.text_value',
-                            'number_value' => 'CustomFieldValues.number_value',
-                            'decimal_value' => 'CustomFieldValues.decimal_value',
-                            'textarea_value' => 'CustomFieldValues.textarea_value',
-                            'date_value' => 'CustomFieldValues.date_value',
-                            'time_value' => 'CustomFieldValues.time_value'
-                        ])
-                        ->innerJoin(['CustomFieldValues' => lcfirst($type) . '_custom_field_values'], [
-                            'CustomFieldValues.infrastructure_custom_field_id = ' . $InfrastructureCustomFields->aliasField('id'),
-                            'CustomFieldValues.institution_' . lcfirst($type) . '_id  = ' . $row['level_id']
-                        ])
-                        ->toArray();
-                }
-                if (!empty($customFieldData)) {
-                    foreach ($customFieldData as $data) {
-                        if (!empty($data->text_value)) {
-                            $row[$data->custom_field_id] = $data->text_value;
-                        }
-                        if (!empty($data->number_value)) {
-                            $row[$data->custom_field_id] = $data->number_value;
-                        }
-                        if (!empty($data->decimal_value)) {
-                            $row[$data->custom_field_id] = $data->decimal_value;
-                        }
-                        if (!empty($data->textarea_value)) {
-                            $row[$data->custom_field_id] = $data->textarea_value;
-                        }
-                        if (!empty($data->date_value)) {
-                            $row[$data->custom_field_id] = $data->date_value;
-
-                        }
-                        if (!empty($data->time_value)) {
-                            $row[$data->custom_field_id] = $data->time_value;
-
-                        }
-                    }
-                }
-                return $row;
-            });
-        });
     }
 
     /**
@@ -488,6 +332,21 @@ class InstitutionAssetsTable extends AppTable
             'asset_code' => $institutionAssets->aliasField('code'),
             'asset_description' => $institutionAssets->aliasField('description'),
             'serial_number' => $institutionAssets->aliasField('serial_number'),
+            'cost' => $institutionAssets->aliasField('cost'),
+            'stocktake_date' => $institutionAssets->aliasField('stocktake_date'),
+            'lifespan' => $institutionAssets->aliasField('lifespan'),
+            'depreciation' => $institutionAssets->aliasField('depreciation'),
+            'purchase_date' => $institutionAssets->aliasField('purchase_date'),
+            'accessibility' => $institutionAssets->aliasField('accessibility'),
+            'purpose' => $institutionAssets->aliasField('purpose'),
+            'area_id' => $this->aliasField('area_id'),
+            'asset_make_id' => $institutionAssets->aliasField('asset_make_id'),
+            'asset_model_id' => $institutionAssets->aliasField('asset_model_id'),
+            'institution_room_id' => $institutionAssets->aliasField('institution_room_id'),
+            'asset_status_id' => $institutionAssets->aliasField('asset_status_id'),
+            'asset_type_id' => $institutionAssets->aliasField('asset_type_id'),
+            'asset_condition_id' => $institutionAssets->aliasField('asset_condition_id'),
+            'salvage_value' => $institutionAssets->aliasField('depreciation'),
             $this->aliasField('area_id'),
         ])
             ->leftJoin([$institutionAssets->alias() => $institutionAssets->table()],
@@ -496,4 +355,330 @@ class InstitutionAssetsTable extends AppTable
 
         return $query;
     }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function getInstitutionAreaQuery(Query $query)
+    {
+        $areas = TableRegistry::get('areas');
+
+        $query = $this->getRelatedQuery($query,
+            'areas',
+            'area_id',
+            'area_name',
+            'name',
+            'area_code',
+            'code');
+        $query->select([
+            'parent_area_id' => $areas->aliasField('parent_id')]);
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function getInstitutionParentAreaQuery(Query $query)
+    {
+        $areas = TableRegistry::get('areas');
+        $query = $this->getRelatedQuery($query,
+            'areas',
+            $areas->aliasField('parent_id'),
+            'parent_area_name',
+            'name',
+            'parent_area_code',
+            'code',
+            'parent_area');
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function getInstitutionStatusQuery(Query $query)
+    {
+        $query = $this->getRelatedQuery($query,
+            'institution_statuses',
+            'institution_status_id',
+            'institution_status');
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function getAssetStatusQuery(Query $query)
+    {
+        $Table = TableRegistry::get('institution_assets');
+
+        $query = $this->getRelatedQuery($query,
+            'asset_statuses',
+            $Table->aliasField('asset_status_id'),
+            'asset_status');
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function getAssetTypeQuery(Query $query)
+    {
+        $institutionAssets = TableRegistry::get('institution_assets');
+
+        $query = $this->getRelatedQuery($query,
+            'asset_types',
+            $institutionAssets->aliasField('asset_type_id'),
+            'asset_type');
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function getAssetMakeQuery(Query $query)
+    {
+        $Table = TableRegistry::get('institution_assets');
+
+        $query = $this->getRelatedQuery($query,
+            'asset_makes',
+            $Table->aliasField('asset_make_id'),
+            'asset_make');
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function getAssetModelQuery(Query $query)
+    {
+        $Table = TableRegistry::get('institution_assets');
+
+        $query = $this->getRelatedQuery($query,
+            'asset_models',
+            $Table->aliasField('asset_model_id'),
+            'asset_model');
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function getAssetConditionQuery(Query $query)
+    {
+        $Table = TableRegistry::get('institution_assets');
+
+        $query = $this->getRelatedQuery($query,
+            'asset_conditions',
+            $Table->aliasField('asset_condition_id'),
+            'asset_condition');
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function getAssetLocationQuery(Query $query)
+    {
+        $Table = TableRegistry::get('institution_assets');
+        $Users = TableRegistry::get('institution_rooms');
+        $name = $Users->aliasField('name');
+        $code = $Users->aliasField('code');
+        $field = "CONCAT({$code}, ': ', {$name})";
+
+        $query = $this->getRelatedQuery($query,
+            'institution_rooms',
+            $Table->aliasField('institution_room_id'),
+            'institution_room',
+            $field);
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function getAssetUserQuery(Query $query)
+    {
+        $Table = TableRegistry::get('institution_assets');
+        $Users = TableRegistry::get('security_users');
+        $first_name = $Users->aliasField('first_name');
+        $last_name = $Users->aliasField('last_name');
+        $field = "CONCAT({$first_name}, ' ', {$last_name})";
+        $query = $this->getRelatedQuery($query,
+            'security_users',
+            $Table->aliasField('user_id'),
+            'user_name',
+            $field);
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function getCalculatedFieldsQuery(Query $query)
+    {
+        $currency = $this->currency;
+        $query = $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($currency) {
+            return $results->map(function ($row) use ($currency) {
+//                $this->log($currency, 'debug');
+                $cost = isset($row['cost']) ? floatval($row['cost']) : 0;
+                $salvageValue = isset($row['salvage_value']) ? floatval($row['salvage_value']) : 0;
+                $row['cost'] = $currency . '' . number_format($cost, 2);
+                $row['depreciation'] = $currency . '' . number_format($salvageValue, 2);
+//                return $row;
+                if (!$cost) {
+                    return $row;
+                }
+                $lifespan = $row['lifespan'];
+                if (!$lifespan) {
+                    return $row;
+                }
+                $purchaseDate = $row['purchase_date'];
+                if (!$purchaseDate) {
+                    return $row;
+                }
+//                $this->log($purchaseDate, 'debug');
+                // Calculate full years and full months of the current year
+                $currentYear = date('Y');
+                $currentTimestamp = time();
+                $purchaseTimestamp = strtotime($purchaseDate);
+                $purchaseYear = date('Y', $purchaseTimestamp);
+//                $this->log($purchaseYear, 'debug');
+                $fullYears = $currentYear - $purchaseYear;
+//                $this->log($fullYears, 'debug');
+                $actual_cost = $cost - $salvageValue;
+                $depreciation = ($actual_cost) / $lifespan;
+//                $this->log($depreciation, 'debug');
+                $monthlyDepreciation = $depreciation / 12;
+                $fullMonths = date('n', $currentTimestamp)
+                    - date('n', $purchaseTimestamp)
+                    + ($fullYears * 12);
+//                $this->log($fullMonths, 'debug');
+                $priorYearAccumulatedDepreciation = $depreciation * $fullYears;
+                if($priorYearAccumulatedDepreciation > $actual_cost){
+                    $priorYearAccumulatedDepreciation = ($actual_cost);
+                }
+//                $this->log($priorYearAccumulatedDepreciation, 'debug');
+                $accumulatedDepreciation = $monthlyDepreciation * $fullMonths;
+                if($accumulatedDepreciation > ($actual_cost)){
+                    $accumulatedDepreciation = ($actual_cost);
+                }
+//                $this->log($accumulatedDepreciation, 'debug');
+                $bookValue = $actual_cost - $accumulatedDepreciation;
+//                $this->log($bookValue, 'debug');
+                if ($bookValue < 0) {
+                    $bookValue = 0;
+                }
+                $row['prior_year_accumulated_depreciation'] =
+                    $currency . '' . number_format($priorYearAccumulatedDepreciation, 2);
+                $row['monthly_depreciation'] =
+                    $currency . '' . number_format($monthlyDepreciation, 2);
+                $row['accumulated_depreciation'] =
+                    $currency . '' . number_format($accumulatedDepreciation, 2);
+                $row['book_value'] =
+                    $currency . '' . number_format($bookValue, 2);
+                $row['depreciation'] = $currency . '' . number_format($salvageValue, 2);
+                $row['salvage_value'] = $currency . '' . number_format($salvageValue, 2);
+
+                return $row;
+            });
+        });
+
+        return $query;
+    }
+
+
+    public function onExcelGetDepreciation(Event $event, Entity $entity)
+    {
+        if (!$entity->depreciation) {
+            return "";
+        }
+        $formattedAmount = $this->currency . '' . number_format($entity->depreciation, 2);
+        return $formattedAmount; // Output: $1,234.56
+    }
+
+    public function onExcelGetPurpose(Event $event, Entity $entity)
+    {
+        if ($entity->purpose) {
+            $purpose = 'Teaching';
+        } else {
+            $purpose = 'Non-Teaching';
+        }
+        return $purpose;
+    }
+
+    public function onExcelGetAccessibility(Event $event, Entity $entity)
+    {
+        if ($entity->accessibility) {
+            $accessibility = 'Accessible';
+        } else {
+            $accessibility = 'Not Accessible';
+        }
+        return $accessibility;
+    }
+
+    /**
+     * common proc to show related field with id in the index table
+     * @param $tableName
+     * @param $relatedField
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getRelatedRecord($tableName, $relatedField)
+    {
+        if (!$relatedField) {
+            return null;
+        }
+        $Table = TableRegistry::get($tableName);
+        try {
+            $related = $Table->get($relatedField);
+            return $related->toArray();
+        } catch (RecordNotFoundException $e) {
+            null;
+        }
+        return null;
+    }
+
+    /**
+     * @param Query $query
+     * @param $table
+     * @param $fk
+     * @param $alias_name
+     * @param string $name
+     * @param null $alias_code
+     * @param string $code
+     * @param null $table_alias
+     * @return Query
+     */
+    private function getRelatedQuery(Query $query, $table, $fk, $alias_name, $name = 'name', $alias_code = null, $code = 'code', $table_alias = null)
+    {
+        $Table = TableRegistry::get($table);
+        if (!$table_alias) {
+            $table_alias = $Table->alias();
+        }
+        $field = "{$table_alias}.{$name}";
+        if (mb_strlen($name) > 0 && ctype_upper(mb_substr($name, 0, 1))) {
+            $field = $name;
+        }
+        $query->select([
+            $Table->aliasField('id'),
+            $alias_name => $field])
+            ->LeftJoin([$table_alias => $Table->table()], [
+                "{$table_alias}.id = {$fk}"]);
+        if ($alias_code) {
+            $query->select([
+                $alias_code => "{$table_alias}.{$code}"]);
+        }
+        return $query;
+    }
+
 }
