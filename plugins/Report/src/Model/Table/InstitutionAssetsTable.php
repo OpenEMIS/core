@@ -536,49 +536,32 @@ class InstitutionAssetsTable extends AppTable
                 $row['cost'] = $currency . '' . number_format($cost, 2);
                 $row['depreciation'] = $currency . '' . number_format($salvageValue, 2);
 //                return $row;
-                if (!$cost) {
-                    return $row;
-                }
+                if (!$cost) { return $row; }
                 $lifespan = $row['lifespan'];
-                if (!$lifespan) {
-                    return $row;
-                }
+                if (!$lifespan) { return $row;}
                 $purchaseDate = $row['purchase_date'];
-                if (!$purchaseDate) {
-                    return $row;
-                }
-//                $this->log($purchaseDate, 'debug');
-                // Calculate full years and full months of the current year
+                if (!$purchaseDate) { return $row; }
                 $currentYear = date('Y');
                 $currentTimestamp = time();
                 $purchaseTimestamp = strtotime($purchaseDate);
                 $purchaseYear = date('Y', $purchaseTimestamp);
-//                $this->log($purchaseYear, 'debug');
                 $fullYears = $currentYear - $purchaseYear;
-//                $this->log($fullYears, 'debug');
                 $actual_cost = $cost - $salvageValue;
                 $depreciation = ($actual_cost) / $lifespan;
-//                $this->log($depreciation, 'debug');
                 $monthlyDepreciation = $depreciation / 12;
                 $fullMonths = date('n', $currentTimestamp)
                     - date('n', $purchaseTimestamp)
                     + ($fullYears * 12);
-//                $this->log($fullMonths, 'debug');
                 $priorYearAccumulatedDepreciation = $depreciation * $fullYears;
                 if($priorYearAccumulatedDepreciation > $actual_cost){
                     $priorYearAccumulatedDepreciation = ($actual_cost);
                 }
-//                $this->log($priorYearAccumulatedDepreciation, 'debug');
                 $accumulatedDepreciation = $monthlyDepreciation * $fullMonths;
                 if($accumulatedDepreciation > ($actual_cost)){
                     $accumulatedDepreciation = ($actual_cost);
                 }
-//                $this->log($accumulatedDepreciation, 'debug');
                 $bookValue = $actual_cost - $accumulatedDepreciation;
-//                $this->log($bookValue, 'debug');
-                if ($bookValue < 0) {
-                    $bookValue = 0;
-                }
+                if ($bookValue < 0) { $bookValue = 0; }
                 $row['prior_year_accumulated_depreciation'] =
                     $currency . '' . number_format($priorYearAccumulatedDepreciation, 2);
                 $row['monthly_depreciation'] =
