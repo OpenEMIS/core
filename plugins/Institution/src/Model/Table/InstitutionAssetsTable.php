@@ -138,28 +138,30 @@ class InstitutionAssetsTable extends ControllerActionTable
     // POCOR-6152 Export Functionality 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        $query->select([
+        ]);
+        if(isset( $this->request)){
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
+            $query->where([
+                    $this->aliasField('institution_id') => $institutionId,
+                ]);
+            $assetType = ($this->request->query('asset_type_id')) ? $this->request->query('asset_type_id') : 0;
+            $accessibility = $this->request->query('accessibility');
+
+
+            if ($assetType > 0) {
+                $query->where([
+                    $this->aliasField('asset_type_id') => $assetType
+                ]);
+            }
+            if ($accessibility != "") {
+                $query->where([
+                    $this->aliasField('accessibility') => $accessibility
+                ]);
+            }
+        }
 //        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
-        $assetType = ($this->request->query('asset_type_id')) ? $this->request->query('asset_type_id') : 0;
-        $accessibility = $this->request->query('accessibility');
-
-        $query->select([
-        ])
-            ->where([
-                $this->aliasField('institution_id') => $institutionId,
-            ]);
-
-        if ($assetType > 0) {
-            $query->where([
-                $this->aliasField('asset_type_id') => $assetType
-            ]);
-        }
-        if ($accessibility != "") {
-            $query->where([
-                $this->aliasField('accessibility') => $accessibility
-            ]);
-        }
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
