@@ -48,7 +48,6 @@ class CommonArchiveShell extends Shell
         $recordsMovedStr = number_format($recordsMoved, 0, '', ' ');
         $featureName = $caller->featureName;
         $pid = $caller->pid;
-
         $TransferLogs = TableRegistry::get('Archive.TransferLogs');
         $transferlog = $TransferLogs
             ->find('all')
