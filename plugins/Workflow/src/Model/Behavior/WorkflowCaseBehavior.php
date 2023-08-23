@@ -963,7 +963,7 @@ class WorkflowCaseBehavior extends Behavior
                 $fieldOrder = [];
                 $fields = $model->fields;
                 foreach ($fields as $fieldKey => $fieldAttr) {
-                    if (!in_array($fieldKey, ['workflow_status', 'assignee_id', 'workflow_transitions'])) {
+                    if (!in_array($fieldKey, ['workflow_status', 'assignee_id', 'workflow_transitions', 'case_number'])) {//POCOR-7613
                         $fieldOrder[$fieldAttr['order']] = $fieldKey;
                     }
                 }
@@ -971,8 +971,9 @@ class WorkflowCaseBehavior extends Behavior
                 // echo "<pre>";print_r($fieldOrder);die;
                 array_unshift($fieldOrder, 'assignee_id');  // Set workflow_status to second
                 array_unshift($fieldOrder, 'workflow_status');  // Set workflow_status to first
+                array_unshift($fieldOrder, 'case_number');//POCOR-7613
                 $fieldOrder[] = 'workflow_transitions'; // Set workflow_transitions to last
-                //echo "<pre>";print_r($fieldOrder);die;
+                // echo "<pre>";print_r($fieldOrder);die;
                 $ControllerAction->setFieldOrder($fieldOrder);
                 // End
             } else {
@@ -1216,7 +1217,7 @@ class WorkflowCaseBehavior extends Behavior
     {
         if ($action == 'view') {
             $attr['type'] = 'string';
-        } elseif ($action == 'add') {
+        } elseif ($action == 'add'|| $action == 'edit') {//POCOR-7613
             $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
             $entity = $attr['entity'];
             $registryAlias = $this->config('model');
@@ -1278,26 +1279,29 @@ class WorkflowCaseBehavior extends Behavior
             else {
                 $attr['type'] = 'hidden';
             }
-        } elseif ($action == 'edit') {
-            $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-            $entity = $attr['entity'];
+        } 
+        //For allow to change assignee on edit(POCOR-7613 start)
+        // elseif ($action == 'edit') {
+        //     $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+        //     $entity = $attr['entity'];
 
-            if ($entity->has('assignee_id') && $entity->assignee_id != 0) {
-                $assigneeId = $entity->assignee_id;
-                $assigneeEntity = $this->getAssigneeEntity($assigneeId);
-                $assigneeName = $assigneeEntity->name_with_id;
-            } else {
-                $assigneeName = '<'.__('Unassigned').'>';
-                $assigneeId = 0;
-            }
+        //     if ($entity->has('assignee_id') && $entity->assignee_id != 0) {
+        //         $assigneeId = $entity->assignee_id;
+        //         $assigneeEntity = $this->getAssigneeEntity($assigneeId);
+        //         $assigneeName = $assigneeEntity->name_with_id;
+        //     } else {
+        //         $assigneeName = '<'.__('Unassigned').'>';
+        //         $assigneeId = 0;
+        //     }
 
-            $attr['type'] = 'readonly';
-            $attr['value'] = $assigneeId;
-            $attr['attr']['value'] = $assigneeName;
-        } elseif ($action == 'approve') {
-            $attr['type'] = 'hidden';
-        }
-
+        //     $attr['type'] = 'select';
+        //     $attr['value'] = $assigneeId;
+        //     $attr['attr']['value'] = $assigneeName;
+        //     $attr['options'] = $assigneeOptions;
+        // } elseif ($action == 'approve') {
+        //     $attr['type'] = 'hidden';
+        // }
+         //POCOR-7613 end 
         return $attr;
     }
 
@@ -1394,13 +1398,11 @@ class WorkflowCaseBehavior extends Behavior
         }
 
         ksort($fieldOrder);
-        array_unshift($fieldOrder, 'assignee_id');  // Set Status to second
-        if($model->url('index')['controller']=="Profiles"&&$model->url('index')['action']=="Cases"){//POCOR-7439
-            array_push($fieldOrder, 'status_id');
-        }
-        else{
-        array_unshift($fieldOrder, 'status_id');    // Set Status to first
-        }
+        array_push($fieldOrder, 'status_id');
+        array_push($fieldOrder, 'assignee_id');//POCOR-7613
+        array_push($fieldOrder, 'institution_id');//POCOR-7613
+        array_push($fieldOrder, 'created');//POCOR-7613
+        array_push($fieldOrder, 'modified'); //POCOR-7613
         if ($this->isCAv4()) {
             $this->_table->setFieldOrder($fieldOrder);
         } else {

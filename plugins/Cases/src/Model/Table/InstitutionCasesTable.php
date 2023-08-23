@@ -30,7 +30,8 @@ class InstitutionCasesTable extends ControllerActionTable
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->hasMany('LinkedRecords', ['className' => 'Cases.InstitutionCaseRecords', 'foreignKey' => 'institution_case_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-
+        $this->belongsTo('CaseTypes', ['className' => 'Cases.CaseTypes', 'foreignKey' => 'case_type_id']);//POCOR-7613
+        $this->belongsTo('CasePriority', ['className' => 'Cases.CasePriorities', 'foreignKey' => 'case_priority_id']);//POCOR-7613
         $this->addBehavior('Workflow.WorkflowCase');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
@@ -166,7 +167,8 @@ class InstitutionCasesTable extends ControllerActionTable
         $this->field('linked_records', [
             'type' => 'custom_linked_records',
             'valueClass' => 'table-full-width',
-            'after' => 'description'
+            'after' => 'description',
+            'visible'=>'false'//POCOR-7613
         ]);
         $this->field('created', [
             'visible' => true,
@@ -372,6 +374,7 @@ class InstitutionCasesTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         //start POCOR-6210
+        $this->field('case_number', ['visible' => true]);//POCOR-7613
         if ($entity->linked_records[0]['record_id'] != 0) {
             $this->field('linked_records', [
                 'type' => 'custom_linked_records',
@@ -379,15 +382,18 @@ class InstitutionCasesTable extends ControllerActionTable
                 'after' => 'description'
             ]);
         }
+        $this->setFieldOrder([//POCOR-7613
+            'case_number','status_id', 'assignee_id','title',  'case_type_id', 'case_priority_id', 'description',
+        ]);
         //End POCOR-6210
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('case_number', ['type' => 'readonly']);
-        $this->field('title', ['type' => 'readonly']);
-        $this->setFieldOrder([
-            'title','assignee_id', 'description'
+        $this->field('case_number',['visible'=>true,'type'=>"readonly"]);//POCOR-7613
+        $this->field('title');
+        $this->setFieldOrder([//POCOR-7613
+           'case_number', 'title','description','case_type_id','case_priority_id','assignee_id',
         ]);
     }
 
@@ -809,20 +815,21 @@ class InstitutionCasesTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {    
         $this->field('institution_id');//POCOR-7437 
-        $this->field('case_number',['visible' => false]);
-        $this->setFieldOrder([
-            'title', 'description', 'assignee_id'
+        $this->field('case_number',['visible' =>'true']);//POCOR-7613
+        $this->field('case_type_id');//POCOR-7613
+        $this->field('case_priority_id');//POCOR-7613
+        $this->setFieldOrder([//POCOR-7613
+           'case_number', 'title', 'description', 'assignee_id'
         ]);
     }
     //POCOR-7437 start
     public function indexAfterAction(Event $event, $data){
-        if($this->request->controller=="Profiles"){
+
             $this->field('case_number',['visible' => true]);
             $this->field('status_id',['visible' => true,'after'=>'created']);
             $this->field('modified',['visible' => true]);
             $this->fields['modified']['sort'] = false;
             $this->field('description',['visible' => false]);
-            $this->field('assignee_id',['visible' => false]);
             $this->field('linked_records',['visible' => false]);
             $this->field('institution_id',['visible' => false]);
             $this->fields['created']['sort'] = false;
@@ -830,18 +837,8 @@ class InstitutionCasesTable extends ControllerActionTable
             $this->setFieldOrder([
                 'case_number','created','modified','title','status_id'
             ]);
-        }
-       
     }
-    public function addEditAfterAction(Event $event, $data){
-        if($this->request->controller=="Profiles"){
-         
-            $this->setFieldOrder([
-                'institution_id','title','description'
-            ]);
-        }
-       
-    }
+   
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request){
        
         if($request->params['controller']=="Profiles"){
@@ -894,4 +891,61 @@ class InstitutionCasesTable extends ControllerActionTable
         return $caseResults->toArray();
     }
     //POCOR-7642 end
+    //POCOR-7613 start
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'case_type_id':
+                return __('Type');
+            case 'case_priority_id':
+                return __('Priority');
+            case 'modified':
+                return __('Updated');
+            case 'created':
+                return __('Created');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    public function onUpdateFieldCaseTypeId(Event $event, array $attr, $action, $request)
+    {
+        $CaseTypes = TableRegistry::get('case_types');
+        $CaseTypeList = $CaseTypes
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'name'
+            ])
+            ->toArray();
+        $attr['type'] = 'select';
+        $attr['options'] = $CaseTypeList;
+        return $attr;
+    }
+    public function onUpdateFieldCasePriorityId(Event $event, array $attr, $action, $request)
+    {
+
+        $CasePriority = TableRegistry::get('case_priorities');
+        $CasePriorityList = $CasePriority
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'name'
+            ])
+            ->toArray();
+        $attr['type'] = 'select';
+        $attr['options'] = $CasePriorityList;
+        return $attr;
+    }
+
+    public function onGetCaseTypeId(Event $event, Entity $entity)
+    {
+        return $entity->case_type->name;
+    }
+    public function onGetCasePriorityId(Event $event, Entity $entity)
+    {
+        return $entity->case_priority->name;
+    }
+    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('case_number', ['visible' => false]);
+    }
+      //POCOR-7613 end
 }
