@@ -40,10 +40,12 @@ class CommonArchiveShell extends Shell
     }
 
     public static
-    function setTransferLogsBatch($caller, $step = 1, $proc = "")
+    function setTransferLogsBatch($caller, $step = 1, $proc = "", $baseCount = 0, $baseCountStr="")
     {
         $recordsInArchive = number_format($caller->recordsInArchive, 0, '', ' ');
         $recordsToArchive = number_format($caller->recordsToArchive, 0, '', ' ');
+        $recordsMoved = $baseCount - $caller->recordsToArchive;
+        $recordsMovedStr = number_format($recordsMoved, 0, '', ' ');
         $featureName = $caller->featureName;
         $pid = $caller->pid;
 
@@ -51,10 +53,12 @@ class CommonArchiveShell extends Shell
         $transferlog = $TransferLogs
             ->find('all')
             ->where(['p_id' => $pid])->first();
-        $moved = "$featureName. $recordsToArchive / $recordsInArchive. $proc $step.";
+        $moved = "{$featureName}. {$recordsToArchive} / {$recordsInArchive}. {$proc} {$step}.";
         $caller->out($moved);
-        $moved = "$featureName. $recordsToArchive / $recordsInArchive.";
+        Log::write('debug', $moved);
+        $moved = "{$featureName}. {$recordsMovedStr} / {$baseCountStr}.";
         $transferlog->features = $moved;
+        Log::write('debug', $moved);
         try {
             $TransferLogs->save($transferlog);
         } catch (\Exception $e) {
@@ -140,6 +144,8 @@ class CommonArchiveShell extends Shell
             $connection->execute("ALTER TABLE $targetTableName DISABLE KEYS");
 
             $i = 1;
+            $baseCount = intval($caller->recordsToArchiveTotal);
+            $baseCountStr = number_format($baseCount, 0, '', ' ');
             for ($offset = 0; $offset < $totalRecords; $offset += $batchSize) {
                 // Build and execute batch insert query
                 $sql = "INSERT IGNORE INTO $targetTableName SELECT * FROM $table_name where academic_period_id = $academic_period_id LIMIT $batchSize OFFSET $offset";
@@ -149,7 +155,7 @@ class CommonArchiveShell extends Shell
                 // Update affected records count and log progress;
                 $proc = "Copy step:";
                 self::setTransferLogsBatch($caller,
-                    $i, $proc);
+                    $i, $proc, $baseCount, $baseCountStr);
                 $i++;
             }
 
@@ -158,13 +164,14 @@ class CommonArchiveShell extends Shell
 
             // Enable foreign key checks
             $i = 1;
+
             for ($offset = 0; $offset < $totalRecords; $offset += $batchSize) {
                 $sql = "DELETE FROM $table_name where academic_period_id = $academic_period_id LIMIT $batchSize";
                 $affectedBatchRows = $connection->execute($sql)->rowCount();
                 $caller->recordsToArchive = $caller->recordsToArchive - $affectedBatchRows;
                 $proc = "Delete step:";
                 self::setTransferLogsBatch($caller,
-                    $i, $proc);
+                    $i, $proc, $baseCount, $baseCountStr);
                 $i++;
             }
             $sourceTable->deleteAll($whereCondition);

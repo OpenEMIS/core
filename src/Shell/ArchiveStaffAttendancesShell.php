@@ -29,6 +29,7 @@ class ArchiveStaffAttendancesShell extends Shell
     public $featureName;
     public $systemProcessId;
     public $recordsToArchive;
+    public $recordsToArchiveTotal;
     public $recordsInArchive;
 
     /**
@@ -56,6 +57,7 @@ class ArchiveStaffAttendancesShell extends Shell
 
         $this->recordsInArchive = $recordsInArchive;
         $this->recordsToArchive = $recordsToArchive;
+        $this->recordsToArchiveTotal = $recordsToArchive;
         $this->out("academic period id: $academicPeriodId, process id : $pid, recordsToArchive: $recordsToArchive, recordsInArchive: $recordsInArchive" );
         $tablesToArchive = [
             'institution_staff_attendances',
