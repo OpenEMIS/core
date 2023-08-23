@@ -27,6 +27,7 @@ class ArchiveStudentAssessmentsShell extends Shell
     public $featureName;
     public $systemProcessId;
     public $recordsToArchive;
+    public $recordsToArchiveTotal;
     public $recordsInArchive;
 
     /**
@@ -53,6 +54,7 @@ class ArchiveStudentAssessmentsShell extends Shell
         $recordsInArchive = !empty($args[3]) ? intval(trim($args[3])) : 0;
 
         $this->recordsInArchive = $recordsInArchive;
+        $this->recordsToArchiveTotal = $recordsToArchive;
         $this->recordsToArchive = $recordsToArchive;
         $this->out("academic period id: $academicPeriodId, process id : $pid, recordsToArchive: $recordsToArchive, recordsInArchive: $recordsInArchive" );
 
