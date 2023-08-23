@@ -340,6 +340,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function getMultipleInstitutionsStudentEnrollment(){
         InstitutionsStudentsSvc.getMultipleInstitutionsStudentEnrollmentConfig()
             .then(function(resp){
+                console.log(resp);
                 const config_value = resp.data[0].value == "1" ? true : false;
                 StudentController.multipleInstitutionsStudentEnrollment = config_value;
         }, function(error){
@@ -1059,8 +1060,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.messageClass = '';
         StudentController.message = ``;
         if (StudentController.step === 'confirmation') {
-            const studentExistByIdentityFromConfiguration = await StudentController.checkUserExistByIdentityFromConfiguration();
-            if (studentExistByIdentityFromConfiguration) return;
+            const studentExistByIdentityFromConfiguration =
+                await StudentController.checkUserExistByIdentityFromConfiguration();
+
+            if (studentExistByIdentityFromConfiguration)
+                return;
         }
 
         if (StudentController.studentExistInUnfinishedWithdraw()) {
