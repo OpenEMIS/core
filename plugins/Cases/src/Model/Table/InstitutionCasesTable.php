@@ -51,7 +51,7 @@ class InstitutionCasesTable extends ControllerActionTable
         $events['Model.LinkedRecord.afterSave'] = 'linkedRecordAfterSave';
         return $events;
     }
-
+ 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //POCOR-7367::Start
@@ -392,6 +392,17 @@ class InstitutionCasesTable extends ControllerActionTable
     {
         $this->field('case_number',['visible'=>true,'type'=>"readonly"]);//POCOR-7613
         $this->field('title');
+        //POCOR-7613 start
+        if ($this->request->params['controller'] == "Profiles") {
+            $this->field('case_number', ['visible' => false]);//POCOR-7613
+            $this->field('institution_id', ['visible' => true,'type'=>'read_only']);
+            $this->field('title', ['type' => "readonly"]);
+            $this->field('description', ['type' => "readonly"]);
+            $this->field('case_type_id', ['type' => "readonly"]);
+            $this->field('case_priority_id', ['type' => "readonly"]);
+            $this->field('new_comment', ['type' => 'custom_criterias']);
+        }
+        //POCOR-7613 end
         $this->setFieldOrder([//POCOR-7613
            'case_number', 'title','description','case_type_id','case_priority_id','assignee_id',
         ]);
@@ -832,6 +843,9 @@ class InstitutionCasesTable extends ControllerActionTable
             $this->field('description',['visible' => false]);
             $this->field('linked_records',['visible' => false]);
             $this->field('institution_id',['visible' => false]);
+            if ($this->request->params['controller'] == "Profiles") {//POCOR-7613
+                $this->field('institution_id', ['visible' => true]);
+            }
             $this->fields['created']['sort'] = false;
             $this->fields['status_id']['sort'] = true;
             $this->setFieldOrder([
@@ -918,6 +932,11 @@ class InstitutionCasesTable extends ControllerActionTable
             ->toArray();
         $attr['type'] = 'select';
         $attr['options'] = $CaseTypeList;
+        if ($request->params['controller'] == "Profiles") {//POCOR-7613
+           if($action=="edit"){
+                $attr['type'] = 'readonly';
+           }
+        }
         return $attr;
     }
     public function onUpdateFieldCasePriorityId(Event $event, array $attr, $action, $request)
@@ -932,6 +951,11 @@ class InstitutionCasesTable extends ControllerActionTable
             ->toArray();
         $attr['type'] = 'select';
         $attr['options'] = $CasePriorityList;
+        if ($request->params['controller'] == "Profiles") {//POCOR-7613
+            if ($action == "edit") {
+                $attr['type'] = 'readonly';
+            }
+        }
         return $attr;
     }
 
@@ -946,6 +970,21 @@ class InstitutionCasesTable extends ControllerActionTable
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('case_number', ['visible' => false]);
+        $this->setFieldOrder([ //POCOR-7613
+            'case_number', 'title', 'description', 'case_type_id', 'case_priority_id', 'institution_id'
+        ]);
     }
-      //POCOR-7613 end
+    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options = [])
+    {
+        $fieldKey = 'comment';
+        $tableHeaders = [__('Date'),_('User'),_('Comment')];
+        $tableCells = [];
+        $attr['tableHeaders'] = $tableHeaders;
+        $attr['tableCells'] = $tableCells;
+        // $attr['fieldOfStudiesOptions'] = $fieldOfStudiesOptions;
+
+        return $event->subject()->renderElement('Cases.comment', ['attr' => $attr]);
+    
+    }
+     //POCOR-7613 end
 }
