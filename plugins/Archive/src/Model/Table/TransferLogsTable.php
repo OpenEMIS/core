@@ -481,7 +481,7 @@ class TransferLogsTable extends ControllerActionTable
 
                 $recordsInArchiveStr = number_format($recordsInArchive, 0, '', ' ');
                 $recordsToArchiveStr = number_format($recordsToArchive, 0, '', ' ');
-                $todoing = trim($entity['features']) . '. ' . $recordsToArchiveStr . '/' . $recordsInArchiveStr;
+                $todoing = trim($entity['features']) . '. 0 /' . $recordsToArchiveStr;
 
                 $alreadytransferring = $this->find('all')
                     ->where(['academic_period_id' => $entity->academic_perid_id,
