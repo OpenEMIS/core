@@ -1,3 +1,7 @@
+### [3.92.3] - 2023-08-23
+- Bug Fixed: Institutions>Students>Add: External search tab is missing
+- Bug Fixed: Institutions > Add page : System does not INSERT security_group_institutions when a new Institution is created
+
 ### [3.92.2] - 2023-08-22
 - Bug Fixed: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 3 Fixes
 - Bug Fixed: Administration > System Setup > Field Options > Extracurricular Types: Extracurricular should be removed
