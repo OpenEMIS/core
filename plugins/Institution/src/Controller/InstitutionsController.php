@@ -7484,6 +7484,11 @@ class InstitutionsController extends AppController
                         echo json_encode(['user_exist' => 1, 'status_code' => 200, 'message' => $message]);
                         die;
                     } else {
+                        $externalsearch = $this->checkConfigurationForExternalSearch();
+                        if($externalsearch['showExternalSearch'] == true){
+                            echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => '']);
+                            die;
+                        }
                         if ($first_name === null
                             || $last_name === null
                             || $gender_id === null
@@ -7553,8 +7558,12 @@ class InstitutionsController extends AppController
         $configItemsResult = $configItems
             ->find()
             ->select(['id', 'value'])
-            ->where(['code' => 'external_data_source_type', 'type' => 'External Data Source Identity', 'name' => 'Type'])
+            ->where(['code' => 'external_data_source_type',
+                'type' => 'External Data Source - Identity',
+                'name' => 'Type'])
             ->toArray();
+        $this->log('checkConfigurationForExternalSearch', 'debug');
+        $this->log($configItemsResult, 'debug');
         foreach ($configItemsResult AS $result) {
             if ($result['value'] == "None") {
                 $result_array[] = array("value" => $result['value'], "showExternalSearch" => false);

@@ -596,7 +596,7 @@ class ConfigItemsTable extends AppTable
             $value = $this->configurations[$code];
         } else {
             $entity = $this->findByCode($code)->first();
-            $value = $entity->default;
+            $value = $entity->default_value;
             $this->configurations[$code] = $value;
         }
         return $value;
