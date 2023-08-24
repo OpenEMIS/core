@@ -93,7 +93,8 @@ class CustomFieldsTable extends ControllerActionTable
     {
         $url =  $this->request->here();
         $arr = explode("/",$url);
-        if($arr[1] == "StudentCustomFields"){
+        $key = array_search('StudentCustomFields', $arr); //POCOR-7700
+        if($arr[$key] == "StudentCustomFields"){
             $studentCustomFieldOptionsT = TableRegistry::get('student_custom_field_options');
             $studentCustomFieldOptionsData = $studentCustomFieldOptionsT->find()->where(['student_custom_field_id'=>$entity->id])->toArray();
             $studentCustomFieldOptionsT->deleteAll($studentCustomFieldOptionsData);
