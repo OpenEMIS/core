@@ -3543,8 +3543,8 @@ class NavigationComponent extends Component
 //        $this->log('userRoleIdArray', 'debug');
 //        $this->log($userRoleIdArray, 'debug');
         $has_user_permission = self::hasUserPermission($module, $category, $function, $userRoleIdArray);
-        $this->log('$has_user_permission', 'debug');
-        $this->log($has_user_permission, 'debug');
+//        $this->log('$has_user_permission', 'debug');
+//        $this->log($has_user_permission, 'debug');
         if($has_user_permission){
             return $fullPerformanceNavigation;
         }
@@ -4071,17 +4071,17 @@ class NavigationComponent extends Component
      */
     private function getUserRoleIdArray($user_id)
     {
-        $this->log('user_id', 'debug');
-        $this->log($user_id, 'debug');
+//        $this->log('user_id', 'debug');
+//        $this->log($user_id, 'debug');
         $GroupUsers = TableRegistry::get('security_group_users');
         $distinctResults = $GroupUsers->find('all')
             ->where(['security_user_id' => $user_id])
             ->select(['security_role_id'])
             ->distinct(['security_role_id'])
             ->toArray();
-        $this->log($distinctResults, 'debug');
+//        $this->log($distinctResults, 'debug');
         $distinctResultsValues = array_column($distinctResults, 'security_role_id');
-        $this->log($distinctResultsValues, 'debug');
+//        $this->log($distinctResultsValues, 'debug');
         $uniqu_array = array_unique($distinctResultsValues);
         if(sizeof($uniqu_array) == 0){
             $uniqu_array = [0];
