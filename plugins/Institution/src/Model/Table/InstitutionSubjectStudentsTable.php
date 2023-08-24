@@ -1062,6 +1062,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         $Results = TableRegistry::get('Assessment.AssessmentItemResults');
         $marksPerStudent = $Results::getClassAssessmentItemResults($options, $archive);
 //        $totalMarksPerStudent = $Results::getTotalMarksPerStudent($marksPerStudent);
+        $this->log($marksPerStudent, 'debug');
         $query = $query->formatResults(function ($results) use ($marksPerStudent) {
             return $results->map(function ($row) use ($marksPerStudent) {
 //                $academic_period_id = $row->academic_period_id;
@@ -1070,7 +1071,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                 $student_id = $row->student_id;
 //                $assessment_id = $row->assessment_id;
                 $assessment_period_id = $row->assessment_period_id;
-                $mark = $marksPerStudent[$student_id][$education_subject_id][$assessment_period_id];
+                $mark = $marksPerStudent[$student_id][$education_subject_id][$assessment_period_id][0];
                 $row['mark_id'] = self::getFromArray($mark, 'id');
                 $row['mark'] = self::getFromArray($mark, 'marks');
 //                $row['academic_period_id'] = self::getFromArray($mark, 'academic_period_id');
