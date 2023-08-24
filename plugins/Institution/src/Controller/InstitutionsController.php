@@ -5172,7 +5172,9 @@ class InstitutionsController extends AppController
                 ->where([
                     $studentCustomFormsFields->aliasField('section') => $sval->section,
                     $studentCustomFields->aliasField('field_type NOT IN') => $remove_field_type
-                ])->toArray();
+                ])
+                ->order([$studentCustomFormsFields->aliasField('order') => 'ASC'])//POCOR-7671 add condition `order` according to `student_custom_forms_fields` table
+                ->toArray();
 
             foreach ($CustomFieldsData as $ckey => $cval) {
                 $fieldsArr[$i]['student_custom_form_id'] = $cval->student_custom_form_id;
@@ -5325,7 +5327,9 @@ class InstitutionsController extends AppController
                 ->where([
                     $staffCustomFormsFields->aliasField('section') => $sval->section,
                     $staffCustomFields->aliasField('field_type NOT IN') => $remove_field_type
-                ])->toArray();
+                ])
+                ->order([$staffCustomFormsFields->aliasField('order') => 'ASC'])//POCOR-7671 add condition `order` according to `staff_custom_forms_fields` table
+                ->toArray();
 
             foreach ($CustomFieldsData as $ckey => $cval) {
                 $fieldsArr[$i]['staff_custom_form_id'] = $cval->staff_custom_form_id;
