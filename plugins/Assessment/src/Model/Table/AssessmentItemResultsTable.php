@@ -668,6 +668,96 @@ class AssessmentItemResultsTable extends AppTable
 
     /**
      * @param $options
+     * @param $archive
+     * @return array
+     */
+    public static function getClassAssessmentItemResults($options, $archive)
+    {
+        $marks = self::getMarksForClass($options, $archive);
+        $marksWithSubjectClassificationWeight = self::getMarksWithSimpleMarks($marks);
+        $marksPerStudent = self::getMarksPerStudentPerSubjectArray($marksWithSubjectClassificationWeight);
+        return $marksPerStudent;
+    }
+
+    /**
+     * @param array $params
+     * @return array
+     */
+    private static function getMarksForClass(array $params)
+    {
+        $academic_period_id = self::getFromArray($params, 'academic_period_id');
+        $institution_id = self::getFromArray($params, 'institution_id');
+        $institution_class_id = self::getFromArray($params, 'class_id');
+        $assessment_id = self::getFromArray($params, 'assessment_id');
+        $education_grade_id = self::getFromArray($params, 'grade_id');
+        $student_id = self::getFromArray($params, 'student_id');
+        $education_subject_id = -1;
+        $assessment_period_id = -1;
+        $assessment_grading_option_id = -1;
+        if ($education_grade_id == null) {
+            $education_grade_id = -1;
+        }
+        if ($academic_period_id == null) {
+            $academic_period_id = -1;
+        }
+        if ($institution_id == null) {
+            $institution_id = -1;
+        }
+        if ($assessment_id == null) {
+            $assessment_id = -1;
+        }
+        if ($student_id == null) {
+            $student_id = -1;
+        }
+        $id = -1;
+        $options = ["student_id" => $student_id,
+            "institution_id" => $institution_id,
+            "institution_class_id" => $institution_class_id,
+            "academic_period_id" => $academic_period_id,
+            "education_grade_id" => $education_grade_id,
+            "education_subject_id" => $education_subject_id,
+            "id" => $id,
+            'assessment_grading_option_id' => $assessment_grading_option_id,
+            "assessment_period_id" => $assessment_period_id,
+            'assessment_id' => $assessment_id];
+        $marks = self::getLastMark($options);
+        return $marks;
+    }
+
+    /**
+     * @param array $marksWithSubjectClassificationWeight
+     * @return array
+     */
+    private static function getMarksPerStudentPerSubjectArray(array $marksWithSubjectClassificationWeight)
+    {
+        $marksPerStudent = [];
+        foreach ($marksWithSubjectClassificationWeight as $record) {
+            $studentId = $record['student_id'];
+            $assessment_period_id = $record['assessment_period_id'];
+            $subject_id = $record['education_subject_id'];
+            $marksPerStudent[$studentId][$subject_id][$assessment_period_id][] = $record;
+        }
+        return $marksPerStudent;
+    }
+
+    /**
+     * @param array $marks
+     * @return array
+     */
+    private static function getMarksWithSimpleMarks(array $marks)
+    {
+        $new_marks = [];
+        foreach ($marks as $mark) {
+            $simple_mark = floatval($mark['marks']);
+            $mark['simple_mark'] = $simple_mark;
+            $new_marks[] = $mark;
+        }
+//        }
+        return $new_marks;
+    }
+
+    /**
+     * @param $options
      * @return float|null
      */
     public static function getLastMark($options, $archive=false)
