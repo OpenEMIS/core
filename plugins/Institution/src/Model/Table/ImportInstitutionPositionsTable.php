@@ -39,7 +39,7 @@ class ImportInstitutionPositionsTable extends AppTable
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         $events['Model.import.onImportGetHomeroomTeacherId'] = 'onImportGetHomeroomTeacherId';
         $events['Model.import.onImportPopulateStaffPositionTitlesData'] = 'onImportPopulateStaffPositionTitlesData';
-        $events['Model.import.onImportPopulateInstitutionShiftsData'] = 'onImportPopulateInstitutionShiftsData'; //POCOR-7417
+        $events['Model.import.onImportPopulateShiftOptionsData'] = 'onImportPopulateShiftOptionsData'; //POCOR-7684
         $events['Model.import.onImportPopulateHomeroomTeacherData'] = 'onImportPopulateHomeroomTeacherData';
         $events['Model.import.onImportPopulateWorkflowStepsData'] = 'onImportPopulateWorkflowStepsData';
         $events['Model.import.onImportSetModelPassedRecord'] = 'onImportSetModelPassedRecord';
@@ -57,11 +57,10 @@ class ImportInstitutionPositionsTable extends AppTable
         $crumbTitle = $this->getHeader($this->alias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
-
-    //POCOR-7417:Start
-    public function onImportPopulateInstitutionShiftsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    //POCOR-7684:: Start
+    public function onImportPopulateShiftOptionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . "InstitutionShifts");
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->getCurrent();
         $InstitutionShiftsResults = $lookedUpTable
@@ -79,12 +78,10 @@ class ImportInstitutionPositionsTable extends AppTable
             ->autoFields(false)
             ->all();
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        
         $data[$columnOrder]['lookupColumn'] = 2;
         $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
         if (!$InstitutionShiftsResults->isEmpty()) {
             $modelData = $InstitutionShiftsResults->toArray();
-            
             foreach ($modelData as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
@@ -93,7 +90,8 @@ class ImportInstitutionPositionsTable extends AppTable
             }
         }
     }
-//POCOR-7417:end
+    //POCOR-7684:: End
+
     public function onImportGetHomeroomTeacherId(Event $event, $cellValue)
     {
         $options = $this->getSelectOptions('general.yesno');
