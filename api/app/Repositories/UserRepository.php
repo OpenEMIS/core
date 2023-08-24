@@ -62,6 +62,7 @@ use App\Models\StaffCustomFields;
 use App\Models\StudentCustomField;
 use App\Models\UserContacts;
 use App\Models\StudentGuardians;
+use App\Models\OpenemisTemp;
 
 class UserRepository extends Controller
 {
@@ -1052,7 +1053,7 @@ class UserRepository extends Controller
                             }
 
                             //get id from `security_group_users` table
-                            $SecurityGroupUsersTbl = SecurityGroupUsers::join('security_roles', 'security_roles.id', '=', 'security_group_users.security_role_id')
+                            $SecurityGroupUsersTbl = SecurityGroupUsers::select('security_group_users.id')->join('security_roles', 'security_roles.id', '=', 'security_group_users.security_role_id')
                                 ->leftjoin('security_group_institutions', function($j) use($institutionId){
                                     $j->on('security_group_institutions.security_group_id', '=', 'security_group_users.security_group_id')
                                     ->where('security_group_institutions.institution_id', $institutionId);
@@ -1062,7 +1063,7 @@ class UserRepository extends Controller
                                 ->where('security_group_users.security_role_id', $staffPositionTitlesTbl->security_role_id??0)
                                 ->where('security_roles.code', '!=', 'HOMEROOM_TEACHER')
                                 ->first();
-
+                            //dd($SecurityGroupUsersTbl);
                             $entityStaffsData = [
                                 'FTE' => $fte,
                                 'start_date' => $startDate,
@@ -1080,7 +1081,7 @@ class UserRepository extends Controller
                                 'created_user_id' => $userId,
                                 'created' => date('Y-m-d H:i:s')
                             ];
-
+                            
                             $store = InstitutionStaff::insert($entityStaffsData);
                         }
 
@@ -1231,14 +1232,17 @@ class UserRepository extends Controller
                 }
 
 
-                $CheckGaurdianExist = SecurityUsers::where(['openemis_no' => $openemisNo])->first();
-
-                if (!empty($CheckGaurdianExist)) {
+                
+                
+                if (!empty($openemisNo)) {
+                    
+                    $CheckGaurdianExist = SecurityUsers::where(['openemis_no' => $openemisNo])->first();
                     $existGaurdianId = $CheckGaurdianExist->id;
 
                     $entityData = [
                         'id' => !empty($existGaurdianId) ? $existGaurdianId : '',
-                        'openemis_no' => $openemisNo,
+                        //'openemis_no' => $openemisNo,
+                        'openemis_no' => $CheckGaurdianExist->openemis_no??$openemisNo,
                         'first_name' => $firstName,
                         'middle_name' => $middleName,
                         'third_name' => $thirdName,
@@ -1264,8 +1268,10 @@ class UserRepository extends Controller
                     $SecurityUserResult = $CheckGaurdianExist;
                     $securityUserUpdate = SecurityUsers::where('id', $CheckGaurdianExist->id)->update($entityData);
                 } else {
+
+                    $openemis_no = $this->getNewOpenemisNo();
                     $entityData = [
-                        'openemis_no' => $openemisNo,
+                        'openemis_no' => $openemis_no??Null,
                         'first_name' => $firstName,
                         'middle_name' => $middleName,
                         'third_name' => $thirdName,
@@ -1287,7 +1293,7 @@ class UserRepository extends Controller
                         'created_user_id' => $userId,
                         'created' => date('Y-m-d H:i:s'),
                     ];
-
+                    
                     $securityUserId = SecurityUsers::insertGetId($entityData);
                     $SecurityUserResult = SecurityUsers::where('id', $securityUserId)->first();
                 }
@@ -1385,6 +1391,77 @@ class UserRepository extends Controller
             );
 
             return $this->sendErrorResponse('Failed to store guardian data.');
+        }
+    }
+
+
+
+
+    public function getNewOpenemisNo()
+    {
+        try {
+            $configItem = ConfigItem::where('code', 'openemis_id_prefix')->first();
+            if($configItem){
+                $value = $configItem->value;
+                $prefix = explode(",", $value);
+                if($prefix[1] > 0){
+                    $prefix = $prefix[1];
+                } else {
+                    $prefix = '';
+                }
+
+                $latest = SecurityUsers::orderBy('id', 'DESC')->first();
+                $latestOpenemisNo = $latest->openemis_no;
+
+
+                if (empty($prefix)) {
+                    $latestDbStamp = $latestOpenemisNo;
+                } else {
+                    $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
+                }
+
+                $latestOpenemisNoLastValue = substr($latestOpenemisNo, -1);
+
+
+                $currentStamp = time();
+                if ($latestDbStamp <= $currentStamp && is_numeric($latestOpenemisNoLastValue)) {
+                    $newStamp = $latestDbStamp + 1;
+                } else {
+                    $newStamp = $currentStamp;
+                }
+                $newOpenemisNo = $prefix.$newStamp;
+
+                $resultOpenemisTemp = OpenemisTemp::orderBy('id', 'DESC')->first();
+
+                if(strlen($resultOpenemisTemp->openemis_no) < 5){
+                    $resultOpenemisTemp = SecurityUsers::orderBy('id', 'DESC')->first();
+                }
+
+                $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
+
+                $newOpenemisNo = $resultOpenemisNoTemp+1;
+                $newOpenemisNo=$prefix.$newOpenemisNo;
+
+                $resultOpenemisTemps = OpenemisTemp::where('openemis_no', $newOpenemisNo)->first();
+                
+                if(empty($resultOpenemisTemps->openemis_no)){
+                    $storeOpenemisTemp = OpenemisTemp::insert([
+                        'openemis_no' => $newOpenemisNo,
+                        'ip_address' => $_SERVER['REMOTE_ADDR'],
+                        'created' => Carbon::now()->toDateTimeString()
+                    ]);
+                }
+
+                return $newOpenemisNo;
+            }
+            return Null;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get new openemis number.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get new openemis number.');
         }
     }
 }
