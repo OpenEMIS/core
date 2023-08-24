@@ -147,26 +147,34 @@ class PerformanceCompetenciesShell extends Shell
             $to_end_date = $ToAcademicPeriodsData['end_date']->format('Y-m-d');
             $from_start_date = "'".$from_start_date."'";
             $to_end_date = "'".$to_end_date."'";
-
-            $statement3 = $connection->prepare("SELECT education_systems.academic_period_id,correct_grade.id AS correct_grade_id,institution_grades.* FROM `institution_grades`
-            INNER JOIN education_grades wrong_grade ON wrong_grade.id = institution_grades.education_grade_id
-            INNER JOIN education_grades correct_grade ON correct_grade.code = wrong_grade.code
-            INNER JOIN education_programmes ON correct_grade.education_programme_id = education_programmes.id
-            INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
-            INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
-            INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
-            LEFT JOIN academic_periods ON institution_grades.start_date BETWEEN $from_start_date AND $to_end_date
-            AND academic_periods.academic_period_level_id != -1
-            AND education_systems.academic_period_id = academic_periods.id
-            WHERE correct_grade.id != institution_grades.education_grade_id AND academic_periods.id=$toAcademicPeriod");
-
+            //POCOR-6424 start (for updating education_grades in competency_template table)
+            $statement3 = $connection->prepare("Select subq1.grade_id as wrong_grade,subq2.grade_id as correct_grade from
+                        (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
+                        INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                        INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                        INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+                        INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+                        INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
+                        where academic_period_id=$fromAcademicPeriod
+                        ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq1
+                        inner join
+                        (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
+                        INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                        INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                        INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+                        INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+                        INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
+                        where academic_period_id=$toAcademicPeriod
+                        ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq2
+                        on subq1.grade_name=subq2.grade_name");
+            //POCOR-6424 end
             $statement3->execute();
             $row = $statement3->fetchAll(\PDO::FETCH_ASSOC);
             if(!empty($row)){
                 foreach($row AS $rowData){
                     $CompetencyTemplatesTable->updateAll(
-                        ['education_grade_id' => $rowData['correct_grade_id']],    //field
-                        ['education_grade_id' => $rowData['education_grade_id'], 'academic_period_id' => $toAcademicPeriod]
+                        ['education_grade_id' => $rowData['correct_grade']],    //field
+                        ['education_grade_id' => $rowData['wrong_grade'], 'academic_period_id' => $toAcademicPeriod]
                     );
                 }
             }
@@ -182,6 +190,18 @@ class PerformanceCompetenciesShell extends Shell
             foreach($CompetencyTemplateData as $val){
                 $arr[] = $val['id'];
             }
+        //POCOR-6424 start
+        $PreviousCompetencyTemplateData = $CompetencyTemplatesTable
+            ->find('all')
+            ->where(['academic_period_id' => $fromAcademicPeriod])
+            ->toArray();
+        foreach($PreviousCompetencyTemplateData as $val) {
+            $prev_arr[] = $val['id'];
+        }
+        foreach ($CompetencyTemplateData as $val) {
+            $arr[] = $val['id'];
+        }
+         //POCOR-6424 end
         $CompetencyItemsData = $CompetencyItemsTable
         ->find('all')
         ->where(['academic_period_id' => $toAcademicPeriod])
@@ -194,9 +214,12 @@ class PerformanceCompetenciesShell extends Shell
         //competencyItems[STARTS]
         if(isset($competency_items_value) && $competency_items_value == 0){
             $CompetencyItemsTable = TableRegistry::get('Competency.CompetencyItems');
+            foreach($prev_arr as $value){// //POCOR-6424 
             $CompetencyItemsData = $CompetencyItemsTable
-            ->find('all')
-            ->where(['academic_period_id' => $fromAcademicPeriod])
+            ->find()
+            ->where(['academic_period_id' => $fromAcademicPeriod,
+                    'competency_template_id' => $value]  //POCOR-6424 
+            )
             ->toArray();
 
             foreach($CompetencyItemsData AS $key => $CompetencyItemsValue){
@@ -241,7 +264,7 @@ class PerformanceCompetenciesShell extends Shell
                     $statement4->execute([
                     'name' => $CompetencyItemsValue["name"],
                     'academic_period_id' => $toAcademicPeriod,
-                    'competency_template_id' => $arr[$key],
+                    'competency_template_id' => $value,
                     'modified_user_id' => $CompetencyItemsValue["modified_user_id"],
                     'modified' => $modified,
                     'created_user_id' => $CompetencyItemsValue["created_user_id"],
@@ -252,6 +275,7 @@ class PerformanceCompetenciesShell extends Shell
                     echo "<pre>";print_r($e);die;
                 }
             }
+            } 
         }
         //competencyItems[END]
 
