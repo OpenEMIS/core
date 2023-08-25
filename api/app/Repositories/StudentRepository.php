@@ -25,7 +25,7 @@ class StudentRepository extends Controller
                 $limit = $params['limit'];
             }
 
-            $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser:id,first_name,middle_name,third_name,last_name,openemis_no,gender_id', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name');
+            $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name');
 
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
@@ -64,7 +64,7 @@ class StudentRepository extends Controller
                 $limit = $params['limit'];
             }
 
-            $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser:id,first_name,middle_name,third_name,last_name,openemis_no,gender_id', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name')->where('institution_id', $institutionId);
+            $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name')->where('institution_id', $institutionId);
 
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
@@ -97,7 +97,7 @@ class StudentRepository extends Controller
             $data = InstitutionStudent::with(
                     'institution:id,code,name', 
                     'educationGrade:id,name', 
-                    'securityUser:id,first_name,middle_name,third_name,last_name,openemis_no,gender_id', 
+                    'securityUser', 
                     'securityUser.gender:id,name', 
                     'studentStatus', 
                     'academicPeriod:id,name'
@@ -136,7 +136,7 @@ class StudentRepository extends Controller
             }
 
             $getStudents = InstitutionStudentAbsenceDetails::with(
-                        'securityUser:id,first_name,middle_name,third_name,last_name,openemis_no,gender_id',
+                        'securityUser',
                         'securityUser.gender:id,name',
                         'educationGrade:id,name',
                         'institutionClass:id,name',
@@ -177,6 +177,7 @@ class StudentRepository extends Controller
                         $arr[$key]['absence_type_id'] = $dd['absence_type']['id']??Null;
                         $arr[$key]['absence_type_name'] = $dd['absence_type']['name']??Null;
                         $arr[$key]['student_absence_reason_id'] = $dd['student_absence_reason']['id']??Null;
+                        $arr[$key]['student_absence_reason_name'] = $dd['student_absence_reason']['name']??Null;
                         $arr[$key]['comment'] = $dd['comment']??Null;
                         $arr[$key]['date'] = $dd['date']??Null;
                         
@@ -214,7 +215,7 @@ class StudentRepository extends Controller
             }
 
             $getStudents = InstitutionStudentAbsenceDetails::with(
-                        'securityUser:id,first_name,middle_name,third_name,last_name,openemis_no,gender_id',
+                        'securityUser',
                         'securityUser.gender:id,name',
                         'educationGrade:id,name',
                         'institutionClass:id,name',
@@ -255,6 +256,7 @@ class StudentRepository extends Controller
                         $arr[$key]['absence_type_id'] = $dd['absence_type']['id']??Null;
                         $arr[$key]['absence_type_name'] = $dd['absence_type']['name']??Null;
                         $arr[$key]['student_absence_reason_id'] = $dd['student_absence_reason']['id']??Null;
+                        $arr[$key]['student_absence_reason_name'] = $dd['student_absence_reason']['name']??Null;
                         $arr[$key]['comment'] = $dd['comment']??Null;
                         $arr[$key]['date'] = $dd['date']??Null;
                         
@@ -269,7 +271,6 @@ class StudentRepository extends Controller
             return $getStudents;
             
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -284,7 +285,7 @@ class StudentRepository extends Controller
     {
         try {
             $getStudent = InstitutionStudentAbsenceDetails::with(
-                        'securityUser:id,first_name,middle_name,third_name,last_name,openemis_no,gender_id',
+                        'securityUser',
                         'securityUser.gender:id,name',
                         'educationGrade:id,name',
                         'institutionClass:id,name',
@@ -309,6 +310,7 @@ class StudentRepository extends Controller
                     $arr[$key]['absence_type_id'] = $dd['absence_type']['id']??Null;
                     $arr[$key]['absence_type_name'] = $dd['absence_type']['name']??Null;
                     $arr[$key]['student_absence_reason_id'] = $dd['student_absence_reason']['id']??Null;
+                    $arr[$key]['student_absence_reason_name'] = $dd['student_absence_reason']['name']??Null;
                     $arr[$key]['comment'] = $dd['comment']??Null;
                     $arr[$key]['date'] = $dd['date']??Null;
                     
@@ -320,7 +322,6 @@ class StudentRepository extends Controller
             }
             return $getStudent;
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
