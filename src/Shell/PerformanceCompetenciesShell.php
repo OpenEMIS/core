@@ -100,42 +100,21 @@ class PerformanceCompetenciesShell extends Shell
                 $newTemplateData=[];
                 //inserting template data
                 try{
-                    $statement2 = $connection->prepare('INSERT INTO competency_templates (
-                    code, 
-                    name,
-                    description,
-                    academic_period_id,
-                    education_grade_id,
-                    modified_user_id,
-                    modified,
-                    created_user_id,
-                    created)
-                    
-                    VALUES (
-                    :code, 
-                    :name,
-                    :description,
-                    :academic_period_id,
-                    :education_grade_id,
-                    :modified_user_id,
-                    :modified,
-                    :created_user_id,
-                    :created)');
-
-                    $newTemplateData= $statement2->execute([
-                    'code' => $CompetencyTemplatesValue["code"],
-                    'name' => $CompetencyTemplatesValue["name"],
-                    'description' => $CompetencyTemplatesValue["description"],
-                    'academic_period_id' => $toAcademicPeriod,
-                    'education_grade_id' => $CompetencyTemplatesValue["education_grade_id"],
-                    'modified_user_id' => $CompetencyTemplatesValue["modified_user_id"],
-                    'modified' => $modified,
-                    'created_user_id' => $CompetencyTemplatesValue["created_user_id"],
-                    'created' => $created,
-                    ])->fetch('assoc');
-                
-                }catch (PDOException $e) {
-                    echo "<pre>";print_r($e);die;
+                    $newTemplateEntity = $CompetencyTemplatesTable->newEntity([
+                        'code' => $CompetencyTemplatesValue["code"],
+                        'name' => $CompetencyTemplatesValue["name"],
+                        'description' => $CompetencyTemplatesValue["description"],
+                        'academic_period_id' => $toAcademicPeriod,
+                        'education_grade_id' => $CompetencyTemplatesValue["education_grade_id"],
+                        'modified_user_id' => $CompetencyTemplatesValue["modified_user_id"],
+                        'modified' => $modified,
+                        'created_user_id' => $CompetencyTemplatesValue["created_user_id"],
+                        'created' => $created,
+                    ]);
+                    $CompetencyTemplatesTable->save($newTemplateEntity);
+                    $newTemplateData= $newTemplateEntity->id;
+                } catch (Exception $e) {
+                    pr($e->getMessage());
                 }
                //CompetencyItem[START]
                 if(!empty($newTemplateData)){
@@ -170,37 +149,20 @@ class PerformanceCompetenciesShell extends Shell
                                 }
                                 $newItemData=[];
                                 try{
-                                    $statement4 = $connection->prepare('INSERT INTO competency_items (
-                                    name,
-                                    academic_period_id,
-                                    competency_template_id,
-                                    modified_user_id,
-                                    modified,
-                                    created_user_id,
-                                    created)
-                                    
-                                    VALUES (
-                                    :name,
-                                    :academic_period_id,
-                                    :competency_template_id,
-                                    :modified_user_id,
-                                    :modified,
-                                    :created_user_id,
-                                    :created)');
-
-                                $newItemData=    $statement4->execute([
+                                    $newItemEntity= $CompetencyItemsTable->newEntity([
                                     'name' => $CompetencyItemsValue["name"],
                                     'academic_period_id' => $toAcademicPeriod,
-                                    'competency_template_id' => $newTemplateData['id'],
+                                    'competency_template_id' => $newTemplateData,
                                     'modified_user_id' => $CompetencyItemsValue["modified_user_id"],
                                     'modified' => $modified,
                                     'created_user_id' => $CompetencyItemsValue["created_user_id"],
                                     'created' => $created,
-                                    ])->fetch('assoc');
-                                
-                                }catch (PDOException $e) {
-                                    echo "<pre>";print_r($e);die;
-                                }
+                                    ]);
+                                    $CompetencyItemsTable->save($newItemEntity);
+                                    $newItemData[]= $newItemEntity->id;
+                            } catch (Exception $e) {
+                                pr($e->getMessage());
+                            }
                                 if (!empty($newItemData)) { 
                                     //CompetencyCriteria[START]      
                                     if(isset($competency_criterias_value) && $competency_criterias_value == 0){
@@ -232,46 +194,22 @@ class PerformanceCompetenciesShell extends Shell
                                                 $created = date('Y-m-d H:i:s');
                                             }
                                             try{
-                                                $statement = $connection->prepare('INSERT INTO competency_criterias (
-                                                code, 
-                                                name,
-                                                academic_period_id,
-                                                competency_item_id,
-                                                competency_template_id,
-                                                competency_grading_type_id,
-                                                modified_user_id,
-                                                modified,
-                                                created_user_id,
-                                                created)
-                                                
-                                                VALUES (
-                                                :code, 
-                                                :name,
-                                                :academic_period_id,
-                                                :competency_item_id,
-                                                :competency_template_id,
-                                                :competency_grading_type_id,
-                                                :modified_user_id,
-                                                :modified,
-                                                :created_user_id,
-                                                :created)');
-
-                                                $statement->execute([
+                                                $newCriteriaEntity=$CompetencyCriteriasTable->execute([
                                                 'code' => $CompetencyCriteriasValue["code"],
                                                 'name' => $CompetencyCriteriasValue["name"],
                                                 'academic_period_id' => $toAcademicPeriod,
-                                                'competency_item_id' => $newItemData['id'],
-                                                'competency_template_id' =>  $newTemplateData['id'],
+                                                'competency_item_id' => $newItemData,
+                                                'competency_template_id' =>  $newTemplateData,
                                                 'competency_grading_type_id' => $CompetencyCriteriasValue["competency_grading_type_id"],
                                                 'modified_user_id' => $CompetencyCriteriasValue["modified_user_id"],
                                                 'modified' => $modified,
                                                 'created_user_id' => $CompetencyCriteriasValue["created_user_id"],
                                                 'created' => $created,
                                                 ]);
-                                            
-                                            }catch (PDOException $e) {
-                                                echo "<pre>"; print_r($e);die;
-                                            }
+                                               $CompetencyCriteriasTable->save($newCriteriaEntity);
+                                        } catch (Exception $e) {
+                                            pr($e->getMessage());
+                                        }
                                         }
                                     }
                                 } //CompetencyCriteria[END]
