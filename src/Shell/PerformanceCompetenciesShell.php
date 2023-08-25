@@ -69,7 +69,7 @@ class PerformanceCompetenciesShell extends Shell
         $CompetencyTemplatesTable = TableRegistry::get('Competency.CompetencyTemplates');
         $CompetencyItemsTable = TableRegistry::get('Competency.CompetencyItems');
         $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
-        
+        //POCOOR-7670 start
         //CompetencyTemplates[START]
         if(isset($competency_templates_value) && $competency_templates_value == 0){
             $CompetencyTemplatesData = $CompetencyTemplatesTable
@@ -159,7 +159,7 @@ class PerformanceCompetenciesShell extends Shell
                                     'created' => $created,
                                     ]);
                                     $CompetencyItemsTable->save($newItemEntity);
-                                    $newItemDataId[]= $newItemEntity->id;
+                                    $newItemDataId= $newItemEntity->id;
                             } catch (Exception $e) {
                                 pr($e->getMessage());
                             }
@@ -251,6 +251,7 @@ class PerformanceCompetenciesShell extends Shell
                     );
                 }
             }
+        //POCOOR-7670 end
         return true;
     }
 
