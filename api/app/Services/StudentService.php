@@ -31,6 +31,10 @@ class StudentService extends Controller
                     $list[$k]['third_name'] = $d['security_user']['third_name'];
                     $list[$k]['last_name'] = $d['security_user']['last_name'];
                     $list[$k]['openemis_no'] = $d['security_user']['openemis_no'];
+                    $list[$k]['date_of_birth'] = $d['security_user']['date_of_birth'];
+                    $list[$k]['date_of_death'] = $d['security_user']['date_of_death'];
+                    $list[$k]['identity_number'] = $d['security_user']['identity_number']??NULL;
+                    $list[$k]['external_reference'] = $d['security_user']['external_reference']??NULL;
                     $list[$k]['gender_id'] = $d['security_user']['gender']['id'];
                     $list[$k]['gender_name'] = $d['security_user']['gender']['name'];
                     $list[$k]['start_date'] = $d['start_date'];
@@ -83,6 +87,10 @@ class StudentService extends Controller
                     $list[$k]['third_name'] = $d['security_user']['third_name'];
                     $list[$k]['last_name'] = $d['security_user']['last_name'];
                     $list[$k]['openemis_no'] = $d['security_user']['openemis_no'];
+                    $list[$k]['date_of_birth'] = $d['security_user']['date_of_birth'];
+                    $list[$k]['date_of_death'] = $d['security_user']['date_of_death'];
+                    $list[$k]['identity_number'] = $d['security_user']['identity_number']??NULL;
+                    $list[$k]['external_reference'] = $d['security_user']['external_reference']??NULL;
                     $list[$k]['gender_id'] = $d['security_user']['gender']['id'];
                     $list[$k]['gender_name'] = $d['security_user']['gender']['name'];
                     $list[$k]['start_date'] = $d['start_date'];
@@ -136,6 +144,10 @@ class StudentService extends Controller
                 $resp['third_name'] = $data['security_user']['third_name'];
                 $resp['last_name'] = $data['security_user']['last_name'];
                 $resp['openemis_no'] = $data['security_user']['openemis_no'];
+                $resp['date_of_birth'] = $data['security_user']['date_of_birth'];
+                $resp['date_of_death'] = $data['security_user']['date_of_death'];
+                $resp['identity_number'] = $data['security_user']['identity_number']??NULL;
+                $resp['external_reference'] = $data['security_user']['external_reference']??NULL;
                 $resp['gender_id'] = $data['security_user']['gender']['id'];
                 $resp['gender_name'] = $data['security_user']['gender']['name'];
                 $resp['start_date'] = $data['start_date'];
@@ -186,6 +198,10 @@ class StudentService extends Controller
                     $list[$k]['third_name'] = $d['security_user']['third_name']??NULL;
                     $list[$k]['last_name'] = $d['security_user']['last_name']??NULL;
                     $list[$k]['openemis_no'] = $d['security_user']['openemis_no']??NULL;
+                    $list[$k]['date_of_birth'] = $d['security_user']['date_of_birth']??NULL;
+                    $list[$k]['date_of_death'] = $d['security_user']['date_of_death'];
+                    $list[$k]['identity_number'] = $d['security_user']['identity_number']??NULL;
+                    $list[$k]['external_reference'] = $d['security_user']['external_reference']??NULL;
                     $list[$k]['gender_id'] = $d['security_user']['gender']['id']??NULL;
                     $list[$k]['gender_name'] = $d['security_user']['gender']['name']??NULL;
                     $list[$k]['institution_id'] = $d['institution_id']??NULL;
@@ -210,7 +226,6 @@ class StudentService extends Controller
             return $data;
             
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -235,6 +250,10 @@ class StudentService extends Controller
                     $list[$k]['third_name'] = $d['security_user']['third_name']??NULL;
                     $list[$k]['last_name'] = $d['security_user']['last_name']??NULL;
                     $list[$k]['openemis_no'] = $d['security_user']['openemis_no']??NULL;
+                    $list[$k]['date_of_birth'] = $d['security_user']['date_of_birth']??NULL;
+                    $list[$k]['date_of_death'] = $d['security_user']['date_of_death'];
+                    $list[$k]['identity_number'] = $d['security_user']['identity_number']??NULL;
+                    $list[$k]['external_reference'] = $d['security_user']['external_reference']??NULL;
                     $list[$k]['gender_id'] = $d['security_user']['gender']['id']??NULL;
                     $list[$k]['gender_name'] = $d['security_user']['gender']['name']??NULL;
                     $list[$k]['institution_id'] = $d['institution_id']??NULL;
@@ -282,6 +301,10 @@ class StudentService extends Controller
                 $resp['third_name'] = $data['security_user']['third_name']??NULL;
                 $resp['last_name'] = $data['security_user']['last_name']??NULL;
                 $resp['openemis_no'] = $data['security_user']['openemis_no']??NULL;
+                $resp['date_of_birth'] = $data['security_user']['date_of_birth']??NULL;
+                $resp['date_of_death'] = $data['security_user']['date_of_death'];
+                $resp['identity_number'] = $data['security_user']['identity_number']??NULL;
+                $resp['external_reference'] = $data['security_user']['external_reference']??NULL;
                 $resp['gender_id'] = $data['security_user']['gender']['id']??NULL;
                 $resp['gender_name'] = $data['security_user']['gender']['name']??NULL;
                 $resp['institution_id'] = $data['institution_id']??NULL;
