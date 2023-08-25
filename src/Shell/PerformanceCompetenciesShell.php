@@ -97,7 +97,7 @@ class PerformanceCompetenciesShell extends Shell
                 }else{
                     $created = date('Y-m-d H:i:s');
                 }
-                $newTemplateData=[];
+                $newTemplateDataId=[];
                 //inserting template data
                 try{
                     $newTemplateEntity = $CompetencyTemplatesTable->newEntity([
@@ -112,12 +112,12 @@ class PerformanceCompetenciesShell extends Shell
                         'created' => $created,
                     ]);
                     $CompetencyTemplatesTable->save($newTemplateEntity);
-                    $newTemplateData= $newTemplateEntity->id;
+                    $newTemplateDataId= $newTemplateEntity->id;
                 } catch (Exception $e) {
                     pr($e->getMessage());
                 }
                //CompetencyItem[START]
-                if(!empty($newTemplateData)){
+                if(!empty($newTemplateDataId)){
                         if(isset($competency_items_value) && $competency_items_value == 0){
                             $CompetencyItemsTable = TableRegistry::get('Competency.CompetencyItems');
                             $CompetencyItemsData = $CompetencyItemsTable
@@ -147,23 +147,23 @@ class PerformanceCompetenciesShell extends Shell
                                 }else{
                                     $created = date('Y-m-d H:i:s');
                                 }
-                                $newItemData=[];
+                                $newItemDataId=[];
                                 try{
                                     $newItemEntity= $CompetencyItemsTable->newEntity([
                                     'name' => $CompetencyItemsValue["name"],
                                     'academic_period_id' => $toAcademicPeriod,
-                                    'competency_template_id' => $newTemplateData,
+                                    'competency_template_id' => $newTemplateDataId,
                                     'modified_user_id' => $CompetencyItemsValue["modified_user_id"],
                                     'modified' => $modified,
                                     'created_user_id' => $CompetencyItemsValue["created_user_id"],
                                     'created' => $created,
                                     ]);
                                     $CompetencyItemsTable->save($newItemEntity);
-                                    $newItemData[]= $newItemEntity->id;
+                                    $newItemDataId[]= $newItemEntity->id;
                             } catch (Exception $e) {
                                 pr($e->getMessage());
                             }
-                                if (!empty($newItemData)) { 
+                                if (!empty($newItemDataId)) { 
                                     //CompetencyCriteria[START]      
                                     if(isset($competency_criterias_value) && $competency_criterias_value == 0){
                                         $CompetencyCriteriasData = $CompetencyCriteriasTable
@@ -198,8 +198,8 @@ class PerformanceCompetenciesShell extends Shell
                                                 'code' => $CompetencyCriteriasValue["code"],
                                                 'name' => $CompetencyCriteriasValue["name"],
                                                 'academic_period_id' => $toAcademicPeriod,
-                                                'competency_item_id' => $newItemData,
-                                                'competency_template_id' =>  $newTemplateData,
+                                                'competency_item_id' => $newItemDataId,
+                                                'competency_template_id' =>  $newTemplateDataId,
                                                 'competency_grading_type_id' => $CompetencyCriteriasValue["competency_grading_type_id"],
                                                 'modified_user_id' => $CompetencyCriteriasValue["modified_user_id"],
                                                 'modified' => $modified,
