@@ -187,9 +187,6 @@ class PerformanceCompetenciesShell extends Shell
             ->where(['academic_period_id' => $toAcademicPeriod])
             ->toArray();
             $arr = [];
-            foreach($CompetencyTemplateData as $val){
-                $arr[] = $val['id'];
-            }
         //POCOR-7670 start
         $PreviousCompetencyTemplateData = $CompetencyTemplatesTable
             ->find('all')
@@ -198,8 +195,10 @@ class PerformanceCompetenciesShell extends Shell
         foreach($PreviousCompetencyTemplateData as $val) {
             $prev_arr[] = $val['id'];
         }
+        $i=0;
         foreach ($CompetencyTemplateData as $val) {
-            $arr[] = $val['id'];
+            $arr[$prev_arr[$i]] = $val['id'];
+            $i++;
         }
          //POCOR-7670 end
         $CompetencyItemsData = $CompetencyItemsTable
@@ -214,11 +213,11 @@ class PerformanceCompetenciesShell extends Shell
         //competencyItems[STARTS]
         if(isset($competency_items_value) && $competency_items_value == 0){
             $CompetencyItemsTable = TableRegistry::get('Competency.CompetencyItems');
-            foreach($prev_arr as $value){// //POCOR-7670 
+            foreach($arr as $key=>$value){// //POCOR-7670 
             $CompetencyItemsData = $CompetencyItemsTable
             ->find()
             ->where(['academic_period_id' => $fromAcademicPeriod,
-                    'competency_template_id' => $value]  //POCOR-7670 
+                    'competency_template_id' => $key]  //POCOR-7670 
             )
             ->toArray();
 
