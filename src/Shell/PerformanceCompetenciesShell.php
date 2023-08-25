@@ -194,7 +194,7 @@ class PerformanceCompetenciesShell extends Shell
                                                 $created = date('Y-m-d H:i:s');
                                             }
                                             try{
-                                                $newCriteriaEntity=$CompetencyCriteriasTable->execute([
+                                                $newCriteriaEntity=$CompetencyCriteriasTable->newEntity([
                                                 'code' => $CompetencyCriteriasValue["code"],
                                                 'name' => $CompetencyCriteriasValue["name"],
                                                 'academic_period_id' => $toAcademicPeriod,
