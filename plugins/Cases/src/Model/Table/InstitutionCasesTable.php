@@ -289,7 +289,7 @@ class InstitutionCasesTable extends ControllerActionTable
                     //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
                 ]
             )
-            ->where([$this->aliasField('assignee_id') =>$userId]) //start POCOR-6210
+            ->where([$this->aliasField('created_user_id') =>$userId]) //POCOR-7668
             ->group($this->aliasField('id'));
         }
         else{//POCOR-7437 end
@@ -868,6 +868,7 @@ class InstitutionCasesTable extends ControllerActionTable
             $attr['type'] = 'chosenSelect';
             $attr['attr']['multiple'] = false;
             $attr['options'] = $institutionOptions;
+            $attr['onChangeReload'] = true;//POCOR-7668
             if($action=="edit"){
                 $attr['type'] = 'readOnly';
             }
@@ -894,4 +895,10 @@ class InstitutionCasesTable extends ControllerActionTable
         return $caseResults->toArray();
     }
     //POCOR-7642 end
+    //POCOR-7668 start
+    public function onGetAssigneeId(Event $event, Entity $entity)
+    {
+        return $entity->assignee->name;
+    }
+    //POCOR-7668 end
 }
