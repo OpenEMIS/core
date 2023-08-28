@@ -291,7 +291,7 @@ class InstitutionCasesTable extends ControllerActionTable
                     //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
                 ]
             )
-            ->where([$this->aliasField('assignee_id') =>$userId]) //start POCOR-6210
+            ->where([$this->aliasField('created_user_id') =>$userId]) //POCOR-7668
             ->group($this->aliasField('id'));
         }
         else{//POCOR-7437 end
@@ -879,6 +879,7 @@ class InstitutionCasesTable extends ControllerActionTable
             $attr['type'] = 'chosenSelect';
             $attr['attr']['multiple'] = false;
             $attr['options'] = $institutionOptions;
+            $attr['onChangeReload'] = true;//POCOR-7668
             if($action=="edit"){
                 $attr['type'] = 'readOnly';
             }
@@ -905,86 +906,10 @@ class InstitutionCasesTable extends ControllerActionTable
         return $caseResults->toArray();
     }
     //POCOR-7642 end
-    //POCOR-7613 start
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    //POCOR-7668 start
+    public function onGetAssigneeId(Event $event, Entity $entity)
     {
-        switch ($field) {
-            case 'case_type_id':
-                return __('Type');
-            case 'case_priority_id':
-                return __('Priority');
-            case 'modified':
-                return __('Updated');
-            case 'created':
-                return __('Created');
-            default:
-                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
+        return $entity->assignee->name;
     }
-    public function onUpdateFieldCaseTypeId(Event $event, array $attr, $action, $request)
-    {
-        $CaseTypes = TableRegistry::get('case_types');
-        $CaseTypeList = $CaseTypes
-            ->find('list', [
-                'keyField' => 'id',
-                'valueField' => 'name'
-            ])
-            ->toArray();
-        $attr['type'] = 'select';
-        $attr['options'] = $CaseTypeList;
-        if ($request->params['controller'] == "Profiles") {//POCOR-7613
-           if($action=="edit"){
-                $attr['type'] = 'readonly';
-           }
-        }
-        return $attr;
-    }
-    public function onUpdateFieldCasePriorityId(Event $event, array $attr, $action, $request)
-    {
-
-        $CasePriority = TableRegistry::get('case_priorities');
-        $CasePriorityList = $CasePriority
-            ->find('list', [
-                'keyField' => 'id',
-                'valueField' => 'name'
-            ])
-            ->toArray();
-        $attr['type'] = 'select';
-        $attr['options'] = $CasePriorityList;
-        if ($request->params['controller'] == "Profiles") {//POCOR-7613
-            if ($action == "edit") {
-                $attr['type'] = 'readonly';
-            }
-        }
-        return $attr;
-    }
-
-    public function onGetCaseTypeId(Event $event, Entity $entity)
-    {
-        return $entity->case_type->name;
-    }
-    public function onGetCasePriorityId(Event $event, Entity $entity)
-    {
-        return $entity->case_priority->name;
-    }
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $this->field('case_number', ['visible' => false]);
-        $this->setFieldOrder([ //POCOR-7613
-            'case_number', 'title', 'description', 'case_type_id', 'case_priority_id', 'institution_id'
-        ]);
-    }
-    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options = [])
-    {
-        $fieldKey = 'comment';
-        $tableHeaders = [__('Date'),_('User'),_('Comment')];
-        $tableCells = [];
-        $attr['tableHeaders'] = $tableHeaders;
-        $attr['tableCells'] = $tableCells;
-        // $attr['fieldOfStudiesOptions'] = $fieldOfStudiesOptions;
-
-        return $event->subject()->renderElement('Cases.comment', ['attr' => $attr]);
-    
-    }
-     //POCOR-7613 end
+    //POCOR-7668 end
 }
