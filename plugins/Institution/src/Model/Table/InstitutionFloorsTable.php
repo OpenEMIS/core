@@ -14,7 +14,7 @@ use Cake\I18n\Date;
 use Cake\ORM\ResultSet;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
-
+use Cake\Routing\Router;
 class InstitutionFloorsTable extends ControllerActionTable
 {
     use OptionsTrait;
@@ -148,8 +148,11 @@ class InstitutionFloorsTable extends ControllerActionTable
             $InstitutionBuilding = $InstitutionBuildings->get($entity['institution_building_id']);
         }
         if($entity['area'] >= $InstitutionBuilding['area']){
+            if (Router::getRequest()->params['action'] == "CopyData") {
+            } else {//POCOR_7657
             $this->Alert->warning('InstitutionFloors.sizeGreater', ['reset' => true]);
             return false;
+            }
         }
         //End:POCOR-7597
         if (!$entity->isNew() && $entity->has('change_type')) {

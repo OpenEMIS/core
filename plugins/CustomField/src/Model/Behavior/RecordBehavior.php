@@ -994,76 +994,85 @@ class RecordBehavior extends Behavior
             $sectionName = null;
             foreach ($customFields as $key => $obj) {
                 // If tabSection is not set, setup Section Header
-                if (!$this->config('tabSection')) {
+                //POCOR-7600
+                if ((!$this->config('tabSection'))||$model->request->params['action']=="Surveys") {
                     if (isset($obj->section)) {
-                        if ($sectionName != $obj->section) {
-                            $sectionName = $obj->section;
+                        if (!in_array($obj->section, $sectionName)) {
+                            $sectionName[$key] = $obj->section;
                             $fieldName = "section_".$key."_header";
-
-                            if (!empty($sectionName)) {
-                                $ControllerAction->field($fieldName, ['type' => 'section', 'title' => $sectionName]);
+                            
+                            if (!empty($sectionName)&&$model->request->params['action']!="Surveys") {
+                                $ControllerAction->field($fieldName, ['type' => 'section', 'title' => $sectionName[$key]]);
                                 $fieldOrder[++$order] = $fieldName;
+                               // echo "<pre>";print_r($customFields);die;
                             }
-                        }
-                    }
-                }
-                // End
 
-                $customField = $obj->custom_field;
 
-                $fieldType = $customField->field_type;
-                $fieldName = "custom_".$key."_field";
-                $valueClass = strtolower($fieldType) == 'table' || strtolower($fieldType) == 'student_list' ? 'table-full-width' : '';
-
-                $attr = [
-                    'type' => 'custom_'. strtolower($fieldType),
-                    'attr' => [
-                        'label' => $customField->name,
-                        'fieldKey' => $this->config('fieldKey'),
-                        'formKey' => $this->config('formKey'),
-                        'tableColumnKey' => $this->config('tableColumnKey'),
-                        'tableRowKey' => $this->config('tableRowKey')
-                    ],
-                    'valueClass' => $valueClass,
-                    'customField' => $customField,
-                    'customFieldValues' => $valuesArray,
-                    'customTableCells' => $cellsArray
-                ];
-
-                // for label of mandatory *
-                if ($customField->is_mandatory == 1) {
-                    $attr['attr']['required'] = 'required';
-                }
-
-                // seq is very important for validation errors
-                if (in_array($fieldType, $this->fieldValueArray)) {
-                    $attr['attr']['seq'] = $count++;
-                }
-
-                $renderField = true;
-
-                // For survey only
-                // To show the field in the view page base on the rules
-                if (is_null($this->config('moduleKey')) && $this->_table->action == 'view') {
-                    $id = $attr['customField']['id'];
-                    if (isset($rules[$id])) {
-                        $answer = $this->_table->array_column($attr['customFieldValues'], 'number_value');
-                        $forRender = false;
-                        foreach ($rules[$id] as $ruleKey => $ruleOpt) {
-                            if (isset($answer[$ruleKey])) {
-                                if (in_array($answer[$ruleKey], json_decode($ruleOpt, true))) {
-                                    $forRender = true;
+                            foreach($customFields as $we => $cfld){
+                                if($cfld->section == $sectionName[$key]){
+                                    $customField = $cfld->custom_field;
+                                    $fieldType = $customField->field_type;
+                                    $fieldName = "custom_".$we."_field";
+                                    $valueClass = strtolower($fieldType) == 'table' || strtolower($fieldType) == 'student_list' ? 'table-full-width' : '';
+            
+                                    $attr = [
+                                        'type' => 'custom_'. strtolower($fieldType),
+                                        'attr' => [
+                                            'label' => $customField->name,
+                                            'fieldKey' => $this->config('fieldKey'),
+                                            'formKey' => $this->config('formKey'),
+                                            'tableColumnKey' => $this->config('tableColumnKey'),
+                                            'tableRowKey' => $this->config('tableRowKey')
+                                        ],
+                                        'valueClass' => $valueClass,
+                                        'customField' => $customField,
+                                        'customFieldValues' => $valuesArray,
+                                        'customTableCells' => $cellsArray
+                                    ];
+            
+                                    // for label of mandatory *
+                                    if ($customField->is_mandatory == 1) {
+                                        $attr['attr']['required'] = 'required';
+                                    }
+            
+                                    // seq is very important for validation errors
+                                    if (in_array($fieldType, $this->fieldValueArray)) {
+                                        $attr['attr']['seq'] = $count++;
+                                    }
+            
+                                    $renderField = true;
+            
+                                    // For survey only
+                                    // To show the field in the view page base on the rules
+                                    if (is_null($this->config('moduleKey')) && $this->_table->action == 'view') {
+                                        $id = $attr['customField']['id'];
+                                        if (isset($rules[$id])) {
+                                            $answer = $this->_table->array_column($attr['customFieldValues'], 'number_value');
+                                            $forRender = false;
+                                            foreach ($rules[$id] as $ruleKey => $ruleOpt) {
+                                                if (isset($answer[$ruleKey])) {
+                                                    if (in_array($answer[$ruleKey], json_decode($ruleOpt, true))) {
+                                                        $forRender = true;
+                                                    }
+                                                }
+                                            }
+                                            $renderField = $forRender;
+                                        }
+                                    }
+            
+                                    if ($renderField) {
+                                        $ControllerAction->field($fieldName, $attr);
+                                        $fieldOrder[++$order] = $fieldName;
+                                    }
                                 }
+                            
+                                
                             }
                         }
-                        $renderField = $forRender;
                     }
-                }
-
-                if ($renderField) {
-                    $ControllerAction->field($fieldName, $attr);
-                    $fieldOrder[++$order] = $fieldName;
-                }
+                }//POCOR-7600
+                // End
+                
             }
 
             foreach ($ignoreFields as $key => $field) {

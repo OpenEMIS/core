@@ -12,7 +12,7 @@ class ExaminationCentresExaminationsSubjectsStudentsTable extends ControllerActi
     {
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
-        $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
+        $this->belongsTo('ExaminationSubjects', ['className' => 'Examination.ExaminationSubjects']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
@@ -26,7 +26,7 @@ class ExaminationCentresExaminationsSubjectsStudentsTable extends ControllerActi
         ]);
         $this->belongsTo('ExaminationCentresExaminationsSubjects', [
             'className' => 'Examination.ExaminationCentresExaminationsSubjects',
-            'foreignKey' => ['examination_centre_id', 'examination_item_id']
+            'foreignKey' => ['examination_centre_id', 'examination_subject_id']
         ]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -47,10 +47,10 @@ class ExaminationCentresExaminationsSubjectsStudentsTable extends ControllerActi
         // used to update total mark whenever an examination mark is added or updated
         $studentId = $results->student_id;
         $examinationCentreId = $results->examination_centre_id;
-        $examinationItemId = $results->examination_item_id;
+        $examinationItemId = $results->examination_subject_id;
         $examinationId = $results->examination_id;
 
-        $examItem = $this->ExaminationItems->get($examinationItemId, ['contain' => ['ExaminationGradingTypes']]);
+        $examItem = $this->ExaminationSubjects->get($examinationItemId, ['contain' => ['ExaminationGradingTypes']]);
         if (!empty($examItem)) {
             $resultType = $examItem->examination_grading_type->result_type;
 
@@ -60,7 +60,7 @@ class ExaminationCentresExaminationsSubjectsStudentsTable extends ControllerActi
                 $this->updateAll(['total_mark' => $totalMark], [
                     'examination_centre_id' => $examinationCentreId,
                     'student_id' => $studentId,
-                    'examination_item_id' => $examinationItemId,
+                    'examination_subject_id' => $examinationItemId,
                     'examination_id' => $examinationId
                 ]);
             }

@@ -21,6 +21,7 @@ use Cake\I18n\Time;
 use Cake\Log\Log;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
+use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 
 class StaffLeaveTable extends ControllerActionTable
 {
@@ -943,24 +944,29 @@ class StaffLeaveTable extends ControllerActionTable
         }
     }
 
+    /**
+     * common proc to add extra buttons, to call in indexBeforeAction
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @param ArrayObject $extra
+     */
     private function addExtraButtons(ArrayObject $extra)
     {
 
         $toolbarButtons = $extra['toolbarButtons'];
         $this->addManualButton($toolbarButtons);
-
         $this->addArchiveButton($toolbarButtons);
-
-
     }
 
     /**
+     * common proc to add a manual button
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      * @param $toolbarButtons
      */
     private function addManualButton($toolbarButtons)
     {
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Personal', 'Leave', 'Staff - Career');
+        $options  = ['Personal', 'Leave', 'Staff - Career'];
+        $is_manual_exist = $this->getManualUrl(...$options);
         if (!empty($is_manual_exist)) {
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
@@ -976,13 +982,11 @@ class StaffLeaveTable extends ControllerActionTable
             $customButtonTitle = __('Help');
             $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl, $btnAttr);
         }
-
-
     }
 
-
-
     /**
+     * common proc to add an archive button
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      * @param $toolbarButtons
      */
     private function addArchiveButton($toolbarButtons)
@@ -994,102 +998,45 @@ class StaffLeaveTable extends ControllerActionTable
             $customButtonUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
-                'action' => 'ArchivedStaffLeave'
+                'action' => 'ArchivedStaffLeave',
+                0=>'index',
+                'user_id' => $this->staffId,
+
             ];
             $customButtonLabel = '<i class="fa fa-folder"></i>';
             $customButtonTitle = __('Archive');
             $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl);
         }
     }
-    public function hasArchiveTable($sourceTable)
-    {
-        $sourceTableName = $sourceTable->table();
-        $targetTableName = $sourceTableName . '_archived';
-        $connection = ConnectionManager::get('default');
-        $schemaCollection = new \Cake\Database\Schema\Collection($connection);
-        $existingTables = $schemaCollection->listTables();
-        $tableExists = in_array($targetTableName, $existingTables);
 
-        if ($tableExists) {
-            return true;
-        }
-
-        $sourceTableSchema = $schemaCollection->describe($sourceTableName);
-
-        // Create a new table schema for the target table
-        $targetTableSchema = new Table($targetTableName);
-
-        // Copy the columns from the source table to the target table
-        foreach ($sourceTableSchema->columns() as $column) {
-            $columnDefinition = $sourceTableSchema->column($column);
-            $targetTableSchema->addColumn($column, $columnDefinition);
-        }
-        $randomString = $this->generateRandomString();
-        // Copy the indexes from the source table to the target table
-        foreach ($sourceTableSchema->indexes() as $index) {
-            $indexDefinition = $sourceTableSchema->index($index);
-            $targetTableSchema->addIndex($index . $randomString, $indexDefinition);
-        }
-
-        // Copy the constraints from the source table to the target table
-        // FIX for random FK name
-
-        foreach ($sourceTableSchema->constraints() as $constraint) {
-            $constraintDefinition = $sourceTableSchema->constraint($constraint);
-            $targetTableSchema->addConstraint($constraint . $randomString, $constraintDefinition);
-        }
-
-
-
-        // Generate the SQL statement to create the target table
-        $createTableSql = $targetTableSchema->createSql($connection);
-
-        // Execute the SQL statement to create the target table
-        foreach ($createTableSql as $sql) {
-            $connection->execute($sql);
-        }
-
-        // Check if the target table was created successfully
-        $existingTables = $schemaCollection->listTables();
-        $tableExists = in_array($targetTableName, $existingTables);
-        if ($tableExists) {
-            return true;
-        }
-
-        return false; // Return false if the table couldn't be created
-    }
-
-    private function generateRandomString($length = 4) {
-        $bytes = random_bytes($length);
-        return substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $length);
-    }
-
+    /**
+     * common proc to check if there is an archive
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * @return bool
+     */
     private function isArchiveExists()
     {
-        $is_archive_exists = false;
         $institutionId = $this->institutionId;
         $staffId = $this->staffId;
-        //This is for POCOR-7475 as well
-        if(!$this->hasArchiveTable($this)){
-            $is_archive_exists = false;
-            return $is_archive_exists;
-        }
-        $tableArchived = TableRegistry::get('institution_staff_leave_archived');
-        $count = $tableArchived->find()
-            ->select([$tableArchived->aliasField('staff_id')])// POCOR-7339-HINDOL
-            ->where([
-                $tableArchived->aliasField('institution_id') => $institutionId,
-                $tableArchived->aliasField('staff_id') => $staffId,
-            ])->first();
-        if($count) {
-            $is_archive_exists = true;
-        }
-        if(!$count) {
-            $is_archive_exists = false;
-        }
+        $where = [
+            ['institution_id = '.  $institutionId],
+            ['staff_id = ' . $staffId]
+        ];
+        $table_name = 'institution_staff_leave';
+        $is_archive_exists = ArchiveConnections::hasArchiveRecords($table_name, $where);
         return $is_archive_exists;
     }
 
+    /**
+     * @param ArrayObject $toolbarButtons
+     * @param $name
+     * @param $title
+     * @param $label
+     * @param $url
+     * @param null $btnAttr
+     * common proc to generate button
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     private function generateButton(ArrayObject $toolbarButtons, $name, $title, $label, $url, $btnAttr = null)
     {
         if (!$btnAttr) {
@@ -1116,36 +1063,34 @@ class StaffLeaveTable extends ControllerActionTable
         $toolbarButtons[$name] = $customButton;
     }
 
-    private function addBackButton($toolbarButtons)
-    {
-        $is_archive_exists = true;
-        if ($is_archive_exists) {
-            $customButtonName = 'back';
-            $customButtonUrl = [
-                'plugin' => 'Student',
-                'controller' => 'Students',
-                'action' => 'Absences'
-            ];
-            $customButtonLabel = '<i class="fa kd-back"></i>';
-            $customButtonTitle = __('Back');
-            $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl);
-        }
-    }
-
+    /**
+     * common proc to get/set main variables to use further
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     private function setInstitutionStaffIDs()
     {
+
         $institutionId = $staffId = null;
         $session = $this->controller->request->session();
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
         }
-        $staffId = $this->getStaffId();
-        if (!$staffId) {
-            $staffId = $this->Session->read('Institution.Staff.id');
+        if (!is_null($this->request->query('user_id'))) {
+            $staffId = $this->request->query('user_id');
         }
+        if (!$staffId & !is_null($this->request->query('staff_id'))) {
+            $staffId = $this->request->query('staff_id');
+        }
+        if (!$staffId) {
+            $staffId = $session->read('Staff.Staff.id');
+        }
+        if (!$staffId) {
+            $staffId = $session->read('Institution.Staff.id');
+        }
+
+
         $this->institutionId = $institutionId;
         $this->staffId = $staffId;
     }
-
 
 }

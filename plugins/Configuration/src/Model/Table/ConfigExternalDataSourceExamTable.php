@@ -55,6 +55,22 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                 ->requirePresence('password');
         }
         //POCOR-7531 end
+        //POCOR-7533 start
+         else if($this->request['data']['ConfigExternalDataSourceExam']['value'] == 'CXC'){
+            return $validator
+                ->requirePresence('url')
+                ->requirePresence('username')
+                ->requirePresence('password');
+        }
+        //POCOR-7533 end
+        //POCOR-7532 start
+        else if($this->request['data']['ConfigExternalDataSourceExam']['value'] == 'PacSIMS'){
+            return $validator
+                ->requirePresence('url')
+                ->requirePresence('username')
+                ->requirePresence('password');
+        }
+        //POCOR-7532 end
         else{//POCOR-6930 Ends
             return $validator
                 ->requirePresence('client_id')
@@ -134,6 +150,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         if ($entity->value != 'None') {
             $this->field('attributes', ['type' => 'custom_external_source']);
         }
+        $this->field('value_selection', ['type' => 'hidden']);//POCOR-7533
     }
 
     public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = [])
@@ -158,7 +175,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
             unset($attributes['private_key']);
         }
 
-        if ($entity->value == 'OpenEMIS Exams') {
+        if ($entity->value == 'OpenEMIS Exams'||$entity->value == 'CXC'||$entity->value == 'PacSIMS') {//POCOR-7533
             $newAttributes = [];
             // $newAttributes['client_id'] = $attributes['client_id'];  //POCOR-7531 
             $newAttributes['url'] = $attributes['url'];
@@ -242,7 +259,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
     {
-        if ($requestData[$this->alias()]['value'] == 'OpenEMIS Exams') {
+        if ($requestData[$this->alias()]['value'] == 'OpenEMIS Exams'||$requestData[$this->alias()]['value'] =='CXC'||$requestData[$this->alias()]['value'] =='PacSIMS') {//POCOR-7533
             $url = rtrim(trim($requestData[$this->alias()]['url']), "/");
             $requestData[$this->alias()]['url'] = $url;
             $requestData[$this->alias()]['scope'] = 'Student';
@@ -365,7 +382,54 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                 // $this->field('private_key', ['type' => 'text']);//POCOR-7531 
                 // $this->field('public_key', ['type' => 'text']);//POCOR-7531 
                 break;
-
+                //POCOR-7533 start
+            case 'CXC':
+                    $this->field('url');
+                    $this->field('username'); 
+                    $this->field('password',['type'=>'password']);
+                    $this->field('token_uri', ['type' => 'hidden']);
+                    $this->field('record_uri', ['type' => 'hidden']);
+                  
+                    $this->field('scope', ['type' => 'hidden']);
+                    $this->field('first_name_mapping', ['type' => 'hidden']);
+                    $this->field('middle_name_mapping', ['type' => 'hidden']);
+                    $this->field('third_name_mapping', ['type' => 'hidden']);
+                    $this->field('last_name_mapping', ['type' => 'hidden']);
+                    $this->field('date_of_birth_mapping', ['type' => 'hidden']);
+                    $this->field('external_reference_mapping', ['type' => 'hidden']);
+                    $this->field('gender_mapping', ['type' => 'hidden']);
+                    $this->field('identity_type_mapping', ['type' => 'hidden']);
+                    $this->field('identity_number_mapping', ['type' => 'hidden']);
+                    $this->field('nationality_mapping', ['type' => 'hidden']);
+                    $this->field('address_mapping', ['type' => 'hidden']);
+                    $this->field('postal_mapping', ['type' => 'hidden']);
+                    $this->field('user_endpoint_uri', ['type' => 'hidden']);
+                    $this->field('value_selection', ['type' => 'hidden']);
+                    break;
+                 //POCOR-7533 end
+            case 'PacSIMS':
+                    $this->field('url');
+                    $this->field('username'); 
+                    $this->field('password',['type'=>'password']);
+                    $this->field('token_uri', ['type' => 'hidden']);
+                    $this->field('record_uri', ['type' => 'hidden']);
+                  
+                    $this->field('scope', ['type' => 'hidden']);
+                    $this->field('first_name_mapping', ['type' => 'hidden']);
+                    $this->field('middle_name_mapping', ['type' => 'hidden']);
+                    $this->field('third_name_mapping', ['type' => 'hidden']);
+                    $this->field('last_name_mapping', ['type' => 'hidden']);
+                    $this->field('date_of_birth_mapping', ['type' => 'hidden']);
+                    $this->field('external_reference_mapping', ['type' => 'hidden']);
+                    $this->field('gender_mapping', ['type' => 'hidden']);
+                    $this->field('identity_type_mapping', ['type' => 'hidden']);
+                    $this->field('identity_number_mapping', ['type' => 'hidden']);
+                    $this->field('nationality_mapping', ['type' => 'hidden']);
+                    $this->field('address_mapping', ['type' => 'hidden']);
+                    $this->field('postal_mapping', ['type' => 'hidden']);
+                    $this->field('user_endpoint_uri', ['type' => 'hidden']);
+                    $this->field('value_selection', ['type' => 'hidden']);
+                break;
             case 'Custom':
                 $this->field('token_uri');
                 $this->field('record_uri');
