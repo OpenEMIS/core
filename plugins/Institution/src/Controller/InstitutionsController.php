@@ -1072,62 +1072,12 @@ class InstitutionsController extends AppController
     {
         if ($pass == 'excel') {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAbsencesPeriodDetailsArchive']);
-        } else {
-
-            $_edit = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'edit']);
-
-            $_excel = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'excel']);
-            $_import = $this->AccessControl->check(['Institutions', 'ImportStudentAttendances', 'add']);
-
-            $_excel = true;
+        }
+        if ($pass != 'excel') {
 
             $institutionId = $this->getInstitutionId();
 
-            $securityFunctions = TableRegistry::get('SecurityFunctions');
-            $securityFunctionsData = $securityFunctions
-                ->find()
-                ->select([
-                    'SecurityFunctions.id'
-                ])
-                ->where([
-                    'SecurityFunctions.name' => 'Student Attendance Archive'
-                ])
-                ->first();
-            $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
-
-            $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
-            $TransferLogs = TableRegistry::get('TransferLogs');
-            $TransferLogsData = $TransferLogs
-                ->find()
-                ->select([
-                    'TransferLogs.academic_period_id'
-                ])
-                ->first();
-
-            $securityRoleFunctionsData = $securityRoleFunctions
-                ->find()
-                ->select([
-                    'SecurityRoleFunctions._view'
-                ])
-                ->where([
-                    'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
-                    'SecurityRoleFunctions.security_role_id' => $permission_id,
-                ])
-                ->first();
-            $is_button_accesible = 0;
-            if ((!empty($securityRoleFunctionsData) && $securityRoleFunctionsData->_view == 1)) {
-                $is_button_accesible = 1;
-            }
-            if ($this->Auth->user('super_admin') == 1) {
-                $is_button_accesible = 1;
-            }
-            if (empty($TransferLogsData)) {
-                $is_button_accesible = 0;
-            } else {
-                $is_button_accesible = 1;
-            }
-
-            // issue
+            $_excel = true;
             $excelUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -1136,30 +1086,13 @@ class InstitutionsController extends AppController
                 'excel'
             ];
 
-            $importUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'ImportStudentAttendances',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-                'add'
-            ];
-
-            $archiveUrl = $this->ControllerAction->url('index');
-            $archiveUrl['plugin'] = 'Institution';
-            $archiveUrl['controller'] = 'Institutions';
-            $archiveUrl['action'] = 'InstitutionStudentAbsencesArchived';
 
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+
             $this->Navigation->addCrumb($crumbTitle);
 
-            $this->set('_edit', $_edit);
             $this->set('_excel', $_excel);
-            $this->set('_import', $_import);
-            $this->set('_archive', $_archive);
             $this->set('excelUrl', Router::url($excelUrl));
-            $this->set('importUrl', Router::url($importUrl));
-            $this->set('archiveUrl', Router::url($archiveUrl));
-            $this->set('is_button_accesible', $is_button_accesible);
             $this->set('institution_id', $institutionId);
             $this->set('ngController', 'InstitutionStudentAttendancesArchiveCtrl as $ctrl');
         }
