@@ -173,9 +173,24 @@ class POCOR7613 extends AbstractMigration
         $this->execute('ALTER TABLE `institution_cases` ADD FOREIGN KEY (`case_type_id`) REFERENCES `case_types` (`id`)');
         $this->execute('ALTER TABLE `institution_cases` ADD FOREIGN KEY (`case_priority_id`) REFERENCES `case_priorities` (`id`)');
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+
+        //institution_case_comments
+        $this->execute('CREATE TABLE `institution_case_comments` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `case_id`  int(11) NOT NULL ,
+            `comment`  text NOT NULL,
+            `modified_user_id` int(11) NULL,
+            `modified` datetime DEFAULT NULL ,
+            `created_user_id` int(11) NOT NULL,
+            `created` datetime NOT NULL,
+             PRIMARY KEY (`id`),
+             FOREIGN KEY (`case_id`) REFERENCES `institution_cases`(`id`) 
+             ) ENGINE=InnoDB DEFAULT CHARSET=latin1');
+
     }
     public function down()
     {
+        $this->execute('DROP TABLE IF EXISTS `institution_case_comments`');
         $this->execute('DROP TABLE IF EXISTS `institution_cases`');
         $this->execute('RENAME TABLE `zz_7613_institution_cases` TO `field_options`');
         $this->execute('DROP TABLE IF EXISTS `field_options`');
