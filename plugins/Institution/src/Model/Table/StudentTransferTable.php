@@ -619,7 +619,8 @@ class StudentTransferTable extends ControllerActionTable
                     'table' => $Grades->table(),
                     'alias' => $Grades->alias(),
                     'conditions' => [
-                        $Grades->aliasField('institution_id = ') . $this->Institutions->aliasField('id'),
+                        $Grades->aliasField('institution_id = ') .
+                        $this->Institutions->aliasField('id'),
                         $Grades->aliasField('education_grade_id') => $nextGradeId,
                         $Grades->aliasField('start_date <=') => $nextPeriodStartDate,
                         'OR' => [
@@ -630,12 +631,14 @@ class StudentTransferTable extends ControllerActionTable
                 ])
                 ->where([
                     $this->Institutions->aliasField('id <>') => $institutionId,
-                    $this->Institutions->aliasField('institution_status_id') => $InstitutionStatuses->getIdByCode('ACTIVE')
+                    $this->Institutions->aliasField('institution_status_id') =>
+                        $InstitutionStatuses->getIdByCode('ACTIVE')
                 ])
                 ->order([$this->Institutions->aliasField('code')]);
 
             if (!empty($request->data[$this->alias()]['area_id'])) {
-                $institutionQuery->where([$this->Institutions->aliasField('area_id') => $request->data[$this->alias()]['area_id']]);
+                $institutionQuery->where([$this->Institutions->aliasField('area_id')
+                => $request->data[$this->alias()]['area_id']]);
             }
             $institutionOptions = $institutionQuery->toArray();
         }

@@ -790,22 +790,31 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 $institutionOptions = $this->Institutions
                     ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                     ->innerJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()], [
-                        $InstitutionGrades->aliasField('institution_id =') . $this->Institutions->aliasField('id'),
-                        $InstitutionGrades->aliasField('institution_id') . ' <> ' . $entity->institution_id, // Institution list will not contain the old institution.
-                        $InstitutionGrades->aliasField('education_grade_id') => $entity->education_grade_id,
+                        $InstitutionGrades->aliasField('institution_id =') .
+                        $this->Institutions->aliasField('id'),
+                        $InstitutionGrades->aliasField('institution_id') . ' <> ' .
+                        $entity->institution_id, // Institution list will not contain the old institution.
+                        $InstitutionGrades->aliasField('education_grade_id') =>
+                            $entity->education_grade_id,
                         $InstitutionGrades->aliasField('start_date') . ' <= ' => $academicPeriodEndDate,
                         'OR' => [
                             $InstitutionGrades->aliasField('end_date') . ' IS NULL',
-                            // Previously as long as the programme end date is later than academicPeriodStartDate, institution will be in the list.
-                            // POCOR-3134 request to only displayed institution with active grades (end-date is later than today-date)
+                            // Previously as long as the programme
+                            // end date is later than academicPeriodStartDate,
+                            // institution will be in the list.
+                            // POCOR-3134 request to only
+                            // displayed institution with active grades
+                            // (end-date is later than today-date)
                             $InstitutionGrades->aliasField('end_date') . ' >=' => $today->format('Y-m-d')
                         ]
                     ])
-                    ->where([$this->Institutions->aliasField('institution_status_id') => $InstitutionStatuses->getIdByCode('ACTIVE')])
+                    ->where([$this->Institutions->aliasField('institution_status_id')
+                    => $InstitutionStatuses->getIdByCode('ACTIVE')])
                     ->order([$this->Institutions->aliasField('code')]);
 
                 if (!empty($request->data[$this->alias()]['area_id'])) {
-                    $institutionOptions->where([$this->Institutions->aliasField('area_id') => $request->data[$this->alias()]['area_id']]);
+                    $institutionOptions->where([$this->Institutions->aliasField('area_id')
+                    => $request->data[$this->alias()]['area_id']]);
                 }
 
                 $attr['type'] = 'chosenSelect';
