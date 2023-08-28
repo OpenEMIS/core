@@ -88,7 +88,31 @@ class CustomFieldsTable extends ControllerActionTable
     {
         $this->request->query['field_type'] = $entity->field_type;
     }
-
+    //POCOR-7673:START
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    {
+        $url =  $this->request->here();
+        $arr = explode("/",$url);
+        $key = array_search('StudentCustomFields', $arr); //POCOR-7700
+        if($arr[$key] == "StudentCustomFields"){
+            $studentCustomFieldOptionsT = TableRegistry::get('student_custom_field_options');
+            $studentCustomFieldOptionsData = $studentCustomFieldOptionsT->find()->where(['student_custom_field_id'=>$entity->id])->toArray();
+            $studentCustomFieldOptionsT->deleteAll($studentCustomFieldOptionsData);
+            foreach($entity['custom_field_options'] as $cusF){ //echo "<pre>"; print_r($cusF);die;
+                $NEWEntity = $studentCustomFieldOptionsT->newEntity([
+                    'name' => $cusF->name,
+                    'is_default' => $cusF->is_default,
+                    'visible' => $cusF->visible,
+                    'student_custom_field_id' => $entity->id,
+                    'created_user_id' => $this->Auth->user('id'),
+                    'created' => date('Y-m-d h:i:s')
+                ]);
+                $studentCustomFieldOptionsT->save($NEWEntity);
+            }
+        }
+        
+    }
+    //POCOR-7673:END
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);

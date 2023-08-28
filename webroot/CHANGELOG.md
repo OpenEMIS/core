@@ -1,3 +1,86 @@
+### [3.93.0] - 2023-08-25
+- Implemented: Develop Tertiary Education feature
+- Implemented: Move copy function from Administration > System Setup > Education Structure to Data Management > Copy
+- Implemented: Develop calendar holiday placeholders for school profiles
+- Bug Fixed: Investigate what is filling up the apache http logs
+- Bug Fixed: Institutions>Cases: Assignee should not be able to see the cases in Personal>Cases
+- Bug Fixed: Institutions > Students > Add: The student custom fields are not in order and the checkbox field type looks incorrect
+- Bug Fixed: Students>Academic>Curriculars>Add: When adding curricular, the records are not showing even when there is a successful message
+- Bug Fixed: Institutions > Appointments > Position: User is not able to import institutions positions as the error message of Shift is showing
+- Bug Fixed: Administration > Workflows: When editing the workflow for Staff Leave, the Staff Leave type is not showing any options
+- Bug Fixed: Reports > Institutions> Institution Position Summaries: The report is stuck in progress
+- Bug Fixed: Administration > System Setup > Custom Field > Student: When deleting options for the checkbox field type under the student custom field, the page gives a successful message but records were not deleted
+
+### [3.92.3] - 2023-08-23
+- Bug Fixed: Institutions>Students>Add: External search tab is missing
+- Bug Fixed: Institutions > Add page : System does not INSERT security_group_institutions when a new Institution is created
+
+### [3.92.2] - 2023-08-22
+- Bug Fixed: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 3 Fixes
+- Bug Fixed: Administration > System Setup > Field Options > Extracurricular Types: Extracurricular should be removed
+- Bug Fixed: Administrative > Meals: A 404 error is showing when adding the meal programme
+- Bug Fixed: Institutions > Survey > Forms: There is no date field type displaying for student_list questions even when it is a date field
+- Bug Fixed: Reports > Staff: Staff Out of School: Report is stuck in progress
+- Bug Fixed: Institutions > General > Shifts: Periods field dropdown is showing all periods that have been configured even though some periods is not in the date enabled and date disabled
+- Bug Fixed: Administration > System Setup > Custom Field > Student: When deleting options for the checkbox field type under the student custom field, the page gives a successful message but records were not deleted
+- Bug Fixed: Institutions > Academic > Subjects: The user is unable to add the same subject more than 1 time
+- Bug Fixed: Institutions>Academic>Classes: User is not able to assign homeroom teachers
+- Bug Fixed: API: Endpoint is not showing the label academic period and institution
+
+### [3.92.1] - 2023-08-18
+- Implemented: Develop changes to asset feature
+- Implemented: Develop a function to add Case Escalation emails to Alerts
+- Implemented: Move all textbook related field options under a separate textbook section heading
+- Implemented: Develop a "Bonded Organisation" field for the scholarship feature
+- Bug Fixed: Develop Institutions > Statistics > Standard: Student Attendance Summary Report(Rule to Calculate Daily Attendance/Absence)
+- Bug Fixed: CLONE - SAME DB ARCHIVE : Institutions > Attendance> Staff page: The page is not showing correctly
+- Bug Fixed: Swagger: Textbook api is not updated properly
+- Bug Fixed: Report>UIS Statistics: Error Message when inserting queries
+- Bug Fixed: Reports > Workflows: Report is stuck in progress
+- Bug Fixed: Administration > Security > Groups > User Group: User Roles configured are not showing in the list
+- Bug Fixed: Institutions > Students > General > Guardian: Not able to add guardian when adding via identity number
+- Bug Fixed: Institutions>Performance>Report Cards: Unable to generate all
+- Bug Fixed: Issues with copying the features in Administration > Data Management > Copy
+- Bug Fixed: Administration > Profiles > Classes: When publishing the class profile, the page navigates to 404 error
+
+### [3.92.0] - 2023-08-11
+- Implemented: Improvements to the Case feature to allow users to add/update cases from the Personal module
+- Bug Fixed: Institutions > Student/Staff > Export: The page goes to Bad Gateway
+- Bug Fixed: Administrations > Profiles: Sort Institution Name in Ascending order
+- Bug Fixed: Administration>Profile>Institutions: Number of classroom placeholder is not counting correctly
+- Bug Fixed: Institutions > Students/Staffs > General > Language: There is an error in adding languages
+- Bug Fixed: Institutions > Academic > Classes > Edit: The unit and course field has the asterisk "*" even though the fields are not mandatory
+- Bug Fixed: Administration>Security>Groups: System is picking up the newly created institutions and adding them to user groups
+
+### [3.91.1] - 2023-08-10
+- Implemented: Improvements to the Case feature to allow adding comments to cases
+- Implemented: Develop "External Data Source - Exams" config page for PacSIMS
+- Implemented: Make the room field non mandatory on the timetable schedule page
+- Bug Fixed: Administration > Data Management > Copy: The system does not allow the copy as there is existing data. However, not all institutions have data updated.
+- Bug Fixed: Institutions>Survey>Forms: Survey_responses is not showing up in the interface
+- Bug Fixed: Administration>Performance>Report Card: GPA is not accounting for unmarked subjects
+- Bug Fixed: Develop permissions to allow the Qualifications tabs under the Professional menu for all users
+- Bug Fixed: Reports > Students: Student Out of School Report generates blank
+- Bug Fixed: Administration > Security > Roles: Even when permission for Administration > Trainings is enabled in Security > Role page, the user is unable to view the Trainings module under their profile
+- Bug Fixed: Institutions>Performance>Report Cards: Unable to generate all
+- Bug Fixed: Reports > Institutions>Guardians: The data in guardian reports is very few eventhough there is alot of students who has guardians linked
+- Bug Fixed: Institutions > Students > Bulk Transfer In: As a principal role, i am not able to see the list of students for bulk transfer
+
+### [3.91.0] - 2023-08-04
+- Implemented: Develop changed to the Institution > Examinations > Students page
+- Implemented: Develop changed to the Administration > Examinations > Students page
+- Implemented: Develop Staff Behaviour Report
+- Implemented: Develop "External Data Source - Exams" config page for CXC
+- Implemented: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 3
+- Bug Fixed: Administrations > Communications > Alerts : Duplicated values are showing
+- Bug Fixed: Administration > Custom Fields > Institutions: The custom field got mixed up when editing/adding an existing custom field
+- Bug Fixed: Institutions>Students>Academic>Textbook: 404 error when viewing 
+- Bug Fixed: Institutions > Performances > Report Cards : System should calculate GPA based on assessment periods that is in start and end date of report card
+- Bug Fixed: Institutions > General > Overview > Edit: The system is checking against validation for mandatory coordinates and the length
+- Bug Fixed: Reports > Workflow: The OpenEMIS ID column is not showing any data
+- Bug Fixed: Institutions > Infrastructures > Overview: Error message is confusing
+- Bug Fixed: Reports > Staff: The column Identity Type is showing the Identity Type Code
+
 ### [3.90.2] - 2023-08-01
 - Implemented: Develop APIs for the Textbook feature
 - Bug Fixed: Institutions>Student>Academic>Assessment: Archive button should be present even if student does not have archive

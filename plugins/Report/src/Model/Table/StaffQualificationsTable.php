@@ -2,6 +2,7 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -226,6 +227,47 @@ class StaffQualificationsTable extends AppTable  {
         return implode(', ', array_values($return));
     }
 
+    /**
+     * common proc to show related field with id in the index table
+     * @param $tableName
+     * @param $relatedField
+     * @return array
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getRelatedRecord($tableName, $relatedField)
+    {
+        if (!$relatedField) {
+            return [];
+        }
+        $Table = TableRegistry::get($tableName);
+        try {
+            $related = $Table->get($relatedField);
+            return $related->toArray();
+        } catch (RecordNotFoundException $e) {
+            return [];
+        }
+        return [];
+    }
+
+    /**
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getFromArray($array, $key)
+    {
+        return isset($array[$key]) ? $array[$key] : null;
+    }
+
+    /**
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    {
+        $identity_type_id = $entity->identity_type_id;
+        $identity_type = self::getRelatedRecord('identity_types', $identity_type_id);
+        $identity_name = self::getFromArray($identity_type, 'name');
+        return $identity_name;
+    }
+
     public function onExcelGetSubjects(Event $event, Entity $entity)
     {
         $return = [];
@@ -360,13 +402,20 @@ class StaffQualificationsTable extends AppTable  {
             'label' => ''
         ];
         
+//        $newFields[] = [
+//            'key' => 'Users.identity_type_id',
+//            'field' => 'identity_type_id',
+//            'type' => 'string',
+//            'label' => ''
+//        ];
+//
         $newFields[] = [
-            'key' => 'Users.identity_type_id',
-            'field' => 'identity_type_id',
+            'key' => 'identity_type',
+            'field' => 'identity_type',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Identity Type')
         ];
-        
+
         $newFields[] = [
             'key' => 'Users.identity_number',
             'field' => 'identity_number',
@@ -376,4 +425,5 @@ class StaffQualificationsTable extends AppTable  {
         
         $fields->exchangeArray($newFields);
     }
+
 }

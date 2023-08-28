@@ -170,8 +170,6 @@ class FieldOptionComponent extends Component
             return "Scholarship.Semesters";
         }elseif($key== "ScholarshipInstitutionChoices" ){
             return "Scholarship.InstitutionChoiceTypes";
-
-
         }elseif($key== "InfrastructureOwnerships" ){
             return "FieldOption.InfrastructureOwnerships";
         }elseif($key== "InfrastructureConditions" ){
@@ -182,7 +180,11 @@ class FieldOptionComponent extends Component
             return "SpecialNeeds.SpecialNeedsDiagnosticsTypes";
         }elseif($key== "DiagnosticDisabilityDegree" ){
             return "SpecialNeeds.SpecialNeedsDiagnosticsDegree";
-        }else{ 
+        }elseif($key== "AssetMakes" ){
+            return "FieldOption.AssetMakes";
+        }elseif($key== "AssetModels" ){
+            return "FieldOption.AssetModels";
+        }else{
            $className =  $FieldOptions->category.".".$key;
            return $className;
          }
