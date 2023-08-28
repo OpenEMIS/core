@@ -108,7 +108,7 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
         var currentYear = currentDate.getFullYear();
         var currentMonth = currentDate.getMonth()+1;
         var currentdate = currentDate.getDate();
-        console.log(currentYear + '-' +currentMonth + '-' + currentdate)
+        // console.log(currentYear + '-' +currentMonth + '-' + currentdate)
         vm.currentDayMonthYear = currentYear + '-' +currentMonth + '-' + currentdate;
         InstitutionStudentAttendancesArchiveSvc.init(angular.baseUrl, $scope);
         vm.action = 'view';
@@ -148,27 +148,27 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
                 return InstitutionStudentAttendancesArchiveSvc.getEducationGradeOptions(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass);
             }, vm.error)
             .then(function(educationGradeListOptions) {
-                console.log("educationGradeListOptions", educationGradeListOptions)
+                // console.log("educationGradeListOptions", educationGradeListOptions)
                 vm.updateEducationGradeList(educationGradeListOptions);                
                 return InstitutionStudentAttendancesArchiveSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass,vm.selectedDay);
             }, vm.error)
             .then(function(attendanceType) {
-                console.log("attendanceType", attendanceType) 
+                // console.log("attendanceType", attendanceType)
                 vm.isMarkableSubjectAttendance = attendanceType;                     
                 return InstitutionStudentAttendancesArchiveSvc.getSubjectOptions(vm.institutionId,vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade);
             }, vm.error)
             .then(function(subjectListOptions) {
-                console.log("subjectListOptions", subjectListOptions)
+                // console.log("subjectListOptions", subjectListOptions)
                 vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
                 return InstitutionStudentAttendancesArchiveSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade, vm.selectedWeekStartDate, vm.selectedWeekEndDate); //POCOR-7183 add params vm.selectedWeekStartDate, vm.selectedWeekEndDate
                 }, vm.error)
             .then(function(attendancePeriodOptions) {
-                console.log("attendancePeriodOptions", attendancePeriodOptions)
+                // console.log("attendancePeriodOptions", attendancePeriodOptions)
                 vm.updateAttendancePeriodList(attendancePeriodOptions);
                 return InstitutionStudentAttendancesArchiveSvc.getIsMarked(vm.getIsMarkedParams());
             }, vm.error)
             .then(function(isMarked) {
-                console.log("isMarked", isMarked)
+                // console.log("isMarked", isMarked)
                 vm.updateIsMarked(isMarked);
                 return InstitutionStudentAttendancesArchiveSvc.getClassStudent(vm.getClassStudentParams());
             }, vm.error)
@@ -224,14 +224,14 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
     vm.updateDayList = function(dayListOptions) {
 
         vm.dayListOptions = dayListOptions;
-        console.log(vm.dayListOptions);
+        // console.log(vm.dayListOptions);
         var hasSelected = false;
         if (dayListOptions.length > 0) {
             for (var i = 0; i < dayListOptions.length; ++i) {
                 if (angular.isDefined(dayListOptions[i]['selected']) && dayListOptions[i]['selected']) {
                     hasSelected = true;
                     vm.selectedDay = dayListOptions[i].date;
-                    console.log(vm.selectedDay);
+                    // console.log(vm.selectedDay);
                    
                     vm.schoolClosed = (angular.isDefined(dayListOptions[i]['closed']) && dayListOptions[i]['closed']) ? true : false;
                     vm.gridOptions.context.date = vm.selectedDay;
@@ -471,13 +471,12 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
 
     // dashboard count
     vm.countStudentData = function(data) {
-        // var attendanceType = InstitutionStudentAttendancesArchiveSvc.getAttendanceTypeListCount(vm.getClassStudentParams());
         var absenceCount = 0;
         var lateCount = 0;
         totalStudents = 0;
         angular.forEach(data, function(obj, key) {
-            console.log("attendanceType In Controller");
-            console.log(obj);
+            // console.log("attendanceType In Controller");
+            // console.log(obj);
             if(obj.absence_type_id == 1 || obj.absence_type_id == 2){
                 ++absenceCount;
             }else if(obj.absence_type_id == 3){
@@ -493,8 +492,8 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
     // params
     vm.getClassStudentParams = function() {
 
-        vm.excelExportAUrl = vm.exportexcel
-                             +'?institution_id='+ vm.institutionId+
+        vm.excelExportAUrl = vm.exportexcel+
+                             '?institution_id='+ vm.institutionId+
                             '&institution_class_id='+ vm.selectedClass+
                             '&education_grade_id='+ vm.selectedEducationGrade+
                             '&academic_period_id='+ vm.selectedAcademicPeriod+
@@ -503,7 +502,7 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
                             '&week_start_day='+ vm.selectedWeekStartDate+
                             '&week_end_day='+ vm.selectedWeekEndDate+
                             '&subject_id='+ vm.selectedSubject+
-                            '&week_id='+ vm.selectedWeek
+                            '&week_id='+ vm.selectedWeek;
         
         return {
             institution_id: vm.institutionId,

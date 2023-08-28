@@ -1428,6 +1428,24 @@ class AcademicPeriodsTable extends AppTable
             });
     }
 
+    public function findAcademicPeriodWithStudentAttendanceMarkedArchive(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $academicPeriodWithArchiveArray = ArchiveConnections::getArchiveYears('student_attendance_marked_records',
+            ['institution_id' => $institutionId]);
+
+        $academicPeriodWithArchiveArrayId = [0];
+        if(sizeof($academicPeriodWithArchiveArray) > 0){
+            $academicPeriodWithArchiveArrayId = $academicPeriodWithArchiveArray;
+        }
+
+        $where = [
+            $this->aliasField('current !=') => 1,
+            $this->aliasField('id IN')  => $academicPeriodWithArchiveArrayId
+        ];
+        return $query->where($where);
+    }
+
     public function findWorkingDayOfWeek(Query $query, array $options)
     {
         $workingDayOfWeek = $this->getWorkingDaysOfWeek();
@@ -1537,10 +1555,7 @@ class AcademicPeriodsTable extends AppTable
         $lastDay = new Date($options['end_date']);
         $institutionId = $options['institution_id'];
         $today = null;
-//        $this->log('findDaysForPeriodWeekArchive', 'debug');
-//        $this->log($firstDay, 'debug');
-//        $this->log($lastDay, 'debug');
-//        $this->log($institutionId, 'debug');
+
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
         $daysPerWeek = $ConfigItems->value('days_per_week');
@@ -1586,7 +1601,7 @@ class AcademicPeriodsTable extends AppTable
                 return $dayOptions;
             })
         ;
-//        return $dayOptions;
+
     }
 
     public function getNextAcademicPeriodId($id)
