@@ -30,7 +30,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     private $canUpdateDetails = true;
     private $currentAcademicPeriod = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -54,7 +54,8 @@ class InstitutionRoomsTable extends ControllerActionTable
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
-        $this->addBehavior('CustomField.Record', [
+        //comment cakephp4
+        /*$this->addBehavior('CustomField.Record', [
             'fieldKey' => 'infrastructure_custom_field_id',
             'tableColumnKey' => null,
             'tableRowKey' => null,
@@ -66,7 +67,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             'recordKey' => 'institution_room_id',
             'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true],
             'tableCellClass' => null
-        ]);
+        ]);*/
         $this->addBehavior('Institution.InfrastructureShift');
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
@@ -81,7 +82,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -158,7 +159,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             });
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.AcademicPeriods.afterSave'] = 'academicPeriodAfterSave';
@@ -447,7 +448,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }
 
-        $extra['excludedModels'] = [$this->CustomFieldValues->alias()];
+        $extra['excludedModels'] = [$this->CustomFieldValues->getAlias()];
 
         // check if the same room is copy from / copy to other academic period, then not allow user to delete
         //POCOR-5330 starts

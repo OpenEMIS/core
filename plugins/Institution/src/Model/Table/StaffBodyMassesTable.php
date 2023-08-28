@@ -16,9 +16,9 @@ class StaffBodyMassesTable extends ControllerActionTable
     use OptionsTrait;
     const COMMENT_MAX_LENGTH = 350;
     const POWER = 2;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_body_masses');
+        $this->setTable('user_body_masses');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods',   ['className' => 'AcademicPeriod.AcademicPeriods', 'foreign_key' => 'academic_period_id']);
@@ -38,7 +38,7 @@ class StaffBodyMassesTable extends ControllerActionTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];

@@ -11,7 +11,7 @@ use Cake\I18n\Date;
 
 class InstitutionClassBehavior extends Behavior
 {
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         // priority has to be set at 100 so that Institutions->indexBeforePaginate will be triggered first

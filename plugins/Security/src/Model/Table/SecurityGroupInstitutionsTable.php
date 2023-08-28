@@ -16,14 +16,14 @@ use Cake\I18n\Time;
 
 
 class SecurityGroupInstitutionsTable extends AppTable {
-	public function initialize(array $config) {
-		$this->table('security_group_institutions');
+	public function initialize(array $config): void {
+		$this->setTable('security_group_institutions');
 		parent::initialize($config);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
 	}
 
-	public function implementedEvents()
+	public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -36,8 +36,8 @@ class SecurityGroupInstitutionsTable extends AppTable {
 	public function institutionAfterSave(Event $event, Entity $entity)
     {
         if ($entity->isNew()) {
-        	$SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-        	$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+        	$SecurityInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
+        	$SecurityGroupAreas = TableRegistry::getTableLocator()->get('Security.SecurityGroupAreas');
         	if ($entity->institution_id['_ids']) {
 	            foreach ($entity->institution_id['_ids'] as $key => $value) {
 	                    $securityInstitution = $SecurityInstitutions->newEntity([

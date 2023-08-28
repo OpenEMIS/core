@@ -32,9 +32,9 @@ class StudentsTable extends ControllerActionTable
     private $_dynamicFieldName = 'custom_field_data';
     // POCOR-6129 custome fields code
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_students');
+        $this->setTable('institution_students');
         parent::initialize($config);
 
         // Associations
@@ -140,7 +140,7 @@ class StudentsTable extends ControllerActionTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
@@ -154,7 +154,7 @@ class StudentsTable extends ControllerActionTable
         $searchableFields[] = 'openemis_no';
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -2221,7 +2221,7 @@ class StudentsTable extends ControllerActionTable
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
         foreach ($conditions as $key => $value) {
-            $_conditions[$this->alias().'.'.$key] = $value;
+            $_conditions[$this->getAlias().'.'.$key] = $value;
         }
 
         $AcademicPeriod = $this->AcademicPeriods;
@@ -2277,7 +2277,7 @@ class StudentsTable extends ControllerActionTable
                 ->where($queryCondition)
                 ->group(['gender_name', $this->aliasField('academic_period_id')])
                 ->order('AcademicPeriods.order DESC')
-                ->hydrate(false)
+                //->hydrate(false)
                 ->toArray()
                 ;
 
@@ -2299,7 +2299,7 @@ class StudentsTable extends ControllerActionTable
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
         foreach ($conditions as $key => $value) {
-            $_conditions[$this->alias().'.'.$key] = $value;
+            $_conditions[$this->getAlias().'.'.$key] = $value;
         }
 
         $AcademicPeriod = $this->AcademicPeriods;
@@ -2387,7 +2387,7 @@ class StudentsTable extends ControllerActionTable
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
         foreach ($conditions as $key => $value) {
-            $_conditions[$this->alias().'.'.$key] = $value;
+            $_conditions[$this->getAlias().'.'.$key] = $value;
         }
 
         $AcademicPeriod = $this->AcademicPeriods;
@@ -2399,20 +2399,20 @@ class StudentsTable extends ControllerActionTable
             $currentYear = __('Not Defined');
         }
 
-		$studentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
+		$studentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
 
         $StudentAttendancesRecords = $studentAttendanceMarkedRecords->find('all')
             ->select([
 				'education_grade' => 'educationGrades.name',
 				'education_grade_id' => 'educationGrades.id',
-				'period' => 'student_attendance_marked_records.period',
+				'period' => 'StudentAttendanceMarkedRecords.period',
 				'student_id' => 'InstitutionClassesStudents.student_id',
                 'institution_class_id' => 'InstitutionClassesStudents.institution_class_id',
             ])
 			->innerJoin(
 			['InstitutionClasses' => 'institution_classes'],
 			[
-				'InstitutionClasses.id = student_attendance_marked_records.institution_class_id '
+				'InstitutionClasses.id = StudentAttendanceMarkedRecords.institution_class_id '
 			]
 			)
 			->innerJoin(
@@ -2436,9 +2436,9 @@ class StudentsTable extends ControllerActionTable
 			]
 			)
             ->where([
-                'student_attendance_marked_records.date' => date('Y-m-d'),
-				'student_attendance_marked_records.academic_period_id' => $currentYearId,
-				'student_attendance_marked_records.institution_id' => $conditions['institution_id'],
+                'StudentAttendanceMarkedRecords.date' => date('Y-m-d'),
+				'StudentAttendanceMarkedRecords.academic_period_id' => $currentYearId,
+				'StudentAttendanceMarkedRecords.institution_id' => $conditions['institution_id'],
 				'educationGrades.id IS NOT NULL',
             ])
             ->distinct(['InstitutionClassesStudents.student_id'])//POCOR-7019
@@ -2448,9 +2448,9 @@ class StudentsTable extends ControllerActionTable
         $periodId = array(1,2);
 		foreach ($StudentAttendancesRecords as $key => $record) {
 
-			$InstitutionStudentAbsenceDetails = TableRegistry::get('institution_student_absence_details');
+			$InstitutionStudentAbsenceDetails = TableRegistry::getTableLocator()->get('Institution.StudentAbsencesPeriodDetails');
             //POCOR-7050 start
-            $configVal = TableRegistry::get('config_items');
+            $configVal = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $configData = $configVal->find()->select(['val'=>$configVal->aliasField('value')])->where([$configVal->aliasField('code')=>'calculate_daily_attendance'])->first();
             $configOption = $configData['val']; 
             if($configOption==2){ 

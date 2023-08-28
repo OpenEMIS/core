@@ -254,7 +254,7 @@ class ControllerActionBehavior extends Behavior
                 if ($enabled) {
                     $this->_table->addBehavior('ControllerAction.' . ucfirst($action));
                 } else {
-                    $this->_table->removeBehavior(ucfirst($action));
+                    $this->_table->addBehavior('remove',['enabled'=>ucfirst($action)]);
                 }
                 $actions[$action] = $enabled;
             }
@@ -279,9 +279,9 @@ class ControllerActionBehavior extends Behavior
     {
         $controller = $this->_table->controller;
         $url = [
-            'plugin' => $controller->plugin,
-            'controller' => $controller->name,
-            'action' => $this->_table->alias,
+            'plugin' => $controller->getPlugin(),
+            'controller' => $controller->getName(),
+            'action' => $this->_table->getAlias(),
             0 => $action
         ];
 
@@ -567,7 +567,7 @@ class ControllerActionBehavior extends Behavior
 
     public function getPrimaryKey()
     {
-        $primaryKey = $this->_table->primaryKey();
+        $primaryKey = $this->_table->getPrimaryKey();
         if (is_array($primaryKey)) {
             $primaryKey = 'id';
         }

@@ -64,7 +64,7 @@ $icon = strpos($_productName, 'School') !== false ? '_school' : '';
 			?>
 			
 			<?php 
-			echo $this->Form->create('Users', [
+			echo $this->Form->create(null, [
 				'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'postForgotUsername'],
 				'class' => 'form-horizontal'
 			]);

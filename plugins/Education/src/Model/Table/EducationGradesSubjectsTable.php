@@ -19,7 +19,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
 
     private $autoAllocationOptions = [];
 
-	public function initialize(array $config)
+	public function initialize(array $config): void
     {
 		parent::initialize($config);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
@@ -32,7 +32,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
 	}
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator
@@ -47,7 +47,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';

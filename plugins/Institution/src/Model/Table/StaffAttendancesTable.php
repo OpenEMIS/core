@@ -18,9 +18,9 @@ class StaffAttendancesTable extends ControllerActionTable
     private $_leaveData = [];
     private $_attendanceData = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff');
+        $this->setTable('institution_staff');
         $config['Modified'] = false;
         $config['Created'] = false;
         parent::initialize($config);
@@ -56,7 +56,7 @@ class StaffAttendancesTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;

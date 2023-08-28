@@ -82,7 +82,7 @@ class ValidationBehavior extends Behavior
 
     public function setValidationCode($key, $code)
     {
-        $alias = $this->_table->registryAlias() . '.' . $key;
+        $alias = $this->_table->getRegistryAlias() . '.' . $key;
         $this->validationCode[$alias] = $code . '.' . $key;
     }
 

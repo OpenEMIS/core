@@ -7,7 +7,7 @@ use App\Controller\PageController;
 
 class InstitutionHistoriesController extends PageController
 {
-	public function initialize()
+	public function initialize(): void
     {
         parent::initialize();
 

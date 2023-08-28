@@ -21,7 +21,7 @@ class WebhooksTable extends Table
         'DELETE' => 'DELETE'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallbacks' => true]);

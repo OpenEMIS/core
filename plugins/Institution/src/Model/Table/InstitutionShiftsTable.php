@@ -19,7 +19,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 {
     use MessagesTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -41,16 +41,14 @@ class InstitutionShiftsTable extends ControllerActionTable
             'InstitutionStaffAttendances' => ['index', 'add','edit']
         ]);
 
-        $this->behaviors()->get('ControllerAction')->config([
-            'actions' => ['search' => false],
-        ]);
+        $this->behaviors()->get('ControllerAction')->setConfig('actions.search', false);
         $this->setDeleteStrategy('restrict');
 
         $this->addBehavior('ContactExcel', ['excludes' => ['start_time','end_time','academic_period_id','previous_shift_id'], 'pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour
 
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -74,7 +72,7 @@ class InstitutionShiftsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.ajaxInstitutionsAutocomplete'] = 'ajaxInstitutionsAutocomplete';

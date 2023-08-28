@@ -8,7 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 
 class AdvanceSearchBehavior extends Behavior
@@ -214,7 +214,7 @@ class AdvanceSearchBehavior extends Behavior
 **
 ******************************************************************************************************************/
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         $this->indexBeforeQuery($event, $query, $options);
     }
@@ -226,7 +226,7 @@ class AdvanceSearchBehavior extends Behavior
         if (!empty($reset)) {
             if ($reset == 'Reset') {
                 $model = $this->_table;
-                $alias = $model->alias();
+                $alias = $model->getAlias();
                 // clear session
                 if ($model->Session->check($alias.'.advanceSearch.belongsTo')) {
                      $model->Session->delete($alias.'.advanceSearch.belongsTo');
@@ -407,7 +407,7 @@ class AdvanceSearchBehavior extends Behavior
         if (is_object($associationKey)) {
             $associatedEntityArrayKey = Inflector::underscore(Inflector::singularize($associationKey->alias()));
         } else {
-            die($field . '\'s association not found in ' . $this->_table->alias());
+            die($field . '\'s association not found in ' . $this->_table->getAlias());
         }
         return $associatedEntityArrayKey;
     }

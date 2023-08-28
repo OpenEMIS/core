@@ -13,7 +13,7 @@ use Transport\Model\Table\TransportStatusesTable as TransportStatuses;
 
 class InstitutionBusesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -32,7 +32,7 @@ class InstitutionBusesTable extends ControllerActionTable
 			'cascadeCallbacks' => true
 		]);
 
-        $this->displayField('plate_number');
+        $this->getDisplayField('plate_number');
         $this->addBehavior('Excel', [
             'excludes' => ['comment', 'institution_id'],
             'pages' => ['index'],
@@ -41,7 +41,7 @@ class InstitutionBusesTable extends ControllerActionTable
         
     }
 
-	public function validationDefault(Validator $validator)
+	public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

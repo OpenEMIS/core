@@ -5,9 +5,9 @@ use App\Model\Table\ControllerActionTable;
 
 class SectorsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_sectors');
+        $this->SetTable('institution_sectors');
         parent::initialize($config);
 
         $this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_sector_id']);

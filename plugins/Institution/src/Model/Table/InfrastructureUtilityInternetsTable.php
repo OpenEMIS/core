@@ -19,9 +19,9 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
         2 => 'Non-Teaching'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('infrastructure_utility_internets');
+        $this->setTable('infrastructure_utility_internets');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods',   ['className' => 'AcademicPeriod.AcademicPeriods', 'foreign_key' => 'academic_period_id']);
@@ -41,7 +41,7 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
         return $this->internetPurpose;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

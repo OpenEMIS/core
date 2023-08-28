@@ -12,7 +12,7 @@ use PHPExcel_IOFactory;
 
 class ReportsController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->ControllerAction->models = [
@@ -36,19 +36,20 @@ class ReportsController extends AppController
         ];
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
+        $this->loadComponent('Navigation');
     }
 
     public function beforeFilter(Event $event)
-    {
+    { 
         parent::beforeFilter($event);
         $header = 'Reports';
-        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
-        $this->Navigation->addCrumb($this->request->action);
+        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' =>$this->getRequest()->getParam('action')]);
+        $this->Navigation->addCrumb($this->getRequest()->getParam('action'));
     }
 
     public function onInitialize(Event $event, Table $table, ArrayObject $extra)
     {
-        $header = __('Reports') . ' - ' . __($table->alias());
+        $header = __('Reports') . ' - ' . __($table->getAlias());
         $this->set('contentHeader', $header);
     }
 
@@ -241,6 +242,7 @@ class ReportsController extends AppController
 
     public function index()
     {
+
         return $this->redirect(['action' => 'Users']);
     }
 
@@ -260,7 +262,7 @@ class ReportsController extends AppController
                 'ReportProgress.current_records',
                 'ReportProgress.total_records'
             );
-            $ReportProgress = TableRegistry::get('Report.ReportProgress');
+            $ReportProgress = TableRegistry::getTableLocator()->get('Report.ReportProgress');
             if (!empty($ids)) {
                 $results = $ReportProgress
                     ->find()
@@ -405,4 +407,5 @@ class ReportsController extends AppController
     {
         $this->ControllerAction->process(['alias' => _FUNCTION_, 'className' => 'Student.Guardians']);
     }
+
 }

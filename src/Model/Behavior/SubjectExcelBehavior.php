@@ -42,13 +42,13 @@ class SubjectExcelBehavior extends Behavior
         'auto_contain' => true
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
+        $this->getConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
         if (!array_key_exists('filename', $config)) {
-            $this->config('filename', $this->_table->alias());
+            $this->getConfig('filename', $this->_table->getAlias());
         }
-        $folder = WWW_ROOT . $this->config('folder');
+        $folder = WWW_ROOT . $this->getConfig('folder');
 
         if (!file_exists($folder)) {
             umask(0);
@@ -62,9 +62,9 @@ class SubjectExcelBehavior extends Behavior
             //  $this->deleteOldFiles($folder, $format);
             // }
         }
-        $pages = $this->config('pages');
+        $pages = $this->getConfig('pages');
         if ($pages !== false && empty($pages)) {
-            $this->config('pages', ['index', 'view']);
+            $this->getConfig('pages', ['index', 'view']);
         }
     }
 
@@ -458,7 +458,7 @@ class SubjectExcelBehavior extends Behavior
                 }
             }
 
-            if ($this->config('auto_contain')) {
+            if ($this->getConfig('auto_contain')) {
                 $this->contain($query, $fields, $table);
             }
 
@@ -476,24 +476,24 @@ class SubjectExcelBehavior extends Behavior
             $sheetCount = 1;
             $sheetRowCount = 0;
             $percentCount = intval($count / 100);
-            $pages = ceil($count / $this->config('limit'));
+            $pages = ceil($count / $this->getConfig('limit'));
 
             // Debugging 
             $pages = 1;
 
             if (isset($sheet['orientation'])) {
                 if ($sheet['orientation'] == 'landscape') {
-                    $this->config('orientation', 'landscape');
+                    $this->getConfig('orientation', 'landscape');
                 } else {
-                    $this->config('orientation', 'portrait');
+                    $this->getConfig('orientation', 'portrait');
                 }
             } elseif ($count == 1) {
-                $this->config('orientation', 'portrait');
+                $this->getConfig('orientation', 'portrait');
             }
 
             $this->dispatchEvent($table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count], true);
             $this->onEvent($table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
-            if ($this->config('orientation') == 'landscape') {
+            if ($this->getConfig('orientation') == 'landscape') {
                 $headerRow = [];
                 $headerStyle = [];
                 $headerFormat = [];
@@ -561,7 +561,7 @@ class SubjectExcelBehavior extends Behavior
                 // process every page based on the limit
                 for ($pageNo=0; $pageNo<$pages; $pageNo++) {
                     $resultSet = $query
-                    ->limit($this->config('limit'))
+                    ->limit($this->getConfig('limit'))
                     ->page($pageNo+1)
                     ->all();
 
@@ -573,7 +573,7 @@ class SubjectExcelBehavior extends Behavior
 
                     // process each row based on the result set
                     foreach ($resultSet as $entity) {
-                        if ($sheetRowCount >= $this->config('sheet_limit')) {
+                        if ($sheetRowCount >= $this->getConfig('sheet_limit')) {
                             $sheetCount++;
                             $sheetName = $baseSheetName . '_' . $sheetCount;
 
@@ -596,7 +596,7 @@ class SubjectExcelBehavior extends Behavior
                         $sheetRowCount++;
                         $rowCount++;
                         $event = $this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
-                        if (!$event->result) {
+                        if (!$event->getResult()) {
                             $writer->writeSheetRow($sheetName, $row, $rowStyle);
                         }
                     }
@@ -639,7 +639,7 @@ class SubjectExcelBehavior extends Behavior
 
     private function getFields($table, $settings)
     {
-        $schema = $table->schema();
+        $schema = $table->getSchema();
         //$columns = $schema->columns();
         //POCOR-5852 added 'identity_type', 'identity_number' starts
 		$columns = ['institution_code','institution_name','academic_period_id',
@@ -648,15 +648,15 @@ class SubjectExcelBehavior extends Behavior
 					'gender','student_status', 'identity_type', 'identity_number'
 					];
         //POCOR-5852 ends            
-        $excludes = $this->config('excludes');
+        $excludes = $this->getConfig('excludes');
 
-        if (!is_array($table->primaryKey())) { //if not composite key
-            $excludes[] = $table->primaryKey();
+        if (!is_array($table->getPrimaryKey())) { //if not composite key
+            $excludes[] = $table->getPrimaryKey();
         }
 
         $fields = new ArrayObject();
-        $module = $table->alias();
-        $language = I18n::locale();
+        $module = $table->getAlias();
+        $language = I18n::getLocale();
         $excludedTypes = ['binary'];
         /*POCOR-6635 starts - added condition to export individual subject with student's list*/
         $encodedSubjectId = $this->_table->request->params['pass'][1];
@@ -668,13 +668,13 @@ class SubjectExcelBehavior extends Behavior
         /*POCOR-6635 ends */
 
         foreach ($columns as $col) {
-            $field = $schema->column($col);
+            $field = $schema->getColumn($col);
             if (!in_array($field['type'], $excludedTypes)) {
                 $label = $table->aliasField($col);
 
                 $event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $col, $language], true);
-                if (strlen($event->result)) {
-                    $label = $event->result;
+                if (strlen($event->getResult())) {
+                    $label = $event->getResult();
                 }
 
                 $fields[] = [
@@ -781,7 +781,7 @@ class SubjectExcelBehavior extends Behavior
     {
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     return true;
                 }
             }
@@ -795,7 +795,7 @@ class SubjectExcelBehavior extends Behavior
 
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     $relatedModel = $assoc;
                     break;
                 }
@@ -850,7 +850,7 @@ class SubjectExcelBehavior extends Behavior
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 0];
@@ -871,7 +871,7 @@ class SubjectExcelBehavior extends Behavior
     {
         $action = $this->_table->action;
         //POCOR-5852 starts add  || $action == 'index' condition
-        if (in_array($action, $this->config('pages')) || $action == 'index') {
+        if (in_array($action, $this->getConfig('pages')) || $action == 'index') {
             $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
             $toolbarAttr = [
                 'class' => 'btn btn-xs btn-default',
@@ -911,7 +911,7 @@ class SubjectExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if (in_array($action, $pages)) {
                 $toolbarButtons['export'] = $export;
             }
@@ -928,7 +928,7 @@ class SubjectExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if ($pages != false) {
                 if (in_array($action, $pages)) {
                     $toolbarButtons['export'] = $export;

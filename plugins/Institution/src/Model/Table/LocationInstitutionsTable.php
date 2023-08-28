@@ -5,10 +5,10 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
 
 class LocationInstitutionsTable extends ControllerActionTable {
-	public function initialize(array $config)
+	public function initialize(array $config): void
     {
         // $this->addBehavior('FieldOption.FieldOption');
-		$this->table('institutions');
+		$this->setTable('institutions');
         parent::initialize($config);
 
 		$this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true]);

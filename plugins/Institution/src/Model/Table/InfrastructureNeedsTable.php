@@ -25,9 +25,9 @@ class InfrastructureNeedsTable extends ControllerActionTable
         3 => 'Low'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('infrastructure_needs');
+        $this->setTable('infrastructure_needs');
         parent::initialize($config);
 
         $this->belongsTo('InfrastructureNeedTypes', ['className' => 'Institution.InfrastructureNeedTypes', 'foreign_key' => 'infrastructure_need_type_id']);
@@ -49,10 +49,8 @@ class InfrastructureNeedsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
         // setting this up to be overridden in viewAfterAction(), this code is required
-        $this->behaviors()->get('ControllerAction')->config(
-            'actions.download.show',
-            true
-        );
+        $this->behaviors()->get('ControllerAction')->setConfig(['actions.download.show',
+            true]);
 
         $this->addBehavior('Excel',[
             'excludes' => ['academic_period_id', 'institution_id'],
@@ -60,7 +58,7 @@ class InfrastructureNeedsTable extends ControllerActionTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
@@ -76,7 +74,7 @@ class InfrastructureNeedsTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

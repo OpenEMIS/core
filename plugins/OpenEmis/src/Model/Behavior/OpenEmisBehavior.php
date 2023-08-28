@@ -85,7 +85,6 @@ class OpenEmisBehavior extends Behavior
                 '<button type="submit" class="btn btn-default">' . __('Delete') . '</button>'
             ];
             $modal['cancelButton'] = true;
-
             if (!isset($model->controller->viewVars['modals'])) {
                 $model->controller->set('modals', ['delete-modal' => $modal]);
             } else {
@@ -319,9 +318,10 @@ class OpenEmisBehavior extends Behavior
 
         if ($action == 'index') {
             if ($model->actions('add')) {
-                $toolbarButtons['add']['url'] = $model->url('add');
+               // $model->url('add')
+                $toolbarButtons['add']['url'] = 'http://127.0.0.1/openemis4/pocor-openemis-core/Institutions/Institutions/add';
                 $toolbarButtons['add']['type'] = 'button';
-                $toolbarButtons['add']['label'] = '<i class="fa kd-add"></i>';
+                $toolbarButtons['add']['label'] = "<i class='fa kd-add'></i>";
                 $toolbarButtons['add']['attr'] = $toolbarAttr;
                 $toolbarButtons['add']['attr']['title'] = __('Add');
             }
@@ -398,6 +398,7 @@ class OpenEmisBehavior extends Behavior
         }
 
         if ($model->actions('remove')) {
+            //$model->actions('remove')
             $indexButtons['remove']['strategy'] = $model->actions('remove');
             $removeUrl = 'remove';
             if ($model->actions('remove') == 'transfer') {

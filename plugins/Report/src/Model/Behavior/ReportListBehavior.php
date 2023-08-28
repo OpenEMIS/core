@@ -20,14 +20,14 @@ use DateTime;
 class ReportListBehavior extends Behavior {
 	public $ReportProgress;
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		
-		$this->ReportProgress = TableRegistry::get('Report.ReportProgress');
-		$this->SecurityUsers  = TableRegistry::get('Security.Users');
+		$this->ReportProgress = TableRegistry::getTableLocator()->get('Report.ReportProgress');
+		$this->SecurityUsers  = TableRegistry::getTableLocator()->get('Security.Users');
 		
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.add.beforeSave'] = 'addBeforeSave';
 		$events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
@@ -44,10 +44,10 @@ class ReportListBehavior extends Behavior {
 		if ($this->_table->action == 'index') {
 			/*POCOR-6208 starts*/
 			if ($this->_table->Auth->user()['super_admin'] == 0) {
-				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-	        	$SecurityRoles = TableRegistry::get('Security.SecurityRoles');
-	        	$securityFunctions = TableRegistry::get('SecurityFunctions');
-	        	$SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
+				$SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+	        	$SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+	        	$securityFunctions = TableRegistry::getTableLocator()->get('SecurityFunctions');
+	        	$SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
 	        	$userRole = $SecurityGroupUsers->find()->select([
 	                        	$SecurityGroupUsers->aliasField('security_role_id'),
 	                        	$SecurityRoles->aliasField('name')

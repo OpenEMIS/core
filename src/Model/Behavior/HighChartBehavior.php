@@ -19,7 +19,7 @@ class HighChartBehavior extends Behavior
     public function getHighChart($chart, $params = [])
     {
         $model = $this->_table;
-        $selectedConfig = $this->config($chart);
+        $selectedConfig = $this->getConfig($chart);
         $function = $selectedConfig['_function'];
         $defaultColors = isset($selectedConfig['_defaultColors']) ? $selectedConfig['_defaultColors'] : true;
         $params = call_user_func_array([$model, $function], [$params]);
@@ -59,7 +59,7 @@ class HighChartBehavior extends Behavior
     public function getDonutChart($chart, $params = array())
     {
         $model = $this->_table;
-        $selectedConfig = $this->config($chart);
+        $selectedConfig = $this->getConfig($chart);
         $function = $selectedConfig['_function'];
         $defaultColors = isset($selectedConfig['_defaultColors']) ? $selectedConfig['_defaultColors'] : true;
         $params = call_user_func_array([$model, $function], [$params]);
@@ -131,7 +131,7 @@ class HighChartBehavior extends Behavior
     // Modification from advance name search behavior
     public function advanceNameSearch($model, $search)
     {
-        $alias = $model->alias();
+        $alias = $model->getAlias();
 
         $searchParams = explode(' ', $search);
         foreach ($searchParams as $key => $value) {
@@ -141,7 +141,7 @@ class HighChartBehavior extends Behavior
         }
         $conditions = [];
         // note that CONCAT_WS is not supported by cakephp and also not supported by some dbs like sqlite and mysqlserver, thus this condition
-        if ($this->_table->connection()->config()['driver'] == 'Cake\Database\Driver\Mysql') {
+        if ($this->_table->connection()->getConfig()['driver'] == 'Cake\Database\Driver\Mysql') {
             switch (count($searchParams)) {
                 case 1:
                     // 1 word - search by openemis id or 1st or middle or third or last

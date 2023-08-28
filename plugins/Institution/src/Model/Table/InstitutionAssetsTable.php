@@ -22,7 +22,7 @@ class InstitutionAssetsTable extends ControllerActionTable
     private $accessibilityOptions = [];
     private $purposeOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -40,7 +40,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         // POCOR-6152 export button <vikas.rathore@mail.valuecoders.com>
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

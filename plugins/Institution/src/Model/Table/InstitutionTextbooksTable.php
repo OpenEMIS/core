@@ -25,7 +25,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     // NOTE : studentoption used to retrive enrolled students only, however later for pocor-7362 assigned staff are also required and hence a method is written to get assigned staff and merged with $studentOptions. 
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -39,15 +39,15 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
-        $this->EducationLevels          = TableRegistry::get('Education.EducationLevels');
-        $this->EducationProgrammes      = TableRegistry::get('Education.EducationProgrammes');
-        $this->EducationGrades          = TableRegistry::get('Education.EducationGrades');
-        $this->EducationGradeSubjects   = TableRegistry::get('Education.EducationGradeSubjects');
+        $this->EducationLevels          = TableRegistry::getTableLocator()->get('Education.EducationLevels');
+        $this->EducationProgrammes      = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+        $this->EducationGrades          = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $this->EducationGradeSubjects   = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');
 
-        $this->InstitutionSubjectStudents   = TableRegistry::get('Institution.InstitutionSubjectStudents');
-        $this->InstitutionGrades            = TableRegistry::get('Institution.InstitutionGrades');
-        $this->InstitutionClasses           = TableRegistry::get('Institution.InstitutionClasses');
-        $this->InstitutionSubjects          = TableRegistry::get('Institution.InstitutionSubjects');
+        $this->InstitutionSubjectStudents   = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
+        $this->InstitutionGrades            = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+        $this->InstitutionClasses           = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $this->InstitutionSubjects          = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
 
         $this->setDeleteStrategy('restrict');
 
@@ -55,7 +55,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->addBehavior('InstitutionTextbookExcel', ['excludes' => ['security_group_id'], 'pages' => ['index']]); // POCOR-3627
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
 
         return $validator
@@ -66,7 +66,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
             ]);
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
        $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
         return $events;
@@ -494,7 +494,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
         // echo $educationGradesId;
         // exit;
-        $staff = TableRegistry::get('institution_staff');
+        $staff = TableRegistry::getTableLocator()->get('institution_staff');
         $query = $staff->find()
                 ->select([
                    'su.openemis_no',
@@ -680,12 +680,12 @@ class InstitutionTextbooksTable extends ControllerActionTable
         if ($action == 'add' || $action == 'edit') {
 
             if ($action == 'add') {
-				$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+				$AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 				$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
 
-				$InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-				$EducationGrades = TableRegistry::get('Education.EducationGrades');
-				$EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+				$InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+				$EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+				$EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
 
 				$list = $InstitutionGrades
 					->find()

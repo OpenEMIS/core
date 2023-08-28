@@ -11,7 +11,7 @@ class RestrictAssociatedDeleteBehavior extends Behavior {
 		'message' => 'general.deleteTransfer.restrictDelete'
 	];
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'ControllerAction.Model.onBeforeDelete'	=> ['callable' => 'onBeforeDelete', 'priority' => 20],
@@ -23,7 +23,7 @@ class RestrictAssociatedDeleteBehavior extends Behavior {
 	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra) {
 		if ($this->_table->hasAssociatedRecords($this->_table, $entity, $extra)) {
 			$event->stopPropagation();
-			$extra['Alert']['message'] = $this->config('message');
+			$extra['Alert']['message'] = $this->getConfig('message');
 			return false;
 		}
 	}

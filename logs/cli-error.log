@@ -15,3 +15,11 @@ Stack Trace:
 - /Users/ehteramahmad/Sites/testingPurpose/repositories/openemis_core_version_4_2_2/pocor-openemis-core/vendor/cakephp/cakephp/src/Console/ShellDispatcher.php:130
 - /Users/ehteramahmad/Sites/testingPurpose/repositories/openemis_core_version_4_2_2/pocor-openemis-core/bin/cake.php:34
 
+2023-08-18 12:23:34 error: [Error] Class 'Router' not found in C:\xampp-new\htdocs\openemis4\pocor-openemis-core\plugins\Report\config\routes.php on line 4
+Stack Trace:
+- C:\xampp-new\htdocs\openemis4\pocor-openemis-core\vendor\cakephp\cakephp\src\Core\BasePlugin.php:262
+- C:\xampp-new\htdocs\openemis4\pocor-openemis-core\vendor\cakephp\cakephp\src\Http\BaseApplication.php:211
+- C:\xampp-new\htdocs\openemis4\pocor-openemis-core\vendor\cakephp\cakephp\src\Console\CommandRunner.php:399
+- C:\xampp-new\htdocs\openemis4\pocor-openemis-core\vendor\cakephp\cakephp\src\Console\CommandRunner.php:147
+- C:\xampp-new\htdocs\openemis4\pocor-openemis-core\bin\cake.php:12
+

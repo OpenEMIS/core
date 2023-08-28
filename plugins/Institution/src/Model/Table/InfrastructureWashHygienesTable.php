@@ -13,9 +13,9 @@ use App\Model\Table\ControllerActionTable;
 
 class InfrastructureWashHygienesTable extends ControllerActionTable {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('infrastructure_wash_hygienes');
+        $this->setTable('infrastructure_wash_hygienes');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods',   ['className' => 'AcademicPeriod.AcademicPeriods', 'foreign_key' => 'academic_period_id']);
@@ -32,7 +32,7 @@ class InfrastructureWashHygienesTable extends ControllerActionTable {
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

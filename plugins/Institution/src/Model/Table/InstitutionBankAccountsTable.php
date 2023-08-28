@@ -24,7 +24,7 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 ** CakePHP default methods
 **
 ******************************************************************************************************************/
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -33,7 +33,7 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
         $this->addBehavior('Excel', ['pages' => ['index']]);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 		return $validator;
 	}

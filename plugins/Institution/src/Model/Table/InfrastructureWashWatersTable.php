@@ -11,9 +11,9 @@ use Cake\ORM\TableRegistry;
 class InfrastructureWashWatersTable extends ControllerActionTable
 {
     private $infrastructureTabsData = [0 => "Water", 1 => "Sanitation", 2 => "Hygiene", 3 => "Waste", 4 => "Sewage"];
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('infrastructure_wash_waters');
+        $this->setTable('infrastructure_wash_waters');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreign_key' => 'academic_period_id']);

@@ -14,8 +14,8 @@ use Cake\Log\Log;
 
 class InstitutionStaffAttendancesTable extends ControllerActionTable {
 
-    public function initialize(array $config) {
-        $this->table('institution_staff_attendances');
+    public function initialize(array $config): void {
+        $this->setTable('institution_staff_attendances');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -28,7 +28,7 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
         $this->addBehavior('TrackActivity', ['target' => 'User.InstitutionStaffAttendanceActivities', 'key' => 'security_user_id', 'keyField' => 'staff_id']);
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
 
         return $validator

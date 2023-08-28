@@ -17,8 +17,8 @@ class ReportProgressTable extends AppTable  {
 	const COMPLETED = 0;
 	const PENDING = 1;
 
-	public function initialize(array $config) {
-		$this->table('report_progress');
+	public function initialize(array $config): void {
+		$this->setTable('report_progress');
 		parent::initialize($config);
 	}
 
