@@ -14,7 +14,7 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Validation\Validator;
 use Cake\Log\Log;
 use App\Model\Table\AppTable;
-
+use Cake\Datasource\ConnectionManager;
 class StudentPromotionTable extends AppTable
 {
     private $InstitutionGrades = null;
@@ -721,7 +721,48 @@ class StudentPromotionTable extends AppTable
                     elseif (in_array($studentStatusId, [$statuses['GRADUATED']]) && !$isLastGrade) {
                         $options = [0 => $this->getMessage($this->aliasField('notEnrolled'))] + $gradeOptions;
                     } elseif (in_array($studentStatusId, [$statuses['PROMOTED']])) {
-                        $options = $toGradeOptionPromoted;
+                       //POCOR-4746 start
+                       $educationGrades=TableRegistry::get('Education.EducationGrades');
+                       $educationProgramme=TableRegistry::get('education_programmes');
+                       $data=$educationGrades->find()
+                                             ->select([
+                                                "id"=> $educationGrades->aliasField('id'),
+                                                "grade_name"=> $educationGrades->aliasField('name'),
+                                                "programme_id"=> $educationProgramme->aliasField('id'),
+                                                "same_grade_promotion"=>$educationProgramme->aliasField('same_grade_promotion'),
+                                                "programme"=>$educationProgramme->aliasField('name'),
+                                                      ]
+                                                    )
+                                             ->innerJoin(
+                                                [$educationProgramme->alias() => $educationProgramme->table()],
+                                                [
+                                            
+                                                    $educationProgramme->aliasField('id = ') . $educationGrades->aliasField('education_programme_id')
+                                                ]
+                                            )
+                                            ->where([$educationGrades->aliasField('id')=>$entity->grade_to_promote])
+                                            ->first();
+                        $connection = ConnectionManager::get('default');
+                        $sql="SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name 
+                                                   FROM education_grades 
+                                                   INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                                                   INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                                                   INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id 
+                                                   INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+                                                   INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
+                                                   WHERE academic_periods.id=  $academicPeriodId and education_grades.name = '".$data->grade_name."'
+                                                   ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC;";
+                        $result=$connection->execute($sql)->fetch('assoc');
+                        $newOption=[];                       
+                        $newOption[$result['grade_id']] = $result['programme_name'] . ' - ' .$result['grade_name'];
+                        
+                        if($data->same_grade_promotion==1){
+                            $options =   $newOption;
+                        }
+                        else{
+                            $options = $toGradeOptionPromoted;
+                        }
+                    //POCOR-4746 end
                     } else {
                         // to cater for promote
                         $options = $gradeOptions;
@@ -895,7 +936,6 @@ class StudentPromotionTable extends AppTable
                         $gradeId = $this->Session->read('grade_id');
                         $nextClasses = $InstitutionClassesTable->getClassOptions($selectedNextPeriod, $institutionId, $gradeId);
                     }
-
                     $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
                     $StudentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
                     $StudentTransfersTable = TableRegistry::get('Institution.InstitutionStudentTransfers');
