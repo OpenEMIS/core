@@ -539,6 +539,30 @@ class SecurityRolesTable extends ControllerActionTable
             ->toArray();
     }
 
+    /**
+     * function returns the list + user roles for the group
+     * @param $userGroupId
+     * @return array
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function getUserRolesList($userGroupId)
+    {
+        $systemRoleGroupIds = [self::FIXED_SYSTEM_GROUP_ID, self::CUSTOM_SYSTEM_GROUP_ID, $userGroupId];
+//        $this->log($systemRoleGroupIds, 'debug');
+        $options = $this->find('list')
+            ->find('visible')
+            ->where([
+                $this->aliasField('security_group_id') . ' IN ' => $systemRoleGroupIds,
+                // to exclude homeroom teacher role from selection as this role will be added to user from institution position is_homeroom = true
+                $this->aliasField('code') . ' NOT LIKE ' => 'HOMEROOM_TEACHER'
+            ])
+            ->order([$this->aliasField('order')])
+            ->hydrate(false)
+            ->toArray();
+//        $this->log($options, 'debug');
+        return $options;
+    }
+
     public function getGroupOptions()
     {
         $InstitutionsTable = TableRegistry::get('Institution.Institutions');

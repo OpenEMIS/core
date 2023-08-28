@@ -942,7 +942,7 @@ class DirectoriesController extends AppController
             'ExaminationResults' => ['text' => __('Examinations')],
             'ReportCards' => ['text' => __('Report Cards')],
             'Awards' => ['text' => __('Awards')],
-            'Extracurriculars' => ['text' => __('Extracurriculars')],
+            //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7648
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
             'Associations' => ['text' => __('Associations')]
@@ -1024,7 +1024,7 @@ class DirectoriesController extends AppController
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
                 'Qualifications' => ['text' => __('Qualifications')],
-                'Extracurriculars' => ['text' => __('Extracurriculars')],
+                //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR7648
                 'Memberships' => ['text' => __('Memberships')],
                 'Licenses' => ['text' => __('Licenses')],
                 'Awards' => ['text' => __('Awards')],
@@ -1033,6 +1033,7 @@ class DirectoriesController extends AppController
             $user=0;//POCOR-7528 
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
+                'Qualifications' => ['text' => __('Qualifications')],
                 'Licenses' => ['text' => __('Licenses')],
             ];
         }

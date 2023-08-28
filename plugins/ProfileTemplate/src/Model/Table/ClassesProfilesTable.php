@@ -342,7 +342,9 @@ class ClassesProfilesTable extends ControllerActionTable
             $institutionOptions = $Institutions->find('list')
                                 ->where([
                                     $Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
-                                ])->toArray();
+                                ])
+                                ->order([$Institutions->aliasField('name') =>'ASC']) //POCOR-7641
+                                ->toArray();
         }else{
             //POCOR-6822 Anubhav's code starts
             $areaIds = [];
@@ -357,7 +359,9 @@ class ClassesProfilesTable extends ControllerActionTable
             $institutionOptions = $Institutions->find('list')
                                 ->where([ $Institutions->aliasField('area_id IN') => $allselectedAreas,
                                     $Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
-                                ])->toArray();
+                                ])
+                                ->order([$Institutions->aliasField('name') =>'ASC']) //POCOR-7641
+                                ->toArray();
         }
 
         if(!empty($institutionOptions)){
@@ -914,6 +918,7 @@ class ClassesProfilesTable extends ControllerActionTable
     public function publish(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
+        unset($params['area_id']); //POCOR-7663
         $result = $this->ClassProfiles->updateAll(['status' => self::PUBLISHED], $params);
         $this->Alert->success('ReportCardStatuses.publish');
         $event->stopPropagation();
@@ -923,7 +928,10 @@ class ClassesProfilesTable extends ControllerActionTable
     public function publishAll(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-
+        if(empty($params['institution_id'])){
+            unset($params['institution_id']); //POCOR-7663
+        }
+        
         // only publish report cards with generated status to published status
         $result = $this->ClassProfiles->updateAll(['status' => self::PUBLISHED], [
             $params,

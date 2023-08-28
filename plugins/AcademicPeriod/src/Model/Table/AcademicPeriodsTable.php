@@ -14,6 +14,7 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
 use Cake\I18n\Date;
+use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 
 class AcademicPeriodsTable extends AppTable
 {
@@ -70,7 +71,7 @@ class AcademicPeriodsTable extends AppTable
         $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentresExaminations', ['className' => 'Examination.ExaminationCentresExaminations', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentresExaminationsStudents', ['className' => 'Examination.ExaminationCentresExaminationsStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationStudentSubjectResults', ['className' => 'Examination.ExaminationStudentSubjectResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffBehaviours', ['className' => 'Institution.StaffBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Scholarships', ['className' => 'Scholarship.Scholarships', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -665,6 +666,30 @@ class AcademicPeriodsTable extends AppTable
             });
     }
 
+    /**
+     * @param Query $query
+     * @param array $options
+     * @return Query
+     */
+    public function findAcademicPeriodStaffAttendanceArchived(Query $query, array $options)
+    {
+//        $this->log('findAcademicPeriodStaffAttendanceArchived', 'debug');
+//        $this->log($options, 'debug');
+        $academicPeriodStaffAttendanceArrayId = [];
+        $academicPeriodStaffAttendanceArray = ArchiveConnections::getArchiveYears('institution_staff_attendances',
+            ['institution_id' => $options['institution_id']]);
+        if(sizeof($academicPeriodStaffAttendanceArray) > 0){
+            $academicPeriodStaffAttendanceArrayId = $academicPeriodStaffAttendanceArray;
+        }
+//        $this->log('$academicPeriodStaffAttendanceArchived', 'debug');
+//        $this->log("$academicPeriodStaffAttendanceArray", 'debug');
+        $where = [
+            $this->aliasField('current !=') => 1,
+            $this->aliasField('id IN')  => $academicPeriodStaffAttendanceArrayId
+        ];
+        return $query->where($where);
+    }
+
     public function getList($params=[])
     {
         $withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : true;
@@ -1256,6 +1281,101 @@ class AcademicPeriodsTable extends AppTable
             });
     }
 
+    public function findWeeksForPeriodStaffAttendanceArchived(Query $query, array $options)
+    {
+        $academicPeriodId = $options['academic_period_id'];
+        $institutionId = $options['institution_id'];
+        $model = $this;
+        $distinctDateValues = ArchiveConnections::getArchiveDays('institution_staff_attendances',
+            ['institution_id' => $institutionId,
+                'academic_period_id' => $academicPeriodId
+            ]);
+        $distinctLeaveDateValues = ArchiveConnections::getArchiveLeaveDays('institution_staff_leave',
+            ['institution_id' => $institutionId,
+                'academic_period_id' => $academicPeriodId
+            ]);
+//        $this->log('$distinctDateValues', 'debug');
+//        $this->log($distinctDateValues, 'debug');
+//        $this->log('$distinctLeaveDateValues', 'debug');
+//        $this->log($distinctLeaveDateValues, 'debug');
+        $mergedArray = array_unique(
+            array_merge(
+                $distinctDateValues,
+                $distinctLeaveDateValues
+            )
+        );
+//        $this->log('$mergedArray', 'debug');
+//        $this->log($mergedArray, 'debug');
+// Convert the strings back to DateTime objects
+        $finalArray = array_map(function ($dateString) {
+            return new Date($dateString);
+        }, $mergedArray);
+        return $query
+            ->where([$this->aliasField('id') => $academicPeriodId])
+            ->formatResults(function (ResultSetInterface $results) use ($model, $finalArray) {
+                return $results->map(function ($row) use ($model, $finalArray) {
+                    $academicPeriodId = $row->id;
+
+                    $todayDate = date("Y-m-d");
+                    $weekOptions = [];
+                    $selectedIndex = 0;
+
+                    $weeks = $model->getAttendanceWeeks($academicPeriodId);
+                    $weekStr = __('Week') . ' %d (%s - %s)';
+                    $currentWeek = null;
+
+                    foreach ($weeks as $index => $dates) {
+                        $startDay = $dates[0]->format('Y-m-d');
+                        $endDay = $dates[1]->format('Y-m-d');
+                        $weekAttr = [];
+                        if ($todayDate >= $startDay && $todayDate <= $endDay) {
+                            $weekStr = __('Current Week') . ' %d (%s - %s)';
+                            // $weekAttr['selected'] = true;
+                            $currentWeek = $index;
+                        } else {
+                            $weekStr = __('Week') . ' %d (%s - %s)';
+                        }
+                        $weekAttr['name'] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
+                        $weekAttr['start_day'] = $startDay;
+                        $weekAttr['end_day'] = $endDay;
+                        $weekAttr['id'] = $index;
+
+                        foreach ($finalArray as $distinctDateValue) {
+                            if ($distinctDateValue >= $dates[0] && $distinctDateValue <= $dates[1]) {
+                                $weekOptions[] = $weekAttr;
+                            }
+                        }
+
+                        $uniqueWeekOptions = [];
+                        $ids = [];
+
+                        foreach ($weekOptions as $subArray) {
+                            $id = $subArray['id'];
+                            if (!in_array($id, $ids)) {
+                                $ids[] = $id;
+                                $uniqueWeekOptions[] = $subArray;
+                            }
+                        }
+
+
+//                        $this->log('$uniqueWeekOptions', 'debug');
+//
+//                        $this->log($uniqueWeekOptions, 'debug');
+
+                        if ($todayDate >= $startDay && $todayDate <= $endDay) {
+                            end($uniqueWeekOptions);
+                            $selectedIndex = key($uniqueWeekOptions);
+                        }
+                    }
+                    $uniqueWeekOptions[$selectedIndex]['selected'] = true;
+                    $row->weeks = $uniqueWeekOptions;
+
+                    return $row;
+                });
+            });
+    }
+
+
     public function findPeriodHasClass(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
@@ -1413,87 +1533,60 @@ class AcademicPeriodsTable extends AppTable
 
     public function findDaysForPeriodWeekArchive(Query $query, array $options)
     {
-        $academicPeriodId = $options['academic_period_id'];
-        $current_week_number_selected = $options['current_week_number_selected']; // POCOR-6723
-        $weekId = $options['week_id'];
+        $firstDay = new Date($options['start_date']);
+        $lastDay = new Date($options['end_date']);
         $institutionId = $options['institution_id'];
-
-        // pass true if you need school closed data
-        if (array_key_exists('school_closed_required', $options)) {
-            $schoolClosedRequired = $options['school_closed_required'];
-        } else {
-            $schoolClosedRequired = false;
-        }
-        
-        $model = $this;
-
+        $today = null;
+//        $this->log('findDaysForPeriodWeekArchive', 'debug');
+//        $this->log($firstDay, 'debug');
+//        $this->log($lastDay, 'debug');
+//        $this->log($institutionId, 'debug');
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
         $daysPerWeek = $ConfigItems->value('days_per_week');
-        $weeks = $model->getAttendanceWeeks($academicPeriodId);
-        $week = $weeks[$weekId];
-        $options['exclude_all'] = true;
-        if (isset($options['exclude_all']) && $options['exclude_all']) {
-            $dayOptions = [];
-        } else {
-            $dayOptions[] = [
-                'id' => -1,
-                'name' => __('All Days'),
-                'date' => -1
-            ];
-        }
-
         $schooldays = [];
         for ($i = 0; $i < $daysPerWeek; ++$i) {
             // sunday should be '7' in order to be displayed
             $schooldays[] = 1 + ($firstDayOfWeek + 6 + $i) % 7;
         }
-        $firstDayOfWeek = $week[0]->copy();
-        $today = null;
-
         do {
-            // if (in_array($firstDayOfWeek->dayOfWeek, $schooldays)) {
-                // echo json_encode($firstDayOfWeek->dayOfWeek);die;
-                if ($schoolClosedRequired == false) {
-                    $schoolClosed = false;
-                } else {
-                    $schoolClosed = $this->isSchoolClosed($firstDayOfWeek, $institutionId);
+            if (in_array($firstDay->dayOfWeek, $schooldays)) {
+                {
+                    $schoolClosed = $this->isSchoolClosed($firstDay, $institutionId);
                 }
                 $suffix = $schoolClosed ? __('School Closed') : '';
 
                 $data = [
-                    'id' => $firstDayOfWeek->dayOfWeek,
-                    'day' => __($firstDayOfWeek->format('l')),
-                    'name' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ') ' . $suffix,
-                    'date' => $firstDayOfWeek->format('Y-m-d'),
-                    'current_week_number_selected' => $current_week_number_selected, //POCOR-6723
-                    'day_number' => $firstDayOfWeek->isToday() //POCOR-6723
+                    'id' => $firstDay->dayOfWeek,
+                    'day' => __($firstDay->format('l')),
+                    'name' => __($firstDay->format('l')) . ' (' . $this->formatDate($firstDay) . ') ' . $suffix ,
+                    'date' => $firstDay->format('Y-m-d'),
+                    'day_number' => $firstDay->isToday() //POCOR-6723
                 ];
-                
-                if ($schoolClosed) {
-                    $data['closed'] = true;
-                }
+
                 $dayOptions[] = $data;
 
-                if (is_null($today) || $firstDayOfWeek->isToday()) {
+                if (is_null($today) || $firstDay->isToday()) {
                     end($dayOptions);
                     $today = key($dayOptions);
                 }
-            // }
-            $firstDayOfWeek->addDay();
-        } while ($firstDayOfWeek->lte($week[1]));
+            }
+            $firstDay->addDay();
+        } while ($firstDay->lte($lastDay));
         // echo json_encode($dayOptions);die;
         if (!is_null($today)) {
             $dayOptions[$today]['selected'] = true;
-            $dayOptions[$today]['current_week_number_selected'] = $current_week_number_selected; //POCOR-6723
-            $dayOptions[$today]['day_number'] = __($firstDayOfWeek->format('N')); //POCOR-6723
+            $dayOptions[$today]['day_number'] = __($firstDay->format('N')); //POCOR-6723
         }
-       
-        return $query
-            ->where([$this->aliasField('id') => $academicPeriodId])
+
+        $query
+            ->select(['id'])
+            ->limit(1)
             ->formatResults(function (ResultSetInterface $results) use ($dayOptions) {
                 return $dayOptions;
-            });
+            })
+        ;
+//        return $dayOptions;
     }
 
     public function getNextAcademicPeriodId($id)

@@ -17,7 +17,7 @@ class EducationProgrammesTable extends ControllerActionTable {
     use HtmlTrait;
 
     private $_contain = ['EducationNextProgrammes._joinData'];
-    private $_fieldOrder = ['code', 'name', 'duration', 'visible', 'education_field_of_study_id', 'education_cycle_id', 'education_certification_id'];
+    private $_fieldOrder = ['code', 'name', 'duration', 'visible', 'education_field_of_study_id','education_cycle_id', 'education_certification_id' ,'same_grade_promotion'];//POCOR-4746
 
     public function initialize(array $config) {
         parent::initialize($config);
@@ -60,8 +60,9 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     public function beforeAction(Event $event, ArrayObject $extra) {
         if ($this->action != 'index') {
-            $this->field('next_programmes', ['type' => 'custom_next_programme', 'valueClass' => 'table-full-width']);
-            $this->_fieldOrder[] = 'next_programmes';
+            $this->field('next_programmes', ['type' => 'custom_next_programme', 'valueClass' => 'table-full-width','after'=>'same_grade_promotion']);
+            $this->field('same_grade_promotion');//POCOR-4746
+            $this->_fieldOrder[] =['next_programmes'];
         }
     }
 
@@ -73,7 +74,7 @@ class EducationProgrammesTable extends ControllerActionTable {
         $this->fields['education_field_of_study_id']['sort'] = ['field' => 'EducationFieldOfStudies.name'];
         $this->fields['education_cycle_id']['sort'] = ['field' => 'EducationCycles.name'];
         $this->fields['education_certification_id']['sort'] = ['field' => 'EducationCertifications.name'];
-
+        $this->field('same_grade_promotion',['visible'=>'hidden']);//POCOR-4746
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Administration','Education Programmes','Education');       
 		if(!empty($is_manual_exist)){
@@ -208,6 +209,7 @@ class EducationProgrammesTable extends ControllerActionTable {
         $this->field('education_cycle_id');
         $this->fields['education_field_of_study_id']['type'] = 'select';
         $this->fields['education_certification_id']['type'] = 'select';
+        $this->fields['same_grade_promotion']['type'] = 'select';//POCOR-4746
     }
 
     public function onUpdateFieldEducationCycleId(Event $event, array $attr, $action, Request $request) {
@@ -444,7 +446,6 @@ class EducationProgrammesTable extends ControllerActionTable {
         if (!array_key_exists('education_next_programmes', $data[$this->alias()])) {
             $data[$this->alias()]['education_next_programmes'] = [];
         }
-
         // Required by patchEntity for associated data
         $newOptions = [];
         $newOptions['associated'] = $this->_contain;
@@ -468,5 +469,22 @@ class EducationProgrammesTable extends ControllerActionTable {
                         ->order(['EducationCycles.order' => 'ASC', $this->aliasField('order') => 'ASC'])
                         ->toArray();
     }
+    //POCOR-4746 start
+    public function onUpdateFieldSameGradePromotion(Event $event, array $attr, $action, Request $request) {
+        $options = [1 => "Enabled", 0 => "Disabled"];
+        $attr['options'] = $options;
+        $attr['onChangeReload'] = 'changeCurrent';
+        return $attr;
+    }
 
+    public function onGetSameGradePromotion(Event $event, Entity $entity)
+    {
+       if($entity->same_grade_promotion==1){
+          return $entity->same_grade_promotion="Enabled";
+       }
+       if($entity->same_grade_promotion==0){
+          return $entity->same_grade_promotion="Disabled";
+       }
+    }
+    //POCOR-4746 end
 }

@@ -538,4 +538,14 @@ class StudentMarkTypesTable extends ControllerActionTable
         }
     }
 
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {   
+        $id = $entity->id;
+        if(!empty($id)){
+            $studentAttendancePerDayPeriodsTable = TableRegistry::get('student_attendance_per_day_periods');
+            $studentAttendancePerDayPeriodsTable->deleteAll([
+                $studentAttendancePerDayPeriodsTable->aliasField('student_attendance_mark_type_id') => $id
+            ]);
+        }
+    }
 }

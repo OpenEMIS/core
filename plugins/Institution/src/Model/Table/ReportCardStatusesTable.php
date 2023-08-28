@@ -505,9 +505,9 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $entity->modified = $currentTimeZone;//POCOR-6841
                     $ReportCardProcessesTable->save($entity);
                     $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-			        $StudentsReportCards->updateAll([
-				         'status'=>-1//POCOR-7530
-			        ],['student_id' => $entity->student_id, 'report_card_id'=> $entity->report_card_id]);
+                    $StudentsReportCards->updateAll([
+                         'status'=>-1//POCOR-7530
+                    ],['student_id' => $entity->student_id, 'report_card_id'=> $entity->report_card_id]);
                     
                 }//POCOR-7067 Ends
             }//POCOR-6841 ends
@@ -724,7 +724,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                         'report_card_id' => $reportCardId
                     ];
     
-                   
                     $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
                     $SecurityFunctionsAllExcelData = $SecurityFunctions
                                         ->find()
@@ -741,7 +740,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                                             
                                         ])
                                         ->count();
-    
+                    
                     $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
                     $SecurityFunctionsAllPdfData = $SecurityFunctions
                                         ->find()
@@ -787,8 +786,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                         //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
                         ])
                         ->count();            
-                        
-
+                    
                     if ($generatedCount > 0 || $publishedCount > 0) {
                         if ($this->AccessControl->isAdmin()) {
                             $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
@@ -810,9 +808,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                             }
                         }
                     }        
-
                     // End POCOR-7320
-                    
                     // Download all button
                      if ($generatedCount > 0 || $publishedCount > 0) {
                         if ($this->AccessControl->isAdmin()) {
@@ -842,7 +838,10 @@ class ReportCardStatusesTable extends ControllerActionTable
                             $downloadButton['attr']['title'] = __('Download All Excel');
                             $extra['toolbarButtons']['downloadAll'] = $downloadButton;
                         }else{
-                            if($SecurityRoleFunctionsTableAllExcelData >= 1){
+                            //POCOR-7656 start
+                            $ExcludedSecurityRoleEntity=$this->getExcludedSecurityRolesData($reportCardId);  //POCOR-7551
+                            //POCOR-7656 end
+                            if(($SecurityRoleFunctionsTableAllExcelData >= 1) || ($ExcludedSecurityRoleEntity == 1)){
                                 $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
                                 $downloadButton['type'] = 'button';
                                 $downloadButton['label'] = '<i class="fa kd-download"></i>';
@@ -852,7 +851,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                             }
                         }
                     }
-    
                     // Generate all button
                     $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
                     $generateButton['type'] = 'button';
@@ -869,8 +867,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                                         ->where([
                                             $this->ReportCards->aliasField('id') => $reportCardId])
                                         ->first();
-    
-    
+        
                     if (!empty($ReportCardsData->generate_start_date)) {
                         $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
                     }
@@ -1022,7 +1019,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                                             $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds])//POCOR-7131
                                         ->count();//POCOR-7131
                     //POCOR-6838: End
-
                     // Start POCOR-7320
                     $SecurityFunctionsMergeGenerateAllData = $SecurityFunctions
                     ->find()
@@ -1037,8 +1033,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                         //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
                         ])
                         ->count();            
-                        
-                        
                     if ($generatedCount > 0 || $publishedCount > 0) {
                         if ($this->AccessControl->isAdmin()) {
                             $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
@@ -1118,8 +1112,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                                         ->where([
                                             $this->ReportCards->aliasField('id') => $reportCardId])
                                         ->first();
-    
-    
                     if (!empty($ReportCardsData->generate_start_date)) {
                         $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
                     }
@@ -1139,8 +1131,11 @@ class ReportCardStatusesTable extends ControllerActionTable
                             $extra['toolbarButtons']['generateAll'] = $generateButton;
                         }
                     }else{
+                        //POCOR-7656 start
+                        $ExcludedSecurityRoleEntity=$this->getExcludedSecurityRolesData($reportCardId);  //POCOR-7551
+                        //POCOR-7656 end
                         if($SecurityRoleFunctionsTableGenerateAllData >= 1){//POCOR-7131 change in if condition
-                            if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
+                            if ((!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) || ($ExcludedSecurityRoleEntity == 1)) {
                                 $extra['toolbarButtons']['generateAll'] = $generateButton;
                             } else { 
                                 $generateButton['attr']['data-html'] = true;
@@ -1190,8 +1185,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                 }
             }
         }
-        
-        
     }
     // Start POCOR-7320
 
@@ -1300,8 +1293,17 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $params = $this->request->query;
-
-        $query
+        $reportCardTable = TableRegistry::get('report_cards');
+        //POCOR-7605 start
+        $decodeParam = $this->paramsDecode($this->request->params['pass'][1]);
+        $conditions = [];
+        $CheckStudent = $this->StudentsReportCards->find()->where([$this->StudentsReportCards->aliasField('student_id') =>$decodeParam['student_id'], $this->StudentsReportCards->aliasField('report_card_id') =>$params['report_card_id']])->first();
+        if(!empty($CheckStudent)){
+            $conditions[$this->StudentsReportCards->aliasField('report_card_id')] = $params['report_card_id'];
+            
+        }
+        //POCOR-7605 end
+            $query
             ->select([
                 'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
                 'report_card_status' => $this->StudentsReportCards->aliasField('status'),
@@ -1309,7 +1311,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on'),
                 'email_status_id' => $this->ReportCardEmailProcesses->aliasField('status'),
                 'email_error_message' => $this->ReportCardEmailProcesses->aliasField('error_message'),
-                'gpa' => $this->StudentsReportCards->aliasField('gpa')//POCOR-7318
+                'gpa' => $this->StudentsReportCards->aliasField('gpa'),//POCOR-7318
             ])
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
@@ -1330,8 +1332,11 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $params['report_card_id']
                 ]
             )
+            ->where($conditions)
             ->order(['report_card_id' => 'DESC'])
             ->autoFields(true);
+
+        
     }
 
     public function onGetStatus(Event $event, Entity $entity)
@@ -1441,8 +1446,9 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function onGetReportCard(Event $event, Entity $entity)
     {
         $value = '';
+        $params = $this->request->query;
         if ($entity->has('report_card_id')) {
-            $reportCardId = $entity->report_card_id;
+            $reportCardId = $params['report_card_id'];
         } else if (!is_null($this->request->query('report_card_id'))) {
             // used if student report card record has not been created yet
             $reportCardId = $this->request->query('report_card_id');
@@ -1811,6 +1817,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $where = [];
         $where[$classStudentsTable->aliasField('institution_class_id')] = $institutionClassId;
         if (!is_null($studentId)) {
+            $checkgpaStudent = $studentId; //POCOR-7656
             $where[$classStudentsTable->aliasField('student_id')] = $studentId;
         }
         $classStudents = $classStudentsTable->find()
@@ -1827,6 +1834,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         foreach ($classStudents as $student) {
             // Report card processes
+            $checkgpaStudent  = $student->student_id;//POCOR-7656
             $idKeys = [
                 'report_card_id' => $reportCardId,
                 'institution_class_id' => $student->institution_class_id,
@@ -1854,7 +1862,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $this->ReportCardEmailProcesses->delete($reportCardEmailProcessEntity);
             }
             // end
-            $getGpa = $this->addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId,$educationGradeId);//POCOR-7318 get student GPA
+            $getGpa = $this->addGpaReportCards($checkgpaStudent, $reportCardId);//POCOR-7318 get student GPA//POCOR-7656
             // Student report card
             $recordIdKeys = [
                 'report_card_id' => $reportCardId,
@@ -2287,43 +2295,241 @@ class ReportCardStatusesTable extends ControllerActionTable
     }
      //POCOR-7400 end
 
-    //POCOR-7318
-    private function addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId,$educationGradeId)
+    /*
+    * POCOR-7318
+    * query again change in POCOR-7628
+    **/
+    private function addGpaReportCards($checkgpaStudent, $reportCardId)
     {
-
+        $studentId = $checkgpaStudent;//POCOR-7656
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods'); 
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriodId =  $this->AcademicPeriods->getCurrent();
         $gpa = 0.00;
         $connection = ConnectionManager::get('default');
-        $statement = $connection->prepare("SELECT subq.student_id
-                        ,AVG(subq.gpa_per_subject) gpa_per_student
-                    FROM
-                    (
-                        SELECT institution_subject_students.student_id
-                            ,MAX(IFNULL(assessment_grading_options.point, 0)) gpa_per_subject
-                        FROM institution_subject_students
-                        LEFT JOIN assessment_grading_options
-                        ON institution_subject_students.total_mark >= assessment_grading_options.min 
-                        AND institution_subject_students.total_mark <= assessment_grading_options.max
-                        WHERE institution_subject_students.academic_period_id = $selectedAcademicPeriodId
-                        AND institution_subject_students.institution_id = $institutionId
-                        AND institution_subject_students.education_grade_id = $educationGradeId
-                        AND institution_subject_students.student_id = $studentId
-                        GROUP BY institution_subject_students.student_id
-                                ,institution_subject_students.education_subject_id
-                    ) subq
-                    GROUP BY subq.student_id");
+        $statement = $connection->prepare("SELECT subq1.report_card_code
+    ,subq1.report_card_name
+    ,subq1.start_date
+    ,subq1.end_date
+    ,ROUND(subq1.gpa_per_student_report_card_period / (not_null_counter + IFNULL(null_counter, 0)), 2) gpa_per_student_report_card_period
+FROM 
+(
+    SELECT 'a' joining_column
+        ,student_info.report_card_code
+        ,student_info.report_card_name
+        ,student_info.start_date
+        ,student_info.end_date
+        ,ROUND(SUM(student_info.gpa_per_subject), 2) gpa_per_student_report_card_period
+        ,SUM(CASE WHEN report_card_code IS NOT NULL THEN 1 ELSE 0 END) not_null_counter
+    FROM 
+    (
+        SELECT student_subject_info.report_card_code
+            ,student_subject_info.report_card_name
+            ,student_subject_info.start_date
+            ,student_subject_info.end_date
+            ,IF(student_subject_info.report_card_code IS NULL, 0, assessment_grading_options.point) gpa_per_subject
+            ,institution_subject_students.academic_period_id
+            ,institution_subject_students.education_grade_id
+            ,institution_subject_students.student_id
+            ,student_subject_info.report_card_id
+        FROM institution_subject_students
+        LEFT JOIN 
+        (
+            SELECT education_subjects.name subject_name
+                ,report_cards.code report_card_code
+                ,report_cards.name report_card_name
+                ,report_cards.start_date
+                ,report_cards.end_date
+                ,SUM(assessment_item_results.marks * assessment_periods.weight) subject_mark
+                ,MAX(assessment_items_grading_types.assessment_grading_type_id) assessment_grading_type_id
+                ,assessment_item_results.academic_period_id
+                ,assessment_item_results.education_subject_id
+                ,assessment_item_results.education_grade_id
+                ,assessment_item_results.student_id
+                ,report_cards.id report_card_id
+            FROM assessment_item_results
+            INNER JOIN 
+            (
+                SELECT assessment_item_results.student_id
+                    ,assessment_item_results.assessment_id
+                    ,assessment_item_results.education_subject_id
+                    ,assessment_item_results.assessment_period_id
+                    ,MAX(assessment_item_results.created) latest_created
+                FROM assessment_item_results
+                WHERE assessment_item_results.student_id = $studentId
+                AND assessment_item_results.academic_period_id = $selectedAcademicPeriodId
+                GROUP BY assessment_item_results.student_id
+                    ,assessment_item_results.assessment_id
+                    ,assessment_item_results.education_subject_id
+                    ,assessment_item_results.assessment_period_id
+            ) latest_grades
+            ON latest_grades.student_id = assessment_item_results.student_id
+            AND latest_grades.assessment_id = assessment_item_results.assessment_id
+            AND latest_grades.education_subject_id = assessment_item_results.education_subject_id
+            AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id
+            AND latest_grades.latest_created = assessment_item_results.created
+            INNER JOIN assessment_periods
+            ON assessment_periods.id = assessment_item_results.assessment_period_id
+            INNER JOIN assessments
+            ON assessments.id = assessment_periods.assessment_id
+            INNER JOIN report_cards
+            ON report_cards.academic_period_id = assessments.academic_period_id
+            AND report_cards.education_grade_id = assessments.education_grade_id
+            AND assessment_periods.end_date BETWEEN report_cards.start_date AND report_cards.end_date
+            INNER JOIN education_subjects
+            ON education_subjects.id = assessment_item_results.education_subject_id
+            INNER JOIN assessment_items_grading_types
+            ON assessment_items_grading_types.education_subject_id = assessment_item_results.education_subject_id
+            AND assessment_items_grading_types.assessment_id = assessment_item_results.assessment_id
+            AND assessment_items_grading_types.assessment_period_id = assessment_item_results.assessment_period_id
+            WHERE assessment_item_results.student_id = $studentId
+            AND assessment_item_results.academic_period_id = $selectedAcademicPeriodId
+            AND report_cards.id = $reportCardId
+            GROUP BY assessment_item_results.academic_period_id
+                ,assessment_item_results.education_subject_id
+                ,assessment_item_results.education_grade_id
+                ,assessment_item_results.student_id
+                ,report_cards.id
+        ) student_subject_info
+        ON student_subject_info.student_id = institution_subject_students.student_id
+        AND student_subject_info.education_subject_id = institution_subject_students.education_subject_id
+        AND student_subject_info.education_grade_id = institution_subject_students.education_grade_id
+        AND student_subject_info.academic_period_id = institution_subject_students.academic_period_id
+        LEFT JOIN assessment_grading_options
+        ON student_subject_info.subject_mark >= assessment_grading_options.min 
+        AND student_subject_info.subject_mark <= assessment_grading_options.max
+        AND student_subject_info.assessment_grading_type_id = assessment_grading_options.assessment_grading_type_id
+        WHERE IF(student_subject_info.report_card_code IS NULL, 0, assessment_grading_options.point) IS NOT NULL
+        AND institution_subject_students.student_status_id = 1
+        AND institution_subject_students.student_id = $studentId
+        AND institution_subject_students.academic_period_id = $selectedAcademicPeriodId
+        GROUP BY institution_subject_students.academic_period_id
+            ,institution_subject_students.education_grade_id
+            ,institution_subject_students.education_subject_id
+            ,institution_subject_students.student_id
+            ,student_subject_info.report_card_id
+    ) student_info
+    WHERE student_info.report_card_code IS NOT NULL
+    GROUP BY student_info.academic_period_id
+        ,student_info.education_grade_id
+        ,student_info.student_id
+        ,student_info.report_card_id
+) subq1
+LEFT JOIN 
+(
+    SELECT 'a' joining_column
+        ,student_info.report_card_code
+        ,student_info.report_card_name
+        ,student_info.start_date
+        ,student_info.end_date
+        ,ROUND(SUM(student_info.gpa_per_subject), 2) gpa_per_student_report_card_period
+        ,SUM(CASE WHEN report_card_code IS NULL THEN 1 ELSE 0 END) null_counter
+    FROM 
+    (
+        SELECT student_subject_info.report_card_code
+            ,student_subject_info.report_card_name
+            ,student_subject_info.start_date
+            ,student_subject_info.end_date
+            ,IF(student_subject_info.report_card_code IS NULL, 0, assessment_grading_options.point) gpa_per_subject
+            ,institution_subject_students.academic_period_id
+            ,institution_subject_students.education_grade_id
+            ,institution_subject_students.student_id
+            ,student_subject_info.report_card_id
+        FROM institution_subject_students
+        LEFT JOIN 
+        (
+            SELECT education_subjects.name subject_name
+                ,report_cards.code report_card_code
+                ,report_cards.name report_card_name
+                ,report_cards.start_date
+                ,report_cards.end_date
+                ,SUM(assessment_item_results.marks * assessment_periods.weight) subject_mark
+                ,MAX(assessment_items_grading_types.assessment_grading_type_id) assessment_grading_type_id
+                ,assessment_item_results.academic_period_id
+                ,assessment_item_results.education_subject_id
+                ,assessment_item_results.education_grade_id
+                ,assessment_item_results.student_id
+                ,report_cards.id report_card_id
+            FROM assessment_item_results
+            INNER JOIN 
+            (
+                SELECT assessment_item_results.student_id
+                    ,assessment_item_results.assessment_id
+                    ,assessment_item_results.education_subject_id
+                    ,assessment_item_results.assessment_period_id
+                    ,MAX(assessment_item_results.created) latest_created
+                FROM assessment_item_results
+                WHERE assessment_item_results.student_id = $studentId
+                AND assessment_item_results.academic_period_id = $selectedAcademicPeriodId
+                GROUP BY assessment_item_results.student_id
+                    ,assessment_item_results.assessment_id
+                    ,assessment_item_results.education_subject_id
+                    ,assessment_item_results.assessment_period_id
+            ) latest_grades
+            ON latest_grades.student_id = assessment_item_results.student_id
+            AND latest_grades.assessment_id = assessment_item_results.assessment_id
+            AND latest_grades.education_subject_id = assessment_item_results.education_subject_id
+            AND latest_grades.assessment_period_id = assessment_item_results.assessment_period_id
+            AND latest_grades.latest_created = assessment_item_results.created
+            INNER JOIN assessment_periods
+            ON assessment_periods.id = assessment_item_results.assessment_period_id
+            INNER JOIN assessments
+            ON assessments.id = assessment_periods.assessment_id
+            INNER JOIN report_cards
+            ON report_cards.academic_period_id = assessments.academic_period_id
+            AND report_cards.education_grade_id = assessments.education_grade_id
+            AND assessment_periods.end_date BETWEEN report_cards.start_date AND report_cards.end_date
+            INNER JOIN education_subjects
+            ON education_subjects.id = assessment_item_results.education_subject_id
+            INNER JOIN assessment_items_grading_types
+            ON assessment_items_grading_types.education_subject_id = assessment_item_results.education_subject_id
+            AND assessment_items_grading_types.assessment_id = assessment_item_results.assessment_id
+            AND assessment_items_grading_types.assessment_period_id = assessment_item_results.assessment_period_id
+            WHERE assessment_item_results.student_id = $studentId
+            AND assessment_item_results.academic_period_id = $selectedAcademicPeriodId
+            GROUP BY assessment_item_results.academic_period_id
+                ,assessment_item_results.education_subject_id
+                ,assessment_item_results.education_grade_id
+                ,assessment_item_results.student_id
+                ,report_cards.id
+        ) student_subject_info
+        ON student_subject_info.student_id = institution_subject_students.student_id
+        AND student_subject_info.education_subject_id = institution_subject_students.education_subject_id
+        AND student_subject_info.education_grade_id = institution_subject_students.education_grade_id
+        AND student_subject_info.academic_period_id = institution_subject_students.academic_period_id
+        LEFT JOIN assessment_grading_options
+        ON student_subject_info.subject_mark >= assessment_grading_options.min 
+        AND student_subject_info.subject_mark <= assessment_grading_options.max
+        AND student_subject_info.assessment_grading_type_id = assessment_grading_options.assessment_grading_type_id
+        WHERE IF(student_subject_info.report_card_code IS NULL, 0, assessment_grading_options.point) IS NOT NULL
+        AND institution_subject_students.student_status_id = 1
+        AND institution_subject_students.student_id = $studentId
+        AND institution_subject_students.academic_period_id = $selectedAcademicPeriodId
+        GROUP BY institution_subject_students.academic_period_id
+            ,institution_subject_students.education_grade_id
+            ,institution_subject_students.education_subject_id
+            ,institution_subject_students.student_id
+            ,student_subject_info.report_card_id
+    ) student_info
+    WHERE student_info.report_card_code IS NULL
+    GROUP BY student_info.academic_period_id
+        ,student_info.education_grade_id
+        ,student_info.student_id
+        ,student_info.report_card_id
+) subq2
+ON subq2.joining_column = subq1.joining_column
+
+");
         $statement->execute();
         $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
-    
+
         if(!empty($result)){
            foreach($result as $val){
-            $gpa = $val['gpa_per_student'];
+            $gpa = $val['gpa_per_student_report_card_period'];
 
            }
         }
-         return number_format((float)$gpa, 2, '.', '');
+        return $gpa;
         
     }
 
