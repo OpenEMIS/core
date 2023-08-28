@@ -36,7 +36,8 @@ class InstitutionCasesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
-
+        $this->hasMany('InstitutionCaseComments', ['className' => 'Cases.InstitutionCaseComments', 'foreignKey' => 'case_id']);
+       
         // $this->toggle('add', false);
 
         $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
