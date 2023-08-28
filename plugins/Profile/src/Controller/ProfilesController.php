@@ -72,7 +72,6 @@ class ProfilesController extends AppController
         $this->loadComponent('User.Image');
         $this->loadComponent('Scholarship.ScholarshipTabs');
         $this->attachAngularModules();
-
         $this->set('contentHeader', 'Personal');
     }
 
@@ -210,7 +209,7 @@ class ProfilesController extends AppController
     // AngularJS
     public function StudentResults()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         //$studentId = $this->Auth->user('id');
         $sId = $this->request->pass[1];
 
@@ -290,19 +289,21 @@ class ProfilesController extends AppController
         parent::beforeFilter($event);
 
         $session = $this->request->getSession();
-        $action = $this->request->getParams['action'];
+        $action = $this->request->getParam('action');
 
         $loginUserId = $this->Auth->user('id'); // login user
-
         $this->Navigation->addCrumb('Personal', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Personal', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
         
         $header = '';
 
         if ($this->Profiles->exists([$this->Profiles->getPrimaryKey() => $loginUserId])) {
+
             // if ($session->read('Auth.User.is_guardian') == 1) {
             //     $studentId = $session->read('Student.ExaminationResults.student_id'); 
             // } else {
-                $studentId = $this->request->pass[1];
+
+                $studentId = $this->request->getParam('pass')[1];
+
             //}
             
             if (!empty($studentId)) {
@@ -327,7 +328,8 @@ class ProfilesController extends AppController
                     }//POCOR-6202 end
                 }
                 $entity = $this->Profiles->get($student_id);
-                $name = $entity->name;
+                //$name = $entity->name;
+                $name = $entity->first_name;
             } else {
                 $entity = $this->Profiles->get($loginUserId);
                 $name = $entity->name;
@@ -345,14 +347,14 @@ class ProfilesController extends AppController
 
     public function changeUserHeader($model, $modelAlias, $userType)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         // add the student name to the header
         $id = 0;
         if ($session->check('Staff.Staff.id')) {
             $id = $session->read('Staff.Staff.id');
         }
         if (!empty($id)) {
-            $Users = TableRegistry::get('Security.Users');
+            $Users = TableRegistry::getTableLocator()->get('Security.Users');
             $entity = $Users->get($id);
             $name = $entity->name;
             $crumb = Inflector::humanize(Inflector::underscore($modelAlias));
@@ -370,6 +372,7 @@ class ProfilesController extends AppController
         $session = $this->request->getSession();
 
         if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
+
             // off the import action
             if ($model->behaviors()->has('ImportLink')) {
                 $model->removeBehavior('ImportLink');
@@ -427,7 +430,7 @@ class ProfilesController extends AppController
         //POCOR-5890 ends
         $this->Navigation->addCrumb($model->getHeader($alias));
         //POCOR-5675
-        $action = $this->request->params['action'];
+        $action = $this->request->getParam('action');
         if($action == 'Profiles'){
             $action = __('Personal');
         }
@@ -553,8 +556,8 @@ class ProfilesController extends AppController
         public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
         {
         $loginUserId = $this->Auth->user('id'); // login user
-        $action = $this->request->params['action'];
-        $session = $this->request->session();
+        $action = $this->request->getParam('action');
+        $session = $this->request->getSession();
         if ($model->hasField('security_user_id')) {
             $studentId = $session->read('Student.Students.id'); 
             if (!empty($studentId)) {
@@ -984,6 +987,12 @@ class ProfilesController extends AppController
     public function StaffCurriculars()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffCurriculars']);
+    }
+
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 
 

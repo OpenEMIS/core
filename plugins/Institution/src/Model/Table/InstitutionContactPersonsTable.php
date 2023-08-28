@@ -13,7 +13,7 @@ use Cake\ORM\TableRegistry; // POCOR-5188
 
 class InstitutionContactPersonsTable extends ControllerActionTable {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 	
@@ -23,7 +23,7 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

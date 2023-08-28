@@ -103,7 +103,7 @@ class HtmlFieldHelper extends Helper
         $html = '';
 
         if (is_null($this->table)) {
-            $this->table = TableRegistry::get($attr['className']);
+            $this->table = TableRegistry::getTableLocator()->get($attr['className']);
         }
 
         // trigger event for custom field types
@@ -516,7 +516,7 @@ class HtmlFieldHelper extends Helper
             if (array_key_exists('ajaxLoad', $attr) && $attr['ajaxLoad']) {
                 $imageUrl = '';
                 if (array_key_exists('imageUrl', $attr) && $attr['imageUrl']) {
-                    $imageUrl = $this->Url->build($attr['imageUrl'], true);
+                    $imageUrl = $this->Url->build($attr['imageUrl'], []);
                     $imageUrl = str_replace('http','https',$imageUrl); //POCOR-7041 change http request to https..
                     
                 }

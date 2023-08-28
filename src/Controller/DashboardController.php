@@ -57,7 +57,7 @@ class DashboardController extends AppController
         parent::beforeFilter($event);
         $user = $this->Auth->user();
         if (is_array($user) && array_key_exists('last_login', $user) && is_null($user['last_login'])) {
-            $userInfo = TableRegistry::get('User.Users')->get($user['id']);
+            $userInfo = TableRegistry::getTableLocator()->get('User.Users')->get($user['id']);
             if ($userInfo->password) {
                 $this->Alert->warning('security.login.changePassword');
                 $lastLogin = $userInfo->last_login;
@@ -441,7 +441,7 @@ class DashboardController extends AppController
             $data[4]['modifiedDate'] = 'Not updated';
         }
 
-        $userLanguages = TableRegistry::get('user_languages');
+        $userLanguages =TableRegistry::getTableLocator()->get('user_languages');
         $userLanguagesData = $userLanguages->find()
             ->select([
                 'created' => 'user_languages.created',
@@ -468,7 +468,7 @@ class DashboardController extends AppController
         // $profilePercentage = round($profilePercentage);
         //$data['percentage'] = $profilePercentage;
         // config 
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $typeList = $ConfigItem
             ->find('list', [
                 'keyField' => 'name',

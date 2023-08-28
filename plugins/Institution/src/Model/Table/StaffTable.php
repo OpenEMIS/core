@@ -1730,7 +1730,7 @@ class StaffTable extends ControllerActionTable
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
         foreach ($conditions as $key => $value) {
-            $_conditions[$this->alias() . '.' . $key] = $value;
+            $_conditions[$this->getAlias() . '.' . $key] = $value;
         }
 
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -1896,10 +1896,10 @@ class StaffTable extends ControllerActionTable
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
         foreach ($conditions as $key => $value) {
-            $_conditions[$this->alias() . '.' . $key] = $value;
+            $_conditions[$this->getAlias() . '.' . $key] = $value;
         }
 
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $currentPeriodId = $AcademicPeriod->getCurrent();
 
         $genderOptions = $this->Users->Genders->getList();
@@ -1950,7 +1950,7 @@ class StaffTable extends ControllerActionTable
                         ])
                         ->where($queryCondition)
                         ->group(['gender_name'])
-                        ->hydrate(false)
+                        //->hydrate(false)
                         ->toArray();
 
                     if (!empty($staffByYear)) {
@@ -1970,10 +1970,10 @@ class StaffTable extends ControllerActionTable
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
         foreach ($conditions as $key => $value) {
-            $_conditions[$this->alias() . '.' . $key] = $value;
+            $_conditions[$this->getAlias() . '.' . $key] = $value;
         }
 
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $currentYearId = $AcademicPeriod->getCurrent();
 
         if (!empty($currentYearId)) {
@@ -1988,7 +1988,7 @@ class StaffTable extends ControllerActionTable
             $currentYear = __('Not Defined');
         }
 
-        $institutionStaff = TableRegistry::get('institution_staff');
+        $institutionStaff = TableRegistry::getTableLocator()->get('Institution.StaffAttendances');
         /**POCOR-6900 starts - Modified complete query to get correct records of staff Present, Late and Absent as suggested by client*/ 
         $staffAttendances = $this->find()
             ->where([

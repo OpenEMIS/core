@@ -8,14 +8,14 @@ use Cake\ORM\Entity;
 
 class SecurityGroupAreasTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -31,7 +31,7 @@ class SecurityGroupAreasTable extends AppTable
         // on the institution entity marking the isNew flag false
         if ($entity->dirty('security_group_id')) {
             $classification = $entity->classification;
-            if ($classification == $event->subject()->getNonAcademicConstant()) {
+            if ($classification == $event->getSubject()->getNonAcademicConstant()) {
                 $newSecurityGroupAreaRecord = [
                     'security_group_id' => $entity->security_group_id,
                     'area_id' => $entity->area_id
@@ -54,7 +54,7 @@ class SecurityGroupAreasTable extends AppTable
 
     public function getAreasByUser($userId)
     {
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $groupIds = $SecurityGroupUsers
         ->find('list', ['keyField' => 'id', 'valueField' => 'security_group_id'])
         ->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])

@@ -17,7 +17,7 @@ use Cake\Utility\Text;
 
 class InstitutionSubjectStudentsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
 
         parent::initialize($config);
@@ -53,7 +53,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Students.afterSave'] = 'studentsAfterSave';

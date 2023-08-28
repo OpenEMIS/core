@@ -13,7 +13,7 @@ class StudentCascadeDeleteBehavior extends Behavior
     private $classIds = [];
     private $subjectIds = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }

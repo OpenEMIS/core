@@ -5,9 +5,9 @@ use App\Model\Table\AppTable;
 
 class GendersTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_genders');
+        $this->setTable('institution_genders');
         parent::initialize($config);
 
         $this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_gender_id']);

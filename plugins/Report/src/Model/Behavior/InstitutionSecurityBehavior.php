@@ -9,7 +9,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 
 class InstitutionSecurityBehavior extends Behavior {
-	public function implementedEvents()
+	public function implementedEvents(): array
 	{
 		$eventMap = parent::implementedEvents();
 		$eventMap['Model.excel.onExcelBeforeQuery'] = ['callable' => 'onExcelBeforeQuery', 'priority' => 15];

@@ -32,7 +32,7 @@ class InstitutionLandsTable extends ControllerActionTable
     private $currentAcademicPeriod = null;
     private $_dynamicFieldName = 'custom_field_data';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -75,7 +75,7 @@ class InstitutionLandsTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -134,7 +134,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.AcademicPeriods.afterSave'] = 'academicPeriodAfterSave';

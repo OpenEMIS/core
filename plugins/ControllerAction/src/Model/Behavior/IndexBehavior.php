@@ -50,7 +50,7 @@ class IndexBehavior extends Behavior
         * @ticket POCOR-5301
         */
         //START: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
-        $ConfigItemOptionsTable = TableRegistry::get('Configuration.ConfigItemOptions');
+        $ConfigItemOptionsTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItemOptions');
         $ConfigItemoption =   $ConfigItemOptionsTable
                             ->find()
                             ->select(['listpage' => 'ConfigItemOptions.value'])
@@ -73,7 +73,7 @@ class IndexBehavior extends Behavior
         * @ticket POCOR-5301
         */
         //START: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
-        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemsTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItem =   $ConfigItemsTable
                             ->find()
                             ->select(['listvalue' => 'ConfigItems.value'])
@@ -123,7 +123,7 @@ class IndexBehavior extends Behavior
 
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();
-            return $event->result;
+            return $event->getResult();
         }
         if ($event->getResult() instanceof Table) {
             $query = $event->getResult()->find();

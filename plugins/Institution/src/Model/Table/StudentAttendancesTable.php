@@ -871,7 +871,7 @@ class StudentAttendancesTable extends ControllerActionTable
         $day = $options['day_id'];
         $subjectId = $options['subject_id'];
 
-        $studentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
+        $studentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance'.'StudentAttendanceMarkedRecords');
         $AttendanceMarkedData = $studentAttendanceMarkedRecords->find()
                     ->where([
                         $studentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,

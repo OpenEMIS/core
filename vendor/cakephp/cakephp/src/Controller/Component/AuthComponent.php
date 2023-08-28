@@ -662,7 +662,6 @@ class AuthComponent extends Component implements EventDispatcherInterface
         $user = (array)$this->user();
         $this->dispatchEvent('Auth.logout', [$user]);
         $this->storage()->delete();
-
         return Router::normalize($this->_config['logoutRedirect']);
     }
 

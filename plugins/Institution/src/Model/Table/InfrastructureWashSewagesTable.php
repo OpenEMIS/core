@@ -12,9 +12,9 @@ use App\Model\Table\ControllerActionTable;
 
 class InfrastructureWashSewagesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('infrastructure_wash_sewages');
+        $this->setTable('infrastructure_wash_sewages');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods',   ['className' => 'AcademicPeriod.AcademicPeriods', 'foreign_key' => 'academic_period_id']);

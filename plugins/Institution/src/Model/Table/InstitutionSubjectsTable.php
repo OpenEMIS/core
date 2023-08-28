@@ -24,7 +24,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     use MessagesTrait;
     private $enrolledStatus;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -96,7 +96,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
@@ -110,7 +110,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $searchableFields[] = 'education_subject_id';
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator

@@ -98,7 +98,10 @@
             "Meal\\": "plugins/Meal/src/",
             "GuardianNav\\": "plugins/GuardianNav/src/",
             "OAuth\\": "plugins/OAuth/src/",
-            "Archive\\": "plugins/Archive/src/"
+            "Archive\\": "plugins/Archive/src/",
+            "Profile\\": "plugins/Profile/src/",
+            "Manuals\\": "./plugins/Manuals/src",
+            "Report\\": "./plugins/Report/src"
         }
     },
     "autoload-dev": {

@@ -30,9 +30,10 @@ class AreapickerBehavior extends Behavior
     public function onGetAreapickerElement(Event $event, $action, Entity $entity, $attr, $options)
     {
         $fieldName = $attr['model'] . '.' . $attr['field'];
-        $HtmlField = $event->subject();
+        $HtmlField = $event->getSubject();
         $data = $HtmlField->request->data;
-        $value = isset($data[$this->_table->alias()][$attr['field']]) ? $data[$this->_table->alias()][$attr['field']] : $entity->{$attr['field']};
+        //print_r($data);die;
+        $value = isset($data[$this->_table->getAlias()][$attr['field']]) ? $data[$this->_table->getAlias()][$attr['field']] : $entity->{$attr['field']};
 
         if ($action == 'edit') {
             $Url = $HtmlField->Url;
@@ -43,7 +44,7 @@ class AreapickerBehavior extends Behavior
             $attr['value'] = $value;
 
             $targetModel = $attr['source_model'];
-            $targetTable = TableRegistry::get($targetModel);
+            $targetTable = TableRegistry::getTableLocator()->get($targetModel);
 
             $areaOptions = $targetTable
                 ->find('list');

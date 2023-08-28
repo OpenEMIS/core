@@ -137,7 +137,7 @@ class AppTable extends Table
 
     public function getList($query = null)
     {
-        $schema = $this->schema();
+        $schema = $this->getSchema();
         $columns = $schema->columns();
         $table = $schema->name();
 
@@ -289,21 +289,23 @@ class AppTable extends Table
     // Event: 'ControllerAction.Model.onGetFieldLabel'
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        // echo "<pre>";print_r($event->getData()['module']);die;
-        $Labels     = TableRegistry::get('Labels');
-        $fieldLabel = $Labels->find()
-                ->select(['name'])
-                ->where(['module' => $event->getData()['module'],'field'=>'openemis_no'])
-                ->first();
-       
-        if ($field == 'openemis_no' && !empty($fieldLabel['name'])) {
-             return $fieldLabel['name'];
-             
-        } else if ($field == 'openemis_no') {
-            return self::OpenEMIS;
-            
-		} else if ($field == 'fax' && !empty($fieldLabel['name'])) {
-		    return $fieldLabel['name'];
+         //echo "<pre>";print_r($event->getData());die;
+        $Labels     = TableRegistry::getTableLocator()->get('Labels');
+        if($event->getData()['module'] !=null){
+            $fieldLabel = $Labels->find()
+                    ->select(['name'])
+                    ->where(['module' => $event->getData()['module'],'field'=>'openemis_no'])
+                    ->first();
+           
+            if ($field == 'openemis_no' && !empty($fieldLabel['name'])) {
+                 return $fieldLabel['name'];
+                 
+            } else if ($field == 'openemis_no') {
+                return self::OpenEMIS;
+                
+    		} else if ($field == 'fax' && !empty($fieldLabel['name'])) {
+    		    return $fieldLabel['name'];
+            }
         }
         
         return $this->getFieldLabel($module, $field, $language, $autoHumanize);

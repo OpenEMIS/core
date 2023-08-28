@@ -27,7 +27,7 @@ class StaffBehavioursTable extends ControllerActionTable
     const TO_DO = 1; //POCOR-6670
     const IN_PROGRESS = 2; //POCOR-6670
     const DONE = 3; //POCOR-6670
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
@@ -53,7 +53,7 @@ class StaffBehavioursTable extends ControllerActionTable
 
         $this->setDeleteStrategy('restrict');
         $roles = [1,2,3,4,5,6,7,8,9,10,11];
-        $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()
+        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
@@ -70,7 +70,7 @@ class StaffBehavioursTable extends ControllerActionTable
         // }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['InstitutionCase.onSetCustomCaseTitle'] = 'onSetCustomCaseTitle';
@@ -80,7 +80,7 @@ class StaffBehavioursTable extends ControllerActionTable
         return $events;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

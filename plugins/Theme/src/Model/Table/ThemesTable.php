@@ -20,7 +20,7 @@ class ThemesTable extends AppTable
     const COLOUR = 5;
     const COPYRIGHTNOTICE = 6;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->addBehavior('Page.FileUpload', [
@@ -32,7 +32,7 @@ class ThemesTable extends AppTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $themes = $this;
         return $validator

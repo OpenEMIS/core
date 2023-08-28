@@ -17,9 +17,9 @@ class InstitutionGradesTable extends ControllerActionTable
 {
     private $institutionId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_grades');
+        $this->setTable('institution_grades');
         parent::initialize($config);
 
         $this->belongsTo('EducationGrades',['className' => 'Education.EducationGrades']);
@@ -39,7 +39,7 @@ class InstitutionGradesTable extends ControllerActionTable
         $this->addBehavior('ContactExcel', ['excludes' => ['start_date', 'end_date', 'start_year', 'end_year'], 'pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

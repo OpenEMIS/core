@@ -17,9 +17,9 @@ class StudentAttendanceMarkedRecordsArchivedTable extends AppTable
     const MARKED = 1;
     const PARTIAL_MARKED = 2;
     const DAY_COLUMN_PREFIX = 'day_';
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_attendance_marked_records_archived');
+        $this->setTable('student_attendance_marked_records_archived');
         parent::initialize($config);
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -31,7 +31,7 @@ class StudentAttendanceMarkedRecordsArchivedTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];

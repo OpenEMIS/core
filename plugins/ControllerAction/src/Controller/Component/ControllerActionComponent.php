@@ -73,6 +73,7 @@ use Cake\Log\Log;
 
 use ControllerAction\Model\Traits\ControllerActionV4Trait;
 use ControllerAction\Model\Traits\SecurityTrait;
+use Cake\Http\ServerRequest;
 
 class ControllerActionComponent extends Component
 {
@@ -125,9 +126,9 @@ class ControllerActionComponent extends Component
             $this->ignoreFields = array_merge($this->ignoreFields, $config['ignoreFields']);
         }
         $controller = $this->_registry->getController();
-        $this->paramsPass = $this->request->params['pass'];
-        $this->currentAction = $this->request->params['action'];
-        $this->ctpFolder = $controller->name;
+        $this->paramsPass = $this->getController()->getRequest()->getParam('pass');
+        $this->currentAction = $this->getController()->getRequest()->getParam('action');
+        $this->ctpFolder = $controller->getName();
 
         $this->controller = $controller;
         $this->session = $this->getController()->getRequest()->getSession();
@@ -141,9 +142,9 @@ class ControllerActionComponent extends Component
     // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
     public function startup(Event $event)
     {
-        $controller = $this->controller;
+        $controller = $this->getController();
 
-        $action = $this->request->params['action'];
+        $action = $this->getController()->getRequest()->getParam('action');
         $this->debug('Startup');
         if (!method_exists($controller, $action)) { // method cannot be found in controller
             $defaultActions = $this->defaultActions;
@@ -154,11 +155,11 @@ class ControllerActionComponent extends Component
                 $event = new Event('ControllerAction.Model.onUpdateDefaultActions', $this);
                 $event = $this->model->getEventManager()->dispatch($event);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
 
-                if (!empty($event->result)) {
-                    $newDefaultActions = $event->result;
+                if (!empty($event->getResult())) {
+                    $newDefaultActions = $event->getResult();
                     $defaultActions = array_merge($defaultActions, $newDefaultActions);
                 }
             }
@@ -196,7 +197,7 @@ class ControllerActionComponent extends Component
 
                         $this->debug(__METHOD__, ': Event -> ControllerAction.Controller.onInitialize');
                         $event = new Event('ControllerAction.Controller.onInitialize', $this, [$this->model, new ArrayObject([])]);
-                        $event = $this->controller->eventManager()->dispatch($event);
+                        $event = $this->controller->getEventManager()->dispatch($event);
                         if ($event->isStopped()) {
                             return $event->result;
                         }
@@ -208,7 +209,7 @@ class ControllerActionComponent extends Component
             }
         }
 
-        $pass = $this->request->pass;
+        $pass = $this->getController()->getRequest()->getParam('pass');;
         if (isset($pass[0])) {
             if ($pass[0] == 'reorder') {
                 $this->enableReorder($this->request->params['action'], $controller);
@@ -285,12 +286,12 @@ class ControllerActionComponent extends Component
                     $query = $associatedObject->find();
 
                     $event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, [$query]);
-                    $event = $associatedObject->eventManager()->dispatch($event);
+                    $event = $associatedObject->getEventManager()->dispatch($event);
                     if ($event->isStopped()) {
-                        return $event->result;
+                        return $event->getResult();
                     }
-                    if (!empty($event->result)) {
-                        $query = $event->result;
+                    if (!empty($event->getResult())) {
+                        $query = $event->getResult();
                     }
 
                     if ($query instanceof Query) {
@@ -544,7 +545,7 @@ class ControllerActionComponent extends Component
 
     public function getPrimaryKey(Table $model)
     {
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $model->getPrimaryKey();
         if (is_array($primaryKey)) {
             $primaryKey = 'id';
         }
@@ -642,9 +643,9 @@ class ControllerActionComponent extends Component
     private function initComponentsForModel()
     {
         $this->debug(__METHOD__);
-        $this->model->controller = $this->controller;
-        $this->model->request = $this->request;
-        $this->model->Session = $this->request->session();
+        $this->model->controller = $this->getController();
+        $this->model->request = $this->getController()->getRequest();
+        $this->model->Session = $this->getController()->getRequest()->getSession();
         $this->model->action = $this->currentAction;
 
         // Copy all component objects from Controller to Model
@@ -832,7 +833,7 @@ class ControllerActionComponent extends Component
         * @ticket POCOR-5301
         */
         //START: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
-        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemsTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItem =   $ConfigItemsTable
                             ->find()
                             ->select(['listvalue' => 'ConfigItems.value'])
@@ -883,7 +884,7 @@ class ControllerActionComponent extends Component
         * @ticket POCOR-5301
         */
         //START: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
-        $ConfigItemOptionsTable = TableRegistry::get('Configuration.ConfigItemOptions');
+        $ConfigItemOptionsTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItemOptions');
         $ConfigItemoption =   $ConfigItemOptionsTable
                             ->find()
                             ->select(['listpage' => 'ConfigItemOptions.value'])
@@ -961,10 +962,10 @@ class ControllerActionComponent extends Component
         $event = new Event('ControllerAction.Model.index.afterPaginate', $this, [$data, $query]);
         $event = $this->model->eventManager()->dispatch($event);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (!empty($event->result)) {
-            $data = $event->result;
+        if (!empty($event->getResult())) {
+            $data = $event->getResult();
         }
 
         return $data;
@@ -995,7 +996,7 @@ class ControllerActionComponent extends Component
         try {
             if ($settings['pagination']) {
                 if ($settings['model'] != $model->registryAlias()) {
-                    $model = TableRegistry::get($settings['model']);
+                    $model = TableRegistry::getTableLocator()->get($settings['model']);
                 }
                 $data = $this->search($model);
                 $indexElements[] = ['name' => 'OpenEmis.pagination', 'data' => [], 'options' => []];
@@ -1018,11 +1019,11 @@ class ControllerActionComponent extends Component
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.index.afterAction');
         $event = new Event('ControllerAction.Model.index.afterAction', $this, [$data]);
         $event = $this->model->eventManager()->dispatch($event);
-        if (!empty($event->result)) {
-            $data = $event->result;
+        if (!empty($event->getResult())) {
+            $data = $event->getResult();
         }
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
         $modals = ['delete-modal' => $this->getModalOptions('remove')];
         $this->config['form'] = true;
@@ -2137,7 +2138,7 @@ class ControllerActionComponent extends Component
                 $subject->eventManager()->on($eventKey, [], [$subject, $method]);
             }
         }
-        return $subject->eventManager()->dispatch($event);
+        return $subject->getEventManager()->dispatch($event);
     }
 
     public function endsWith($haystack, $needle)
@@ -2208,7 +2209,7 @@ class ControllerActionComponent extends Component
                     break;
             }
         }
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $model->getPrimaryKey();
         $id = $entity->{$primaryKey};
         $associations = [];
         foreach ($model->associations() as $assoc) {

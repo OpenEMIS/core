@@ -12,7 +12,7 @@ use App\Model\Table\ControllerActionTable;
 
 class InstitutionStaffDutiesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->table('institution_staff_duties');
         parent::initialize($config);
@@ -27,13 +27,13 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 
 		return $validator

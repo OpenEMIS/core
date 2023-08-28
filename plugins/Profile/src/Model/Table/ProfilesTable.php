@@ -55,7 +55,7 @@ class ProfilesTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $toolbarButtons = $extra['toolbarButtons'];
         if ($this->action == 'edit') {
@@ -581,6 +581,7 @@ class ProfilesTable extends ControllerActionTable
     }
 
     private function setupTabElements($entity) {
+        die('sdsd');
         $id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
 
         $options = [

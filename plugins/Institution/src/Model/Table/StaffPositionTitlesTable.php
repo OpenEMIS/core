@@ -25,9 +25,9 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 	private $positionGradeSelection = [];
 
-	public function initialize(array $config)
+	public function initialize(array $config): void
 	{
-        $this->table('staff_position_titles');
+        $this->setTable('staff_position_titles');
         parent::initialize($config);
         $this->hasMany('TrainingCoursesTargetPopulations', ['className' => 'Training.TrainingCoursesTargetPopulations', 'foreignKey' => 'target_population_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
@@ -49,7 +49,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 	}
 
-	public function validationDefault(Validator $validator)
+	public function validationDefault(Validator $validator): Validator
 	{
 		$validator = parent::validationDefault($validator);
 		return $validator
@@ -384,7 +384,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		return false;
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$events['Shell.shellRestartUpdateRole'] = 'shellRestartUpdateRole';
 		return $events;

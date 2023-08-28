@@ -120,10 +120,10 @@ trait ControllerActionV4Trait {
 
 					// need to include associated object
 					$event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, [$query]);
-					$event = $associatedObject->eventManager()->dispatch($event);
-					if ($event->isStopped()) { return $event->result; }
-					if (!empty($event->result)) {
-						$query = $event->result;
+					$event = $associatedObject->getEventManager()->dispatch($event);
+					if ($event->isStopped()) { return $event->getResult(); }
+					if (!empty($event->getResult())) {
+						$query = $event->getResult();
 					}
 
 					if ($model->action != 'index') { // should not populate options for index page
@@ -233,14 +233,14 @@ trait ControllerActionV4Trait {
 		$entity = null;
 
 		$event = $controller->dispatchEvent('ControllerAction.Controller.onInitialize', [$model, $extra], $this);
-		if ($event->isStopped()) { return $event->result; }
+		if ($event->isStopped()) { return $event->getResult(); }
 
 		$event = $model->dispatchEvent('ControllerAction.Model.beforeAction', [$extra], $this);
-		if ($event->isStopped()) { return $event->result; }
+		if ($event->isStopped()) { return $event->getResult(); }
 
 		// dispatch event for specific action
 		$event = $model->dispatchEvent("ControllerAction.Model.$action", [$extra], $this);
-		if ($event->isStopped()) { return $event->result; }
+		if ($event->isStopped()) { return $event->getResult(); }
 		if ($event->getResult() instanceof Entity) {
 			$entity = $event->getResult();
 		} else if ($event->getResult() instanceof Response) {

@@ -9,7 +9,7 @@ use Cake\Core\Configure;
 //use Cake\Event\Event;
 use Cake\Log\Log;
 use Cake\Mailer\Email;
-use Cake\Network\Exception\ForbiddenException;
+//use Cake\Network\Exception\ForbiddenException;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Utility\Security;
@@ -19,6 +19,7 @@ use Cake\Event\EventManager;
 use Cake\Event\EventDispatcherTrait;
 use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
+use Cake\Http\Exception\ForbiddenException;
 
 
 class UsersController extends AppController
@@ -614,7 +615,7 @@ class UsersController extends AppController
 
     public function logout($username = null)
     {
-        //if ($this->request->is('get')) {
+        if ($this->request->is('get')) {
             $username = empty($username) ? $this->Auth->user()['username'] : $username;
             //POCOR-6953 start
             $body = array();
@@ -625,13 +626,15 @@ class UsersController extends AppController
             $SecurityUserSessions = TableRegistry::getTableLocator()->get('SSO.SecurityUserSessions');
             $SecurityUserSessions->deleteEntries($username);
             $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
+
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('logout', ['username' => $username], $body);
             }
+
             return $this->redirect($this->Auth->logout());
-        /*} else {
+        } else {
             throw new ForbiddenException();
-        }*/
+        }
     }
 
     public function implementedEvents(): array

@@ -8,7 +8,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\I18n\I18n;
@@ -22,6 +21,7 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\I18n\Time;
 use Institution\Model\Behavior\LatLongBehavior as LatLongOptions;
+use Cake\Http\ServerRequest;
 
 class InstitutionsTable extends ControllerActionTable
 {
@@ -160,7 +160,7 @@ class InstitutionsTable extends ControllerActionTable
             'dependent' => true
         ]);
         //POCOR-6520 starts: add isset condition only
-       if(isset(Router::getRequest()->params['pass'][0]) && Router::getRequest()->params['pass'][0]!='excel'){ //POCOR-6520 ends
+       if(isset(Router::getRequest()->getParam('pass')[0]) && Router::getRequest()->getParam('pass')[0]!='excel'){ //POCOR-6520 ends
 
         $this->addBehavior('CustomField.Record', [
             'fieldKey' => 'institution_custom_field_id',
@@ -184,13 +184,13 @@ class InstitutionsTable extends ControllerActionTable
             'code', 'name','classification', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id',
             'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'education_programmes','alternative_name','shift_type'
         ];
-        $this->addBehavior('AdvanceSearch', [
+        /*$this->addBehavior('AdvanceSearch', [
             'display_country' => false,
             'include' =>[
                 'code', 'name','alternative_name'
             ],
             'order' => $advancedSearchFieldOrder
-        ]);
+        ]);*/
         $this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Security.Institution');
         $this->addBehavior('Area.Areapicker');
@@ -244,6 +244,11 @@ class InstitutionsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
 
         $this->addBehavior('Institution.LatLong');
+        if (!empty($config['request']) && $config['request'] instanceof ServerRequest) {
+            $this->setConfig('request', $config['request']);
+        }
+
+
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -781,15 +786,15 @@ class InstitutionsTable extends ControllerActionTable
         $name = $entity->name;
         $redirectToOverview = false;
 
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $redirectToOverview = $ConfigItem->value('default_school_landing_page');
-
-        if ($this->AccessControl->check([$this->controller->name, 'dashboard'])) {
+        if ($this->AccessControl->check([$this->controller->getName(), 'dashboard'])) {
             // Redirect to overview page based on School Landing
             if (!$redirectToOverview) {
-                $name = $event->subject()->HtmlField->link($entity->name, [
-                    'plugin' => $this->controller->plugin,
-                    'controller' => $this->controller->name,
+            
+                $name = $event->getSubject()->HtmlField->link($entity->name, [
+                    'plugin' => $this->controller->getPlugin(),
+                    'controller' => $this->controller->getName(),
                     'action' => 'dashboard',
                     'institutionId' => $this->paramsEncode(['id' => $entity->id]),
                     '0' => $this->paramsEncode(['id' => $entity->id])
@@ -850,14 +855,14 @@ class InstitutionsTable extends ControllerActionTable
         return ['downloadFile'];
     }
 
-    public function onUpdateFieldDateOpened(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldDateOpened(Event $event, array $attr, $action, ServerRequest $request)
     {
         $today = new Date();
         $attr['date_options']['endDate'] = $today->format('d-m-Y');
         return $attr;
     }
 
-    public function onUpdateFieldDateClosed(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldDateClosed(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['default_date'] = false;
 
@@ -872,7 +877,7 @@ class InstitutionsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionStatusId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionStatusId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['visible'] = false;
@@ -915,7 +920,7 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $DataManagementConnections = TableRegistry::get('Archive.DataManagementConnections');
+        $DataManagementConnections = TableRegistry::getTableLocator()->get('Archive.DataManagementConnections');
         $DataManagementConnectionsResult = $DataManagementConnections
             ->find()
             ->select(['conn_status_id'])
@@ -952,22 +957,22 @@ class InstitutionsTable extends ControllerActionTable
 
         $this->field('shift_section', ['type' => 'section', 'title' => __('Shifts'), 'visible' => ['view'=>true]]);
         $this->field('shift_type', ['visible' => ['view' => false]]);
-
-        $this->field('shift_details', [
+        //comment cakephp 4
+        /*$this->field('shift_details', [
             'type' => 'element',
             'element' => 'Institution.Shifts/details',
             'visible' => ['view'=>true],
             'data' => $this->getViewShiftDetail($this->Session->read('Institution.Institutions.id'), $this->InstitutionShifts->AcademicPeriods->getCurrent())
-        ]);
+        ]);*/
 
         $this->field('location_section', ['type' => 'section', 'title' => __('Location')]);
 
-        $language = I18n::locale();
+        $language = I18n::getLocale();
         $field = 'area_id';
-        $areaLabel = $this->onGetFieldLabel($event, $this->alias(), $field, $language, true);
+        $areaLabel = $this->onGetFieldLabel($event, $this->getAlias(), $field, $language, true);
         $this->field('area_section', ['type' => 'section', 'title' => $areaLabel]);
         $field = 'area_administrative_id';
-        $areaAdministrativesLabel = $this->onGetFieldLabel($event, $this->alias(), $field, $language, true);
+        $areaAdministrativesLabel = $this->onGetFieldLabel($event, $this->getAlias(), $field, $language, true);
         $this->field('area_administrative_section', ['type' => 'section', 'title' => $areaAdministrativesLabel]);
         $this->field('contact_section', ['type' => 'section', 'title' => __('Contact'), 'after' => $field]);
         $this->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => 'website', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
@@ -1000,7 +1005,7 @@ class InstitutionsTable extends ControllerActionTable
             $this->field('logo_content', ['type' => 'image']);
         }
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $LatLongPermission = $ConfigItems->value("latitude_longitude");
 
         if ($LatLongPermission == LatLongOptions::EXCLUDED) {
@@ -1013,7 +1018,7 @@ class InstitutionsTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //Start POCOR-7029
-        $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+        $SurveyFormsFilters = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
         $todayDate = date("Y-m-d");
         $institutionType =  $entity->institution_type_id;
         $institutionProvider = $entity->institution_provider_id;
@@ -1342,7 +1347,8 @@ class InstitutionsTable extends ControllerActionTable
         $count = $institutionCount->count();
         unset($institutionCount);
 
-            if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+            //comment in upgrade        
+            /*if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
                 $extra['elements']['mini_dashboard'] = [
                     'name' => $indexDashboard,
                     'data' => [
@@ -1353,7 +1359,7 @@ class InstitutionsTable extends ControllerActionTable
                     'options' => [],
                     'order' => 1
                 ];
-            }
+            }*/
         }
         $extra['formButtons'] = false;
 
@@ -1382,7 +1388,8 @@ class InstitutionsTable extends ControllerActionTable
             ->group($modelId)
             ;
 
-            $this->advancedSearchQuery($this->request, $institutionTypesCount);
+            //Comment in cakephp4
+            //$this->advancedSearchQuery($this->request, $institutionTypesCount);
 
             // Creating the data set
             $dataSet = [];
@@ -1412,12 +1419,11 @@ class InstitutionsTable extends ControllerActionTable
     ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-
-        $this->Session->delete('Institutions.id');
-
-        $plugin = $this->controller->plugin;
-        $name = $this->controller->name;
-        $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->alias(), 'image'];
+        //print_r($userId = $this->Session->read('Institution.Institutions.id'));die;
+        $this->Session->delete('Institution.Institutions.id');
+        $plugin = $this->controller->getPlugin();
+        $name = $this->controller->getName();
+        $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->getAlias(), 'image'];
         $imageDefault = 'fa kd-institutions';
         $this->field('logo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
         $this->field('area_id', [ 'sort' => ['field' => 'Areas.name']]); //POCOR-6849
@@ -1429,7 +1435,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->setFieldVisible(['index'], [
             'logo_content', 'code', 'name', 'area_id', 'institution_type_id', 'institution_status_id'
         ]);
-        $this->controller->set('ngController', 'AdvancedSearchCtrl');
+       // $this->controller->set('ngController', 'AdvancedSearchCtrl');
     }
 
     public function onGetAreaId(Event $event, Entity $entity)
@@ -1534,11 +1540,11 @@ class InstitutionsTable extends ControllerActionTable
     {
         $this->dashboardQuery = clone $query;
         $search = $this->getSearchKey();
-        if (empty($search) && !$this->isAdvancedSearchEnabled()) {
+        //if (empty($search) && !$this->isAdvancedSearchEnabled()) {
             // redirect to school dashboard if it is only one record and no add access
 
             //POCOR-6866[START]
-            $securityFunctions = TableRegistry::get('SecurityFunctions');
+            $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
             $securityFunctionsData = $securityFunctions
             ->find()
             ->select([
@@ -1551,9 +1557,10 @@ class InstitutionsTable extends ControllerActionTable
                 'SecurityFunctions.category' => 'General'
             ])
             ->first();
-            $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
+            //commnet in upgrade cakephp 4
+            //$permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
 
-            $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
+            $securityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
 
             $securityRoleFunctionsData = $securityRoleFunctions
             ->find()
@@ -1562,7 +1569,7 @@ class InstitutionsTable extends ControllerActionTable
             ])
             ->where([
                 'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
-                'SecurityRoleFunctions.security_role_id' => $permission_id,
+               // 'SecurityRoleFunctions.security_role_id' => $permission_id,
             ])
             ->first();
             //POCOR-7191::Start
@@ -1578,15 +1585,15 @@ class InstitutionsTable extends ControllerActionTable
             if ($data->count() == 1 && (!$addAccess || Configure::read('schoolMode'))) {
                 $entity = $data->first();
                 $event->stopPropagation();
-                $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'dashboard', $this->paramsEncode(['id' => $entity->id])];
+                $action = ['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName, 'action' => 'dashboard', $this->paramsEncode(['id' => $entity->id])];
                 return $this->controller->redirect($action);
             } elseif ($data->count() == 0 && Configure::read('schoolMode')) {
                 $event->stopPropagation();
                 $this->Alert->info('Institutions.noInstitution', ['reset' => true]);
-                $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Institutions', 'add'];
+                $action = ['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Institutions', 'add'];
                 return $this->controller->redirect($action);
             }
-        }
+        //}
 
         // to display message after redirect
         $sessionKey = 'HideButton.warning';
@@ -1754,13 +1761,13 @@ class InstitutionsTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldInstitutionProviderId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionProviderId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $providerOptions = [];
         $selectedSectorId = '';
 
-        if (isset($request->data[$this->alias()]['institution_sector_id'])) {
-            $selectedSectorId = $request->data[$this->alias()]['institution_sector_id'];
+        if (isset($request->data[$this->getAlias()]['institution_sector_id'])) {
+            $selectedSectorId = $request->data[$this->getAlias()]['institution_sector_id'];
         } elseif ($action == 'add') {
             $SectorTable = $this->Sectors;
             $defaultSector = $SectorTable
@@ -1821,7 +1828,7 @@ class InstitutionsTable extends ControllerActionTable
         return $data;
     }
 
-    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             // list($typeOptions, $selectedType) = array_values($this->getTypeOptions());
@@ -1967,7 +1974,6 @@ class InstitutionsTable extends ControllerActionTable
         )
         ->select([$SecurityGroupAreas->aliasField('security_group_id')])
         ->distinct([$SecurityGroupAreas->aliasField('security_group_id')])
-        ->hydrate(false)
         ->toArray();
         $securityGroupIds = $this->array_column($securityGroupIds, 'security_group_id');
         return $securityGroupIds;
@@ -1994,7 +2000,7 @@ class InstitutionsTable extends ControllerActionTable
         $yearOpened = $entity->year_opened;
 
         if ($yearDateOpened != $yearOpened) {
-            $debugInfo = $this->alias() . ' (Institution Name: ' . $entity->name . ', Date_Opened: ' . $entity->date_opened . ', year_opened: ' . $yearOpened . ')';
+            $debugInfo = $this->getAlias() . ' (Institution Name: ' . $entity->name . ', Date_Opened: ' . $entity->date_opened . ', year_opened: ' . $yearOpened . ')';
 
             Log::write('debug', $debugInfo);
             Log::write('debug', $options);

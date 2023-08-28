@@ -26,9 +26,10 @@ class InstitutionsTable extends AppTable
     const NO_STUDENT = 1;
     const NO_STAFF = 2;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institutions');
+
+        $this->setTable('institutions');
         parent::initialize($config);
 
         $this->belongsTo('Localities', ['className' => 'Institution.Localities', 'foreignKey' => 'institution_locality_id']);
@@ -61,7 +62,7 @@ class InstitutionsTable extends AppTable
 
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -107,7 +108,7 @@ class InstitutionsTable extends AppTable
             ]);
 
         /*POCOR-6333 starts*/
-        $feature = $this->request->data[$this->alias()]['feature'];
+        $feature = $this->request->data[$this->getAlias()]['feature'];
         if (in_array($feature, ['Report.Institutions','Report.StudentAbsencesPerDays'])) {
             $validator = $validator
                     ->notEmpty('area_level_id')
@@ -234,7 +235,7 @@ class InstitutionsTable extends AppTable
         return $validator;
     }//POCOR-5762 ends
 
-    public function beforeAction(Event $event)
+    public function indexBeforeAction(Event $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
@@ -2264,4 +2265,5 @@ class InstitutionsTable extends AppTable
         return '';
     }
     // End POCOR-7358
+
 }

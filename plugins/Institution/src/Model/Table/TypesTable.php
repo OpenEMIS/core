@@ -5,9 +5,9 @@ use App\Model\Table\ControllerActionTable;
 
 class TypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_types');
+        $this->setTable('institution_types');
         parent::initialize($config);
 
         $this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_type_id']);
