@@ -912,4 +912,84 @@ class InstitutionCasesTable extends ControllerActionTable
         return $entity->assignee->name;
     }
     //POCOR-7668 end
+     //POCOR-7613 start
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'case_type_id':
+                return __('Type');
+            case 'case_priority_id':
+                return __('Priority');
+            case 'modified':
+                return __('Updated');
+            case 'created':
+                return __('Created');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    public function onUpdateFieldCaseTypeId(Event $event, array $attr, $action, $request)
+    {
+        $CaseTypes = TableRegistry::get('case_types');
+        $CaseTypeList = $CaseTypes
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'name'
+            ])
+            ->toArray();
+        $attr['type'] = 'select';
+        $attr['options'] = $CaseTypeList;
+        if ($request->params['controller'] == "Profiles") {//POCOR-7613
+           if($action=="edit"){
+                $attr['type'] = 'readonly';
+           }
+        }
+        return $attr;
+    }
+    public function onUpdateFieldCasePriorityId(Event $event, array $attr, $action, $request)
+    {
+        $CasePriority = TableRegistry::get('case_priorities');
+        $CasePriorityList = $CasePriority
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'name'
+            ])
+            ->toArray();
+        $attr['type'] = 'select';
+        $attr['options'] = $CasePriorityList;
+        if ($request->params['controller'] == "Profiles") {//POCOR-7613
+            if ($action == "edit") {
+                $attr['type'] = 'readonly';
+            }
+        }
+        return $attr;
+    }
+    public function onGetCaseTypeId(Event $event, Entity $entity)
+    {
+        return $entity->case_type->name;
+    }
+    public function onGetCasePriorityId(Event $event, Entity $entity)
+    {
+        return $entity->case_priority->name;
+    }
+    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('case_number', ['visible' => false]);
+        $this->setFieldOrder([ //POCOR-7613
+            'case_number', 'title', 'description', 'case_type_id', 'case_priority_id', 'institution_id'
+        ]);
+    }
+    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options = [])
+    {
+        $fieldKey = 'comment';
+        $tableHeaders = [__('Date'),_('User'),_('Comment')];
+        $tableCells = [];
+        $attr['tableHeaders'] = $tableHeaders;
+        $attr['tableCells'] = $tableCells;
+        // $attr['fieldOfStudiesOptions'] = $fieldOfStudiesOptions;
+        return $event->subject()->renderElement('Cases.comment', ['attr' => $attr]);
+    
+    }
+     //POCOR-7613 end
+
 }
