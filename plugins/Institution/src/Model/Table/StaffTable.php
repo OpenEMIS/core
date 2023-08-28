@@ -3761,8 +3761,10 @@ class StaffTable extends ControllerActionTable
      */
     private function getFormattedStaffAttendanceArchivedRow($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $day_id)
     {
-        return function (ResultSetInterface $results) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $day_id) {
-            return $results->map(function ($row) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
+        $AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
+        $absenceTypes = $AbsenceTypesTable->getAbsenceTypeList();
+        return function (ResultSetInterface $results) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $day_id, $absenceTypes) {
+            return $results->map(function ($row) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $day_id, $absenceTypes) {
                 $staffId = $row->staff_id;
                 $staffRecords = [];
                 $staffLeaveRecords = [];
@@ -3799,6 +3801,7 @@ class StaffTable extends ControllerActionTable
                                 'time_out' => $this->formatTime($attendanceRecord['time_out']),
                                 'comment' => $attendanceRecord['comment'],
                                 'absence_type_id' => $attendanceRecord['absence_type_id'],
+                                'absence_type' => __($absenceTypes[$attendanceRecord['absence_type_id']]),
                                 'isNew' => false
                             ];
                             break;
@@ -3816,7 +3819,7 @@ class StaffTable extends ControllerActionTable
                         ];
                     }
                     $staffTimeRecords[$dateStr] = $attendanceData;
-                    if ($dayId != -1) {
+                    if ($day_id != -1) {
                         $row->date = $dateStr;
                     }
                     $historyUrl = Router::url([
