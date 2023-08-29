@@ -111,7 +111,7 @@ function StaffAttendancesArchivedSvc($http, $q, $filter, KdDataSvc, AlertSvc, Ut
             }
         };
         return AcademicPeriods
-            .find('WeeksForPeriodStaffAttendanceArchived', {
+            .find('WeeksForPeriod', {
                 institution_id: institutionId,
                 academic_period_id: academicPeriodId
             })
@@ -311,8 +311,8 @@ function StaffAttendancesArchivedSvc($http, $q, $filter, KdDataSvc, AlertSvc, Ut
                     field: 'attendance.' + dayObj.date,
                     suppressSorting: true,
                     cellRenderer: function (params) {
-                        console.log('cellRenderer - params');
-                        console.log(params);
+                        // console.log('cellRenderer - params');
+                        // console.log(params);
                         if (angular.isDefined(params.value) && params.value !== null) {
                             return getAllDayTimeInTimeOutElement(params.value);
                         } else {
