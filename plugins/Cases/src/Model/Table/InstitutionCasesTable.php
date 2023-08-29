@@ -37,7 +37,7 @@ class InstitutionCasesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
-        $this->hasMany('InstitutionCaseComments', ['className' => 'Cases.InstitutionCaseComments', 'foreignKey' => 'case_id']);
+        $this->hasMany('InstitutionCaseComments', ['className' => 'Cases.InstitutionCaseComments', 'foreignKey' => 'case_id']);//POCOR-7613
 
         // $this->toggle('add', false);
 
