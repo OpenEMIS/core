@@ -3853,7 +3853,7 @@ class StaffTable extends ControllerActionTable
                     $url = Router::url([
                         'plugin' => 'Institution',
                         'controller' => 'Institutions',
-                        'action' => 'StaffLeave',
+                        'action' => 'ArchivedStaffLeave',
                         'index',
                         'user_id' => $staffId
                     ]);
