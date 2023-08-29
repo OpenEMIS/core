@@ -7,9 +7,18 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use CustomField\Model\Behavior\RenderBehavior;
 use Cake\Log\Log;
+use Cake\View\Helper\IdGeneratorTrait;
+use ControllerAction\Model\Traits\PickerTrait;
+use Cake\I18n\Date;
+use Cake\I18n\Time;
 
-class RenderStudentListBehavior extends RenderBehavior {
-	public function initialize(array $config) {
+class RenderStudentListBehavior extends RenderBehavior
+{
+
+    use IdGeneratorTrait;
+    use PickerTrait;
+    public function initialize(array $config)
+    {
         parent::initialize($config);
     }
 
@@ -162,7 +171,7 @@ class RenderStudentListBehavior extends RenderBehavior {
                         $studentQuery
                             ->where([
                                 $ClassStudents->aliasField('institution_class_id') => $selectedClass
-                        ]);
+                            ]);
                     }
 
                     $students = $studentQuery->toArray();
@@ -271,12 +280,63 @@ class RenderStudentListBehavior extends RenderBehavior {
                                         // for view
                                         $cellValue = !is_null($answerValue) ? $dropdownOptions[$answerValue] : '';
                                         break;
+                                        //POCOR-7660 start
+                                    case 'DATE':
+                                        $answerValue = !is_null($answerObj['date_value']) ? $answerObj['date_value'] : null;
+
+                                        $_options = [
+                                            'format' => 'dd-mm-yyyy',
+                                            'todayBtn' => 'linked',
+                                            'orientation' => 'auto',
+                                            'autoclose' => true,
+                                        ];
+
+                                        $attr['date_options'] = $_options;
+                                        $attr['id'] = $attr['model'] . '_' . $attr['field'];
+
+                                        $attr['fieldName'] = $cellPrefix . "." . $fieldTypes[$questionType];
+                                        if (array_key_exists('fieldName', $attr)) {
+                                            $attr['id'] = $this->_domId($attr['fieldName']);
+                                        }
+
+                                        $defaultDate = false;
+                                        if (!isset($attr['default_date'])) {
+                                            $attr['default_date'] = $defaultDate;
+                                        }
+
+                                        if (!array_key_exists('value', $attr)) {
+                                            if (!is_null($answerValue)) {
+                                                if ($answerValue instanceof Time || $answerValue instanceof Date) {
+                                                    $attr['value'] = $answerValue->format('d-m-Y');
+                                                } else {
+                                                    $attr['value'] = date('d-m-Y', strtotime($answerValue));
+                                                }
+                                            } else if ($attr['default_date']) {
+                                                $attr['value'] = date('d-m-Y');
+                                            }
+                                        } else {
+                                            if ($attr['value'] instanceof Time || $answerValue instanceof Date) {
+                                                $attr['value'] = $attr['value']->format('d-m-Y');
+                                            } else {
+                                                $attr['value'] = date('d-m-Y', strtotime($attr['value']));
+                                            }
+                                        }
+
+                                        $attr['null'] = !$attr['customField']['is_mandatory'];
+
+                                        $event->subject()->viewSet('datepicker', $attr);
+                                        $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
+                                        $cellValue = !is_null($answerValue) ? $this->_table->formatDate($answerValue) : '';
+                                        unset($attr['value']); // Need to unset so that it will not effect other Date or Time elements.
+                                        break;
+
                                     default:
                                         break;
                                 }
-
-                                $cellInput .= $form->input($cellPrefix.".".$fieldTypes[$questionType], $cellOptions);
-                                $unlockFields[] = $cellPrefix.".".$fieldTypes[$questionType];
+                                if (empty($cellInput)) {
+                                    $cellInput .= $form->input($cellPrefix . "." . $fieldTypes[$questionType], $cellOptions);
+                                }//POCOR-7660 end
+                                $unlockFields[] = $cellPrefix . "." . $fieldTypes[$questionType];
 
                                 if ($action == 'view') {
                                     $rowData[$colKey+$colOffset] = $cellValue;
