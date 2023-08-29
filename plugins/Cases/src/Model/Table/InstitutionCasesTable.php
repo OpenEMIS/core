@@ -383,10 +383,71 @@ class InstitutionCasesTable extends ControllerActionTable
                 'after' => 'description'
             ]);
         }
-       
         $this->setFieldOrder([//POCOR-7613
             'case_number','status_id', 'assignee_id','title',  'case_type_id', 'case_priority_id', 'description',
         ]);
+        //POCOR-7613 start
+        if ($this->request->params['controller'] == "Profiles") {
+
+            $this->field('modified', ['visible' => false]); //POCOR-7613
+            $this->field('modified_user_id', ['visible' => 'false']);
+            $this->field('created', ['visible' => false]); //POCOR-7613
+            $this->field('created_user_id', ['visible' => 'false']);
+            $this->field('assignee_id', ['visible' => 'false']);
+            $this->field('workflow_status', ['type' => 'hidden']);
+            // $this->field('personal_comment', ['type'=>'element','element' => 'custom_personal_comment', 'valueClass' => 'table-full-width',]);
+            $fieldKey = 'comment';
+            $tableHeaders = [__('Comment'), _('Created By'), _('Created On')];
+            $tableCells = [];
+            $Comments = TableRegistry::get('Cases.InstitutionCaseComments');
+            $case_id = $this->paramsDecode($this->request->params['pass'][1])['id'];
+            $userTable = TableRegistry::get('security_users');
+            $commentResults = $Comments->find()
+                ->select([
+                    "user_id" => $Comments->aliasField('created_user_id'),
+                    "first_name" => $userTable->aliasField('first_name'),
+                    "last_name" => $userTable->aliasField('last_name'),
+                    "openemis_no" => $userTable->aliasField('openemis_no'),
+                    "case_id" => $Comments->aliasField('case_id'),
+                    "comment" => $Comments->aliasField('comment'),
+                    "comment_id" => $Comments->aliasField('id'),
+                    "created" => $Comments->aliasField('created'),
+
+                ])
+                ->leftJoin([$userTable->alias() => $userTable->table()], [
+                    $userTable->aliasField('id =') . $Comments->aliasField('created_user_id')
+                ])
+                ->where([
+                    $Comments->aliasField('case_id') => $case_id,
+                    $Comments->aliasField('created_user_id') => $this->Auth->user('id')
+                ])->toArray();
+
+            if (!empty($commentResults)) {
+                foreach ($commentResults as $commentObj) {
+                    $rowData = [];
+                    $rowData[] = $commentObj->comment;
+                    $rowData[] = $commentObj->openemis_no . " - " . $commentObj->first_name . " " . $commentObj->last_name;
+                    $rowData[] = $commentObj->created->format('Y-m-d h:i:s');
+
+                    // table cells
+                    $tableCells[] = $rowData;
+                }
+            }
+            $attr['tableHeaders'] = $tableHeaders;
+            $attr['tableCells'] = $tableCells;
+            $this->field('new_comment', [
+                'type' => 'element',
+                'element' => 'Cases.comment',
+                'override' => true,
+                'tableHeaders' => $tableHeaders,
+                'tableCells' => $tableCells,
+            ]);
+        
+            $this->setFieldOrder([ //POCOR-7613
+            'case_number', 'title', 'description', 'case_type_id', 'case_priority_id', 'institution_id'
+        ]);
+        }
+         //POCOR-7613 end
         //End POCOR-6210
     }
 
@@ -394,17 +455,6 @@ class InstitutionCasesTable extends ControllerActionTable
     {
         $this->field('case_number',['visible'=>true,'type'=>"readonly"]);//POCOR-7613
         $this->field('title');
-        //POCOR-7613 start
-        if ($this->request->params['controller'] == "Profiles") {
-            $this->field('case_number', ['visible' => false]);//POCOR-7613
-            $this->field('institution_id', ['visible' => true,'type'=>'read_only']);
-            $this->field('title', ['type' => "readonly"]);
-            $this->field('description', ['type' => "readonly"]);
-            $this->field('case_type_id', ['type' => "readonly"]);
-            $this->field('case_priority_id', ['type' => "readonly"]);
-            $this->field('personal_comment', ['type' => 'custom_personal_comment']);
-        }
-        //POCOR-7613 end
         $this->setFieldOrder([//POCOR-7613
            'case_number', 'title','description','case_type_id','case_priority_id','assignee_id',
         ]);
