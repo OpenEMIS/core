@@ -1,4 +1,5 @@
 <?php
+
 namespace Cases\Model\Table;
 
 use ArrayObject;
@@ -37,7 +38,7 @@ class InstitutionCasesTable extends ControllerActionTable
             'Dashboard' => ['index']
         ]);
         $this->hasMany('InstitutionCaseComments', ['className' => 'Cases.InstitutionCaseComments', 'foreignKey' => 'case_id']);
-       
+
         // $this->toggle('add', false);
 
         $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
@@ -52,7 +53,7 @@ class InstitutionCasesTable extends ControllerActionTable
         $events['Model.LinkedRecord.afterSave'] = 'linkedRecordAfterSave';
         return $events;
     }
- 
+
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //POCOR-7367::Start
@@ -88,7 +89,7 @@ class InstitutionCasesTable extends ControllerActionTable
             );
             if ($entity->submit == 'save') {
                 if (is_null($this->request->query('feature'))) {
-                   $this->request->query['feature'] = 'StudentAttendances';
+                    $this->request->query['feature'] = 'StudentAttendances';
                 }
                 $features = $this->request->query['feature'];
 
@@ -99,30 +100,30 @@ class InstitutionCasesTable extends ControllerActionTable
                 $params['created_user_id'] = $entity->created_user_id;
                 $params['created'] = date('Y-m-d H:i:s');
                 $newEntity = $linkedRecord->newEntity($params);
-                $linkedRecord->save($newEntity);                
+                $linkedRecord->save($newEntity);
             }
         }
         //POCOR-7439 start
         if($options['all_institution_cases']==1){//for entering multiple entries for institution
             $newEntities=[];
             $institutionList = $this->Institutions
-                                ->find('list', [
-                                    'keyField' => 'id',
-                                    'valueField' => 'code_name'
-                                ])
-                                ->where([
-                                    $this->Institutions->aliasField('institution_status_id') => self::ACTIVE
-                                ])
-                                ->order([
-                                    $this->Institutions->aliasField('code') => 'ASC',
-                                    $this->Institutions->aliasField('name') => 'ASC'
-                                ])
-                                ->toArray();
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'code_name'
+                ])
+                ->where([
+                    $this->Institutions->aliasField('institution_status_id') => self::ACTIVE
+                ])
+                ->order([
+                    $this->Institutions->aliasField('code') => 'ASC',
+                    $this->Institutions->aliasField('name') => 'ASC'
+                ])
+                ->toArray();
             $insIds=array_keys($institutionList);
             $istId=array_shift($insIds);
             $result=$entity->toArray();
                 foreach($insIds as $id){
-                        $autoGenerateCaseNumber = $this->getAutoGenerateCaseNumber($id);
+                $autoGenerateCaseNumber = $this->getAutoGenerateCaseNumber($id);
                         $value=$result;
                         $newData=array('institution_id' => $id,
                                             'title'=>$value['title'],
@@ -133,29 +134,28 @@ class InstitutionCasesTable extends ControllerActionTable
                                             'created'=>$value['created'],
                                             'case_number'=>$autoGenerateCaseNumber);
                         $institutionCases=TableRegistry::get('Institution.InstitutionCases');
-                        $caseEntity = $institutionCases->newEntity($newData);
+                $caseEntity = $institutionCases->newEntity($newData);
                         if($institutionCases->save($caseEntity)){
-                            $newCaseNumber =  $caseEntity->case_number . "-" .  $caseEntity->id;
-                            $this->updateAll(
-                                ['case_number' => $newCaseNumber],
-                                ['id' =>  $caseEntity->id]
-                            );
+                    $newCaseNumber =  $caseEntity->case_number . "-" .  $caseEntity->id;
+                    $this->updateAll(
+                        ['case_number' => $newCaseNumber],
+                        ['id' =>  $caseEntity->id]
+                    );
                             if ($this->request->query('feature')==-1) {
-                                    $params['feature'] = 'StudentAttendances';
-                            }
-                            $params['feature'] = $features;
-                            $params['institution_case_id'] =  $caseEntity->id;
-                            $params['record_id'] =  0;
-                            $params['id'] = Text::uuid();
-                            $params['created_user_id'] =$caseEntity->created_user_id;
-                            $params['created'] = date('Y-m-d H:i:s');
-                            $newEntity = $linkedRecord->newEntity($params);
-                            $linkedRecord->save($newEntity);   
+                        $params['feature'] = 'StudentAttendances';
                     }
+                    $params['feature'] = $features;
+                    $params['institution_case_id'] =  $caseEntity->id;
+                    $params['record_id'] =  0;
+                    $params['id'] = Text::uuid();
+                    $params['created_user_id'] = $caseEntity->created_user_id;
+                    $params['created'] = date('Y-m-d H:i:s');
+                    $newEntity = $linkedRecord->newEntity($params);
+                    $linkedRecord->save($newEntity);
                 }
-                
-       }
-       //POCOR-7439 end
+            }
+        }
+        //POCOR-7439 end
     }
 
     public function linkedRecordAfterSave(Event $event, Entity $linkedRecordEntity)
@@ -225,11 +225,11 @@ class InstitutionCasesTable extends ControllerActionTable
         if (!empty($params['options'])) {
             $this->controller->set($params['options']);
         }
-        
+
         // Start POCOR-5188
         $is_manual_exist = $this->getManualUrl('Institutions','Cases','Cases');   
         if(!empty($is_manual_exist)){
-           
+
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
                 'data-toggle' => 'tooltip',
@@ -237,16 +237,16 @@ class InstitutionCasesTable extends ControllerActionTable
                 'escape' => false,
                 'target'=>'_blank'
             ];
-    
+
             $helpBtn['url'] = $is_manual_exist['url'];
             $helpBtn['type'] = 'button';
             $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
             $helpBtn['attr'] = $btnAttr;
             $helpBtn['attr']['title'] = __('Help');
             $extra['toolbarButtons']['help'] = $helpBtn;
-        
-    
-		// End POCOR-5188
+
+
+            // End POCOR-5188
         }}
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -266,104 +266,104 @@ class InstitutionCasesTable extends ControllerActionTable
         //POCOR-7437 start
         if($this->request->params['controller']=="Profiles"){
             $query
-            ->select([
-                $this->aliasField('id'),
-                $this->aliasField('case_number'),
-                $this->aliasField('title'),
-                $this->aliasField('description'),
-                $this->aliasField('status_id'),
-                $this->aliasField('assignee_id'),
-                $this->aliasField('institution_id'),
-                $this->aliasField('modified_user_id'),
-                $this->aliasField('modified'),
-                $this->aliasField('created_user_id'),
-                $this->aliasField('created'),
-                $this->Assignees->aliasField('first_name'),
-                $this->Assignees->aliasField('middle_name'),
-                $this->Assignees->aliasField('last_name'),
-                $this->Assignees->aliasField('third_name'),
-                $this->Assignees->aliasField('preferred_name')
-            ])
-            ->contain(['LinkedRecords'])
-            ->innerJoin(
-                [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
-                [
-                    [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
-                    //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
-                ]
-            )
-            ->where([$this->aliasField('created_user_id') =>$userId]) //POCOR-7668
-            ->group($this->aliasField('id'));
+                ->select([
+                    $this->aliasField('id'),
+                    $this->aliasField('case_number'),
+                    $this->aliasField('title'),
+                    $this->aliasField('description'),
+                    $this->aliasField('status_id'),
+                    $this->aliasField('assignee_id'),
+                    $this->aliasField('institution_id'),
+                    $this->aliasField('modified_user_id'),
+                    $this->aliasField('modified'),
+                    $this->aliasField('created_user_id'),
+                    $this->aliasField('created'),
+                    $this->Assignees->aliasField('first_name'),
+                    $this->Assignees->aliasField('middle_name'),
+                    $this->Assignees->aliasField('last_name'),
+                    $this->Assignees->aliasField('third_name'),
+                    $this->Assignees->aliasField('preferred_name')
+                ])
+                ->contain(['LinkedRecords'])
+                ->innerJoin(
+                    [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                    [
+                        [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
+                        //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+                    ]
+                )
+                ->where([$this->aliasField('created_user_id') => $userId]) //POCOR-7668
+                ->group($this->aliasField('id'));
         }
         else{//POCOR-7437 end
         if ($selectedFeature != -1 ) { //start POCOR-6210
-             $query
-            ->select([
-                $this->aliasField('id'),
-                $this->aliasField('case_number'),
-                $this->aliasField('title'),
-                $this->aliasField('description'),
-                $this->aliasField('status_id'),
-                $this->aliasField('assignee_id'),
-                $this->aliasField('institution_id'),
-                $this->aliasField('modified_user_id'),
-                $this->aliasField('modified'),
-                $this->aliasField('created_user_id'),
-                $this->aliasField('created'),
-                $this->Assignees->aliasField('first_name'),
-                $this->Assignees->aliasField('middle_name'),
-                $this->Assignees->aliasField('last_name'),
-                $this->Assignees->aliasField('third_name'),
-                $this->Assignees->aliasField('preferred_name')
-            ])
-            ->contain(['LinkedRecords'])
-            ->innerJoin(
-                [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
-                [
-                    [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
-                     [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
-                ]
-            )
-            ->where([$this->LinkedRecords->aliasField('record_id NOT IN') => 0]) //start POCOR-6210
-            ->group($this->aliasField('id'));
+                $query
+                    ->select([
+                        $this->aliasField('id'),
+                        $this->aliasField('case_number'),
+                        $this->aliasField('title'),
+                        $this->aliasField('description'),
+                        $this->aliasField('status_id'),
+                        $this->aliasField('assignee_id'),
+                        $this->aliasField('institution_id'),
+                        $this->aliasField('modified_user_id'),
+                        $this->aliasField('modified'),
+                        $this->aliasField('created_user_id'),
+                        $this->aliasField('created'),
+                        $this->Assignees->aliasField('first_name'),
+                        $this->Assignees->aliasField('middle_name'),
+                        $this->Assignees->aliasField('last_name'),
+                        $this->Assignees->aliasField('third_name'),
+                        $this->Assignees->aliasField('preferred_name')
+                    ])
+                    ->contain(['LinkedRecords'])
+                    ->innerJoin(
+                        [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                        [
+                            [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
+                            [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+                        ]
+                    )
+                    ->where([$this->LinkedRecords->aliasField('record_id NOT IN') => 0]) //start POCOR-6210
+                    ->group($this->aliasField('id'));
         }
         else{
-            $query
-            ->select([
-                $this->aliasField('id'),
-                $this->aliasField('case_number'),
-                $this->aliasField('title'),
-                $this->aliasField('description'),
-                $this->aliasField('status_id'),
-                $this->aliasField('assignee_id'),
-                $this->aliasField('institution_id'),
-                $this->aliasField('modified_user_id'),
-                $this->aliasField('modified'),
-                $this->aliasField('created_user_id'),
-                $this->aliasField('created'),
-                $this->Assignees->aliasField('first_name'),
-                $this->Assignees->aliasField('middle_name'),
-                $this->Assignees->aliasField('last_name'),
-                $this->Assignees->aliasField('third_name'),
-                $this->Assignees->aliasField('preferred_name')
-            ])
-            ->contain(['LinkedRecords'])
-            ->innerJoin(
-                [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
-                [
-                    [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
-                    //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
-                ]
-            )
-            ->group($this->aliasField('id'));
+                $query
+                    ->select([
+                        $this->aliasField('id'),
+                        $this->aliasField('case_number'),
+                        $this->aliasField('title'),
+                        $this->aliasField('description'),
+                        $this->aliasField('status_id'),
+                        $this->aliasField('assignee_id'),
+                        $this->aliasField('institution_id'),
+                        $this->aliasField('modified_user_id'),
+                        $this->aliasField('modified'),
+                        $this->aliasField('created_user_id'),
+                        $this->aliasField('created'),
+                        $this->Assignees->aliasField('first_name'),
+                        $this->Assignees->aliasField('middle_name'),
+                        $this->Assignees->aliasField('last_name'),
+                        $this->Assignees->aliasField('third_name'),
+                        $this->Assignees->aliasField('preferred_name')
+                    ])
+                    ->contain(['LinkedRecords'])
+                    ->innerJoin(
+                        [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                        [
+                            [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
+                            //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+                        ]
+                    )
+                    ->group($this->aliasField('id'));
 
-        }
-    }
-     
-        // $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
-            if ($selectedFeature != 'StudentAttendances') {
-               $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
             }
+        }
+
+        // $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
+        if ($selectedFeature != 'StudentAttendances') {
+            $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
+        }
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -401,7 +401,7 @@ class InstitutionCasesTable extends ControllerActionTable
             $this->field('description', ['type' => "readonly"]);
             $this->field('case_type_id', ['type' => "readonly"]);
             $this->field('case_priority_id', ['type' => "readonly"]);
-            $this->field('new_comment', ['type' => 'custom_criterias']);
+            $this->field('personal_comment', ['type' => 'custom_personal_comment']);
         }
         //POCOR-7613 end
         $this->setFieldOrder([//POCOR-7613
@@ -444,8 +444,8 @@ class InstitutionCasesTable extends ControllerActionTable
                     }
                     if (!empty($event->result)) {
                         $summary = $event->result;
-                        }
-        
+                    }
+
                     if (is_array($summary) && isset($summary[1]) && $summary[1] === true) {
                         $baseUrl = $featureAttr[$feature]['url'];
                         $baseUrl[] = 'view';
@@ -461,7 +461,7 @@ class InstitutionCasesTable extends ControllerActionTable
                     } else {
                         $url = $summary[0]['title'];//POCOR-48684
                     }
-                  
+
                     $rowData[] = isset($featureOptions[$recordEntity->feature]) ? $featureOptions[$recordEntity->feature] : $recordEntity->feature;
                     //POCOR-4864 start
                     $rowData[]=date_format($recordEntity->created, 'F d, Y');
@@ -690,7 +690,7 @@ class InstitutionCasesTable extends ControllerActionTable
     // POCOR-6170
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-		$institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->Session->read('Institution.Institutions.id');
         $assignee = TableRegistry::get('security_users');
 
         // for getting selected feature
@@ -712,45 +712,45 @@ class InstitutionCasesTable extends ControllerActionTable
         }
         // for getting selected feature
 
-		// query start
+        // query start
         $query
-        ->select([
-            $this->aliasField('id'),
-            $this->aliasField('case_number'),
-            $this->aliasField('title'),
-            'status' => 'Statuses.name',
-            'assignee' => $assignee->find()->func()->concat([
-                'first_name' => 'literal',
-                " ",
-                'last_name' => 'literal'
-            ]),
-            $this->aliasField('description'),
-            $this->aliasField('status_id'),
-            $this->aliasField('assignee_id'),
-            $this->aliasField('institution_id'),
-            $this->aliasField('modified_user_id'),
-            $this->aliasField('modified'),
-            $this->aliasField('created_user_id'),
-            $this->aliasField('created'),
-        ])
-        ->contain(['LinkedRecords'])
-        ->innerJoin(
-            [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
-            [
-                [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
-                [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
-            ]
-        )
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('case_number'),
+                $this->aliasField('title'),
+                'status' => 'Statuses.name',
+                'assignee' => $assignee->find()->func()->concat([
+                    'first_name' => 'literal',
+                    " ",
+                    'last_name' => 'literal'
+                ]),
+                $this->aliasField('description'),
+                $this->aliasField('status_id'),
+                $this->aliasField('assignee_id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('modified_user_id'),
+                $this->aliasField('modified'),
+                $this->aliasField('created_user_id'),
+                $this->aliasField('created'),
+            ])
+            ->contain(['LinkedRecords'])
+            ->innerJoin(
+                [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                [
+                    [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
+                    [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+                ]
+            )
         ->LeftJoin([$this->Assignees->alias() => $this->Assignees->table()],[
             $this->Assignees->aliasField('id').' = ' . 'InstitutionCases.assignee_id'
-        ])  
+            ])
         ->LeftJoin([$this->Statuses->alias() => $this->Statuses->table()],[
             $this->Statuses->aliasField('id').' = ' . 'InstitutionCases.status_id'
-        ])
-        ->where([
-            'InstitutionCases.institution_id' =>  $institutionId
-        ])
-        ->group($this->aliasField('id'));
+            ])
+            ->where([
+                'InstitutionCases.institution_id' =>  $institutionId
+            ])
+            ->group($this->aliasField('id'));
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
@@ -825,54 +825,54 @@ class InstitutionCasesTable extends ControllerActionTable
     // POCOR-6170
 
     public function beforeAction(Event $event, ArrayObject $extra)
-    {    
+    {
         $this->field('institution_id');//POCOR-7437 
         $this->field('case_number',['visible' =>'true']);//POCOR-7613
         $this->field('case_type_id');//POCOR-7613
         $this->field('case_priority_id');//POCOR-7613
         $this->setFieldOrder([//POCOR-7613
-           'case_number', 'title', 'description', 'assignee_id'
+            'case_number', 'title', 'description', 'assignee_id'
         ]);
     }
     //POCOR-7437 start
     public function indexAfterAction(Event $event, $data){
 
-            $this->field('case_number',['visible' => true]);
-            $this->field('status_id',['visible' => true,'after'=>'created']);
-            $this->field('modified',['visible' => true]);
-            $this->fields['modified']['sort'] = false;
-            $this->field('description',['visible' => false]);
-            $this->field('linked_records',['visible' => false]);
-            $this->field('institution_id',['visible' => false]);
-            if ($this->request->params['controller'] == "Profiles") {//POCOR-7613
-                $this->field('institution_id', ['visible' => true]);
-            }
-            $this->fields['created']['sort'] = false;
-            $this->fields['status_id']['sort'] = true;
-            $this->setFieldOrder([
+        $this->field('case_number', ['visible' => true]);
+        $this->field('status_id', ['visible' => true, 'after' => 'created']);
+        $this->field('modified', ['visible' => true]);
+        $this->fields['modified']['sort'] = false;
+        $this->field('description', ['visible' => false]);
+        $this->field('linked_records', ['visible' => false]);
+        $this->field('institution_id', ['visible' => false]);
+        if ($this->request->params['controller'] == "Profiles") { //POCOR-7613
+            $this->field('institution_id', ['visible' => true]);
+        }
+        $this->fields['created']['sort'] = false;
+        $this->fields['status_id']['sort'] = true;
+        $this->setFieldOrder([
                 'case_number','created','modified','title','status_id'
-            ]);
+        ]);
     }
-   
+
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request){
-       
+
         if($request->params['controller']=="Profiles"){
-            
+
             $institutionList = $this->Institutions
-            ->find('list', [
-                'keyField' => 'id',
-                'valueField' => 'code_name'
-            ])
-            ->where([
-                $this->Institutions->aliasField('institution_status_id') => self::ACTIVE
-            ])
-            ->order([
-                $this->Institutions->aliasField('code') => 'ASC',
-                $this->Institutions->aliasField('name') => 'ASC'
-            ])
-            ->toArray();
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'code_name'
+                ])
+                ->where([
+                    $this->Institutions->aliasField('institution_status_id') => self::ACTIVE
+                ])
+                ->order([
+                    $this->Institutions->aliasField('code') => 'ASC',
+                    $this->Institutions->aliasField('name') => 'ASC'
+                ])
+                ->toArray();
             if (count($institutionList) > 1) {
-             
+
                     $institutionOptions = ['' => __('-- Select --')]+['-1' => __('All Institutions')] + $institutionList;
             } else {
                 $institutionOptions =  $institutionList;
@@ -885,7 +885,7 @@ class InstitutionCasesTable extends ControllerActionTable
                 $attr['type'] = 'readOnly';
             }
         }
-      return $attr;
+        return $attr;
     }
     //POCOR-7437 end
     //POCOR-7642 start
@@ -913,7 +913,7 @@ class InstitutionCasesTable extends ControllerActionTable
         return $entity->assignee->name;
     }
     //POCOR-7668 end
-     //POCOR-7613 start
+    //POCOR-7613 start
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
@@ -943,7 +943,7 @@ class InstitutionCasesTable extends ControllerActionTable
         if ($request->params['controller'] == "Profiles") {//POCOR-7613
            if($action=="edit"){
                 $attr['type'] = 'readonly';
-           }
+            }
         }
         return $attr;
     }
@@ -980,17 +980,48 @@ class InstitutionCasesTable extends ControllerActionTable
             'case_number', 'title', 'description', 'case_type_id', 'case_priority_id', 'institution_id'
         ]);
     }
-    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomPersonalCommentElement(Event $event, $action, $entity, $attr, $options = [])
     {
         $fieldKey = 'comment';
-        $tableHeaders = [__('Date'),_('User'),_('Comment')];
+        $tableHeaders = [__('Comment'), _('Created By'), _('Created On')];
         $tableCells = [];
+        $Comments = TableRegistry::get('Cases.InstitutionCaseComments');
+        $case_id = $this->paramsDecode($this->request->params['pass'][1])['id'];
+        $userTable = TableRegistry::get('security_users');
+        $commentResults = $Comments->find()
+            ->select([
+                "user_id" => $Comments->aliasField('created_user_id'),
+                "first_name" => $userTable->aliasField('first_name'),
+                "last_name" => $userTable->aliasField('last_name'),
+                "openemis_no" => $userTable->aliasField('openemis_no'),
+                "case_id" => $Comments->aliasField('case_id'),
+                "comment" => $Comments->aliasField('comment'),
+                "comment_id" => $Comments->aliasField('id'),
+                "created" => $Comments->aliasField('created'),
+
+            ])
+            ->leftJoin([$userTable->alias() => $userTable->table()], [
+                $userTable->aliasField('id =') . $Comments->aliasField('created_user_id')
+            ])
+            ->where([
+                $Comments->aliasField('case_id') => $case_id,
+                $Comments->aliasField('created_user_id') => $this->Auth->user('id')
+            ])->toArray();
+
+        if (!empty($commentResults)) {
+            foreach ($commentResults as $commentObj) {
+                $rowData = [];
+                $rowData[] = $commentObj->comment;
+                $rowData[] = $commentObj->openemis_no . " - " . $commentObj->first_name . " " . $commentObj->last_name;
+                $rowData[] = $commentObj->created->format('Y-m-d h:i:s');
+
+                // table cells
+                $tableCells[] = $rowData;
+            }
+        }
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
-        // $attr['fieldOfStudiesOptions'] = $fieldOfStudiesOptions;
         return $event->subject()->renderElement('Cases.comment', ['attr' => $attr]);
-    
     }
-     //POCOR-7613 end
-
+    //POCOR-7613 end   
 }
