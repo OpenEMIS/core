@@ -639,7 +639,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
     public function onUpdateFieldRequestedDate(Event $event, array $attr, $action, Request $request)
     {
-
+        //Single transfer
         if (in_array($action, ['add', 'edit', 'approve', 'associated'])) {
             $entity = $attr['entity'];
 
@@ -771,6 +771,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
+
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
 
@@ -778,6 +779,10 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 // using institution_student entity
                 $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
                 $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
+                $area_id = $request->data[$this->alias()]['area_id'];
+                $attr['type'] = 'chosenSelect';
+                $attr['attr']['multiple'] = false;
+                $attr['select'] = true;
                 $today = Date::now();
 
                 $selectedAcademicPeriodData = $this->AcademicPeriods->get($entity->academic_period_id);
@@ -812,14 +817,10 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     => $InstitutionStatuses->getIdByCode('ACTIVE')])
                     ->order([$this->Institutions->aliasField('code')]);
 
-                if (!empty($request->data[$this->alias()]['area_id'])) {
+                if ($area_id) {
                     $institutionOptions->where([$this->Institutions->aliasField('area_id')
-                    => $request->data[$this->alias()]['area_id']]);
+                    => $area_id]);
                 }
-
-                $attr['type'] = 'chosenSelect';
-                $attr['attr']['multiple'] = false;
-                $attr['select'] = true;
                 $attr['options'] = $institutionOptions->toArray();
             } else {
                 // using institution_student_transfer entity
