@@ -572,7 +572,7 @@ class UserRepository extends Controller
                 }
 
                 
-                $institutionPosition = DB::table('institution_positions')->where('id', $institutionPositionId)->first();
+                $institutionPosition = DB::table('institution_positions')->where('id', $institutionPositionId)->where('institution_id', $institutionId)->first();
                 if(empty($institutionPosition)){
                     return 5; //Institution Position don't exists...
                 }
