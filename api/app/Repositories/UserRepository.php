@@ -525,7 +525,7 @@ class UserRepository extends Controller
                 $nationality_id = (array_key_exists('nationality_id', $requestData)) ? $requestData['nationality_id'] : null;
                 $nationalityName = (array_key_exists('nationality_name', $requestData)) ? $requestData['nationality_name'] : null;
                 $username = (array_key_exists('username', $requestData)) ? $requestData['username'] : null;
-                $password = (array_key_exists('password', $requestData)) ? Hash::make($requestData['password']) : Hash::make(123456);
+                $password = (array_key_exists('password', $requestData)) ? Hash::make($requestData['password']) : "";
                 $address = (array_key_exists('address', $requestData)) ? $requestData['address'] : null;
                 $postalCode = (array_key_exists('postal_code', $requestData)) ? $requestData['postal_code'] : null;
                 $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData)) ? $requestData['birthplace_area_id'] : null;
@@ -799,7 +799,8 @@ class UserRepository extends Controller
                             //'staff_id' => $staffId,
                             'staff_id' => $user_record_id,
                             'staff_type_id' => $staffTypeId,
-                            'staff_status_id' => $statuses['ASSIGNED'],
+                            //'staff_status_id' => $statuses['ASSIGNED'],
+                            'staff_status_id' => 1, //ASSIGNED
                             'is_homeroom' => $is_homeroom, //POCOR-5070
                             'institution_id' => $institutionId,
                             'institution_position_id' => $institutionPositionId,
@@ -1072,7 +1073,8 @@ class UserRepository extends Controller
                                 'end_year' => $endYear,
                                 'staff_id' => $staffId,
                                 'staff_type_id' => $staffTypeId??358,
-                                'staff_status_id' => $statuses['ASSIGNED'],
+                                //'staff_status_id' => $statuses['ASSIGNED'],
+                                'staff_status_id' => 1, //Assigned
                                 'is_homeroom' => $is_homeroom, //POCOR-5070
                                 'institution_id' => $institutionId,
                                 'institution_position_id' => $institutionPositionId,
@@ -1082,7 +1084,13 @@ class UserRepository extends Controller
                                 'created' => date('Y-m-d H:i:s')
                             ];
                             
-                            $store = InstitutionStaff::insert($entityStaffsData);
+                            $check = InstitutionStaff::where('institution_id', $institutionId)->where('staff_id', $staffId)->first();
+                            if($check){
+                                $update = InstitutionStaff::where('institution_id', $institutionId)->where('staff_id', $staffId)->update($entityStaffsData);
+                            } else {
+                                $store = InstitutionStaff::insert($entityStaffsData);
+                            }
+
                         }
 
                         if (!empty($shiftIds)) {
@@ -1173,7 +1181,7 @@ class UserRepository extends Controller
                 $nationality_id = (array_key_exists('nationality_id', $requestData)) ? $requestData['nationality_id'] : null;
                 $nationalityName = (array_key_exists('nationality_name', $requestData)) ? $requestData['nationality_name'] : null;
                 $username = (array_key_exists('username', $requestData)) ? $requestData['username'] : null;
-                $password = (array_key_exists('password', $requestData)) ? Hash::make($requestData['password']) : Hash::make(123456);
+                $password = (array_key_exists('password', $requestData)) ? Hash::make($requestData['password']) : "";
                 $address = (array_key_exists('address', $requestData)) ? $requestData['address'] : null;
                 $postalCode = (array_key_exists('postal_code', $requestData)) ? $requestData['postal_code'] : null;
                 $birthplaceAreaId = (array_key_exists('birthplace_area_id', $requestData)) ? $requestData['birthplace_area_id'] : null;
