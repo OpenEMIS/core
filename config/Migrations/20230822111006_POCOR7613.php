@@ -194,7 +194,7 @@ class POCOR7613 extends AbstractMigration
         $this->execute('DROP TABLE IF EXISTS `institution_cases`');
         $this->execute('RENAME TABLE `zz_7613_institution_cases` TO `field_options`');
         $this->execute('DROP TABLE IF EXISTS `field_options`');
-        $this->execute('RENAME TABLE `zz_7362_field_options` TO `field_options`');
+        $this->execute('RENAME TABLE `zz_7613_field_options` TO `field_options`');
         $this->execute('DROP TABLE IF EXISTS `case_types`');
         $this->execute('DROP TABLE IF EXISTS `case_priorities`');
     }
