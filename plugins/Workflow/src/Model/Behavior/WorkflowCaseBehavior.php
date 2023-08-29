@@ -1778,7 +1778,7 @@ class WorkflowCaseBehavior extends Behavior
                 
             ];
         $buttons = [
-            '<button id="reassign-submit" type="submit" class="btn btn-default" onclick="return Workflow.onSubmit(\'reassign\');">' . __('Save') . '</button>'
+            '<button id="reassign-submit" type="submit" class="btn btn-default" >' . __('Save') . '</button>'
         ];
             $contentFields = new ArrayObject([
                 'comment' => [
@@ -2167,6 +2167,40 @@ class WorkflowCaseBehavior extends Behavior
                     unset($toolbarButtons['add']);
                 }
             } elseif ($action == 'view') {
+                 //POCOR-7613 start
+                if($this->_table->request->params['controller']=="Profiles"&& $this->_table->request->params['action']=="Cases"){
+                            unset($toolbarButtons['list']);
+                            $addButtonAttr = [
+                                'escapeTitle' => false,
+                                'escape' => true,
+                                'onclick' => 'Workflow.init();Workflow.copy(' . $json . ', "comment");return false;',
+                                'data-toggle' => 'modal',
+                                'data-target' => '#workflowComment'
+                            ];
+                            $addButtonAttr = array_merge($attr, $addButtonAttr);
+                            $addButton = [];
+                            $addButton['type'] = 'button';
+                            $addButton['label'] = '<i class="fa kd-add"></i>';
+                            $addButton['url'] = '#';
+                            $addButton['attr'] = $addButtonAttr;
+                            $addButton['attr']['title'] = __('Comment');
+                            $toolbarButtons['add'] = $addButton;
+                            $entity = $this->getRecord();
+                            $modal = $this->getPersonalCommentModalOptions($entity);
+                            if (!empty($modal)) {
+
+                                if (!isset($this->_table->controller->editVars['modals'])) {
+                                    $this->_table->controller->set('modals', ['workflowComment' => $modal]);
+                                } else {
+                                    $modals = array_merge($this->_table->controller->editVars['modals'], ['workflowComment' => $modal]);
+
+
+                                    $this->_table->controller->set('modals', $modals);
+                                }
+                            }
+            }        
+                //POCOR-7613 end
+	        else{
                 $isEditable = false;
                 $isDeletable = false;
                 
@@ -2476,43 +2510,8 @@ class WorkflowCaseBehavior extends Behavior
                 // End
             }
         }
-        //POCOR-7613 start
-        $model = $this->_table;
-        if ($model->url('index')['controller'] == "Profiles" && $model->url('index')['action'] == "Cases") { //POCOR-7439
-            if ($action == "edit") {
-                unset($toolbarButtons['list']);
-                $addButtonAttr = [
-                    'escapeTitle' => false,
-                    'escape' => true,
-                    'onclick' => 'Workflow.init();Workflow.copy(' . $json . ', "comment");return false;',
-                    'data-toggle' => 'modal',
-                    'data-target' => '#workflowComment'
-                ];
-                $addButtonAttr = array_merge($attr, $addButtonAttr);
-                $addButton = [];
-                $addButton['type'] = 'button';
-                $addButton['label'] = '<i class="fa kd-add"></i>';
-                $addButton['url'] = '#';
-                $addButton['attr'] = $addButtonAttr;
-                $addButton['attr']['title'] = __('Comment');
-                $toolbarButtons['add'] = $addButton;
-                $entity = $this->getRecord();
-                $modal = $this->getPersonalCommentModalOptions($entity);
-                if (!empty($modal)) {
-
-                    if (!isset($this->_table->controller->editVars['modals'])) {
-                        $this->_table->controller->set('modals', ['workflowComment' => $modal]);
-                    } else {
-                        $modals = array_merge($this->_table->controller->editVars['modals'], ['workflowComment' => $modal]);
-
-
-                        $this->_table->controller->set('modals', $modals);
-                    }
-                }
-                
-            }
         }
-        //POCOR-7613 end
+     
     }
 
     public function setAssigneeAsCreator(Entity $entity)
@@ -2932,7 +2931,7 @@ class WorkflowCaseBehavior extends Behavior
                         ]);
             $result= $institutionCaseComment->save($newEntity);
 
-            $url = $model->url('edit');
+            $url = $model->url('view');
             return $this->_table->controller->redirect($url);
         }
     }

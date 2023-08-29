@@ -187,6 +187,13 @@ class POCOR7613 extends AbstractMigration
              FOREIGN KEY (`case_id`) REFERENCES `institution_cases`(`id`) 
              ) ENGINE=InnoDB DEFAULT CHARSET=latin1');
 
+        //security_function_table
+        $this->execute('CREATE TABLE `zz_7316_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `zz_7316_security_functions` SELECT * FROM `security_functions`');
+        $this->execute('UPDATE `security_functions` SET `_delete` = NULL,`_edit` = NULL,`_execute` = NULL
+                        WHERE `security_functions`.`name` = "Cases" and `security_functions`.`controller`="Profiles"
+                        and `security_functions`.`module`="Personal" and `security_functions`.`category`="Cases"');
+
     }
     public function down()
     {
@@ -197,6 +204,8 @@ class POCOR7613 extends AbstractMigration
         $this->execute('RENAME TABLE `zz_7613_field_options` TO `field_options`');
         $this->execute('DROP TABLE IF EXISTS `case_types`');
         $this->execute('DROP TABLE IF EXISTS `case_priorities`');
+        $this->execute('DROP TABLE IF EXISTS `security_functions`');
+        $this->execute('RENAME TABLE `zz_7316_security_functions` TO `security_functions`');
     }
 }
 
