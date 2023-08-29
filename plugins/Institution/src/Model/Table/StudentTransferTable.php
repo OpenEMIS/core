@@ -597,6 +597,7 @@ class StudentTransferTable extends ControllerActionTable
 
     public function onUpdateFieldNextInstitutionId(Event $event, array $attr, $action, Request $request)
     {
+        //bulk student
         $nextPeriodId = $request->query('next_academic_period_id');
         $nextGradeId = $request->query('next_education_grade_id');
         $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
