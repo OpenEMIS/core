@@ -92,9 +92,9 @@ class InstitutionPositionsSummariesTable extends AppTable
                 'staff_position_titles' => 'staff_position_titles.name',
                 'Category' => 'staff_position_categories.name',
                 'staff_position_grades' =>'IFNULL(teaching_staff_info.staff_position_grades_name, "")',
-                'total_male' => 'SUM(CASE WHEN teaching_staff_info.gender_id = 1 THEN 1 ELSE 0 END)',
-                'total_female' => 'SUM(CASE WHEN teaching_staff_info.gender_id = 2 THEN 1 ELSE 0 END)',
-                'total' =>'SUM(CASE WHEN teaching_staff_info.gender_id IN (1,2) THEN 1 ELSE 0 END)'
+                'total_male' => '(SUM(CASE WHEN teaching_staff_info.gender_id = 1 THEN 1 ELSE 0 END))',
+                'total_female' => '(SUM(CASE WHEN teaching_staff_info.gender_id = 2 THEN 1 ELSE 0 END))',
+                'total' =>'(SUM(CASE WHEN teaching_staff_info.gender_id IN (1,2) THEN 1 ELSE 0 END))'
                 ])
             ->innerJoin('institutions', [
                 'institutions.id ='. $this->aliasField('institution_id')
