@@ -231,8 +231,8 @@ function StaffAttendancesArchivedSvc($http, $q, $filter, KdDataSvc, AlertSvc, Ut
             menuTabs: [],
             suppressSorting: true,
             cellRenderer: function (params) {
-                console.log('cellRenderer - params');
-                console.log(params);
+                // console.log('cellRenderer - params');
+                // console.log(params);
 
                 // if (angular.isDefined(params.value) && params.value !== null && angular.isDefined(params.context.action)) {
                 return getSingleDayTimeInTimeOutElement(params);
@@ -333,8 +333,8 @@ function StaffAttendancesArchivedSvc($http, $q, $filter, KdDataSvc, AlertSvc, Ut
         if (staffLeaves.length > 0) {
             data = '<div class="comment-text">';
             angular.forEach(staffLeaves, function (staffLeave) {
-                // console.log('getStaffLeaveElement');
-                // console.log(staffLeaves);
+                console.log('getStaffLeaveElement');
+                console.log(staffLeaves);
                 // console.log(params);
                 var start_time = staffLeave.startTime;
                 var end_time = staffLeave.endTime;
@@ -347,6 +347,7 @@ function StaffAttendancesArchivedSvc($http, $q, $filter, KdDataSvc, AlertSvc, Ut
                 if (full_day) {
                     data += '<div class = "time-view"><font color="#CC5C5C">Full Day</font></div>';
                 }
+                data += '<div class = "time-view"><i class="fa fa-file-text-o" style="color: #72C6ED;"></i><a href="'+url+ '"target="_blank">View Details</a></div>';
             });
         } else {
             data = '<i class="fa fa-minus"></i>';
