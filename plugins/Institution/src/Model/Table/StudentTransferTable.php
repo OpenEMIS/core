@@ -636,9 +636,10 @@ class StudentTransferTable extends ControllerActionTable
                 ])
                 ->order([$this->Institutions->aliasField('code')]);
 
-            if (!empty($request->data[$this->alias()]['area_id'])) {
+            $area_id = $request->data[$this->alias()]['area_id'];
+            if (!empty($area_id)) {
                 $institutionQuery->where([$this->Institutions->aliasField('area_id')
-                => $request->data[$this->alias()]['area_id']]);
+                => $area_id]);
             }
             $institutionOptions = $institutionQuery->toArray();
         }
