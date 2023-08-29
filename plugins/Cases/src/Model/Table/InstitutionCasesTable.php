@@ -383,6 +383,7 @@ class InstitutionCasesTable extends ControllerActionTable
                 'after' => 'description'
             ]);
         }
+       
         $this->setFieldOrder([//POCOR-7613
             'case_number','status_id', 'assignee_id','title',  'case_type_id', 'case_priority_id', 'description',
         ]);
@@ -846,7 +847,9 @@ class InstitutionCasesTable extends ControllerActionTable
         $this->field('institution_id', ['visible' => false]);
         if ($this->request->params['controller'] == "Profiles") { //POCOR-7613
             $this->field('institution_id', ['visible' => true]);
+            $this->field('assignee_id',['visible' => false]);
         }
+       
         $this->fields['created']['sort'] = false;
         $this->fields['status_id']['sort'] = true;
         $this->setFieldOrder([
