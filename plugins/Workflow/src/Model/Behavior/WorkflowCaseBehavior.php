@@ -2169,6 +2169,7 @@ class WorkflowCaseBehavior extends Behavior
             } elseif ($action == 'view') {
                  //POCOR-7613 start
                 if($this->_table->request->params['controller']=="Profiles"&& $this->_table->request->params['action']=="Cases"){
+                            if(isset($_SESSION['Permissions']['Profiles']['Cases']['view']) && isset($_SESSION['Permissions']['Profiles']['Cases']['add'])){
                             unset($toolbarButtons['list']);
                             $addButtonAttr = [
                                 'escapeTitle' => false,
@@ -2197,7 +2198,7 @@ class WorkflowCaseBehavior extends Behavior
 
                                     $this->_table->controller->set('modals', $modals);
                                 }
-                            }
+                            }}
             }        
                 //POCOR-7613 end
 	        else{
