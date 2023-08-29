@@ -146,6 +146,7 @@ class WorkflowCaseBehavior extends Behavior
             $events['ControllerAction.Model.processReassign']       = ['callable' => 'processReassign', 'priority' => 5];
             $events['ControllerAction.Model.processCaseLink']       = ['callable' => 'processCaseLink', 'priority' => 5];
             $events['ControllerAction.Model.processComment']       = ['callable' => 'processComment', 'priority' => 5];
+            $events['ControllerAction.Model.processNewComment']       = ['callable' => 'processNewComment', 'priority' => 5];//POCOR-7613
         } else {
             $events['ControllerAction.Model.index.beforePaginate']  = ['callable' => 'indexBeforePaginate', 'priority' => 1];
         }
@@ -1760,7 +1761,67 @@ class WorkflowCaseBehavior extends Behavior
             return [];
         }
     }
+    //POCOR-7613 start
+    public function getPersonalCommentModalOptions(Entity $entity)
+    {
+        //echo "<pre>";print_r($_SESSION['Auth']['User']['id']);die;
+        $model = $this->_table;
+            $fields = [
+                'id' => [
+                        'type' => 'hidden',
+                        'value' => $entity->id
+                    ],
+                'created_user_id' => [
+                        'type' => 'hidden',
+                        'value' => $entity->created_user_id
+                ],
+                
+            ];
+        $buttons = [
+            '<button id="reassign-submit" type="submit" class="btn btn-default" onclick="return Workflow.onSubmit(\'reassign\');">' . __('Save') . '</button>'
+        ];
+            $contentFields = new ArrayObject([
+                'comment' => [
+                    'label' => __('Comment'),
+                    'type' => 'textarea',
+                    'rows'=>10,
+                    'style'=>'height:200px',
+                    'class' => 'workflow-reassign-comment'
+                   
+                ]
+            ]);
 
+            $model->dispatchEvent('Workflow.addCustomModalFields', [$entity, $contentFields, $alias], $this);
+
+            $content = '';
+            $content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
+            $content .= '<div class="input string"><span class="button-label"></span>';
+            $content .= '<div class="workflow-reassign-assignee-loading">' . __('Loading') . '</div>';
+            $content .= '<div class="workflow-reassign-assignee-no_options">' . __('No options') . '</div>';
+            $content .= '<div class="workflow-reassign-assignee-error">' . __('This field cannot be left empty') . '</div>';
+            $content .= '<div class="workflow-reassign-assignee-same-error">' . __('New Assignee cannot be the same as Current Assignee') . '</div>';
+            $content .= '</div>';
+            $modal = [
+                'id' => 'workflowReassign',
+                'title' => __('Add Comment'),
+                'content' => $content,
+                'contentFields' => $contentFields,
+                'form' => [
+                    'model' => $model,
+                    'formOptions' => [
+                        'class' => 'form-horizontal',
+                        'url' => $this->isCAv4() ? $model->url('processNewComment') : $model->ControllerAction->url('processNewComment'),
+                        'onSubmit' => 'document.getElementById("reassign-submit").disabled=true;'
+                    ],
+                    'fields' => $fields
+                ],
+                'buttons' => $buttons,
+                'cancelButton' => true
+            ];
+
+            return $modal;
+    }
+    //POCOR-7613 end
     public function getCaseLinksModalOptions(Entity $entity)
     {
         $model = $this->_table;
@@ -2415,6 +2476,43 @@ class WorkflowCaseBehavior extends Behavior
                 // End
             }
         }
+        //POCOR-7613 start
+        $model = $this->_table;
+        if ($model->url('index')['controller'] == "Profiles" && $model->url('index')['action'] == "Cases") { //POCOR-7439
+            if ($action == "edit") {
+                unset($toolbarButtons['list']);
+                $addButtonAttr = [
+                    'escapeTitle' => false,
+                    'escape' => true,
+                    'onclick' => 'Workflow.init();Workflow.copy(' . $json . ', "comment");return false;',
+                    'data-toggle' => 'modal',
+                    'data-target' => '#workflowComment'
+                ];
+                $addButtonAttr = array_merge($attr, $addButtonAttr);
+                $addButton = [];
+                $addButton['type'] = 'button';
+                $addButton['label'] = '<i class="fa kd-add"></i>';
+                $addButton['url'] = '#';
+                $addButton['attr'] = $addButtonAttr;
+                $addButton['attr']['title'] = __('Comment');
+                $toolbarButtons['add'] = $addButton;
+                $entity = $this->getRecord();
+                $modal = $this->getPersonalCommentModalOptions($entity);
+                if (!empty($modal)) {
+
+                    if (!isset($this->_table->controller->editVars['modals'])) {
+                        $this->_table->controller->set('modals', ['workflowComment' => $modal]);
+                    } else {
+                        $modals = array_merge($this->_table->controller->editVars['modals'], ['workflowComment' => $modal]);
+
+
+                        $this->_table->controller->set('modals', $modals);
+                    }
+                }
+                
+            }
+        }
+        //POCOR-7613 end
     }
 
     public function setAssigneeAsCreator(Entity $entity)
@@ -2817,7 +2915,28 @@ class WorkflowCaseBehavior extends Behavior
             return $this->_table->controller->redirect($url);
         }
     }
+    //POCOR-7613 start
+    public function processNewComment()
+    {
+        $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+        $request = $model->controller->request;
 
+        if ($request->is(['post', 'put'])) {
+            $requestData = $request->data;
+            $institutionCaseComment=TableRegistry::get('Cases.InstitutionCaseComments');
+            $newEntity= $institutionCaseComment->newEntity([
+                          'case_id'=>$requestData['id'],
+                          'created_user_id'=>$requestData['created_user_id'],
+                          'comment'=>$requestData['comment'],
+                          'created'=>date('Y-m-d H:i:s')
+                        ]);
+            $result= $institutionCaseComment->save($newEntity);
+
+            $url = $model->url('edit');
+            return $this->_table->controller->redirect($url);
+        }
+    }
+    //POCOR-7613 end
     public function getAssigneeEntity($userId)
     {
         $Users = TableRegistry::get('User.Users');
