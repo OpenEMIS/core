@@ -726,6 +726,14 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
+    /**
+     * @param Event $event
+     * @param array $attr
+     * @param $action
+     * @param Request $request
+     * @return array
+     * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
     {
         $entity = $attr['entity'];
@@ -784,6 +792,14 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         return $attr;
     }
 
+    /**
+     * @param Event $event
+     * @param array $attr
+     * @param $action
+     * @param Request $request
+     * @return array
+     * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
         //single student

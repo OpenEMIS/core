@@ -230,6 +230,14 @@ class StudentTransferTable extends ControllerActionTable
 
     }
 
+    /**
+     * @param Event $event
+     * @param array $attr
+     * @param $action
+     * @param Request $request
+     * @return array
+     * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onUpdateFieldFromAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if (isset($request->data[$this->alias()]['from_academic_period_id'])) {
@@ -347,7 +355,14 @@ class StudentTransferTable extends ControllerActionTable
 
          return $attr;
      } */
-
+    /**
+     * @param Event $event
+     * @param array $attr
+     * @param $action
+     * @param Request $request
+     * @return array
+     * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
     {
         $entity = $attr['entity'];
@@ -596,6 +611,14 @@ class StudentTransferTable extends ControllerActionTable
         return $gradeOptions;
     }
 
+    /**
+     * @param Event $event
+     * @param array $attr
+     * @param $action
+     * @param Request $request
+     * @return array
+     * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request) {
         $next_period_id = $request->query('next_academic_period_id');
         $next_grade_id = $request->query('next_education_grade_id');
@@ -647,6 +670,14 @@ class StudentTransferTable extends ControllerActionTable
         return $attr;
     }
 
+    /**
+     * @param Event $event
+     * @param array $attr
+     * @param $action
+     * @param Request $request
+     * @return array
+     * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onUpdateFieldNextInstitutionId(Event $event, array $attr, $action, Request $request)
     {
         //bulk student
@@ -690,7 +721,7 @@ class StudentTransferTable extends ControllerActionTable
                     $this->Institutions->aliasField('institution_status_id') =>
                         $InstitutionStatuses->getIdByCode('ACTIVE')
                 ])
-                ->order([$this->Institutions->aliasField('code')]);
+                ->orderAsc($this->Institutions->aliasField('code'));
 
             if (!empty($area_id)) {
                 $institutionQuery->where([$this->Institutions->aliasField('area_id')
