@@ -24,6 +24,17 @@ Route::post('login', 'Authentication\LoginController@login');
 Route::group(
     ["middleware" => "auth.jwt"],
     function () {
+        //POCOR-7651 starts
+        Route::get('institutions/{institutionId}/students/absences', 'StudentController@getInstitutionStudentAbsences');
+        Route::get('institutions/{institutionId}/students/{studentId}/absences', 'StudentController@getInstitutionStudentAbsencesData');
+        Route::get('institutions/students', 'StudentController@getStudents');
+        Route::get('institutions/{institutionId}/students', 'StudentController@getInstitutionStudents');
+        Route::get('institutions/{institutionId}/students/{studentId}', 'StudentController@getInstitutionStudentData');
+        Route::get('institutions/students/absences', 'StudentController@getStudentAbsences');
+        
+        //POCOR-7651 ends
+
+
         Route::get('institutions', 'InstitutionController@getInstitutionsList')->middleware('auth.jwt');
 
         Route::get('institutions/list', 'RegistrationController@institutionDropdown');
