@@ -394,16 +394,8 @@ class InstitutionSubjectStudentsTable extends AppTable
         if($archive){
             $archive = true;
         }
-        $mark_options = [
-                    "academic_period_id" => $academic_period_id,
-                    "education_grade_id" => $education_grade_id,
-                    "education_subject_id" => $education_subject_id,
-                    "id" => -1,
-                    "assessment_grading_option_id" => "-1",
-                    "assessment_period_id" => "-1",
-                    'assessment_id' => $assessment_id
-        ];
         $education_subject_id = $this->getStrictEdicationSubjectIdForResults($institution_subject_id, $education_subject_id);
+        $options['education_subject_id'] = $education_subject_id;
         $where = [
             $this->aliasField('education_subject_id') => $education_subject_id,
             $this->aliasField('institution_class_id') => $institution_class_id,
@@ -411,6 +403,8 @@ class InstitutionSubjectStudentsTable extends AppTable
             $this->aliasField('education_grade_id') => $education_grade_id,
             $this->aliasField('academic_period_id') => $academic_period_id,
         ];
+//        $this->log('$where', 'debug');
+//        $this->log($where, 'debug');
         if(!$archive){
             $where[$this->StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED', 'WITHDRAWN', 'REPEATED'];
         }
@@ -644,7 +638,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                 }
                 return $arrResults;
             })
-            //POCOR-6573 starts    
+            //POCOR-6573 starts
             ->formatResults(function ($results1) {
                 $arrResults1 = is_array($results1) ? $results1 : $results1->toArray();
                 foreach ($arrResults1 as &$result) {
@@ -1003,7 +997,7 @@ class InstitutionSubjectStudentsTable extends AppTable
             ->innerJoin(
                 [$AssessmentPeriods->alias() => $AssessmentPeriods->table()],
                 [
-                   $AssessmentPeriods->aliasField('assessment_id = ') . $assessment_id,
+                    $AssessmentPeriods->aliasField('assessment_id = ') . $assessment_id,
                 ]
             );
     }
@@ -1021,11 +1015,11 @@ class InstitutionSubjectStudentsTable extends AppTable
                 'student_status_code' => $this->StudentStatuses->aliasField('code'),
             ])
             ->formatResults(function (ResultSetInterface $results) {
-                        return $results->map(function ($row) {
-                            $row['student_status_name'] = __($row->the_student_status);
-                            return $row;
-                        });
-                    });
+                return $results->map(function ($row) {
+                    $row['student_status_name'] = __($row->the_student_status);
+                    return $row;
+                });
+            });
         return $query;
     }
     /**
@@ -1060,6 +1054,7 @@ class InstitutionSubjectStudentsTable extends AppTable
     private function getBasicAssessmentMarksQuery(Query $query, $options, $archive)
     {
         $Results = TableRegistry::get('Assessment.AssessmentItemResults');
+//        $this->log($options, 'debug');
         $marksPerStudent = $Results::getClassAssessmentItemResults($options, $archive);
 //        $totalMarksPerStudent = $Results::getTotalMarksPerStudent($marksPerStudent);
 //        $this->log($marksPerStudent, 'debug');
