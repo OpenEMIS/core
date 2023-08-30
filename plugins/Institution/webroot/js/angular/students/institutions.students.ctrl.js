@@ -1293,6 +1293,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         const birthplaceAreaRef = InstitutionsStudentsSvc.getBirthplaceArea();
         birthplaceAreaRef && (StudentController.selectedStudentData.birthplaceArea = birthplaceAreaRef)
         var params = {
+            currentYear: StudentController.currentYear,//POCOR-7717
             institution_id: StudentController.institutionId,
             openemis_no: StudentController.selectedStudentData.openemis_no,
             first_name: StudentController.selectedStudentData.first_name,
@@ -1384,8 +1385,23 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         params.custom.push(fieldData);
                     });
                 }
-            })
+            });
         });
+        //POCOR-7717 start
+        if (params.is_diff_school > 0) {
+            if (params.currentYear != params.previous_academic_period_id) {
+                if (params.student_status_id == 1) {
+                    StudentController.message = `This student is allocated to ${StudentController.studentData.current_enrol_institution_code} 
+                                               - ${StudentController.studentData.current_enrol_institution_name} in a different
+                                                 Academic Period. Transfer can only happen for students in current
+                                                 Academic Period.`;
+                    StudentController.messageClass = "alert-warning";
+                    UtilsSvc.isAppendLoader(false);
+                    return;
+                }
+            }
+        }
+        //POCOR-7717 end
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.saveStudentDetails(params).then(function(resp){
 
