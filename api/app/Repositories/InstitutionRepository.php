@@ -43,6 +43,21 @@ use App\Models\InstitutionOwnerships;
 use App\Models\InstitutionProviders;
 use App\Models\InstitutionSectors;
 use App\Models\InstitutionSubjectStaff;
+use App\Models\AcademicPeriod;
+use App\Models\StudentStatuses;
+use App\Models\Nationalities;
+use App\Models\Workflows;
+use App\Models\InstitutionStudentTransfers;
+use App\Models\SecurityUsers;
+use App\Models\UserNationalities;
+use App\Models\IdentityTypes;
+use App\Models\UserIdentities;
+use App\Models\StaffPositionTitles;
+use App\Models\SecurityRoles;
+use App\Models\InstitutionStudentAdmission;
+use App\Models\InstitutionClassSubjects;
+use App\Models\InstitutionSubjectStudents;
+use App\Models\StudentCustomFieldValues;
 use App\Models\InstitutionTypes;
 use App\Models\MealBenefits;
 use App\Models\MealProgrammes;
@@ -57,6 +72,7 @@ use App\Models\StudentBehaviourCategory;
 use App\Models\SecurityUsers;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class InstitutionRepository extends Controller
 {
@@ -1843,6 +1859,9 @@ class InstitutionRepository extends Controller
         }
     }
 
+
+
+    
     // POCOR-7394-S starts
 
     public function getAbsenceReasons($request)
