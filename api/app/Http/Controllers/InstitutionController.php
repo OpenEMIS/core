@@ -15,6 +15,7 @@ use App\Http\Requests\DeleteClassAttendanceRequest;
 use App\Http\Requests\StudentBehavioursRequest;
 use Exception;
 
+
 class InstitutionController extends Controller
 {
     protected $institutionService;
