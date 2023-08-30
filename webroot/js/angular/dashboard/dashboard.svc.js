@@ -28,6 +28,10 @@ function DashboardSvc($q, $filter, KdDataSvc) {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.StudentBehaviours'
         },
+        StaffBehavioursTable: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.StaffBehaviours'
+        },
         StaffLeaveTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.StaffLeave'
