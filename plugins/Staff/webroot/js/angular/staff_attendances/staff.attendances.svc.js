@@ -260,7 +260,6 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
                         clearError(data, timeKey);
                         if (Object.keys(response.data.error).length > 0 || response.data.error.length > 0) {
                             setError(data, timeKey, true, { id: timepickerId, elm: timeInputElement });
-                            console.log(response);
                             var errorMsg = 'There was an error when saving record';
                             if (typeof response.data.error === 'string') {
                                 errorMsg = response.data.error;
