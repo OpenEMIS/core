@@ -359,6 +359,7 @@ class RegistrationRepository extends Controller
             //dd($request->all());
 
             $encodedOtp = base64_encode($request['otp']??"");
+            //dd($encodedOtp);
             //$otpData = RegistrationOtp::where('otp', $encodedOtp)->first();
             $userData = SecurityUserCode::select('security_users.id as user_id')->join('security_users', 'security_users.id', '=', 'security_user_codes.security_user_id')->where('verification_otp', $encodedOtp)->first();
 
@@ -667,26 +668,32 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function storeCustomField($customFields, $student_id, $user_id)
+    public function storeCustomField($customFieldsArr, $student_id, $user_id)
     {
         DB::beginTransaction();
         try {
             $cfArray = [];
-            foreach($customFields as $k => $cf){
+            foreach($customFieldsArr as $k => $cf){
                 $cfArray[$k]['id'] = Str::uuid();
                 $cfArray[$k]['student_custom_field_id'] = $cf['custom_field_id'];
-                $cfArray[$k]['text_value'] = $cf['text_value'];
-                $cfArray[$k]['number_value'] = $cf['number_value'];
-                $cfArray[$k]['decimal_value'] = $cf['decimal_value'];
-                $cfArray[$k]['textarea_value'] = $cf['textarea_value'];
-                $cfArray[$k]['time_value'] = $cf['time_value'];
-                $cfArray[$k]['date_value'] = $cf['date_value'];
-                $cfArray[$k]['file'] = $cf['file'];
+                $cfArray[$k]['text_value'] = $cf['text_value']??Null;
+                $cfArray[$k]['number_value'] = $cf['number_value']??Null;
+                $cfArray[$k]['decimal_value'] = $cf['decimal_value']??Null;
+                $cfArray[$k]['textarea_value'] = $cf['textarea_value']??Null;
+                $cfArray[$k]['time_value'] = $cf['time_value']??Null;
+                $cfArray[$k]['date_value'] = $cf['date_value']??Null;
+
+                if(isset($cf['file']) && ($cf['file']) != ""){
+                    $cfArray[$k]['file'] = file_get_contents($cf['file']);
+                } else {
+                    $cfArray[$k]['file'] = Null;
+                }
+                
                 $cfArray[$k]['student_id'] = $student_id;
                 $cfArray[$k]['created_user_id'] = $user_id;
                 $cfArray[$k]['created'] = Carbon::now()->toDateTimeString();
             }
-
+            //dd($cfArray);
             $store = StudentCustomFieldValues::insert($cfArray);
             Log::info("## Stored in InstitutionStudentAdmission ##", $cfArray);
             DB::commit();
@@ -818,7 +825,8 @@ class RegistrationRepository extends Controller
             ->whereHas('studentCustomField')
             ->where('student_custom_form_id', 1)
             ->orderBy('order', 'ASC')
-            ->get();
+            ->get()
+            ->toArray();
             //dd($customFields);
             return $customFields;
 
