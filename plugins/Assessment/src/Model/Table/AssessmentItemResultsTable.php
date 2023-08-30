@@ -688,6 +688,14 @@ class AssessmentItemResultsTable extends AppTable
         $academic_period_id = self::getFromArray($params, 'academic_period_id');
         $institution_id = self::getFromArray($params, 'institution_id');
         $institution_class_id = self::getFromArray($params, 'class_id');
+        if(!$institution_class_id){
+            $institution_class_id = self::getFromArray($params, 'institution_class_id');
+
+        }
+        if(!$institution_class_id){
+            $institution_class_id = self::getFromArray($params, 'institution_classes_id');
+
+        }
         $assessment_id = self::getFromArray($params, 'assessment_id');
         $education_grade_id = self::getFromArray($params, 'grade_id');
         $student_id = self::getFromArray($params, 'student_id');
@@ -779,11 +787,14 @@ class AssessmentItemResultsTable extends AppTable
         $institution_classes_id = self::getFromArray($options, 'institution_class_id');
         $institution_class_students_where = 'INNER JOIN institution_class_students on institution_class_students.student_id
             = all_results.student_id';
-        if($institution_classes_id == null){
+        if(!$institution_classes_id){
             $institution_classes_id = self::getFromArray($options, 'class_id');
         }
-        if($institution_classes_id == null){
+        if(!$institution_classes_id){
             $institution_classes_id = self::getFromArray($options, 'institution_classes_id');
+        }
+        if(!$institution_classes_id){
+            $institution_classes_id = self::getFromArray($options, 'institution_class_id');
         }
         $select = 'all_results.marks, ';
         if ($id) {
@@ -842,10 +853,12 @@ class AssessmentItemResultsTable extends AppTable
             $last_mark_where = $last_mark_where . " AND latest_grades.assessment_grading_option_id = $assessment_grading_option_id ";
         }
         if ($institution_id > 0) {
+            $last_mark_where = $last_mark_where . " AND latest_grades.institution_id = $institution_id ";
             $institution_class_students_where = $institution_class_students_where . " AND institution_class_students.institution_id = $institution_id ";
         }
         if ($institution_classes_id > 0) {
-            $institution_class_students_where = $institution_class_students_where . " AND institution_class_students.institution_classes_id = $institution_classes_id";
+            $last_mark_where = $last_mark_where . " AND latest_grades.institution_classes_id = $institution_classes_id ";
+            $institution_class_students_where = $institution_class_students_where . " AND institution_class_students.institution_class_id = $institution_classes_id";
         }
 
         $select = rtrim($select, ', ');
