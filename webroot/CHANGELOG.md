@@ -1,3 +1,16 @@
+### [3.93.0] - 2023-08-25
+- Implemented: Develop Tertiary Education feature
+- Implemented: Move copy function from Administration > System Setup > Education Structure to Data Management > Copy
+- Implemented: Develop calendar holiday placeholders for school profiles
+- Bug Fixed: Investigate what is filling up the apache http logs
+- Bug Fixed: Institutions>Cases: Assignee should not be able to see the cases in Personal>Cases
+- Bug Fixed: Institutions > Students > Add: The student custom fields are not in order and the checkbox field type looks incorrect
+- Bug Fixed: Students>Academic>Curriculars>Add: When adding curricular, the records are not showing even when there is a successful message
+- Bug Fixed: Institutions > Appointments > Position: User is not able to import institutions positions as the error message of Shift is showing
+- Bug Fixed: Administration > Workflows: When editing the workflow for Staff Leave, the Staff Leave type is not showing any options
+- Bug Fixed: Reports > Institutions> Institution Position Summaries: The report is stuck in progress
+- Bug Fixed: Administration > System Setup > Custom Field > Student: When deleting options for the checkbox field type under the student custom field, the page gives a successful message but records were not deleted
+
 ### [3.92.3] - 2023-08-23
 - Bug Fixed: Institutions>Students>Add: External search tab is missing
 - Bug Fixed: Institutions > Add page : System does not INSERT security_group_institutions when a new Institution is created
