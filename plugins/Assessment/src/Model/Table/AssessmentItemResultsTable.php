@@ -687,6 +687,8 @@ class AssessmentItemResultsTable extends AppTable
         $assessment_grading_option_id = self::getFromArray($options, 'assessment_grading_option_id');
         $institution_id = self::getFromArray($options, 'institution_id');
         $institution_classes_id = self::getFromArray($options, 'institution_class_id');
+        $institution_class_students_where = 'INNER JOIN institution_class_students on institution_class_students.student_id
+            = all_results.student_id';
         if($institution_classes_id == null){
             $institution_classes_id = self::getFromArray($options, 'class_id');
         }
@@ -724,36 +726,36 @@ class AssessmentItemResultsTable extends AppTable
         if ($institution_classes_id) {
             $select = $select . 'all_results.institution_classes_id, ';
         }
-        $where = "WHERE 1 = 1";
+        $last_mark_where = "WHERE 1 = 1";
         if ($id > 0) {
-            $where = $where . " AND latest_grades.id = $id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.id = $id ";
         }
         if ($student_id > 0) {
-            $where = $where . " AND latest_grades.student_id = $student_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.student_id = $student_id ";
         }
         if ($academic_period_id > 0) {
-            $where = $where . " AND latest_grades.academic_period_id = $academic_period_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.academic_period_id = $academic_period_id ";
         }
         if ($education_grade_id > 0) {
-            $where = $where . " AND latest_grades.education_grade_id = $education_grade_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.education_grade_id = $education_grade_id ";
         }
         if ($education_subject_id > 0) {
-            $where = $where . " AND latest_grades.education_subject_id = $education_subject_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.education_subject_id = $education_subject_id ";
         }
         if ($assessment_id > 0) {
-            $where = $where . " AND latest_grades.assessment_id = $assessment_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.assessment_id = $assessment_id ";
         }
         if ($assessment_period_id > 0) {
-            $where = $where . " AND latest_grades.assessment_period_id = $assessment_period_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.assessment_period_id = $assessment_period_id ";
         }
         if ($assessment_grading_option_id > 0) {
-            $where = $where . " AND latest_grades.assessment_grading_option_id = $assessment_grading_option_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.assessment_grading_option_id = $assessment_grading_option_id ";
         }
         if ($institution_id > 0) {
-            $where = $where . " AND latest_grades.institution_id = $institution_id ";
+            $institution_class_students_where = $institution_class_students_where . " AND institution_class_students.institution_id = $institution_id ";
         }
         if ($institution_classes_id > 0) {
-            $where = $where . " AND latest_grades.institution_classes_id = $institution_classes_id";
+            $institution_class_students_where = $institution_class_students_where . " AND institution_class_students.institution_classes_id = $institution_classes_id";
         }
 
         $select = rtrim($select, ', ');
@@ -774,7 +776,7 @@ INNER JOIN
         ,latest_grades.assessment_period_id
         ,MAX(latest_grades.created) latest_created
     FROM $assessment_item_results_table_name latest_grades
-    $where    
+    $last_mark_where    
     GROUP BY latest_grades.student_id
         ,latest_grades.assessment_id
         ,latest_grades.education_subject_id
@@ -785,7 +787,7 @@ AND latest_grades.assessment_id = all_results.assessment_id
 AND latest_grades.education_subject_id = all_results.education_subject_id
 AND latest_grades.assessment_period_id = all_results.assessment_period_id
 AND latest_grades.latest_created = all_results.created
-
+$institution_class_students_where 
 GROUP BY all_results.student_id
     ,all_results.assessment_id
     ,all_results.education_subject_id
