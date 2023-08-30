@@ -173,6 +173,26 @@ class UserService extends Controller
         }
     }
 
+
+
+
+    public function saveStudentData($request)
+    {
+        try {
+            $data = $this->userRepository->saveStudentData($request);
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to store student data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to store student data.');
+        }
+    }
+
+    
     public function getUsersGender($request)
     {
         try {
@@ -187,6 +207,43 @@ class UserService extends Controller
             );
 
             return $this->sendErrorResponse('Users Gender List Not Found');
+        }
+    }
+
+
+
+    public function saveStaffData($request)
+    {
+        try {
+            $data = $this->userRepository->saveStaffData($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to store staff data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to store staff data.');
+        }
+    }
+
+
+    public function saveGuardianData($request)
+    {
+        try {
+            $data = $this->userRepository->saveGuardianData($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to store guardian data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to store guardian data.');
         }
     }
 

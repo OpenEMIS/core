@@ -5,12 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class UserNationalities extends Model
+class StudentGuardians extends Model
 {
     use HasFactory;
-
+    public $timestamps = false;
+    protected $table = "student_guardians";
     protected $primaryKey = 'id';
     public $incrementing = false;
-    public $timestamps = false;
-    protected $table = "user_nationalities";
 }
