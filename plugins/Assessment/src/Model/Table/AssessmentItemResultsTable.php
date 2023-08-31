@@ -851,16 +851,16 @@ class AssessmentItemResultsTable extends AppTable
             $institution_class_students_where = $institution_class_students_where . " AND institution_class_students.education_grade_id = $education_grade_id ";
         }
         if ($education_subject_id > 0) {
-            $where = $where . " AND latest_grades.education_subject_id = $education_subject_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.education_subject_id = $education_subject_id ";
         }
         if ($assessment_id > 0) {
-            $where = $where . " AND latest_grades.assessment_id = $assessment_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.assessment_id = $assessment_id ";
         }
         if ($assessment_period_id > 0) {
-            $where = $where . " AND latest_grades.assessment_period_id = $assessment_period_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.assessment_period_id = $assessment_period_id ";
         }
         if ($assessment_grading_option_id > 0) {
-            $where = $where . " AND latest_grades.assessment_grading_option_id = $assessment_grading_option_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.assessment_grading_option_id = $assessment_grading_option_id ";
         }
         if ($institution_id > 0) {
             $last_mark_where = $last_mark_where . " AND latest_grades.institution_id = $institution_id ";
