@@ -52,25 +52,10 @@ h2, h3, h4, h5, h6 {
     
 </style>
 <body>
-    
-<ul class="bdcm breadcrumb panel-breadcrumb">
-	<li><a href="/Dashboard"><i class="fa fa-home"></i></a></li>
-	
-		<li>
-		<a href="/Institutions/Institutions/index">Institutions</a>	</li>
-		<li>
-		<a href="/Institution/Institutions/dashboard/<?php echo $StudentID ?>"><?php echo $InstitutionData->name ?></a>	</li>
-		<li>
-		<a href="/Institution/Institutions/Students">Students</a>	</li>
-		<li>
-		<a href="/Institution/Institutions/StudentUser/view/<?php echo $StudentID1 ?>"><?php echo $UserData->first_name.' '.$UserData->last_name ?></a>	</li>
-		<li>
-		Guardians	</li>
-	</ul>
 
-
+<?= $this->element('OpenEmis.breadcrumbs') ?>
     <div class="page-header">
-		<h2 id="main-header"><?php echo $UserData->first_name.' '.$UserData->last_name ?> - Student Guardians</h2>
+		<h2 id="main-header"><?php echo $UserData->first_name.' '.$UserData->last_name ?> - <?php echo __('Add Student Guardians') ?></h2>
 					
 			</div>
 
