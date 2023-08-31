@@ -172,6 +172,7 @@ function InstitutionsResultsController($q,
             context: {
                 institution_id: $scope.institution_id,
                 class_id: $scope.class_id,
+                institution_class_id: $scope.class_id,
                 assessment_id: $scope.assessment_id,
                 academic_period_id: $scope.academic_period_id,
                 education_grade_id: $scope.education_grade_id,
@@ -312,9 +313,9 @@ function InstitutionsResultsController($q,
     };
 
     $scope.onChangeSubject = function (subject = undefined, editable = undefined) {
-        console.log('onChangeSubject');
-
-        console.log($scope.selectedAcademicTerm);
+        // console.log('onChangeSubject');
+        //
+        // console.log($scope.selectedAcademicTerm);
 
         AlertSvc.reset($scope);
         $scope.action = 'view';
