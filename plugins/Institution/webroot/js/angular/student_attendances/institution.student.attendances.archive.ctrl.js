@@ -186,8 +186,13 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
     });
 
     // error
-    vm.error = function (error, test) {
-        return $q.reject(error);
+    vm.error = function (error) {
+        UtilsSvc.isAppendLoader(false);
+        console.error(error);
+        vm.initGrid();
+        vm.setGridData();
+        vm.setColumnDef();
+        return $q.reject('There is an error retrieving the data.');
     }
 
     // update data
