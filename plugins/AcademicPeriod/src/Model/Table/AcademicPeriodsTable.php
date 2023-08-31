@@ -1438,10 +1438,14 @@ class AcademicPeriodsTable extends AppTable
     public function findAcademicPeriodWithStudentAttendanceMarkedArchive(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
-        $academicPeriodWithArchiveArray = ArchiveConnections::getArchiveYears('student_attendance_marked_records',
+        $academicPeriodWithRecordsArchiveArray = ArchiveConnections::getArchiveYears('student_attendance_marked_records',
             ['institution_id' => $institutionId]);
-
+        $academicPeriodWithDetailsArchiveArray = ArchiveConnections::getArchiveYears('institution_student_absence_details_archived',
+            ['institution_id' => $institutionId]);
         $academicPeriodWithArchiveArrayId = [0];
+        $academicPeriodWithArchiveArray = array_unique(
+          array_merge($academicPeriodWithRecordsArchiveArray, $academicPeriodWithDetailsArchiveArray)
+        );
         if (sizeof($academicPeriodWithArchiveArray) > 0) {
             $academicPeriodWithArchiveArrayId = $academicPeriodWithArchiveArray;
         }
