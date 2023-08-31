@@ -862,12 +862,16 @@ class AssessmentItemResultsTable extends AppTable
         if ($assessment_grading_option_id > 0) {
             $last_mark_where = $last_mark_where . " AND latest_grades.assessment_grading_option_id = $assessment_grading_option_id ";
         }
-        if ($institution_id > 0) {
-            $last_mark_where = $last_mark_where . " AND latest_grades.institution_id = $institution_id ";
+        if ($institution_id > 0 and $academic_period_id > 0) {
+            $last_mark_where = $last_mark_where . " AND latest_grades.student_id IN 
+            (select student_id FROM institution_class_students ics 
+            where ics.academic_period_id = $academic_period_id and ics.institution_id = $institution_id)";
             $institution_class_students_where = $institution_class_students_where . " AND institution_class_students.institution_id = $institution_id ";
         }
         if ($institution_classes_id > 0) {
-            $last_mark_where = $last_mark_where . " AND latest_grades.institution_classes_id = $institution_classes_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.student_id IN
+            (select student_id FROM institution_class_students icss
+            where icss.institution_class_id = $institution_classes_id)";
             $institution_class_students_where = $institution_class_students_where . " AND institution_class_students.institution_class_id = $institution_classes_id";
         }
 
