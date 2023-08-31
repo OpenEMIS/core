@@ -333,8 +333,8 @@ function StaffAttendancesArchivedSvc($http, $q, $filter, KdDataSvc, AlertSvc, Ut
         if (staffLeaves.length > 0) {
             data = '<div class="comment-text">';
             angular.forEach(staffLeaves, function (staffLeave) {
-                console.log('getStaffLeaveElement');
-                console.log(staffLeaves);
+                // console.log('getStaffLeaveElement');
+                // console.log(staffLeaves);
                 // console.log(params);
                 var start_time = staffLeave.startTime;
                 var end_time = staffLeave.endTime;
@@ -382,7 +382,7 @@ function StaffAttendancesArchivedSvc($http, $q, $filter, KdDataSvc, AlertSvc, Ut
 
 
     function getAllDayTimeInTimeOutElement(params) {
-        console.log(params);
+        // console.log(params);
         var timeIn = params.time_in;
         // console.log(timeIn);
         var timeOut = params.time_out;
@@ -411,8 +411,9 @@ function StaffAttendancesArchivedSvc($http, $q, $filter, KdDataSvc, AlertSvc, Ut
     }
 
     function getCommentElement(params) {
-        var dateString = params.data.date;
-        divElement = getViewCommentElement(params.data.attendance[dateString].comment);
+        const dateString = params.data.date;
+        const comment = params.data.attendance[dateString].comment;
+        const divElement = getViewCommentElement(comment);
         return divElement;
     }
 
