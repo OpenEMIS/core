@@ -3763,8 +3763,16 @@ class StaffTable extends ControllerActionTable
     {
         $AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
         $absenceTypes = $AbsenceTypesTable->getAbsenceTypeList();
-        return function (ResultSetInterface $results) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $day_id, $absenceTypes) {
-            return $results->map(function ($row) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $day_id, $absenceTypes) {
+        return function (ResultSetInterface $results) use ($attendanceByStaffIdRecords,
+            $leaveByStaffIdRecords,
+            $workingDaysArr,
+            $day_id,
+            $absenceTypes) {
+            return $results->map(function ($row) use ($attendanceByStaffIdRecords,
+                $leaveByStaffIdRecords,
+                $workingDaysArr,
+                $day_id,
+                $absenceTypes) {
                 $staffId = $row->staff_id;
                 $staffRecords = [];
                 $staffLeaveRecords = [];
@@ -3836,6 +3844,7 @@ class StaffTable extends ControllerActionTable
 
                     $leaveRecords = [];
                     foreach ($staffLeaveRecords as $staffLeaveRecord) {
+
                         $dateFrom = $staffLeaveRecord['date_from']->format('Y-m-d');
                         $dateTo = $staffLeaveRecord['date_to']->format('Y-m-d');
                         $tableName = 'staff_leave_types';
@@ -3843,7 +3852,12 @@ class StaffTable extends ControllerActionTable
                         $leaveTypeName = self::getRelatedName($tableName, $relatedField);
 
                         if ($dateFrom <= $key && $dateTo >= $key) {
+                            $comment = $staffLeaveRecord['comments'];
+                            if($comment){
+                                $staffTimeRecords[$key]['comment'] = trim($staffTimeRecords[$key]['comment'] . " " . $comment);
+                            }
                             $leaveRecord['isFullDay'] = $staffLeaveRecord['full_day'];
+                            $leaveRecord['comment'] = $staffLeaveRecord['comments'];
                             $leaveRecord['startTime'] = $this->formatTime($staffLeaveRecord['start_time']);
                             $leaveRecord['endTime'] = $this->formatTime($staffLeaveRecord['end_time']);
                             $leaveRecord['staffLeaveTypeName'] = $leaveTypeName;
