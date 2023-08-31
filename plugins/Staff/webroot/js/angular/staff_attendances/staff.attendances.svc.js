@@ -263,11 +263,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
                             var errorMsg = 'There was an error when saving record';
                             if (typeof response.data.error === 'string') {
                                 errorMsg = response.data.error;
-                            } //POCOR-6348 starts
-                            else if (response.data.error.time_in.leavePeriodOverlap) {
-                                errorMsg = response.data.error.time_in.leavePeriodOverlap; //POCOR-6348
                             } 
-                            //POCOR-6348 ends
                             else if (response.data.error.time_out.ruleCompareTimeReverse) {
                                 errorMsg = response.data.error.time_out.ruleCompareTimeReverse;
                             } else if (response.data.error.time_out.timeInShouldNotEmpty) {
