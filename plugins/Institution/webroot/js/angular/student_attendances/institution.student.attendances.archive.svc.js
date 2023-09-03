@@ -191,7 +191,7 @@ function InstitutionStudentAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, 
         };
 
         return AcademicPeriods
-            .find('academicPeriodWithStudentAttendanceMarkedArchive', {
+            .find('periodHasClassArchived', {
                 institution_id: institutionId
             })
             .ajax({success: success, defer: true});
@@ -1054,6 +1054,7 @@ function InstitutionStudentAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, 
 
     function getViewAllDayAttendanceElement(code) {
         var html = '';
+        var i = j = k = 0;
         switch (code) {
             case attendanceType.NOTMARKED.code:
                 html = '<i class="' + attendanceType.NOTMARKED.icon + '"></i>';
@@ -1076,10 +1077,10 @@ function InstitutionStudentAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, 
             default:
                 break;
         }
-        alert(i);
-        alert(j);
-        alert(k);
-        alert(i+j);
+        // alert(i);
+        // alert(j);
+        // alert(k);
+        // alert(i+j);
         return html;
     }
 
