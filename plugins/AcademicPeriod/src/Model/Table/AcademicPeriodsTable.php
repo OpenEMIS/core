@@ -1408,34 +1408,13 @@ class AcademicPeriodsTable extends AppTable
             });
     }
 
-    public function findPeriodHasClassArchive(Query $query, array $options)
-    {
-        $institutionId = $options['institution_id'];
-        $currentYearId = $this->getCurrent();
-        $currentYear = date('Y');
-
-        return $query
-            ->select([
-                $this->aliasField('id'),
-                $this->aliasField('name')
-            ])
-            ->find('years')
-            ->matching('InstitutionClasses', function ($q) use ($institutionId) {
-                return $q->where(['InstitutionClasses.institution_id' => $institutionId]);
-            })
-            ->where([$this->aliasField('current') => 0, $this->aliasField('name <> ') => $currentYear])
-            ->group([$this->aliasField('id')])
-            ->formatResults(function (ResultSetInterface $results) use ($currentYearId) {
-                return $results->map(function ($row) use ($currentYearId) {
-                    if ($row->id == $currentYearId) {
-                        $row->selected = true;
-                    }
-                    return $row;
-                });
-            });
-    }
-
-    public function findAcademicPeriodWithStudentAttendanceMarkedArchive(Query $query, array $options)
+    /**
+     * @param Query $query
+     * @param array $options
+     * @return Query
+     * @throws \Exception
+     */
+    public function findPeriodHasClassArchived(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
         $academicPeriodWithRecordsArchiveArray = ArchiveConnections::getArchiveYears('student_attendance_marked_records',
