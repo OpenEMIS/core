@@ -73,8 +73,37 @@ class PerformanceAssessmentShell extends Shell
                     }
                 }
             }
-
-        } catch (Exception $e) {
+        //To update latest education id POCOR-6423
+        $statementLast = $connection->prepare("Select subq1.grade_id as wrong_grade,subq2.grade_id as correct_grade from
+                        (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
+                        INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                        INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                        INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+                        INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+                        INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
+                        where academic_period_id=$copyFrom
+                        ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq1
+                        inner join
+                        (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
+                        INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                        INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                        INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+                        INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+                        INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
+                        where academic_period_id=$copyTo
+                        ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq2
+                        on subq1.grade_name=subq2.grade_name");
+        $statementLast->execute();
+        $row = $statementLast->fetchAll(\PDO::FETCH_ASSOC);
+        if(!empty($row)){
+                foreach($row AS $rowData){
+                    $AssessmentTable->updateAll(
+                        ['education_grade_id' => $rowData['correct_grade']],    //field
+                        ['education_grade_id' => $rowData['wrong_grade'], 'academic_period_id' => $copyTo]);
+                }
+        }
+        //education grade updation end
+        } catch (\Exception $e) {
             pr($e->getMessage());
         }
     }

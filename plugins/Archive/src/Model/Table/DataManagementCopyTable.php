@@ -395,6 +395,19 @@ class DataManagementCopyTable extends ControllerActionTable
                 }
             }
         }
+        // Start POCOR-6423
+        $AssessmentData = TableRegistry::get('Assessment.Assessments');
+        if ($entity->features == 'Performance Assessments') {
+            $AssessmentRecords = $AssessmentData
+                ->find('all')
+                ->where(['academic_period_id ' => $entity->to_academic_period])
+                ->toArray();
+            if (!empty($AssessmentRecords)) {
+                $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+                return false;
+            }
+        }
+        // End POCOR-6423
     }
 
     /***************POCOR-7326 Start*********************** */
@@ -880,7 +893,16 @@ class DataManagementCopyTable extends ControllerActionTable
             $copyTo = $to_academic_period;
             $this->triggerCopyShell('EducationStructureCopy', $copyFrom, $copyTo);
         }
-         //POCOR-7568 end
+        //POCOR-7568 end
+        // Start POCOR-6423
+        if ($entity->features == "Performance Assessments") {
+            $from_academic_period = $entity->from_academic_period;
+            $to_academic_period = $entity->to_academic_period;
+            $copyFrom = $from_academic_period;
+            $copyTo = $to_academic_period;
+            $this->triggerCopyShell('PerformanceAssessment', $copyFrom, $copyTo);
+        }
+        // End POCOR-6423
     }
     
     // public function afterSave(Event $event, Entity $entity, ArrayObject $data){
@@ -1316,7 +1338,8 @@ class DataManagementCopyTable extends ControllerActionTable
             'Shifts' => __('Shifts'),
             'Infrastructure' => __('Infrastructure'),
             'Risks' => __('Risks'), // POCOR-5337
-            'Performance Competencies' => __('Performance Competencies')
+            'Performance Competencies' => __('Performance Competencies'),
+            'Performance Assessments' => __('Institution Performance Assessments') // POCOR-6423
         ];
         return $options;
     }

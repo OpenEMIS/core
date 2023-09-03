@@ -528,7 +528,7 @@ class EducationGradesTable extends ControllerActionTable
 					['ToAcademicPeriods' => 'academic_periods'],
 					[
 						'ToAcademicPeriods.id = ToSystems.academic_period_id',
-						'ToAcademicPeriods.order = AcademicPeriods.order-1',
+						// 'ToAcademicPeriods.order = AcademicPeriods.order-1',//POCOR-7689 for gd-moe-environment
 					]
 				)
                 ->where([
