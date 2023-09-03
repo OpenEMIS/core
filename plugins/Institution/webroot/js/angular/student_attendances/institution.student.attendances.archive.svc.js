@@ -1024,10 +1024,10 @@ function InstitutionStudentAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, 
                     absence_type_code = 'NoScheduledClicked';
                     absence_type_name = 'No Lessons';
                 }
-                console.log('absence_type_code');
-                console.log(absence_type_code);
-                console.log('absence_type_name');
-                console.log(absence_type_name);
+                // console.log('absence_type_code');
+                // console.log(absence_type_code);
+                // console.log('absence_type_name');
+                // console.log(absence_type_name);
                 switch (absence_type_code) {
                     case attendanceType.PRESENT.code:
                         html = '<div style="color: ' + attendanceType.PRESENT.color + ';">' +

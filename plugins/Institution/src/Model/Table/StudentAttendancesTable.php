@@ -644,14 +644,14 @@ class StudentAttendancesTable extends ControllerActionTable
             $institutionClassId,
             $educationGradeId,
             $institutionId);
-        $this->log("step 1", 'debug');
+//        $this->log("step 1", 'debug');
         if ($subjectId != 0) {
             $query = $this->getAttendanceQueryWithSubjectId($query,
                 $subjectId);
         } else {
             $subjectId = null;
         }
-        $this->log("step 2", 'debug');
+//        $this->log("step 2", 'debug');
 
         $query = $this->getAttendanceQueryWithoutWithdrawn($query,
             $dayly,
@@ -662,29 +662,29 @@ class StudentAttendancesTable extends ControllerActionTable
             $weekStartDay,
             $weekEndDay,
             $archive);
-        $this->log("step 3", 'debug');
+//        $this->log("step 3", 'debug');
 
         if ($dayly) {
             // single day
-            $this->log("step 4", 'debug');
+//            $this->log("step 4", 'debug');
 
             $query = $this->getAttendanceDailyQueryWithDayCondition($query, $day);
-            $this->log("step 5", 'debug');
+//            $this->log("step 5", 'debug');
 
             $query = $this->getAttendanceDailyQueryWithDetails($query, $attendancePeriodId, $day, $subjectId, $archive);
-            $this->log("step 6", 'debug');
+//            $this->log("step 6", 'debug');
 
             $query = $this->getAttendanceDailyQueryWithAbsenceTypes($query, $archive);
-            $this->log("step 7", 'debug');
+//            $this->log("step 7", 'debug');
 
             $query = $this->getAttendanceDailyQueryWithMarkedRecords($query, $day, $archive);
-            $this->log("step 8", 'debug');
+//            $this->log("step 8", 'debug');
 
             $query = $this->getAttendanceDailyQueryWithAbsenceReasons($query, $archive);
-            $this->log("step 9", 'debug');
+//            $this->log("step 9", 'debug');
 
             $query = $this->getAttendanceDailySelectFields($query, $day, $archive);
-            $this->log("step 10", 'debug');
+//            $this->log("step 10", 'debug');
 
         }
 
@@ -1139,7 +1139,7 @@ class StudentAttendancesTable extends ControllerActionTable
 
     private function getAttendanceDailyQueryWithDayCondition(Query $query, $day)
     {
-        $this->log("getAttendanceDailyQueryWithDayCondition $day", 'debug');
+//        $this->log("getAttendanceDailyQueryWithDayCondition $day", 'debug');
         $InstitutionStudents = TableRegistry::get('institution_students');
         $dayCondition = [$InstitutionStudents->aliasField('start_date <= ') => $day,
             'OR' => [
@@ -1160,7 +1160,7 @@ class StudentAttendancesTable extends ControllerActionTable
      * @return Query
      * @throws \Exception
      */
-    private function getAttendanceDailyQueryWithDetails(Query $query, $attendancePeriodId, $day, $subjectId, $archive)
+    private function getAttendanceDailyQueryWithDetails(Query $query, $attendancePeriodId, $day, $subjectId, $archive=false)
     {
         $table_name = 'institution_student_absence_details';
         if (!$archive) {
@@ -1434,13 +1434,14 @@ class StudentAttendancesTable extends ControllerActionTable
                     $educationGradeId,
                     $attendancePeriodId,
                     $subjectId,
-                    $date);
+                    $date,
+                    $archive);
                 $wideQuery = clone $query;
-                $wideQuery = $this->getAttendanceDailyQueryWithDetails($wideQuery, $periodId, $date, $subjectId);
-                $wideQuery = $this->getAttendanceDailyQueryWithAbsenceTypes($wideQuery);
-                $wideQuery = $this->getAttendanceDailyQueryWithMarkedRecords($wideQuery, $date);
-                $wideQuery = $this->getAttendanceDailyQueryWithAbsenceReasons($wideQuery);
-                $wideQuery = $this->getAttendanceDailySelectFields($wideQuery, $date);
+                $wideQuery = $this->getAttendanceDailyQueryWithDetails($wideQuery, $periodId, $date, $subjectId, $archive);
+                $wideQuery = $this->getAttendanceDailyQueryWithAbsenceTypes($wideQuery, $archive);
+                $wideQuery = $this->getAttendanceDailyQueryWithMarkedRecords($wideQuery, $date, $archive);
+                $wideQuery = $this->getAttendanceDailyQueryWithAbsenceReasons($wideQuery, $archive);
+                $wideQuery = $this->getAttendanceDailySelectFields($wideQuery, $date, $archive);
                 $wideQueryResult = $wideQuery->find('list', [
                     'keyField' => 'day',
                     'groupField' => 'user_id',
@@ -1539,32 +1540,45 @@ class StudentAttendancesTable extends ControllerActionTable
      * @param $academicPeriodId
      * @param $institutionClassId
      * @param $educationGradeId
+     * @param $attendancePeriodId
+     * @param $subjectId
      * @param $day
+     * @param bool $archive
      * @return bool
      */
+
     private function getNotMarkedDay($institutionId,
                                      $academicPeriodId,
                                      $institutionClassId,
                                      $educationGradeId,
                                      $attendancePeriodId,
                                      $subjectId,
-                                     $day)
+                                     $day,
+                                     $archive = false)
     {
-        $StudentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
+        $table_name = 'student_attendance_marked_records';
+        if (!$archive) {
+            $Records = TableRegistry::get($table_name);
+        }
+        if ($archive) {
+            $archiveTableAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
+            $table_name = $archiveTableAndConnection[0];
+            $Records = TableRegistry::get($table_name);
+        }
         $where = [
-            $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
-            $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
-            $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $institutionClassId,
-            $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $educationGradeId,
-            $StudentAttendanceMarkedRecords->aliasField('date') => $day
+            $Records->aliasField('institution_id') => $institutionId,
+            $Records->aliasField('academic_period_id') => $academicPeriodId,
+            $Records->aliasField('institution_class_id') => $institutionClassId,
+            $Records->aliasField('education_grade_id') => $educationGradeId,
+            $Records->aliasField('date') => $day
         ];
         if ($attendancePeriodId) {
-            $where[$StudentAttendanceMarkedRecords->aliasField('period')] = $attendancePeriodId;
+            $where[$Records->aliasField('period')] = $attendancePeriodId;
         }
         if ($subjectId) {
-            $where[$StudentAttendanceMarkedRecords->aliasField('subject_id')] = $subjectId;
+            $where[$Records->aliasField('subject_id')] = $subjectId;
         }
-        $totalMarkedCount = $StudentAttendanceMarkedRecords
+        $totalMarkedCount = $Records
             ->find('all')
             ->where($where)
             ->count();
@@ -1612,7 +1626,6 @@ class StudentAttendancesTable extends ControllerActionTable
             });
         return $query;
     }
-
 
 
 }
