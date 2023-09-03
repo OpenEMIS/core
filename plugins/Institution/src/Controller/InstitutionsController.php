@@ -8206,18 +8206,22 @@ class InstitutionsController extends AppController
     public
     function Addguardian()
     {
-        $requestDataa = $this->paramsDecode($this->request->query('queryString1'));
-        $StudentID = $this->paramsEncode(['id' => $requestDataa['institution_id']]);
-        $StudentID1 = $this->paramsEncode(['id' => $requestDataa['student_id']]);
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $studentId = $session->read('Student.Students.id');
+        $studentName = $session->read('Student.Students.name');
         $UsersTable = TableRegistry::get('User.Users');
         $InstitutionTable = TableRegistry::get('Institution.Institutions');
-        $UserData = $UsersTable->find('all', ['conditions' => ['id' => $requestDataa['student_id']]])->first();
-        $InstitutionData = $InstitutionTable->find('all', ['conditions' => ['id' => $requestDataa['institution_id']]])->first();
+        $UserData = $UsersTable->find('all', ['conditions' => ['id' => $studentId]])->first();
+        $InstitutionData = $InstitutionTable->find('all', ['conditions' => ['id' => $institutionId]])->first();
         $queryStng = $this->paramsEncode(['id' => $UserData->id]);
+        $this->Navigation->addCrumb(__('Students'), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students']);
+        $this->Navigation->addCrumb($studentName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
+        $this->Navigation->addCrumb(__('Add Guardians'), []);
         $this->set('InstitutionData', $InstitutionData);
         $this->set('UserData', $UserData);
-        $this->set('StudentID', $StudentID);
-        $this->set('StudentID1', $StudentID1);
+        $this->set('StudentID', $institutionId);
+        $this->set('StudentID1', $studentId);
         $this->set('queryStng', $queryStng);
         $this->set('ngController', 'DirectoryaddguardianCtrl as $ctrl');
     }

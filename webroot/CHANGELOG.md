@@ -1,3 +1,18 @@
+### [3.94.0] - 2023-08-31
+- Implemented: Develop APIs for OpenEMIS Core add student/staff/guardian functions
+- Implemented: Develop updates for institution student and institution student absence APIs
+- Implemented: Develop a function to copy Institution > Performance > Assessments from one academic period to another
+- Bug Fixed: Administration > Data Management > Copy : Competencies
+- Bug Fixed: Staff > Career > Attendances: The record did not get deleted even when successful message display
+- Bug Fixed: Administration > Security > Groups > Edit Group: When editing the user group page, the records showing is different from the view page and instead it shows empty records
+- Bug Fixed: Institutions > Students>Promote: There is no option for no grade when promoting student
+- Bug Fixed: Institutions>Performance>Assessments: Report is showing empty for transferred students
+- Bug Fixed: Administration > Data Management > Copy: Unable to copy shifts
+- Bug Fixed: Institutions > Appointments > Positions: The column Institutions in the report when exporting Institutions Positions is showing wrong data
+- Bug Fixed: Institutions>Staff>Add: When adding staff thru the api, core does not link staff to the institution
+- Bug Fixed: Institutions > Students > General > Guardian: When clicking the following: Student Name, Students, Institution Name, Institution, the breadcrumbs do not work and it navigates to a page that says page not found
+- Bug Fixed: Institutions > Students > Add: The system should allow the transferred for academic period 2022 to academic period 2023
+
 ### [3.93.0] - 2023-08-25
 - Implemented: Develop Tertiary Education feature
 - Implemented: Move copy function from Administration > System Setup > Education Structure to Data Management > Copy

@@ -164,8 +164,8 @@ class AssessmentResultsTable extends AppTable
 
     public function onExcelTemplateInitialiseAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
     {
-        $this->log('onExcelTemplateInitialiseAssessmentItemResults', 'debug');
-        $this->log($params, 'debug');
+//        $this->log('onExcelTemplateInitialiseAssessmentItemResults', 'debug');
+//        $this->log($params, 'debug');
         if (array_key_exists('class_id', $params) && array_key_exists('assessment_id', $params) && array_key_exists('institution_id', $params)) {
             $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
             $results = $AssessmentItemResults->find()
@@ -768,7 +768,7 @@ class AssessmentResultsTable extends AppTable
                                                                         array $params,
                                                                         ArrayObject $extra)
     {
-        $this->log('onExcelTemplateInitialiseGroupAssessmentItemResults', 'debug');
+//        $this->log('onExcelTemplateInitialiseGroupAssessmentItemResults', 'debug');
         if (array_key_exists('class_id', $params)
             && array_key_exists('assessment_id', $params)
             && array_key_exists('institution_id', $params)) {
@@ -783,8 +783,8 @@ class AssessmentResultsTable extends AppTable
 
     public function onExcelTemplateInitialiseClassStudents(Event $event, array $params, ArrayObject $extra)
     {
-        $this->log('onExcelTemplateInitialiseClassStudents', 'debug');
-        $this->log($params, 'debug');
+//        $this->log('onExcelTemplateInitialiseClassStudents', 'debug');
+//        $this->log($params, 'debug');
         $where = [];
         $ids = [];
         if ($params['students'] != 0) {
