@@ -4,7 +4,7 @@ namespace InstitutionCustomField\Model\Table;
 use CustomField\Model\Table\CustomFieldsTable;
 
 class InstitutionCustomFieldsTable extends CustomFieldsTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		$this->supportedFieldTypes = $this->getSupportedFieldTypesByModel('Institution.Institutions');
 		parent::initialize($config);
 		$this->hasMany('CustomFieldOptions', ['className' => 'InstitutionCustomField.InstitutionCustomFieldOptions', 'dependent' => true, 'cascadeCallbacks' => true]);

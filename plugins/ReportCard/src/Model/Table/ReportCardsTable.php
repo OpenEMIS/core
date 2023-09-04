@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
+use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 
 class ReportCardsTable extends ControllerActionTable
@@ -21,7 +22,7 @@ class ReportCardsTable extends ControllerActionTable
     CONST ALL_SUBJECTS = 2;
     CONST SELECT_SUBJECTS = 1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -37,15 +38,15 @@ class ReportCardsTable extends ControllerActionTable
             'allowable_file_types' => 'document',
             'useDefaultName' => true
         ]);
-        $this->behaviors()->get('Download')->config(
+        $this->behaviors()->get('Download')->getConfig(
             'name',
             'excel_template_name'
         );
-        $this->behaviors()->get('Download')->config(
+        $this->behaviors()->get('Download')->getConfig(
             'content',
             'excel_template'
         );
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             true
         );
@@ -56,14 +57,14 @@ class ReportCardsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.downloadTemplate'] = 'downloadTemplate';
         return $events;
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
 
         return $validator
@@ -154,8 +155,9 @@ class ReportCardsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // Academic Period filter
+        $serverRequest = new ServerRequest();
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
@@ -292,7 +294,8 @@ class ReportCardsTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
     }
 
-    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action)
     {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';

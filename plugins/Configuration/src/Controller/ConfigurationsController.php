@@ -12,7 +12,7 @@ class ConfigurationsController extends AppController
 
     use EncodingTrait;
 
-    public function initialize()
+    public function initialize(): void
     {
         //print_r('hasi');
         parent::initialize();
@@ -76,7 +76,7 @@ class ConfigurationsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigStaffReleases']);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';

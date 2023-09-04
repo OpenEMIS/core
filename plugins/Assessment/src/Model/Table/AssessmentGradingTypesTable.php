@@ -17,7 +17,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 	use MessagesTrait;
 	use OptionsTrait;
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 
 		$this->hasMany('GradingOptions', ['className' => 'Assessment.AssessmentGradingOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -59,7 +59,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		$this->setDeleteStrategy('restrict');
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 
 		return $validator

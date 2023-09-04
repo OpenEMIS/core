@@ -11,12 +11,14 @@ use Cake\I18n\I18n;
 use Cake\ORM\Table;
 use Cake\Utility\Security;
 use Cake\Utility\Text;
+use Cake\Http\Session;
 
 use ControllerAction\Model\Traits\SecurityTrait;
 
 class ControllerActionHelper extends Helper
 {
     use SecurityTrait;
+    protected $session;
     public $helpers = ['Html', 'ControllerAction.HtmlField', 'Form', 'Paginator', 'Label', 'Url'];
 
     public function getColumnLetter($columnNumber)
@@ -39,7 +41,7 @@ class ControllerActionHelper extends Helper
         $eventMap = $subject->implementedEvents();
         if (!array_key_exists($eventKey, $eventMap) && !is_null($method)) {
             if (method_exists($subject, $method) || $subject->behaviors()->hasMethod($method)) {
-                $subject->eventManager()->on($eventKey, [], [$subject, $method]);
+                $subject->getEventManager()->on($eventKey, [], [$subject, $method]);
             }
         }
     }
@@ -48,7 +50,7 @@ class ControllerActionHelper extends Helper
     {
         $this->onEvent($subject, $eventKey, $method);
         $event = new Event($eventKey, $this, $params);
-        return $subject->eventManager()->dispatch($event);
+        return $subject->getEventManager()->dispatch($event);
     }
 
     public function getFormTemplate()
@@ -179,7 +181,8 @@ class ControllerActionHelper extends Helper
 
         $tableHeaders = array();
         $table = null;
-        $session = $this->request->session();
+        $this->_session = new Session();
+        $session =$this->_session;
         $language = $session->read('System.language');
 
         foreach ($fields as $field => $attr) {
@@ -198,11 +201,11 @@ class ControllerActionHelper extends Helper
 
                     // attach event to get labels for fields
                     $event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $fieldModel, 'field' => $field, 'language' => $language]);
-                    $event = $table->eventManager()->dispatch($event);
+                    $event = $table->getEventManager()->dispatch($event);
                     // end attach event
 
-                    if ($event->result) {
-                        $label = __($event->result);
+                    if ($event->getResult()) {
+                        $label = __($event->getResult());
                     }
 
                     if ($attr['sort']) {
@@ -263,16 +266,16 @@ class ControllerActionHelper extends Helper
             $eventKey = 'ControllerAction.Model.' . $method;
 
             $event = new Event($eventKey, $this, [$entity]);
-            $event = $table->eventManager()->dispatch($event);
+            $event = $table->getEventManager()->dispatch($event);
 
             // end attach event
             $associatedFound = false;
-            if (strlen($event->result) > 0) {
+            if (strlen($event->getResult()) > 0) {
                 $allowedTranslation = ['string','text'];//array that will be translate
                 if (in_array($attr['type'], $allowedTranslation)) {
-                    $value = __($event->result);
+                    $value = __($event->getResult());
                 } else {
-                    $value = $event->result;
+                    $value = $event->getResult();
                 }
                 $entity->{$field} = $value;
             } elseif ($this->endsWith($field, '_id') || $this->isForeignKey($table, $field)) {
@@ -300,12 +303,12 @@ class ControllerActionHelper extends Helper
             if (isset($attr['tableColumnClass'])) {
                 $row[] = [$value, ['class' => $attr['tableColumnClass']]];
             } else {
-                $row[] =  __($value);
+                $row[] = isset($value)?  __($value): $value;
             }
         }
 
-        $model = TableRegistry::get($entity->source());
-        $primaryKeys = $model->primaryKey();
+        $model = TableRegistry::get($entity->getSource());
+        $primaryKeys = $model->getPrimaryKey();
         $primaryKeyValue = [];
         if (is_array($primaryKeys)) {
             foreach ($primaryKeys as $key) {
@@ -364,7 +367,7 @@ class ControllerActionHelper extends Helper
         $html = '';
         $config = $this->_View->get('ControllerAction');  		
         if (!is_null($config['pageOptions'])) {
-            $pageOptions = $config['pageOptions']; 
+            $pageOptions = $config['pageOptions'];
             if (!empty($pageOptions)) {
                 $html .= $this->Form->input('Search.limit', [
                     'label' => false,
@@ -374,6 +377,7 @@ class ControllerActionHelper extends Helper
                 ]);
             }
         }
+        // echo "<pre>";print_r($html);die;
         //ENDS: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         return $html;
     }
@@ -464,12 +468,12 @@ class ControllerActionHelper extends Helper
 
     private function escapeHtmlSpecialCharacters(Entity $entity)
     {
-        $model = TableRegistry::get($entity->source());
+        $model = TableRegistry::get($entity->getSource());
         // For XSS
-        $schema = $model->schema();
+        $schema = $model->getSchema();
         $columns = $schema->columns();
         foreach ($columns as $key => $col) {
-            $fieldCol = $schema->column($col);
+            $fieldCol = $schema->getColumn($col);
             if ($fieldCol['type'] == 'string' || $fieldCol['type'] == 'text') {
                 if ($entity->has($col)) {
                     $htmlInfo = $this->HtmlField->escapeHtmlEntity($entity->{$col});
@@ -544,11 +548,11 @@ class ControllerActionHelper extends Helper
 
                 // attach event to get labels for fields
                 $event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language]);
-                $event = $table->eventManager()->dispatch($event);
+                $event = $table->getEventManager()->dispatch($event);
                 // end attach event
 
-                if ($event->result) {
-                    $label = $event->result;
+                if ($event->getResult()) {
+                    $label = $event->getResult();
                 }
                 if (isset($options['label'])) {
                     $label = $options['label'];
@@ -639,7 +643,7 @@ class ControllerActionHelper extends Helper
     {
         foreach ($model->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     return true;
                 }
             }

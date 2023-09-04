@@ -6,7 +6,7 @@ use App\Model\Table\ControllerActionTable;
 
 class EducationStagesTable extends ControllerActionTable
 {
-	public function initialize(array $config)
+	public function initialize(array $config): void
     {
 		parent::initialize($config);
 		$this->addBehavior('Education.Setup');
@@ -15,7 +15,7 @@ class EducationStagesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
 	}
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator

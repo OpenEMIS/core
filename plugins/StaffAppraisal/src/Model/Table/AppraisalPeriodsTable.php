@@ -11,7 +11,7 @@ use App\Model\Table\ControllerActionTable;
 
 class AppraisalPeriodsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AppraisalForms', ['className' => 'StaffAppraisal.AppraisalForms', 'foreignKey' => 'appraisal_form_id']);
@@ -31,7 +31,7 @@ class AppraisalPeriodsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         return $validator
             ->add('name', [

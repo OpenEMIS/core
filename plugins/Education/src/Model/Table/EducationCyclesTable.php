@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -76,20 +77,21 @@ class EducationCyclesTable extends ControllerActionTable
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
+		$serverRequest = new ServerRequest();
         // Academic period filter
 	    $EducationSystems = TableRegistry::get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $this->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
         //level filter
         $levelOptions = $this->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
         if (!empty($levelOptions)) {
-        	$selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+        	$selectedLevel = !empty($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
         } else {
             $levelOptions = ['0' => '-- '.__('No Education Level').' --'] + $levelOptions;
-            $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : 0;
+            $selectedLevel = !empty($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : 0;
         }
 
         $this->controller->set(compact('levelOptions', 'selectedLevel'));

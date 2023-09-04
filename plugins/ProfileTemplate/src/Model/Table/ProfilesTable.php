@@ -11,6 +11,7 @@ use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -47,9 +48,9 @@ class ProfilesTable extends ControllerActionTable
         'zip'   => 'application/zip'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institutions');
+        $this->setTable('institutions');
         parent::initialize($config);
 		
 		$this->toggle('add', false);
@@ -68,7 +69,7 @@ class ProfilesTable extends ControllerActionTable
         ];
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.generate'] = 'generate';
@@ -90,11 +91,12 @@ class ProfilesTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     { 
+        $serverRequest = new ServerRequest();
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
         // check if report card request is valid
-        $reportCardId = $this->request->query('report_card_id');
-        $academicPeriodId = $this->request->query('academic_period_id');
+        $reportCardId = $serverRequest->getAttribute('query')['report_card_id'];
+        $academicPeriodId = $serverRequest->getAttribute('query')['academic_period_id'];
         //START:POCOR-6667
         unset($buttons['view']);
         //END:POCOR-6667
@@ -277,7 +279,7 @@ class ProfilesTable extends ControllerActionTable
             ->order([
                 $this->InstitutionReportCardProcesses->aliasField('created'),
             ])
-            ->hydrate(false)
+            // ->hydrate(false)
             ->toArray();
 		$this->setupTabElements();	
     }
@@ -288,12 +290,13 @@ class ProfilesTable extends ControllerActionTable
       
         // Academic Periods filter
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
+        $serverRequest = new ServerRequest();
+        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $AcademicPeriod->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         //$where[$this->InstitutionReportCards->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
 		
-        $ProfileTemplates = TableRegistry::get('profile_templates');
+        $ProfileTemplates = TableRegistry::get('ProfileTemplate.ProfileTemplates');
 
         // Report Cards filter
         $reportCardOptions = [];
@@ -305,7 +308,7 @@ class ProfilesTable extends ControllerActionTable
        
 
         $reportCardOptions = ['-1' => '-- '.__('Select Profile').' --'] + $reportCardOptions; //POCOR-6856
-        $selectedReportCard = !is_null($this->request->query('report_card_id')) ? $this->request->query('report_card_id') : -1;
+        $selectedReportCard = !is_null($serverRequest->getAttribute('query')['report_card_id']) ? $serverRequest->getAttribute('query')['report_card_id'] : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//$where[$this->InstitutionReportCards->aliasField('report_card_id')] = $selectedReportCard;
         //End
@@ -319,14 +322,14 @@ class ProfilesTable extends ControllerActionTable
                 'report_card_started_on' => $this->InstitutionReportCards->aliasField('started_on'),
                 'report_card_completed_on' => $this->InstitutionReportCards->aliasField('completed_on'),
             ])
-            ->leftJoin([$this->InstitutionReportCards->alias() => $this->InstitutionReportCards->table()],
+            ->leftJoin([$this->InstitutionReportCards->getAlias() => $this->InstitutionReportCards->getTable()],
                 [
                     $this->InstitutionReportCards->aliasField('institution_id = ') . $this->aliasField('id'),
                     $this->InstitutionReportCards->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
                     $this->InstitutionReportCards->aliasField('report_card_id = ') . $selectedReportCard
                 ]
             )
-            ->autoFields(true)
+            // ->autoFields(true)
 			->order([
                 $this->aliasField('name'),
             ])
@@ -345,8 +348,9 @@ class ProfilesTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $reportCardId = $this->request->query('report_card_id');
-        $academicPeriodId = $this->request->query('academic_period_id');
+        $serverRequest = new ServerRequest();
+        $reportCardId = $serverRequest->getAttribute('query')['report_card_id'];
+        $academicPeriodId = $serverRequest->getAttribute('query')['academic_period_id'];
 		
         if (!is_null($reportCardId)) {
             $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);
@@ -540,13 +544,14 @@ class ProfilesTable extends ControllerActionTable
 
     public function onGetReportQueue(Event $event, Entity $entity)
     {
+        $serverRequest = new ServerRequest();
         if ($entity->has('report_card_id')) {
             $reportCardId = $entity->report_card_id;
-        } else if (!is_null($this->request->query('report_card_id'))) {
-            $reportCardId = $this->request->query('report_card_id');
+        } else if (!is_null($serverRequest->getAttribute('query')['report_card_id'])) {
+            $reportCardId = $serverRequest->getAttribute('query')['report_card_id'];
         }
 		
-		$academicPeriodId = $this->request->query('academic_period_id');
+		$academicPeriodId = $serverRequest->getAttribute('query')['academic_period_id'];
 
         $search = [
             'report_card_id' => $reportCardId,
@@ -566,10 +571,11 @@ class ProfilesTable extends ControllerActionTable
 
     public function onGetProfileName(Event $event, Entity $entity)
     {
+        $serverRequest = new ServerRequest();
         $value = '';
         if ($entity->has('report_card_id')) {
             $reportCardId = $entity->report_card_id;
-        } else if (!is_null($this->request->query('report_card_id'))) {
+        } else if (!is_null($serverRequest->getAttribute('query')['report_card_id'])) {
             // used if student report card record has not been created yet
             $reportCardId = $this->request->query('report_card_id');
         }

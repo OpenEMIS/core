@@ -102,7 +102,7 @@ class UserBehavior extends Behavior
 
     public function beforeAction(Event $event)
     {
-        switch ($this->_table->table()) {
+        switch ($this->_table->getTable()) {
             case 'institution_students':
             case 'institution_staff':
             case 'student_guardians':
@@ -112,7 +112,7 @@ class UserBehavior extends Behavior
                 $this->_table->fields['last_login']['visible'] = false;
                 break;
         }
-        if ($this->_table->table() == 'security_users') {
+        if ($this->_table->getTable() == 'security_users') {
             $this->_table->addBehavior('OpenEmis.Section');
             $this->_table->fields['is_student']['type'] = 'hidden';
             $this->_table->fields['is_staff']['type'] = 'hidden';
@@ -196,8 +196,8 @@ class UserBehavior extends Behavior
                 }
             }
   
-            if ($this->_table->registryAlias() != 'Security.Users') {
-                $language = I18n::locale();
+            if ($this->_table->getRegistryAlias() != 'Security.Users') {
+                $language = I18n::getLocale();
                 if ($this->isCAv4()) {
                     $this->_table->field('information_section', ['type' => 'section', 'title' => __('Information'), 'before' => 'photo_content', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                     //POCOR-5668 add identity section starts
@@ -315,7 +315,7 @@ class UserBehavior extends Behavior
         $plugin = $this->_table->controller->plugin;
         $name = $this->_table->controller->name;
 
-        switch ($this->_table->alias()) {
+        switch ($this->_table->getAlias()) {
             case 'Students':
                 $imageDefault = 'kd-students';
                 break;
@@ -348,7 +348,7 @@ class UserBehavior extends Behavior
         }
 
         if ($this->isCAv4()) {
-            switch ($this->_table->alias()) {
+            switch ($this->_table->getAlias()) {
                 case 'Guardians':
                     $imageUrl =  ['plugin' => 'Student', 'controller' => 'Students', 'action' => $this->_table->alias(), 'image'];
 
@@ -366,7 +366,7 @@ class UserBehavior extends Behavior
                     }
                     break;
                 default:
-                    $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->_table->alias(), 'image'];
+                    $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->_table->getAlias(), 'image'];
                     break;
             }
         } else if ($this->_table->ControllerAction->getTriggerFrom() == 'Controller') {
@@ -396,7 +396,7 @@ class UserBehavior extends Behavior
             ]);
         }
 
-        if ($this->_table->table() == 'security_users') {
+        if ($this->_table->getTable() == 'security_users') {
             if ($this->isCAv4()) {
                 $this->_table->field('name', ['order' => 3, 'sort' => ['field' => 'first_name']]);
             } else {
@@ -412,8 +412,7 @@ class UserBehavior extends Behavior
     {
         $extra['auto_search'] = false;
         // $extra['auto_contain'] = false;
-
-        $table = $query->repository()->table();
+        $table = $query->getRepository()->getTable();
         if ($table != 'security_users') {
             $query->matching('Users');
 
@@ -494,7 +493,7 @@ class UserBehavior extends Behavior
         }
 
         $value = "";
-        $alias = $this->_table->alias();
+        $alias = $this->_table->getAlias();
         if (empty($fileContent) && is_null($fileContent)) {
             if ($alias == 'Students' || $alias == 'StudentUser' || (($userEntity) && $userEntity->is_student)) {
                 $value = $this->defaultStudentProfileIndex;

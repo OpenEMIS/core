@@ -12,7 +12,7 @@ use App\Model\Table\ControllerActionTable;
 
 class AreaLevelsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasMany('Areas', ['className' => 'Area.Areas', 'foreign_key' => 'area_level_id']);

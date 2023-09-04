@@ -5,7 +5,7 @@ use Cake\Validation\Validator;
 
 class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 
 		$this->belongsTo('AssessmentGradingTypes', ['className' => 'Assessment.AssessmentGradingTypes']);
@@ -35,7 +35,7 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 		}
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 
 		$validator

@@ -15,7 +15,7 @@ class AppraisalFormsTable extends ControllerActionTable
     // Added
     const FIELD_TYPE_SCORE = "SCORE";
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsToMany('AppraisalCriterias', [
@@ -36,7 +36,7 @@ class AppraisalFormsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator

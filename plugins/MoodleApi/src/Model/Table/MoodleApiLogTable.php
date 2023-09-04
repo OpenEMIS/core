@@ -16,7 +16,7 @@ class MoodleApiLogTable extends ControllerActionTable
     //UPDATE getStatuses() if you add new status
 
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }

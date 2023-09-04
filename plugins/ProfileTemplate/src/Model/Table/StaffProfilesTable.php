@@ -11,6 +11,7 @@ use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -47,9 +48,9 @@ class StaffProfilesTable extends ControllerActionTable
         'zip'   => 'application/zip'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff');
+        $this->setTable('institution_staff');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 
@@ -72,7 +73,7 @@ class StaffProfilesTable extends ControllerActionTable
         ];
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.generate'] = 'generate';
@@ -302,18 +303,19 @@ class StaffProfilesTable extends ControllerActionTable
                 $this->StaffReportCardProcesses->aliasField('created'),
                 $this->StaffReportCardProcesses->aliasField('staff_id')
             ])
-            ->hydrate(false)
+            // ->hydrate(false)
             ->toArray();
 		$this->setupTabElements();	
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $serverRequest = new ServerRequest();
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
       
         // Academic Periods filter
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $AcademicPeriod->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$AcademicPeriod->aliasField('id')] = $selectedAcademicPeriod;        
 		//End 
@@ -328,7 +330,7 @@ class StaffProfilesTable extends ControllerActionTable
        
 
         $reportCardOptions = ['-1' => '-- '.__('Select Staff Template').' --'] + $reportCardOptions;
-        $selectedReportCard = !is_null($this->request->query('staff_profile_template_id')) ? $this->request->query('staff_profile_template_id') : -1;
+        $selectedReportCard = !is_null($serverRequest->getAttribute('query')['staff_profile_template_id']) ? $serverRequest->getAttribute('query')['staff_profile_template_id'] : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//End	
 		
@@ -339,12 +341,12 @@ class StaffProfilesTable extends ControllerActionTable
 		$areaOptions = $Areas->find('list')->toArray();
        
         $areaOptions = ['-1' => '-- '.__('Select Area').' --'] + $areaOptions;
-        $selectedArea = !is_null($this->request->query('area_id')) ? $this->request->query('area_id') : -1;
+        $selectedArea = !is_null($serverRequest->getAttribute('query')['area_id']) ? $serverRequest->getAttribute('query')['area_id'] : -1;
         $this->controller->set(compact('areaOptions', 'selectedArea'));
         //End
 
         // Institution filter
-		$Institutions = TableRegistry::get('Institutions');
+		$Institutions = TableRegistry::get('Institution.Institutions');
 
 		$institutionOptions = [];
 		$institutionOptions = $Institutions->find('list')
@@ -354,7 +356,7 @@ class StaffProfilesTable extends ControllerActionTable
 							->toArray();
        
         $institutionOptions = ['-1' => '-- '.__('Select Institution').' --'] + $institutionOptions;
-        $selectedInstitution = !is_null($this->request->query('institution_id')) ? $this->request->query('institution_id') : -1;
+        $selectedInstitution = !is_null($serverRequest->getAttribute('query')['institution_id']) ? $this->request->query('institution_id') : -1;
         $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
 		$where[$this->aliasField('institution_id')] = $selectedInstitution;
         //End
@@ -368,7 +370,7 @@ class StaffProfilesTable extends ControllerActionTable
                 'email_status_id' => $this->StaffReportCardEmailProcesses->aliasField('status'),
                 'email_error_message' => $this->StaffReportCardEmailProcesses->aliasField('error_message')
             ])
-			->innerJoin([$AcademicPeriod->alias() => $AcademicPeriod->table()],
+			->innerJoin([$AcademicPeriod->getAlias() => $AcademicPeriod->getTable()],
                 [
 					'OR' => [[
 					array(
@@ -393,7 +395,7 @@ class StaffProfilesTable extends ControllerActionTable
 					]
                 ]
             )
-            ->leftJoin([$this->StaffReportCards->alias() => $this->StaffReportCards->table()],
+            ->leftJoin([$this->StaffReportCards->getAlias() => $this->StaffReportCards->getTable()],
                 [
                     $this->StaffReportCards->aliasField('staff_id = ') . $this->aliasField('staff_id'),
                     $this->StaffReportCards->aliasField('institution_id = ') . $selectedInstitution,
@@ -401,7 +403,7 @@ class StaffProfilesTable extends ControllerActionTable
                     $this->StaffReportCards->aliasField('staff_profile_template_id = ') . $selectedReportCard
                 ]
             )
-            ->leftJoin([$this->StaffReportCardEmailProcesses->alias() => $this->StaffReportCardEmailProcesses->table()],
+            ->leftJoin([$this->StaffReportCardEmailProcesses->getAlias() => $this->StaffReportCardEmailProcesses->getTable()],
                 [
                     $this->StaffReportCardEmailProcesses->aliasField('staff_id = ') . $this->aliasField('staff_id'),
                     $this->StaffReportCardEmailProcesses->aliasField('institution_id = ') . $selectedInstitution,
@@ -409,10 +411,10 @@ class StaffProfilesTable extends ControllerActionTable
                     $this->StaffReportCardEmailProcesses->aliasField('staff_profile_template_id = ') . $selectedReportCard
                 ]
             )
-            ->autoFields(true)
+            // ->autoFields(true)
             ->where($where)
             ->all();
-        if (is_null($this->request->query('sort'))) {
+        if (is_null($serverRequest->getAttribute('query')['sort'])) {
             $query
                 ->contain('Users')
                 ->order(['Users.first_name', 'Users.last_name']);
@@ -437,9 +439,10 @@ class StaffProfilesTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $reportCardId = $this->request->query('staff_profile_template_id');
-        $institutionId = $this->request->query('institution_id');
-        $academicPeriodId = $this->request->query('academic_period_id');
+        $serverRequest = new ServerRequest();
+        $reportCardId = $serverRequest->getAttribute('query')['staff_profile_template_id'];
+        $institutionId = $serverRequest->getAttribute('query')['institution_id'];
+        $academicPeriodId = $serverRequest->getAttribute('query')['academic_period_id'];
 
         if (!is_null($reportCardId) && !is_null($institutionId)) {
             $existingReportCard = $this->StaffTemplates->exists([$this->StaffTemplates->primaryKey() => $reportCardId]);

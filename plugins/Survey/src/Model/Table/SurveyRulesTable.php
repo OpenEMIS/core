@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
 use Cake\ORM\Query;
 use App\Model\Traits\OptionsTrait;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -52,6 +53,7 @@ class SurveyRulesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $serverRequest = new ServerRequest();
         if ($this->Auth->user('super_admin') == 1 || $this->AccessControl->check(['Surveys', 'Rules', 'edit'])) {
             $toolbarButtons = $extra['toolbarButtons'];
             $toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
@@ -67,7 +69,7 @@ class SurveyRulesTable extends ControllerActionTable
 
         $extra['elements']['controls'] = ['name' => 'Survey.survey_rules_controls', 'data' => [], 'options' => [], 'order' => 2];
         $this->fields['survey_question_id']['type'] = 'integer';
-        if (!$this->request->query('survey_form_id')) {
+        if (!$serverRequest->getAttribute('query')['survey_form_id']) {
             $this->fields['survey_form_id']['type'] = 'integer';
         }
 
@@ -130,6 +132,7 @@ class SurveyRulesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // Survey form options
+        $serverRequest = new ServerRequest();
         $surveyFormOptions = $this->SurveyForms
             ->find('list')
             ->order([
@@ -137,7 +140,7 @@ class SurveyRulesTable extends ControllerActionTable
             ])
             ->toArray();
         $surveyFormOptions = ['' => '-- '.__('All Surveys').' --'] + $surveyFormOptions;
-        $surveyFormId = $this->request->query('survey_form_id');
+        $surveyFormId = $serverRequest->getAttribute('query')['survey_form_id'];
         $this->advancedSelectOptions($surveyFormOptions, $surveyFormId);
         $this->controller->set(compact('surveyFormOptions'));
 
@@ -165,7 +168,7 @@ class SurveyRulesTable extends ControllerActionTable
             $sectionOptions = array_values($sectionOptions);
             // original section options will not be translated
             $originalOptions = $sectionOptions;
-            $sectionId = $this->request->query('section_id');
+            $sectionId = $serverRequest->getAttribute('query')['section_id'];
             $this->advancedSelectOptions($sectionOptions, $sectionId);
             $this->controller->set(compact('sectionOptions'));
         }

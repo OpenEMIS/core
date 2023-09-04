@@ -11,19 +11,22 @@ class RubricSectionsTable extends AppTable
 {
     private $selectedTemplate = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('RubricTemplates', ['className' => 'Rubric.RubricTemplates']);
         $this->hasMany('RubricCriterias', ['className' => 'Rubric.RubricCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
         if ($this->behaviors()->has('Reorder')) {
-            $this->behaviors()->get('Reorder')->config([
-                'filter' => 'rubric_template_id',
-            ]);
+            // $this->behaviors()->get('Reorder')->config([
+            //     'filter' => 'rubric_template_id',
+            // ]);
+            $reorderBehavior = $this->behaviors()->get('Reorder');
+            $reorderBehavior->setConfig('filter', 'rubric_template_id');
+
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
@@ -35,7 +38,7 @@ class RubricSectionsTable extends AppTable
         $searchableFields[] = 'name';
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

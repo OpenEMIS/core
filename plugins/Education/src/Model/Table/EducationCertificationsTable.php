@@ -5,7 +5,7 @@ use App\Model\Table\ControllerActionTable;
 
 class EducationCertificationsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->addBehavior('Education.Setup');

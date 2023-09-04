@@ -13,10 +13,11 @@ use Cake\I18n\Time;
 use Cake\Utility\Text;
 use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
+use Cake\Http\ServerRequest;
 
 class AssessmentPeriodsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -50,7 +51,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -121,7 +122,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         return $query;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.editAcademicTerm'] = 'editAcademicTerm';
@@ -292,11 +293,11 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        //echo '<pre>'; print_r($event); die;
-        list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($this->request->query('period')));
+        $serverRequest = new ServerRequest();
+        list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($serverRequest->getAttribute('query')['period']));
         $extra['selectedPeriod'] = $selectedPeriod;
 
-        list($templateOptions, $selectedTemplate) = array_values($this->getTemplateOptions($selectedPeriod, $this->request->query('template')));
+        list($templateOptions, $selectedTemplate) = array_values($this->getTemplateOptions($selectedPeriod, $serverRequest->getAttribute('query')['template']));
         $extra['selectedTemplate'] = $selectedTemplate;
 
         $extra['elements']['control'] = [
@@ -590,11 +591,13 @@ class AssessmentPeriodsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldAssessmentId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAssessmentId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssessmentId(Event $event, array $attr, $action)
     {
-        list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($this->request->query('period')));
+        $serverRequest = new ServerRequest();
+        list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($serverRequest->getAttribute('query')['period']));
 
-        list($templateOptions, $selectedTemplate) = array_values($this->getTemplateOptions($selectedPeriod, $this->request->query('template')));
+        list($templateOptions, $selectedTemplate) = array_values($this->getTemplateOptions($selectedPeriod, $serverRequest->getAttribute('query')['template']));
 
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
@@ -890,7 +893,8 @@ class AssessmentPeriodsTable extends ControllerActionTable
     }
     //POCOR-7400 end
     //POCOR-7550 start
-    public function onUpdateFieldEditableStudentStatuses(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldEditableStudentStatuses(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEditableStudentStatuses(Event $event, array $attr, $action)
     {
         $attr['options'] = ['Enrolled','All Statuses'];
         $attr['onChangeReload'] = 'changeCurrent';

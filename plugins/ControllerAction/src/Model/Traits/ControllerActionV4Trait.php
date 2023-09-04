@@ -120,7 +120,7 @@ trait ControllerActionV4Trait {
 
 					// need to include associated object
 					$event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, [$query]);
-					$event = $associatedObject->eventManager()->dispatch($event);
+					$event = $associatedObject->getEventManager()->dispatch($event);
 					if ($event->isStopped()) { return $event->result; }
 					if (!empty($event->result)) {
 						$query = $event->result;

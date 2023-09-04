@@ -24,7 +24,7 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
         return $events;
    	}
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }

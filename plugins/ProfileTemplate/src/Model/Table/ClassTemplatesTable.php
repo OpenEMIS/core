@@ -27,9 +27,9 @@ class ClassTemplatesTable extends ControllerActionTable
     CONST ALL_SUBJECTS = 2;
     CONST SELECT_SUBJECTS = 1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('class_profile_templates');
+        $this->setTable('class_profile_templates');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 
@@ -41,15 +41,15 @@ class ClassTemplatesTable extends ControllerActionTable
             'allowable_file_types' => 'document',
             'useDefaultName' => true
         ]);
-        $this->behaviors()->get('Download')->config(
+        $this->behaviors()->get('Download')->getConfig(
             'name',
             'excel_template_name'
         );
-        $this->behaviors()->get('Download')->config(
+        $this->behaviors()->get('Download')->getConfig(
             'content',
             'excel_template'
         );
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             true
         );
@@ -60,14 +60,14 @@ class ClassTemplatesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.downloadTemplate'] = 'downloadTemplate';
         return $events;
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
 
         return $validator
@@ -164,7 +164,8 @@ class ClassTemplatesTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'generate_start_date', 'generate_end_date', 'excel_template']);
     }
 
-    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action)
     {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';

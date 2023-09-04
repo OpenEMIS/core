@@ -8,19 +8,20 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Http\ServerRequest;
 
 class RubricsController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
-        $this->ControllerAction->models = [
-            'Sections' => ['className' => 'Rubric.RubricSections'],
-            'Criterias' => ['className' => 'Rubric.RubricCriterias'],
-            'Options' => ['className' => 'Rubric.RubricTemplateOptions'],
-            'Status' => ['className' => 'Rubric.RubricStatuses']
-        ];
+        // $this->ControllerAction->models = [
+        //     'Sections' => ['className' => 'Rubric.RubricSections'],
+        //     'Criterias' => ['className' => 'Rubric.RubricCriterias'],
+        //     'Options' => ['className' => 'Rubric.RubricTemplateOptions'],
+        //     'Status' => ['className' => 'Rubric.RubricStatuses']
+        // ];
         $this->loadComponent('Paginator');
     }
 
@@ -29,10 +30,16 @@ class RubricsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Rubric.RubricTemplates']);
     }
+
+    public function Sections()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Rubric.RubricSections']);
+    }
     // end CAv4
 
     public function beforeFilter(Event $event)
     {
+        $serverRequest = new ServerRequest();
         parent::beforeFilter($event);
 
         $tabElements = [
@@ -59,8 +66,8 @@ class RubricsController extends AppController
         ];
 
         // pass query string for selected template across tabs
-        if (!is_null($this->request->query('template'))) {
-            $template = $this->request->query('template');
+        if (!is_null($serverRequest->getAttribute('query')['template'])) {
+            $template = $serverRequest->getAttribute('query')['template'];
             foreach ($tabElements as $key => $obj) {
                 $tabElements[$key]['url']['template'] = $template;
             }
@@ -113,5 +120,11 @@ class RubricsController extends AppController
 
             $this->set(compact('templateOptions', 'selectedTemplate'));
         }
+    }
+
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 }

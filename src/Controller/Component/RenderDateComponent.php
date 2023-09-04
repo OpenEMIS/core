@@ -14,13 +14,13 @@ class RenderDateComponent extends Component
 {
     private $controller = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->controller = $this->_registry->getController();
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $eventMap = [
             'Controller.Page.onRenderDate' => ['callable' => 'onRenderDate', 'priority' => 5]

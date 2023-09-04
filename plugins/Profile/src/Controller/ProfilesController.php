@@ -427,7 +427,7 @@ class ProfilesController extends AppController
         //POCOR-5890 ends
         $this->Navigation->addCrumb($model->getHeader($alias));
         //POCOR-5675
-        $action = $this->request->params['action'];
+        $action = $this->request->getParam('action');
         if($action == 'Profiles'){
             $action = __('Personal');
         }
@@ -553,8 +553,8 @@ class ProfilesController extends AppController
         public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
         {
         $loginUserId = $this->Auth->user('id'); // login user
-        $action = $this->request->params['action'];
-        $session = $this->request->session();
+        $action = $this->request->getParam('action');
+        $session = $this->request->getSession();
         if ($model->hasField('security_user_id')) {
             $studentId = $session->read('Student.Students.id'); 
             if (!empty($studentId)) {
