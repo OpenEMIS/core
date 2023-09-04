@@ -76,7 +76,7 @@ class ProfilesController extends AppController
     }
 
     public function Personal() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
-    // public function Profiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
+     public function Profiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
 
     // CAv4
     public function StudentAbsences()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']); }
@@ -406,7 +406,7 @@ class ProfilesController extends AppController
                 }
             }
         } else if ($model instanceof \App\Model\Table\AppTable) { // CAv3
-            $alias = $model->alias();
+            $alias = $model->getAlias();
             $excludedModel = ['Accounts', 'Extracurriculars', 'UserActivities'];
 
             if (!in_array($alias, $excludedModel)) {
@@ -617,17 +617,17 @@ class ProfilesController extends AppController
 
     public function getUserTabElements($options = [])
     {
-        if (array_key_exists('queryString', $this->request->query)) { //to filter if the URL already contain querystring
+        if (array_key_exists('queryString', $this->request->getQuery())) { //to filter if the URL already contain querystring
             $id = $this->ControllerAction->getQueryString('security_user_id');
         }
 
-        $plugin = $this->plugin;
-        $name = $this->name;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
 
         $id = (array_key_exists('id', $options))? $options['id']: $this->Auth->user('id');
 
         $tabElements = [
-            $this->name => ['text' => __('Overview')],
+            $this->getName() => ['text' => __('Overview')],
             'Accounts' => ['text' => __('Account')],
             'Demographic' => ['text' => __('Demographic')],
             'Identities' => ['text' => __('Identities')],
@@ -640,7 +640,7 @@ class ProfilesController extends AppController
         ];
 
         foreach ($tabElements as $key => $value) {
-            if ($key == $this->name) {
+            if ($key == $this->getName()) {
                 $tabElements[$key]['url']['action'] = 'Personal';
                 $tabElements[$key]['url'][] = 'view';
                 $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
@@ -669,7 +669,7 @@ class ProfilesController extends AppController
 
     public function getAcademicTabElements($options = [])
     {  
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if ($session->read('Auth.User.is_guardian') == 1) {
             $studentId = $session->read('Student.ExaminationResults.student_id'); 
         } else {

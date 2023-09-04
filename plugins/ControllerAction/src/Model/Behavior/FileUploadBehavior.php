@@ -24,6 +24,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 
 class FileUploadBehavior extends Behavior
 {
@@ -107,15 +108,16 @@ class FileUploadBehavior extends Behavior
     public function addOnInitialize(Event $event, Entity $entity)
     {
         $model = $this->_table;
-        $session = $model->request->session();
-        $session->delete($model->registryAlias().'.parseUpload');
+        $request = $model->request;
+        $session = $model->request->getSession();
+        $session->delete($model->getRegistryAlias().'.parseUpload');
     }
 
     public function editOnInitialize(Event $event, Entity $entity)
     {
         $model = $this->_table;
-        $session = $model->request->session();
-        $session->delete($model->registryAlias().'.parseUpload');
+        $session = $model->request->getSession();
+        $session->delete($model->getRegistryAlias().'.parseUpload');
     }
 
     public function afterAction(Event $event)

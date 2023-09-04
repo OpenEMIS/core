@@ -242,7 +242,6 @@ class InstitutionsTable extends ControllerActionTable
         ];
 
         $this->setDeleteStrategy('restrict');
-
         $this->addBehavior('Institution.LatLong');
         if (!empty($config['request']) && $config['request'] instanceof ServerRequest) {
             $this->setConfig('request', $config['request']);
@@ -1654,8 +1653,8 @@ class InstitutionsTable extends ControllerActionTable
             'escape' => false
         ];
 
-        $session = $this->request->session();
-        $institutionId = $this->request->pass[1];
+        $session = $this->request->getSession();
+        $institutionId = $this->request->getParam('pass')[1];
 
         $extraButtons = [
             'close' => [
@@ -1907,7 +1906,7 @@ class InstitutionsTable extends ControllerActionTable
     **
     ******************************************************************************************************************/
 
-    public function onUpdateFieldClassification(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldClassification(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             if (!Configure::read('schoolMode')) {

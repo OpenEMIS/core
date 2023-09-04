@@ -145,7 +145,7 @@ class OpenEmisBehavior extends Behavior
                 $isDeleteButtonEnabled = $toolbarButtons->offsetExists('remove');
                 $isNotTransferOperation = $model->actions('remove') != 'transfer';
                 $isNotRestrictOperation = $model->actions('remove') != 'restrict';
-                $primaryKey = $model->primaryKey();
+                $primaryKey = $model->getPrimaryKey();
 
                 $ids = [];
                 if (is_array($primaryKey)) {
@@ -280,7 +280,7 @@ class OpenEmisBehavior extends Behavior
 
     private function initializeButtons(ArrayObject $extra)
     {
-        $model = $this->_table;
+        $model = $this->table();
         $controller = $model->controller;
 
         $toolbarButtons = new ArrayObject([]);
@@ -318,8 +318,7 @@ class OpenEmisBehavior extends Behavior
 
         if ($action == 'index') {
             if ($model->actions('add')) {
-               // $model->url('add')
-                $toolbarButtons['add']['url'] = 'http://127.0.0.1/openemis4/pocor-openemis-core/Institutions/Institutions/add';
+                $toolbarButtons['add']['url'] = $model->url('add');
                 $toolbarButtons['add']['type'] = 'button';
                 $toolbarButtons['add']['label'] = "<i class='fa kd-add'></i>";
                 $toolbarButtons['add']['attr'] = $toolbarAttr;

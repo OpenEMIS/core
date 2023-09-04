@@ -8,9 +8,9 @@ use Cake\ORM\Entity;
 
 class ProvidersTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_providers');
+        $this->setTable('institution_providers');
         parent::initialize($config);
 
         $this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_provider_id']);

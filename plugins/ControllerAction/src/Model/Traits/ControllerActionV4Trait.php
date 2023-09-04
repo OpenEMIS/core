@@ -19,10 +19,8 @@ trait ControllerActionV4Trait {
 
 	private function _initComponents($model) {
 		$model->controller = $this->controller;
-		$model->request = $this->request;
-		$model->Session = new Session();
-		//$model->Session = $this->request->getSession();
-		//$model->Session =$this->session;
+		$model->request = $this->controller->getRequest();
+		$model->Session =  $this->controller->getRequest()->getSession();
 
 		// Copy all component objects from Controller to Model
 		$components = $this->controller->components()->loaded();
@@ -35,7 +33,7 @@ trait ControllerActionV4Trait {
 		list($plugin, $alias) = pluginSplit($model->getRegistryAlias());
 
 		if (empty($plugin)) {
-			$path = APP . 'Template' . DS . $this->controller->name . DS;
+			$path = APP . 'Template' . DS . $this->controller->getName() . DS;
 		} else {
 			$path = ROOT . DS . 'plugins' . DS . $plugin . DS . 'src' . DS . 'Template' . DS;
 		}
@@ -220,7 +218,7 @@ trait ControllerActionV4Trait {
 			'config' => ['form' => false]
 		]);
 
-		$paramsPass = $request->params['pass'];
+		$paramsPass = $this->controller->getRequest()->getParam('pass');
 		$action = 'index';
 
 		if (count($paramsPass) > 0) {
@@ -247,16 +245,16 @@ trait ControllerActionV4Trait {
 			return $event->getResult();
 		} else if (is_null($event->getResult())) {
 			throw new MissingActionException([
-                'controller' => $controller->name . "Controller",
+                'controller' => $controller->getName() . "Controller",
                 'action' => $action,
                 'prefix' => '',
-                'plugin' => $request->params['plugin'],
+                'plugin' => $this->controller->getRequest()->getParam('plugin')
             ]);
 		}
 
 		$extra['entity'] = $entity;
 		$event = $model->dispatchEvent('ControllerAction.Model.afterAction', [$extra], $this);
-		if ($event->isStopped()) { return $event->result; }
+		if ($event->isStopped()) { return $event->getResult(); }
 
 		$elements = $extra['elements'];
 		uasort($elements, [$this, '_sortByOrder']);

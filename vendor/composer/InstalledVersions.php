@@ -29,7 +29,7 @@ private static $installed = array (
     'aliases' => 
     array (
     ),
-    'reference' => '94675795f81fd548a002b560b6e25cfb081d71dd',
+    'reference' => 'b1bbca275490b94eed7a9de851cdc8651a1435d9',
     'name' => 'korditpteltd/openemis-phpoe',
   ),
   'versions' => 
@@ -353,7 +353,7 @@ private static $installed = array (
       'aliases' => 
       array (
       ),
-      'reference' => '94675795f81fd548a002b560b6e25cfb081d71dd',
+      'reference' => 'b1bbca275490b94eed7a9de851cdc8651a1435d9',
     ),
     'laminas/laminas-diactoros' => 
     array (

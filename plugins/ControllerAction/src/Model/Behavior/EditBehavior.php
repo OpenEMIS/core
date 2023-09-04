@@ -30,29 +30,29 @@ class EditBehavior extends Behavior
 
         $event = $model->dispatchEvent('ControllerAction.Model.addEdit.beforeAction', [$extra], $this);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if ($event->result instanceof Table) {
-            $model = $event->result;
+        if ($event->getResult() instanceof Table) {
+            $model = $event->getResult();
         }
 
         $event = $model->dispatchEvent('ControllerAction.Model.edit.beforeAction', [$extra], $this);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if ($event->result instanceof Table) {
-            $model = $event->result;
+        if ($event->getResult() instanceof Table) {
+            $model = $event->getResult();
         }
 
         $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
-        $sessionKey = $model->registryAlias() . '.primaryKey';
+        $sessionKey = $model->getRegistryAlias() . '.primaryKey';
 
         if (empty($ids)) {
             if ($model->Session->check($sessionKey)) {
                 $ids = $model->Session->read($sessionKey);
             } else if (!empty($model->ControllerAction->getQueryString())) {
                 // Query string logic not implemented yet, will require to check if the query string contains the primary key
-                $primaryKey = $model->primaryKey();
+                $primaryKey = $model->getPrimaryKey();
                 $ids = $model->ControllerAction->getQueryString($primaryKey);
             }
         }
