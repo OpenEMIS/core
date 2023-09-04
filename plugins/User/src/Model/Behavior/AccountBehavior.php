@@ -19,10 +19,10 @@ class AccountBehavior extends Behavior
     private $targetField = 'password';
     private $passwordAllowEmpty = false;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->_table->table('security_users');
-        $this->_table->entityClass('User.User');
+        $this->_table->setTable('security_users');
+        $this->_table->setEntityClass('User.User');
         parent::initialize($config);
 
         $this->userRole = (array_key_exists('userRole', $config))? $config['userRole']: null;
@@ -133,7 +133,7 @@ class AccountBehavior extends Behavior
         $this->setupTabElements($entity);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';

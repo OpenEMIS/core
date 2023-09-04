@@ -162,9 +162,9 @@ class ControllerActionHelper extends Helper
     public function locale($locale = null)
     {
         if (!empty($locale)) {
-            return I18n::getLocale($locale);
+            return I18n::setLocale($locale);
         } else {
-            return I18n::getLocale();
+            return I18n::setLocale();
         }
     }
 
@@ -385,7 +385,7 @@ class ControllerActionHelper extends Helper
         $_fields = $config['fields'];
 
         $html = '';
-        $model = $config['table']->alias();
+        $model = $config['table']->getAlias();
         $displayFields = $_fields;
 
         if (!empty($fields)) { // if we only want specific fields to be displayed
@@ -411,7 +411,7 @@ class ControllerActionHelper extends Helper
         ];
 
         $table = null;
-        $session = $this->request->session();
+        $session = $this->_View->getRequest()->getSession();
         $language = $session->read('System.language');
 
         foreach ($displayFields as $_field => $attr) {
@@ -431,11 +431,11 @@ class ControllerActionHelper extends Helper
 
                 // attach event to get labels for fields
                 $event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language, 'autoHumanize' => true]);
-                $event = $table->eventManager()->dispatch($event);
+                $event = $table->getEventManager()->dispatch($event);
                 // end attach event
 
-                if ($event->result) {
-                    $label = $event->result;
+                if ($event->getResult()) {
+                    $label = $event->getResult();
                 }
                 if ($label !== false) {
                     if (!array_key_exists('label', $options)) {
@@ -519,7 +519,8 @@ class ControllerActionHelper extends Helper
         );
 
         $table = null;
-        $session = $this->request->session();
+        //$session = $this->request->session(); //comment in cakephp4
+        $session = $this->_View->getRequest()->getSession();
         $language = $session->read('System.language');
         // For XSS
         $this->escapeHtmlSpecialCharacters($data);
@@ -545,11 +546,11 @@ class ControllerActionHelper extends Helper
 
                 // attach event to get labels for fields
                 $event = new Event('ControllerAction.Model.onGetFieldLabel', $this, ['module' => $_fieldModel, 'field' => $_field, 'language' => $language]);
-                $event = $table->eventManager()->dispatch($event);
+                $event = $table->getEventManager()->dispatch($event);
                 // end attach event
 
-                if ($event->result) {
-                    $label = $event->result;
+                if ($event->getResult()) {
+                    $label = $event->getResult();
                 }
                 if (isset($options['label'])) {
                     $label = $options['label'];
@@ -575,14 +576,14 @@ class ControllerActionHelper extends Helper
                 // end attach event
 
                 $associatedFound = false;
-                if ($event->result || is_int($event->result)) {
-                    $data->{$_field} = $event->result;
+                if ($event->getResult() || is_int($event->getResult())) {
+                    $data->{$_field} = $event->getResult();
                 } elseif ($this->endsWith($_field, '_id')) {
                     $associatedObject = '';
                     if (isset($table->CAVersion) && $table->CAVersion=='4.0') {
                         $associatedObject = $table->getAssociatedEntity($_field);
                     } else {
-                        $table = TableRegistry::get($attr['className']);
+                        $table = TableRegistry::getTableLocator()->get($attr['className']);
                         $associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
                     }
 
@@ -615,7 +616,7 @@ class ControllerActionHelper extends Helper
 
                 if ($_fieldAttr['label']) {
                     $labelClass = implode(' ', $_labelClass);
-                    $rowContent = sprintf($_labelCol.$_valueCol, $labelClass, __($label), $valueClass, __($value));
+                    $rowContent = sprintf($_labelCol.$_valueCol, $labelClass, ($label), $valueClass, isset($value) ? ($value) : null);
                 } else { // no label
                     $rowContent = sprintf($_valueCol, $valueClass, __($value));
                 }

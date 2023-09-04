@@ -217,25 +217,28 @@ class ControllerActionBehavior extends Behavior
 
     public function paramsPass($index = null)
     {
-        $params = $this->_table->request->pass;
+        $params = $this->_table->request->getParam('pass');
         if (count($params) > 0) {
             if (!is_numeric($params[0])) {
                 array_shift($params);
             }
             if (!is_null($index)) {
+
                 if (isset($params[$index])) {
                     $params = $params[$index];
                 } else {
+
                     $params = null;
                 }
             }
         }
+
         return $params;
     }
 
     public function paramsQuery()
     {
-        return $this->_table->request->query;
+        return $this->_table->request->getQuery();
     }
 
     public function params()
@@ -266,18 +269,21 @@ class ControllerActionBehavior extends Behavior
 
     private function mergeRequestParams(array &$url)
     {
-        $requestParams = $this->_table->request->params;
+        //comment cakephp4
+        //$requestParams =$this->_table->request->params;
+        $requestParams = $this->table()->request->getAttribute('params');
         foreach ($requestParams as $key => $value) {
             if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
                 unset($requestParams[$key]);
             }
         }
         $url = array_merge($url, $requestParams);
+        return $url;
     }
 
     public function url($action, $params = true /* 'PASS' | 'QUERY' | false */)
     {
-        $controller = $this->_table->controller;
+        $controller = $this->table()->controller;
         $url = [
             'plugin' => $controller->getPlugin(),
             'controller' => $controller->getName(),
@@ -286,14 +292,16 @@ class ControllerActionBehavior extends Behavior
         ];
 
         $this->mergeRequestParams($url);
-
+        
         if ($params === true) {
             $url = array_merge($url, $this->params());
+
         } elseif ($params === 'PASS') {
             $url = array_merge($url, $this->paramsPass());
         } elseif ($params === 'QUERY') {
             $url = array_merge($url, $this->paramsQuery());
         }
+       // print_r($url);die('dgd');
         return $url;
     }
 

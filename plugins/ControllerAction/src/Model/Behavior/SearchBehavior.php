@@ -21,26 +21,28 @@ class SearchBehavior extends Behavior {
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
-		$serverRequest = new ServerRequest();
 		$model = $this->_table;
 		$alias = $model->getRegistryAlias();
 		$controller = $model->controller;
 		$request = $model->request;
-		$session = $serverRequest->getSession();
+		$session = $request->getSession();
 		$pageOptions = $extra['config']['pageOptions'];
 
 		$search = $session->check($alias.'.search.key') ? $session->read($alias.'.search.key') : '';
 
-		if ($serverRequest->is(['post', 'put'])) {
+		if ($request->is(['post', 'put'])) {
 			if (isset($request->data['Search'])) {
 				if (array_key_exists('searchField', $request->data['Search'])) {
 					$search = trim($request->data['Search']['searchField']);
 				}
 			}
+		// cakephp4 add
+		$request->data['Search']['searchField'] = $search;
 		}
 
 		$session->write($alias.'.search.key', $search);
-		$request->data['Search']['searchField'] = $search;
+		//commnet cakephp4
+		//$request->data['Search']['searchField'] = $search;
 
 		$extra['config']['search'] = $search;
 	}

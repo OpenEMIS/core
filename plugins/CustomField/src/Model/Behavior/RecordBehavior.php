@@ -15,6 +15,7 @@ use Cake\Log\Log;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\Datasource\ConnectionManager;
+use Cake\Http\ServerRequest;
 
 class RecordBehavior extends Behavior
 {
@@ -154,7 +155,7 @@ class RecordBehavior extends Behavior
     public function viewEditBeforeQuery(Event $event, Query $query)
     {
         // do not contain CustomFieldValues
-        if (!is_null($this->config('tableCellClass'))) {
+        if (!is_null($this->getConfig('tableCellClass'))) {
             $query->contain(['CustomTableCells']);
         }
     }
@@ -334,8 +335,8 @@ class RecordBehavior extends Behavior
                 $errors = $entity->errors();
 
                 $fileErrors = [];
-                $session = $model->request->session();
-                $sessionErrors = $model->registryAlias().'.parseFileError';
+                $session = $model->request->getSession();
+                $sessionErrors = $model->getRegistryAlias().'.parseFileError';
                 if ($session->check($sessionErrors)) {
                     $fileErrors = $session->read($sessionErrors);
                 }
@@ -609,10 +610,11 @@ class RecordBehavior extends Behavior
     private function getFilterKey($filterAlias, $modelAlias)
     {
         $filterKey = '';
-        $associations = TableRegistry::get($filterAlias)->associations();
+        $associations = TableRegistry::getTableLocator()->get($filterAlias)->associations();
+
         foreach ($associations as $assoc) {
-            if ($assoc->registryAlias() == $modelAlias) {
-                $filterKey = $assoc->foreignKey();
+            if ($assoc->getRegistryAlias() == $modelAlias) {
+                $filterKey = $assoc->getForeignKey();
                 return $filterKey;
             }
         }
@@ -624,11 +626,10 @@ class RecordBehavior extends Behavior
         $query = null;
         $withContain = array_key_exists('withContain', $params) ? $params['withContain'] : true;
         $generalOnly = array_key_exists('generalOnly', $params) ? $params['generalOnly'] : false;
-
         // For Institution Survey
-        if (is_null($this->config('moduleKey'))) {
-            if ($entity->has($this->config('formKey'))) {
-                $customFormId = $entity->{$this->config('formKey')};
+        if (is_null($this->getConfig('moduleKey'))) {
+            if ($entity->has($this->getConfig('formKey'))) {
+                $customFormId = $entity->{$this->getConfig('formKey')};
 
                 if (isset($customFormId)) {
                     $customFormQuery = $this->CustomForms
@@ -637,8 +638,12 @@ class RecordBehavior extends Behavior
                 }
             }
         } else {
-            $where = [$this->CustomModules->aliasField('model') => $this->config('model')];
-
+            //cakephp4 start
+            $model = $this->getConfig('model');
+            if (empty($model)) {
+                $model =  $this->_table->getRegistryAlias();
+            } //END
+            $where = [$this->CustomModules->aliasField('model') => $model];
             $results = $this->CustomModules
                 ->find('all')
                 ->where($where)
@@ -650,25 +655,24 @@ class RecordBehavior extends Behavior
 
                 $customFormQuery = $this->CustomForms
                     ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-                    ->where([$this->CustomForms->aliasField($this->config('moduleKey')) => $moduleId]);
+                    ->where([$this->CustomForms->aliasField($this->getConfig('moduleKey')) => $moduleId]);
 
                 if (!empty($filterAlias)) {
-                    $filterKey = $this->getFilterKey($filterAlias, $this->config('model'));
+                    $filterKey = $this->getFilterKey($filterAlias, $this->getConfig('model'));
                     if (empty($filterKey)) {
                         list($modelplugin, $modelAlias) = explode('.', $filterAlias, 2);
                         $filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
                     }
-
-                    $filterId = $entity->{$filterKey};
+                    $filterId = isset($entity->{$filterKey})? $entity->{$filterKey} : 0;
 
                     // conditions
                     $generalConditions = [
-                        $this->CustomFormsFilters->aliasField($this->config('formKey') . ' = ') . $this->CustomForms->aliasField('id'),
-                        $this->CustomFormsFilters->aliasField($this->config('filterKey')) => 0
+                        $this->CustomFormsFilters->aliasField($this->getConfig('formKey') . ' = ') . $this->CustomForms->aliasField('id'),
+                        $this->CustomFormsFilters->aliasField($this->getConfig('filterKey')) => 0
                     ];
                     $filterConditions = [
-                        $this->CustomFormsFilters->aliasField($this->config('formKey') . ' = ') . $this->CustomForms->aliasField('id'),
-                        $this->CustomFormsFilters->aliasField($this->config('filterKey')) => $filterId
+                        $this->CustomFormsFilters->aliasField($this->getConfig('formKey') . ' = ') . $this->CustomForms->aliasField('id'),
+                        $this->CustomFormsFilters->aliasField($this->getConfig('filterKey')) => $filterId
                     ];
                     if ($generalOnly) {
                         $conditions = $generalConditions;
@@ -677,14 +681,15 @@ class RecordBehavior extends Behavior
                             'OR' => [$generalConditions, $filterConditions]
                         ];
                     }
-                    // End
 
-                    $customFormQuery
+                    // End
+                 $customFormQuery
                         ->join([
-                            'table' => $this->CustomFormsFilters->table(),
-                            'alias' => $this->CustomFormsFilters->alias(),
+                            'table' => $this->CustomFormsFilters->getTable(),
+                            'alias' => $this->CustomFormsFilters->getAlias(),
                             'conditions' => $conditions
                         ]);
+                         
                 }
             }
         }
@@ -698,10 +703,10 @@ class RecordBehavior extends Behavior
                     ->find('all')
                     ->find('order')
                     ->where([
-                        $this->CustomFormsFields->aliasField($this->config('formKey') . ' IN') => $customFormIds
+                        $this->CustomFormsFields->aliasField($this->getConfig('formKey') . ' IN') => $customFormIds
                     ])
                     ->group([
-                        $this->CustomFormsFields->aliasField($this->config('fieldKey'))
+                        $this->CustomFormsFields->aliasField($this->getConfig('fieldKey'))
                     ]);
 
                 if ($withContain) {
@@ -716,7 +721,7 @@ class RecordBehavior extends Behavior
                             }
                         ]);
 
-                        if (!is_null($this->config('tableColumnKey'))) {
+                        if (!is_null($this->getConfig('tableColumnKey'))) {
                             $query->contain([
                                 'CustomFields.CustomTableColumns' => function ($q) {
                                     return $q
@@ -726,7 +731,7 @@ class RecordBehavior extends Behavior
                             ]);
                         }
 
-                        if (!is_null($this->config('tableRowKey'))) {
+                        if (!is_null($this->getConfig('tableRowKey'))) {
                             $query->contain([
                                 'CustomFields.CustomTableRows' => function ($q) {
                                     return $q
@@ -746,7 +751,7 @@ class RecordBehavior extends Behavior
     public function formatEntity(Entity $entity)
     {
         $model = $this->_table;
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $model->getPrimaryKey();
         $idKey = $model->aliasField($primaryKey);
         $id = $entity->id;
 
@@ -757,7 +762,7 @@ class RecordBehavior extends Behavior
             $newEntity = $query->first();
             if ($newEntity->has('custom_field_values')) {
                 foreach ($newEntity->custom_field_values as $key => $obj) {
-                    $fieldId = $obj->{$this->config('fieldKey')};
+                    $fieldId = $obj->{$this->getConfig('fieldKey')};
                     $customField = $obj->custom_field;
 
                     if ($customField->field_type == 'CHECKBOX') {
@@ -809,8 +814,8 @@ class RecordBehavior extends Behavior
 								'textarea_value' => null,
 								'date_value' => null,
 								'time_value' => null,
-								$this->config('fieldKey') => $fieldId,
-								$this->config('recordKey') => $entity->id,
+								$this->getConfig('fieldKey') => $fieldId,
+								$this->getConfig('recordKey') => $entity->id,
 								'custom_field' => null // set after data is patched else will lost
 							];
 							$valueEntity = $this->CustomFieldValues->newEntity($valueData, ['validate' => false]);
@@ -821,8 +826,8 @@ class RecordBehavior extends Behavior
                 } else {
                     $fieldType = Inflector::camelize(strtolower($fieldTypeCode));
                     $settings = new ArrayObject([
-                        'fieldKey' => $this->config('fieldKey'),
-                        'formKey' => $this->config('formKey'),
+                        'fieldKey' => $this->getConfig('fieldKey'),
+                        'formKey' => $this->getConfig('formKey'),
                         'customField' => $customField
                     ]);
 
@@ -841,11 +846,11 @@ class RecordBehavior extends Behavior
     {
         $model = $this->_table;
         $ControllerAction = $this->isCAv4() ? $model : $model->ControllerAction;
-        $session = $model->request->session();
+        $session = $model->request->getSession();
         $query = $this->getCustomFieldQuery($entity);
 
         // If tabSection is set, setup Tab Section
-        if ($this->config('tabSection')) {
+        if ($this->getConfig('tabSection')) {
             $customFields = $query->toArray();
 
             $tabElements = [];
@@ -892,8 +897,8 @@ class RecordBehavior extends Behavior
 
         // For survey only
         // To get the rules for the survey form
-        if (is_null($this->config('moduleKey')) && $this->_table->action == 'view') {
-            $SurveyRules = TableRegistry::get('Survey.SurveyRules');
+        if (is_null($this->getConfig('moduleKey')) && $this->_table->action == 'view') {
+            $SurveyRules = TableRegistry::getTableLocator()->get('Survey.SurveyRules');
             $surveyFormId = $entity->survey_form_id;
             $rules = $SurveyRules
                 ->find('SurveyRulesList', [
@@ -1080,9 +1085,9 @@ class RecordBehavior extends Behavior
     private function deleteUploadSessions()
     {
         $model = $this->_table;
-        $session = $model->request->session();
-        $session->delete($model->registryAlias().'.parseFile');
-        $session->delete($model->registryAlias().'.parseFileError');
+        $session = $model->request->getSession();
+        $session->delete($model->getRegistryAlias().'.parseFile');
+        $session->delete($model->getRegistryAlias().'.parseFileError');
     }
 
     // Model.excel.onExcelBeforeStart
@@ -1090,7 +1095,7 @@ class RecordBehavior extends Behavior
     {
         $optionsValues = $this->CustomFieldOptions->find('list')->toArray();
         $sheets[] = [
-            'name' => $this->_table->alias(),
+            'name' => $this->_table->getAlias(),
             'table' => $this->_table,
             'query' => $this->_table->find(),
             'customFieldOptions' => $optionsValues,

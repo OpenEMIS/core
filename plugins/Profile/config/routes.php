@@ -18,3 +18,10 @@ Router::scope('/Profiles', ['plugin' => 'Profile'], function ($routes) {
         );
     });
 });
+Router::scope('/Profiles', ['plugin' => 'Profile'], function ($routes) {
+    $routes->scope('/', ['controller' => 'ProfilesController'], function ($routes) {
+        // $routes->extensions(['json']);
+
+        $routes->connect('/:key', ['action' => 'Accounts', '_method' => 'GET'], ['pass' => ['key']]);
+    });
+});

@@ -225,6 +225,7 @@ class InstitutionsController extends AppController
         $this->loadComponent('Institution.CreateUsers');
         $this->attachAngularModules();
 
+
         $this->attachAngularModulesForDirectory();
         $this->loadModel('Institution.StaffBodyMasses');
         //POCOR-5672 it is used for removing csrf token mismatch condition in save student Api
@@ -2224,7 +2225,7 @@ class InstitutionsController extends AppController
     //POCOR-5672 starts
     public function isActionIgnored(Event $event, $action)
     {
-        $pass = $this->request->pass;
+        $pass = $this->request->getParam('pass');
         if (isset($pass[0]) && $pass[0] == 'downloadFile') {
             return true;
         }
@@ -2232,14 +2233,14 @@ class InstitutionsController extends AppController
 
     public function changeUserHeader($model, $modelAlias, $userType)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         // add the student name to the header
         $id = 0;
         if ($session->check('Staff.Staff.id')) {
             $id = $session->read('Staff.Staff.id');
         }
         if (!empty($id)) {
-            $Users = TableRegistry::get('Security.Users');
+            $Users = TableRegistry::getTableLocator()->get('Security.Users');
             $entity = $Users->get($id);
             $name = $entity->name;
             $crumb = Inflector::humanize(Inflector::underscore($modelAlias));
@@ -2303,7 +2304,7 @@ class InstitutionsController extends AppController
             return;
         }
 
-        if ($action == 'Institutions' && isset($this->request->pass[0]) && $this->request->pass[0] == 'index') {
+        if ($action == 'Institutions' && isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'index') {
             if ($session->check('Institution.Institutions.search.key')) {
                 $search = $session->read('Institution.Institutions.search.key');
                 $session->delete('Institution.Institutions.id');
@@ -2331,8 +2332,8 @@ class InstitutionsController extends AppController
                     return false;
                 }
                 $session->write('Institution.Institutions.id', $id);
-            } elseif ($action == 'Institutions' && isset($this->request->pass[0]) && (in_array($this->request->pass[0], ['view', 'edit']))) {
-                $id = $this->request->pass[1];
+            } elseif ($action == 'Institutions' && isset($this->request->getParam('pass')[0]) && (in_array($this->request->getParam('pass')[0], ['view', 'edit']))) {
+                $id = $this->request->getParam('pass')[1];
                 $id = $this->ControllerAction->paramsDecode($id)['id'];
                 $this->checkInstitutionAccess($id, $event);
                 if ($event->isStopped()) {
@@ -2386,7 +2387,7 @@ class InstitutionsController extends AppController
             }
         }
         if ($action == 'dashboard') {
-            $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($this->Auth->user('id'), $id);
+            $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($this->Auth->user('id'), $id);
             $havePermission = $this->AccessControl->check(['Institutions', 'InstitutionProfileCompletness', 'view'], $roles);
             if ($havePermission) {
                 $header = $name . ' - ' . __('Institution Data Completeness');//POCOR-6022
@@ -2412,11 +2413,11 @@ class InstitutionsController extends AppController
 
     private function attachAngularModules()
     {
-        $action = $this->request->action;
+        $action = $this->getRequest()->getParam('action');
         switch ($action) {
             case 'Associations':
                 if (isset($this->request->pass[0])) {
-                    if ($this->request->param('pass')[0] == 'edit') {
+                    if ($this->getRequest()->getParam('pass')[0] == 'edit') {
                         $this->Angular->addModules([
                             'alert.svc',
                             'kd-angular-multi-select',
@@ -2622,7 +2623,6 @@ class InstitutionsController extends AppController
 
             // POCOR-3983 to disable add/edit/remove action on the model depend when inactive
             $this->getStatusPermission($model);
-
             $studentModels = [
                 'StudentProgrammes' => __('Programmes'),
                 'StudentRisks' => __('Risks'),
@@ -8430,9 +8430,8 @@ class InstitutionsController extends AppController
 
 //POCOR-7231 :: END
 
-//POCOR-6673
-    public
-    function getCurricularsTabElements($options = [])
+    //POCOR-6673
+    public function getCurricularsTabElements($options = [])
     {
         $queryString = $this->request->query('queryString');
         $tabElements = [
@@ -8448,9 +8447,8 @@ class InstitutionsController extends AppController
         return $tabElements;
     }
 
-//POCOR-6673
-    public
-    function StudentCurriculars()
+    //POCOR-6673
+    public function StudentCurriculars()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurriculars']);
     }
@@ -8459,8 +8457,7 @@ class InstitutionsController extends AppController
      * @param $classId
      * @return mixed
      */
-    private
-    function getInstitutionClassName($classId)
+    private function getInstitutionClassName($classId)
     {
         $classes_table = TableRegistry::get('Institution.InstitutionClasses');
         $myClass = $classes_table->get($classId);

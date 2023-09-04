@@ -20,7 +20,7 @@ class NavigationComponent extends Component
     public function initialize(array $config): void
     {
         $this->controller = $this->_registry->getController();
-        $this->action = $this->request->params['action'];
+        $this->action = $this->getController()->getRequest()->getParam('action');
     }
 
     public function implementedEvents(): array
@@ -116,7 +116,6 @@ class NavigationComponent extends Component
 
     public function checkPermissions(array &$navigations)
     {
-        //echo "<pre>";print_r($navigations);die;
         $linkOnly = [];
 
         //$ignoredPlugin = ['Profile']; // Plugin that will be excluded from checking //POCOR-5312
@@ -124,7 +123,6 @@ class NavigationComponent extends Component
         $roles = [];
         $restrictedTo = [];
         $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
-        //echo "<pre>";print_r($event->getResult());die;
         if ($event->getResult()) {
             $roles = $event->getResult('roles');
             $restrictedTo = $event->getResult('restrictedTo');
@@ -133,7 +131,6 @@ class NavigationComponent extends Component
         // Unset the children
         foreach ($navigations as $key => $value) {
             $rolesRestrictedTo = $roles;
-            //print_r($roles);die;
             if (isset($value['link']) && !$value['link']) {
                 $linkOnly[] = $key;
             } else {
@@ -174,14 +171,14 @@ class NavigationComponent extends Component
     public function checkSelectedLink(array &$navigations)
     {
         // Set the pass variable
-        if (!empty($this->request->pass)) {
-            $pass = $this->request->pass;
+        if (!empty($this->getController()->getRequest()->getParam('pass'))) {
+            $pass = $this->getController()->getRequest()->getParam('pass');
         } else {
             $pass[0] = '';
         }
 
         // The URL name "Controller.Action.Model or Controller.Action"
-        $controller = $this->controller->name;
+        $controller = $this->getController()->getName();
         $action = $this->action;
         $linkName = $controller . '.' . $action;
         $controllerActionLink = $linkName;
@@ -215,7 +212,7 @@ class NavigationComponent extends Component
         if (!empty($institutionId)) {
             $Institutions = TableRegistry::get('Institution.Institutions');
 
-            if ($Institutions->exists([$Institutions->primaryKey() => $institutionId])) {
+            if ($Institutions->exists([$Institutions->getPrimaryKey() => $institutionId])) {
                 $currentInstitution = $Institutions->get($institutionId);
                 $classification = $currentInstitution->classification;
 
@@ -330,8 +327,8 @@ class NavigationComponent extends Component
             'DirectoryComments',
             'DirectoryInsurances'];
         $guardianNavsControllers = [];
-        if (in_array($controller->name, $institutionControllers) || (
-                $controller->name == 'Institutions'
+        if (in_array($controller->getName(), $institutionControllers) || (
+                $controller->getName() == 'Institutions'
                 && $action != 'index'
                 && (!in_array($action, $institutionActions))
             )
@@ -586,7 +583,7 @@ class NavigationComponent extends Component
     {
         $session = $this->getController()->getRequest()->getSession();
         $id = $this->controller->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
-        $institutionId = isset($this->request->params['institutionId']) ? $this->request->params['institutionId'] : $id;
+        $institutionId = isset($this->request->getParam['institutionId']) ? $this->request->getParam['institutionId'] : $id;
         $navigation = [
             'Institutions.dashboard' => [
                 'title' => 'Dashboard',

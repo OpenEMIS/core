@@ -96,7 +96,7 @@ trait SecurityTrait
 
     public function getIdKeys(Table $model, $ids, $addAlias = true)
     {
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $model->getPrimaryKey();
         $idKeys = [];
         if (!empty($ids)) {
             if (is_array($primaryKey)) {

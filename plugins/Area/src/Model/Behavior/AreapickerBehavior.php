@@ -7,6 +7,8 @@ use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use Cake\Http\Session;
+use Cake\Http\ServerRequest;
 
 class AreapickerBehavior extends Behavior
 {
@@ -32,7 +34,7 @@ class AreapickerBehavior extends Behavior
         $fieldName = $attr['model'] . '.' . $attr['field'];
         $HtmlField = $event->getSubject();
         $data = $HtmlField->request->data;
-        //print_r($data);die;
+        $request = $HtmlField->getRequest();
         $value = isset($data[$this->_table->getAlias()][$attr['field']]) ? $data[$this->_table->getAlias()][$attr['field']] : $entity->{$attr['field']};
 
         if ($action == 'edit') {
@@ -84,12 +86,12 @@ class AreapickerBehavior extends Behavior
             $areaOptions = $areaOptions->toArray();
             $areaKeys = array_keys($areaOptions);
             $areaKeys[] = null;
-            $session = $HtmlField->request->session();
+            $session  = $HtmlField->getRequest()->session;
 
             $areaKeys = array_merge($areaKeys, [$entity->{$attr['field']}]);
             // Temporary disabled for further investigation
             // $session->write('FormTampering.'.$fieldName, $areaKeys);
-            return $event->subject()->renderElement('Area.sg_tree', ['attr' => $attr]);
+            return $event->getSubject()->renderElement('Area.sg_tree', ['attr' => $attr]);
         }
         return $value;
     }
@@ -187,13 +189,13 @@ class AreapickerBehavior extends Behavior
 
     public function getAreaLevelName($targetModel, $areaId)
     {
-        $targetTable = TableRegistry::get($targetModel);
-        $levelAssociation = Inflector::singularize($targetTable->alias()).'Levels';
+        $targetTable = TableRegistry::getTableLocator()->get($targetModel);
+        $levelAssociation = Inflector::singularize($targetTable->getAlias()).'Levels';
         $path = $targetTable
             ->find('path', ['for' => $areaId])
             ->contain([$levelAssociation])
             ->select(['level_name' => $levelAssociation.'.name', 'area_name' => $targetTable->aliasField('name')])
-            ->bufferResults(false)
+            //->bufferResults(false) // comment cakephp 4
             ->toArray();
 
         if ($targetModel == 'Area.AreaAdministratives') {

@@ -3,11 +3,11 @@ namespace InstitutionCustomField\Model\Table;
 
 use ArrayObject;
 use CustomField\Model\Table\CustomFormsTable;
-use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Http\ServerRequest;
 
 class InstitutionCustomFormsTable extends CustomFormsTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		$config['extra'] = [
 			'fieldClass' => [
 				'className' => 'InstitutionCustomField.InstitutionCustomFields',
@@ -29,7 +29,7 @@ class InstitutionCustomFormsTable extends CustomFormsTable {
 		parent::initialize($config);
 	}
 
-	public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, ServerRequest $request) {
 		$module = $this->CustomModules
 			->find()
 			->where([$this->CustomModules->aliasField('code') => 'Institution'])

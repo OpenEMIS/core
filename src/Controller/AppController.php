@@ -43,14 +43,14 @@ class AppController extends Controller
     use SecurityTrait;
 
     private $productName = 'OpenEMIS Core';
-    public $helpers = [
+    /*public $helpers = [
         'Text',
 
         // Custom Helper
         'ControllerAction.ControllerAction',
         'OpenEmis.Navigation',
         'OpenEmis.Resource'
-    ];
+    ];*/
 
     private $webhookListUrl = [
         'plugin' => 'Webhook',
@@ -275,6 +275,12 @@ class AppController extends Controller
         //     $this->set('_serialize', true);
         // }
         $this->set('_serialize', true);
+        
+        $this->viewBuilder()->addHelper('Text');
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+        $this->viewBuilder()->addHelper('ControllerAction.HtmlField');
+        $this->viewBuilder()->addHelper('OpenEmis.Navigation');
+        $this->viewBuilder()->addHelper('OpenEmis.Resource');
     }
 
     // Triggered from LocalizationComponent

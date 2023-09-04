@@ -13,13 +13,13 @@ class AccountsTable extends AppTable
 {
     private $targetField = null;
 
-	public function initialize(array $config)
+	public function initialize(array $config): void
     {
 		$this->addBehavior('User.Account');
 		parent::initialize($config);
 	}
 
-	public function validationDefault(Validator $validator)
+	public function validationDefault(Validator $validator): Validator
     {
 		$validator = parent::validationDefault($validator);
 		return $validator

@@ -97,7 +97,7 @@ class ProfilesTable extends ControllerActionTable
                 'last' => true
             ])
             ;
-        $BaseUsers = TableRegistry::get('User.Users');
+        $BaseUsers = TableRegistry::getTableLocator()->get('User.Users');
         return $BaseUsers->setUserValidation($validator, $this);
     }
     
@@ -109,7 +109,7 @@ class ProfilesTable extends ControllerActionTable
         // Case 2: if user has more than one identity and also has more than one nationality, and no one is linked to any nationality, then, check, if any nationality has default identity, then show that identity else show the first identity.
         // Case 3: if user has more than one identity (no one is linked to nationality), show the first
 
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::getTableLocator()->get('user_identities');
         $user_identities = $users_ids->find()
         ->select(['number','nationality_id'])
         ->where([
@@ -117,7 +117,7 @@ class ProfilesTable extends ControllerActionTable
         ])
         ->all();
         
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::getTableLocator()->get('user_identities');
         $user_id_data = $users_ids->find()
         ->select(['number'])
         ->where([                
@@ -132,7 +132,7 @@ class ProfilesTable extends ControllerActionTable
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('nationalities');
+            $nationalities = TableRegistry::getTableLocator()->get('nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -179,7 +179,7 @@ class ProfilesTable extends ControllerActionTable
     // POCOR-5684
     public function onGetIdentityTypeID(Event $event, Entity $entity)
     {
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::getTableLocator()->get('user_identities');
         $user_identities = $users_ids->find()
         ->select(['number','nationality_id'])
         ->where([
@@ -542,6 +542,7 @@ class ProfilesTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        //print_r($entity);die;
         // Remove back toolbarButton
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         unset($toolbarButtonsArray['back']);
@@ -581,8 +582,7 @@ class ProfilesTable extends ControllerActionTable
     }
 
     private function setupTabElements($entity) {
-        die('sdsd');
-        $id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
+        $id = !is_null($this->request->getQuery('id')) ? $this->request->getQuery('id') : 0;
 
         $options = [
             // 'userRole' => 'Student',
@@ -593,6 +593,25 @@ class ProfilesTable extends ControllerActionTable
 
         $tabElements = $this->controller->getUserTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'first_name') {
+            return __('First Name');
+        }else if ($field == 'middle_name') {
+            return __('Middle Name');
+        }else if ($field == 'third_name') {
+            return __('Third Name');
+        }else if ($field == 'last_name') {
+            return __('Last Name');
+        } else if ($field == 'gender_id') {
+            return  __('Gender');
+        }  else if ($field == 'date_of_birth') {
+            return  __('Date of Birth');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

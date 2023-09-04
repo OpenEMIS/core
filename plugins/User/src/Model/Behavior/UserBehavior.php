@@ -540,12 +540,12 @@ class UserBehavior extends Behavior
         // const GUARDIAN = 3;
         // const OTHER = 4;
         $userType = 0;
-        if (isset($this->_table->request->data[$this->_table->alias()]['user_type'])) {
-            $userType = $this->_table->request->data[$this->_table->alias()]['user_type'];
+        if (isset($this->_table->request->data[$this->_table->getAlias()]['user_type'])) {
+            $userType = $this->_table->request->data[$this->_table->getAlias()]['user_type'];
         }
         $tableClass = get_class($this->_table);
         $value = '';
-        $alias = $this->_table->alias();
+        $alias = $this->_table->getAlias();
         if ($alias == 'Students' || $alias == 'StudentUser' || ($alias == 'Directories' && $userType == $tableClass::STUDENT)) {
             $value = $this->defaultStudentProfileView;
         } else if ($alias == 'Staff' || $alias == 'StaffUser' || ($alias == 'Directories' && $userType == $tableClass::STAFF)) {

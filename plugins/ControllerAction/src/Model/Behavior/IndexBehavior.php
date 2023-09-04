@@ -115,10 +115,13 @@ class IndexBehavior extends Behavior
                         $session->write($alias.'.search.limit', $limit);
                     }
                 }
+                //cakephp4 add
+                $request->data['Search']['limit'] = $limit;
             }
 
-            $request->data['Search']['limit'] = $limit;
+            
             $extra['options']['limit'] = $pageOptions[$limit];
+            //$request->data['Search']['limit'] = $limit;
         }
 
         if ($event->isStopped()) {
