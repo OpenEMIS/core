@@ -1122,7 +1122,7 @@ class SurveyRepository extends Controller
                 // build survey records than check if the record don't exist, it is a invalid combination
                 $buildSurveyRecords = $this->buildSurveyRecords($institutionId, $formId, $periodId);
 
-                
+                //dd("institutionId: ".$institutionId, "formId: ".$formId, "periodId: ".$periodId);
                 $institutionSurveyResults = InstitutionSurveys::with('status')->where('survey_form_id', $formId)->where('institution_id', $institutionId)->where('academic_period_id', $periodId)->first();
 
                 if(empty($institutionSurveyResults)){
@@ -1142,7 +1142,7 @@ class SurveyRepository extends Controller
                     return 4; //'Survey is already completed'
                 }
                 
-                $update = InstitutionSurveys::where('survey_form_id', $formId)->where('institution_id', $institutionId)->where('academic_period_id', $periodId)->update(['modified_user_id' => $userId]);
+                $update = InstitutionSurveys::where('survey_form_id', $formId)->where('institution_id', $institutionId)->where('academic_period_id', $periodId)->update(['modified_user_id' => $userId, 'modified' => Carbon::now()->toDateTimeString()]);
 
 
                 // Delete relevance questions
@@ -1206,6 +1206,7 @@ class SurveyRepository extends Controller
             return 1;
         } catch (\Exception $e) {
             DB::rollback();
+            
             Log::error(
                 'Failed to upload survey xform.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1511,7 +1512,7 @@ class SurveyRepository extends Controller
             $excludedModels = ['Cases.InstitutionCases'];
 
             /*if (in_array($workflowModel->model, $excludedModels) && !is_null($entity) && $entity->has('workflow_rule_id') && !empty($entity->workflow_rule_id)) {
-                dd("ifffff");
+                
                 $workflowRuleId = $entity->workflow_rule_id;
                 $workflowIdsQuery->matching('WorkflowRules', function ($q) use ($workflowRuleId) {
                     return $q->where([
@@ -1525,19 +1526,12 @@ class SurveyRepository extends Controller
             $workflowQuery = Workflows::with('WorkflowSteps', 'WorkflowSteps.WorkflowActions');
 
             if (empty($workflowModel->filter)) {
+                //dd("if");
                 $workflowQuery = $workflowQuery->whereIn('id', $workflowIds);
             } else {
-                // Filter key
-                /*list(, $base) = pluginSplit($workflowModel->filter);
-                $filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
-
+                //dd("else");
+                
                 $workflowId = 0;
-                if (empty($filterId)) {
-                    if (!is_null($entity) && $entity->has($filterKey)) {
-                        $filterId = $entity->{$filterKey};
-                    }
-                }*/
-
                 if (!is_null($filterId)) {
                     //$conditions = [$this->WorkflowsFilters->aliasField('workflow_id IN') => $workflowIds];
 
