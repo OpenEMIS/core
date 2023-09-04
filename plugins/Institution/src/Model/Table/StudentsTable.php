@@ -781,9 +781,11 @@ class StudentsTable extends ControllerActionTable
     {
         $affected = 0;
         if ($student_id) {
+
             $table_name = 'security_group_users';
             $field_name = 'security_user_id';
             $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+
             $table_name = 'institution_class_students';
             $field_name = 'student_id';
             $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
@@ -799,7 +801,6 @@ class StudentsTable extends ControllerActionTable
             $table_name = 'institution_competency_results';
             $field_name = 'student_id';
             $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
-
 
             $table_name = 'institution_student_absences';
             $field_name = 'student_id';
@@ -864,7 +865,6 @@ class StudentsTable extends ControllerActionTable
             $table_name = 'student_report_cards';
             $field_name = 'student_id';
             $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
-
 
         }
 
