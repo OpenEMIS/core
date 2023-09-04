@@ -3172,9 +3172,9 @@ class StudentsTable extends ControllerActionTable
 
     private function removeFromTable($student_id, $table_name, $field_name)
     {
-        $SecurityGroupUsers = TableRegistry::get($table_name);
-        $affected = $SecurityGroupUsers->deleteAll([
-            $SecurityGroupUsers->aliasField($field_name) => $student_id
+        $tableToClean = TableRegistry::get($table_name);
+        $affected = $tableToClean->deleteAll([
+            $tableToClean->aliasField($field_name) => $student_id
         ]);
         return $affected;
     }
