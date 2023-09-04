@@ -11,12 +11,14 @@ use Cake\I18n\I18n;
 use Cake\ORM\Table;
 use Cake\Utility\Security;
 use Cake\Utility\Text;
+use Cake\Http\Session;
 
 use ControllerAction\Model\Traits\SecurityTrait;
 
 class ControllerActionHelper extends Helper
 {
     use SecurityTrait;
+    protected $session;
     public $helpers = ['Html', 'ControllerAction.HtmlField', 'Form', 'Paginator', 'Label', 'Url'];
 
     public function getColumnLetter($columnNumber)
@@ -181,6 +183,10 @@ class ControllerActionHelper extends Helper
         $table = null;
         $request = $this->_View->getRequest();
         $session = $request->getSession();
+        //Comment session Ehteram
+        /*$this->_session = new Session();
+        $session =$this->_session;*/
+
         $language = $session->read('System.language');
 
         foreach ($fields as $field => $attr) {
@@ -301,11 +307,11 @@ class ControllerActionHelper extends Helper
             if (isset($attr['tableColumnClass'])) {
                 $row[] = [$value, ['class' => $attr['tableColumnClass']]];
             } else {
-                $row[] =  __($value);
+                $row[] = isset($value)?  __($value): $value;
             }
         }
 
-        $model =TableRegistry::getTableLocator()->get($entity->getSource());
+        $model = TableRegistry::getTableLocator()->get($entity->getSource());
         $primaryKeys = $model->getPrimaryKey();
         $primaryKeyValue = [];
         if (is_array($primaryKeys)) {
@@ -365,7 +371,7 @@ class ControllerActionHelper extends Helper
         $html = '';
         $config = $this->_View->get('ControllerAction');        
         if (!is_null($config['pageOptions'])) {
-            $pageOptions = $config['pageOptions']; 
+            $pageOptions = $config['pageOptions'];
             if (!empty($pageOptions)) {
                 $html .= $this->Form->input('Search.limit', [
                     'label' => false,
@@ -375,6 +381,7 @@ class ControllerActionHelper extends Helper
                 ]);
             }
         }
+        // echo "<pre>";print_r($html);die;
         //ENDS: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         return $html;
     }

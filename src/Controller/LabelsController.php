@@ -7,10 +7,10 @@ use App\Controller\PageController;
 
 class LabelsController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
-
+        $this->loadComponent('Page.Page');
         $this->Page->loadElementsFromTable($this->Labels);
         $this->Page->disable(['add', 'delete']);
     }

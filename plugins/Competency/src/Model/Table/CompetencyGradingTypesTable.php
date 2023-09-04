@@ -13,9 +13,9 @@ use App\Model\Table\ControllerActionTable;
 
 class CompetencyGradingTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('competency_grading_types');
+        $this->setTable('competency_grading_types');
 
         parent::initialize($config);
         $this->hasMany('Criterias', ['className' => 'Competency.CompetencyCriterias']);
@@ -28,7 +28,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

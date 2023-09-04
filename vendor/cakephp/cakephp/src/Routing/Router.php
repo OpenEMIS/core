@@ -492,9 +492,16 @@ class Router
             if ($full && isset($url['_scheme']) && !isset($url['_host'])) {
                 $url['_host'] = $context['_host'];
             }
-            
-            $output = static::$_collection->match($url, $context);
-           
+            $context['params'] = $params;
+            /*if($params['plugin'] == 'Profile'){
+                $output = "/";
+            }else{
+                $output = static::$_collection->match($url, $context);
+            }*/
+           //echo "<pre>"; print_r($url);die;
+             $output = static::$_collection->match($url, $context);
+            // $output = "/";
+             //echo "<pre>";print_r($output);die;
         } else {
             $url = (string)$url;
 

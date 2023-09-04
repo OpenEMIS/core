@@ -9,6 +9,7 @@ use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -704,6 +705,7 @@ class EducationGradesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $serverRequest = new ServerRequest();
         /*list($levelOptions, $selectedLevel, $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $this->controller->set(compact('levelOptions', 'selectedLevel', 'programmeOptions', 'selectedProgramme'));
@@ -714,17 +716,17 @@ class EducationGradesTable extends ControllerActionTable
         // Academic period filter
         $EducationSystems = TableRegistry::get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ?$serverRequest->getAttribute('query')['academic_period_id'] : $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
         //level filter
         $levelOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
         if (!empty($levelOptions)) {
-            $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+            $selectedLevel = !empty($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
         } else{
             $levelOptions = ['0' => '-- '.__('No Education Level').' --'] + $levelOptions;
-            $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : 0;
+            $selectedLevel = !empty($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : 0;
         }
 
         $this->controller->set(compact('levelOptions', 'selectedLevel'));
@@ -754,13 +756,13 @@ class EducationGradesTable extends ControllerActionTable
                 $EducationProgrammes->aliasField('education_cycle_id') . ' IN (' .  $cycleIds . ')'
             ])
             ->toArray();
-        $selectedProgramme = !is_null($this->request->query('programme')) ? $this->request->query('programme') : key($programmeOptions);
+        $selectedProgramme = !is_null($serverRequest->getAttribute('query')['programme']) ? $serverRequest->getAttribute('query')['programme'] : key($programmeOptions);
         $programmeOptions = $programmeOptions;
         if (!empty($programmeOptions )) {
-            $selectedProgramme = !empty($this->request->query('programme')) ? $this->request->query('programme') : key($programmeOptions);
+            $selectedProgramme = !empty($serverRequest->getAttribute('query')['programme']) ? $serverRequest->getAttribute('query')['programme'] : key($programmeOptions);
         } else {
             $programmeOptions = ['0' => '-- '.__('No Education Programme').' --'] + $programmeOptions;
-            $selectedProgramme = !empty($this->request->query('programme')) ? $this->request->query('programme') : 0;
+            $selectedProgramme = !empty($serverRequest->getAttribute('query')['programme']) ?$serverRequest->getAttribute('query')['programme'] : 0;
         }
 
         $this->controller->set(compact('programmeOptions', 'selectedProgramme'));
@@ -803,7 +805,7 @@ class EducationGradesTable extends ControllerActionTable
     public function onGetCustomSubjectElement(Event $event, $action, $entity, $attr, $options=[])
     {
         if ($action == 'index') {
-            $EducationGradesSubjects = TableRegistry::get('EducationGradesSubjects');
+            $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
             $value = $EducationGradesSubjects
                 ->findByEducationGradeId($entity->id)
                 ->where([$EducationGradesSubjects->aliasField('visible') => 1])
@@ -844,10 +846,11 @@ class EducationGradesTable extends ControllerActionTable
             $attr['tableCells'] = $tableCells;
         }
 
-        return $event->subject()->renderElement('Education.subjects', ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Education.subjects', ['attr' => $attr]);
     }
 
-    public function onUpdateFieldAdmissionAge(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAdmissionAge(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAdmissionAge(Event $event, array $attr, $action)
     {
         list(, , $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
 
@@ -883,7 +886,8 @@ class EducationGradesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationStageId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldEducationStageId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationStageId(Event $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
             $stageOptions = $this->EducationStages
@@ -918,15 +922,16 @@ class EducationGradesTable extends ControllerActionTable
 
     public function _getSelectOptions()
     {
+        $serverRequest = new ServerRequest();
         // Academic period filter
         $EducationSystems = TableRegistry::get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
         //Return all required options and their key
         $levelOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
-        $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+        $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
 
         $cycleIds = $this->EducationProgrammes->EducationCycles
             ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
@@ -953,7 +958,7 @@ class EducationGradesTable extends ControllerActionTable
                 $EducationProgrammes->aliasField('education_cycle_id') . ' IN (' .  $cycleIds . ')'
             ])
             ->toArray();
-        $selectedProgramme = !is_null($this->request->query('programme')) ? $this->request->query('programme') : key($programmeOptions);
+        $selectedProgramme = !is_null($serverRequest->getAttribute('query')['programme']) ? $serverRequest->getAttribute('query')['programme'] : key($programmeOptions);
 
         return compact('levelOptions', 'selectedLevel', 'programmeOptions', 'selectedProgramme');
     }

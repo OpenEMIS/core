@@ -9,7 +9,7 @@ use Cake\ORM\TableRegistry;
 
 class SecuritiesController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
@@ -27,6 +27,11 @@ class SecuritiesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.SecurityRoles']);
     }
     // end
+
+    public function Users()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.Users']);
+    }
 
     public function Permissions($subaction = 'index', $roleId = null)
     {
@@ -166,4 +171,11 @@ class SecuritiesController extends AppController
 
         return $this->TabPermission->checkTabPermission($tabElements);
     }
+
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+    }
+
 }

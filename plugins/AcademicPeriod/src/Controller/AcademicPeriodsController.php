@@ -8,7 +8,7 @@ use Cake\ORM\Table;
 
 class AcademicPeriodsController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
@@ -22,6 +22,11 @@ class AcademicPeriodsController extends AppController
     public function Levels()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'AcademicPeriod.AcademicPeriodLevels']);
+    }
+
+    public function Periods()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'AcademicPeriod.AcademicPeriods']);
     }
 
     public function beforeFilter(Event $event)

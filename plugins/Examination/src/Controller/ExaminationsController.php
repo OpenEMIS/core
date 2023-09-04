@@ -9,7 +9,7 @@ use Cake\Utility\Inflector;
 
 class ExaminationsController extends AppController
 {
-	public function initialize() {
+	public function initialize(): void {
         parent::initialize();
         $this->ControllerAction->models = [
             'ImportResults' => ['className' => 'Examination.ImportResults', 'actions' => ['add']],
@@ -44,7 +44,7 @@ class ExaminationsController extends AppController
 
     public function beforeFilter(Event $event) {
         parent::beforeFilter($event);
-        $action = $this->request->params['action'];
+        $action = $this->request->getParam('action');
 
         if ($action == 'Results') {
             $header = __('Examination');
@@ -69,7 +69,7 @@ class ExaminationsController extends AppController
 
         $persona = false;
         $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
-        $event = $model->eventManager()->dispatch($event);
+        $event = $model->getEventManager()->dispatch($event);
     }
 
     public function getExamsTab()
@@ -169,5 +169,11 @@ class ExaminationsController extends AppController
                 ]);
                 break;
         }
+    }
+
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 }

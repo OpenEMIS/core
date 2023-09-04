@@ -11,7 +11,7 @@ use App\Model\Table\ControllerActionTable;
 
 class OutcomeGradingTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasMany('Criterias', [
@@ -35,7 +35,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator

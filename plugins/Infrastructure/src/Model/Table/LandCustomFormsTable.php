@@ -8,7 +8,7 @@ use Cake\Event\Event;
 
 class LandCustomFormsTable extends CustomFormsTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $config['extra'] = [
             'fieldClass' => [
@@ -28,7 +28,7 @@ class LandCustomFormsTable extends CustomFormsTable
                 'dependent' => true
             ]
         ];
-        $this->table('infrastructure_custom_forms');
+        $this->setTable('infrastructure_custom_forms');
         parent::initialize($config);
         $this->addBehavior('Infrastructure.Pages', ['module' => 'Land']);
         $this->setDeleteStrategy('restrict');

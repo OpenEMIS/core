@@ -18,7 +18,7 @@ use Cake\Utility\Security;
 class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -52,7 +52,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
         $this->addBehavior('CompositeKey');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -72,7 +72,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
             ->requirePresence('auto_assign_to_room');
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         $events['Model.Examinations.afterUnregister'] = 'examinationsAfterUnregister';

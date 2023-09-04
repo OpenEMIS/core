@@ -10,12 +10,13 @@ class LocalesController extends PageController
 {
     private $officialLanguages = ['ar', 'zh', 'en', 'fr', 'ru', 'es'];
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
+        $this->loadComponent('Page.Page');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.Page.getEntityDisabledActions'] = 'getEntityDisabledActions';

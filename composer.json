@@ -77,7 +77,7 @@
             "CustomExcel\\": "plugins/CustomExcel/src/",
             "Competency\\": "plugins/Competency/src/",
             "ReportCard\\": "plugins/ReportCard/src/",
-            "ReProfilest\\": "plugins/Profile/src/",
+            "Profile\\": "plugins/Profile/src/",
             "Transport\\": "plugins/Transport/src/",
             "Installer\\": "plugins/Installer/src/",
             "Quality\\": "plugins/Quality/src/",
@@ -99,9 +99,13 @@
             "GuardianNav\\": "plugins/GuardianNav/src/",
             "OAuth\\": "plugins/OAuth/src/",
             "Archive\\": "plugins/Archive/src/",
+<<<<<<< HEAD
             "Profile\\": "plugins/Profile/src/",
             "Manuals\\": "./plugins/Manuals/src",
             "Report\\": "./plugins/Report/src"
+=======
+            "KORDITPTELTD\\IKSSO-CAKEPHP-SSO\\": "./vendor/korditpteltd/iksso-cakephp-sso/src"
+>>>>>>> origin/POCOR-7485-E
         }
     },
     "autoload-dev": {
@@ -110,7 +114,9 @@
             "Cake\\Test\\": "./vendor/cakephp/cakephp/tests",
             "ControllerAction\\Test\\": "./plugins/ControllerAction/tests",
             "OAuth\\Test\\": "./plugins/OAuth/tests",
-            "Archive\\Test\\": "./plugins/Archive/tests"
+            "Archive\\Test\\": "./plugins/Archive/tests",
+            "KORDITPTELTD\\IKPGE-CAKEPHP-PAGE\\": "./vendor/korditpteltd/ikpge-cakephp-page/src",
+            "KORDITPTELTD\\IKSSO-CAKEPHP-SSO\\": "./vendor/korditpteltd/iksso-cakephp-sso/src"
         }
     },
     "scripts": {

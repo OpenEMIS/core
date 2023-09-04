@@ -9,7 +9,7 @@ use Cake\Event\Event;
 
 class TrainingsController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadComponent('Paginator');
@@ -55,4 +55,11 @@ class TrainingsController extends AppController
         }
         return $this->TabPermission->checkTabPermission($tabElements);
     }
+
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+    }
+
 }

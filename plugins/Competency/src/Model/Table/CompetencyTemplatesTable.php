@@ -9,12 +9,13 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
 class CompetencyTemplatesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -35,7 +36,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         $this->addBehavior('Import.ImportLink', ['import_model'=>'ImportCompetencyTemplates']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -58,7 +59,8 @@ class CompetencyTemplatesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+        $serverRequest = new ServerRequest();
+        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($serverRequest->getAttribute('query')['period']));
 
         $extra['selectedPeriod'] = $selectedPeriod;
         $extra['elements']['control'] = [

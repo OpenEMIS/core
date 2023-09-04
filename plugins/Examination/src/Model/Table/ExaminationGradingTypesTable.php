@@ -14,7 +14,7 @@ use App\Model\Traits\OptionsTrait;
 class ExaminationGradingTypesTable extends ControllerActionTable {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -28,7 +28,7 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
 
         $validator

@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\I18n\Time;//POCOR-6841
 use Cake\I18n\Date;//POCOR-6841
 use DateTime;//POCOR-6785
+use Cake\Http\ServerRequest;
 
 class ReportCardProcessesTable extends ControllerActionTable
 {
@@ -18,7 +19,7 @@ class ReportCardProcessesTable extends ControllerActionTable
     const COMPLETED = 3;
     const ERROR = -1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -57,14 +58,14 @@ class ReportCardProcessesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-
+        $serverRequest = new ServerRequest();
        //POCOR_7319 starts
         $where=[];
 
         //Status Filter
         $ReportStatus=$this->getStatusList();
         $reportCardStatusOptions=['-1' => __(' All Status ')] + $ReportStatus;
-        $selectedReportStatus = !is_null($this->request->query('status')) ? $this->request->query('status') :-1 ;
+        $selectedReportStatus = !is_null($serverRequest->getAttribute('query')['status']) ? $serverRequest->getAttribute('query')['status'] :-1 ;
         $this->controller->set(compact( 'reportCardStatusOptions','selectedReportStatus'));
 
         foreach($reportCardStatusOptions AS $key =>$reportCardSatusOptionsData ){
@@ -84,7 +85,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         $areaOptions = $Areas->find('list')
              ->toArray();
         $areaOptions = ['-1' => __(' All Areas ')] + $areaOptions;
-        $selectedArea = !is_null($this->request->query('area_id')) ? $this->request->query('area_id') : -1;
+        $selectedArea = !is_null($serverRequest->getAttribute('query')['area_id']) ? $serverRequest->getAttribute('query')['area_id'] : -1;
         $this->controller->set(compact('areaOptions', 'selectedArea'));
 
         foreach($areaOptions AS $key => $areaOptionsData){
@@ -93,7 +94,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         //End
 
         //Institution Filter
-        $Institutions = TableRegistry::get('Institutions');
+        $Institutions = TableRegistry::get('Institution.Institutions');
         $institutionOptions = [];
         if($selectedArea == -1){
             $institutionOptions = $Institutions->find('list')
@@ -123,7 +124,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         }
 
         $institutionOptions = ['-1' => __('All Institution')] + $institutionOptions;
-        $selectedInstitution = !is_null($this->request->query('institution_id')) ? $this->request->query('institution_id') : -1;
+        $selectedInstitution = !is_null($serverRequest->getAttribute('query')['institution_id']) ?$serverRequest->getAttribute('query')['institution_id'] : -1;
         $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
 
 
@@ -137,8 +138,8 @@ class ReportCardProcessesTable extends ControllerActionTable
         //End
 
         //Education grade Filter
-         $InstitutionGrades = TableRegistry::get('institution_grades');
-         $EducationGrades=TableRegistry::get('education_grades');
+         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+         $EducationGrades=TableRegistry::get('Education.EducationGrades');
          $EducationGradeOptions = [];
          $educationGradeList=[];
          if($selectedInstitution == -1){
@@ -173,7 +174,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         }
 
         $EducationGradeOptions = ['-1' => __('All Education Grades')] + $EducationGradeOptions;
-        $selectedEducationGrade = !is_null($this->request->query('education_grade_id')) ? $this->request->query('education_grade_id') : -1;
+        $selectedEducationGrade = !is_null($serverRequest->getAttribute('query')['education_grade_id']) ?$serverRequest->getAttribute('query')['education_grade_id'] : -1;
         $EducationGradeOptions=array_unique($EducationGradeOptions);
         $this->controller->set(compact('EducationGradeOptions', 'selectedEducationGrade'));
 
@@ -197,7 +198,7 @@ class ReportCardProcessesTable extends ControllerActionTable
         $timeZone= $ConfigItems->value("time_zone");
         date_default_timezone_set($timeZone);//POCOR-7067 Ends
         //Start:POCOR-6785 need to convert this custom query to cake query
-        $ReportCardProcessesTable = TableRegistry::get('report_card_processes');
+        $ReportCardProcessesTable = TableRegistry::get('ReportCard.ReportCardProcesses');
         $entitydata = $ReportCardProcessesTable->find('all',['conditions'=>[
                 'status !=' =>'-1'
         ]])->where([$ReportCardProcessesTable->aliasField('modified IS NOT NULL')])->toArray();

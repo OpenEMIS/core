@@ -463,8 +463,8 @@ class TrainingSessionResultsTable extends ControllerActionTable
 
 	public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->openStatusIds = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'OPEN');
-        $this->approvedStatusIds = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'APPROVED');
+        $this->openStatusIds = $this->Workflow->getStepsByModelCode($this->getRegistryAlias(), 'OPEN');
+        $this->approvedStatusIds = $this->Workflow->getStepsByModelCode($this->getRegistryAlias(), 'APPROVED');
 
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Administration','Results','Trainings');       
@@ -626,7 +626,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
         $sessions = $this->Training->getSessionList();
 
         $openStatusId = null;
-        $workflow = $this->getWorkflow($this->registryAlias());
+        $workflow = $this->getWorkflow($this->getRegistryAlias());
         if (!empty($workflow)) {
             foreach ($workflow->workflow_steps as $workflowStep) {
                 if ($workflowStep->category == self::TO_DO && $workflowStep->is_system_defined == 1) {

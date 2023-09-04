@@ -396,7 +396,7 @@ class UserBehavior extends Behavior
             ]);
         }
 
-        if ($this->_table->getAlias() == 'security_users') {
+        if ($this->_table->getTable() == 'security_users') {
             if ($this->isCAv4()) {
                 $this->_table->field('name', ['order' => 3, 'sort' => ['field' => 'first_name']]);
             } else {
@@ -412,7 +412,6 @@ class UserBehavior extends Behavior
     {
         $extra['auto_search'] = false;
         // $extra['auto_contain'] = false;
-
         $table = $query->getRepository()->getTable();
         if ($table != 'security_users') {
             $query->matching('Users');

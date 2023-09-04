@@ -9,12 +9,13 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
+use Cake\Http\ServerRequest;
 
 class CompetencyPeriodsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('competency_periods');
+        $this->setTable('competency_periods');
 
         parent::initialize($config);
 
@@ -40,7 +41,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -67,10 +68,11 @@ class CompetencyPeriodsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $serverRequest = new ServerRequest();
         $request = $this->request;
 
         //academic period filter
-        $extra['selectedPeriod'] = !empty($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent();
+        $extra['selectedPeriod'] = !empty($serverRequest->getAttribute('query')['period']) ?$serverRequest->getAttribute('query')['period'] : $this->AcademicPeriods->getCurrent();
         $data['periodOptions'] = $this->AcademicPeriods->getYearList();
         $data['selectedPeriod'] = $extra['selectedPeriod'];
 
@@ -84,8 +86,8 @@ class CompetencyPeriodsTable extends ControllerActionTable
             $templateOptions = ['0' => '-- '.__('All Templates').' --'] + $templateOptions;
         }
 
-        if ($request->query('template')) {
-            $selectedTemplate = $request->query('template');
+        if ($serverRequest->getAttribute('query')['template']) {
+            $selectedTemplate =$serverRequest->getAttribute('query')['template'];
         } else {
             $selectedTemplate = 0;
         }

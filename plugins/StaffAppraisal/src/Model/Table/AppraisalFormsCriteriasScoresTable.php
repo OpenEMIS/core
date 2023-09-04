@@ -17,7 +17,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
     const FORMULA_SUM = "SUM";
     const FORMULA_AVG = "AVG";
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasOne('AppraisalFormsCriterias', [

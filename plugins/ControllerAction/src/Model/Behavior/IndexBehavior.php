@@ -80,10 +80,10 @@ class IndexBehavior extends Behavior
                             ->where([
                               $ConfigItemsTable->aliasField('option_type') => 'list_page'
                                    ]);
-         
         foreach ($ConfigItem->toArray() as $defaultval) {
                      $defaultvals = $defaultval['listvalue'];
         }
+        $defaults = 5;
         if($defaultvals == 10){
             $defaults = 0;
         }elseif($defaultvals == 20){
@@ -147,7 +147,6 @@ class IndexBehavior extends Behavior
                 $query->contain($contain);
             }
         }
-
         $data = [];
         if ($hasQuery) {
             if ($extra['pagination']) {

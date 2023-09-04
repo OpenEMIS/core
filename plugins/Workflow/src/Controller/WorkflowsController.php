@@ -8,15 +8,16 @@ use Cake\ORM\Table;
 use Cake\Event\Event;
 use Cake\Core\Configure;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 
 class WorkflowsController extends AppController
 {
-	public function initialize()
+	public function initialize(): void
     {
 		parent::initialize();
 
         $this->ControllerAction->models = [
-            'Workflows' => ['className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']],
+            // 'Workflows' => ['className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']],
             'Steps' => ['className' => 'Workflow.WorkflowSteps', 'options' => ['deleteStrategy' => 'restrict']],
             'Actions' => ['className' => 'Workflow.WorkflowActions'],
             'Statuses' => ['className' => 'Workflow.WorkflowStatuses'],
@@ -27,6 +28,14 @@ class WorkflowsController extends AppController
     // CAv4
     public function Rules() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowRules']); }
     // End
+
+    public function Workflows() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'transfer']]); }
+
+    public function Steps() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.Workflows', 'options' => ['deleteStrategy' => 'restrict']]); }
+
+    public function Actions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowActions']); }
+
+    public function Statuses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowStatuses']); }
 
     public function beforeFilter(Event $event)
     {
@@ -186,7 +195,9 @@ class WorkflowsController extends AppController
 
     private function paramsQuery($keys=[])
     {
-        $requestQuery = $this->request->query;
+        $serverRequest = new ServerRequest();
+        // $requestQuery = $this->request->query;
+        $requestQuery = $serverRequest->getAttribute('query');
 
         if (!empty($keys)) {
             $params = [];
@@ -203,4 +214,11 @@ class WorkflowsController extends AppController
 
         return $requestQuery;
     }
+
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+    }
+
 }

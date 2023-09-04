@@ -16,10 +16,10 @@ class CalendarsController extends PageController
     private $academicPeriodOptions = [];
     private $calendarTypeOptions = [];
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
-
+        $this->loadComponent('Page.Page');
         $this->loadModel('CalendarTypes');
         $this->loadModel('CalendarEventDates');
         $this->loadModel('AcademicPeriod.AcademicPeriods');
@@ -28,7 +28,7 @@ class CalendarsController extends PageController
         $this->Page->disable(['search']); // to disable the search function
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderStartDate'] = 'onRenderStartDate';
@@ -172,7 +172,7 @@ class CalendarsController extends PageController
         $academicPeriodId = !empty($requestQuery['querystring']) ? $this->Page->decode($requestQuery['querystring']): $this->AcademicPeriods->getCurrent();
         $page->setQueryString('academic_period_id', $academicPeriodId);
 
-        parent::index();
+        // parent::index();
     }
 
     public function view($id)

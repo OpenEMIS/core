@@ -14,9 +14,9 @@ class StudentAttendanceTypesTable extends AppTable
     const DAY = 1;
     const SUBJECT = 2;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_attendance_types');
+        $this->setTable('student_attendance_types');
         parent::initialize($config);
 
         $this->hasMany('StudentAttendanceMarkTypes', ['className' => 'Attendance.StudentAttendanceMarkTypes', 'dependent' => true, 'cascadeCallbacks' => true]);

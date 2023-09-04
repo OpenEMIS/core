@@ -11,6 +11,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
+use Cake\Http\ServerRequest;
 
 class EducationProgrammesTable extends ControllerActionTable {
 
@@ -153,6 +154,7 @@ class EducationProgrammesTable extends ControllerActionTable {
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+        $serverRequest = new ServerRequest();
         /*list($academicPeriodOptions, $selectedAcademicPeriod, $levelOptions, $selectedLevel, $cycleOptions, $selectedCycle) = array_values($this->getSelectOptions());
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod','levelOptions', 'selectedLevel', 'cycleOptions', 'selectedCycle'));
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
@@ -161,17 +163,17 @@ class EducationProgrammesTable extends ControllerActionTable {
         // Academic period filter
         $EducationSystems = TableRegistry::get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $this->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
         //level filter
         $levelOptions = $this->EducationCycles->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
         if (!empty($levelOptions)) {
-            $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+            $selectedLevel = !empty($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
         } else{
             $levelOptions = ['0' => '-- '.__('No Education Level').' --'] + $levelOptions;
-            $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : 0;
+            $selectedLevel = !empty($serverRequest->getAttribute('query')['level']) ?$serverRequest->getAttribute('query')['level'] : 0;
         }
 
         $this->controller->set(compact('levelOptions', 'selectedLevel'));
@@ -182,14 +184,14 @@ class EducationProgrammesTable extends ControllerActionTable {
                 ->find('order')
                 ->where([$this->EducationCycles->aliasField('education_level_id') => $selectedLevel])
                 ->toArray();
-        $selectedCycle = !is_null($this->request->query('cycle')) ? $this->request->query('cycle') : key($cycleOptions);
+        $selectedCycle = !is_null($serverRequest->getAttribute('query')['cycle']) ? $serverRequest->getAttribute('query')['cycle'] : key($cycleOptions);
 
         $cycleOptions = $cycleOptions;
         if (!empty($cycleOptions)) {
-            $selectedCycle = !empty($this->request->query('cycle')) ? $this->request->query('cycle') : key($cycleOptions);
+            $selectedCycle = !empty($serverRequest->getAttribute('query')['cycle']) ? $serverRequest->getAttribute('query')['cycle'] : key($cycleOptions);
         } else{
             $cycleOptions = ['0' => '-- '.__('No Education Cycle').' --'] + $cycleOptions;
-            $selectedCycle = !empty($this->request->query('cycle')) ? $this->request->query('cycle') : 0;
+            $selectedCycle = !empty($serverRequest->getAttribute('query')['cycle']) ? $serverRequest->getAttribute('query')['cycle'] : 0;
         }
 
         $this->controller->set(compact('cycleOptions', 'selectedCycle'));

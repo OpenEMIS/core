@@ -12,6 +12,7 @@ use Cake\Event\Event;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Http\ServerRequest;
 
 class EducationGradesSubjectsTable extends ControllerActionTable
 {
@@ -161,6 +162,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $serverRequest = new ServerRequest();
         $searchKey = $this->getSearchKey();
 
         // Add controls filter to index page
@@ -174,17 +176,17 @@ class EducationGradesSubjectsTable extends ControllerActionTable
                 // Academic period filter
         $EducationSystems = TableRegistry::get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
         //level filter
         $levelOptions = $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->getEducationLevelOptions($selectedAcademicPeriod);
         if (!empty($levelOptions)) {
-            $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+            $selectedLevel = !empty($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
         } else{
             $levelOptions = ['0' => '-- '.__('No Education Level').' --'] + $levelOptions;
-            $selectedLevel = !empty($this->request->query('level')) ? $this->request->query('level') : 0;
+            $selectedLevel = !empty($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : 0;
         }
         $this->controller->set(compact('levelOptions', 'selectedLevel'));
         $EducationCycles = $this->EducationGrades->EducationProgrammes->EducationCycles;
@@ -213,10 +215,10 @@ class EducationGradesSubjectsTable extends ControllerActionTable
             ->toArray();
 
         if (!empty($programmeOptions)) {
-            $selectedProgramme = !is_null($this->request->query('programme')) ? $this->request->query('programme') : key($programmeOptions);
+            $selectedProgramme = !is_null($serverRequest->getAttribute('query')['programme']) ? $serverRequest->getAttribute('query')['programme'] : key($programmeOptions);
         } else {
             $programmeOptions = ['0' => '-- '.__('No Education Programme').' --'] + $programmeOptions;
-            $selectedProgramme = !empty($this->request->query('programme')) ? $this->request->query('programme') : 0;
+            $selectedProgramme = !empty($serverRequest->getAttribute('query')['programme']) ? $serverRequest->getAttribute('query')['programme'] : 0;
         }
 
         $this->controller->set(compact('programmeOptions', 'selectedProgramme'));
@@ -229,10 +231,10 @@ class EducationGradesSubjectsTable extends ControllerActionTable
             ->where([$EducationGrades->aliasField('education_programme_id') => $selectedProgramme])
             ->toArray();
         if (!empty($gradeOptions)) {
-            $selectedGrade = !is_null($this->request->query('grade')) ? $this->request->query('grade') : key($gradeOptions);
+            $selectedGrade = !is_null($serverRequest->getAttribute('query')['grade']) ? $serverRequest->getAttribute('query')['grade'] : key($gradeOptions);
         } else {
             $gradeOptions = ['0' => '-- '.__('No Education Grade').' --'] + $gradeOptions;
-            $selectedGrade = !empty($this->request->query('grade')) ? $this->request->query('grade') : 0;
+            $selectedGrade = !empty($serverRequest->getAttribute('query')['grade']) ? $serverRequest->getAttribute('query')['grade'] : 0;
         }
 
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
@@ -325,7 +327,8 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         return $this->autoAllocationOptions[$entity->auto_allocation];
     }
 
-    public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCode(Event $event, array $attr, $action)
     {
         if ($action == 'edit') {
             $subjectCode = '';
@@ -339,7 +342,8 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action)
     {
         if ($action == 'edit') {
             $subjectId = $attr['entity']->education_subject_id;
@@ -391,7 +395,8 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'edit') {
@@ -457,10 +462,11 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldAutoAllocation(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAutoAllocation(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAutoAllocation(Event $event, array $attr, $action)
     {
         // setting the tooltip message
-        $tooltipMessage = $this->getMessage($this->alias().'.tooltip_message');
+        $tooltipMessage = $this->getMessage($this->getAlias().'.tooltip_message');
         $attr['attr']['label']['escape'] = false; //disable the htmlentities (on LabelWidget) so can show html on label.
         $attr['attr']['label']['class'] = 'tooltip-desc'; //css class for label
         $attr['attr']['label']['text'] = __(Inflector::humanize($attr['field'])) . $this->tooltipMessage($tooltipMessage);

@@ -18,7 +18,7 @@ class CompetenciesController extends AppController
     public function Periods()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.CompetencyPeriods']); }
     public function GradingTypes()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.CompetencyGradingTypes']); }
     // End
-     public function initialize()
+     public function initialize(): void
     {       
         parent::initialize();
         $this->ControllerAction->models = [

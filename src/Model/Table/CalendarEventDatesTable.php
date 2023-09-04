@@ -3,9 +3,9 @@ namespace App\Model\Table;
 
 class CalendarEventDatesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('calendar_event_dates');
+        $this->setTable('calendar_event_dates');
         parent::initialize($config);
 
         $this->belongsTo('Calendars', ['className' => 'Calendars', 'foreignKey' => 'calendar_event_id']);
