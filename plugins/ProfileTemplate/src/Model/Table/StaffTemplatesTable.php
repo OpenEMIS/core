@@ -13,14 +13,15 @@ use App\Model\Traits\OptionsTrait;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
+use Cake\Http\ServerRequest;
 
 class StaffTemplatesTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-		$this->table('staff_profile_templates');
+		$this->setTable('staff_profile_templates');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 
@@ -34,15 +35,15 @@ class StaffTemplatesTable extends ControllerActionTable
             'allowable_file_types' => 'document',
             'useDefaultName' => true
         ]);
-        $this->behaviors()->get('Download')->config(
+        $this->behaviors()->get('Download')->getConfig(
             'name',
             'excel_template_name'
         );
-        $this->behaviors()->get('Download')->config(
+        $this->behaviors()->get('Download')->getConfig(
             'content',
             'excel_template'
         );
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             true
         );
@@ -53,14 +54,14 @@ class StaffTemplatesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.downloadTemplate'] = 'downloadTemplate';
         return $events;
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
 
         return $validator
@@ -128,8 +129,9 @@ class StaffTemplatesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // Academic Period filter
+        $serverRequest = new ServerRequest();
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
@@ -196,7 +198,8 @@ class StaffTemplatesTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'generate_start_date', 'generate_end_date', 'excel_template']);
     }
 
-    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action)
     {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';

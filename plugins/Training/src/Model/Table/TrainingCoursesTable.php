@@ -95,7 +95,6 @@ class TrainingCoursesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
-
         $this->targetPopulationSelection = $this->getSelectOptions($this->aliasField('target_population_selection'));
         $this->SENTooltipMessage = $this->getMessage('Training.TrainingCourses.special_education_needs');
     }

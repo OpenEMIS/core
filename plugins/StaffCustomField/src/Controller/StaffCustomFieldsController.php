@@ -9,7 +9,7 @@ use Cake\Utility\Inflector;
 
 class StaffCustomFieldsController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
     }
@@ -52,5 +52,11 @@ class StaffCustomFieldsController extends AppController
         $this->Navigation->addCrumb($model->getHeader($model->alias));
 
         $this->set('contentHeader', $header);
+    }
+
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 }

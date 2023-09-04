@@ -9,9 +9,10 @@ use App\Controller\PageController;
 
 class CredentialsController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
+        $this->loadComponent('Page.Page');
         $this->loadModel('ApiCredentials');
         $this->loadModel('ApiScopes');
         $this->loadModel('ApiCredentialsScopes');

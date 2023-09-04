@@ -4,7 +4,7 @@ namespace StudentCustomField\Model\Table;
 use CustomField\Model\Table\CustomFieldsTable;
 
 class StudentCustomFieldsTable extends CustomFieldsTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		$this->supportedFieldTypes = $this->getSupportedFieldTypesByModel('Student.Students');
 		parent::initialize($config);
 		$this->hasMany('CustomFieldOptions', ['className' => 'StudentCustomField.StudentCustomFieldOptions', 'dependent' => true, 'cascadeCallbacks' => true]);

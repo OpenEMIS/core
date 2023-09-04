@@ -289,7 +289,6 @@ class AppTable extends Table
     // Event: 'ControllerAction.Model.onGetFieldLabel'
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-         //echo "<pre>";print_r($event->getData());die;
         $Labels     = TableRegistry::getTableLocator()->get('Labels');
         if($event->getData()['module'] !=null){
             $fieldLabel = $Labels->find()

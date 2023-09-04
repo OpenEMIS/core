@@ -11,6 +11,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
+use Cake\Http\ServerRequest;
 
 class EducationSystemsTable extends ControllerActionTable
 {
@@ -76,9 +77,10 @@ class EducationSystemsTable extends ControllerActionTable
     //added academic filter on systme listing
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $serverRequest = new ServerRequest();
         if($this->request->action != 'CopySystems'){
         	$academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-	        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+	        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 	        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
 	        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 	        $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];

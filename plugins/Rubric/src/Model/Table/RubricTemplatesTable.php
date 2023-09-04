@@ -16,7 +16,7 @@ class RubricTemplatesTable extends ControllerActionTable
         2 => ['id' => 2, 'name' => 'Percentage']
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasMany('RubricSections', ['className' => 'Rubric.RubricSections', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -25,7 +25,7 @@ class RubricTemplatesTable extends ControllerActionTable
         $this->hasMany('InstitutionRubrics', ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

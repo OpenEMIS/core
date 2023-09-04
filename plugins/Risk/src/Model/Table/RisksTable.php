@@ -16,6 +16,7 @@ use Cake\Validation\Validator;
 use Cake\Datasource\ConnectionManager;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\HtmlTrait;
+use Cake\Http\ServerRequest;
 
 class RisksTable extends ControllerActionTable
 {
@@ -105,9 +106,9 @@ class RisksTable extends ControllerActionTable
         4 => 'Not Completed'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('risks');
+        $this->setTable('risks');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
@@ -117,14 +118,14 @@ class RisksTable extends ControllerActionTable
         $this->hasMany('InstitutionStudentRisks', ['className' => 'Institution.InstitutionStudentRisks', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.generate'] = 'generate';
         return $events;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -321,7 +322,8 @@ class RisksTable extends ControllerActionTable
         return $event->subject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action)
     {
         if ($action == 'add') {
             $periodOptions = $this->AcademicPeriods->getYearList();
@@ -738,8 +740,10 @@ class RisksTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
+        $serverRequest = new ServerRequest();
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $session = $this->request->session();
+        // $session = $this->request->session();
+        $session = $serverRequest->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         $userId = $session->read('Auth.User.id');
         $riskId = $entity->id;

@@ -6,9 +6,10 @@ use Cake\Event\Event;
 
 class NoticesController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
+        $this->loadComponent('Page.Page');
 
         $this->Page->loadElementsFromTable($this->Notices);
     }

@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -115,10 +116,11 @@ class EducationLevelsTable extends ControllerActionTable
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
+		$serverRequest = new ServerRequest();
 		// Academic period filter
 	    $EducationSystems = TableRegistry::get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->EducationSystems->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ?$serverRequest->getAttribute('query')['academic_period_id'] : $this->EducationSystems->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$EducationSystems->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
@@ -126,10 +128,10 @@ class EducationLevelsTable extends ControllerActionTable
         $systemOptions = $this->EducationSystems->getSystemOptions($selectedAcademicPeriod);
 
         if (!empty($systemOptions )) {
-        	$selectedSystem = !empty($this->request->query('system')) ? $this->request->query('system') : key($systemOptions);
+        	$selectedSystem = !empty($serverRequest->getAttribute('query')['system']) ? $serverRequest->getAttribute('query')['system'] : key($systemOptions);
         } else {
         	$systemOptions = ['0' => '-- '.__('No Education System').' --'] + $systemOptions;
-        	$selectedSystem = !empty($this->request->query('system')) ? $this->request->query('system') : 0;
+        	$selectedSystem = !empty($serverRequest->getAttribute('query')['system']) ? $serverRequest->getAttribute('query')['system'] : 0;
         }
 
         $this->controller->set(compact('systemOptions', 'selectedSystem'));

@@ -10,7 +10,7 @@ use Cake\ORM\TableRegistry;
 
 class ReportCardsController extends AppController
 {
-    public function initialize() {
+    public function initialize(): void {
         parent::initialize();
         $this->loadComponent('Paginator');
     }
@@ -64,5 +64,11 @@ class ReportCardsController extends AppController
             $tabElements[$key]['url'] = array_merge($sessionUrl, ['action' => $key, 'index']);
         }
         return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 }

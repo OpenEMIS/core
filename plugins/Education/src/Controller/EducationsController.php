@@ -9,7 +9,7 @@ use Cake\ORM\Table;
 
 class EducationsController extends AppController {
 
-    public function initialize() {
+    public function initialize(): void {
         parent::initialize();
         $this->loadComponent('Paginator');
     }
@@ -123,5 +123,12 @@ class EducationsController extends AppController {
     public function Stages() {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationStages']);
     }
+
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+    }
+
 
 }

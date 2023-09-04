@@ -1,6 +1,6 @@
 <?php
 namespace Scholarship\Controller;
-
+use App\Controller\AppController;
 use ArrayObject;
 
 use Cake\Event\Event;
@@ -9,7 +9,7 @@ use Cake\I18n\Date;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 
-class ScholarshipRecipientsController extends PageController
+class ScholarshipRecipientsController extends AppController
 {
     public function initialize(): void
     {
@@ -19,7 +19,8 @@ class ScholarshipRecipientsController extends PageController
         $this->loadModel('Scholarship.RecipientActivityStatuses');
         $this->loadModel('Scholarship.RecipientActivities');
         $this->loadComponent('Scholarship.ScholarshipTabs');
-        $this->Page->loadElementsFromTable($this->ScholarshipRecipients);
+        $this->loadComponent('Page.Page');
+        // $this->Page->loadElementsFromTable($this->ScholarshipRecipients);
     }
 
     public function implementedEvents(): array
@@ -34,13 +35,12 @@ class ScholarshipRecipientsController extends PageController
     {
     	$page = $this->Page;
         parent::beforeFilter($event);
+		// $page->addCrumb('Scholarships', ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Scholarships', 'index']);
+		// $page->addCrumb('Recipients');
 
-		$page->addCrumb('Scholarships', ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Scholarships', 'index']);
-		$page->addCrumb('Recipients');
+		// $page->setHeader(__('Scholarships') . ' - ' . __('Recipients'));
 
-		$page->setHeader(__('Scholarships') . ' - ' . __('Recipients'));
-
-        $page->disable(['add', 'delete']);
+        // $page->disable(['add', 'delete']);
     }
 
     public function beforeRender(Event $event)

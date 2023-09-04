@@ -78,8 +78,8 @@ class UserGroupsTable extends ControllerActionTable
     {
         $controller = $this->controller;
         $tabElements = [
-            $this->alias() => [
-                'url' => ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => $this->alias()],
+            $this->getAlias() => [
+                'url' => ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => $this->getAlias()],
                 'text' => $this->getMessage($this->aliasField('tabTitle'))
             ],
             'SystemGroups' => [
@@ -89,7 +89,7 @@ class UserGroupsTable extends ControllerActionTable
         ];
         $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
 
         $this->field('area_id', ['title' => __('Area Education'), 'source_model' => 'Area.Areas', 'displayCountry' => false,'attr' => ['label' => __('Area Education')]]);
 
@@ -235,7 +235,8 @@ class UserGroupsTable extends ControllerActionTable
         return $query;
     }
 
-    public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaId(Event $event, array $attr, $action)
     {
         $areaId = isset($request->data) ? $request->data['UserGroups']['area_id']['_ids'] : 0;
         $flag = 1;
@@ -334,12 +335,13 @@ class UserGroupsTable extends ControllerActionTable
     }
 
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action)
     {
         if($action == 'add'){
             $areaId = isset($request->data) ? $request->data['UserGroups']['area_id']['_ids'] : 0;
             $string_version = implode(',', $areaId);
-            $AreaT = TableRegistry::get('areas');
+            $AreaT = TableRegistry::get('Area.Areas');
             //Level-1
             $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $string_version])->toArray();
             $childArea =[];
@@ -383,12 +385,16 @@ class UserGroupsTable extends ControllerActionTable
         }else  {
             $areaId = isset($request->data) ? $request->data['UserGroups']['area_id']['_ids'] : 0;
             //POCOR-6903: Start
-            $AreaLevelsTable = TableRegistry::get('Area.AreaLevels');
-            $AreaLevelsTableResult = $AreaLevelsTable
-                            ->find('list')
-                            ->toArray();
-            $string_version = implode(',', $areaId);
-            $AreaT = TableRegistry::get('areas');
+            if($areaId != 0){
+                $AreaLevelsTable = TableRegistry::get('Area.AreaLevels');
+                $AreaLevelsTableResult = $AreaLevelsTable
+                                ->find('list')
+                                ->toArray();
+                $string_version = implode(',', $areaId);
+            }else{
+                $string_version = $areaId;
+            }
+            $AreaT = TableRegistry::get('Area.Areas');
             //Level-1
             $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $string_version])->toArray();
             $childArea =[];

@@ -17,7 +17,7 @@ class RegisteredStudentsBehavior extends Behavior {
 
     private $identityType;
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
         $model = $this->_table;
 
@@ -26,7 +26,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->toggle('remove', false);
 	}
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';

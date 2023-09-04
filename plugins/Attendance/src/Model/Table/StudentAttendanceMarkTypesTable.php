@@ -16,9 +16,9 @@ class StudentAttendanceMarkTypesTable extends AppTable
     const MAX_MARK_DAYS = 5;
     const DEFAULT_ATTENDANCE_PER_DAY = 1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_attendance_mark_types');
+        $this->setTable('student_attendance_mark_types');
         parent::initialize($config);
 
         //$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades', 'foreignKey' => 'education_grade_id']);
@@ -29,7 +29,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];

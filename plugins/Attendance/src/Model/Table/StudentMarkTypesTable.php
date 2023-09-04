@@ -15,9 +15,9 @@ class StudentMarkTypesTable extends ControllerActionTable
 {
     private $defaultMarkType;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_attendance_mark_types');
+        $this->setTable('student_attendance_mark_types');
         parent::initialize($config);
 
         //$this->toggle('add', false);
@@ -29,7 +29,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->defaultMarkType = $StudentAttendanceMarkTypes->getDefaultMarkType();
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
         $validator
             ->add('code', [
@@ -364,13 +364,15 @@ class StudentMarkTypesTable extends ControllerActionTable
         }
     } */
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action)
     {
         
     }
 
 
-    public function onUpdateFieldStudentAttendanceTypeId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldStudentAttendanceTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStudentAttendanceTypeId(Event $event, array $attr, $action)
     {
             $entity = $attr['entity'];
             if (!empty($entity)) {                
@@ -392,7 +394,8 @@ class StudentMarkTypesTable extends ControllerActionTable
             return $attr;
     }
 
-    public function onUpdateFieldAttendancePerDay(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAttendancePerDay(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAttendancePerDay(Event $event, array $attr, $action)
     {
         $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
         

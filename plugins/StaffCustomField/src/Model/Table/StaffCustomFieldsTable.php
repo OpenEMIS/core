@@ -4,7 +4,7 @@ namespace StaffCustomField\Model\Table;
 use CustomField\Model\Table\CustomFieldsTable;
 
 class StaffCustomFieldsTable extends CustomFieldsTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		$this->supportedFieldTypes = $this->getSupportedFieldTypesByModel('Staff.Staff');
 		parent::initialize($config);
 		$this->hasMany('CustomFieldOptions', ['className' => 'StaffCustomField.StaffCustomFieldOptions', 'dependent' => true, 'cascadeCallbacks' => true]);

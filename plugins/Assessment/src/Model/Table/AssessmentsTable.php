@@ -16,13 +16,14 @@ use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use Cake\Utility\Text;
+use Cake\Http\ServerRequest;
 
 class AssessmentsTable extends ControllerActionTable {
     use MessagesTrait;
     use HtmlTrait;
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -30,7 +31,7 @@ class AssessmentsTable extends ControllerActionTable {
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->hasMany('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => false]);
-        $this->belongsTo('AssessmentGradingTypes', ['className' => 'Assessments.AssessmentGradingTypes']); //POCOR-7318
+        $this->belongsTo('AssessmentGradingTypes', ['className' => 'Assessment.AssessmentGradingTypes']); //POCOR-7318
         $this->belongsToMany('GradingTypes', [
             'className' => 'Assessment.AssessmentGradingTypes',
             'joinTable' => 'assessment_items_grading_types',
@@ -53,22 +54,22 @@ class AssessmentsTable extends ControllerActionTable {
             'Results' => ['index', 'view'],
             'OpenEMIS_Classroom' => ['index']
         ]);
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             true
         );
-        $this->behaviors()->get('Download')->config(
+        $this->behaviors()->get('Download')->getConfig(
             'name',
             'excel_template_name'
         );
-        $this->behaviors()->get('Download')->config(
+        $this->behaviors()->get('Download')->getConfig(
             'content',
             'excel_template'
         );
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
 
         return $validator
@@ -108,7 +109,8 @@ class AssessmentsTable extends ControllerActionTable {
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+        $serverRequest = new ServerRequest();
+        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($serverRequest->getAttribute('query')['period']));
 
         $extra['selectedPeriod'] = $selectedPeriod;
         $extra['elements']['control'] = [
@@ -178,7 +180,7 @@ class AssessmentsTable extends ControllerActionTable {
         $this->setupFields($entity);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.downloadTemplate'] = 'downloadTemplate';
@@ -332,7 +334,8 @@ class AssessmentsTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action)
     {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';
@@ -344,7 +347,8 @@ class AssessmentsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
@@ -574,7 +578,8 @@ class AssessmentsTable extends ControllerActionTable {
     }  
 
     //POCOR-7318
-    public function onUpdateFieldAssessmentGradingTypeId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAssessmentGradingTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssessmentGradingTypeId(Event $event, array $attr, $action)
     {
         $assessmentGradingType = TableRegistry::get('Assessment.AssessmentGradingTypes');
         $assessmentGradingTypeOptions = $assessmentGradingType->find('list')->toArray();

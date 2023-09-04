@@ -9,14 +9,15 @@ use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
 class ExaminationResultsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('examination_centres_examinations');
+        $this->setTable('examination_centres_examinations');
         parent::initialize($config);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
@@ -77,12 +78,13 @@ class ExaminationResultsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $serverRequest = new ServerRequest();
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
 
         $where = [];
         // Academic Period
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ?$serverRequest->getAttribute('query')['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
@@ -91,7 +93,7 @@ class ExaminationResultsTable extends ControllerActionTable
         // Examination
         $examinationOptions = $this->getExaminationOptions($selectedAcademicPeriod);
         $examinationOptions = ['-1' => __('All Examinations')] + $examinationOptions;
-        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : -1;
+        $selectedExamination = !is_null($serverRequest->getAttribute('query')['examination_id']) ? $serverRequest->getAttribute('query')['examination_id'] : -1;
 
         $this->controller->set(compact('examinationOptions', 'selectedExamination'));
         if ($selectedExamination != -1) {

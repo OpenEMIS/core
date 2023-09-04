@@ -581,7 +581,7 @@ class AcademicPeriodsTable extends AppTable
         $data = $this
             ->find('list')
             ->find('years')
-            ->find('editable', ['isEditable' => $isEditable])
+            // ->find('editable', ['isEditable' => $isEditable])
             ->where($conditions)
             ->toArray();
 

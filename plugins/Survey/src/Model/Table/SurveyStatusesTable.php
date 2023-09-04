@@ -9,12 +9,13 @@ use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\I18n\Time;
+use Cake\Http\ServerRequest;
 
 class SurveyStatusesTable extends ControllerActionTable
 {
     private $_contain = ['AcademicPeriods'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
@@ -47,6 +48,7 @@ class SurveyStatusesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $serverRequest = new ServerRequest();
         $query->contain($this->_contain);
 
         // search
@@ -77,20 +79,21 @@ class SurveyStatusesTable extends ControllerActionTable
 
         //custom module option in toolbar
         $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey');
-        $CustomModules = TableRegistry::get('custom_modules');
+        $CustomModules = TableRegistry::get('CustomField.CustomModules');
         $moduleOptions =  $CustomModules
             ->find('list', ['keyField' => 'id', 'valueField' => 'code']) 
-           ->where(['custom_modules.name IN' => $name])->toArray();
+           ->where([$CustomModules->aliasField('name IN') => $name])->toArray();
 
         if (!empty($moduleOptions)) {
             $moduleOptions = $moduleOptions;
-            $moduleId = $this->request->query('survey_module_id');
+
+            $moduleId = $serverRequest->getAttribute('query')['survey_module_id'];
             $this->advancedSelectOptions($moduleOptions, $moduleId);
             $this->controller->set(compact('moduleOptions'));
         }
 
         // Survey form options
-        $SurveyForms = TableRegistry::get('survey_forms');
+        $SurveyForms = TableRegistry::get('Survey.SurveyForms');
         $surveyFormOptions = $SurveyForms
             ->find('list')
             ->where([$SurveyForms->aliasField('custom_module_id') => $moduleId])
@@ -99,12 +102,12 @@ class SurveyStatusesTable extends ControllerActionTable
             ])
             ->toArray();
         $surveyFormOptions = ['-1' => '-- '.__('All Survey Form').' --'] + $surveyFormOptions;
-        $surveyFormId = $this->request->query('survey_form_id');
+        $surveyFormId = $serverRequest->getAttribute('query')['survey_form_id'];
         $this->advancedSelectOptions($surveyFormOptions, $surveyFormId);
         $this->controller->set(compact('surveyFormOptions'));
 
         // survey filter options toolbar
-        $this->SurveyFilters = TableRegistry::get('survey_forms_filters');
+        $this->SurveyFilters = TableRegistry::get('Survey.SurveyFormsFilters');
         if($surveyFormId != -1){
             $surveyFilterOptions = $this->SurveyFilters
                 ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -123,13 +126,13 @@ class SurveyStatusesTable extends ControllerActionTable
                 ->toArray();
         }
         $surveyFilterOptions = ['-1' => '-- '.__('All Survey Filter').' --'] + $surveyFilterOptions;
-        $surveyFilterId = $this->request->query('survey_filter_id');
+        $surveyFilterId = $serverRequest->getAttribute('query')['survey_filter_id'];
         $this->advancedSelectOptions($surveyFilterOptions, $surveyFilterId);
      
         $extra['elements']['controls'] = ['name' => 'Survey.survey_status', 'data' => [], 'options' => [], 'order' => 3];
         $this->controller->set(compact('surveyFilterOptions'));
-        $form  = TableRegistry::get('survey_forms');
-        $filter  = TableRegistry::get('survey_forms_filters');
+        $form  = TableRegistry::get('Survey.SurveyForms');
+        $filter  = TableRegistry::get('Survey.SurveyFormsFilters');
         if($moduleId == 1 && $surveyFormId == -1 && $surveyFilterId == -1){
              $query;
         }elseif($moduleId == 1 && $surveyFormId != -1 && $surveyFilterId == -1){
@@ -219,7 +222,8 @@ class SurveyStatusesTable extends ControllerActionTable
             'survey_form_id','survey_filter_id','date_enabled', 'date_disabled','academic_period_id']);
     }
 
-    public function onUpdateFieldAcademicPeriodLevel(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAcademicPeriodLevel(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodLevel(Event $event, array $attr, $action)
     {
         $AcademicPeriodLevels = TableRegistry::get('AcademicPeriod.AcademicPeriodLevels');
         $levelOptions = $AcademicPeriodLevels->getList()->toArray();
@@ -232,10 +236,12 @@ class SurveyStatusesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriods(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAcademicPeriods(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriods(Event $event, array $attr, $action)
     {
+        $serverRequest = new ServerRequest();
         $selectedLevel = key($this->fields['academic_period_level']['options']);
-        if ($request->is('post')) {
+        if ($serverRequest->is('post')) {
             $selectedLevel = $request->data($this->aliasField('academic_period_level'));
            
         }

@@ -10,6 +10,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Database\Expression\QueryExpression;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -202,6 +203,7 @@ class SecurityRolesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $serverRequest = new ServerRequest();
         if (!$this->AccessControl->check(['Securities', 'UserRoles', 'view'])) {
             unset($this->types[0]);
         } else if (!$this->AccessControl->check(['Securities', 'SystemRoles', 'view'])) {
@@ -209,21 +211,23 @@ class SecurityRolesTable extends ControllerActionTable
         }
 
         $types = $this->types;
-        $selectedAction = !is_null($this->request->query('type')) ? $this->request->query('type') : current($types);
+        $selectedAction = !is_null($serverRequest->getAttribute('query')['type']) ?$serverRequest->getAttribute('query')['type'] : current($types);
         $extra['selectedAction'] = $selectedAction;
 
         switch ($selectedAction) {
             case 'user':
                 $groupOptions = $this->getGroupOptions();
-                $selectedGroup = !is_null($this->request->query('security_group_id')) ? $this->request->query('security_group_id') : key($groupOptions);
+                $selectedGroup = !is_null($serverRequest->getAttribute('query')['security_group_id']) ? $serverRequest->getAttribute('query')['security_group_id'] : key($groupOptions);
 
                 $extra['groupOptions'] = $groupOptions;
                 $extra['selectedGroup'] = $selectedGroup;
 
                 if ($this->behaviors()->has('Reorder')) {
-                    $this->behaviors()->get('Reorder')->config([
-                        'filterValues' => [$selectedGroup]
-                    ]);
+                    // $this->behaviors()->get('Reorder')->config([
+                    //     'filterValues' => [$selectedGroup]
+                    // ]);
+                    $reorderBehavior = $this->behaviors()->get('Reorder');
+                    $reorderBehavior->setConfig('filterValues', [$selectedGroup]);
                 }
                 break;
 
@@ -461,10 +465,12 @@ class SecurityRolesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldSecurityGroupId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldSecurityGroupId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSecurityGroupId(Event $event, array $attr, $action)
     {
+        $serverRequest = new ServerRequest();
         $types = $this->types;
-        $selectedAction = !is_null($this->request->query('type')) ? $this->request->query('type') : current($types);
+        $selectedAction = !is_null($serverRequest->getAttribute('query')['type']) ? $serverRequest->getAttribute('query')['type'] : current($types);
 
         switch ($selectedAction) {
             case 'user':

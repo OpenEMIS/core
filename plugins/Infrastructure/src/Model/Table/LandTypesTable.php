@@ -16,9 +16,9 @@ class LandTypesTable extends ControllerActionTable
     private $levelOptions = [];
     private $landLevel = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('land_types');
+        $this->setTable('land_types');
         parent::initialize($config);
 
         $this->hasMany('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'dependent' => true, 'cascadeCallbacks' => true]);

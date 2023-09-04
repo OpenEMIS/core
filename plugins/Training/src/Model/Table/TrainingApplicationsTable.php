@@ -259,7 +259,8 @@ class TrainingApplicationsTable extends ControllerActionTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Administration > Training > Applications';

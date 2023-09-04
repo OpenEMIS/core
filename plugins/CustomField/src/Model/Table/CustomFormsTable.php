@@ -517,7 +517,8 @@ class CustomFormsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action)
     {
         $moduleQuery = $this->getModuleQuery();
         $moduleOptions = $moduleQuery->toArray();
@@ -532,7 +533,8 @@ class CustomFormsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldApplyToAll(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldApplyToAll(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldApplyToAll(Event $event, array $attr, $action)
     {
         if ($action == 'view') {
             $applyToAllOptions = $attr['options'];
@@ -542,7 +544,8 @@ class CustomFormsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCustomFilters(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldCustomFilters(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCustomFilters(Event $event, array $attr, $action)
     {
         if ($action == 'view') {
             $customModule = $attr['attr']['customModule'];

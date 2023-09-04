@@ -6,10 +6,11 @@ use App\Controller\AppController;
 use Cake\ORM\Table;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Http\ServerRequest;
 
 class InfrastructuresController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadComponent('Paginator');
@@ -104,10 +105,16 @@ class InfrastructuresController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         $header = __('Infrastructure');
-        $header .= ' - ' . __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $header .= ' - ' . __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
         $this->Navigation->addCrumb('Infrastructure', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
-        $this->Navigation->addCrumb(__(Inflector::humanize(Inflector::underscore($this->request->param('action')))));
+        $this->Navigation->addCrumb(__(Inflector::humanize(Inflector::underscore($this->request->getParam('action')))));
 
         $this->set('contentHeader', $header);
+    }
+
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 }

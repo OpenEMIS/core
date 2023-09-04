@@ -2404,7 +2404,7 @@ class NavigationComponent extends Component
     {
         $users = TableRegistry::getTableLocator()->get('User.Users');
        // $users = TableRegistry::getTableLocator()->get('TableNames', ['className' => 'User\Model\Table\UsersTable']);
-        $uId = '';
+        //$uId = '';
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1])->first();
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
@@ -2509,7 +2509,7 @@ class NavigationComponent extends Component
         $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $uId = '';
+        //$uId = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
@@ -2944,7 +2944,7 @@ class NavigationComponent extends Component
         $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $uId = '';
+        //$uId = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
@@ -3053,7 +3053,7 @@ class NavigationComponent extends Component
         $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $uId = '';
+        //$uId = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
@@ -3189,7 +3189,7 @@ class NavigationComponent extends Component
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
         $users = TableRegistry::getTableLocator()->get('User.Users');
-        $uId = '';
+        //$uId = '';
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
 
@@ -3292,7 +3292,7 @@ class NavigationComponent extends Component
         $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $uId = '';
+        //$uId = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
@@ -3395,7 +3395,7 @@ class NavigationComponent extends Component
         $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $uId = '';
+        //$uId = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
@@ -3507,7 +3507,7 @@ class NavigationComponent extends Component
         $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $uId = '';
+        //$uId = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
@@ -3653,7 +3653,7 @@ class NavigationComponent extends Component
         $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $uId = '';
+        //$uId = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
@@ -3790,7 +3790,7 @@ class NavigationComponent extends Component
         $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $uId = '';
+        //$uId = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
@@ -3975,7 +3975,7 @@ class NavigationComponent extends Component
         $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $uId = '';
+        //$uId = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();
@@ -4055,7 +4055,7 @@ class NavigationComponent extends Component
         $session = $this->getController()->getRequest()->getSession();
         $userId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
         $uId = $this->controller->paramsDecode($userId)['id'];
-        $uId = '';
+        //$uId = '';
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $userinfo = $users->find()->where([$users->aliasField('super_admin') => 1,
                     $users->aliasField('id') => $uId])->first();

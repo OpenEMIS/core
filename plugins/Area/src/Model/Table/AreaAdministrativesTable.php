@@ -29,9 +29,8 @@ class AreaAdministrativesTable extends ControllerActionTable
         $this->hasMany('UsersBirthplaceAreas', ['className' => 'Directory.Directories', 'foreignKey' => 'birthplace_area_id']);
         $this->addBehavior('Tree');
         if ($this->behaviors()->has('Reorder')) {
-            $this->behaviors()->get('Reorder')->setConfig([
-                'filter' => 'parent_id',
-            ]);
+            $reorderBehavior = $this->behaviors()->get('Reorder');
+            $reorderBehavior->setConfig('filter', 'parent_id');
         }
 
         $this->addBehavior('Restful.RestfulAccessControl', [

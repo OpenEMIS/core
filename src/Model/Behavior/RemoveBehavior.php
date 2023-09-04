@@ -31,7 +31,7 @@ class RemoveBehavior extends Behavior
         return $events;
     }
 
-    /*public function validationForceDelete(Validator $validator): Validator
+    public function validationForceDelete(Validator $validator): Validator
     {
         $validator = $this->_table->validationDefault($validator);
         return $validator
@@ -42,7 +42,7 @@ class RemoveBehavior extends Behavior
                 'provider' => 'table',
                 'message' => __('Incorrect password.')
             ]);
-    }*/
+    }
 
     public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
@@ -476,7 +476,7 @@ class RemoveBehavior extends Behavior
         return $result;
     }
 
-    public function getAssociatedRecordsbkk($model, $entity, $extra)
+    public function getAssociatedRecords($model, $entity, $extra)
     {
         $dependent = [true, false];
         if ($extra->offsetExists('deleteStrategy')) {
@@ -547,7 +547,7 @@ class RemoveBehavior extends Behavior
         return $associations;
     }
 
-    public function hasAssociatedRecordsbkk($model, $entity, $extra)
+    public function hasAssociatedRecords($model, $entity, $extra)
     {
         $records = $this->getAssociatedRecords($model, $entity, $extra);
         $found = false;
@@ -660,7 +660,7 @@ class RemoveBehavior extends Behavior
         }
     }
 
-    public static function checkPasswordbkk($field, array $globalData)
+    public static function checkPassword($field, array $globalData)
     {
         $Users = TableRegistry::get('User.Users');
         $model = $globalData['providers']['table'];

@@ -8,12 +8,13 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
 class OutcomeTemplatesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -56,7 +57,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
         $this->addBehavior('Import.ImportLink', ['import_model'=>'ImportOutcomeTemplates']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -75,9 +76,10 @@ class OutcomeTemplatesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $serverRequest = new ServerRequest();
         // academic period filter
         $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedPeriod = !is_null($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent();
+        $selectedPeriod = !is_null($serverRequest->getAttribute('query')['period']) ? $serverRequest->getAttribute('query')['period'] : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
         $conditions[$this->aliasField('academic_period_id')] = $selectedPeriod;
 

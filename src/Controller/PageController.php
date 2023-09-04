@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Page\Model\Entity\PageElement;
 use Cake\Routing\Router;
 use Cake\ORM\TableRegistry;//POCOR-7534
+use Cake\Http\ServerRequest;
 
 class PageController extends Controller
 {
@@ -16,7 +17,7 @@ class PageController extends Controller
     public function initialize(): void
     {
         parent::initialize();
-
+        
         $labels = [
             'openemis_no' => 'OpenEMIS ID',
             'modified' => 'Modified On',
@@ -25,9 +26,9 @@ class PageController extends Controller
             'created_user_id' => 'Created By'
         ];
 
-        $this->Page->config('sequence', 'order');
-        $this->Page->config('is_visible', 'visible');
-        $this->Page->config('labels', $labels);
+        // $this->Page->config('sequence', 'order');
+        // $this->Page->config('is_visible', 'visible');
+        // $this->Page->config('labels', $labels);
 
         $this->loadComponent('Page.RenderLink');
         $this->loadComponent('RenderDate');
@@ -46,8 +47,9 @@ class PageController extends Controller
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
+        $rerverRequest = new ServerRequest();
         //POCOR-7534 Starts comment it only for POCOR-7534 ticket's given urls in task
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $superAdmin = $session->read('Auth.User.super_admin');
         if($superAdmin == 0){ 
             $UserData = $session->read('Auth.User')['id'];
@@ -56,7 +58,8 @@ class PageController extends Controller
                         ->contain('SecurityRoles')
                         ->order(['SecurityRoles.order'])
                         ->where([
-                            $GroupRoles->aliasField('security_user_id') => $UserData
+                            // $GroupRoles->aliasField('security_user_id') => $UserData
+                            $GroupRoles->aliasField('security_user_id') => 2
                         ])
                         ->group([$GroupRoles->aliasField('security_role_id')])
                         ->toArray();
@@ -79,7 +82,8 @@ class PageController extends Controller
         $page = $this->Page;
         $request = $this->request;
         $action = $request->action;
-        $ext = $this->request->params['_ext'];
+        // echo "<pre>";print_r($page);die;
+        $ext = $rerverRequest->getAttribute('params')['_ext'];
 
         if ($ext != 'json') {
             if ($request->is(['put', 'post'])) {
@@ -87,7 +91,12 @@ class PageController extends Controller
             }
             $this->set('menuItemSelected', [$this->name]);
 
-            if ($page->isAutoRender() && in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {
+            // if ($page->isAutoRender() && in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {
+            //     $viewFile = 'Page.Page/' . $action;
+            //     $this->viewBuilder()->template($viewFile);
+            // }
+
+            if (in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {
                 $viewFile = 'Page.Page/' . $action;
                 $this->viewBuilder()->template($viewFile);
             }
@@ -564,6 +573,7 @@ class PageController extends Controller
             }
         }
     }
+    
 
     private function initializeToolbars()
     {
