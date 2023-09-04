@@ -784,87 +784,87 @@ class StudentsTable extends ControllerActionTable
 
             $table_name = 'security_group_users';
             $field_name = 'security_user_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'institution_class_students';
             $field_name = 'student_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'user_activities';
             $field_name = 'security_user_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'student_custom_field_values';
             $field_name = 'student_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'institution_competency_results';
             $field_name = 'student_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'institution_student_absences';
             $field_name = 'student_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'institution_student_absence_days';
             $field_name = 'student_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'institution_student_absence_details';
             $field_name = 'student_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'institution_student_risks';
             $field_name = 'student_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'institution_subject_students';
             $field_name = 'student_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'user_special_needs_devices';
             $field_name = 'security_user_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'user_special_needs_referrals';
             $field_name = 'security_user_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'user_special_needs_services';
             $field_name = 'security_user_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'user_special_needs_assessments';
             $field_name = 'security_user_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'user_nationalities';
             $field_name = 'security_user_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'institution_student_admission';
             $field_name = 'student_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'institution_student_surveys';
             $field_name = 'student_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'student_status_updates';
             $field_name = 'security_user_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'institution_students_report_cards_comments';
             $field_name = 'student_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'institution_students_report_cards';
             $field_name = 'student_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'student_report_cards';
             $field_name = 'student_id';
-            $affected = $affected +  $this->removeFromTable($student_id, $table_name, $field_name);
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
         }
 
@@ -3172,10 +3172,18 @@ class StudentsTable extends ControllerActionTable
 
     private function removeFromTable($student_id, $table_name, $field_name)
     {
-        $tableToClean = TableRegistry::get($table_name);
-        $affected = $tableToClean->deleteAll([
-            $tableToClean->aliasField($field_name) => $student_id
-        ]);
+        $affected = 0;
+        try {
+            $tableToClean = TableRegistry::get($table_name);
+            $affected = $tableToClean->deleteAll([
+                $tableToClean->aliasField($field_name) => $student_id
+            ]);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch remove from table',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+        }
         return $affected;
     }
 
