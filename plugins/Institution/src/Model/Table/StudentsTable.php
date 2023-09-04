@@ -767,7 +767,7 @@ class StudentsTable extends ControllerActionTable
             'institution_id' => $institution_id,
         ];
         $affected = $this->removeIndividualChildRecords($student_id);
-        $this->log("removed $affected security records", 'debug');
+//        $this->log("removed $affected security records", 'debug');
         if (!empty($this->action) && $this->action == 'remove') {
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
