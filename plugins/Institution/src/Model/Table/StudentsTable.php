@@ -866,6 +866,10 @@ class StudentsTable extends ControllerActionTable
             $field_name = 'student_id';
             $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
+            $table_name = 'institution_association_student';
+            $field_name = 'student_id';
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+
         }
 
         return $affected;
