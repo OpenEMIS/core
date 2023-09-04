@@ -786,9 +786,9 @@ class StudentsTable extends ControllerActionTable
             $field_name = 'security_user_id';
             $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
-            $table_name = 'institution_class_students';
-            $field_name = 'student_id';
-            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//            $table_name = 'institution_class_students';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'user_activities';
             $field_name = 'security_user_id';
@@ -798,49 +798,49 @@ class StudentsTable extends ControllerActionTable
             $field_name = 'student_id';
             $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
-            $table_name = 'institution_competency_results';
-            $field_name = 'student_id';
-            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-
-            $table_name = 'institution_student_absences';
-            $field_name = 'student_id';
-            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-
-            $table_name = 'institution_student_absence_days';
-            $field_name = 'student_id';
-            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-
-            $table_name = 'institution_student_absence_details';
-            $field_name = 'student_id';
-            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-
-            $table_name = 'institution_student_risks';
-            $field_name = 'student_id';
-            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-
-            $table_name = 'institution_subject_students';
-            $field_name = 'student_id';
-            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-
-            $table_name = 'user_special_needs_devices';
-            $field_name = 'security_user_id';
-            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-
-            $table_name = 'user_special_needs_referrals';
-            $field_name = 'security_user_id';
-            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-
-            $table_name = 'user_special_needs_services';
-            $field_name = 'security_user_id';
-            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-
-            $table_name = 'user_special_needs_assessments';
-            $field_name = 'security_user_id';
-            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-
-            $table_name = 'user_nationalities';
-            $field_name = 'security_user_id';
-            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//            $table_name = 'institution_competency_results';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'institution_student_absences';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'institution_student_absence_days';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'institution_student_absence_details';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'institution_student_risks';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'institution_subject_students';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'user_special_needs_devices';
+//            $field_name = 'security_user_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'user_special_needs_referrals';
+//            $field_name = 'security_user_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'user_special_needs_services';
+//            $field_name = 'security_user_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'user_special_needs_assessments';
+//            $field_name = 'security_user_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'user_nationalities';
+//            $field_name = 'security_user_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'institution_student_admission';
             $field_name = 'student_id';
@@ -854,26 +854,26 @@ class StudentsTable extends ControllerActionTable
             $field_name = 'security_user_id';
             $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
-            $table_name = 'institution_students_report_cards_comments';
-            $field_name = 'student_id';
-            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-
-            $table_name = 'institution_students_report_cards';
-            $field_name = 'student_id';
-            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-
-            $table_name = 'student_report_cards';
-            $field_name = 'student_id';
-            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-
-            $table_name = 'institution_association_student';
-            $field_name = 'security_user_id';
-            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-
-            if($institution_student_id){
-                $table_name = 'institution_students';
-                $affected = $affected + $this->removeFromTableTwo($student_id, $institution_student_id, $table_name);
-            }
+//            $table_name = 'institution_students_report_cards_comments';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'institution_students_report_cards';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'student_report_cards';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'institution_association_student';
+//            $field_name = 'security_user_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            if($institution_student_id){
+//                $table_name = 'institution_students';
+//                $affected = $affected + $this->removeFromTableTwo($student_id, $institution_student_id, $table_name);
+//            }
 
         }
 
