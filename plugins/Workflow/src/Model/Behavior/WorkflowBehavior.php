@@ -628,10 +628,10 @@ class WorkflowBehavior extends Behavior
         
         //POCOR-5695 starts
         if(($this->_table->alias == 'Results') || ($this->_table->alias == 'Sessions')){
-            $TrainingSessions = TableRegistry::get('training_sessions');
+            $TrainingSessions = TableRegistry::get('Training.TrainingSessions');
             if($this->_table->alias == 'Results'){
                 $query->leftJoin(
-                        [$TrainingSessions->alias() => $TrainingSessions->table()],
+                        [$TrainingSessions->getAlias() => $TrainingSessions->getTable()],
                         [
                             $this->_table->aliasField('training_session_id = ') . $TrainingSessions->aliasField('id'),
                         ]
@@ -712,10 +712,10 @@ class WorkflowBehavior extends Behavior
 
         //POCOR-5695 starts
         if(($this->_table->alias == 'Results') || ($this->_table->alias == 'Sessions')){
-            $TrainingSessions = TableRegistry::get('training_sessions');
+            $TrainingSessions = TableRegistry::get('Training.TrainingSessions');
             if($this->_table->alias == 'Results'){
                 $query->leftJoin(
-                        [$TrainingSessions->alias() => $TrainingSessions->table()],
+                        [$TrainingSessions->getAlias() => $TrainingSessions->getTable()],
                         [
                             $this->_table->aliasField('training_session_id = ') . $TrainingSessions->aliasField('id'),
                         ]
@@ -1137,7 +1137,8 @@ class WorkflowBehavior extends Behavior
         }
     }
 
-    public function onUpdateFieldStatusId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldStatusId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStatusId(Event $event, array $attr, $action)
     {
         if ($action == 'index') {
             $attr['type'] = 'select';
@@ -1151,7 +1152,8 @@ class WorkflowBehavior extends Behavior
         return $attr;
     }
 
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action)
     {
         if ($action == 'view') {
             $attr['type'] = 'string';

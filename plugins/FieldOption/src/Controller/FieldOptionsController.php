@@ -10,7 +10,7 @@ use Cake\ORM\TableRegistry;
 
 class FieldOptionsController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadComponent('FieldOption.FieldOption');
@@ -21,8 +21,8 @@ class FieldOptionsController extends AppController
         parent::beforeFilter($event);
         $header = 'Field Options';
         $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'index']);
-        $session = $this->request->session();
-        $action = $this->request->params['action'];
+        $session = $this->request->getSession();
+        $action = $this->request->getParam['action'];
 
         $this->set('contentHeader', __($header));
     }
@@ -228,4 +228,10 @@ class FieldOptionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]); 
     } 
     //POCOR-7363 end
+
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+    }
 }

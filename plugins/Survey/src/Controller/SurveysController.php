@@ -10,7 +10,7 @@ use Cake\Utility\Inflector;
 
 class SurveysController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadComponent('Paginator');
@@ -79,7 +79,7 @@ class SurveysController extends AppController
             ],
         ];
         $name = $this->name;
-        $action = $this->request->action;
+        $action = $this->request->getParam('action');
         $actionName = __(Inflector::humanize($action));
         $header = $name .' - '.$actionName;
         $this->Navigation->addCrumb(__($name), ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $action]);

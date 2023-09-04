@@ -53,7 +53,7 @@ class DataManagementCopyTable extends ControllerActionTable
             'joinType' => 'INNER',
             'className' => 'AcademicPeriod.AcademicPeriods'
         ]);
-
+        
         $this->toggle('view', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);

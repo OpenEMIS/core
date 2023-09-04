@@ -14,6 +14,7 @@ use Cake\Utility\Hash;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Http\ServerRequest;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 
 class WorkflowRulesTable extends ControllerActionTable
@@ -83,10 +84,11 @@ class WorkflowRulesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $serverRequest = new ServerRequest();
         $this->field('rule_events');
 
         $featureOptions = $this->getFeatureOptions();
-        $selectedFeature = !is_null($this->request->query('feature')) ? $this->request->query('feature') : key($featureOptions);
+        $selectedFeature = !is_null($serverRequest->getAttribute('query')['feature']) ? $serverRequest->getAttribute('query')['feature'] : key($featureOptions);
         $workflowOptions = $this->getWorkflowOptions($selectedFeature);
         if (empty($workflowOptions)) {
             $defaultWorkflow = '';
@@ -95,7 +97,7 @@ class WorkflowRulesTable extends ControllerActionTable
             $defaultWorkflow = '-1';
             $workflowOptions = [$defaultWorkflow => __('All Workflows')] + $workflowOptions;
         }
-        $selectedWorkflow = !is_null($this->request->query('workflow')) ? $this->request->query('workflow') : $defaultWorkflow;
+        $selectedWorkflow = !is_null($serverRequest->getAttribute('query')['workflow']) ? $serverRequest->getAttribute('query')['workflow'] : $defaultWorkflow;
 
         $extra['selectedFeature'] = $selectedFeature;
         $extra['selectedWorkflow'] = $selectedWorkflow;

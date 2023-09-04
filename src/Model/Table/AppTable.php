@@ -137,7 +137,7 @@ class AppTable extends Table
 
     public function getList($query = null)
     {
-        $schema = $this->schema();
+        $schema = $this->getSchema();
         $columns = $schema->columns();
         $table = $schema->name();
 
@@ -293,7 +293,8 @@ class AppTable extends Table
         $Labels     = TableRegistry::get('Labels');
         $fieldLabel = $Labels->find()
                 ->select(['name'])
-                ->where(['module' => $event->getData()['module'],'field'=>'openemis_no'])
+                // ->where(['module' => $event->getData()['module'],'field'=>'openemis_no'])
+                ->where(['module' => $module,'field'=>'openemis_no'])
                 ->first();
        
         if ($field == 'openemis_no' && !empty($fieldLabel['name'])) {

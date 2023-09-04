@@ -7,7 +7,7 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 
 class InstitutionCustomFormsTable extends CustomFormsTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		$config['extra'] = [
 			'fieldClass' => [
 				'className' => 'InstitutionCustomField.InstitutionCustomFields',

@@ -218,6 +218,17 @@ Router::scope('/session', ['plugin' => 'Restful'], function ($routes) {
     });
 });
 
+Router::scope('/Areas', ['plugin' => 'Area'], function ($routes) {
+    $routes->scope('/', ['controller' => 'Areas'], function ($routes) {
+        // $routes->extensions(['json']);
+
+        $routes->connect('/:key', ['action' => 'index', '_method' => 'GET'], ['pass' => ['key']]);
+    });
+});
+
+
+
+
 /**
  * Load all plugin routes.  See the Plugin documentation on
  * how to customize the loading of plugin routes.

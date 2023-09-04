@@ -254,7 +254,8 @@ class ControllerActionBehavior extends Behavior
                 if ($enabled) {
                     $this->_table->addBehavior('ControllerAction.' . ucfirst($action));
                 } else {
-                    $this->_table->removeBehavior(ucfirst($action));
+                    // $this->_table->removeBehavior(ucfirst($action));
+                    $this->_table->addBehavior(ucfirst($action), ['enabled' => false]);
                 }
                 $actions[$action] = $enabled;
             }
@@ -463,7 +464,7 @@ class ControllerActionBehavior extends Behavior
             $associatedEntity = Inflector::underscore(Inflector::singularize($associationKey->getAlias()));
         } else {
             // die($field . '\'s association not found in ' . $this->model->alias());
-            Log::write('debug', $field . '\'s association not found in ' . $this->_table->alias());
+            Log::write('debug', $field . '\'s association not found in ' . $this->_table->getAlias());
         }
         return $associatedEntity;
     }

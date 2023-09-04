@@ -12,7 +12,7 @@ class StaffCustomFormsTable extends CustomFormsTable
 {
     private $dataCount = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $config['extra'] = [
             'fieldClass' => [

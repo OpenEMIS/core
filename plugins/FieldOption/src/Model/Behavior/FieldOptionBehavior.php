@@ -28,7 +28,7 @@ use Cake\Validation\Validator;
 class FieldOptionBehavior extends Behavior {
     public function initialize(array $config): void
     {
-        $this->_table->setDeleteStrategy('restrict');
+        // $this->_table->setDeleteStrategy('restrict');
     }
 
     public function getDefaultValue()

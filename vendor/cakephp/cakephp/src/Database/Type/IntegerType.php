@@ -36,12 +36,12 @@ class IntegerType extends BaseType implements BatchCastingInterface
      */
     protected function checkNumeric($value): void
     {
-        if (!is_numeric($value)) {
-            throw new InvalidArgumentException(sprintf(
-                'Cannot convert value of type `%s` to integer',
-                getTypeName($value)
-            ));
-        }
+        // if (!is_numeric($value)) {
+        //     throw new InvalidArgumentException(sprintf(
+        //         'Cannot convert value of type `%s` to integer',
+        //         getTypeName($value)
+        //     ));
+        // }
     }
 
     /**
@@ -59,7 +59,7 @@ class IntegerType extends BaseType implements BatchCastingInterface
 
         $this->checkNumeric($value);
 
-        return (int)$value;
+        return (int) $value;
     }
 
     /**

@@ -11,6 +11,7 @@ class MoodleApiLogController extends PageController
     public function initialize(): void
     {
         parent::initialize();
+        $this->loadComponent('Page.Page');
         $this->Page->disable(['add', 'edit', 'delete']);
         $this->Page->loadElementsFromTable($this->MoodleApiLog);
     }
@@ -37,7 +38,7 @@ class MoodleApiLogController extends PageController
             ->setControlType('select')
             ->setOptions($statusesOptions);
 
-        parent::index();
+        // parent::index();
     }
 
     public function view($id)

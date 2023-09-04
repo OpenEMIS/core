@@ -13,6 +13,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
 use Cake\Utility\Hash;
+use Cake\Http\ServerRequest;
 
 class AreasTable extends ControllerActionTable
 {
@@ -349,6 +350,7 @@ class AreasTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         // Add breadcrumb
+        $serverRequest = new ServerRequest();
         $toolbarElements = [
             ['name' => 'Area.breadcrumb', 'data' => [], 'options' => []]
         ];
@@ -356,7 +358,7 @@ class AreasTable extends ControllerActionTable
 
         $this->field('parent_id', ['visible' => false]);
 
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $parentId = !is_null($serverRequest->getAttribute('query')['parent']) ? $serverRequest->getAttribute('query')['parent'] : null;
         if ($parentId != null) {
             $crumbs = $this
                 ->find('path', ['for' => $parentId])
@@ -399,7 +401,8 @@ class AreasTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $serverRequest = new ServerRequest();
+        $parentId = !is_null($serverRequest->getAttribute('query')['parent']) ? $serverRequest->getAttribute('query')['parent'] : null;
         if ($parentId != null) {
             $query->where([$this->aliasField('parent_id') => $parentId]);
         } else {
@@ -561,7 +564,7 @@ class AreasTable extends ControllerActionTable
 
     public function onGetName(Event $event, Entity $entity)
     {
-        return $event->subject()->HtmlField->link($entity->name, [
+        return $event->getSubject()->HtmlField->link($entity->name, [
             'plugin' => $this->controller->plugin,
             'controller' => $this->controller->name,
             'action' => $this->alias,
@@ -570,13 +573,15 @@ class AreasTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action)
     {
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $serverRequest = new ServerRequest();
+        $parentId = !is_null($serverRequest->getAttribute('query')['parent']) ? $serverRequest->getAttribute('query')['parent'] : null;
         $results = $this
             ->find()
             ->select([$this->aliasField('area_level_id')])
-            ->where([$this->aliasField('id') => $parentId])
+            // ->where([$this->aliasField('id') => $parentId])
             ->all();
 
         $attr['type'] = 'select';

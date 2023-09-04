@@ -9,13 +9,14 @@ use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\I18n\Time;
+use Cake\Http\ServerRequest;
 
 //POCOR-7271
 class SurveyRecipientsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_surveys');
+        $this->setTable('institution_surveys');
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods','foreignKey' => 'academic_period_id']);
         $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms','foreignKey' => 'survey_form_id']);
         parent::initialize($config);
@@ -30,21 +31,22 @@ class SurveyRecipientsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         //custom module option in toolbar
+        $serverRequest = new ServerRequest();
         $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey');
-        $CustomModules = TableRegistry::get('custom_modules');
+        $CustomModules = TableRegistry::get('CustomField.CustomModules');
         $moduleOptions =  $CustomModules
             ->find('list', ['keyField' => 'id', 'valueField' => 'code']) 
-           ->where(['custom_modules.name IN' => $name])->toArray();
+           ->where([$CustomModules->aliasField('name IN') => $name])->toArray();
 
         if (!empty($moduleOptions)) {
             $moduleOptions = $moduleOptions;
-            $moduleId = $this->request->query('survey_module_id');
+            $moduleId = $serverRequest->getAttribute('query')['survey_module_id'];
             $this->advancedSelectOptions($moduleOptions, $moduleId);
             $this->controller->set(compact('moduleOptions'));
         }
 
         // Survey form options
-        $this->SurveyForms = TableRegistry::get('survey_forms');
+        $this->SurveyForms = TableRegistry::get('Survey.SurveyForms');
         $surveyFormOptions = $this->SurveyForms
             ->find('list')
             ->order([
@@ -52,12 +54,12 @@ class SurveyRecipientsTable extends ControllerActionTable
             ])
             ->toArray();
         $surveyFormOptions = ['-1' => '-- '.__('All Survey Form').' --'] + $surveyFormOptions;
-        $surveyFormId = $this->request->query('survey_form_id');
+        $surveyFormId = $serverRequest->getAttribute('query')['survey_form_id'];
         $this->advancedSelectOptions($surveyFormOptions, $surveyFormId);
         $this->controller->set(compact('surveyFormOptions'));
 
         // survey filter options toolbar
-        $this->SurveyFilters = TableRegistry::get('survey_forms_filters');
+        $this->SurveyFilters = TableRegistry::get('Survey.SurveyFormsFilters');
         if($surveyFormId != -1){
             $surveyFilterOptions = $this->SurveyFilters
                 ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -76,19 +78,19 @@ class SurveyRecipientsTable extends ControllerActionTable
                 ->toArray();
         }
         $surveyFilterOptions = ['-1' => '-- '.__('All Survey Filter').' --'] + $surveyFilterOptions;
-        $surveyFilterId = $this->request->query('survey_filter_id');
+        $surveyFilterId = $serverRequest->getAttribute('query')['survey_filter_id'];
         $this->advancedSelectOptions($surveyFilterOptions, $surveyFilterId);
      
         $extra['elements']['controls'] = ['name' => 'Survey.survey_status', 'data' => [], 'options' => [], 'order' => 3];
         $this->controller->set(compact('surveyFilterOptions'));
 
-        $institutions = TableRegistry::get('institutions');
-        $surveyForm = TableRegistry::get('survey_forms');
-        $SurveyFormFilters = TableRegistry::get('survey_forms_filters');
-        $SurveyStatus=TableRegistry::get('survey_statuses'); //POCOR-7611 
-        $SurveyAreas=TableRegistry::get('survey_filter_areas'); //POCOR-7611 
-        $SurveyInstitutionProviders=TableRegistry::get('survey_filter_institution_providers');//POCOR-7611 
-        $SurveyInstitutionTypes=TableRegistry::get('survey_filter_institution_types');//POCOR-7611 
+        $institutions = TableRegistry::get('Institution.Institutions');
+        $surveyForm = TableRegistry::get('Survey.SurveyForms');
+        $SurveyFormFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+        $SurveyStatus=TableRegistry::get('Survey.SurveyStatuses'); //POCOR-7611 
+        $SurveyAreas=TableRegistry::get('Survey.SurveyFilterAreas'); //POCOR-7611 
+        $SurveyInstitutionProviders=TableRegistry::get('Survey.SurveyFilterInstitutionProviders');//POCOR-7611 
+        $SurveyInstitutionTypes=TableRegistry::get('Survey.SurveyFilterInstitutionTypes');//POCOR-7611 
         $this->field('institution_code',['visible' => true]);
         $this->field('institution_name', ['visible' => true]);
         $this->field('status_id', ['visible' => false]);
@@ -103,14 +105,14 @@ class SurveyRecipientsTable extends ControllerActionTable
             $query->find('bySurveyRecipient', ['search' => $search]);
         }
 
-        $moduleId = $this->request->query('survey_module_id');
-        $surveyFormId = $this->request->query('survey_form_id');
-        $surveyFilterId = $this->request->query('survey_filter_id');
+        $moduleId = $serverRequest->getAttribute('query')['survey_module_id'];
+        $surveyFormId = $serverRequest->getAttribute('query')['survey_form_id'];
+        $surveyFilterId = $serverRequest->getAttribute('query')['survey_filter_id'];
         $where = [];
         //POCOR-7611 start
         $conditions=[];
         //filter for area,institution type and provider
-        if($surveyFilterId != -1){
+        if($surveyFilterId != -1 && $surveyFilterId != ''){
                 $SurveyInstitutionProvidersData=$SurveyInstitutionProviders
                             ->find()
                             ->select([$SurveyInstitutionProviders->aliasField('institution_provider_id')])
@@ -155,9 +157,9 @@ class SurveyRecipientsTable extends ControllerActionTable
              $query
             ->select(['id' => $this->aliasField('id'),'institution_name'=> $institutions->aliasField('name'),
                         'institution_code'=> $institutions->aliasField('code'),'academic_period_id','survey_form_id'])
-            ->leftJoin([$institutions->alias() => $institutions->table()],
+            ->leftJoin([$institutions->getAlias() => $institutions->getTable()],
                 [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
-            ->leftJoin([$surveyForm->alias() => $surveyForm->table()],
+            ->leftJoin([$surveyForm->getAlias() => $surveyForm->getTable()],
                 [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
             //->where([$surveyForm->aliasField('custom_module_id') => $moduleId])
             ->order([$this->aliasField('id') => 'DESC']);
@@ -165,9 +167,9 @@ class SurveyRecipientsTable extends ControllerActionTable
              $query
             ->select(['id' => $this->aliasField('id'),'institution_name'=> $institutions->aliasField('name'),
                         'institution_code'=> $institutions->aliasField('code'),'academic_period_id','survey_form_id'])
-            ->leftJoin([$institutions->alias() => $institutions->table()],
+            ->leftJoin([$institutions->getAlias() => $institutions->getTable()],
                 [$institutions->aliasField('id').'='.$this->aliasField('institution_id')])
-            ->leftJoin([$surveyForm->alias() => $surveyForm->table()],
+            ->leftJoin([$surveyForm->getAlias() => $surveyForm->getTable()],
                 [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
             ->where([$surveyForm->aliasField('custom_module_id') => $moduleId])
             ->order([$this->aliasField('id') => 'DESC']);

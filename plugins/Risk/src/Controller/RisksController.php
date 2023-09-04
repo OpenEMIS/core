@@ -12,7 +12,7 @@ use App\Controller\AppController;
 
 class RisksController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
     }
@@ -32,5 +32,11 @@ class RisksController extends AppController
         $header = __('Risks');
         $this->Navigation->addCrumb('Risks', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Risks']);
         $this->set('contentHeader', $header);
+    }
+
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 }

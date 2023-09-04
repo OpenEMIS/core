@@ -11,6 +11,7 @@ use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 /**
@@ -52,10 +53,10 @@ class ClassesProfilesTable extends ControllerActionTable
         'zip'   => 'application/zip'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     { 
         ini_set('memory_limit', '2G');
-        $this->table('institutions');
+        $this->setTable('institutions');
         parent::initialize($config);
 
 		$this->toggle('add', false);
@@ -74,7 +75,7 @@ class ClassesProfilesTable extends ControllerActionTable
         ];
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.generate'] = 'generate';
@@ -281,20 +282,21 @@ class ClassesProfilesTable extends ControllerActionTable
             ->order([
                 $this->ClassProfileProcesses->aliasField('created'),
             ])
-            ->hydrate(false)
+            // ->hydrate(false)
             ->toArray();
 		$this->setupTabElements();	
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {		
+    {
+        $serverRequest = new ServerRequest();		
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         // Academic Periods filter
         $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         //End
-		$ProfileTemplates = TableRegistry::get('class_profile_templates');
+		$ProfileTemplates = TableRegistry::get('ProfileTemplate.ClassProfileTemplates');
         // Report Cards filter
         $reportCardOptions = [];
 		$reportCardOptions = $ProfileTemplates->find('list')
@@ -304,7 +306,7 @@ class ClassesProfilesTable extends ControllerActionTable
 			->toArray();
        
         $reportCardOptions = ['-1' => '-- '.__('Select Class Profile Template').' --'] + $reportCardOptions;
-        $selectedReportCard = !is_null($this->request->query('class_profile_template_id')) ? $this->request->query('class_profile_template_id') : -1;
+        $selectedReportCard = !is_null($serverRequest->getAttribute('query')['class_profile_template_id']) ? $serverRequest->getAttribute('query')['class_profile_template_id'] : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
 		//End
 	    // Area Level filter
@@ -312,7 +314,7 @@ class ClassesProfilesTable extends ControllerActionTable
         $areaLevelOptions = [];
         $areaLevelOptions = $AreaLevel->find('list')->toArray();
         $areaLevelOptions = ['-1' => '-- '.__('Select Area Level').' --'] + $areaLevelOptions;
-        $selectedAreaLevel = !is_null($this->request->query('area_level_id')) ? $this->request->query('area_level_id') : -1;
+        $selectedAreaLevel = !is_null($serverRequest->getAttribute('query')['area_level_id']) ? $serverRequest->getAttribute('query')['area_level_id'] : -1;
         $this->controller->set(compact('areaLevelOptions', 'selectedAreaLevel'));
         //End
         // Area filter
@@ -329,14 +331,14 @@ class ClassesProfilesTable extends ControllerActionTable
              ->toArray();  
         }                
         $areaOptions = ['-1' => __('--Select Area--')] + $areaOptions;
-        $selectedArea = !is_null($this->request->query('area_id')) ? $this->request->query('area_id') : -1;
+        $selectedArea = !is_null($serverRequest->getAttribute('query')['area_id']) ? $serverRequest->getAttribute('query')['area_id'] : -1;
         $this->controller->set(compact('areaOptions', 'selectedArea'));
         //End                    
         foreach($areaOptions AS $key => $areaOptionsData){
             $areaKey[$key] = $key;
         }
         // Institution filter
-        $Institutions = TableRegistry::get('Institutions');
+        $Institutions = TableRegistry::get('Institution.Institutions');
         $institutionOptions = [];
         if($selectedArea == -1){
             $institutionOptions = $Institutions->find('list')
@@ -367,7 +369,7 @@ class ClassesProfilesTable extends ControllerActionTable
         }
         
         $institutionOptions = ['-1' => '-- '.__('All Institution').' --'] + $institutionOptions;
-        $selectedInstitution = !is_null($this->request->query('institution_id')) ? $this->request->query('institution_id') : -1;
+        $selectedInstitution = !is_null($serverRequest->getAttribute('query')['institution_id']) ? $serverRequest->getAttribute('query')['institution_id'] : -1;
         $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
 
         if($selectedInstitution != -1){
@@ -377,7 +379,7 @@ class ClassesProfilesTable extends ControllerActionTable
             $where[$this->aliasField('id IN ')] = $institutionOptionsKey;
         } 
         //End
-        $InstitutionClasses = TableRegistry::get('institution_classes');
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $query
             ->select([
                 'institution_class_id' => $InstitutionClasses->aliasField('id'),
@@ -388,13 +390,13 @@ class ClassesProfilesTable extends ControllerActionTable
                 'report_card_started_on' => $this->ClassProfiles->aliasField('started_on'),
                 'report_card_completed_on' => $this->ClassProfiles->aliasField('completed_on'),
             ])
-            ->innerJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()],
+            ->innerJoin([$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()],
                 [
                     $InstitutionClasses->aliasField('institution_id = ') . $this->aliasField('id'),
                     $InstitutionClasses->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
                 ]
             )
-            ->leftJoin([$this->ClassProfiles->alias() => $this->ClassProfiles->table()],
+            ->leftJoin([$this->ClassProfiles->getAlias() => $this->ClassProfiles->getTable()],
                 [
                     $this->ClassProfiles->aliasField('institution_id = ') . $this->aliasField('id'),
                     $this->ClassProfiles->aliasField('academic_period_id = ') . $selectedAcademicPeriod,
@@ -403,7 +405,7 @@ class ClassesProfilesTable extends ControllerActionTable
                 ]
             )
             ->where($where)
-            ->autoFields(true)
+            // ->autoFields(true)
             ->order([
                 $this->aliasField('name'),
             ])
@@ -435,9 +437,10 @@ class ClassesProfilesTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $reportCardId = $this->request->query('class_profile_template_id');
-        $academicPeriodId = $this->request->query('academic_period_id');
-        $institutionId = $this->request->query('institution_id');
+        $serverRequest = new ServerRequest();
+        $reportCardId = $serverRequest->getAttribute('query')['class_profile_template_id'];
+        $academicPeriodId = $serverRequest->getAttribute('query')['academic_period_id'];
+        $institutionId = $serverRequest->getAttribute('query')['institution_id'];
 		
         if (!is_null($reportCardId)) {
             $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);

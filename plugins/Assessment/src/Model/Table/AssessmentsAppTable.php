@@ -23,20 +23,20 @@ class AssessmentsAppTable extends AppTable {
 		]
 	];
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->_initializeFields();
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 		return $validator;
 	}
 
 	private function _initializeFields() {
-		$alias = $this->alias();
-		$className = $this->registryAlias();
-		$schema = $this->schema();
+		$alias = $this->getAlias();
+		$className = $this->getRegistryAlias();
+		$schema = $this->getSchema();
 
 		$columns = $schema->columns();
 		$fields = [];
@@ -44,7 +44,7 @@ class AssessmentsAppTable extends AppTable {
 		$order = 10;
 
 		foreach ($columns as $i => $col) {
-			$attr = $schema->column($col);
+			$attr = $schema->getColumn($col);
 			$attr['model'] = $alias;
 			$attr['className'] = $className;
 			$attr['visible'] = $col != 'password' ? $visibility : false;
@@ -53,7 +53,7 @@ class AssessmentsAppTable extends AppTable {
 
 			$fields[$col] = $attr;
 		}
-		$primaryKey = $this->primaryKey();
+		$primaryKey = $this->getPrimaryKey();
 
 		if (!is_array($primaryKey) && array_key_exists($primaryKey, $fields)) { // not composite primary keys
 			$fields[$primaryKey]['type'] = 'hidden';

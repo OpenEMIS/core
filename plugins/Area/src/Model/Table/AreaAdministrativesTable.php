@@ -18,7 +18,7 @@ class AreaAdministrativesTable extends ControllerActionTable
     private $fieldsOrder = ['visible', 'code', 'name', 'area_administrative_level_id'];
     private $worldId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AreaAdministrativeParents', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'parent_id']);
@@ -29,9 +29,11 @@ class AreaAdministrativesTable extends ControllerActionTable
         $this->hasMany('UsersBirthplaceAreas', ['className' => 'Directory.Directories', 'foreignKey' => 'birthplace_area_id']);
         $this->addBehavior('Tree');
         if ($this->behaviors()->has('Reorder')) {
-            $this->behaviors()->get('Reorder')->config([
-                'filter' => 'parent_id',
-            ]);
+            // $this->behaviors()->get('Reorder')->config([
+            //     'filter' => 'parent_id',
+            // ]);
+            $reorderBehavior = $this->behaviors()->get('Reorder');
+            $reorderBehavior->setConfig('filter', 'parent_id');
         }
 
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -43,7 +45,7 @@ class AreaAdministrativesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
     //POCOR-5672 starts
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
@@ -59,7 +61,7 @@ class AreaAdministrativesTable extends ControllerActionTable
         }
     }//POCOR-5672 ends
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
         return $validator
             ->add('code', 'ruleUniqueCode', [

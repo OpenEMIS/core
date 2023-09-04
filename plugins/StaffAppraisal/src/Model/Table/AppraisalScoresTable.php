@@ -26,9 +26,9 @@ class AppraisalScoresTable extends ControllerActionTable
         'AVG' => 'Average'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('appraisal_forms');
+        $this->setTable('appraisal_forms');
         parent::initialize($config);
 
         $this->hasMany('AppraisalPeriods', [
@@ -483,7 +483,8 @@ class AppraisalScoresTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldFinalScore(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldFinalScore(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFinalScore(Event $event, array $attr, $action)
     {
         if ($action == 'edit') {
             $entity = $attr['attr']['entity'];
@@ -515,7 +516,8 @@ class AppraisalScoresTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCode(Event $event, array $attr, $action)
     {
         if ($action == 'edit') {
             if (array_key_exists('attr', $attr) && array_key_exists('entity', $attr['attr'])) {
