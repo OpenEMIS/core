@@ -1514,6 +1514,70 @@ class StaffTable extends ControllerActionTable
         }
     }
 
+    /**
+     * @param Event $event
+     * @param Entity $entity
+     */
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+
+        $staff_id = !empty($entity->staff_id) ? $entity->staff_id : NULL;
+        $affected = $this->removeIndividualChildRecords($staff_id);
+//        $this->log("deleted $affected children", 'debug');
+    }
+
+    /**
+     * @param $staff_id
+     * @return int
+     */
+    private function removeIndividualChildRecords($staff_id)
+    {
+        $affected = 0;
+        if ($staff_id) {
+
+            $table_name = 'security_group_users';
+            $field_name = 'security_user_id';
+            $affected = $affected + $this->removeFromTable($staff_id, $table_name, $field_name);
+
+            $table_name = 'user_activities';
+            $field_name = 'security_user_id';
+            $affected = $affected + $this->removeFromTable($staff_id, $table_name, $field_name);
+
+            $table_name = 'staff_custom_field_values';
+            $field_name = 'staff_id';
+            $affected = $affected + $this->removeFromTable($staff_id, $table_name, $field_name);
+
+        }
+
+        return $affected;
+
+    }
+
+
+    /**
+     * @param $user_id
+     * @param $table_name
+     * @param $field_name
+     * @return int
+     */
+    private function removeFromTable($user_id, $table_name, $field_name)
+    {
+        $affected = 0;
+        try {
+            $tableToClean = TableRegistry::get($table_name);
+            $affected = $tableToClean->deleteAll([
+                $tableToClean->aliasField($field_name) => $user_id
+            ]);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch remove from table',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+        }
+        return $affected;
+    }
+
+
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
         $broadcaster = $this;
