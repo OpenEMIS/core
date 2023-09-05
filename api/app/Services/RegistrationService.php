@@ -430,4 +430,55 @@ class RegistrationService extends Controller
         }
     }
 
+
+
+    public function areaAdministrativeLevelsDropdown()
+    {
+        try {
+            $data = $this->registrationRepository->areaAdministrativeLevelsDropdown()->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->name,
+                    ];
+                }
+            );
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Administrative Levels List Not Found');
+        }
+    }
+
+
+    public function areasAdministrativeDropdown($request)
+    {
+        try {
+            $data = $this->registrationRepository->areasAdministrativeDropdown($request)->map(
+                function ($item, $key) {
+                    return [
+                        "id" => $item->id,
+                        "name" => $item->name,
+                    ];
+                }
+            );
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Administrative Names List Not Found');
+        }
+    }
+
 }

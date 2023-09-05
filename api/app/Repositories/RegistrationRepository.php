@@ -26,6 +26,7 @@ use App\Models\StudentCustomFieldValues;
 use App\Models\IdentityTypes;
 use App\Models\InstitutionTypes;
 use App\Models\AreaLevels;
+use App\Models\AreaAdministrativeLevels;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
@@ -936,6 +937,47 @@ class RegistrationRepository extends Controller
             );
 
             return $this->sendErrorResponse('Area Levels List Not Found');
+        }
+    }
+
+
+    public function areaAdministrativeLevelsDropdown()
+    {
+        try {
+            $areaLevels = AreaAdministrativeLevels::select('id', 'name')->get();
+            
+            return $areaLevels;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Levels List Not Found');
+        }
+    }
+
+
+
+    public function areasAdministrativeDropdown($request)
+    {
+        try {
+            $areas = AreaAdministrativeLevels::select('id', 'name');
+
+            if($request['area_level_id']){
+                $areas = $areas->where('area_administrative_level_id', $request['area_administrative_level_id']);
+            }
+
+            $data = $areas->orderBy('name', 'ASC')->get();
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Administrative Levels List Not Found');
         }
     }
 
