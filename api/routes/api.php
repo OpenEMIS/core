@@ -43,6 +43,11 @@ Route::group(
         Route::get('area-levels/list', 'RegistrationController@areaLevelsDropdown');
         Route::get('areas/list', 'RegistrationController@areasDropdown');
 
+        //POCOR-7728 starts...
+        Route::get('area-administrative-levels/list', 'RegistrationController@areaAdministrativeLevelsDropdown');
+        Route::get('area-administratives/list', 'RegistrationController@areasAdministrativeDropdown');
+        //POCOR-7728 ends...
+
         Route::get('institutions/areas/list', 'RegistrationController@administrativeAreasList');
 
         Route::get('institutions/subjects/staff', 'InstitutionController@getSubjectsStaffList');

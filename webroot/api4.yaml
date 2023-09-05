@@ -4265,6 +4265,63 @@ paths:
 
 # POCOR-7546 ends
 
+
+#POCOR-7728 starts
+  /api/v4/area-administrative-levels/list:
+      get:
+        tags:
+          - Area Administrative Levels List
+        summary: Get Area Administrative Levels List List
+        description: Area administrative levels list is provided to filter area administrative dropdown.
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Area-Administrative-Levels'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Assessments'
+          '400':
+            description: Invalid status value
+
+  /api/v4/area-administratives/list:
+      get:
+        tags:
+          - Area Administrative List
+        summary: Get Area Administrative List List
+        description: Area administrative list is used on OpenEMIS Registration.
+        parameters:
+          - name: area_administrative_level_id
+            in: header
+            description: This is to filter area administrative list
+            required: false
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Area-Administrative'         
+              application/xml:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Assessments'
+          '400':
+            description: Invalid status value
+
+#POCOR-7728 ends
+
 components:
   schemas:
     Institutions:
@@ -7231,3 +7288,29 @@ components:
                 1228,
                 1229}"
     #POCOR-7546 ends
+
+#POCOR-7728 starts
+    Area-Administrative-Levels:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 129
+        name:
+          type: string
+          format: varchar
+          example: Country
+
+    Area-Administrative:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int11
+          example: 129
+        name:
+          type: string
+          format: varchar
+          example: Continent
+#POCOR-7728 ends
