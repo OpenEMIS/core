@@ -602,6 +602,12 @@ class StudentAttendancesTable extends ControllerActionTable
         return $query;
     }
 
+    /**
+     * @param Query $query
+     * @param array $options
+     * @return Query
+     * @throws \Exception
+     */
     public function findClassStudentsWithAbsenceArchive(Query $query, array $options)
 
     {
@@ -1545,8 +1551,8 @@ class StudentAttendancesTable extends ControllerActionTable
      * @param $day
      * @param bool $archive
      * @return bool
+     * @throws \Exception
      */
-
     private function getNotMarkedDay($institutionId,
                                      $academicPeriodId,
                                      $institutionClassId,
