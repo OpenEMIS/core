@@ -1417,24 +1417,56 @@ class AcademicPeriodsTable extends AppTable
     public function findPeriodHasClassArchived(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
-        $academicPeriodWithRecordsArchiveArray = ArchiveConnections::getArchiveYears('student_attendance_marked_records',
-            ['institution_id' => $institutionId]);
-        $academicPeriodWithDetailsArchiveArray = ArchiveConnections::getArchiveYears('institution_student_absence_details_archived',
-            ['institution_id' => $institutionId]);
+        $institutionClassIds = $this->getInstitutionClasses($institutionId);
+        $academicPeriodArrayOne =
+            ArchiveConnections::getArchiveYears('institution_class_attendance_records',
+                ['institution_class_id IN' => $institutionClassIds]);
+        $academicPeriodArrayTwo =
+            ArchiveConnections::getArchiveYears('institution_student_absences',
+                ['institution_id' => $institutionId]);
+        $academicPeriodArrayThree =
+            ArchiveConnections::getArchiveYears('institution_student_absence_details',
+                ['institution_id' => $institutionId]);
+        $academicPeriodArrayFour =
+            ArchiveConnections::getArchiveYears('student_attendance_marked_records',
+                ['institution_id' => $institutionId]);
+
         $academicPeriodWithArchiveArrayId = [0];
         $academicPeriodWithArchiveArray = array_unique(
-          array_merge($academicPeriodWithRecordsArchiveArray, $academicPeriodWithDetailsArchiveArray)
+            array_merge($academicPeriodArrayOne,
+                $academicPeriodArrayTwo,
+                $academicPeriodArrayThree,
+                $academicPeriodArrayFour)
         );
         if (sizeof($academicPeriodWithArchiveArray) > 0) {
             $academicPeriodWithArchiveArrayId = $academicPeriodWithArchiveArray;
         }
-
+//        $this->log('$academicPeriodWithArchiveArrayId', 'debug');
+//        $this->log($academicPeriodWithArchiveArrayId, 'debug');
         $where = [
             $this->aliasField('current !=') => 1,
             $this->aliasField('id IN') => $academicPeriodWithArchiveArrayId
         ];
         return $query->where($where);
     }
+
+    /**
+     * @param $institutionId
+     * @return array
+     */
+    private function getInstitutionClasses($institutionId)
+    {
+        $tableClasses = TableRegistry::get('institution_classes');
+        $distinctClasses = $tableClasses->find('all')
+            ->where(['institution_id' => $institutionId])
+            ->select(['id'])
+            ->distinct(['id'])
+            ->toArray();
+        $distinctClassValues = array_column($distinctClasses, 'id');
+        $institutionClassIds = array_unique($distinctClassValues);
+        return $institutionClassIds;
+    }
+
 
     public function findWorkingDayOfWeek(Query $query, array $options)
     {
