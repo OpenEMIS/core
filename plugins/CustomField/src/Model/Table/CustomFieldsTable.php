@@ -103,6 +103,7 @@ class CustomFieldsTable extends ControllerActionTable
         $url = $this->request->here();
 //        $this->log('entity', 'debug');
 //        $this->log($entity, 'debug');
+//        $this->log($url, 'debug');
         $no_options = true;
         if ($entity->field_type == "CHECKBOX" ) {
             $no_options = false;
@@ -115,6 +116,7 @@ class CustomFieldsTable extends ControllerActionTable
         }
         list($options_table_name, $options_custom_field_id) =
             $this->getCustomFieldDomain($url);
+        $this->log("$options_table_name, $options_custom_field_id", 'debug');
 
         $CustomFieldOptions =
             TableRegistry::get($options_table_name);
@@ -278,7 +280,7 @@ class CustomFieldsTable extends ControllerActionTable
             $key = array_search($customFieldsName, $arr); //POCOR-7700
         }
         if (!$key) {
-            $customFieldsName = 'InfrastructureCustomFields';
+            $customFieldsName = 'Infrastructures';
             $key = array_search($customFieldsName, $arr); //POCOR-7700
         }
         if ($arr[$key] == $customFieldsName) {
@@ -294,7 +296,7 @@ class CustomFieldsTable extends ControllerActionTable
                 $options_table_name = 'staff_custom_field_options';
                 $options_custom_field_id = 'staff_custom_field_id';
             }
-            if ($customFieldsName == 'InfrastructureCustomFields') {
+            if ($customFieldsName == 'Infrastructures') {
                 $options_table_name = 'infrastructure_custom_field_options';
                 $options_custom_field_id = 'infrastructure_custom_field_id';
             }
