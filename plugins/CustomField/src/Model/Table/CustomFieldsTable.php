@@ -116,7 +116,7 @@ class CustomFieldsTable extends ControllerActionTable
         }
         list($options_table_name, $options_custom_field_id) =
             $this->getCustomFieldDomain($url);
-        $this->log("$options_table_name, $options_custom_field_id", 'debug');
+//        $this->log("$options_table_name, $options_custom_field_id", 'debug');
 
         $CustomFieldOptions =
             TableRegistry::get($options_table_name);
