@@ -100,7 +100,314 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
         },
         getRowHeight: getRowHeight,
     };
+    
+    function handleError(error) {
+        removeLoader();
+        console.error(error);
+        AlertSvc.warning($scope, error);
+        vm.initGrid();
+        vm.setGridData();
+        vm.setColumnDef();
+        return $q.reject('There is an error retrieving the data.');
+    }
 
+    function removeLoader() {
+        UtilsSvc.isAppendLoader(false);
+    }
+
+    function appendLoader() {
+        AlertSvc.reset($scope);
+        UtilsSvc.isAppendLoader(true);
+    }
+
+    function setDayMonthYear() {
+        var currentDate = new Date();
+        var currentYear = currentDate.getFullYear();
+        var currentMonth = currentDate.getMonth() + 1;
+        var currentdate = currentDate.getDate();
+        // console.log(currentYear + '-' +currentMonth + '-' + currentdate)
+        vm.currentDayMonthYear = currentYear + '-' + currentMonth + '-' + currentdate;
+    }
+
+    function getAbsenceTypeOptions() {
+        var promise;
+        promise = InstitutionStudentAttendancesArchiveSvc.getAbsenceTypeOptions();
+        return promise.then(function (result) {
+            return result;
+        });
+    }
+
+    function getTranslatedText() {
+        var promise;
+        promise = InstitutionStudentAttendancesArchiveSvc.getTranslatedText();
+        return promise.then(function (result) {
+            return result;
+        });
+    }
+
+    function setAbsenceTypes(result) {
+        vm.absenceType = result;
+        vm.gridOptions.context.absenceTypes = vm.absenceType;
+    }
+
+    function getStudentAbsenceReasonOptions() {
+        var promise;
+        promise = InstitutionStudentAttendancesArchiveSvc.getStudentAbsenceReasonOptions();
+        return promise.then(function (result) {
+            return result;
+        });
+    }
+
+
+    function setAbsenceReasons(result) {
+        vm.studentAbsenceReasonOptions = result;
+        vm.gridOptions.context.studentAbsenceReasons = vm.studentAbsenceReasonOptions;
+    }
+
+    function getAcademicPeriodOptions() {
+        var promise;
+        promise = InstitutionStudentAttendancesArchiveSvc.getAcademicPeriodOptions(vm.institutionId);
+        return promise.then(function (result) {
+            return result;
+        });
+    }
+
+    function setAcademicPeriodOptions(result) {
+        vm.academicPeriodOptions = result;
+        // console.log(vm.academicPeriodOptions);
+        if (result.length > 0) {
+
+            for (var i = 0; i < result.length; ++i) {
+                vm.selectedAcademicPeriod = result[0].id;
+                if (angular.isDefined(result[i]['selected'] && result[i]['selected'])) {
+                    vm.selectedAcademicPeriod = result[i].id;
+                    break;
+                }
+            }
+
+        }
+
+    }
+
+    function getWeekListOptions() {
+        var promise;
+        promise = InstitutionStudentAttendancesArchiveSvc.getWeekListOptions(vm.selectedAcademicPeriod);
+        return promise.then(function (result) {
+            return result;
+        });
+    }
+
+    function setWeekListOptions(result) {
+        vm.weekListOptions = result;
+        if (result.length > 0) {
+            for (var i = 0; i < result.length; ++i) {
+                if (angular.isDefined(result[i]['selected']) && result[i]['selected']) {
+                    vm.selectedWeek = result[i].id;
+                    vm.selectedWeekStartDate = result[i].start_day;
+                    vm.selectedWeekEndDate = result[i].end_day;
+                    vm.week = vm.selectedWeek;
+                    vm.gridOptions.context.week = vm.selectedWeek;
+                    break;
+                }
+            }
+        }
+
+    }
+
+    function getDayListOptions() {
+        var promise;
+        promise = InstitutionStudentAttendancesArchiveSvc.getDayListOptions(vm.selectedAcademicPeriod, vm.selectedWeek, vm.institutionId);
+        return promise.then(function (result) {
+            return result;
+        });
+    }
+
+    function setDayListOptions(dayListOptions) {
+        vm.dayListOptions = dayListOptions;
+        var hasSelected = false;
+        if (dayListOptions.length > 0) {
+            for (var i = 0; i < dayListOptions.length; ++i) {
+                if (angular.isDefined(dayListOptions[i]['selected']) && dayListOptions[i]['selected']) {
+                    hasSelected = true;
+                    vm.selectedDay = dayListOptions[i].date;
+                    vm.schoolClosed = (angular.isDefined(dayListOptions[i]['closed']) && dayListOptions[i]['closed']) ? true : false;
+                    vm.gridOptions.context.date = vm.selectedDay;
+                    vm.gridOptions.context.schoolClosed = vm.schoolClosed;
+                    break;
+                }
+            }
+
+            if (!hasSelected) {
+                vm.selectedDay = dayListOptions[0].date;
+                vm.schoolClosed = (angular.isDefined(dayListOptions[0]['closed']) && dayListOptions[0]['closed']) ? true : false;
+                vm.gridOptions.context.date = vm.selectedDay;
+                vm.gridOptions.context.schoolClosed = vm.schoolClosed;
+            }
+        }
+
+        if (dayListOptions.length < 1) {
+            vm.selectedDay = -1;
+            vm.gridOptions.context.date = vm.selectedDay;
+        }
+    }
+
+
+    function getClassOptions() {
+        var promise;
+        promise = InstitutionStudentAttendancesArchiveSvc.getClassOptions(vm.institutionId, vm.selectedAcademicPeriod);
+        return promise.then(function (result) {
+            return result;
+        });
+    }
+
+    function setClassOptions(classListOptions) {
+        vm.classListOptions = classListOptions;
+        if (classListOptions.length > 0) {
+            vm.selectedClass = classListOptions[0].id;
+            if (classListOptions[0].SecurityRoleFunctions) {
+                vm.superAdmin = 0;
+                vm.permissionView = classListOptions[0].SecurityRoleFunctions._view;
+                vm.permissionEdit = classListOptions[0].SecurityRoleFunctions._edit;
+            }
+        }
+    }
+
+    function getEducationGradeOptions() {
+        var promise;
+        promise = InstitutionStudentAttendancesArchiveSvc.getEducationGradeOptions(vm.institutionId, vm.selectedAcademicPeriod, vm.selectedClass);
+        return promise.then(function (result) {
+            return result;
+        });
+    }
+
+    function setEducationGradeOptions(educationGradeListOptions) {
+        vm.educationGradeListOptions = educationGradeListOptions;
+        if (educationGradeListOptions.length > 0) {
+            vm.selectedEducationGrade = educationGradeListOptions[0].id;
+            vm.gridOptions.context.education_grade_id = vm.selectedEducationGrade;
+        }
+    }
+
+    function isMarkableSubjectAttendance() {
+        var promise;
+        promise = InstitutionStudentAttendancesArchiveSvc.isMarkableSubjectAttendance(vm.institutionId, vm.selectedAcademicPeriod, vm.selectedClass, vm.selectedDay);
+        return promise.then(function (result) {
+            return result;
+        });
+    }
+
+    function setMarkableSubjectAttendance(result) {
+        vm.isMarkableSubjectAttendance = result;
+    }
+
+    function getSubjectOptions() {
+        var promise;
+        promise = InstitutionStudentAttendancesArchiveSvc.getSubjectOptions(vm.institutionId, vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade);
+        return promise.then(function (result) {
+            return result;
+        });
+    }
+
+    function setSubjectOptions(subjectListOptions) {
+        vm.subjectListOptions = subjectListOptions;
+        vm.selectedSubject = 0;
+        if (vm.isMarkableSubjectAttendance == true) {
+            if (subjectListOptions.length > 0) {
+                vm.selectedSubject = subjectListOptions[0].id;
+            }
+        }
+        vm.gridOptions.context.subject_id = vm.selectedSubject;
+    }
+
+    function getPeriodOptions() {
+        var promise;
+        promise = InstitutionStudentAttendancesArchiveSvc.getPeriodOptions(
+            vm.selectedClass,
+            vm.selectedAcademicPeriod,
+            vm.selectedDay,
+            vm.selectedEducationGrade,
+            vm.selectedWeekStartDate,
+            vm.selectedWeekEndDate);
+        //POCOR-7183 add params vm.selectedWeekStartDate, vm.selectedWeekEndDate
+        return promise.then(function (result) {
+            return result;
+        });
+    }
+
+    function setPeriodOptions(attendancePeriodOptions) {
+        vm.attendancePeriodOptions = attendancePeriodOptions;
+        if (attendancePeriodOptions.length > 0) {
+            vm.selectedAttendancePeriod = attendancePeriodOptions[0].id;
+            vm.gridOptions.context.period = vm.selectedAttendancePeriod;
+        }
+
+        vm.excelExportAUrl = vm.exportexcel +
+            '?institution_id=' + vm.institutionId +
+            '&institution_class_id=' + vm.selectedClass +
+            '&education_grade_id=' + vm.selectedEducationGrade +
+            '&academic_period_id=' + vm.selectedAcademicPeriod +
+            '&day_id=' + vm.selectedDay +
+            '&attendance_period_id=' + vm.selectedAttendancePeriod +
+            '&week_start_day=' + vm.selectedWeekStartDate +
+            '&week_end_day=' + vm.selectedWeekEndDate +
+            '&subject_id=' + vm.selectedSubject +
+            '&week_id=' + vm.selectedWeek;
+    }
+
+    function getIsMarked() {
+        var promise;
+        var options = {
+            institution_id: vm.institutionId,
+            institution_class_id: vm.selectedClass,
+            education_grade_id: vm.selectedEducationGrade,
+            academic_period_id: vm.selectedAcademicPeriod,
+            day_id: vm.selectedDay,
+            attendance_period_id: vm.selectedAttendancePeriod,
+            subject_id: vm.selectedSubject
+        };
+        promise = InstitutionStudentAttendancesArchiveSvc.getIsMarked(options);
+        //POCOR-7183 add params vm.selectedWeekStartDate, vm.selectedWeekEndDate
+        return promise.then(function (result) {
+            return result;
+        });
+    }
+
+    function setIsMarked(isMarked) {
+        vm.isMarked = isMarked;
+        vm.gridOptions.context.isMarked = isMarked;
+
+    }
+
+    function getClassStudent() {
+        if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
+            return [];
+        }
+        var promise;
+        var options = {
+            institution_id: vm.institutionId,
+            institution_class_id: vm.selectedClass,
+            education_grade_id: vm.selectedEducationGrade,
+            academic_period_id: vm.selectedAcademicPeriod,
+            day_id: vm.selectedDay,
+            attendance_period_id: vm.selectedAttendancePeriod,
+            week_start_day: vm.selectedWeekStartDate,
+            week_end_day: vm.selectedWeekEndDate,
+            week_id: vm.selectedWeek,
+            subject_id: vm.selectedSubject
+        };
+        promise = InstitutionStudentAttendancesArchiveSvc.getClassStudent(options);
+
+        return promise.then(function (result) {
+            return result;
+        });
+    }
+
+    function setClassStudent(classStudents) {
+        vm.classStudents = [];
+        vm.classStudentList = classStudents;
+        // console.log(classStudents);
+    }
+    
     // ready
     angular.element(document).ready(function () {
 
@@ -108,7 +415,7 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
         var currentYear = currentDate.getFullYear();
         var currentMonth = currentDate.getMonth()+1;
         var currentdate = currentDate.getDate();
-        console.log(currentYear + '-' +currentMonth + '-' + currentdate)
+        // console.log(currentYear + '-' +currentMonth + '-' + currentdate)
         vm.currentDayMonthYear = currentYear + '-' +currentMonth + '-' + currentdate;
         InstitutionStudentAttendancesArchiveSvc.init(angular.baseUrl, $scope);
         vm.action = 'view';
@@ -148,27 +455,27 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
                 return InstitutionStudentAttendancesArchiveSvc.getEducationGradeOptions(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass);
             }, vm.error)
             .then(function(educationGradeListOptions) {
-                console.log("educationGradeListOptions", educationGradeListOptions)
+                // console.log("educationGradeListOptions", educationGradeListOptions)
                 vm.updateEducationGradeList(educationGradeListOptions);                
                 return InstitutionStudentAttendancesArchiveSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass,vm.selectedDay);
             }, vm.error)
             .then(function(attendanceType) {
-                console.log("attendanceType", attendanceType) 
+                // console.log("attendanceType", attendanceType)
                 vm.isMarkableSubjectAttendance = attendanceType;                     
                 return InstitutionStudentAttendancesArchiveSvc.getSubjectOptions(vm.institutionId,vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade);
             }, vm.error)
             .then(function(subjectListOptions) {
-                console.log("subjectListOptions", subjectListOptions)
+                // console.log("subjectListOptions", subjectListOptions)
                 vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
                 return InstitutionStudentAttendancesArchiveSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade, vm.selectedWeekStartDate, vm.selectedWeekEndDate); //POCOR-7183 add params vm.selectedWeekStartDate, vm.selectedWeekEndDate
                 }, vm.error)
             .then(function(attendancePeriodOptions) {
-                console.log("attendancePeriodOptions", attendancePeriodOptions)
+                // console.log("attendancePeriodOptions", attendancePeriodOptions)
                 vm.updateAttendancePeriodList(attendancePeriodOptions);
                 return InstitutionStudentAttendancesArchiveSvc.getIsMarked(vm.getIsMarkedParams());
             }, vm.error)
             .then(function(isMarked) {
-                console.log("isMarked", isMarked)
+                // console.log("isMarked", isMarked)
                 vm.updateIsMarked(isMarked);
                 return InstitutionStudentAttendancesArchiveSvc.getClassStudent(vm.getClassStudentParams());
             }, vm.error)
@@ -186,8 +493,13 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
     });
 
     // error
-    vm.error = function (error, test) {
-        return $q.reject(error);
+    vm.error = function (error) {
+        UtilsSvc.isAppendLoader(false);
+        console.error(error);
+        vm.initGrid();
+        vm.setGridData();
+        vm.setColumnDef();
+        return $q.reject('There is an error retrieving the data.');
     }
 
     // update data
@@ -224,14 +536,14 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
     vm.updateDayList = function(dayListOptions) {
 
         vm.dayListOptions = dayListOptions;
-        console.log(vm.dayListOptions);
+        // console.log(vm.dayListOptions);
         var hasSelected = false;
         if (dayListOptions.length > 0) {
             for (var i = 0; i < dayListOptions.length; ++i) {
                 if (angular.isDefined(dayListOptions[i]['selected']) && dayListOptions[i]['selected']) {
                     hasSelected = true;
                     vm.selectedDay = dayListOptions[i].date;
-                    console.log(vm.selectedDay);
+                    // console.log(vm.selectedDay);
                    
                     vm.schoolClosed = (angular.isDefined(dayListOptions[i]['closed']) && dayListOptions[i]['closed']) ? true : false;
                     vm.gridOptions.context.date = vm.selectedDay;
@@ -471,13 +783,12 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
 
     // dashboard count
     vm.countStudentData = function(data) {
-        // var attendanceType = InstitutionStudentAttendancesArchiveSvc.getAttendanceTypeListCount(vm.getClassStudentParams());
         var absenceCount = 0;
         var lateCount = 0;
         totalStudents = 0;
         angular.forEach(data, function(obj, key) {
-            console.log("attendanceType In Controller");
-            console.log(obj);
+            // console.log("attendanceType In Controller");
+            // console.log(obj);
             if(obj.absence_type_id == 1 || obj.absence_type_id == 2){
                 ++absenceCount;
             }else if(obj.absence_type_id == 3){
@@ -493,8 +804,8 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
     // params
     vm.getClassStudentParams = function() {
 
-        vm.excelExportAUrl = vm.exportexcel
-                             +'?institution_id='+ vm.institutionId+
+        vm.excelExportAUrl = vm.exportexcel+
+                             '?institution_id='+ vm.institutionId+
                             '&institution_class_id='+ vm.selectedClass+
                             '&education_grade_id='+ vm.selectedEducationGrade+
                             '&academic_period_id='+ vm.selectedAcademicPeriod+
@@ -503,7 +814,7 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
                             '&week_start_day='+ vm.selectedWeekStartDate+
                             '&week_end_day='+ vm.selectedWeekEndDate+
                             '&subject_id='+ vm.selectedSubject+
-                            '&week_id='+ vm.selectedWeek
+                            '&week_id='+ vm.selectedWeek;
         
         return {
             institution_id: vm.institutionId,
