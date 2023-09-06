@@ -2718,6 +2718,11 @@ class InstitutionsController extends AppController
 
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $currentPeriod = $AcademicPeriods->getCurrent();
+        //POCOR-7733 start
+        $session = $this->request->session();
+        $session->write('AcademicPeriod.currentAcademicPeriod', $currentPeriod);
+        $session->write('AcademicPeriod.currentAcademicPeriodName', $AcademicPeriods->get($currentPeriod)->name);
+        //POCOR-7733 end
         if (empty($currentPeriod)) {
             $this->Alert->warning('Institution.Institutions.academicPeriod');
         }
