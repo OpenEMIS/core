@@ -5,7 +5,7 @@ use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
 use Cake\Console\Shell;
 use Cake\Utility\Text;
-
+use DateTime;
 class PerformanceAssessmentShell extends Shell
 {
     public function initialize()
@@ -68,9 +68,9 @@ class PerformanceAssessmentShell extends Shell
                                             'education_grade_id' => $assessmentData->education_grade_id,
                                             'assessment_grading_type_id' => $assessmentData->assessment_grading_type_id,
                                             'modified_user_id' => $assessmentData->modified_user_id,
-                                            'modified' =>  date('Y-m-d h:i:s',$assessmentData->modified),
+                                            'modified' =>  new DateTime($assessmentData->modified),
                                             'created_user_id' => $assessmentData->created_user_id,
-                                            'created'=> date('Y-m-d h:i:s', $assessmentData->created)));
+                                            'created'=> new DateTime($assessmentData->created)));
                 $newAssessmentId = $connection->execute('SELECT LAST_INSERT_ID()')->fetch('assoc')['LAST_INSERT_ID()'];                         
                 if($newAssessmentId!=0){
                     $assessment_item_result = $AssessmentItemsTable->find()
@@ -91,9 +91,9 @@ class PerformanceAssessmentShell extends Shell
                                             'assessment_id' => $newAssessmentId,
                                             'education_subject_id' => $assessmentItemData->education_subject_id,
                                             'modified_user_id' => $assessmentItemData->modified_user_id,
-                                            'modified' => date( 'Y-m-d h:i:s',$assessmentItemData->modified),
+                                            'modified' => new DateTime($assessmentItemData->modified),
                                             'created_user_id' => $assessmentItemData->created_user_id,
-                                            'created'=> date('Y-m-d h:i:s', $assessmentItemData->created)));
+                                            'created'=> new DateTime($assessmentItemData->created)));
                         }
                     }
                     //Copy Assessment Item[End]
@@ -120,9 +120,9 @@ class PerformanceAssessmentShell extends Shell
                                     'assessment_id' => $newAssessmentId,
                                     'editable_student_statuses' =>  $assessmentPeriodData->editable_student_statuses,
                                     'modified_user_id' =>  $assessmentPeriodData->modified_user_id,
-                                    'modified' => date('Y-m-d h:i:s', $assessmentPeriodData->modified),
+                                    'modified' => new DateTime($assessmentPeriodData->modified),
                                     'created_user_id' =>  $assessmentPeriodData->created_user_id,
-                                    'created' => date('Y-m-d h:i:s', $assessmentPeriodData->created)
+                                    'created' => new DateTime($assessmentPeriodData->created)
                                 ]);
                         }
                     }
