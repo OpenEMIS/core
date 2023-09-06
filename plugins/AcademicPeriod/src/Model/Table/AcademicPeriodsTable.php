@@ -29,6 +29,126 @@ class AcademicPeriodsTable extends AppTable
         // reference to itself
         $this->hasMany('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'parent_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         // other associated modules
+//appraisal_periods	academic_period_id
+        $this->hasMany('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
+//calendar_events	academic_period_id
+//class_profile_processes	academic_period_id
+//class_profile_templates	academic_period_id
+//class_profiles	academic_period_id
+//competency_criterias	academic_period_id
+//competency_items	academic_period_id
+//competency_items_periods	academic_period_id
+//competency_periods	academic_period_id
+//competency_templates	academic_period_id
+//education_systems	academic_period_id
+//examination_centres	academic_period_id
+//examination_centres_examinations	academic_period_id
+//examination_centres_examinations_students	academic_period_id
+//examinations	academic_period_id
+//feeders_institutions	academic_period_id
+//infrastructure_utility_electricities	academic_period_id
+//infrastructure_utility_internets	academic_period_id
+//infrastructure_utility_telephones	academic_period_id
+//infrastructure_wash_hygienes	academic_period_id
+//infrastructure_wash_sanitations	academic_period_id
+//infrastructure_wash_sewages	academic_period_id
+//infrastructure_wash_wastes	academic_period_id
+//infrastructure_wash_waters	academic_period_id
+//institution_association_student	academic_period_id
+//institution_associations	academic_period_id
+//institution_budgets	academic_period_id
+//institution_buildings	academic_period_id
+//institution_class_attendance_records	academic_period_id
+//institution_class_students	academic_period_id
+//institution_classes	academic_period_id
+//institution_committees	academic_period_id
+//institution_competency_item_comments	academic_period_id
+//institution_competency_period_comments	academic_period_id
+//institution_competency_results	academic_period_id
+//institution_expenditures	academic_period_id
+//institution_fees	academic_period_id
+//institution_floors	academic_period_id
+//institution_incomes	academic_period_id
+//institution_lands	academic_period_id
+//institution_meal_students	academic_period_id
+//institution_outcome_results	academic_period_id
+//institution_outcome_subject_comments	academic_period_id
+//institution_quality_rubrics	academic_period_id
+//institution_quality_visits	academic_period_id
+//institution_repeater_surveys	academic_period_id
+//institution_report_card_processes	academic_period_id
+//institution_report_cards	academic_period_id
+//institution_rooms	academic_period_id
+//institution_schedule_intervals	academic_period_id
+//institution_schedule_terms	academic_period_id
+//institution_schedule_timetable_customizes	academic_period_id
+//institution_schedule_timetables	academic_period_id
+//institution_shifts	academic_period_id
+//institution_staff_attendances	academic_period_id
+//institution_staff_duties	academic_period_id
+//institution_staff_leave	academic_period_id
+//institution_student_absence_details	academic_period_id
+//institution_student_absences	academic_period_id
+//institution_student_admission	academic_period_id
+//institution_student_risks	academic_period_id
+//institution_student_surveys	academic_period_id
+//institution_student_transfers	previous_academic_period_id
+//institution_student_transfers	academic_period_id
+//institution_student_visit_requests	academic_period_id
+//institution_student_visits	academic_period_id
+//institution_student_withdraw	academic_period_id
+//institution_students	academic_period_id
+//institution_students_report_cards_comments	academic_period_id
+//institution_subject_students	academic_period_id
+//institution_subjects	academic_period_id
+//institution_surveys	academic_period_id
+//institution_trip_passengers	academic_period_id
+//institution_trips	academic_period_id
+//institution_visit_requests	academic_period_id
+//meal_programmes	academic_period_id
+//outcome_criterias	academic_period_id
+//outcome_periods	academic_period_id
+//outcome_templates	academic_period_id
+//profile_templates	academic_period_id
+//report_card_email_processes	academic_period_id
+//report_card_processes	academic_period_id
+//report_cards	academic_period_id
+//risks	academic_period_id
+//rubric_status_periods	academic_period_id
+//scholarship_recipient_academic_standings	academic_period_id
+//scholarship_recipient_collections	academic_period_id
+//scholarship_recipient_payment_structures	academic_period_id
+//staff_extracurriculars	academic_period_id
+//staff_profile_templates	academic_period_id
+//staff_report_card_email_processes	academic_period_id
+//staff_report_card_processes	academic_period_id
+//staff_report_cards	academic_period_id
+//student_attendance_mark_types	academic_period_id
+//student_attendance_marked_records	academic_period_id
+//student_extracurriculars	academic_period_id
+//student_mark_type_statuses	academic_period_id
+//student_meal_marked_records	academic_period_id
+//student_profile_templates	academic_period_id
+//student_report_card_email_processes	academic_period_id
+//student_report_card_processes	academic_period_id
+//student_report_cards	academic_period_id
+//student_status_updates	academic_period_id
+//survey_status_periods	academic_period_id
+//transfer_logs	academic_period_id
+//user_body_masses	academic_period_id
+//user_special_needs_referrals	academic_period_id
+//user_special_needs_services	academic_period_id
+//student_behaviours	academic_period_id
+//staff_behaviours	academic_period_id
+//institution_meal_programmes	academic_period_id
+//assessments	academic_period_id
+//institution_students_report_cards	academic_period_id
+//textbooks	academic_period_id
+//institution_textbooks	academic_period_id
+//examination_student_subject_results	academic_period_id
+//scholarships	academic_period_id
+//summary_assessment_item_results	academic_period_id
+
         $this->hasMany('AssessmentAssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionAssessmentItemResults', ['className' => 'Institution.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Assessments', ['className' => 'Assessment.Assessments', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -73,10 +193,11 @@ class AcademicPeriodsTable extends AppTable
         $this->hasMany('ExaminationCentresExaminationsStudents', ['className' => 'Examination.ExaminationCentresExaminationsStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationStudentSubjectResults', ['className' => 'Examination.ExaminationStudentSubjectResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffBehaviours', ['className' => 'Institution.StaffBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Scholarships', ['className' => 'Scholarship.Scholarships', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ClassAttendanceRecords', ['className' => 'Institution.ClassAttendanceRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionCommittees', ['className' => 'Institution.InstitutionCommittees', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+
         $this->addBehavior('Tree');
 
         $this->addBehavior('Restful.RestfulAccessControl', [
