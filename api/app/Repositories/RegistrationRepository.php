@@ -685,6 +685,7 @@ class RegistrationRepository extends Controller
 
                 if(isset($cf['file']) && ($cf['file']) != ""){
                     $cfArray[$k]['file'] = file_get_contents($cf['file']);
+                    $cfArray[$k]['text_value'] = $cf['file']->getClientOriginalName();
                 } else {
                     $cfArray[$k]['file'] = Null;
                 }
@@ -693,7 +694,7 @@ class RegistrationRepository extends Controller
                 $cfArray[$k]['created_user_id'] = $user_id;
                 $cfArray[$k]['created'] = Carbon::now()->toDateTimeString();
             }
-            //dd($cfArray);
+            
             $store = StudentCustomFieldValues::insert($cfArray);
             Log::info("## Stored in InstitutionStudentAdmission ##", $cfArray);
             DB::commit();
