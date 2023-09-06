@@ -1514,6 +1514,70 @@ class StaffTable extends ControllerActionTable
         }
     }
 
+    /**
+     * @param Event $event
+     * @param Entity $entity
+     */
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+
+        $staff_id = !empty($entity->staff_id) ? $entity->staff_id : NULL;
+        $affected = $this->removeIndividualChildRecords($staff_id);
+//        $this->log("deleted $affected children", 'debug');
+    }
+
+    /**
+     * @param $staff_id
+     * @return int
+     */
+    private function removeIndividualChildRecords($staff_id)
+    {
+        $affected = 0;
+        if ($staff_id) {
+
+            $table_name = 'security_group_users';
+            $field_name = 'security_user_id';
+            $affected = $affected + $this->removeFromTable($staff_id, $table_name, $field_name);
+
+            $table_name = 'user_activities';
+            $field_name = 'security_user_id';
+            $affected = $affected + $this->removeFromTable($staff_id, $table_name, $field_name);
+
+            $table_name = 'staff_custom_field_values';
+            $field_name = 'staff_id';
+            $affected = $affected + $this->removeFromTable($staff_id, $table_name, $field_name);
+
+        }
+
+        return $affected;
+
+    }
+
+
+    /**
+     * @param $user_id
+     * @param $table_name
+     * @param $field_name
+     * @return int
+     */
+    private function removeFromTable($user_id, $table_name, $field_name)
+    {
+        $affected = 0;
+        try {
+            $tableToClean = TableRegistry::get($table_name);
+            $affected = $tableToClean->deleteAll([
+                $tableToClean->aliasField($field_name) => $user_id
+            ]);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch remove from table',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+        }
+        return $affected;
+    }
+
+
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
         $broadcaster = $this;
@@ -3761,8 +3825,18 @@ class StaffTable extends ControllerActionTable
      */
     private function getFormattedStaffAttendanceArchivedRow($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $day_id)
     {
-        return function (ResultSetInterface $results) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $day_id) {
-            return $results->map(function ($row) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
+        $AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
+        $absenceTypes = $AbsenceTypesTable->getAbsenceTypeList();
+        return function (ResultSetInterface $results) use ($attendanceByStaffIdRecords,
+            $leaveByStaffIdRecords,
+            $workingDaysArr,
+            $day_id,
+            $absenceTypes) {
+            return $results->map(function ($row) use ($attendanceByStaffIdRecords,
+                $leaveByStaffIdRecords,
+                $workingDaysArr,
+                $day_id,
+                $absenceTypes) {
                 $staffId = $row->staff_id;
                 $staffRecords = [];
                 $staffLeaveRecords = [];
@@ -3799,6 +3873,7 @@ class StaffTable extends ControllerActionTable
                                 'time_out' => $this->formatTime($attendanceRecord['time_out']),
                                 'comment' => $attendanceRecord['comment'],
                                 'absence_type_id' => $attendanceRecord['absence_type_id'],
+                                'absence_type' => __($absenceTypes[$attendanceRecord['absence_type_id']]),
                                 'isNew' => false
                             ];
                             break;
@@ -3816,7 +3891,7 @@ class StaffTable extends ControllerActionTable
                         ];
                     }
                     $staffTimeRecords[$dateStr] = $attendanceData;
-                    if ($dayId != -1) {
+                    if ($day_id != -1) {
                         $row->date = $dateStr;
                     }
                     $historyUrl = Router::url([
@@ -3833,6 +3908,7 @@ class StaffTable extends ControllerActionTable
 
                     $leaveRecords = [];
                     foreach ($staffLeaveRecords as $staffLeaveRecord) {
+
                         $dateFrom = $staffLeaveRecord['date_from']->format('Y-m-d');
                         $dateTo = $staffLeaveRecord['date_to']->format('Y-m-d');
                         $tableName = 'staff_leave_types';
@@ -3840,7 +3916,12 @@ class StaffTable extends ControllerActionTable
                         $leaveTypeName = self::getRelatedName($tableName, $relatedField);
 
                         if ($dateFrom <= $key && $dateTo >= $key) {
+                            $comment = $staffLeaveRecord['comments'];
+                            if($comment){
+                                $staffTimeRecords[$key]['comment'] = trim($staffTimeRecords[$key]['comment'] . " " . $comment);
+                            }
                             $leaveRecord['isFullDay'] = $staffLeaveRecord['full_day'];
+                            $leaveRecord['comment'] = $staffLeaveRecord['comments'];
                             $leaveRecord['startTime'] = $this->formatTime($staffLeaveRecord['start_time']);
                             $leaveRecord['endTime'] = $this->formatTime($staffLeaveRecord['end_time']);
                             $leaveRecord['staffLeaveTypeName'] = $leaveTypeName;
@@ -3850,7 +3931,7 @@ class StaffTable extends ControllerActionTable
                     $url = Router::url([
                         'plugin' => 'Institution',
                         'controller' => 'Institutions',
-                        'action' => 'StaffLeave',
+                        'action' => 'ArchivedStaffLeave',
                         'index',
                         'user_id' => $staffId
                     ]);
