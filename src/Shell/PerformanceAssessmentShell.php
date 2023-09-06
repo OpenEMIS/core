@@ -68,9 +68,9 @@ class PerformanceAssessmentShell extends Shell
                                             'education_grade_id' => $assessmentData->education_grade_id,
                                             'assessment_grading_type_id' => $assessmentData->assessment_grading_type_id,
                                             'modified_user_id' => $assessmentData->modified_user_id,
-                                            'modified' => $assessmentData->modified,
+                                            'modified' =>  date('Y-m-d h:i:s',$assessmentData->modified),
                                             'created_user_id' => $assessmentData->created_user_id,
-                                            'created'=> $assessmentData->created));
+                                            'created'=> date('Y-m-d h:i:s', $assessmentData->created)));
                 $newAssessmentId = $connection->execute('SELECT LAST_INSERT_ID()')->fetch('assoc')['LAST_INSERT_ID()'];                         
                 if($newAssessmentId!=0){
                     $assessment_item_result = $AssessmentItemsTable->find()
@@ -91,9 +91,9 @@ class PerformanceAssessmentShell extends Shell
                                             'assessment_id' => $newAssessmentId,
                                             'education_subject_id' => $assessmentItemData->education_subject_id,
                                             'modified_user_id' => $assessmentItemData->modified_user_id,
-                                            'modified' => $assessmentItemData->modified,
+                                            'modified' => date( 'Y-m-d h:i:s',$assessmentItemData->modified),
                                             'created_user_id' => $assessmentItemData->created_user_id,
-                                            'created'=> $assessmentItemData->created));
+                                            'created'=> date('Y-m-d h:i:s', $assessmentItemData->created)));
                         }
                     }
                     //Copy Assessment Item[End]
@@ -120,9 +120,9 @@ class PerformanceAssessmentShell extends Shell
                                     'assessment_id' => $newAssessmentId,
                                     'editable_student_statuses' =>  $assessmentPeriodData->editable_student_statuses,
                                     'modified_user_id' =>  $assessmentPeriodData->modified_user_id,
-                                    'modified' =>  $assessmentPeriodData->modified,
+                                    'modified' => date('Y-m-d h:i:s', $assessmentPeriodData->modified),
                                     'created_user_id' =>  $assessmentPeriodData->created_user_id,
-                                    'created' =>  $assessmentPeriodData->created
+                                    'created' => date('Y-m-d h:i:s', $assessmentPeriodData->created)
                                 ]);
                         }
                     }
@@ -162,9 +162,8 @@ class PerformanceAssessmentShell extends Shell
             }
         //education grade updation end
         } catch (\Exception $e) {
-            // pr($e->getMessage());
-        echo $e;
-        exit;
+            pr($e->getMessage());
+       
         }
     }
 }
