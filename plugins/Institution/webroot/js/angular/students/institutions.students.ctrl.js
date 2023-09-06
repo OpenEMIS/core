@@ -44,6 +44,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.isSameSchool = false;
     StudentController.isDiffSchool = false;
     StudentController.currentYear = new Date().getFullYear();
+    StudentController.currentAcademicPeriod = $window.localStorage.getItem("currentAcademicPeriod");//POCOR-7733
+    StudentController.currentAcademicPeriodName = $window.localStorage.getItem("currentAcademicPeriodName");//POCOR-7733
     StudentController.studentStatus = 'Pending Transfer';
     StudentController.StudentData = {};
     StudentController.isExternalSearchEnable = false;
@@ -1293,7 +1295,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         const birthplaceAreaRef = InstitutionsStudentsSvc.getBirthplaceArea();
         birthplaceAreaRef && (StudentController.selectedStudentData.birthplaceArea = birthplaceAreaRef)
         var params = {
-            currentYear: StudentController.currentYear,//POCOR-7717
+            currentAcademicPeriod: StudentController.currentAcademicPeriod,//POCOR-7733
+            currentAcademicPeriodName: StudentController.currentAcademicPeriodName,//POCOR-7733
             institution_id: StudentController.institutionId,
             openemis_no: StudentController.selectedStudentData.openemis_no,
             first_name: StudentController.selectedStudentData.first_name,
@@ -1387,9 +1390,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 }
             });
         });
-        //POCOR-7717 start
+        //POCOR-7733 start
         if (params.is_diff_school > 0) {
-            if (params.currentYear != params.previous_academic_period_id) {
+            if (params.currentAcademicPeriod != params.previous_academic_period_id) {
                 if (params.student_status_id == 1) {
                     StudentController.message = `This student is allocated to ${StudentController.studentData.current_enrol_institution_code} 
                                                - ${StudentController.studentData.current_enrol_institution_name} in a different
@@ -1401,7 +1404,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 }
             }
         }
-        //POCOR-7717 end
+        //POCOR-7733 end
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.saveStudentDetails(params).then(function(resp){
 
