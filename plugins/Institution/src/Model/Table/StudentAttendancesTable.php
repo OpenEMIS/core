@@ -1184,8 +1184,8 @@ class StudentAttendancesTable extends ControllerActionTable
             . $this->aliasField('academic_period_id'),
             $Details->aliasField('institution_class_id = ')
             . $this->aliasField('institution_class_id'),
-            $Details->aliasField('education_grade_id = ')
-            . $this->aliasField('education_grade_id'),
+//            $Details->aliasField('education_grade_id = ')
+//            . $this->aliasField('education_grade_id'),
             $Details->aliasField('student_id = ')
             . $this->aliasField('student_id'),
             $Details->aliasField('institution_id = ')
@@ -1319,7 +1319,7 @@ class StudentAttendancesTable extends ControllerActionTable
         $Users = TableRegistry::get('security_users');
         $Types = TableRegistry::get('absence_types');
         $Classes = TableRegistry::get('institution_classes');
-        $Reasons = TableRegistry::get('institution_classes');
+        $Reasons = TableRegistry::get('student_absence_reasons');
         if (!$archive) {
             $Details = TableRegistry::get('institution_student_absence_details');
             $Records = TableRegistry::get('student_attendance_marked_records');
