@@ -45,91 +45,125 @@ class PerformanceAssessmentShell extends Shell
             $AssessmentTable = TableRegistry::get('Assessment.Assessments');
             $AssessmentItemsTable = TableRegistry::get('assessment_items');
             $AssessmentPeriodsTable = TableRegistry::get('Assessment.AssessmentPeriods');
-            $connection = ConnectionManager::get('default'); 
+            $AssessmentItemGradingTypesTable=TableRegistry::get('assessment_items_grading_types');
+            $connection = ConnectionManager::get('default');
             //POCOR-7723 start
             $assessment_res = $AssessmentTable->find()->where([$AssessmentTable->aliasField('academic_period_id')=>$copyFrom])->toArray();
             foreach($assessment_res as $key=>$assessmentData){   
                 //Copy Assessment [Start]
-                $statement1= $connection->prepare('INSERT INTO assessments(code, name, description,
+                $statement1 = $connection->prepare('INSERT INTO assessments(code, name, description,
                             excel_template_name, excel_template, type, academic_period_id, education_grade_id,
                             assessment_grading_type_id, modified_user_id, modified, created_user_id, created)
                             VALUES (:code, :name, :description, :excel_template_name, :excel_template, :type, :academic_period_id, :education_grade_id,
                             :assessment_grading_type_id, :modified_user_id, :modified, :created_user_id, :created)');
 
                 $statement1->execute(array(
-                                            'code' => $assessmentData->code,
-                                            'name'=> $assessmentData->name,
-                                            'description' => $assessmentData->description,
-                                            'excel_template_name' => $assessmentData->excel_template_name,
-                                            'excel_template' => $assessmentData->excel_template,
-                                            'type' => $assessmentData->type,
-                                            'academic_period_id'=>$copyTo,
-                                            'education_grade_id' => $assessmentData->education_grade_id,
-                                            'assessment_grading_type_id' => $assessmentData->assessment_grading_type_id,
-                                            'modified_user_id' => $assessmentData->modified_user_id,
-                                            'modified' =>  date("Y-m-d H:i:s", strtotime($assessmentData->modified)),
-                                            'created_user_id' => $assessmentData->created_user_id,
-                                            'created'=> date("Y-m-d H:i:s", strtotime($assessmentData->created))));
-                $newAssessmentId = $connection->execute('SELECT LAST_INSERT_ID()')->fetch('assoc')['LAST_INSERT_ID()'];                         
-                if($newAssessmentId!=0){
+                    'code' => $assessmentData->code,
+                    'name' => $assessmentData->name,
+                    'description' => $assessmentData->description,
+                    'excel_template_name' => $assessmentData->excel_template_name,
+                    'excel_template' => $assessmentData->excel_template,
+                    'type' => $assessmentData->type,
+                    'academic_period_id' => $copyTo,
+                    'education_grade_id' => $assessmentData->education_grade_id,
+                    'assessment_grading_type_id' => $assessmentData->assessment_grading_type_id,
+                    'modified_user_id' => $assessmentData->modified_user_id,
+                    'modified' =>  date("Y-m-d H:i:s", strtotime($assessmentData->modified)),
+                    'created_user_id' => $assessmentData->created_user_id,
+                    'created' => date("Y-m-d H:i:s", strtotime($assessmentData->created))
+                ));
+                $newAssessmentId = $connection->execute('SELECT LAST_INSERT_ID()')->fetch('assoc')['LAST_INSERT_ID()'];
+                if ($newAssessmentId != 0) {
                     $assessment_item_result = $AssessmentItemsTable->find()
-                                                  ->where([$AssessmentItemsTable->aliasField('assessment_id') => $assessmentData->id])
-                                                  ->toArray();
-                   
+                        ->where([$AssessmentItemsTable->aliasField('assessment_id') => $assessmentData->id])
+                        ->toArray();
+
                     //Copy Assessment Item[Start]
-                    if(!empty($assessment_item_result)){
+                    if (!empty($assessment_item_result)) {
                         foreach ($assessment_item_result as $key => $assessmentItemData) {
                             $statement2 = $connection->prepare('INSERT INTO assessment_items(id, weight, classification, 
                                     assessment_id, education_subject_id, modified_user_id, modified, created_user_id, created)
                                     VALUES (:id, :weight, :classification, :assessment_id, :education_subject_id, :modified_user_id, :modified, :created_user_id, :created)');
-                                    
+
                             $statement2->execute(array(
-                                            'id'=> Text::uuid(),
-                                            'weight' => $assessmentItemData->weight,
-                                            'classification'=> $assessmentItemData->classification,
-                                            'assessment_id' => $newAssessmentId,
-                                            'education_subject_id' => $assessmentItemData->education_subject_id,
-                                            'modified_user_id' => $assessmentItemData->modified_user_id,
-                                            'modified' =>  date("Y-m-d H:i:s", strtotime($assessmentItemData->modified)),
-                                            'created_user_id' => $assessmentItemData->created_user_id,
-                                            'created'=> date("Y-m-d H:i:s", strtotime($assessmentItemData->created))));
+                                'id' => Text::uuid(),
+                                'weight' => $assessmentItemData->weight,
+                                'classification' => $assessmentItemData->classification,
+                                'assessment_id' => $newAssessmentId,
+                                'education_subject_id' => $assessmentItemData->education_subject_id,
+                                'modified_user_id' => $assessmentItemData->modified_user_id,
+                                'modified' =>  date("Y-m-d H:i:s", strtotime($assessmentItemData->modified)),
+                                'created_user_id' => $assessmentItemData->created_user_id,
+                                'created' => date("Y-m-d H:i:s", strtotime($assessmentItemData->created))
+                            ));
                         }
                     }
                     //Copy Assessment Item[End]
                     $assessment_period_result = $AssessmentPeriodsTable->find()
-                                                ->where([$AssessmentPeriodsTable->aliasField('assessment_id') => $assessmentData->id])
-                                                ->toArray();
+                        ->where([$AssessmentPeriodsTable->aliasField('assessment_id') => $assessmentData->id])
+                        ->toArray();
                     //Copy Assessment Period[Start]
                     if (!empty($assessment_period_result)) {
                         foreach ($assessment_period_result as $key => $assessmentPeriodData) {
-                            $statement3=$connection->prepare('INSERT INTO assessment_periods(code, name, 
+                            $statement3 = $connection->prepare('INSERT INTO assessment_periods(code, name, 
                                     start_date, end_date, date_enabled, date_disabled, weight, academic_term, assessment_id,
                                     editable_student_statuses, modified_user_id, modified, created_user_id, created)
                                     VALUES (:code, :name, :start_date, :end_date, :date_enabled, :date_disabled, :weight, 
                                     :academic_term, :assessment_id, :editable_student_statuses,:modified_user_id, :modified, :created_user_id, :created)');
 
-                            $statement3->execute(['code' => $assessmentPeriodData->code,
-                                    'name' =>  $assessmentPeriodData->name,
-                                    'start_date' =>  $assessmentPeriodData->start_date,
-                                    'end_date' =>  $assessmentPeriodData->end_date,
-                                    'date_enabled' =>  $assessmentPeriodData->date_enabled,
-                                    'date_disabled' =>  $assessmentPeriodData->date_disabled,
-                                    'weight' =>  $assessmentPeriodData->weight,
-                                    'academic_term' =>  $assessmentPeriodData->academic_term,
-                                    'assessment_id' => $newAssessmentId,
-                                    'editable_student_statuses' =>  $assessmentPeriodData->editable_student_statuses,
-                                    'modified_user_id' =>  $assessmentPeriodData->modified_user_id,
-                                    'modified' => date("Y-m-d H:i:s", strtotime($assessmentPeriodData->modified)),
-                                    'created_user_id' =>  $assessmentPeriodData->created_user_id,
-                                    'created' => date("Y-m-d H:i:s", strtotime($assessmentPeriodData->created))
-                                ]);
+                            $statement3->execute([
+                                'code' => $assessmentPeriodData->code,
+                                'name' =>  $assessmentPeriodData->name,
+                                'start_date' => date("Y-m-d", strtotime($assessmentPeriodData->start_date)),
+                                'end_date' =>  date("Y-m-d", strtotime($assessmentPeriodData->end_date)),
+                                'date_enabled' => date("Y-m-d", strtotime($assessmentPeriodData->date_enabled)),
+                                'date_disabled' => date("Y-m-d", strtotime($assessmentPeriodData->date_disabled)),
+                                'weight' =>  $assessmentPeriodData->weight,
+                                'academic_term' =>  $assessmentPeriodData->academic_term,
+                                'assessment_id' => $newAssessmentId,
+                                'editable_student_statuses' =>  $assessmentPeriodData->editable_student_statuses,
+                                'modified_user_id' =>  $assessmentPeriodData->modified_user_id,
+                                'modified' => date("Y-m-d H:i:s", strtotime($assessmentPeriodData->modified)),
+                                'created_user_id' =>  $assessmentPeriodData->created_user_id,
+                                'created' => date("Y-m-d H:i:s", strtotime($assessmentPeriodData->created))
+                            ]);
+                            $newAssessmentPeriodId = $connection->execute('SELECT LAST_INSERT_ID()')->fetch('assoc')['LAST_INSERT_ID()'];
+                           
+                            if($newAssessmentPeriodId!=0){
+                                $assessment_item_grading_type_result = $AssessmentItemGradingTypesTable->find()
+                                    ->where([$AssessmentItemGradingTypesTable->aliasField('assessment_id') => $assessmentData->id,
+                                             $AssessmentItemGradingTypesTable->aliasField('assessment_period_id') => $assessmentPeriodData->id])
+                                    ->toArray();
+                                //Copy Assessment Item Grading Type [START]
+                                if (!empty($assessment_item_grading_type_result)) {
+                                    foreach($assessment_item_grading_type_result as $key => $assessmentItemGradingTypeData) {
+                                        $statement4 = $connection->prepare('INSERT INTO assessment_items_grading_types(id,education_subject_id, assessment_grading_type_id, 
+                                            assessment_id,assessment_period_id, modified_user_id, modified, created_user_id, created)
+                                            VALUES (:id, :education_subject_id, :assessment_grading_type_id, :assessment_id, :assessment_period_id,
+                                            :modified_user_id, :modified, :created_user_id, :created)');
+                                        $statement4->execute([
+                                            'id' => Text::uuid(),
+                                            'education_subject_id' => $assessmentItemGradingTypeData->education_subject_id,
+                                            'assessment_grading_type_id' => $assessmentItemGradingTypeData->assessment_grading_type_id,
+                                            'assessment_id' => $newAssessmentId,
+                                            'assessment_period_id' => $newAssessmentPeriodId,
+                                            'modified_user_id' =>  $assessmentItemGradingTypeData->modified_user_id,
+                                            'modified' => date("Y-m-d H:i:s", strtotime($assessmentItemGradingTypeData->modified)),
+                                            'created_user_id' =>  $assessmentItemGradingTypeData->created_user_id,
+                                            'created' => date("Y-m-d H:i:s", strtotime($assessmentItemGradingTypeData->created))
+                                        ]);
+                                    }
+                                }
+                                //Copy Assessment Item Grading Type [END]
+                            }
+                
                         }
                     }
                     //Copy Assessment End[Start]
                 }
             }
             //Copy Assessment [End]
-             //POCOR-7723 end
+            //POCOR-7723 end
             //To update latest education id POCOR-6423
             $statementLast = $connection->prepare("Select subq1.grade_id as wrong_grade,subq2.grade_id as correct_grade from
                             (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
@@ -152,17 +186,17 @@ class PerformanceAssessmentShell extends Shell
                             on subq1.grade_name=subq2.grade_name");
             $statementLast->execute();
             $row = $statementLast->fetchAll(\PDO::FETCH_ASSOC);
-            if(!empty($row)){
-                    foreach($row AS $rowData){
-                        $AssessmentTable->updateAll(
-                            ['education_grade_id' => $rowData['correct_grade']],    //field
-                            ['education_grade_id' => $rowData['wrong_grade'], 'academic_period_id' => $copyTo]);
-                    }
+            if (!empty($row)) {
+                foreach ($row as $rowData) {
+                    $AssessmentTable->updateAll(
+                        ['education_grade_id' => $rowData['correct_grade']],    //field
+                        ['education_grade_id' => $rowData['wrong_grade'], 'academic_period_id' => $copyTo]
+                    );
+                }
             }
-        //education grade updation end
+            //education grade updation end
         } catch (\Exception $e) {
             pr($e->getMessage());
-       
         }
     }
 }
