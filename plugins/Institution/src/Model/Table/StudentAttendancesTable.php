@@ -1260,7 +1260,7 @@ class StudentAttendancesTable extends ControllerActionTable
 
         $options = [
             $Records->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
-            $Records->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+//            $Records->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
             $Records->aliasField('institution_id = ') . $this->aliasField('institution_id'),
             $Records->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
             $Records->aliasField('date = "') . $day . '"',
@@ -1575,7 +1575,7 @@ class StudentAttendancesTable extends ControllerActionTable
             $Records->aliasField('institution_id') => $institutionId,
             $Records->aliasField('academic_period_id') => $academicPeriodId,
             $Records->aliasField('institution_class_id') => $institutionClassId,
-            $Records->aliasField('education_grade_id') => $educationGradeId,
+//            $Records->aliasField('education_grade_id') => $educationGradeId,
             $Records->aliasField('date') => $day
         ];
         if ($attendancePeriodId) {
