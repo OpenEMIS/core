@@ -544,6 +544,30 @@ class StudentRepository extends Controller
 
                 $resp = 1;
             }
+
+
+            $checkMarkedRecord = StudentAttendanceMarkedRecords::where([
+                    'institution_id' => $param['institution_id'],
+                    'academic_period_id' => $param['academic_period_id'],
+                    'institution_class_id' => $param['institution_class_id'],
+                    'education_grade_id' => $param['education_grade_id'],
+                    'date' => $param['date'],
+                    'period' => $param['period'],
+                    'subject_id' => $param['subject_id']
+                ])
+                ->first();
+
+            if(!$checkMarkedRecord){
+                $storeArr['institution_id'] = $param['institution_id'];
+                $storeArr['academic_period_id'] = $param['academic_period_id'];
+                $storeArr['institution_class_id'] = $param['institution_class_id'];
+                $storeArr['education_grade_id'] = $param['education_grade_id'];
+                $storeArr['date'] = $param['date'];
+                $storeArr['period'] = $param['period'];
+                $storeArr['subject_id'] = $param['subject_id'];
+
+                $insert = StudentAttendanceMarkedRecords::insert($storeArr);
+            }
                 
             DB::commit();
             return $resp;
