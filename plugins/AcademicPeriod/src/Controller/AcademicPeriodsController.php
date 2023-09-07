@@ -31,15 +31,11 @@ class AcademicPeriodsController extends AppController
 
     public function Periods()
     {
-        $this->log(__FUNCTION__, 'debug');
-//        $this->log('rere', 'debug');
-
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'AcademicPeriod.AcademicPeriods']);
     }
 
     public function beforeFilter(Event $event)
     {
-        $this->log('beforeFilter', 'debug');
         parent::beforeFilter($event);
         $tabElements = [
             'Levels' => [

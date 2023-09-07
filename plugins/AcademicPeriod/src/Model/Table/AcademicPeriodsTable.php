@@ -245,21 +245,21 @@ class AcademicPeriodsTable extends ControllerActionTable
         // Webhook Academic Period Delete -- End
     }
 
-    public function onBeforeDelete(Event $event, ArrayObject $options, $ids)
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $entity = $this->find()->select(['current'])->where($ids)->first();
+//        $entity = $this->find()->select(['current'])->where($ids)->first();
 
         // die silently when a non super_admin wants to delete
         if (!$this->AccessControl->isAdmin()) {
             $event->stopPropagation();
-//            $this->controller->redirect($this->ControllerAction->url('index'));
+            $this->controller->redirect($this->url('index'));
         }
 
         // do not allow for deleting of current
         if (!empty($entity) && $entity->current == 1) {
             $event->stopPropagation();
             $this->Alert->warning('general.currentNotDeletable');
-//            $this->controller->redirect($this->ControllerAction->url('index'));
+            $this->controller->redirect($this->url('index'));
         }
     }
 
@@ -392,7 +392,7 @@ class AcademicPeriodsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->log('before', 'debug');
-//        $this->ControllerAction->field('academic_period_level_id');
+        $this->field('academic_period_level_id');
         $this->fields['start_year']['visible'] = false;
         $this->fields['end_year']['visible'] = false;
         $this->fields['school_days']['visible'] = false;
@@ -403,19 +403,19 @@ class AcademicPeriodsTable extends ControllerActionTable
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->log('after', 'debug');
-//        $this->ControllerAction->field('current');
-        // $this->ControllerAction->field('copy_data_from', [
-        //     'type' => 'hidden',
-        //     'value' => 0,
-        //     'after' => 'current'
-        // ]);
-//        $this->ControllerAction->field('editable');
+        $this->field('current');
+        $this->field('copy_data_from', [
+            'type' => 'hidden',
+            'value' => 0,
+            'after' => 'current'
+        ]);
+        $this->field('editable');
         foreach ($this->_fieldOrder as $key => $value) {
             if (!in_array($value, array_keys($this->fields))) {
                 unset($this->_fieldOrder[$key]);
             }
         }
-//        $this->ControllerAction->setFieldOrder($this->_fieldOrder);
+        $this->setFieldOrder($this->_fieldOrder);
     }
 
     public function editBeforeQuery(Event $event, Query $query)
@@ -426,7 +426,7 @@ class AcademicPeriodsTable extends ControllerActionTable
     public function editAfterAction(Event $event, Entity $entity)
     {
         $this->request->data[$this->alias()]['current'] = $entity->current;
-//        $this->ControllerAction->field('visible');
+        $this->field('visible');
 
         // set academic_period_level_id to not editable to prevent any classes/subjects to not in Year level
         $this->fields['academic_period_level_id']['type'] = 'readonly';
@@ -438,7 +438,6 @@ class AcademicPeriodsTable extends ControllerActionTable
     {
         $this->log('indexBeforeAction', 'debug');
         // Add breadcrumb
-        return;
         $toolbarElements = [
             ['name' => 'AcademicPeriod.breadcrumb', 'data' => [], 'options' => []]
         ];
@@ -465,7 +464,7 @@ class AcademicPeriodsTable extends ControllerActionTable
                     ->first()
                     ->id;
 
-                $action = $this->ControllerAction->url('index');
+                $action = $this->url('index');
                 $action['parent'] = $parentId;
                 return $this->controller->redirect($action);
             }
@@ -478,9 +477,8 @@ class AcademicPeriodsTable extends ControllerActionTable
         $query->where([$this->aliasField('parent_id') => $parentId]);
     }
 
-    public function addEditBeforeAction(Event $event)
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
-        return;
         //Setup fields
         $this->_fieldOrder = ['academic_period_level_id', 'code', 'name'];
 
@@ -503,10 +501,8 @@ class AcademicPeriodsTable extends ControllerActionTable
                 $parentPath .= $crumb === end($crumbs) ? '' : ' > ';
             }
 
-            $this->ControllerAction->field('parent', [
-                'type' => 'readonly',
-                'attr' => ['value' => $parentPath]
-            ]);
+            $this->fields['parent']['type'] = 'readonly';
+            $this->fields['parent']['attr']['value'] = $parentPath;
 
             array_unshift($this->_fieldOrder, 'parent');
         }
@@ -1537,7 +1533,7 @@ class AcademicPeriodsTable extends ControllerActionTable
             ['institution_id' => $institutionId]);
         $academicPeriodWithArchiveArrayId = [0];
         $academicPeriodWithArchiveArray = array_unique(
-          array_merge($academicPeriodWithRecordsArchiveArray, $academicPeriodWithDetailsArchiveArray)
+            array_merge($academicPeriodWithRecordsArchiveArray, $academicPeriodWithDetailsArchiveArray)
         );
         if (sizeof($academicPeriodWithArchiveArray) > 0) {
             $academicPeriodWithArchiveArrayId = $academicPeriodWithArchiveArray;
