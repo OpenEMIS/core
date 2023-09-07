@@ -777,11 +777,9 @@ class AssessmentItemResultsTable extends AppTable
 
     /**
      * @param $options
-     * @param bool $archive
      * @return |null
      * @throws \Exception
      */
-
     public static function getLastMark($options)
     {
 //        echo('$options');
