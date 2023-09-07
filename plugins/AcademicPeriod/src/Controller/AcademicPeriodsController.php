@@ -24,10 +24,23 @@ class AcademicPeriodsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'AcademicPeriod.AcademicPeriodLevels']);
     }
 
+//    public function AcademicPeriods()
+//    {
+//        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'AcademicPeriod.AcademicPeriods']);
+//    }
+
+    public function Periods()
+    {
+        $this->log(__FUNCTION__, 'debug');
+//        $this->log('rere', 'debug');
+
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'AcademicPeriod.AcademicPeriods']);
+    }
+
     public function beforeFilter(Event $event)
     {
+        $this->log('beforeFilter', 'debug');
         parent::beforeFilter($event);
-
         $tabElements = [
             'Levels' => [
                 'url' => ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods', 'action' => 'Levels'],
@@ -41,6 +54,7 @@ class AcademicPeriodsController extends AppController
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
+
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
