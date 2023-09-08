@@ -57,29 +57,29 @@ class InstitutionCasesTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //POCOR-7367::Start
+        //POCOR-7613 start
+        if ($this->request->params['controller'] == "Profiles") {
+            if ($entity->assignee_id == 0 || empty($entity->assignee_id)) {
+                $this->Alert->warning('Cases.noAssignee', ['reset' => true]);
+                return false;
+            }
+        }
+        //POCOR-7613 end
         $workflows = TableRegistry::get('workflows');
         $workflowSteps = TableRegistry::get('workflow_steps');
         $wfData = $workflows->find()->where(['name' => 'Cases - General'])->first();
         $WFSdata = $workflowSteps->find()->where(['name' => 'Open','workflow_id'=>$wfData->id])->first();
         $entity->status_id = $WFSdata->id;
         //POCOR-7367::end
-        //POCOR-7439 start
-        if($entity->institution_id==-1){//for entering multiple entries for institution
-            $entity->institution_id=1;
+        if ($entity->isNew()) {
             $autoGenerateCaseNumber = $this->getAutoGenerateCaseNumber($entity->institution_id);
             $entity->case_number = $autoGenerateCaseNumber;
-            $options['all_institution_cases']=1;
-        }
-        else{//POCOR-7439 end
-            if ($entity->isNew()) {
-                $autoGenerateCaseNumber = $this->getAutoGenerateCaseNumber($entity->institution_id);
-                $entity->case_number = $autoGenerateCaseNumber;
-            }
         }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        
         if ($entity->isNew()) {
             $linkedRecord = TableRegistry::get('Institution.InstitutionCaseRecords');
             $newCaseNumber = $entity->case_number . "-" . $entity->id;
@@ -103,59 +103,6 @@ class InstitutionCasesTable extends ControllerActionTable
                 $linkedRecord->save($newEntity);
             }
         }
-        //POCOR-7439 start
-        if($options['all_institution_cases']==1){//for entering multiple entries for institution
-            $newEntities=[];
-            $institutionList = $this->Institutions
-                ->find('list', [
-                    'keyField' => 'id',
-                    'valueField' => 'code_name'
-                ])
-                ->where([
-                    $this->Institutions->aliasField('institution_status_id') => self::ACTIVE
-                ])
-                ->order([
-                    $this->Institutions->aliasField('code') => 'ASC',
-                    $this->Institutions->aliasField('name') => 'ASC'
-                ])
-                ->toArray();
-            $insIds=array_keys($institutionList);
-            $istId=array_shift($insIds);
-            $result=$entity->toArray();
-                foreach($insIds as $id){
-                $autoGenerateCaseNumber = $this->getAutoGenerateCaseNumber($id);
-                        $value=$result;
-                        $newData=array('institution_id' => $id,
-                                            'title'=>$value['title'],
-                                            'description'=>$value['description'],
-                                            'status_id'=>$value['status_id'],
-                                            'assignee_id'=>$value['assignee_id'],
-                                            'created_user_id'=>$value['created_user_id'],
-                                            'created'=>$value['created'],
-                                            'case_number'=>$autoGenerateCaseNumber);
-                        $institutionCases=TableRegistry::get('Institution.InstitutionCases');
-                $caseEntity = $institutionCases->newEntity($newData);
-                        if($institutionCases->save($caseEntity)){
-                    $newCaseNumber =  $caseEntity->case_number . "-" .  $caseEntity->id;
-                    $this->updateAll(
-                        ['case_number' => $newCaseNumber],
-                        ['id' =>  $caseEntity->id]
-                    );
-                            if ($this->request->query('feature')==-1) {
-                        $params['feature'] = 'StudentAttendances';
-                    }
-                    $params['feature'] = $features;
-                    $params['institution_case_id'] =  $caseEntity->id;
-                    $params['record_id'] =  0;
-                    $params['id'] = Text::uuid();
-                    $params['created_user_id'] = $caseEntity->created_user_id;
-                    $params['created'] = date('Y-m-d H:i:s');
-                    $newEntity = $linkedRecord->newEntity($params);
-                    $linkedRecord->save($newEntity);
-                }
-            }
-        }
-        //POCOR-7439 end
     }
 
     public function linkedRecordAfterSave(Event $event, Entity $linkedRecordEntity)
@@ -940,7 +887,7 @@ class InstitutionCasesTable extends ControllerActionTable
                 ->toArray();
             if (count($institutionList) > 1) {
 
-                    $institutionOptions = ['' => __('-- Select --')]+['-1' => __('All Institutions')] + $institutionList;
+                    $institutionOptions = ['' => __('-- Select --')] + $institutionList;
             } else {
                 $institutionOptions =  $institutionList;
             }
