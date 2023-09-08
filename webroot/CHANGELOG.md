@@ -1,3 +1,15 @@
+### [3.94.1] - 2023-09-08
+- Implemented: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 4
+- Bug Fixed: Institutions>Performance>Assessments: Duplicate queries are found
+- Bug Fixed: Institutions > Academic > Curriculars: When editing, the page goes to 404 error page
+- Bug Fixed: OpenEMIS Registration: The student's custom field for the field type "File" configured in OpenEMIS Core is not working in OpenEMIS Registration
+- Bug Fixed: Migration fix : Renaming POCOR-7395 to run earlier as it affects other migration files
+- Bug Fixed: Administration>Data Management>Copy: Infrastructure custom fields are not copied over
+- Bug Fixed: Home Page > Workbench: Workbench for behaviour is not showing up for assign user in their profile
+- Bug Fixed: Institutions>Students>Add: Other countries is not showing in the drop down list for address area and birthplace area
+- Bug Fixed: Administration > System Setup > Custom Field: When deleting options for the checkbox field type under the institutions custom field, the page gives a successful message but records were not deleted
+- Bug Fixed: Not able to delete users
+
 ### [3.94.0] - 2023-08-31
 - Implemented: Develop APIs for OpenEMIS Core add student/staff/guardian functions
 - Implemented: Develop updates for institution student and institution student absence APIs
