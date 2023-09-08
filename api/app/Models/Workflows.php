@@ -5,12 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class UserNationalities extends Model
+class Workflows extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'id';
-    public $incrementing = false;
     public $timestamps = false;
-    protected $table = "user_nationalities";
+    protected $table = "workflows";
 }
