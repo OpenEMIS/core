@@ -121,7 +121,7 @@ function InstitutionStaffAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, Al
             }
         };
         return AcademicPeriods
-            .find('DaysForPeriodWeekArchive', {
+            .find('DaysForPeriodWeek', {
                 academic_period_id: academicPeriodId,
                 week_id: weekId,
                 institution_id: institutionId,
