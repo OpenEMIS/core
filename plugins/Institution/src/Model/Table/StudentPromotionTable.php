@@ -636,7 +636,7 @@ class StudentPromotionTable extends AppTable
                 }
                 //POCOR-7715 start
                 if ($EducationProgrammeResult->same_grade_promotion == 1) {
-                    $options[$statusesCode['GRADUATED']] = __($studentStatusesList[$statusesCode['GRADUATED']]);
+                    // $options[$statusesCode['GRADUATED']] = __($studentStatusesList[$statusesCode['GRADUATED']]);
                 }
                 else{
                     $options[$statusesCode['REPEATED']] = __($studentStatusesList[$statusesCode['REPEATED']]);
