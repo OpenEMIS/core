@@ -775,6 +775,8 @@ class InstitutionCasesTable extends ControllerActionTable
                     " ",
                     'last_name' => 'literal'
                 ]),
+                'type'=> 'CaseTypes.name',//POCOR-7613 
+                'priority'=> 'CasePriority.name',//POCOR-7613 
                 $this->aliasField('description'),
                 $this->aliasField('status_id'),
                 $this->aliasField('assignee_id'),
@@ -784,7 +786,7 @@ class InstitutionCasesTable extends ControllerActionTable
                 $this->aliasField('created_user_id'),
                 $this->aliasField('created'),
             ])
-            ->contain(['LinkedRecords'])
+            ->contain(['LinkedRecords','CaseTypes','CasePriority'])//POCOR-7613 
             ->innerJoin(
                 [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
                 [
@@ -801,8 +803,9 @@ class InstitutionCasesTable extends ControllerActionTable
             ->where([
                 'InstitutionCases.institution_id' =>  $institutionId
             ])
-            ->group($this->aliasField('id'));
-
+            ->group($this->aliasField('id'))
+            ->order([ $this->aliasField('created') => 'DESC']);//POCOR-7613 
+      
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 $row['total_linked_record'] = count($row->linked_records);
@@ -815,27 +818,16 @@ class InstitutionCasesTable extends ControllerActionTable
         // when user select academic period , feature ,instituion class and grade filter 
         $requestQuery = $this->request->query;
         $featureModel = TableRegistry::get($this->features[$selectedFeature]);
-
-        $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
+        //POCOR-7613 for proper records in excel
+        if ($selectedFeature != 'StudentAttendances') {
+            $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
+        }
+        // $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
     }
     // POCOR-6170
     // POCOR-6170
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
-    {
-        $extraField[] = [
-            'key' => 'Statuses.name',
-            'field' => 'status',
-            'type' => 'string',
-            'label' => __('Status')
-        ];
-
-        $extraField[] = [
-            'key' => 'Assignees.assignee',
-            'field' => 'assignee',
-            'type' => 'string',
-            'label' => __('Assignee')
-        ];
-
+    {   //POCOR-7613 start
         $extraField[] = [
             'key' => 'InstitutionCases.case_number',
             'field' => 'case_number',
@@ -851,26 +843,48 @@ class InstitutionCasesTable extends ControllerActionTable
         ];
 
         $extraField[] = [
-            'key' => 'InstitutionCases.description',
-            'field' => 'description',
+            'key' => 'CaseTypes.name',
+            'field' => 'type',
             'type' => 'string',
-            'label' => __('Description')
+            'label' => __('Type')
         ];
 
         $extraField[] = [
-            'key' => '',
-            'field' => 'total_linked_record',
+            'key' => 'CasePriority.name',
+            'field' => 'priority',
             'type' => 'string',
-            'label' => __('Linked Records')
+            'label' => __('Priority')
         ];
+        
+        $extraField[] = [
+            'key' => 'Statuses.name',
+            'field' => 'status',
+            'type' => 'string',
+            'label' => __('Status')
+        ];
+
+        $extraField[] = [
+            'key' => 'Assignees.assignee',
+            'field' => 'assignee',
+            'type' => 'string',
+            'label' => __('Assignee')
+        ];
+
 
         $extraField[] = [
             'key' => 'InstitutionCases.created',
             'field' => 'created',
             'type' => 'date',
-            'label' => __('Created On')
+            'label' => __('Created')
         ];
 
+        $extraField[] = [
+            'key' => 'InstitutionCases.modified',
+            'field' => 'modified',
+            'type' => 'date',
+            'label' => __('Updated')
+        ];
+    //POCOR-7613 end
         $fields->exchangeArray($extraField);
     }
     // POCOR-6170
