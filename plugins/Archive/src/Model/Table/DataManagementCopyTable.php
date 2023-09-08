@@ -21,13 +21,13 @@ use Cake\I18n\Date;
  *
  * @property \Cake\ORM\Association\BelongsTo $AcademicPeriods
  *
- * @method \Archive\Model\Entity\DeletedLog get($primaryKey, $options = [])
- * @method \Archive\Model\Entity\DeletedLog newEntity($data = null, array $options = [])
- * @method \Archive\Model\Entity\DeletedLog[] newEntities(array $data, array $options = [])
- * @method \Archive\Model\Entity\DeletedLog|bool save(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \Archive\Model\Entity\DeletedLog patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method \Archive\Model\Entity\DeletedLog[] patchEntities($entities, array $data, array $options = [])
- * @method \Archive\Model\Entity\DeletedLog findOrCreate($search, callable $callback = null, $options = [])
+ * @method \Archive\Model\Entity\DataManagementCopy get($primaryKey, $options = [])
+ * @method \Archive\Model\Entity\DataManagementCopy newEntity($data = null, array $options = [])
+ * @method \Archive\Model\Entity\DataManagementCopy[] newEntities(array $data, array $options = [])
+ * @method \Archive\Model\Entity\DataManagementCopy|bool save(\Cake\Datasource\EntityInterface $entity, $options = [])
+ * @method \Archive\Model\Entity\DataManagementCopy patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
+ * @method \Archive\Model\Entity\DataManagementCopy[] patchEntities($entities, array $data, array $options = [])
+ * @method \Archive\Model\Entity\DataManagementCopy findOrCreate($search, callable $callback = null, $options = [])
  */
 class DataManagementCopyTable extends ControllerActionTable
 {
@@ -307,7 +307,10 @@ class DataManagementCopyTable extends ControllerActionTable
 
             }
             //**********************POCOR-7326 End******************************* */
-            if(!empty($InstitutionBuildingsData) && !empty($InstitutionFloorsData) && !empty($InstitutionRoomsData) && !empty($InstitutionLandsData)){
+            if(!empty($InstitutionBuildingsData)
+                && !empty($InstitutionFloorsData)
+                && !empty($InstitutionRoomsData)
+                && !empty($InstitutionLandsData)){
                // $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
                 //return false;
             }
@@ -411,19 +414,29 @@ class DataManagementCopyTable extends ControllerActionTable
     }
 
     /***************POCOR-7326 Start*********************** */
-    public function codeGenerateL($Inscode,$no){
-        return $Inscode."-". $no;
+    public function codeGenerateL($Inscode, $no){
+        $no = str_pad($no, 2, 0, STR_PAD_LEFT);
+        return $Inscode."-" . $no;
         //return $Inscode."-". date('Ymdhis');
     }
     public function codeGenerateB($Inscode,$no,$b){
+        $no = str_pad($no, 2, 0, STR_PAD_LEFT);
+        $b = str_pad($b, 2, 0, STR_PAD_LEFT);
         return $Inscode."-". $no.$b;
         //return $Inscode."-". date('Ymdhis');
     }
     public function codeGenerateF($Inscode,$no,$b,$F){
+        $no = str_pad($no, 2, 0, STR_PAD_LEFT);
+        $b = str_pad($b, 2, 0, STR_PAD_LEFT);
+        $F = str_pad($F, 2, 0, STR_PAD_LEFT);
         return $Inscode."-". $no.$b.$F;
         //return $Inscode."-". date('Ymdhis');
     }
     public function codeGenerateR($Inscode,$no,$b,$F,$R){
+        $no = str_pad($no, 2, 0, STR_PAD_LEFT);
+        $b = str_pad($b, 2, 0, STR_PAD_LEFT);
+        $F = str_pad($F, 2, 0, STR_PAD_LEFT);
+        $R = str_pad($R, 2, 0, STR_PAD_LEFT);
         return $Inscode."-". $no.$b.$F.$R;
         //return $Inscode."-". date('Ymdhis');
     }
@@ -485,11 +498,11 @@ class DataManagementCopyTable extends ControllerActionTable
 
             $institutions = $Institutions->find('all')->toArray();        
             // foreach($InstitutionGradesdataToInsert AS $InstitutionGradesdataValue){
-                foreach($institutions as $k => $Insti){ 
+                foreach($institutions as $institutionKey => $Institution){ 
                         $InstitutionGradesdataValue = $InstitutionGrades
                                                         ->find()
                                                         ->contain('EducationGrades')
-                                                        ->where(['academic_period_id' => $from_academic_period,'institution_id'=> $Insti->id])
+                                                        ->where(['academic_period_id' => $from_academic_period,'institution_id'=> $Institution->id])
                                                         ->toArray();
                    //for removing duplicate records POCOR-7657 start
                         if(!empty($InstitutionGradesdataValue)){
@@ -499,7 +512,7 @@ class DataManagementCopyTable extends ControllerActionTable
                                                                             ->find()
                                                                             ->contain('EducationGrades')
                                                                             ->where(['academic_period_id' => $to_academic_period,
-                                                                                      'institution_id' => $Insti->id,
+                                                                                      'institution_id' => $Institution->id,
                                                                                       'EducationGrades.name'=>$newData->education_grade->name])
                                                                             ->first();
                                             if(empty($existingRecord)){
@@ -699,149 +712,177 @@ class DataManagementCopyTable extends ControllerActionTable
             //Check here Land entity for each school**
             $Unmatched =[];
             $Matched = [];
-            foreach($institutions as $k => $Insti){ 
-                if (!in_array($Insti->id, $InsIds)) {
-                   $Unmatched[$k] = $Insti->id;
+            foreach($institutions as $institutionKey => $Institution){ 
+                if (!in_array($Institution->id, $InsIds)) {
+                   $Unmatched[$institutionKey] = $Institution->id;
                    //*********Save Land/Bulding/Floor/room */
-                   $InstitutionLandDataa = $InstitutionLands
+                   $oldLand = $InstitutionLands
                    ->find('all')
-                   ->where(['academic_period_id ' => $entity->from_academic_period,'institution_id'=> $Insti->id])
+                   ->where(['academic_period_id ' => $entity->from_academic_period,
+                       'institution_id'=> $Institution->id])
                    ->first();
 
                    $AcademicPeriod = $AcademicPeriods->get($entity->to_academic_period);
 
-                    $newLandEntity = $InstitutionLands->newEntity([
-                        'code'=> $this->codeGenerateL($Insti->code,$k+1),
-                        'name'=> $InstitutionLandDataa->name,
+                   $newLand = $InstitutionLands->newEntity([
+                        'code'=> $this->codeGenerateL($Institution->code,$institutionKey+1),
+                        'name'=> $oldLand->name,
                         'start_date' => $AcademicPeriod->start_date,
                         'start_year' => $AcademicPeriod->start_year,
                         'end_date' => $AcademicPeriod->end_date,
                         'end_year' => $AcademicPeriod->end_year,
-                        'year_acquired'=> $InstitutionLandDataa->year_acquired,
-                        'year_disposed' => $InstitutionLandDataa->year_disposed,
-                        'area' => $InstitutionLandDataa->area,
-                        'accessibility'=> $InstitutionLandDataa->accessibility,
-                        'comment'=> $InstitutionLandDataa->comment,
-                        'institution_id'=> $InstitutionLandDataa->institution_id,
+                        'year_acquired'=> $oldLand->year_acquired,
+                        'year_disposed' => $oldLand->year_disposed,
+                        'area' => $oldLand->area,
+                        'accessibility'=> $oldLand->accessibility,
+                        'comment'=> $oldLand->comment,
+                        'institution_id'=> $oldLand->institution_id,
                         'academic_period_id'=> $AcademicPeriod->id,
-                        'land_type_id'=> $InstitutionLandDataa->land_type_id,
-                        'land_status_id'=> $InstitutionLandDataa->land_status_id,
-                        'infrastructure_ownership_id'=> $InstitutionLandDataa->infrastructure_ownership_id,
-                        'infrastructure_condition_id'=> $InstitutionLandDataa->infrastructure_condition_id,
-                        'previous_institution_land_id'=> $InstitutionLandDataa->previous_institution_land_id,
-                        'modified_user_id'=> $InstitutionLandDataa->modified_user_id,
-                        'modified'=> $InstitutionLandDataa->modified,
-                        'created_user_id'=> $InstitutionLandDataa->created_user_id,
-                        'created'=> $InstitutionLandDataa->created,
+                        'land_type_id'=> $oldLand->land_type_id,
+                        'land_status_id'=> $oldLand->land_status_id,
+                        'infrastructure_ownership_id'=> $oldLand->infrastructure_ownership_id,
+                        'infrastructure_condition_id'=> $oldLand->infrastructure_condition_id,
+                        'previous_institution_land_id'=> $oldLand->previous_institution_land_id,
+                        'modified_user_id'=> $oldLand->modified_user_id,
+                        'modified'=> $oldLand->modified,
+                        'created_user_id'=> $oldLand->created_user_id,
+                        'created'=> $oldLand->created,
 
                     ]);
-                    if($saveLandEntity = $InstitutionLands->save($newLandEntity)){
-                        
+                    if($saveLand = $InstitutionLands->save($newLand)){
+                        $oldLandId = $oldLand->id;
+                        $newLandId = $saveLand->id;
+                        $tableName = "land_custom_field_values";
+                        $fieldName = "institution_land_id";
+                        $this->copyCustomFields($connection, $tableName, $fieldName, $newLandId, $oldLandId);
                         $InstitutionBuildingData = $InstitutionBuildings
                         ->find('all')
-                        ->where(['institution_land_id ' => $InstitutionLandDataa->id])
+                        ->where(['institution_land_id ' => $oldLand->id])
                         ->toArray();
-                        foreach($InstitutionBuildingData as $kei=> $building){
+                        foreach($InstitutionBuildingData as $buildingKey=> $oldBuilding){
                             $newBuildingEntity = $InstitutionBuildings->newEntity([
-                                'code'=>$this->codeGenerateB($Insti->code,$k+1,$kei+1),
-                                'name'=>$building->name,
+                                'code'=>$this->codeGenerateB($Institution->code,$institutionKey+1,$buildingKey+1),
+                                'name'=>$oldBuilding->name,
                                 'start_date' => $AcademicPeriod->start_date,
                                 'start_year' => $AcademicPeriod->start_year,
                                 'end_date' => $AcademicPeriod->end_date,
                                 'end_year' => $AcademicPeriod->end_year,
-                                'year_acquired'=>$building->year_acquired,
-                                'year_disposed'=>$building->year_disposed,
-                                'area'=>$building->area,
-                                'accessibility'=>$building->accessibility,
-                                'comment'=>$building->comment,
-                                'institution_land_id'=>$saveLandEntity->id,
-                                'institution_id'=>$building->institution_id,
+                                'year_acquired'=>$oldBuilding->year_acquired,
+                                'year_disposed'=>$oldBuilding->year_disposed,
+                                'area'=>$oldBuilding->area,
+                                'accessibility'=>$oldBuilding->accessibility,
+                                'comment'=>$oldBuilding->comment,
+                                'institution_land_id'=>$newLandId,
+                                'institution_id'=>$oldBuilding->institution_id,
                                 'academic_period_id'=>$AcademicPeriod->id,
-                                'building_type_id'=>$building->building_type_id,
-                                'building_status_id'=>$building->building_status_id,
-                                'infrastructure_ownership_id'=>$building->infrastructure_ownership_id,
+                                'building_type_id'=>$oldBuilding->building_type_id,
+                                'building_status_id'=>$oldBuilding->building_status_id,
+                                'infrastructure_ownership_id'=>$oldBuilding->infrastructure_ownership_id,
 
-                                'infrastructure_condition_id'=>$building->infrastructure_condition_id,
-                                'previous_institution_building_id'=>$building->previous_institution_building_id,
-                                'modified_user_id'=>$building->modified_user_id,
-                                'modified'=>$building->modified,
-                                'created_user_id'=>$building->created_user_id,
-                                'created'=>$building->created
+                                'infrastructure_condition_id'=>$oldBuilding->infrastructure_condition_id,
+                                'previous_institution_building_id'=>$oldBuilding->previous_institution_building_id,
+                                'modified_user_id'=>$oldBuilding->modified_user_id,
+                                'modified'=>$oldBuilding->modified,
+                                'created_user_id'=>$oldBuilding->created_user_id,
+                                'created'=>$oldBuilding->created
 
                             ]);
                             
                             if($saveBuilding = $InstitutionBuildings->save($newBuildingEntity)){
+                                $oldBuildingId = $oldBuilding->id;
+                                $newBuildingId = $saveBuilding->id;
+                                $tableName = "building_custom_field_values";
+                                $fieldName = "institution_building_id";
+                                $this->copyCustomFields($connection, $tableName, $fieldName, $newBuildingId, $oldBuildingId);
                                 $InstitutionFloorData = $InstitutionFloors
                                 ->find('all')
-                                ->where(['institution_building_id ' => $building->id])
+                                ->where(['institution_building_id ' => $oldBuilding->id])
                                 ->toArray();
 
-                                foreach($InstitutionFloorData as $kkey => $floor){
-                                    $newFloorEntity = $InstitutionFloors->newEntity([
+                                foreach($InstitutionFloorData as $floorKey => $oldFloor){
+                                    $newFloor = $InstitutionFloors->newEntity([
 
-                                        'code'=>$this->codeGenerateF($Insti->code,$k+1,$kei+1,$kkey+1),
-                                        'name'=>$floor->name,
+                                        'code'=>$this->codeGenerateF($Institution->code,
+                                            $institutionKey+1,
+                                            $buildingKey+1,
+                                            $floorKey+1),
+                                        'name'=>$oldFloor->name,
                                         'start_date' => $AcademicPeriod->start_date,
                                         'start_year' => $AcademicPeriod->start_year,
                                         'end_date' => $AcademicPeriod->end_date,
                                         'end_year' => $AcademicPeriod->end_year,
                                     
-                                        'area'=>$floor->area,
-                                        'accessibility'=>$floor->accessibility,
-                                        'comment'=>$floor->comment,
+                                        'area'=>$oldFloor->area,
+                                        'accessibility'=>$oldFloor->accessibility,
+                                        'comment'=>$oldFloor->comment,
                                         'institution_building_id'=>$saveBuilding->id,
-                                        'institution_id'=>$floor->institution_id,
+                                        'institution_id'=>$oldFloor->institution_id,
                                         'academic_period_id'=>$AcademicPeriod->id,
-                                        'floor_type_id'=>$floor->floor_type_id,
-                                        'floor_status_id'=>$floor->floor_status_id,
+                                        'floor_type_id'=>$oldFloor->floor_type_id,
+                                        'floor_status_id'=>$oldFloor->floor_status_id,
                                         
-                                        'infrastructure_condition_id'=>$floor->infrastructure_condition_id,
-                                        'previous_institution_floor_id'=>$floor->previous_institution_floor_id,
-                                        'modified_user_id'=>$floor->modified_user_id,
-                                        'modified'=>$floor->modified,
-                                        'created_user_id'=>$floor->created_user_id,
-                                        'created'=>$floor->created
+                                        'infrastructure_condition_id'=>$oldFloor->infrastructure_condition_id,
+                                        'previous_institution_floor_id'=>$oldFloor->previous_institution_floor_id,
+                                        'modified_user_id'=>$oldFloor->modified_user_id,
+                                        'modified'=>$oldFloor->modified,
+                                        'created_user_id'=>$oldFloor->created_user_id,
+                                        'created'=>$oldFloor->created
 
                                     ]);
                                    
-                                    if($saveFloor = $InstitutionFloors->save($newFloorEntity)){
-                                        
+                                    if($saveFloor = $InstitutionFloors->save($newFloor)){
+                                        $oldFloorId = $oldFloor->id;
+                                        $newFloorId = $saveFloor->id;
+                                        $tableName = "floor_custom_field_values";
+                                        $fieldName = "institution_floor_id";
+                                        $this->copyCustomFields($connection, $tableName, $fieldName, $newFloorId, $oldFloorId);
+
                                         $InstitutionRoomData = $InstitutionRooms
                                         ->find('all')
-                                        ->where(['institution_floor_id ' => $floor->id])
+                                        ->where(['institution_floor_id ' => $oldFloor->id])
                                         ->toArray();
 
-                                        foreach($InstitutionRoomData as $no=>$room){
-                                          $newRoomEntity = $InstitutionRooms->newEntity([
-                                                'code'=>$this->codeGenerateR($Insti->code,$k+1,$kei+1,$kkey+1,$no+1),
-                                                'name'=>$room->name,
+                                        foreach($InstitutionRoomData as $roomKey=>$oldRoom){
+                                          $newRoom = $InstitutionRooms->newEntity([
+                                                'code'=>$this->codeGenerateR($Institution->code,
+                                                    $institutionKey+1,
+                                                    $buildingKey+1,
+                                                    $floorKey+1,
+                                                    $roomKey+1),
+                                                'name'=>$oldRoom->name,
                                                 'start_date' => $AcademicPeriod->start_date,
                                                 'start_year' => $AcademicPeriod->start_year,
                                                 'end_date' => $AcademicPeriod->end_date,
                                                 'end_year' => $AcademicPeriod->end_year,
                                             
                                             
-                                                'accessibility'=>$room->accessibility,
-                                                'comment'=>$room->comment,
+                                                'accessibility'=>$oldRoom->accessibility,
+                                                'comment'=>$oldRoom->comment,
                                             
                                                 
-                                                'room_type_id'=>$room->room_type_id,
-                                                'room_status_id'=>$room->room_status_id,
+                                                'room_type_id'=>$oldRoom->room_type_id,
+                                                'room_status_id'=>$oldRoom->room_status_id,
                                                 'institution_floor_id'=>$saveFloor->id,
 
-                                                'institution_id'=>$room->institution_id,
+                                                'institution_id'=>$oldRoom->institution_id,
                                                 'academic_period_id'=>$AcademicPeriod->id,
 
-                                                'infrastructure_condition_id'=>$room->infrastructure_condition_id,
-                                                'area'=>$room->area,
-                                                'previous_institution_room_id'=>$room->previous_institution_room_id,
-                                                'modified_user_id'=>$room->modified_user_id,
-                                                'modified'=>$room->modified,
-                                                'created_user_id'=>$room->created_user_id,
-                                                'created'=>$room->created
+                                                'infrastructure_condition_id'=>$oldRoom->infrastructure_condition_id,
+                                                'area'=>$oldRoom->area,
+                                                'previous_institution_room_id'=>$oldRoom->previous_institution_room_id,
+                                                'modified_user_id'=>$oldRoom->modified_user_id,
+                                                'modified'=>$oldRoom->modified,
+                                                'created_user_id'=>$oldRoom->created_user_id,
+                                                'created'=>$oldRoom->created
                                             ]);
-                                            
-                                            $InstitutionRooms->save($newRoomEntity);
+                                            if($saveRoom = $InstitutionRooms->save($newRoom)){
+                                                $oldRoomId = $oldRoom->id;
+                                                $newRoomId = $saveRoom->id;
+                                                $tableName = "room_custom_field_values";
+                                                $fieldName = "institution_room_id";
+                                                $this->copyCustomFields($connection, $tableName, $fieldName, $newRoomId, $oldRoomId);
+                                            }
+
                                         }
                                     }
                                 }
@@ -853,7 +894,7 @@ class DataManagementCopyTable extends ControllerActionTable
 
 
                 } else {
-                    $Matched[$k] = $Insti->id;
+                    $Matched[$institutionKey] = $Institution->id;
                 }
                
             }
@@ -1517,6 +1558,37 @@ class DataManagementCopyTable extends ControllerActionTable
                 $matches[]=$a;
         }
         return $matches;
+    }
+
+    /**
+     * @param \Cake\Datasource\ConnectionInterface $connection
+     * @param $tableName
+     * @param $fieldName
+     * @param $newId
+     * @param $oldId
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function copyCustomFields(\Cake\Datasource\ConnectionInterface $connection, $tableName, $fieldName, $newId, $oldId)
+    {
+        $sql = "INSERT IGNORE INTO `$tableName` 
+    (`id`, `text_value`, `number_value`, `decimal_value`, `textarea_value`, 
+     `date_value`, `time_value`, `file`, `infrastructure_custom_field_id`, 
+     `$fieldName`, `created_user_id`, `created`) 
+     SELECT uuid(), `CustomFieldValues`.`text_value`, 
+            `CustomFieldValues`.`number_value`, 
+            `CustomFieldValues`.`decimal_value`, 
+            `CustomFieldValues`.`textarea_value`, 
+            `CustomFieldValues`.`date_value`, 
+            `CustomFieldValues`.`time_value`, 
+            `CustomFieldValues`.`file`, 
+            `CustomFieldValues`.`infrastructure_custom_field_id`, 
+            $newId, 
+            `CustomFieldValues`.`created_user_id`, 
+            NOW() FROM `$tableName` AS 
+                `CustomFieldValues` WHERE `CustomFieldValues`.$fieldName = $oldId";
+//        $this->log($sql, 'debug');
+        $connection->query($sql);
+
     }
     //POCOR-7576-institution programme end 
    
