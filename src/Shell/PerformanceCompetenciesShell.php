@@ -69,14 +69,14 @@ class PerformanceCompetenciesShell extends Shell
         $CompetencyTemplatesTable = TableRegistry::get('Competency.CompetencyTemplates');
         $CompetencyItemsTable = TableRegistry::get('Competency.CompetencyItems');
         $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
-        
+        //POCOOR-7670 start
         //CompetencyTemplates[START]
         if(isset($competency_templates_value) && $competency_templates_value == 0){
             $CompetencyTemplatesData = $CompetencyTemplatesTable
             ->find('all')
             ->where(['academic_period_id' => $fromAcademicPeriod])
             ->toArray();
-
+            
             foreach($CompetencyTemplatesData AS $CompetencyTemplatesValue){
                 if(isset($CompetencyTemplatesValue['modified'])){
                     if ($CompetencyTemplatesValue['modified'] instanceof Time || $CompetencyTemplatesValue['modified'] instanceof Date) {
@@ -97,260 +97,161 @@ class PerformanceCompetenciesShell extends Shell
                 }else{
                     $created = date('Y-m-d H:i:s');
                 }
+                $newTemplateDataId=[];
+                //inserting template data
                 try{
-                    $statement2 = $connection->prepare('INSERT INTO competency_templates (
-                    code, 
-                    name,
-                    description,
-                    academic_period_id,
-                    education_grade_id,
-                    modified_user_id,
-                    modified,
-                    created_user_id,
-                    created)
-                    
-                    VALUES (
-                    :code, 
-                    :name,
-                    :description,
-                    :academic_period_id,
-                    :education_grade_id,
-                    :modified_user_id,
-                    :modified,
-                    :created_user_id,
-                    :created)');
-
-                    $statement2->execute([
-                    'code' => $CompetencyTemplatesValue["code"],
-                    'name' => $CompetencyTemplatesValue["name"],
-                    'description' => $CompetencyTemplatesValue["description"],
-                    'academic_period_id' => $toAcademicPeriod,
-                    'education_grade_id' => $CompetencyTemplatesValue["education_grade_id"],
-                    'modified_user_id' => $CompetencyTemplatesValue["modified_user_id"],
-                    'modified' => $modified,
-                    'created_user_id' => $CompetencyTemplatesValue["created_user_id"],
-                    'created' => $created,
+                    $newTemplateEntity = $CompetencyTemplatesTable->newEntity([
+                        'code' => $CompetencyTemplatesValue["code"],
+                        'name' => $CompetencyTemplatesValue["name"],
+                        'description' => $CompetencyTemplatesValue["description"],
+                        'academic_period_id' => $toAcademicPeriod,
+                        'education_grade_id' => $CompetencyTemplatesValue["education_grade_id"],
+                        'modified_user_id' => $CompetencyTemplatesValue["modified_user_id"],
+                        'modified' => $modified,
+                        'created_user_id' => $CompetencyTemplatesValue["created_user_id"],
+                        'created' => $created,
                     ]);
-                
-                }catch (PDOException $e) {
-                    echo "<pre>";print_r($e);die;
+                    $CompetencyTemplatesTable->save($newTemplateEntity);
+                    $newTemplateDataId= $newTemplateEntity->id;
+                } catch (Exception $e) {
+                    pr($e->getMessage());
                 }
+               //CompetencyItem[START]
+                if(!empty($newTemplateDataId)){
+                        if(isset($competency_items_value) && $competency_items_value == 0){
+                            $CompetencyItemsTable = TableRegistry::get('Competency.CompetencyItems');
+                            $CompetencyItemsData = $CompetencyItemsTable
+                            ->find()
+                            ->where(['academic_period_id' => $fromAcademicPeriod,
+                                    'competency_template_id' => $CompetencyTemplatesValue['id'] ]  //POCOR-7670 
+                            )
+                            ->toArray();
 
+                            foreach($CompetencyItemsData AS $key => $CompetencyItemsValue){
+                                if(isset($CompetencyItemsValue['modified'])){
+                                    if ($CompetencyItemsValue['modified'] instanceof Time || $CompetencyItemsValue['modified'] instanceof Date) {
+                                        $modified = $CompetencyItemsValue['modified']->format('Y-m-d H:i:s');
+                                    }else {
+                                        $modified = date('Y-m-d H:i:s', strtotime($CompetencyItemsValue['modified']));
+                                    }
+                                }else{
+                                    $modified = date('Y-m-d H:i:s');
+                                }
+
+                                if(isset($CompetencyItemsValue['created'])){
+                                    if ($CompetencyItemsValue['created'] instanceof Time || $CompetencyItemsValue['created'] instanceof Date) {
+                                        $created = $CompetencyItemsValue['created']->format('Y-m-d H:i:s');
+                                    }else {
+                                        $created = date('Y-m-d H:i:s', strtotime($CompetencyItemsValue['created']));
+                                    }
+                                }else{
+                                    $created = date('Y-m-d H:i:s');
+                                }
+                                $newItemDataId=[];
+                                try{
+                                    $newItemEntity= $CompetencyItemsTable->newEntity([
+                                    'name' => $CompetencyItemsValue["name"],
+                                    'academic_period_id' => $toAcademicPeriod,
+                                    'competency_template_id' => $newTemplateDataId,
+                                    'modified_user_id' => $CompetencyItemsValue["modified_user_id"],
+                                    'modified' => $modified,
+                                    'created_user_id' => $CompetencyItemsValue["created_user_id"],
+                                    'created' => $created,
+                                    ]);
+                                    $CompetencyItemsTable->save($newItemEntity);
+                                    $newItemDataId= $newItemEntity->id;
+                            } catch (Exception $e) {
+                                pr($e->getMessage());
+                            }
+                                if (!empty($newItemDataId)) { 
+                                    //CompetencyCriteria[START]      
+                                    if(isset($competency_criterias_value) && $competency_criterias_value == 0){
+                                        $CompetencyCriteriasData = $CompetencyCriteriasTable
+                                        ->find()
+                                        ->where(['academic_period_id' => $fromAcademicPeriod,
+                                                'competency_template_id' => $CompetencyTemplatesValue['id'],
+                                                'competency_item_id' => $CompetencyItemsValue['id']
+                                                ])
+                                        ->toArray();
+                                        foreach($CompetencyCriteriasData AS $key => $CompetencyCriteriasValue){
+                                            if(isset($CompetencyCriteriasValue['modified'])){
+                                                if ($CompetencyCriteriasValue['modified'] instanceof Time || $CompetencyCriteriasValue['modified'] instanceof Date) {
+                                                    $modified = $CompetencyCriteriasValue['modified']->format('Y-m-d H:i:s');
+                                                }else {
+                                                    $modified = date('Y-m-d H:i:s', strtotime($CompetencyCriteriasValue['modified']));
+                                                }
+                                            }else{
+                                                $modified = date('Y-m-d H:i:s');
+                                            }
+
+                                            if(isset($CompetencyCriteriasValue['created'])){
+                                                if ($CompetencyCriteriasValue['created'] instanceof Time || $CompetencyCriteriasValue['created'] instanceof Date) {
+                                                    $created = $CompetencyCriteriasValue['created']->format('Y-m-d H:i:s');
+                                                }else {
+                                                    $created = date('Y-m-d H:i:s', strtotime($CompetencyCriteriasValue['created']));
+                                                }
+                                            }else{
+                                                $created = date('Y-m-d H:i:s');
+                                            }
+                                            try{
+                                                $newCriteriaEntity=$CompetencyCriteriasTable->newEntity([
+                                                'code' => $CompetencyCriteriasValue["code"],
+                                                'name' => $CompetencyCriteriasValue["name"],
+                                                'academic_period_id' => $toAcademicPeriod,
+                                                'competency_item_id' => $newItemDataId,
+                                                'competency_template_id' =>  $newTemplateDataId,
+                                                'competency_grading_type_id' => $CompetencyCriteriasValue["competency_grading_type_id"],
+                                                'modified_user_id' => $CompetencyCriteriasValue["modified_user_id"],
+                                                'modified' => $modified,
+                                                'created_user_id' => $CompetencyCriteriasValue["created_user_id"],
+                                                'created' => $created,
+                                                ]);
+                                               $CompetencyCriteriasTable->save($newCriteriaEntity);
+                                        } catch (Exception $e) {
+                                            pr($e->getMessage());
+                                        }
+                                        }
+                                    }
+                                } //CompetencyCriteria[END]
+                            }
+                        }
+                }//CompetencyItem[END]
+       
+        //CompetencyCriterias[END] 
             }
-
-            $ToAcademicPeriodsData = $AcademicPeriods
-            ->find()
-            ->select(['start_date', 'start_year','end_date'])
-            ->where(['id' => $toAcademicPeriod])
-            ->first();
-            $from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
-            $to_end_date = $ToAcademicPeriodsData['end_date']->format('Y-m-d');
-            $from_start_date = "'".$from_start_date."'";
-            $to_end_date = "'".$to_end_date."'";
-
-            $statement3 = $connection->prepare("SELECT education_systems.academic_period_id,correct_grade.id AS correct_grade_id,institution_grades.* FROM `institution_grades`
-            INNER JOIN education_grades wrong_grade ON wrong_grade.id = institution_grades.education_grade_id
-            INNER JOIN education_grades correct_grade ON correct_grade.code = wrong_grade.code
-            INNER JOIN education_programmes ON correct_grade.education_programme_id = education_programmes.id
-            INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
-            INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
-            INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
-            LEFT JOIN academic_periods ON institution_grades.start_date BETWEEN $from_start_date AND $to_end_date
-            AND academic_periods.academic_period_level_id != -1
-            AND education_systems.academic_period_id = academic_periods.id
-            WHERE correct_grade.id != institution_grades.education_grade_id AND academic_periods.id=$toAcademicPeriod");
-
-            $statement3->execute();
-            $row = $statement3->fetchAll(\PDO::FETCH_ASSOC);
+        }
+        //CompetencyTemplates[END]
+        //for updating education_grades in competency_template table)
+            $statementLast = $connection->prepare("Select subq1.grade_id as wrong_grade,subq2.grade_id as correct_grade from
+                        (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
+                        INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                        INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                        INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+                        INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+                        INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
+                        where academic_period_id=$fromAcademicPeriod
+                        ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq1
+                        inner join
+                        (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
+                        INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                        INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                        INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+                        INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+                        INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
+                        where academic_period_id=$toAcademicPeriod
+                        ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq2
+                        on subq1.grade_name=subq2.grade_name");
+            $statementLast->execute();
+            $row = $statementLast->fetchAll(\PDO::FETCH_ASSOC);
             if(!empty($row)){
                 foreach($row AS $rowData){
                     $CompetencyTemplatesTable->updateAll(
-                        ['education_grade_id' => $rowData['correct_grade_id']],    //field
-                        ['education_grade_id' => $rowData['education_grade_id'], 'academic_period_id' => $toAcademicPeriod]
+                        ['education_grade_id' => $rowData['correct_grade']],    //field
+                        ['education_grade_id' => $rowData['wrong_grade'], 'academic_period_id' => $toAcademicPeriod]
                     );
                 }
             }
-        }
-
-        //CompetencyTemplates[END]
-
-        $CompetencyTemplateData = $CompetencyTemplatesTable
-            ->find('all')
-            ->where(['academic_period_id' => $toAcademicPeriod])
-            ->toArray();
-            $arr = [];
-            foreach($CompetencyTemplateData as $val){
-                $arr[] = $val['id'];
-            }
-        $CompetencyItemsData = $CompetencyItemsTable
-        ->find('all')
-        ->where(['academic_period_id' => $toAcademicPeriod])
-        ->toArray();
-        $arr1 = [];
-        foreach($CompetencyItemsData as $val){
-            $arr1[] = $val['id'];
-        }
-
-        //competencyItems[STARTS]
-        if(isset($competency_items_value) && $competency_items_value == 0){
-            $CompetencyItemsTable = TableRegistry::get('Competency.CompetencyItems');
-            $CompetencyItemsData = $CompetencyItemsTable
-            ->find('all')
-            ->where(['academic_period_id' => $fromAcademicPeriod])
-            ->toArray();
-
-            foreach($CompetencyItemsData AS $key => $CompetencyItemsValue){
-                if(isset($CompetencyItemsValue['modified'])){
-                    if ($CompetencyItemsValue['modified'] instanceof Time || $CompetencyItemsValue['modified'] instanceof Date) {
-                        $modified = $CompetencyItemsValue['modified']->format('Y-m-d H:i:s');
-                    }else {
-                        $modified = date('Y-m-d H:i:s', strtotime($CompetencyItemsValue['modified']));
-                    }
-                }else{
-                    $modified = date('Y-m-d H:i:s');
-                }
-
-                if(isset($CompetencyItemsValue['created'])){
-                    if ($CompetencyItemsValue['created'] instanceof Time || $CompetencyItemsValue['created'] instanceof Date) {
-                        $created = $CompetencyItemsValue['created']->format('Y-m-d H:i:s');
-                    }else {
-                        $created = date('Y-m-d H:i:s', strtotime($CompetencyItemsValue['created']));
-                    }
-                }else{
-                    $created = date('Y-m-d H:i:s');
-                }
-                try{
-                    $statement4 = $connection->prepare('INSERT INTO competency_items (
-                    name,
-                    academic_period_id,
-                    competency_template_id,
-                    modified_user_id,
-                    modified,
-                    created_user_id,
-                    created)
-                    
-                    VALUES (
-                    :name,
-                    :academic_period_id,
-                    :competency_template_id,
-                    :modified_user_id,
-                    :modified,
-                    :created_user_id,
-                    :created)');
-
-                    $statement4->execute([
-                    'name' => $CompetencyItemsValue["name"],
-                    'academic_period_id' => $toAcademicPeriod,
-                    'competency_template_id' => $arr[$key],
-                    'modified_user_id' => $CompetencyItemsValue["modified_user_id"],
-                    'modified' => $modified,
-                    'created_user_id' => $CompetencyItemsValue["created_user_id"],
-                    'created' => $created,
-                    ]);
-                
-                }catch (PDOException $e) {
-                    echo "<pre>";print_r($e);die;
-                }
-            }
-        }
-        //competencyItems[END]
-
-        //competencycriterias[start]
-        if(isset($competency_criterias_value) && $competency_criterias_value == 0){
-            $CompetencyCriteriasData = $CompetencyCriteriasTable
-            ->find('all')
-            ->where(['academic_period_id' => $fromAcademicPeriod])
-            ->toArray();
-            foreach($CompetencyCriteriasData AS $key => $CompetencyCriteriasValue){
-                if(isset($CompetencyCriteriasValue['modified'])){
-                    if ($CompetencyCriteriasValue['modified'] instanceof Time || $CompetencyCriteriasValue['modified'] instanceof Date) {
-                        $modified = $CompetencyCriteriasValue['modified']->format('Y-m-d H:i:s');
-                    }else {
-                        $modified = date('Y-m-d H:i:s', strtotime($CompetencyCriteriasValue['modified']));
-                    }
-                }else{
-                    $modified = date('Y-m-d H:i:s');
-                }
-
-                if(isset($CompetencyCriteriasValue['created'])){
-                    if ($CompetencyCriteriasValue['created'] instanceof Time || $CompetencyCriteriasValue['created'] instanceof Date) {
-                        $created = $CompetencyCriteriasValue['created']->format('Y-m-d H:i:s');
-                    }else {
-                        $created = date('Y-m-d H:i:s', strtotime($CompetencyCriteriasValue['created']));
-                    }
-                }else{
-                    $created = date('Y-m-d H:i:s');
-                }
-                try{
-                    $statement = $connection->prepare('INSERT INTO competency_criterias (
-                    code, 
-                    name,
-                    academic_period_id,
-                    competency_item_id,
-                    competency_template_id,
-                    competency_grading_type_id,
-                    modified_user_id,
-                    modified,
-                    created_user_id,
-                    created)
-                    
-                    VALUES (
-                    :code, 
-                    :name,
-                    :academic_period_id,
-                    :competency_item_id,
-                    :competency_template_id,
-                    :competency_grading_type_id,
-                    :modified_user_id,
-                    :modified,
-                    :created_user_id,
-                    :created)');
-
-                    $statement->execute([
-                    'code' => $CompetencyCriteriasValue["code"],
-                    'name' => $CompetencyCriteriasValue["name"],
-                    'academic_period_id' => $toAcademicPeriod,
-                    'competency_item_id' => $CompetencyCriteriasValue["competency_item_id"],
-                    //'competency_item_id' => $arr1[$key],
-                    'competency_template_id' => $CompetencyCriteriasValue["competency_template_id"],
-                  //  'competency_template_id' => $arr[$key],
-                    'competency_grading_type_id' => $CompetencyCriteriasValue["competency_grading_type_id"],
-                    'modified_user_id' => $CompetencyCriteriasValue["modified_user_id"],
-                    'modified' => $modified,
-                    'created_user_id' => $CompetencyCriteriasValue["created_user_id"],
-                    'created' => $created,
-                    ]);
-                
-                }catch (PDOException $e) {
-                    
-                }
-            }
-
-            $templateId = $CompetencyTemplatesTable
-                ->find('all')
-                ->where(['academic_period_id' => $toAcademicPeriod])
-                ->first()->id;
-            $updateCriterias =  $CompetencyCriteriasTable->updateAll(
-                                ['competency_template_id' => $templateId,],    //field
-                                [
-                                 'academic_period_id' => $toAcademicPeriod, 
-                                ] //condition
-                                );
-             $itemId = $CompetencyItemsTable
-                ->find('all')
-                ->where(['academic_period_id' => $toAcademicPeriod])
-                ->first()->id;
-            $updateCriterias =  $CompetencyCriteriasTable->updateAll(
-                                ['competency_item_id' => $itemId,],    //field
-                                [
-                                 'academic_period_id' => $toAcademicPeriod, 
-                                ] //condition
-                                );
-        }
-        
-       
-        //CompetencyCriterias[END] 
-
+        //POCOOR-7670 end
         return true;
     }
 
