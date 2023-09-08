@@ -3,6 +3,7 @@ namespace ControllerAction\Model\Behavior;
 
 use ArrayObject;
 use Cake\Auth\DefaultPasswordHasher;
+use Cake\Log\Log;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
@@ -508,9 +509,9 @@ class RemoveBehavior extends Behavior
                         if ($assoc->type() == 'manyToMany') {
                             $assocTable = $assoc->junction();
                         }
+//                        Log::write('debug', $assoc);
                         $bindingKey = $assoc->bindingKey();
                         $foreignKey = $assoc->foreignKey();
-
                         $conditions = [];
 
                         if (is_array($foreignKey)) {
@@ -520,6 +521,7 @@ class RemoveBehavior extends Behavior
                         } else {
                             $conditions[$assocTable->aliasField($foreignKey)] = $ids[$bindingKey];
                         }
+//                        Log::write('debug', $conditions);
 
                         $query = $assocTable->find()->where($conditions);
                         $event = $model->dispatchEvent('ControllerAction.Model.getAssociatedRecordConditions', [$query, $assocTable, $extra], $this);
@@ -538,7 +540,9 @@ class RemoveBehavior extends Behavior
                             }
                         }
                         if ($isAssociated) {
+                            if($count){
                             $associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+                            }
                         }
                     }
                 }
