@@ -484,5 +484,13 @@ class InstitutionCurricularsTable extends ControllerActionTable
              return 'Extracurricular';
         }
     }
-    
+    //POCOR-7691 start
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        if(!empty($this->request->pass[1])){
+            $curricularId = $this->paramsDecode($this->request->pass[1])['id'];
+            $_SESSION["curricularId"] = $curricularId;
+        }
+    }
+    //POCOR-7691 end
 }
