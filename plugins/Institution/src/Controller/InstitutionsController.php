@@ -2321,7 +2321,7 @@ class InstitutionsController extends AppController
         if (($session->check('Institution.Institutions.id')
                 || $this->getRequest()->getParam('institutionId'))
             || $action == 'dashboard'
-            || ($action == 'Institutions' && isset($this->request->pass[0]) && in_array($this->request->pass[0], ['view', 'edit']))) {
+            || ($action == 'Institutions' && isset($this->request->getParam('pass')[0]) && in_array($this->request->getParam('pass')[0], ['view', 'edit']))) {
             $id = 0;
 
             if (isset($this->request->pass[0]) && (in_array($action, ['dashboard']))) {

@@ -21,8 +21,8 @@ class AccountBehavior extends Behavior
 
     public function initialize(array $config): void
     {
-        $this->_table->setTable('security_users');
-        $this->_table->setEntityClass('User.User');
+        $this->table()->setTable('security_users');
+        $this->table()->setEntityClass('User.User');
         parent::initialize($config);
 
         $this->userRole = (array_key_exists('userRole', $config))? $config['userRole']: null;
@@ -30,7 +30,7 @@ class AccountBehavior extends Behavior
         $this->passwordAllowEmpty = (array_key_exists('passwordAllowEmpty', $config))? $config['passwordAllowEmpty']: $this->passwordAllowEmpty;
         $this->isInstitution = (array_key_exists('isInstitution', $config))? $config['isInstitution']: $this->isInstitution;
 
-        $this->_table->belongsToMany('Roles', [
+        $this->table()->belongsToMany('Roles', [
             'className' => 'Security.SecurityRoles',
             'joinTable' => 'security_group_users',
             'foreignKey' => 'security_user_id',
@@ -40,7 +40,7 @@ class AccountBehavior extends Behavior
         ]);
 
         $checkOwnPassword = ($this->userRole == 'Preferences');
-        $this->_table->addBehavior('Security.Password', [
+        $this->table()->addBehavior('Security.Password', [
             'field' => $this->targetField,
             'checkOwnPassword' => $checkOwnPassword,
             'passwordAllowEmpty' => $this->passwordAllowEmpty,

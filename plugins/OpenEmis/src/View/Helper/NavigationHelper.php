@@ -2,6 +2,7 @@
 namespace OpenEmis\View\Helper;
 
 use Cake\View\Helper;
+use Cake\Http\ServerRequest;
 
 class NavigationHelper extends Helper
 {
@@ -14,6 +15,8 @@ class NavigationHelper extends Helper
 
     public function printNavigation($navigations)
     {
+        $serverRequest = new ServerRequest();
+        //echo "<pre>"; print_r($navigations); die;
         // Processing variables
         $parentStack = [];
         $html = '';
@@ -27,8 +30,10 @@ class NavigationHelper extends Helper
         $ul = '<ul id="nav-menu-%s" class="nav %s" role="tabpanel" data-level="%s">';
         $class = 'nav-level-' . $level . ' collapse';
         $html .= sprintf($ul, $index++, ($class.' in'), $level);
-        $controller = $this->request->params['controller'];
-        $action = $this->request->params['action'];
+        //$controller = $this->request->params['controller'];
+        //$action = $this->request->params['action'];
+        $controller = $this->_View->getRequest()->getParam('controller');
+        $action = $this->_View->getRequest()->getParam('action');
         $pass = [];
 
         // Build all the parent nodes
@@ -41,8 +46,13 @@ class NavigationHelper extends Helper
         }
 
         // Set the pass variable
-        if (!empty($this->request->pass)) {
+        /*if (!empty($this->request->pass)) {
             $pass = $this->request->pass;
+        } else {
+            $pass[0] = '';
+        }*/
+        if (!empty($this->_View->getRequest()->getParam('pass'))) {
+            $pass = $this->_View->getRequest()->getParam('pass');
         } else {
             $pass[0] = '';
         }

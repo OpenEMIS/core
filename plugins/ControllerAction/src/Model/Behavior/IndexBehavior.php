@@ -110,8 +110,10 @@ class IndexBehavior extends Behavior
         //END: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
             if ($serverRequest->is(['post', 'put'])) {
                 if (isset($request->data['Search'])) {
-                    if (array_key_exists('limit', $request->data['Search'])) {
-                        $limit = $request->data['Search']['limit'];
+                    //if (array_key_exists('limit', $request->data['Search'])) {
+                    if (array_key_exists('limit', $request->getData()['Search'])) {
+                        //$limit = $request->data['Search']['limit'];
+                        $request->getData()['Search']['limit'] = $limit;
                         $session->write($alias.'.search.limit', $limit);
                     }
                 }
