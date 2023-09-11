@@ -113,7 +113,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.isNextButtonShouldDisable = isNextButtonShouldDisable;
     StudentController.getCSPDSearchData = getCSPDSearchData;
     StudentController.checkUserExistByIdentityFromConfiguration=checkUserExistByIdentityFromConfiguration;
-        //POCOR-6172-HINDOL[START]
+    //POCOR-6172-HINDOL[START]
     StudentController.multipleInstitutionsStudentEnrollment=true;
     StudentController.getMultipleInstitutionsStudentEnrollment=getMultipleInstitutionsStudentEnrollment
     //POCOR-6172-HINDOL[END]
@@ -172,15 +172,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.getUniqueOpenEmisId()
-        .then(function(response) {
-            StudentController.selectedStudentData.openemis_no = response;
-            StudentController.selectedStudentData.username = angular.copy(StudentController.selectedStudentData.openemis_no);
-            UtilsSvc.isAppendLoader(false);
-        }, function(error) {
-            UtilsSvc.isAppendLoader(false);
-            console.log(error);
+            .then(function(response) {
+                StudentController.selectedStudentData.openemis_no = response;
+                StudentController.selectedStudentData.username = angular.copy(StudentController.selectedStudentData.openemis_no);
+                UtilsSvc.isAppendLoader(false);
+            }, function(error) {
+                UtilsSvc.isAppendLoader(false);
+                console.log(error);
             });
-        }
+    }
 
     function getInternalSearchData() {
         var first_name = '';
@@ -192,7 +192,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var nationality_name = '';
         var identity_type_name = '';
         var identity_type_id = '';
-     
+
         first_name = StudentController.selectedStudentData.first_name;
         last_name = StudentController.selectedStudentData.last_name;
         date_of_birth = StudentController.selectedStudentData.date_of_birth;
@@ -223,18 +223,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     identity_type_id: identity_type_id
                 }
                 InstitutionsStudentsSvc.getInternalSearchData(param)
-                .then(function(response) {
-                    var gridData = response.data.data;
-                    if(!gridData)
-                        gridData=[];
+                    .then(function(response) {
+                        var gridData = response.data.data;
+                        if(!gridData)
+                            gridData=[];
 
-                    StudentController.isSearchResultEmpty = gridData.length === 0;
-                    var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
-                    return StudentController.processInternalGridUserRecord(gridData, params, totalRowCount);
-                }, function(error) {
-                    console.log(error);
-                    UtilsSvc.isAppendLoader(false);
-                });
+                        StudentController.isSearchResultEmpty = gridData.length === 0;
+                        var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
+                        return StudentController.processInternalGridUserRecord(gridData, params, totalRowCount);
+                    }, function(error) {
+                        console.log(error);
+                        UtilsSvc.isAppendLoader(false);
+                    });
             }
         };
         StudentController.internalGridOptions.api.setDatasource(dataSource);
@@ -273,25 +273,25 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 param.limit = params.endRow - params.startRow;
                 param.page = params.endRow / (params.endRow - params.startRow);
                 InstitutionsStudentsSvc.getExternalSearchData(param)
-                .then(function(response) {
-                    var gridData = response.data.data;
-                    if(!gridData)
-                        gridData = [];
-                    gridData.forEach((data) => {
-                        data.gender = data['gender.name'];
-                        data.nationality = data['main_nationality.name'];
-                        data.identity_type = data['main_identity_type.name'];
-                        data.gender_id = data['gender.id'];
-                        data.nationality_id = data['main_nationality.id'];
-                        data.identity_type_id = data['main_identity_type.id'];
+                    .then(function(response) {
+                        var gridData = response.data.data;
+                        if(!gridData)
+                            gridData = [];
+                        gridData.forEach((data) => {
+                            data.gender = data['gender.name'];
+                            data.nationality = data['main_nationality.name'];
+                            data.identity_type = data['main_identity_type.name'];
+                            data.gender_id = data['gender.id'];
+                            data.nationality_id = data['main_nationality.id'];
+                            data.identity_type_id = data['main_identity_type.id'];
+                        });
+                        StudentController.isSearchResultEmpty = gridData.length === 0;
+                        var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
+                        return StudentController.processExternalGridUserRecord(gridData, params, totalRowCount);
+                    }, function(error) {
+                        console.log(error);
+                        UtilsSvc.isAppendLoader(false);
                     });
-                    StudentController.isSearchResultEmpty = gridData.length === 0;
-                    var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
-                    return StudentController.processExternalGridUserRecord(gridData, params, totalRowCount);
-            }, function(error) {
-                    console.log(error);
-                    UtilsSvc.isAppendLoader(false);
-                });
             }
         };
         StudentController.externalGridOptions.api.setDatasource(dataSource);
@@ -317,13 +317,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function generatePassword() {
         UtilsSvc.isAppendLoader(true);
         InstitutionsStudentsSvc.generatePassword()
-        .then(function(response) {
-            StudentController.selectedStudentData.password = response;
-            StudentController.getAcademicPeriods();
+            .then(function(response) {
+                StudentController.selectedStudentData.password = response;
+                StudentController.getAcademicPeriods();
             }, function(error) {
-            console.log(error);
-            StudentController.getAcademicPeriods();
-        });
+                console.log(error);
+                StudentController.getAcademicPeriods();
+            });
     }
 
     function getGenders(){
@@ -340,12 +340,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function getMultipleInstitutionsStudentEnrollment(){
         InstitutionsStudentsSvc.getMultipleInstitutionsStudentEnrollmentConfig()
             .then(function(resp){
-                console.log(resp);
+                // console.log(resp);
                 const config_value = resp.data[0].value == "1" ? true : false;
                 StudentController.multipleInstitutionsStudentEnrollment = config_value;
-        }, function(error){
-            console.log(error);
-        });
+            }, function(error){
+                console.log(error);
+            });
     }
     //POCOR-6172-HINDOL[END]
 
@@ -465,7 +465,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 }
                 if(fieldData.field_type === 'DROPDOWN') {
                     fieldData.selectedOptionId = '';
-                    fieldData.answer = fieldData.values && fieldData.values.length > 0 ? fieldData.values[0].dropdown_val.toString() : '';
+                    try{
+                        fieldData.answer = fieldData.values && fieldData.values.length > 0 && fieldData.values[0].dropdown_val ? fieldData.values[0].dropdown_val.toString() : '';
+                    }catch (e) {
+                        console.error(e);
+                        console.log(customField);
+                        console.log(fieldData);
+                        fieldData.answer = "";
+                    }
                     fieldData.option.forEach((option) => {
                         if(option.option_id === fieldData.answer) {
                             fieldData.selectedOption = option.option_name;
@@ -733,197 +740,197 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function goToInternalSearch(){
         UtilsSvc.isAppendLoader(true);
         AggridLocaleSvc.getTranslatedGridLocale()
-        .then(function(localeText){
-            StudentController.internalGridOptions = {
-                columnDefs: [
-                    {headerName: StudentController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
-                ],
-                localeText: localeText,
-                enableColResize: true,
-                enableFilter: false,
-                enableServerSideFilter: true,
-                enableServerSideSorting: true,
-                enableSorting: false,
-                headerHeight: 38,
-                rowData: [],
-                rowHeight: 38,
-                rowModelType: 'infinite',
-                // Removed options - Issues in ag-Grid AG-828
-                // suppressCellSelection: true,
+            .then(function(localeText){
+                StudentController.internalGridOptions = {
+                    columnDefs: [
+                        {headerName: StudentController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
+                    ],
+                    localeText: localeText,
+                    enableColResize: true,
+                    enableFilter: false,
+                    enableServerSideFilter: true,
+                    enableServerSideSorting: true,
+                    enableSorting: false,
+                    headerHeight: 38,
+                    rowData: [],
+                    rowHeight: 38,
+                    rowModelType: 'infinite',
+                    // Removed options - Issues in ag-Grid AG-828
+                    // suppressCellSelection: true,
 
-                // Added options
-                suppressContextMenu: true,
-                stopEditingWhenGridLosesFocus: true,
-                ensureDomOrder: true,
-                pagination: true,
-                paginationPageSize: 10,
-                maxBlocksInCache: 1,
-                cacheBlockSize: 10,
-                // angularCompileRows: true,
-                onRowSelected: function (_e) {
-                    StudentController.selectStudentFromInternalSearch(_e.node.data.id);
-                    $scope.$apply();
-                },
-                onGridSizeChanged: function() {
-                    this.api.sizeColumnsToFit();
-                },
-            };
-            setTimeout(function(){
-                StudentController.getInternalSearchData();
-            }, 1500);
-        }, function(error){
-            StudentController.internalGridOptions = {
-                columnDefs: [
-                    {headerName: StudentController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
-                ],
-                localeText: localeText,
-                enableColResize: true,
-                enableFilter: false,
-                enableServerSideFilter: true,
-                enableServerSideSorting: true,
-                enableSorting: false,
-                headerHeight: 38,
-                rowData: [],
-                rowHeight: 38,
-                rowModelType: 'infinite',
-                // Removed options - Issues in ag-Grid AG-828
-                // suppressCellSelection: true,
+                    // Added options
+                    suppressContextMenu: true,
+                    stopEditingWhenGridLosesFocus: true,
+                    ensureDomOrder: true,
+                    pagination: true,
+                    paginationPageSize: 10,
+                    maxBlocksInCache: 1,
+                    cacheBlockSize: 10,
+                    // angularCompileRows: true,
+                    onRowSelected: function (_e) {
+                        StudentController.selectStudentFromInternalSearch(_e.node.data.id);
+                        $scope.$apply();
+                    },
+                    onGridSizeChanged: function() {
+                        this.api.sizeColumnsToFit();
+                    },
+                };
+                setTimeout(function(){
+                    StudentController.getInternalSearchData();
+                }, 1500);
+            }, function(error){
+                StudentController.internalGridOptions = {
+                    columnDefs: [
+                        {headerName: StudentController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
+                    ],
+                    localeText: localeText,
+                    enableColResize: true,
+                    enableFilter: false,
+                    enableServerSideFilter: true,
+                    enableServerSideSorting: true,
+                    enableSorting: false,
+                    headerHeight: 38,
+                    rowData: [],
+                    rowHeight: 38,
+                    rowModelType: 'infinite',
+                    // Removed options - Issues in ag-Grid AG-828
+                    // suppressCellSelection: true,
 
-                // Added options
-                suppressContextMenu: true,
-                stopEditingWhenGridLosesFocus: true,
-                ensureDomOrder: true,
-                pagination: true,
-                paginationPageSize: 10,
-                maxBlocksInCache: 1,
-                cacheBlockSize: 10,
-                // angularCompileRows: true,
-                onRowSelected: function (_e) {
-                    StudentController.selectStudentFromInternalSearch(_e.node.data.id);
-                    $scope.$apply();
-                },
-                onGridSizeChanged: function() {
-                    this.api.sizeColumnsToFit();
-                },
-            };
-            setTimeout(function(){
-                StudentController.getInternalSearchData();
-            }, 1500);
-        });
+                    // Added options
+                    suppressContextMenu: true,
+                    stopEditingWhenGridLosesFocus: true,
+                    ensureDomOrder: true,
+                    pagination: true,
+                    paginationPageSize: 10,
+                    maxBlocksInCache: 1,
+                    cacheBlockSize: 10,
+                    // angularCompileRows: true,
+                    onRowSelected: function (_e) {
+                        StudentController.selectStudentFromInternalSearch(_e.node.data.id);
+                        $scope.$apply();
+                    },
+                    onGridSizeChanged: function() {
+                        this.api.sizeColumnsToFit();
+                    },
+                };
+                setTimeout(function(){
+                    StudentController.getInternalSearchData();
+                }, 1500);
+            });
     }
 
     function goToExternalSearch(){
         UtilsSvc.isAppendLoader(true);
         AggridLocaleSvc.getTranslatedGridLocale()
-        .then(function(localeText){
-            StudentController.externalGridOptions = {
-                columnDefs: [
-                    {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
-                ],
-                localeText: localeText,
-                enableColResize: false,
-                enableFilter: false,
-                enableServerSideFilter: true,
-                enableServerSideSorting: true,
-                enableSorting: false,
-                headerHeight: 38,
-                rowData: [],
-                rowHeight: 38,
-                 rowModelType: 'infinite',
-                // Removed options - Issues in ag-Grid AG-828
-                // suppressCellSelection: true,
+            .then(function(localeText){
+                StudentController.externalGridOptions = {
+                    columnDefs: [
+                        {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                    ],
+                    localeText: localeText,
+                    enableColResize: false,
+                    enableFilter: false,
+                    enableServerSideFilter: true,
+                    enableServerSideSorting: true,
+                    enableSorting: false,
+                    headerHeight: 38,
+                    rowData: [],
+                    rowHeight: 38,
+                    rowModelType: 'infinite',
+                    // Removed options - Issues in ag-Grid AG-828
+                    // suppressCellSelection: true,
 
-                // Added options
-                suppressContextMenu: true,
-                stopEditingWhenGridLosesFocus: true,
-                ensureDomOrder: true,
-                pagination: true,
-                paginationPageSize: 10,
-                maxBlocksInCache: 1,
-                cacheBlockSize: 10,
-                // angularCompileRows: true,
-                onRowSelected: function (_e) {
-                    StudentController.selectStudentFromExternalSearch(_e.node.data.id);
-                    $scope.$apply();
-                },
-                onGridSizeChanged: function() {
-                    this.api.sizeColumnsToFit();
-                },
-            };
-            setTimeout(function(){
-                if (StudentController.externalSearchSourceName === 'Jordan CSPD'){
-                    StudentController.getCSPDSearchData();
-                }else{
-                    StudentController.getExternalSearchData();
-                }
-            }, 1500);
-        }, function(error){
-            StudentController.externalGridOptions = {
-                columnDefs: [
-                    {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
-                ],
-                localeText: localeText,
-                enableColResize: false,
-                enableFilter: false,
-                enableServerSideFilter: true,
-                enableServerSideSorting: true,
-                enableSorting: false,
-                headerHeight: 38,
-                rowData: [],
-                rowHeight: 38,
-                 rowModelType: 'infinite',
-                // Removed options - Issues in ag-Grid AG-828
-                // suppressCellSelection: true,
+                    // Added options
+                    suppressContextMenu: true,
+                    stopEditingWhenGridLosesFocus: true,
+                    ensureDomOrder: true,
+                    pagination: true,
+                    paginationPageSize: 10,
+                    maxBlocksInCache: 1,
+                    cacheBlockSize: 10,
+                    // angularCompileRows: true,
+                    onRowSelected: function (_e) {
+                        StudentController.selectStudentFromExternalSearch(_e.node.data.id);
+                        $scope.$apply();
+                    },
+                    onGridSizeChanged: function() {
+                        this.api.sizeColumnsToFit();
+                    },
+                };
+                setTimeout(function(){
+                    if (StudentController.externalSearchSourceName === 'Jordan CSPD'){
+                        StudentController.getCSPDSearchData();
+                    }else{
+                        StudentController.getExternalSearchData();
+                    }
+                }, 1500);
+            }, function(error){
+                StudentController.externalGridOptions = {
+                    columnDefs: [
+                        {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                    ],
+                    localeText: localeText,
+                    enableColResize: false,
+                    enableFilter: false,
+                    enableServerSideFilter: true,
+                    enableServerSideSorting: true,
+                    enableSorting: false,
+                    headerHeight: 38,
+                    rowData: [],
+                    rowHeight: 38,
+                    rowModelType: 'infinite',
+                    // Removed options - Issues in ag-Grid AG-828
+                    // suppressCellSelection: true,
 
-                // Added options
-                suppressContextMenu: true,
-                stopEditingWhenGridLosesFocus: true,
-                ensureDomOrder: true,
-                pagination: true,
-                paginationPageSize: 10,
-                maxBlocksInCache: 1,
-                cacheBlockSize: 10,
-                // angularCompileRows: true,
-                onRowSelected: function (_e) {
-                    StudentController.selectStudentFromExternalSearch(_e.node.data.id);
-                    $scope.$apply();
-                },
-                onGridSizeChanged: function() {
-                    this.api.sizeColumnsToFit();
-                },
-            };
-            setTimeout(function(){
-                if (StudentController.externalSearchSourceName === 'Jordan CSPD'){
-                    StudentController.getCSPDSearchData();
-                }else{
-                    StudentController.getExternalSearchData();
-                }
-            }, 1500);
-        });
+                    // Added options
+                    suppressContextMenu: true,
+                    stopEditingWhenGridLosesFocus: true,
+                    ensureDomOrder: true,
+                    pagination: true,
+                    paginationPageSize: 10,
+                    maxBlocksInCache: 1,
+                    cacheBlockSize: 10,
+                    // angularCompileRows: true,
+                    onRowSelected: function (_e) {
+                        StudentController.selectStudentFromExternalSearch(_e.node.data.id);
+                        $scope.$apply();
+                    },
+                    onGridSizeChanged: function() {
+                        this.api.sizeColumnsToFit();
+                    },
+                };
+                setTimeout(function(){
+                    if (StudentController.externalSearchSourceName === 'Jordan CSPD'){
+                        StudentController.getCSPDSearchData();
+                    }else{
+                        StudentController.getExternalSearchData();
+                    }
+                }, 1500);
+            });
     }
 
     function goToPrevStep(){
@@ -973,8 +980,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
 
-            //POCOR-6172-HINDOL[START]
-            //POCOR-7224-HINDOL[START]
+    //POCOR-6172-HINDOL[START]
+    //POCOR-7224-HINDOL[START]
 
     function studentExistInTheSameSchool() {
         return (StudentController.isInternalSearchSelected
@@ -1189,12 +1196,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
         }
 
-       /*  if(!StudentController.selectedStudentData.first_name
-       || !StudentController.selectedStudentData.last_name
-       || !StudentController.selectedStudentData.gender_id
-       || !StudentController.selectedStudentData.date_of_birth){
-            return;
-        } */
+        /*  if(!StudentController.selectedStudentData.first_name
+        || !StudentController.selectedStudentData.last_name
+        || !StudentController.selectedStudentData.gender_id
+        || !StudentController.selectedStudentData.date_of_birth){
+             return;
+         } */
 
         if (hasError)
         {
@@ -1228,14 +1235,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         // console.log(StudentController.selectedStudentData);
         var res = InstitutionsStudentsSvc.getEducationGradeAddStudent(StudentController.selectedStudentData.education_grade_id, StudentController.selectedStudentData.first_name, StudentController.selectedStudentData.last_name,  StudentController.selectedStudentData.openemis_no); //POCOR-7386
         var res1 = $window.localStorage.getItem('repeater_validation');
-          timer = setTimeout(()=>{
+        timer = setTimeout(()=>{
             var res1 = $window.localStorage.getItem('repeater_validation');
             if (res1 == '"yes"') {
                 StudentController.error.education_grade_id = 'This student has completed the education grade before. Please assign to a different grade.';
                 $window.localStorage.removeItem('repeater_validation');
                 return;
-              }
-          }, 3000);
+            }
+        }, 3000);
         if(!StudentController.selectedStudentData.startDate){
             StudentController.error.startDate = 'This field cannot be left empty';
         }
@@ -1269,8 +1276,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             if (res1 == '"no"') {
                 StudentController.saveStudentDetails();
                 $window.localStorage.removeItem('repeater_validation')
-              }
-          }, 3000);
+            }
+        }, 3000);
     }
 
     function saveStudentDetails() {
@@ -1411,7 +1418,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 if(StudentController.studentData &&
                     //POCOR-6172-HINDOL[END]
                     StudentController.studentData.is_diff_school > 0
-) {
+                ) {
                     StudentController.message ='Student transfer request is added successfully.';
                     StudentController.messageClass = 'alert-success';
                     UtilsSvc.isAppendLoader(false);
@@ -1433,7 +1440,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function transferStudent() {
         if (!StudentController.selectedStudentData.education_grade_id) {
-          StudentController.error.education_grade_id = 'This field cannot be left empty';
+            StudentController.error.education_grade_id = 'This field cannot be left empty';
         }
         // console.log(StudentController.selectedStudentData);
         var res = InstitutionsStudentsSvc.getEducationGrade(StudentController.selectedStudentData.education_grade_id, StudentController.selectedStudentData.openemis_no);
@@ -1442,16 +1449,16 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         let shouldSaveData = false;
 
         // timer = setTimeout(() => {
-          var res1 = $window.localStorage.getItem('repeater_validation');
-          timer = setTimeout(()=>{
+        var res1 = $window.localStorage.getItem('repeater_validation');
+        timer = setTimeout(()=>{
             var res1 = $window.localStorage.getItem('repeater_validation');
             if (res1 == '"yes"') {
                 shouldSaveData = true;
                 StudentController.error.education_grade_id = 'This student has completed the education grade before. Please assign to a different grade.';
                 $window.localStorage.removeItem('repeater_validation');
                 return;
-              }
-          }, 3000);
+            }
+        }, 3000);
 
         //   if (res1 == '"yes"') {
         //     StudentController.error.education_grade_id = 'This student has completed the education grade before. Please assign to a different grade.';
@@ -1460,16 +1467,16 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         // }, 3000);
 
         if (!StudentController.selectedStudentData.transferStartDate) {
-          StudentController.error.transferStartDate = 'This field cannot be left empty';
+            StudentController.error.transferStartDate = 'This field cannot be left empty';
         } else {
-          StudentController.selectedStudentData.transferStartDate = $filter('date')(StudentController.selectedStudentData.transferStartDate, 'yyyy-MM-dd');
+            StudentController.selectedStudentData.transferStartDate = $filter('date')(StudentController.selectedStudentData.transferStartDate, 'yyyy-MM-dd');
         }
         if (!StudentController.selectedStudentData.transfer_reason_id) {
-          StudentController.error.transfer_reason_id = 'This field cannot be left empty';
+            StudentController.error.transfer_reason_id = 'This field cannot be left empty';
         }
 
         if (!StudentController.selectedStudentData.education_grade_id || !StudentController.selectedStudentData.transferStartDate || !StudentController.selectedStudentData.transfer_reason_id) {
-          return;
+            return;
         }
 
         timer = setTimeout(()=>{
@@ -1477,9 +1484,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             if (res1 == '"no"') {
                 StudentController.saveStudentDetails();
                 $window.localStorage.removeItem('repeater_validation')
-              }
-          }, 3000);
-      }
+            }
+        }, 3000);
+    }
 
     function goToFirstStep() {
         if(!StudentController.isGuardianAdding){
@@ -1560,8 +1567,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var log = [];
         angular.forEach(StudentController.rowsThisPage , function(value) {
             if (value.id == StudentController.selectedStudent) {
-                    StudentController.studentData = value;
-                    if(StudentController.isInternalSearchSelected) {
+                StudentController.studentData = value;
+                if(StudentController.isInternalSearchSelected) {
                     StudentController.studentData.currentlyAllocatedTo = value.current_enrol_institution_code + ' - ' + value.current_enrol_institution_name;
                     StudentController.setStudentData(value);
                 }
@@ -1792,169 +1799,169 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function initGrid() {
         AggridLocaleSvc.getTranslatedGridLocale()
-        .then(function(localeText){
-            StudentController.internalGridOptions = {
-                columnDefs: [
-                    {headerName: StudentController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
-                ],
-                localeText: localeText,
-                enableColResize: true,
-                enableFilter: false,
-                enableServerSideFilter: true,
-                enableServerSideSorting: true,
-                enableSorting: false,
-                headerHeight: 38,
-                rowData: [],
-                rowHeight: 38,
-                rowModelType: 'infinite',
-                // Removed options - Issues in ag-Grid AG-828
-                // suppressCellSelection: true,
+            .then(function(localeText){
+                StudentController.internalGridOptions = {
+                    columnDefs: [
+                        {headerName: StudentController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true}
+                    ],
+                    localeText: localeText,
+                    enableColResize: true,
+                    enableFilter: false,
+                    enableServerSideFilter: true,
+                    enableServerSideSorting: true,
+                    enableSorting: false,
+                    headerHeight: 38,
+                    rowData: [],
+                    rowHeight: 38,
+                    rowModelType: 'infinite',
+                    // Removed options - Issues in ag-Grid AG-828
+                    // suppressCellSelection: true,
 
-                // Added options
-                suppressContextMenu: true,
-                stopEditingWhenGridLosesFocus: true,
-                ensureDomOrder: true,
-                pagination: true,
-                paginationPageSize: 10,
-                maxBlocksInCache: 1,
-                cacheBlockSize: 10,
-                // angularCompileRows: true,
-                onRowSelected: function (_e) {
-                    StudentController.selectStudentFromInternalSearch(_e.node.data.id);
-                    $scope.$apply();
-                },
-                onGridSizeChanged: function() {
-                    this.api.sizeColumnsToFit();
-                },
-            };
+                    // Added options
+                    suppressContextMenu: true,
+                    stopEditingWhenGridLosesFocus: true,
+                    ensureDomOrder: true,
+                    pagination: true,
+                    paginationPageSize: 10,
+                    maxBlocksInCache: 1,
+                    cacheBlockSize: 10,
+                    // angularCompileRows: true,
+                    onRowSelected: function (_e) {
+                        StudentController.selectStudentFromInternalSearch(_e.node.data.id);
+                        $scope.$apply();
+                    },
+                    onGridSizeChanged: function() {
+                        this.api.sizeColumnsToFit();
+                    },
+                };
 
-            StudentController.externalGridOptions = {
-                columnDefs: [
-                    {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
-                ],
-                localeText: localeText,
-                enableColResize: false,
-                enableFilter: false,
-                enableServerSideFilter: true,
-                enableServerSideSorting: true,
-                enableSorting: false,
-                headerHeight: 38,
-                rowData: [],
-                rowHeight: 38,
-                 rowModelType: 'infinite',
-                // Removed options - Issues in ag-Grid AG-828
-                // suppressCellSelection: true,
+                StudentController.externalGridOptions = {
+                    columnDefs: [
+                        {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                    ],
+                    localeText: localeText,
+                    enableColResize: false,
+                    enableFilter: false,
+                    enableServerSideFilter: true,
+                    enableServerSideSorting: true,
+                    enableSorting: false,
+                    headerHeight: 38,
+                    rowData: [],
+                    rowHeight: 38,
+                    rowModelType: 'infinite',
+                    // Removed options - Issues in ag-Grid AG-828
+                    // suppressCellSelection: true,
 
-                // Added options
-                suppressContextMenu: true,
-                stopEditingWhenGridLosesFocus: true,
-                ensureDomOrder: true,
-                pagination: true,
-                paginationPageSize: 10,
-                maxBlocksInCache: 1,
-                cacheBlockSize: 10,
-                // angularCompileRows: true,
-                onRowSelected: function (_e) {
-                    StudentController.selectStudentFromExternalSearch(_e.node.data.id);
-                    $scope.$apply();
-                },
-                onGridSizeChanged: function() {
-                    this.api.sizeColumnsToFit();
-                },
-            };
-        }, function(error){
-            StudentController.internalGridOptions = {
-                columnDefs: [
-                    {headerName: StudentController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
-                ],
-                enableColResize: false,
-                enableFilter: false,
-                enableServerSideFilter: true,
-                enableServerSideSorting: true,
-                enableSorting: false,
-                headerHeight: 38,
-                rowData: [],
-                rowHeight: 38,
-                rowModelType: 'infinite',
-                // Removed options - Issues in ag-Grid AG-828
-                // suppressCellSelection: true,
+                    // Added options
+                    suppressContextMenu: true,
+                    stopEditingWhenGridLosesFocus: true,
+                    ensureDomOrder: true,
+                    pagination: true,
+                    paginationPageSize: 10,
+                    maxBlocksInCache: 1,
+                    cacheBlockSize: 10,
+                    // angularCompileRows: true,
+                    onRowSelected: function (_e) {
+                        StudentController.selectStudentFromExternalSearch(_e.node.data.id);
+                        $scope.$apply();
+                    },
+                    onGridSizeChanged: function() {
+                        this.api.sizeColumnsToFit();
+                    },
+                };
+            }, function(error){
+                StudentController.internalGridOptions = {
+                    columnDefs: [
+                        {headerName: StudentController.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                    ],
+                    enableColResize: false,
+                    enableFilter: false,
+                    enableServerSideFilter: true,
+                    enableServerSideSorting: true,
+                    enableSorting: false,
+                    headerHeight: 38,
+                    rowData: [],
+                    rowHeight: 38,
+                    rowModelType: 'infinite',
+                    // Removed options - Issues in ag-Grid AG-828
+                    // suppressCellSelection: true,
 
-                // Added options
-                suppressContextMenu: true,
-                stopEditingWhenGridLosesFocus: true,
-                ensureDomOrder: true,
-                pagination: true,
-                paginationPageSize: 10,
-                maxBlocksInCache: 1,
-                cacheBlockSize: 10,
-                // angularCompileRows: true,
-                onRowSelected: function (_e) {
-                    StudentController.selectStudentFromInternalSearch(_e.node.data.id);
-                    $scope.$apply();
-                },
-                onGridSizeChanged: function() {
-                    this.api.sizeColumnsToFit();
-                },
-            };
+                    // Added options
+                    suppressContextMenu: true,
+                    stopEditingWhenGridLosesFocus: true,
+                    ensureDomOrder: true,
+                    pagination: true,
+                    paginationPageSize: 10,
+                    maxBlocksInCache: 1,
+                    cacheBlockSize: 10,
+                    // angularCompileRows: true,
+                    onRowSelected: function (_e) {
+                        StudentController.selectStudentFromInternalSearch(_e.node.data.id);
+                        $scope.$apply();
+                    },
+                    onGridSizeChanged: function() {
+                        this.api.sizeColumnsToFit();
+                    },
+                };
 
-            StudentController.externalGridOptions = {
-                columnDefs: [
-                    {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
-                    {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
-                ],
-                localeText: localeText,
-                enableColResize: false,
-                enableFilter: false,
-                enableServerSideFilter: true,
-                enableServerSideSorting: true,
-                enableSorting: false,
-                headerHeight: 38,
-                rowData: [],
-                rowHeight: 38,
-                 rowModelType: 'infinite',
-                // Removed options - Issues in ag-Grid AG-828
-                // suppressCellSelection: true,
+                StudentController.externalGridOptions = {
+                    columnDefs: [
+                        {headerName: StudentController.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true},
+                        {headerName: StudentController.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                    ],
+                    localeText: localeText,
+                    enableColResize: false,
+                    enableFilter: false,
+                    enableServerSideFilter: true,
+                    enableServerSideSorting: true,
+                    enableSorting: false,
+                    headerHeight: 38,
+                    rowData: [],
+                    rowHeight: 38,
+                    rowModelType: 'infinite',
+                    // Removed options - Issues in ag-Grid AG-828
+                    // suppressCellSelection: true,
 
-                // Added options
-                suppressContextMenu: true,
-                stopEditingWhenGridLosesFocus: true,
-                ensureDomOrder: true,
-                pagination: true,
-                paginationPageSize: 10,
-                maxBlocksInCache: 1,
-                cacheBlockSize: 10,
-                // angularCompileRows: true,
-                onRowSelected: function (_e) {
-                    StudentController.selectStudentFromExternalSearch(_e.node.data.id);
-                    $scope.$apply();
-                },
-                onGridSizeChanged: function() {
-                    this.api.sizeColumnsToFit();
-                },
-            };
-        });
+                    // Added options
+                    suppressContextMenu: true,
+                    stopEditingWhenGridLosesFocus: true,
+                    ensureDomOrder: true,
+                    pagination: true,
+                    paginationPageSize: 10,
+                    maxBlocksInCache: 1,
+                    cacheBlockSize: 10,
+                    // angularCompileRows: true,
+                    onRowSelected: function (_e) {
+                        StudentController.selectStudentFromExternalSearch(_e.node.data.id);
+                        $scope.$apply();
+                    },
+                    onGridSizeChanged: function() {
+                        this.api.sizeColumnsToFit();
+                    },
+                };
+            });
     };
 
 
@@ -2059,11 +2066,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         const { first_name, last_name, date_of_birth, gender_id } = selectedStudentData;
 
         if (isIdentityUserExist && step === "internal_search") {
-          return true;
+            return true;
         }
 
         if (step === "external_search" && (!first_name|| !last_name || !date_of_birth|| !gender_id)) {
-          return true;
+            return true;
         }
         return false;
     }
@@ -2080,25 +2087,25 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 param.limit = params.endRow - params.startRow;
                 param.page = params.endRow / (params.endRow - params.startRow);
                 InstitutionsStudentsSvc.getCspdData(param)
-                .then(function(response) {
-                    var gridData = [response.data.data];
-                    if(!gridData)gridData = [];
-                    gridData.forEach((data) => {
-                        data.name = `${data['first_name']} ${data['middle_name']} ${data['last_name']}`;
-                        data.gender = data['gender_name'];
-                        data.nationality = data['nationality_name'];
-                        data.identity_type = data['identity_type_name'];
-                        data.gender_id = data['gender_id'];
-                        data.nationality_id = data['nationality_id'];
-                        data.identity_type_id = data['identity_type_id'];
+                    .then(function(response) {
+                        var gridData = [response.data.data];
+                        if(!gridData)gridData = [];
+                        gridData.forEach((data) => {
+                            data.name = `${data['first_name']} ${data['middle_name']} ${data['last_name']}`;
+                            data.gender = data['gender_name'];
+                            data.nationality = data['nationality_name'];
+                            data.identity_type = data['identity_type_name'];
+                            data.gender_id = data['gender_id'];
+                            data.nationality_id = data['nationality_id'];
+                            data.identity_type_id = data['identity_type_id'];
+                        });
+                        StudentController.isSearchResultEmpty = gridData.length === 0;
+                        var totalRowCount = gridData.length === 0 ? 1 : gridData.length;
+                        return StudentController.processExternalGridUserRecord(gridData, params, totalRowCount);
+                    }, function(error) {
+                        console.log(error);
+                        UtilsSvc.isAppendLoader(false);
                     });
-                    StudentController.isSearchResultEmpty = gridData.length === 0;
-                    var totalRowCount = gridData.length === 0 ? 1 : gridData.length;
-                    return StudentController.processExternalGridUserRecord(gridData, params, totalRowCount);
-                }, function(error) {
-                    console.log(error);
-                    UtilsSvc.isAppendLoader(false);
-                });
             }
         };
         StudentController.externalGridOptions.api.setDatasource(dataSource);
@@ -2119,13 +2126,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         {
             userCtrl.error.identity_type_id =
                 "This field cannot be left empty";
-                return false;
+            return false;
         }
         if (!identity_number)
         {
             userCtrl.error.identity_number =
                 "This field cannot be left empty";
-                return false;
+            return false;
         }
 
         const result = await userSvc.checkUserAlreadyExistByIdentity({
