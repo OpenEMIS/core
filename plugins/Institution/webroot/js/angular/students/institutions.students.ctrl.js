@@ -418,7 +418,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 StudentController.classOptions = [];
             UtilsSvc.isAppendLoader(false);
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -443,7 +443,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.createCustomFieldsArray();
             UtilsSvc.isAppendLoader(false);
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -469,7 +469,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         fieldData.answer = fieldData.values && fieldData.values.length > 0 && fieldData.values[0].dropdown_val ? fieldData.values[0].dropdown_val.toString() : '';
                     }catch (e) {
                         console.error(e);
-                        console.log(customField);
+                        // console.log(customField);
                         console.log(fieldData);
                         fieldData.answer = "";
                     }
@@ -1433,7 +1433,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 }
             }
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -1517,7 +1517,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.redirectToGuardian = resp.data[0].redirecttoguardian_status;
             UtilsSvc.isAppendLoader(false);
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -1528,7 +1528,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.relationTypeOptions = resp.data;
             UtilsSvc.isAppendLoader(false);
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -1792,7 +1792,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             UtilsSvc.isAppendLoader(false);
             StudentController.getEducationGrades();
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -2103,7 +2103,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         var totalRowCount = gridData.length === 0 ? 1 : gridData.length;
                         return StudentController.processExternalGridUserRecord(gridData, params, totalRowCount);
                     }, function(error) {
-                        console.log(error);
+                        console.error(error);
                         UtilsSvc.isAppendLoader(false);
                     });
             }
