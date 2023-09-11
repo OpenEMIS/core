@@ -7499,8 +7499,8 @@ class InstitutionsController extends AppController
                 'type' => 'External Data Source - Identity',
                 'name' => 'Type'])
             ->toArray();
-        $this->log('checkConfigurationForExternalSearch', 'debug');
-        $this->log($configItemsResult, 'debug');
+//        $this->log('checkConfigurationForExternalSearch', 'debug');
+//        $this->log($configItemsResult, 'debug');
         foreach ($configItemsResult AS $result) {
             if ($result['value'] == "None") {
                 $result_array[] = array("value" => $result['value'], "showExternalSearch" => false);
