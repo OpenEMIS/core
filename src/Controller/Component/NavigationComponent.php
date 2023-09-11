@@ -214,7 +214,8 @@ class NavigationComponent extends Component
         $institutionId = $session->read('Institution.Institutions.id');
 
         if (!empty($institutionId)) {
-            $Institutions = TableRegistry::get('Institution.Institutions');
+            //$Institutions = TableRegistry::get('Institution.Institutions');
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
             if ($Institutions->exists([$Institutions->getPrimaryKey() => $institutionId])) {
                 $currentInstitution = $Institutions->get($institutionId);
@@ -274,8 +275,8 @@ class NavigationComponent extends Component
             $controller = $this->controller;
             $action = $this->action;
             $pass = [];
-            if (!empty($this->request->pass)) {
-                $pass = $this->request->pass;
+            if (!empty($this->getController()->getRequest()->getParam('pass'))) {
+                $pass = $this->getController()->getRequest()->getParam('pass');
             } else {
                 $pass[0] = '';
             }
@@ -334,6 +335,8 @@ class NavigationComponent extends Component
                 'DirectoryComments',
                 'DirectoryInsurances'];
             $guardianNavsControllers = [];
+
+
             if (in_array($controller->getName(), $institutionControllers) || (
                     $controller->getName() == 'Institutions'
                     && $action != 'index'
@@ -344,15 +347,15 @@ class NavigationComponent extends Component
                 $navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
                 $navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
                 $this->checkClassification($navigations);
-            } elseif (($controller->name == 'Students' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStudentActions))) {
+            } elseif (($controller->getName() == 'Students' && $action != 'index') || ($controller->getName() == 'Institutions' && in_array($action, $institutionStudentActions))) {
                 $navigations = $this->appendNavigation('Institutions.Institutions.index', $navigations, $this->getInstitutionNavigation());
                 $navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
                 $this->checkClassification($navigations);
-            } elseif (($controller->name == 'Staff' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStaffActions))) {
+            } elseif (($controller->getName() == 'Staff' && $action != 'index') || ($controller->getName() == 'Institutions' && in_array($action, $institutionStaffActions))) {
                 $navigations = $this->appendNavigation('Institutions.Institutions.index', $navigations, $this->getInstitutionNavigation());
                 $navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
                 $this->checkClassification($navigations);
-            } elseif (($controller->name == 'Directories' && $action != 'index') || in_array($controller->name, $directoryControllers)) {
+            } elseif (($controller->getName() == 'Directories' && $action != 'index') || in_array($controller->getName(), $directoryControllers)) {
                 $navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
 
                 $encodedParam = $this->request->params['pass'][1];
@@ -472,7 +475,7 @@ class NavigationComponent extends Component
                 }
                 // POCOR-6372 (end) initially here userType was checking but it did not work for directory navigation so changed with roles
                 /*POCOR-6332 ends*/
-            } elseif (($controller->name == 'Profiles' && $action != 'index') || in_array($controller->name, $profileControllers)) {
+            } elseif (($controller->getName() == 'Profiles' && $action != 'index') || in_array($controller->getName(), $profileControllers)) {
                 $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigation());
                 $navigations = $this->appendNavigation('Profiles.Personal', $navigations, $this->getProfileNavigation());
 
@@ -490,11 +493,11 @@ class NavigationComponent extends Component
                     $navigations = $this->appendNavigation('Profiles.Profiles.view', $navigations, $this->getProfileStudentNavigation());
                     $session->write('Profile.Profiles.reload', true);
                 }
-            } elseif (($controller->name == 'GuardianNavs' && $action != 'index')) {
+            } elseif (($controller->getName() == 'GuardianNavs' && $action != 'index')) {
                 $navigations = $this->appendNavigation('GuardianNavs.GuardianNavs.index', $navigations, $this->getGuardianNavNavigation());
                 $this->checkClassification($navigations);
             }
-
+            
             $navigations = $this->appendNavigation('Reports', $navigations, $this->getReportNavigation());
             $navigations = $this->appendNavigation('Administration', $navigations, $this->getAdministrationNavigation());
             return $navigations;
@@ -1652,6 +1655,7 @@ class NavigationComponent extends Component
         //POCOR-5886 starts
         $session = $this->getController()->getRequest()->getSession();
         $profileUserId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        
         //POCOR-5886 ends
         $navigation = [
             'Profiles.Profiles.view' => [

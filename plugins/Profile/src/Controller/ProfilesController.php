@@ -76,7 +76,7 @@ class ProfilesController extends AppController
     }
 
     public function Personal() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
-     public function Profiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
+    //public function Profiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
 
     // CAv4
     public function StudentAbsences()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']); }
@@ -620,7 +620,7 @@ class ProfilesController extends AppController
         if (array_key_exists('queryString', $this->request->getQuery())) { //to filter if the URL already contain querystring
             $id = $this->ControllerAction->getQueryString('security_user_id');
         }
-
+        //echo $id; die;
         $plugin = $this->getPlugin();
         $name = $this->getName();
 
@@ -994,6 +994,4 @@ class ProfilesController extends AppController
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
-
-
 }
