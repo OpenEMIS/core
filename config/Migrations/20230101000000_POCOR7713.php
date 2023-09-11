@@ -18,7 +18,7 @@ class POCOR7713 extends AbstractMigration
 	$this->execute('INSERT INTO `zz_7713_phinxlog` SELECT * FROM `phinxlog`');
 
 	// Update record for 20230515023003_POCOR7395.php
-	$this->execute('UPDATE `phinxlog` SET `version` = "20230502023003" WHERE `migration_name` LIKE "POCOR7395"');
+	$this->execute('UPDATE IGNORE `phinxlog` SET `version` = "20230502023003" WHERE `migration_name` LIKE "POCOR7395"');
     }
 
     public function down()
