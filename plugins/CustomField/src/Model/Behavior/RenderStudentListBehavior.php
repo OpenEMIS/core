@@ -43,6 +43,7 @@ class RenderStudentListBehavior extends RenderBehavior
         $fieldKey = $attr['attr']['fieldKey'];
         $formKey = $attr['attr']['formKey'];
         $fieldId = $customField->id;
+
         $form = $event->subject()->Form;
         $fieldPrefix = $attr['model'] . '.institution_student_surveys.' . $fieldId;
         $unlockFields = [];
@@ -52,7 +53,7 @@ class RenderStudentListBehavior extends RenderBehavior
         $tableHeaders = [];
         $tableCells = [];
         $cellCount = 0;
-        
+
         $formId = null;
         // Get Survey Form ID
         if ($customField->has('params') && !empty($customField->params)) {
@@ -62,7 +63,9 @@ class RenderStudentListBehavior extends RenderBehavior
             }
         }
         // End
-        $parentIDDDD = $attr['customField']['id'];
+        //echo "<pre>";print_r(count($entity['institution_student_surveys']));die;
+        $session->write('SurveyTabCount', count($entity['institution_student_surveys']));
+        $tabID = $attr['customField']['id']; //POCOR-7730
         if (!is_null($formId)) {
             $questions = $CustomFormsFields
                 ->find('all')
@@ -82,8 +85,6 @@ class RenderStudentListBehavior extends RenderBehavior
                 ->where([$CustomFormsFields->aliasField($formKey) => $formId])
                 ->group([$CustomFormsFields->aliasField($fieldKey)])
                 ->toArray();
-                
-                
 
             if (!empty($questions)) {
                 $institutionId = $entity->institution_id;
@@ -156,7 +157,7 @@ class RenderStudentListBehavior extends RenderBehavior
                             }
                         }
                     }
-                    
+
                     if ($session->check($sessionKey)) {
                         $selectedClass = $session->read($sessionKey);
                     }
@@ -173,8 +174,6 @@ class RenderStudentListBehavior extends RenderBehavior
                             ->where([
                                 $ClassStudents->aliasField('institution_class_id') => $selectedClass
                             ]);
-
-                            
                     }
 
                     $students = $studentQuery->toArray();
@@ -210,17 +209,12 @@ class RenderStudentListBehavior extends RenderBehavior
                                 $rowData[] = $student->user->openemis_no . $rowInput;
                                 $rowData[] = $student->user->name;
                             }
+
                             foreach ($questions as $colKey => $question) {
                                 $questionId = $question->custom_field->id;
                                 $questionType = $question->custom_field->field_type;
 
-
-                                $customField = $attr['customField'];
-
-                                $fieldId = $customField->id;
-
                                 $cellPrefix = "$rowPrefix.$questionId";
-                               // echo "<pre>";print_r($cellPrefix);die;
                                 $cellInput = "";
                                 $cellValue = "";
                                 $cellOptions = ['label' => false, 'value' => ''];
@@ -228,7 +222,8 @@ class RenderStudentListBehavior extends RenderBehavior
 
                                 // put back answer value for edit and validation failed
                                 if (isset($entity->institution_student_surveys[$fieldId][$studentId][$questionId])) {
-                                    
+                                    //$answerObj = $entity->institution_student_surveys[$fieldId][$studentId][$questionId];
+                                    //POCOR-7730
                                     $studentsurvy = $StudentSurveys->find('all',['conditions'=>[
                                         'status_id' => $entity->status_id,
                                         'institution_id' => $entity->institution_id,
@@ -236,11 +231,12 @@ class RenderStudentListBehavior extends RenderBehavior
                                         'academic_period_id' => $entity->academic_period_id,
                                         'parent_form_id' => $entity->survey_form_id
                                     ]])->first();
-                                    
+                                    //POCOR-7730
                                 }
-                                
+
                                 switch ($questionType) {
                                     case 'TEXT':
+                                        $answerObj = $entity->institution_student_surveys[$fieldId][$studentId][$questionId];
                                         $answerValue = !is_null($answerObj['text_value']) ? $answerObj['text_value'] : null;
 
                                         $cellOptions['type'] = 'string';
@@ -249,6 +245,7 @@ class RenderStudentListBehavior extends RenderBehavior
                                         $cellValue = !is_null($answerValue) ? $answerValue : '';
                                         break;
                                     case 'NUMBER':
+                                        $answerObj = $entity->institution_student_surveys[$fieldId][$studentId][$questionId];
                                         $answerValue = !is_null($answerObj['number_value']) ? $answerObj['number_value'] : null;
 
                                         $cellOptions['type'] = 'number';
@@ -257,6 +254,7 @@ class RenderStudentListBehavior extends RenderBehavior
                                         $cellValue = !is_null($answerValue) ? $answerValue : '';
                                         break;
                                     case 'DECIMAL':
+                                        $answerObj = $entity->institution_student_surveys[$fieldId][$studentId][$questionId];
                                         $answerValue = !is_null($answerObj['decimal_value']) ? $answerObj['decimal_value'] : null;
 
                                         $cellOptions['type'] = 'number';
@@ -275,11 +273,10 @@ class RenderStudentListBehavior extends RenderBehavior
                                         $cellValue = !is_null($answerValue) ? $answerValue : '';
                                         break;
                                     case 'DROPDOWN':
-                                        $existFieldOption = $StudentSurveyAnswers->find()->where(['survey_question_id'=> $questionId,'parent_survey_question_id'=> $fieldId,'institution_student_survey_id'=>$studentsurvy->id ])->first();
-                                        
-                                        $answerValue = !empty($existFieldOption->number_value) ? $existFieldOption->number_value : (!is_null($answerObj['number_value']) ? $answerObj['number_value'] : null);
+                                        $existFieldOption = $StudentSurveyAnswers->find()->where(['survey_question_id'=> $questionId,'parent_survey_question_id'=> $fieldId,'institution_student_survey_id'=>$studentsurvy->id ])->first(); //POCOR-7730
+                                        $answerValue = !empty($existFieldOption->number_value) ? $existFieldOption->number_value : (!is_null($answerObj['number_value']) ? $answerObj['number_value'] : null); //POCOR-7730
                                         //$answerValue = !is_null($answerObj['number_value']) ? $answerObj['number_value'] : null;
-                                        
+
                                         $dropdownOptions = [];
                                         $dropdownDefault = null;
                                         foreach ($question->custom_field->custom_field_options as $key => $obj) {
@@ -295,10 +292,9 @@ class RenderStudentListBehavior extends RenderBehavior
                                         $cellOptions['default'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
                                         $cellOptions['value'] = !is_null($answerValue) ? $answerValue : $dropdownDefault;
                                         $cellOptions['options'] = $dropdownOptions;
-                                        
+
                                         // for view
                                         $cellValue = !is_null($answerValue) ? $dropdownOptions[$answerValue] : '';
-                                        
                                         break;
                                         //POCOR-7660 start
                                     case 'DATE':
@@ -461,103 +457,203 @@ class RenderStudentListBehavior extends RenderBehavior
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-        if ($entity->has('institution_student_surveys')) {
-            $fieldKey = 'survey_question_id';
-            $formKey = 'survey_form_id';
-            $StudentSurveys = TableRegistry::get('Student.StudentSurveys');
-            $StudentSurveyAnswers = TableRegistry::get('Student.StudentSurveyAnswers');
+      //echo "<pre>";print_r($_SESSION['SurveyTabCount']);die;
+        $tabcount = $_SESSION['SurveyTabCount'];
 
-            $status = $entity->status_id;
-            $institutionId = $entity->institution_id;
-            $periodId = $entity->academic_period_id;
-            $parentFormId = $entity->{$formKey};
-
-            $parentIdd = (array_key_first($entity['institution_student_surveys']));
-
-            foreach ($entity->institution_student_surveys as $fieldId => $fieldObj) {
-                $formId = $fieldObj[$formKey];
-                unset($fieldObj[$formKey]);
-                unset($fieldObj['institution_class']);
-
-                // Logic to delete all answers before re-insert
-                $studentIds = array_keys($fieldObj);
-                $surveyIds = [];
-                if (!empty($studentIds)) {
-                    $surveyIds = $StudentSurveys
-                        ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-                        ->where([
-                            $StudentSurveys->aliasField('status_id') => $status,
-                            $StudentSurveys->aliasField('institution_id') => $institutionId,
-                            $StudentSurveys->aliasField('academic_period_id') => $periodId,
-                            $StudentSurveys->aliasField($formKey) => $formId,
-                            $StudentSurveys->aliasField('student_id IN ') => $studentIds
-                        ])
-                        ->toArray();
-                }
-
-                if (!empty($surveyIds)) {
-                    $StudentSurveyAnswers->deleteAll([
-                        $StudentSurveyAnswers->aliasField('institution_student_survey_id IN ') => $surveyIds,
-                        $StudentSurveyAnswers->aliasField('parent_survey_question_id') => $parentFormId
-                    ]);
-                }
-                // End
-
-                foreach ($fieldObj as $studentId => $studentObj) { 
-                    if (is_array($studentObj)) {
-                        $surveyData = [
-                            'status_id' => $status,
-                            'institution_id' => $institutionId,
-                            'academic_period_id' => $periodId,
-                            $formKey => $formId,
-                            'parent_form_id' => $parentFormId,
-                            'student_id' => $studentId
-                        ];
-                        // for edit record
-                        if (array_key_exists('id', $studentObj)) {
-                            $surveyData['id'] = $studentObj['id'];
-                            unset($studentObj['id']);
-                        }
-                        // End
-                        $ir=0;
-                        $answers = [];
-                        
-                        foreach ($studentObj as $questionId => $answerObj) {
-                            
-                            // checking to skip insert if is empty
-                            $textValue = isset($answerObj['text_value']) && strlen($answerObj['text_value']) > 0 ? $answerObj['text_value'] : null;
-                            $numberValue = isset($answerObj['number_value']) && strlen($answerObj['number_value']) > 0 ? $answerObj['number_value'] : null;
-                            $decimalValue = isset($answerObj['decimal_value']) && strlen($answerObj['decimal_value']) > 0 ? $answerObj['decimal_value'] : null;
-                            $textareaValue = isset($answerObj['textarea_value']) && strlen($answerObj['textarea_value']) > 0 ? $answerObj['textarea_value'] : null;
-                            $dateValue = isset($answerObj['date_value']) && strlen($answerObj['date_value']) > 0 ? $answerObj['date_value'] : null;
-                            $timeValue = isset($answerObj['time_value']) && strlen($answerObj['time_value']) > 0 ? $answerObj['time_value'] : null;
-
-
-                            $duplicateData11 = $StudentSurveyAnswers->find()->where(['survey_question_id'=> $questionId,'parent_survey_question_id'=> $parentIdd,'institution_student_survey_id'=> $surveyData['id']])->toArray();
-                            foreach($duplicateData11 as $dup){
-                                $StudentSurveyAnswers->delete($dup);
+        if($tabcount == 1){
+            if ($entity->has('institution_student_surveys')) {
+                $fieldKey = 'survey_question_id';
+                $formKey = 'survey_form_id';
+                $StudentSurveys = TableRegistry::get('Student.StudentSurveys');
+                $StudentSurveyAnswers = TableRegistry::get('Student.StudentSurveyAnswers');
+    
+                $status = $entity->status_id;
+                $institutionId = $entity->institution_id;
+                $periodId = $entity->academic_period_id;
+                $parentFormId = $entity->{$formKey};
+                $parentIdd = (array_key_first($entity['institution_student_surveys']));//POCOR-7730
+    
+                foreach ($entity->institution_student_surveys as $fieldId => $fieldObj) {
+                    $formId = $fieldObj[$formKey];
+                    unset($fieldObj[$formKey]);
+                    unset($fieldObj['institution_class']);
+    
+                    // Logic to delete all answers before re-insert
+                    $studentIds = array_keys($fieldObj);
+                    $surveyIds = [];
+                    if (!empty($studentIds)) {
+                        $surveyIds = $StudentSurveys
+                            ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+                            ->where([
+                                $StudentSurveys->aliasField('status_id') => $status,
+                                $StudentSurveys->aliasField('institution_id') => $institutionId,
+                                $StudentSurveys->aliasField('academic_period_id') => $periodId,
+                                $StudentSurveys->aliasField($formKey) => $formId,
+                                $StudentSurveys->aliasField('student_id IN ') => $studentIds
+                            ])
+                            ->toArray();
+                    }
+    
+                    if (!empty($surveyIds)) {
+                        $StudentSurveyAnswers->deleteAll([
+                            $StudentSurveyAnswers->aliasField('institution_student_survey_id IN ') => $surveyIds//,
+                            //$StudentSurveyAnswers->aliasField('parent_survey_question_id') => $parentFormId //POCOR-7730
+                        ]);
+                    }
+                    // End
+    
+                    foreach ($fieldObj as $studentId => $studentObj) {
+                        if (is_array($studentObj)) {
+                            $surveyData = [
+                                'status_id' => $status,
+                                'institution_id' => $institutionId,
+                                'academic_period_id' => $periodId,
+                                $formKey => $formId,
+                                'parent_form_id' => $parentFormId,
+                                'student_id' => $studentId
+                            ];
+                            // for edit record
+                            if (array_key_exists('id', $studentObj)) {
+                                $surveyData['id'] = $studentObj['id'];
+                                unset($studentObj['id']);
                             }
-
-                            if (!is_null($textValue) || !is_null($numberValue) || !is_null($decimalValue) || !is_null($textareaValue) || !is_null($dateValue) || !is_null($timeValue)) {
-                                $answerObj = array_merge($answerObj, [
-                                    $fieldKey => $questionId
-                                ]);
-
-                                $answers[] = $answerObj;
-                                $answers[$ir]['parent_survey_question_id'] = $parentIdd;
+                            // End
+                            $ir=0;
+                            $answers = [];
+                            foreach ($studentObj as $questionId => $answerObj) {
+                                // checking to skip insert if is empty
+                                $textValue = isset($answerObj['text_value']) && strlen($answerObj['text_value']) > 0 ? $answerObj['text_value'] : null;
+                                $numberValue = isset($answerObj['number_value']) && strlen($answerObj['number_value']) > 0 ? $answerObj['number_value'] : null;
+                                $decimalValue = isset($answerObj['decimal_value']) && strlen($answerObj['decimal_value']) > 0 ? $answerObj['decimal_value'] : null;
+                                $textareaValue = isset($answerObj['textarea_value']) && strlen($answerObj['textarea_value']) > 0 ? $answerObj['textarea_value'] : null;
+                                $dateValue = isset($answerObj['date_value']) && strlen($answerObj['date_value']) > 0 ? $answerObj['date_value'] : null;
+                                $timeValue = isset($answerObj['time_value']) && strlen($answerObj['time_value']) > 0 ? $answerObj['time_value'] : null;
+                                //POCOR-7730
+                                $duplicateData11 = $StudentSurveyAnswers->find()->where(['survey_question_id'=> $questionId,'parent_survey_question_id'=> $parentIdd,'institution_student_survey_id'=> $surveyData['id']])->toArray();
+                                foreach($duplicateData11 as $dup){
+                                    $StudentSurveyAnswers->delete($dup);
+                                }
+                                //POCOR-7730
+                                if (!is_null($textValue) || !is_null($numberValue) || !is_null($decimalValue) || !is_null($textareaValue) || !is_null($dateValue) || !is_null($timeValue)) {
+                                    $answerObj = array_merge($answerObj, [
+                                        $fieldKey => $questionId
+                                    ]);
+    
+                                    $answers[] = $answerObj;
+                                    //$answers[$ir]['parent_survey_question_id'] = $parentIdd; //POCOR-7730
+                                }
+                                $ir++;
                             }
-                            $ir++;
+    
+                            $surveyData['custom_field_values'] = $answers;
+                            $surveyEntity = $StudentSurveys->newEntity($surveyData);
+                            // save student by student
+                            if ($StudentSurveys->save($surveyEntity)) {
+                            } else {
+                                Log::write('debug', $surveyEntity->errors());
+                            }
                         }
-                        $surveyData['custom_field_values'] = $answers;
-                        $surveyEntity = $StudentSurveys->newEntity($surveyData);
-                        // save student by student
-                        if ($StudentSurveys->save($surveyEntity)) {
-                        } else {
-                            Log::write('debug', $surveyEntity->errors());
+                    }
+                }
+            }
+
+        }else{
+            if ($entity->has('institution_student_surveys')) {
+                $fieldKey = 'survey_question_id';
+                $formKey = 'survey_form_id';
+                $StudentSurveys = TableRegistry::get('Student.StudentSurveys');
+                $StudentSurveyAnswers = TableRegistry::get('Student.StudentSurveyAnswers');
+    
+                $status = $entity->status_id;
+                $institutionId = $entity->institution_id;
+                $periodId = $entity->academic_period_id;
+                $parentFormId = $entity->{$formKey};
+                $parentIdd = (array_key_first($entity['institution_student_surveys']));//POCOR-7730
+    
+                foreach ($entity->institution_student_surveys as $fieldId => $fieldObj) {
+                    $formId = $fieldObj[$formKey];
+                    unset($fieldObj[$formKey]);
+                    unset($fieldObj['institution_class']);
+    
+                    // Logic to delete all answers before re-insert
+                    $studentIds = array_keys($fieldObj);
+                    $surveyIds = [];
+                    if (!empty($studentIds)) {
+                        $surveyIds = $StudentSurveys
+                            ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+                            ->where([
+                                $StudentSurveys->aliasField('status_id') => $status,
+                                $StudentSurveys->aliasField('institution_id') => $institutionId,
+                                $StudentSurveys->aliasField('academic_period_id') => $periodId,
+                                $StudentSurveys->aliasField($formKey) => $formId,
+                                $StudentSurveys->aliasField('student_id IN ') => $studentIds
+                            ])
+                            ->toArray();
+                    }
+    
+                    if (!empty($surveyIds)) {
+                        $StudentSurveyAnswers->deleteAll([
+                            $StudentSurveyAnswers->aliasField('institution_student_survey_id IN ') => $surveyIds,
+                            $StudentSurveyAnswers->aliasField('parent_survey_question_id') => $parentFormId //POCOR-7730
+                        ]);
+                    }
+                    // End
+    
+                    foreach ($fieldObj as $studentId => $studentObj) {
+                        if (is_array($studentObj)) {
+                            $surveyData = [
+                                'status_id' => $status,
+                                'institution_id' => $institutionId,
+                                'academic_period_id' => $periodId,
+                                $formKey => $formId,
+                                'parent_form_id' => $parentFormId,
+                                'student_id' => $studentId
+                            ];
+                            // for edit record
+                            if (array_key_exists('id', $studentObj)) {
+                                $surveyData['id'] = $studentObj['id'];
+                                unset($studentObj['id']);
+                            }
+                            // End
+                            $ir=0;
+                            $answers = [];
+                            foreach ($studentObj as $questionId => $answerObj) {
+                                // checking to skip insert if is empty
+                                $textValue = isset($answerObj['text_value']) && strlen($answerObj['text_value']) > 0 ? $answerObj['text_value'] : null;
+                                $numberValue = isset($answerObj['number_value']) && strlen($answerObj['number_value']) > 0 ? $answerObj['number_value'] : null;
+                                $decimalValue = isset($answerObj['decimal_value']) && strlen($answerObj['decimal_value']) > 0 ? $answerObj['decimal_value'] : null;
+                                $textareaValue = isset($answerObj['textarea_value']) && strlen($answerObj['textarea_value']) > 0 ? $answerObj['textarea_value'] : null;
+                                $dateValue = isset($answerObj['date_value']) && strlen($answerObj['date_value']) > 0 ? $answerObj['date_value'] : null;
+                                $timeValue = isset($answerObj['time_value']) && strlen($answerObj['time_value']) > 0 ? $answerObj['time_value'] : null;
+                                //POCOR-7730
+                                $duplicateData11 = $StudentSurveyAnswers->find()->where(['survey_question_id'=> $questionId,'parent_survey_question_id'=> $parentIdd,'institution_student_survey_id'=> $surveyData['id']])->toArray();
+                                foreach($duplicateData11 as $dup){
+                                    $StudentSurveyAnswers->delete($dup);
+                                }
+                                //POCOR-7730
+                                if (!is_null($textValue) || !is_null($numberValue) || !is_null($decimalValue) || !is_null($textareaValue) || !is_null($dateValue) || !is_null($timeValue)) {
+                                    $answerObj = array_merge($answerObj, [
+                                        $fieldKey => $questionId
+                                    ]);
+    
+                                    $answers[] = $answerObj;
+                                    $answers[$ir]['parent_survey_question_id'] = $parentIdd; //POCOR-7730
+                                }
+                                $ir++;
+                            }
+    
+                            $surveyData['custom_field_values'] = $answers;
+                            $surveyEntity = $StudentSurveys->newEntity($surveyData);
+                            // save student by student
+                            if ($StudentSurveys->save($surveyEntity)) {
+                            } else {
+                                Log::write('debug', $surveyEntity->errors());
+                            }
                         }
                     }
                 }
             }
         }
+        
     }
 }
