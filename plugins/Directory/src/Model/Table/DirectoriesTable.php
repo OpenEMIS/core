@@ -203,13 +203,12 @@ class DirectoriesTable extends ControllerActionTable
 
         $this->addBehavior('User.User');
         $this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
-        $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('User.AdvancedIdentitySearch');
         $this->addBehavior('User.AdvancedContactNumberSearch');
         $this->addBehavior('User.AdvancedPositionSearch');
         $this->addBehavior('User.AdvancedSpecificNameTypeSearch');
         $this->addBehavior('User.MoodleCreateUser');
-        $this->addBehavior('OpenEmis.Autocomplete');
+        $this->addBehavior('Directory.Merge');
 
         //specify order of advanced search fields
         $advancedSearchFieldOrder = [
@@ -259,10 +258,7 @@ class DirectoriesTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';
         $events['AdvanceSearch.onModifyConditions'] = 'onModifyConditions';
-        $events['ControllerAction.Model.merge'] = 'merge';
         $events['Model.AreaAdministrative.afterDelete'] = 'areaAdminstrativeAfterDelete';
-        $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
-        $events['ControllerAction.Model.merge.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
         return $events;
     }
 
@@ -554,233 +550,8 @@ class DirectoriesTable extends ControllerActionTable
         return $query;
     }
 
-    public function mergeAfterAction(Event $event, ArrayObject $extra)
-    {
-
-//        die();
-//        $event->stopPropagation();
-    }
-
-    public function merge(Event $event, ArrayObject $extra)
-    {
-//        $this->Alert->error($this->aliasField('unableToTransfer'));
-        $model = $this;
-        $sessionKey = $model->registryAlias() . '.primaryKey';
-        $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
-
-        if (empty($ids)) {
-            if ($model->Session->check($sessionKey)) {
-                $ids = $model->Session->read($sessionKey);
-            } elseif (!empty($model->ControllerAction->getQueryString())) {
-                // Query string logic not implemented yet, will require to check if the query string contains the primary key
-                $primaryKey = $model->primaryKey();
-                $ids = $model->ControllerAction->getQueryString($primaryKey);
-            }
-        }
-
-        $idKeys = $model->getIdKeys($model, $ids);
-
-        $entity = false;
-        $contain = [];
-
-        // need to change this part
-        if ($model->exists([$idKeys])) {
-            $query = $model->find()->where($idKeys)->contain($contain);
-            $event = $model->dispatchEvent('ControllerAction.Controller.beforeQuery', [$model, $query, $extra], $this);
-            $event = $model->dispatchEvent('ControllerAction.Model.merge.beforeQuery', [$query, $extra], $this);
-            $entity = $query->first();
-        }
-
-        $action = $this->Session->read($this->registryAlias().'.referralAction');
-        if(!$action){
-            $action = 'view';
-        }
-
-        $extra['config']['form'] = true;
-        $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit'];
-        $this->fields = []; // reset all the fields
-
-        $this->field('first_id', [
-            'type' => 'readonly',
-            'entity' => $entity
-        ]);
-
-        $this->field('merge_id');
-
-
-        // back button
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        $toolbarAttr = [
-            'class' => 'btn btn-xs btn-default',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false
-        ];
-        $toolbarButtonsArray['back']['type'] = 'button';
-        $toolbarButtonsArray['back']['label'] = '<i class="fa kd-back"></i>';
-        $toolbarButtonsArray['back']['attr'] = $toolbarAttr;
-        $toolbarButtonsArray['back']['attr']['title'] = __('Back');
-        $toolbarButtonsArray['back']['url'] = $this->url($action);
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
-        // end back button
-
-        $associations = $this->getAssociatedRecords($model, $entity, $extra);
-        $this->log('$associations', 'debug');
-        $this->log($associations, 'debug');
-        if ($extra->offsetExists('excludedModels')) {
-            $associations = array_diff_key($associations, array_flip($extra['excludedModels']));
-        }
-        if ($extra->offsetExists('associatedRecords')) {
-            $associations = array_merge($associations, $extra['associatedRecords']);
-        }
-        $cells = [];
-        $totalCount = 0;
-        $associatedRecordLimit = 100;
-        $exceedAssociatedRecordLimit = false;
-
-        foreach ($associations as $row) {
-            $modelName = Inflector::humanize(Inflector::underscore($row['model']));
-            $cells[] = [0 => __($modelName), 1 => $row['count']];
-            if ($row['count'] > $associatedRecordLimit) {
-                $exceedAssociatedRecordLimit = true;
-            }
-            $totalCount += $row['count'];
-        }
-        if ($extra['associatedRecordsss'][0]['count'] > 0 ) { //POCOR-6964
-            $model->Alert->error('general.delete.restrictDeleteBecauseAssociation');
-            $this->recordHasAssociatedRecords = true;
-        }elseif($extra['associatedRecords'][1]['count'] > 0){// POCOR-6975
-            $model->Alert->error('general.delete.restrictDeleteBecauseAssociation');
-            $this->recordHasAssociatedRecords = true;
-        } else {
-            // Change the method to delete if the record can be deleted
-            $extra['config']['form'] = ['type' => 'DELETE'];
-            $this->recordHasAssociatedRecords = false;
-        }
-
-        $extra['cells'] = $cells;
-        $this->log($cells,'debug');
-        $this->field('associated_records', [
-            'type' => 'table',
-            'headers' => [__('Feature'), __('No of Records')],
-            'cells' => $cells,
-        ]);
-        $this->controller->set('data', $entity);
-        return $entity;
-    }
-
-    public function onUpdateFieldFirstId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'merge') {
-            $entity = $attr['entity'];
-
-            $attr['type'] = 'readonly';
-            $attr['value'] = $entity->id;
-            $attr['attr']['value'] = $entity->name_with_id;
-        }
-        return $attr;
-    }
-
-
-    public function onUpdateFieldMergeId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'merge') {
-            $attr['type'] = 'autocomplete';
-            $attr['target'] = ['key' => 'id', 'name' => $this->aliasField('id')];
-            $attr['noResults'] = __('No Merge User found.');
-            $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
-            $urlAction = $this->alias();
-            $attr['url'] = ['controller' => $this->controller->name, 'action' => $urlAction, 'ajaxUserAutocomplete'];
-            $Users = TableRegistry::get('User.Users');
-            $requestData = $this->request->data;
-            if (isset($requestData) && !empty($requestData[$this->alias()]['id'])) {
-                $mergeId = $requestData[$this->alias()]['id'];
-                $mergeName = $Users->get($mergeId)->name_with_id;
-
-                $attr['attr']['value'] = $mergeName;
-            }
-//
-//            $iconSave = '<i class="fa fa-check"></i> ' . __('Save');
-//            $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
-//            $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
-//            $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
-            $attr['onSelect'] = "$('#reload').click();";
-        }
-        return $attr;
-    }
-
-    public function ajaxUserAutocomplete()
-    {
-        $this->controller->autoRender = false;
-        $this->ControllerAction->autoRender = false;
-
-        if ($this->request->is(['ajax'])) {
-            $term = $this->request->query['term'];
-
-            $Users = TableRegistry::get('User.Users');
-            $UserIdentitiesTable = TableRegistry::get('User.Identities');
-
-            $query = $Users
-                ->find()
-                ->select([
-                    $Users->aliasField('openemis_no'),
-                    $Users->aliasField('first_name'),
-                    $Users->aliasField('middle_name'),
-                    $Users->aliasField('third_name'),
-                    $Users->aliasField('last_name'),
-                    $Users->aliasField('preferred_name'),
-                    $Users->aliasField('id')
-                ])
-                ->leftJoin(
-                    [$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()],
-                    [
-                        $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $Users->aliasField('id')
-                    ]
-                )
-                ->group([
-                    $Users->aliasField('id')
-                ])
-                ->limit(100);
-
-            $term = trim($term);
-            if (!empty($term)) {
-                $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term, 'OR' => ['`Identities`.number LIKE ' => $term . '%']]);
-            }
-
-            $list = $query->all();
-
-            $data = [];
-            foreach ($list as $obj) {
-                $label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
-                $data[] = ['label' => $label, 'value' => $obj->id];
-            }
-
-            echo json_encode($data);
-            die;
-        }
-    }
-
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
-    {
-        switch ($field) {
-            case 'first_id':
-                return __('Base Account');
-            case 'merge_id':
-                return __('Account to be merged');
-//            case 'special_need_difficulty_id':
-//                return __('Difficulty');
-//            case 'assessor_id':
-//                return __('Assessor Name');  //POCOR-6873
-            default:
-                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
-
-
-
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->log($this->action, 'debug');
         if ($this->action == 'add') {
             if ($this->controller->name != 'Students') {
                 $this->field('user_type', ['type' => 'select', 'after' => 'photo_content']);
@@ -856,16 +627,7 @@ class DirectoriesTable extends ControllerActionTable
                 $userType = self::GUARDIAN;
                 $this->addCustomUserBehavior($userType);
             }
-            $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-            if (isset($toolbarButtonsArray['edit'])) {
-                $toolbarButtonsArray['merge'] = $toolbarButtonsArray['edit'];
-                $toolbarButtonsArray['merge']['url'][0] = 'merge';
-                $toolbarButtonsArray['merge']['label'] = '<i class="fa kd-reassign"></i>';
-                $toolbarButtonsArray['merge']['attr']['title'] = __('Merge');
-//                unset($toolbarButtonsArray['edit']);
-            }
 
-            $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         }
 
         // Start POCOR-5188
