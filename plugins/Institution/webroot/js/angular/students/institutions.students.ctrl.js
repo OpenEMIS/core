@@ -178,7 +178,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             UtilsSvc.isAppendLoader(false);
         }, function(error) {
             UtilsSvc.isAppendLoader(false);
-            console.log(error);
+            console.error(error);
             });
         }
 
@@ -232,7 +232,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return StudentController.processInternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
-                    console.log(error);
+                    console.error(error);
                     UtilsSvc.isAppendLoader(false);
                 });
             }
@@ -289,7 +289,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                     return StudentController.processExternalGridUserRecord(gridData, params, totalRowCount);
             }, function(error) {
-                    console.log(error);
+                    console.error(error);
                     UtilsSvc.isAppendLoader(false);
                 });
             }
@@ -321,7 +321,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.selectedStudentData.password = response;
             StudentController.getAcademicPeriods();
             }, function(error) {
-            console.log(error);
+            console.error(error);
             StudentController.getAcademicPeriods();
         });
     }
@@ -331,7 +331,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.genderOptions = resp;
             StudentController.getNationalities();
         }, function(error){
-            console.log(error);
+            console.error(error);
             StudentController.getNationalities();
         });
     }
@@ -340,11 +340,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function getMultipleInstitutionsStudentEnrollment(){
         InstitutionsStudentsSvc.getMultipleInstitutionsStudentEnrollmentConfig()
             .then(function(resp){
-                console.log(resp);
+                // console.log(resp);
                 const config_value = resp.data[0].value == "1" ? true : false;
                 StudentController.multipleInstitutionsStudentEnrollment = config_value;
         }, function(error){
-            console.log(error);
+                console.error(error);
         });
     }
     //POCOR-6172-HINDOL[END]
@@ -354,7 +354,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.nationalitiesOptions = resp.data;
             StudentController.getIdentityTypes();
         }, function(error){
-            console.log(error);
+            console.error(error);
             StudentController.getIdentityTypes();
         });
     }
@@ -364,7 +364,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.identityTypeOptions = resp.data;
             UtilsSvc.isAppendLoader(false);
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
         StudentController.checkConfigForExternalSearch()
@@ -375,13 +375,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.academicPeriodOptions = resp.data;
             StudentController.getStudentCustomFields();
         }, function(error){
-            console.log(error);
+            console.error(error);
             StudentController.getStudentCustomFields();
         });
     }
 
     function getEducationGrades() {
-        console.log(StudentController.selectedStudentData.academic_period_id);
+        // console.log(StudentController.selectedStudentData.academic_period_id);
         if(!StudentController.selectedStudentData.academic_period_id){
             StudentController.selectedStudentData.academic_period_id = StudentController.studentData.current_enrol_academic_period_id;
         }
@@ -392,14 +392,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             institution_id: StudentController.institutionId
         };
         InstitutionsStudentsSvc.getEducationGrades(param).then(function(resp){
-            console.log(resp.data);
+            // console.log(resp.data);
             if(resp.data !== 'null')
                 StudentController.educationGradeOptions = resp.data;
             else
                 StudentController.educationGradeOptions = [];
             UtilsSvc.isAppendLoader(false);
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -420,7 +420,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 StudentController.classOptions = [];
             UtilsSvc.isAppendLoader(false);
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -445,7 +445,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.createCustomFieldsArray();
             UtilsSvc.isAppendLoader(false);
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -1428,7 +1428,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 }
             }
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -1512,7 +1512,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.redirectToGuardian = resp.data[0].redirecttoguardian_status;
             UtilsSvc.isAppendLoader(false);
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -1523,7 +1523,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.relationTypeOptions = resp.data;
             UtilsSvc.isAppendLoader(false);
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -1787,7 +1787,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             UtilsSvc.isAppendLoader(false);
             StudentController.getEducationGrades();
         }, function(error){
-            console.log(error);
+            console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
@@ -2098,7 +2098,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     var totalRowCount = gridData.length === 0 ? 1 : gridData.length;
                     return StudentController.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
-                    console.log(error);
+                    console.error(error);
                     UtilsSvc.isAppendLoader(false);
                 });
             }
