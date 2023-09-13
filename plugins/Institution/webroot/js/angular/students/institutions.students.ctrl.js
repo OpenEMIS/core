@@ -381,6 +381,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function getEducationGrades() {
+        console.log(StudentController.selectedStudentData.academic_period_id);
         if(!StudentController.selectedStudentData.academic_period_id){
             StudentController.selectedStudentData.academic_period_id = StudentController.studentData.current_enrol_academic_period_id;
         }
@@ -391,6 +392,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             institution_id: StudentController.institutionId
         };
         InstitutionsStudentsSvc.getEducationGrades(param).then(function(resp){
+            console.log(resp.data);
             if(resp.data !== 'null')
                 StudentController.educationGradeOptions = resp.data;
             else
