@@ -135,7 +135,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     function getTranslatedText() {
         var success = function(response, deferred) {
             var translatedObj = response.data;
-            console.log("response.data", response.data)
+            // console.log("response.data", response.data)
             if (angular.isDefined(translatedObj)) {
                 translateText = translatedObj;
             }
@@ -268,7 +268,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     function getEducationGradeOptions(institutionId, academicPeriodId, classId) {
         var success = function(response, deferred) {
             var educationGradeList = response.data.data;
-            console.log("educationGradeList", educationGradeList)
+            // console.log("educationGradeList", educationGradeList)
             if (angular.isObject(educationGradeList)) {
                 if (educationGradeList.length > 0) {
                     deferred.resolve(educationGradeList);
@@ -317,7 +317,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     function getPeriodOptions(institutionClassId, academicPeriodId,day_id, educationGradeId, weekStartDay, weekEndDay) {//POCOR-7183 add params weekStartDay, weekEndDay 
         var success = function(response, deferred) {
             var attendancePeriodList = response.data.data;
-            console.log("attendancePeriodList", attendancePeriodList)
+            // console.log("attendancePeriodList", attendancePeriodList)
             if (angular.isObject(attendancePeriodList) && attendancePeriodList.length > 0) {
                 deferred.resolve(attendancePeriodList);
             } else {
@@ -370,7 +370,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     }
 
     function getIsMarked(params) {
-        console.log("parms", params)
+        // console.log("parms", params)
         var extra = {
             institution_id: params.institution_id,
             institution_class_id: params.institution_class_id,
@@ -387,7 +387,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         var success = function(response, deferred) {
             var count = response.data.total;
-            console.log("response.data", response.data)
+            // console.log("response.data", response.data)
             if (angular.isDefined(count)) {
                 var isMarked = count > 0;
                 deferred.resolve(isMarked);
@@ -402,7 +402,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     }
 
     function getNoScheduledClassMarked(params) {
-        console.log("parms", params)
+        // console.log("parms", params)
         var extra = {
             institution_id: params.institution_id,
             institution_class_id: params.institution_class_id,
@@ -419,7 +419,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
         var success = function(response, deferred) {
             var count = response.data.total;
-            console.log("response.data", response.data)
+            // console.log("response.data", response.data)
             if (angular.isDefined(count)) {
                 var isMarked = count > 0;
                 deferred.resolve(isMarked);
@@ -514,8 +514,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         };
       
         var success = function(response, deferred) {
-            console.log('getsavePeriodMarked');
-            console.log(response);
+            // console.log('getsavePeriodMarked');
+            // console.log(response);
             var classStudents = response;
             if (angular.isObject(classStudents)) {
                 deferred.resolve(classStudents);
@@ -758,7 +758,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             localStorage.setItem("scrollbar-value", scrollbar_value);
             //POCOR-5846 end
             var absenceTypeObj = absenceTypeList.find(obj => obj.id == newValue);
-            console.log("absenceTypeObj", absenceTypeObj)
+            // console.log("absenceTypeObj", absenceTypeObj)
             // data.institution_student_absences.absence_type_id = newValue;
 
             if (newValue != oldValue) {
@@ -851,7 +851,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
     function setRowDatas(context, data) {
         var studentList = context.scope.$ctrl.classStudentList;
-        console.log("studentList", studentList)
+        // console.log("studentList", studentList)
         studentList.forEach(function (dataItem, index) {
             if(dataItem.institution_student_absences.absence_type_code == null || dataItem.institution_student_absences.absence_type_code == "PRESENT") {
                 dataItem.rowHeight = 60;
@@ -983,7 +983,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
     function getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClosed, noScheduledClicked) {
         if (angular.isDefined(data.institution_student_absences)) {
             var html = '';
-            if (isMarked) {console.log('in')
+            if (isMarked) {
+                // console.log('in')
                 var id = (data.absence_type_id === null) ? 0 : data.institution_student_absences.absence_type_id;
                 if(noScheduledClicked)
                     var absenceTypeObj = {
@@ -1015,9 +1016,11 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                 }
                 return html;
             } else {
-                if (isSchoolClosed) {console.log('in')
+                if (isSchoolClosed) {
+                    // console.log('in')
                     html = '<i style="color: #999999;" class="fa fa-minus"></i>';
-                } else {console.log('out')
+                } else {
+                    // console.log('out')
                     if (data.is_NoClassScheduled == 1) {
                         html = '<i style="color: #000000;"><span>No Lessons</span></i>';
                     } else {
