@@ -476,7 +476,7 @@ class RestSurveyComponent extends Component
                     'academic_period_id' => $stu['academic_period_id'],
                     'survey_form_id' => $stu['student_list_form_id'],
                     'parent_form_id' => $stu['institution_form_id'],
-                    'created_user_id' => $stu['userId'],
+                    'created_user_id' => 2,
                     'created' => date('Y-m-d H:i:s')
         
         
@@ -502,7 +502,7 @@ class RestSurveyComponent extends Component
                                 'survey_question_id' => $ques['student_list_survey_question_id'],
                                 'parent_survey_question_id' => $stu['parent_survey_question_id'],
                                 'institution_student_survey_id' => $successData['id'],
-                                'created_user_id' => $stu['userId'],
+                                'created_user_id' => 2,
                                 'created' => date('Y-m-d H:i:s')
                             ]);
                             $sucesDAta = $InstitutionStudentSurveyAnswersTbl->save($AnsEntity);
@@ -513,7 +513,7 @@ class RestSurveyComponent extends Component
                                 'survey_question_id' => $ques['student_list_survey_question_id'],
                                 'parent_survey_question_id' => $stu['parent_survey_question_id'],
                                 'institution_student_survey_id' => $successData['id'],
-                                'created_user_id' => $stu['userId'],
+                                'created_user_id' =>2,
                                 'created' => date('Y-m-d H:i:s')
                             ]);
                             $sucesDAta =$InstitutionStudentSurveyAnswersTbl->save($AnsEntity);
@@ -524,7 +524,7 @@ class RestSurveyComponent extends Component
                                 'survey_question_id' => $ques['student_list_survey_question_id'],
                                 'parent_survey_question_id' => $stu['parent_survey_question_id'],
                                 'institution_student_survey_id' => $successData['id'],
-                                'created_user_id' => $stu['userId'],
+                                'created_user_id' =>2,
                                 'created' => date('Y-m-d H:i:s')
                             ]);
                             $sucesDAta = $InstitutionStudentSurveyAnswersTbl->save($AnsEntity);
@@ -535,7 +535,7 @@ class RestSurveyComponent extends Component
                                 'survey_question_id' => $ques['student_list_survey_question_id'],
                                 'parent_survey_question_id' => $stu['parent_survey_question_id'],
                                 'institution_student_survey_id' => $successData['id'],
-                                'created_user_id' => $stu['userId'],
+                                'created_user_id' => 2,
                                 'created' => date('Y-m-d H:i:s')
                             ]);
                             $sucesDAta = $InstitutionStudentSurveyAnswersTbl->save($AnsEntity);
@@ -546,7 +546,7 @@ class RestSurveyComponent extends Component
                                 'survey_question_id' => $ques['student_list_survey_question_id'],
                                 'parent_survey_question_id' => $stu['parent_survey_question_id'],
                                 'institution_student_survey_id' => $successData['id'],
-                                'created_user_id' => $stu['userId'],
+                                'created_user_id' => 2,
                                 'created' => date('Y-m-d H:i:s')
                             ]);
                             $sucesDAta = $InstitutionStudentSurveyAnswersTbl->save($AnsEntity);
@@ -557,7 +557,7 @@ class RestSurveyComponent extends Component
                                 'survey_question_id' => $ques['student_list_survey_question_id'],
                                 'parent_survey_question_id' => $stu['parent_survey_question_id'],
                                 'institution_student_survey_id' => $successData['id'],
-                                'created_user_id' => $stu['userId'],
+                                'created_user_id' => 2,
                                 'created' => date('Y-m-d H:i:s')
                             ]);
                             $sucesDAta = $InstitutionStudentSurveyAnswersTbl->save($AnsEntity);
@@ -1219,37 +1219,35 @@ class RestSurveyComponent extends Component
 
                     foreach($finalData[$tbDta->section]['students'][$ke]['questions'] as $jk=> $ques){
                         //add selected ans value
-                        $ins_stu_survey = $institutionStudentSurveysTbl->find('all',['conditions'=>[
-                            'status_id' => 1,
-                            'institution_id' => $student['institution_id'],
-                            'student_id' => $student['student_id'],
-                            'academic_period_id' => $student['academic_period_id'],
-                            'survey_form_id' => $student['student_list_form_id'],
-                            'parent_form_id' => $student['institution_form_id'],
-                        ]])->first();
+                        // $ins_stu_survey = $institutionStudentSurveysTbl->find('all',['conditions'=>[
+                        //     'status_id' => 1,
+                        //     'institution_id' => $student['institution_id'],
+                        //     'student_id' => $student['student_id'],
+                        //     'academic_period_id' => $student['academic_period_id'],
+                        //     'survey_form_id' => $student['student_list_form_id'],
+                        //     'parent_form_id' => $student['institution_form_id'],
+                        // ]])->first();
                         
-                        $dataExistAns = $institution_student_survey_answers_tbl->find('all',['conditions'=>[
-                            'survey_question_id' => $ques['student_list_survey_question_id'],
-                            'parent_survey_question_id' => $tbDta->institutiton_survey_question_id,
-                            'institution_student_survey_id' => $ins_stu_survey['id'],
-                        ]])->first();
+                        // $dataExistAns = $institution_student_survey_answers_tbl->find('all',['conditions'=>[
+                        //     'survey_question_id' => $ques['student_list_survey_question_id'],
+                        //     'parent_survey_question_id' => $tbDta->institutiton_survey_question_id,
+                        //     'institution_student_survey_id' => $ins_stu_survey['id'],
+                        // ]])->first();
 
-                        if(!empty($dataExistAns['number_value'])){
-                            $selectVAlue= $dataExistAns['number_value'];
-                        }elseif(!empty($dataExistAns['text_value'])){
-                            $selectVAlue= $dataExistAns['text_value'];
-                        }elseif(!empty($dataExistAns['decimal_value'])){
-                            $selectVAlue= $dataExistAns['decimal_value'];
-                        }elseif(!empty($dataExistAns['textarea_value'])){
-                            $selectVAlue= $dataExistAns['textarea_value'];
-                        }elseif(!empty($dataExistAns['date_value'])){
-                            $selectVAlue= $dataExistAns['date_value'];
-                        }elseif(!empty($dataExistAns['time_value'])){
-                            $selectVAlue= $dataExistAns['time_value'];
-                        }else{
-                            $selectVAlue= '';
-                        }
-                        $finalData[$tbDta->section]['students'][$ke]['questions'][$jk]['survey_answer'] = $selectVAlue;
+                        // if(!empty($dataExistAns['number_value'])){
+                        //     $selectVAlue= $dataExistAns['number_value'];
+                        // }elseif(!empty($dataExistAns['text_value'])){
+                        //     $selectVAlue= $dataExistAns['text_value'];
+                        // }elseif(!empty($dataExistAns['decimal_value'])){
+                        //     $selectVAlue= $dataExistAns['decimal_value'];
+                        // }elseif(!empty($dataExistAns['textarea_value'])){
+                        //     $selectVAlue= $dataExistAns['textarea_value'];
+                        // }elseif(!empty($dataExistAns['date_value'])){
+                        //     $selectVAlue= $dataExistAns['date_value'];
+                        // }elseif(!empty($dataExistAns['time_value'])){
+                        //     $selectVAlue= $dataExistAns['time_value'];
+                        // }
+                        // $finalData[$tbDta->section]['students'][$ke]['questions'][$jk]['survey_answer_id'] = $dataExistAns['id'];
 
                         $options = $surveyQuestionChoicesTbl->find('all',['fields'=>['id','name']])
                                     ->where(['survey_question_id' => $ques['student_list_survey_question_id']])->toArray();
