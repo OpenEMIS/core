@@ -1,8 +1,8 @@
 <?php $label = isset($attr['label']) ? $attr['label'] : $attr['field']; ?>
 <?php if ($label) : ?>
 	<!-- POCOR-7659 start -->
-	<?php if ($attr['type'] == "custom_repeater" && $attr['customField']['name'] == "repeater" && !empty($attr['date_options'])) :;
-		  else : ?>
+	<?php if (($attr['type'] == "custom_repeater") && (strcasecmp($attr['customField']['name'],"repeater")==0) && !empty($attr['date_options'])) :;
+    	else : ?>
 			<div class="input date<?= $attr['null'] == false ? ' required' : '' ?>">
 				<label for="<?= $attr['id'] ?>"><?= $label ?></label>
 	<?php endif;?>
