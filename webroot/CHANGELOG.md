@@ -1,3 +1,6 @@
+### [3.94.3] - 2023-09-14
+- Bug Fixed: Institutions>Survey>Forms: Survey form that are uploaded in survey app are not reflected correctly in core interface
+
 ### [3.94.2] - 2023-09-14
 - Implemented: Develop changes to the OpenEMIS Core (CakePHP) v2 upload survey API to include the student list question
 - Bug Fixed: Institutions > Students > Import: Not able to import students
