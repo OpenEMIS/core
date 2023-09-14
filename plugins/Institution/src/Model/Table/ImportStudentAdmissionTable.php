@@ -475,10 +475,18 @@ class ImportStudentAdmissionTable extends AppTable {
             $rowInvalidCodeCols['education_grade_id'] = __('Selected education grade will end before academic period ends');
             return false;
         }
+        /* POCOR-7703 remove `$gradeStartDate > $periodStartDate` condition Starts
         if ($gradeStartDate > $periodStartDate) {
             $rowInvalidCodeCols['education_grade_id'] = __('Selected education grade start date should be before academic period starts');
             return false;
-        }
+        }POCOR-7703 Ends*/
+        //POCOR-7703 Starts
+        if(($gradeStartDate >= $periodStartDate)  &&  ($gradeStartDate <= $periodEndDate)){
+            //condition passed
+        }else{
+            $rowInvalidCodeCols['education_grade_id'] = __('Selected education grade start date should be between academic period starts and end date');
+            return false;
+        }//POCOR-7703 Ends
 
         if (!empty($tempRow['institution_class_id'])) {
             if (empty($this->availableClasses)) {
