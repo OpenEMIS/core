@@ -190,7 +190,8 @@ class ContactsTable extends ControllerActionTable
         }
     }
 
-    public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    //POCOR-7767 Asked to remove this check
+    public function _beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
         //for email, check whether has minimum one email record.
         $contactOption = $this->ContactTypes->get($entity->contact_type_id)->contact_option_id;
