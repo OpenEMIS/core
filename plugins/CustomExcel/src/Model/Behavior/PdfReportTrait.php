@@ -346,7 +346,7 @@ trait PdfReportTrait
             $sheetStatus = $objSpreadsheet->getSheet($sheetIndex)->getSheetState(); //POCOR-7077
             if($sheetStatus == 'visible'){ //POCOR-7077
                 // $mpdf = new \Mpdf\Mpdf(array('', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
-                $mpdf = new \Mpdf\Mpdf(array('mode' => 'utf-8', 'format' => [400, 220])); //POCOR-7090
+                $mpdf = new \Mpdf\Mpdf(array('mode' => 'utf-8', 'format' => [400, 245])); //POCOR-7750
                 $mpdf->autoScriptToLang = true; //POCOR-7264
                 $mpdf->autoLangToFont = true; //POCOR-7264
                 $filepath = $basePath.'_'.$sheetIndex;
