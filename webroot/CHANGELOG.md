@@ -1,3 +1,29 @@
+### [3.94.3] - 2023-09-14
+- Bug Fixed: Institutions>Survey>Forms: Survey form that are uploaded in survey app are not reflected correctly in core interface
+
+### [3.94.2] - 2023-09-14
+- Implemented: Develop changes to the OpenEMIS Core (CakePHP) v2 upload survey API to include the student list question
+- Bug Fixed: Institutions > Students > Import: Not able to import students
+- Bug Fixed: Institutions > Students: The institutions showing for the selected area are not showing correctly
+- Bug Fixed: Improvements to Tertiary Education feature
+- Bug Fixed: Administrations > Workflows > Student Transfer > Receiving/Sending : Remove Option from Post Event
+- Bug Fixed: Institutions>Survey>Forms: When a user answers a survey question for Student A, then all other questions for the same student get marked simultaneously
+- Bug Fixed: Institutions > Students > Add: Academic Period is showing wrongly when transferred from older academic period to current academic period
+- Bug Fixed: OpenEMIS Registration: Assignee for Pending Approval should follow the security role in workflow step
+- Bug Fixed: Institutions > Students> Add: When adding the students, the page load very slow/does not load at all
+
+### [3.94.1] - 2023-09-08
+- Implemented: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 4
+- Bug Fixed: Institutions>Performance>Assessments: Duplicate queries are found
+- Bug Fixed: Institutions > Academic > Curriculars: When editing, the page goes to 404 error page
+- Bug Fixed: OpenEMIS Registration: The student's custom field for the field type "File" configured in OpenEMIS Core is not working in OpenEMIS Registration
+- Bug Fixed: Migration fix : Renaming POCOR-7395 to run earlier as it affects other migration files
+- Bug Fixed: Administration>Data Management>Copy: Infrastructure custom fields are not copied over
+- Bug Fixed: Home Page > Workbench: Workbench for behaviour is not showing up for assign user in their profile
+- Bug Fixed: Institutions>Students>Add: Other countries is not showing in the drop down list for address area and birthplace area
+- Bug Fixed: Administration > System Setup > Custom Field: When deleting options for the checkbox field type under the institutions custom field, the page gives a successful message but records were not deleted
+- Bug Fixed: Not able to delete users
+
 ### [3.94.0] - 2023-08-31
 - Implemented: Develop APIs for OpenEMIS Core add student/staff/guardian functions
 - Implemented: Develop updates for institution student and institution student absence APIs
