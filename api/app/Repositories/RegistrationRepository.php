@@ -27,6 +27,7 @@ use App\Models\IdentityTypes;
 use App\Models\InstitutionTypes;
 use App\Models\AreaLevels;
 use App\Models\AreaAdministrativeLevels;
+use App\Models\SecurityGroupUsers;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
@@ -360,6 +361,7 @@ class RegistrationRepository extends Controller
             //dd($request->all());
 
             $encodedOtp = base64_encode($request['otp']??"");
+            //dd($encodedOtp);
             //$otpData = RegistrationOtp::where('otp', $encodedOtp)->first();
             $userData = SecurityUserCode::select('security_users.id as user_id')->join('security_users', 'security_users.id', '=', 'security_user_codes.security_user_id')->where('verification_otp', $encodedOtp)->first();
 
@@ -422,6 +424,7 @@ class RegistrationRepository extends Controller
                             
 
                             //Creating Institution_student_Admission...
+                            $assigneeId = $this->getAssigneeId();
                             $storeAdmission['start_date'] = $academicPeriod['start_date'];
                             $storeAdmission['end_date'] = $academicPeriod['end_date'];
                             $storeAdmission['student_id'] = $student->id;
@@ -429,7 +432,7 @@ class RegistrationRepository extends Controller
                             $storeAdmission['institution_id'] = $request['institution_id'];
                             $storeAdmission['academic_period_id'] = $academicPeriod['id'];
                             $storeAdmission['education_grade_id'] = $request['education_grade_id'];
-                            $storeAdmission['assignee_id'] = $userData->user_id;
+                            $storeAdmission['assignee_id'] = $assigneeId??$userData->user_id;
                             $storeAdmission['created_user_id'] = $userData->user_id;
                             $storeAdmission['created'] = Carbon::now()->toDateTimeString();
 
@@ -515,6 +518,8 @@ class RegistrationRepository extends Controller
                             
 
                             //Creating Institution_student_Admission...
+                            $assigneeId = $this->getAssigneeId();
+
                             $storeAdmission['start_date'] = $academicPeriod['start_date'];
                             $storeAdmission['end_date'] = $academicPeriod['end_date'];
                             $storeAdmission['student_id'] = $student->id;
@@ -522,7 +527,7 @@ class RegistrationRepository extends Controller
                             $storeAdmission['institution_id'] = $request['institution_id'];
                             $storeAdmission['academic_period_id'] = $academicPeriod['id'];
                             $storeAdmission['education_grade_id'] = $request['education_grade_id'];
-                            $storeAdmission['assignee_id'] = $userData->user_id;
+                            $storeAdmission['assignee_id'] = $assigneeId??$userData->user_id;
                             $storeAdmission['created_user_id'] = $userData->user_id;
                             $storeAdmission['created'] = Carbon::now()->toDateTimeString();
 
@@ -621,6 +626,7 @@ class RegistrationRepository extends Controller
 
 
                         //Creating Institution_student_Admission...
+                        $assigneeId = $this->getAssigneeId();
                         $storeAdmission['start_date'] = $academicPeriod['start_date'];
                         $storeAdmission['end_date'] = $academicPeriod['end_date'];
                         $storeAdmission['student_id'] = $student->id;
@@ -628,7 +634,7 @@ class RegistrationRepository extends Controller
                         $storeAdmission['institution_id'] = $request['institution_id'];
                         $storeAdmission['academic_period_id'] = $academicPeriod['id'];
                         $storeAdmission['education_grade_id'] = $request['education_grade_id'];
-                        $storeAdmission['assignee_id'] = $userData->user_id;
+                        $storeAdmission['assignee_id'] = $assigneeId??$userData->user_id;
                         $storeAdmission['created_user_id'] = $userData->user_id;
                         $storeAdmission['created'] = Carbon::now()->toDateTimeString();
 
@@ -668,28 +674,35 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function storeCustomField($customFields, $student_id, $user_id)
+    public function storeCustomField($customFieldsArr, $student_id, $user_id)
     {
         DB::beginTransaction();
         try {
             $cfArray = [];
-            foreach($customFields as $k => $cf){
+            foreach($customFieldsArr as $k => $cf){
                 $cfArray[$k]['id'] = Str::uuid();
                 $cfArray[$k]['student_custom_field_id'] = $cf['custom_field_id'];
-                $cfArray[$k]['text_value'] = $cf['text_value'];
-                $cfArray[$k]['number_value'] = $cf['number_value'];
-                $cfArray[$k]['decimal_value'] = $cf['decimal_value'];
-                $cfArray[$k]['textarea_value'] = $cf['textarea_value'];
-                $cfArray[$k]['time_value'] = $cf['time_value'];
-                $cfArray[$k]['date_value'] = $cf['date_value'];
-                $cfArray[$k]['file'] = $cf['file'];
+                $cfArray[$k]['text_value'] = $cf['text_value']??Null;
+                $cfArray[$k]['number_value'] = $cf['number_value']??Null;
+                $cfArray[$k]['decimal_value'] = $cf['decimal_value']??Null;
+                $cfArray[$k]['textarea_value'] = $cf['textarea_value']??Null;
+                $cfArray[$k]['time_value'] = $cf['time_value']??Null;
+                $cfArray[$k]['date_value'] = $cf['date_value']??Null;
+
+                if(isset($cf['file']) && ($cf['file']) != ""){
+                    $cfArray[$k]['file'] = file_get_contents($cf['file']);
+                    $cfArray[$k]['text_value'] = $cf['file']->getClientOriginalName();
+                } else {
+                    $cfArray[$k]['file'] = Null;
+                }
+                
                 $cfArray[$k]['student_id'] = $student_id;
                 $cfArray[$k]['created_user_id'] = $user_id;
                 $cfArray[$k]['created'] = Carbon::now()->toDateTimeString();
             }
-
+            
             $store = StudentCustomFieldValues::insert($cfArray);
-            Log::info("## Stored in InstitutionStudentAdmission ##", $cfArray);
+            Log::info("## Stored in StudentCustomFieldValues ##", $cfArray);
             DB::commit();
             return true;
             
@@ -819,7 +832,8 @@ class RegistrationRepository extends Controller
             ->whereHas('studentCustomField')
             ->where('student_custom_form_id', 1)
             ->orderBy('order', 'ASC')
-            ->get();
+            ->get()
+            ->toArray();
             //dd($customFields);
             return $customFields;
 
@@ -978,6 +992,29 @@ class RegistrationRepository extends Controller
             );
 
             return $this->sendErrorResponse('Area Administrative Levels List Not Found');
+        }
+    }
+
+    
+    public function getAssigneeId()
+    {
+        try {
+            $data = SecurityGroupUsers::join('workflow_steps_roles', 'workflow_steps_roles.security_role_id', '=', 'security_group_users.security_role_id')
+                ->join('workflow_steps', 'workflow_steps.id', '=', 'workflow_steps_roles.workflow_step_id')
+                ->join('workflows', 'workflows.id', '=', 'workflow_steps.workflow_id')
+                ->where('workflows.code', 'STUDENT-ADMISSION-1001')
+                ->where('workflow_steps.name', 'Pending Approval')
+                ->select('security_group_users.security_role_id', 'security_group_users.security_user_id')
+                ->first();
+
+            return $data->security_user_id??Null;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch assignee id from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch assignee id from DB.');
         }
     }
 

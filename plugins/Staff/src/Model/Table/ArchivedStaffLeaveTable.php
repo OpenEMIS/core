@@ -60,7 +60,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
 
         // POCOR-4047 to get staff profile data
 
-        $this->toggle('view', false);
+//        $this->toggle('view', false);
         $this->toggle('edit', false);
         $this->toggle('delete', false);
         $this->toggle('remove', false);
@@ -101,7 +101,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         unset($buttons['edit']);
-        unset($buttons['view']);
+//        unset($buttons['view']);
         return $buttons;
     }
 
