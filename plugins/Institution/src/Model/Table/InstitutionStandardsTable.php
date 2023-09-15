@@ -27,9 +27,9 @@ class InstitutionStandardsTable extends AppTable
      * Initializing the dependencies
      * @param array $config
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
+        $this->setTable('security_users');
         parent::initialize($config);
 
         // Relationship
@@ -854,7 +854,7 @@ class InstitutionStandardsTable extends AppTable
     /**
      * add dropdown validation POCOR-6630
     */ 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $feature = $this->request->data[$this->alias()]['feature'];

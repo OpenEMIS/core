@@ -111,7 +111,7 @@ class AcademicPeriodBehavior extends Behavior {
 				}
 				break;
 			case 'index':
-				$tableAlias = $this->_table->alias();
+				$tableAlias = $this->_table->getAlias();
 				if ($tableAlias == 'StudentAttendances' || $tableAlias == 'StaffAttendances') {
 					if ($this->_table->AccessControl->check(['Institutions', $tableAlias, 'indexEdit'])) {
 						if (isset($this->_table->request->query['academic_period_id'])) {

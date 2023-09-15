@@ -216,7 +216,7 @@ class InstitutionsController extends AppController
 // POCOR-7339-HINDOL redundancy
 //            'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
             'InstitutionStatistics' => ['className' => 'Institution.InstitutionStatistics', 'actions' => ['index', 'add']],
-            'InstitutionStandards' => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
+            // 'InstitutionStandards' => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
             'ImportStudentCurriculars' => ['className' => 'Institution.ImportStudentCurriculars', 'actions' => ['add']],//POCOR-6673
         ];
 
@@ -232,6 +232,11 @@ class InstitutionsController extends AppController
         if ($this->request->getParam('action') == 'saveStudentData' || $this->request->getParam('action') == 'saveStaffData' || $this->request->getParam('action') == 'saveGuardianData' || $this->request->getParam('action') == 'saveDirectoryData') {
             $this->getEventManager()->off($this->Csrf);
         }//POCOR-5672 ends
+    }
+
+    public function InstitutionStandards()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStandards']);
     }
 
     // CAv4
@@ -2321,7 +2326,7 @@ class InstitutionsController extends AppController
         if (($session->check('Institution.Institutions.id')
                 || $this->getRequest()->getParam('institutionId'))
             || $action == 'dashboard'
-            || ($action == 'Institutions' && isset($this->request->pass[0]) && in_array($this->request->pass[0], ['view', 'edit']))) {
+            || ($action == 'Institutions' && isset($this->request->getParam('pass')[0]) && in_array($this->request->getParam('pass')[0], ['view', 'edit']))) {
             $id = 0;
 
             if (isset($this->request->pass[0]) && (in_array($action, ['dashboard']))) {

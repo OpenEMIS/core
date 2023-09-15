@@ -14,7 +14,7 @@ use Cake\I18n\Time;
 class InstitutionClassSubjectsTable extends AppTable
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
