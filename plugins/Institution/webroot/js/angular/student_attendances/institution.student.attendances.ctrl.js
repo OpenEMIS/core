@@ -108,7 +108,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         var currentYear = currentDate.getFullYear();
         var currentMonth = currentDate.getMonth()+1;
         var currentdate = currentDate.getDate();
-        console.log(currentYear + '-' +currentMonth + '-' + currentdate)
+        // console.log(currentYear + '-' +currentMonth + '-' + currentdate)
         vm.currentDayMonthYear = currentYear + '-' +currentMonth + '-' + currentdate;
         InstitutionStudentAttendancesSvc.init(angular.baseUrl, $scope);
         vm.action = 'view';
@@ -148,27 +148,27 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
                 return InstitutionStudentAttendancesSvc.getEducationGradeOptions(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass);
             }, vm.error)
             .then(function(educationGradeListOptions) {
-                console.log("educationGradeListOptions", educationGradeListOptions)
+                // console.log("educationGradeListOptions", educationGradeListOptions)
                 vm.updateEducationGradeList(educationGradeListOptions);                
                 return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(vm.institutionId,vm.selectedAcademicPeriod,vm.selectedClass,vm.selectedDay);
             }, vm.error)
             .then(function(attendanceType) {
-                console.log("attendanceType", attendanceType) 
+                // console.log("attendanceType", attendanceType)
                 vm.isMarkableSubjectAttendance = attendanceType;                     
                 return InstitutionStudentAttendancesSvc.getSubjectOptions(vm.institutionId,vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade);
             }, vm.error)
             .then(function(subjectListOptions) {
-                console.log("subjectListOptions", subjectListOptions)
+                // console.log("subjectListOptions", subjectListOptions)
                 vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
                 return InstitutionStudentAttendancesSvc.getPeriodOptions(vm.selectedClass, vm.selectedAcademicPeriod, vm.selectedDay, vm.selectedEducationGrade, vm.selectedWeekStartDate, vm.selectedWeekEndDate); //POCOR-7183 add params vm.selectedWeekStartDate, vm.selectedWeekEndDate
                 }, vm.error)
             .then(function(attendancePeriodOptions) {
-                console.log("attendancePeriodOptions", attendancePeriodOptions)
+                // console.log("attendancePeriodOptions", attendancePeriodOptions)
                 vm.updateAttendancePeriodList(attendancePeriodOptions);
                 return InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams());
             }, vm.error)
             .then(function(isMarked) {
-                console.log("isMarked", isMarked)
+                // console.log("isMarked", isMarked)
                 vm.updateIsMarked(isMarked);
                 return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
             }, vm.error)
@@ -224,14 +224,14 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     vm.updateDayList = function(dayListOptions) {
 
         vm.dayListOptions = dayListOptions;
-        console.log(vm.dayListOptions);
+        // console.log(vm.dayListOptions);
         var hasSelected = false;
         if (dayListOptions.length > 0) {
             for (var i = 0; i < dayListOptions.length; ++i) {
                 if (angular.isDefined(dayListOptions[i]['selected']) && dayListOptions[i]['selected']) {
                     hasSelected = true;
                     vm.selectedDay = dayListOptions[i].date;
-                    console.log(vm.selectedDay);
+                    // console.log(vm.selectedDay);
                    
                     vm.schoolClosed = (angular.isDefined(dayListOptions[i]['closed']) && dayListOptions[i]['closed']) ? true : false;
                     vm.gridOptions.context.date = vm.selectedDay;
@@ -591,7 +591,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             return InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams());
         }, vm.error)
         .then(function(isMarked) {
-            console.log("isMarked", isMarked)
+            // console.log("isMarked", isMarked)
             vm.updateIsMarked(isMarked);
             return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
         }, vm.error)
