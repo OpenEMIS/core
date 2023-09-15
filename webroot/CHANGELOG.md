@@ -1,3 +1,22 @@
+### [3.94.4] - 2023-09-15
+- Bug Fixed: Administration>Data Management>Archive: Archive is stuck in progress
+- Bug Fixed: Institutions > Survey > Forms: The date field for repeater form alignment seems to be out
+- Bug Fixed: Institutions > Performance > Report Cards: The generated PDF report card format is not as per the desired format
+
+### [3.94.3] - 2023-09-14
+- Bug Fixed: Institutions>Survey>Forms: Survey form that are uploaded in survey app are not reflected correctly in core interface
+
+### [3.94.2] - 2023-09-14
+- Implemented: Develop changes to the OpenEMIS Core (CakePHP) v2 upload survey API to include the student list question
+- Bug Fixed: Institutions > Students > Import: Not able to import students
+- Bug Fixed: Institutions > Students: The institutions showing for the selected area are not showing correctly
+- Bug Fixed: Improvements to Tertiary Education feature
+- Bug Fixed: Administrations > Workflows > Student Transfer > Receiving/Sending : Remove Option from Post Event
+- Bug Fixed: Institutions>Survey>Forms: When a user answers a survey question for Student A, then all other questions for the same student get marked simultaneously
+- Bug Fixed: Institutions > Students > Add: Academic Period is showing wrongly when transferred from older academic period to current academic period
+- Bug Fixed: OpenEMIS Registration: Assignee for Pending Approval should follow the security role in workflow step
+- Bug Fixed: Institutions > Students> Add: When adding the students, the page load very slow/does not load at all
+
 ### [3.94.1] - 2023-09-08
 - Implemented: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 4
 - Bug Fixed: Institutions>Performance>Assessments: Duplicate queries are found
