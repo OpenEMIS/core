@@ -607,6 +607,23 @@ class StudentPromotionTable extends AppTable
             $studentStatusesList = $this->StudentStatuses->find('list')->toArray();
             $statusesCode = $this->statuses;
             $options = [];
+            //POCOR-7715 start
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $institutionId = $this->institutionId;  
+            $EducationProgrammeResult = $EducationGrades->find()
+                ->select(["same_grade_promotion"=>'EducationProgrammes.same_grade_promotion'])
+                ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                ->LeftJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()], [
+                    $EducationGrades->aliasField('id') . ' = ' . $InstitutionGrades->aliasField('education_grade_id')
+                ])
+                ->where([
+                    'EducationSystems.academic_period_id' => $entity->from_academic_period_id,
+                    $InstitutionGrades->aliasField('institution_id') => $institutionId,
+                    $EducationGrades->aliasField('id')=> $educationGradeId
+                    
+                ])->first();
+            //POCOR-7715 end
             if (!empty($educationGradeId) && $educationGradeId != -1) {
                 $nextGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId);
                 $isLastGrade = $this->EducationGrades->isLastGradeInEducationProgrammes($educationGradeId);
@@ -617,7 +634,14 @@ class StudentPromotionTable extends AppTable
                 } else {
                     $options[$statusesCode['PROMOTED']] = __($studentStatusesList[$statusesCode['PROMOTED']]);
                 }
-                $options[$statusesCode['REPEATED']] = __($studentStatusesList[$statusesCode['REPEATED']]);
+                //POCOR-7715 start
+                if ($EducationProgrammeResult->same_grade_promotion == 1) {
+                    // $options[$statusesCode['GRADUATED']] = __($studentStatusesList[$statusesCode['GRADUATED']]);
+                }
+                else{
+                    $options[$statusesCode['REPEATED']] = __($studentStatusesList[$statusesCode['REPEATED']]);
+                }
+                //POCOR-7715 end
             }
 
             foreach ($options as $key => $value) {

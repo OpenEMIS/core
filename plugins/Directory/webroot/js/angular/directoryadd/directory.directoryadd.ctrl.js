@@ -1349,7 +1349,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
                     }
                     if(fieldData.field_type === 'DROPDOWN') {
                         fieldData.selectedOptionId = '';
-                        fieldData.answer = fieldData.values && fieldData.values.length > 0 ? fieldData.values[0].dropdown_val.toString() : '';
+                        fieldData.answer = fieldData.values && fieldData.values.length > 0 && fieldData.values[0].dropdown_val ? fieldData.values[0].dropdown_val.toString() : '';
                         fieldData.option.forEach((option) => {
                             if(option.option_id === fieldData.answer) {
                                 fieldData.selectedOption = option.option_name;
