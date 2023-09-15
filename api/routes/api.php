@@ -24,6 +24,16 @@ Route::post('login', 'Authentication\LoginController@login');
 Route::group(
     ["middleware" => "auth.jwt"],
     function () {
+        // POCOR-7547 starts
+        Route::get('attendance-mark-types/education-grades', 'StudentController@getEducationGrades');
+        Route::get('institutions/{institutionId}/classes/subjects', 'StudentController@getClassesSubjects');
+        Route::post('institutions/classes/attendances', 'StudentController@addClassAttendances');
+        Route::post('institutions/students/absences', 'StudentController@addStudentAbsences');
+        Route::post('institutions/staff/attendances', 'StudentController@addStaffAttendances');
+        Route::post('institutions/staff', 'StudentController@updateStaffDetails');
+        // POCOR-7547 ends
+
+
         //POCOR-7651 starts
         Route::get('institutions/{institutionId}/students/absences', 'StudentController@getInstitutionStudentAbsences');
         Route::get('institutions/{institutionId}/students/{studentId}/absences', 'StudentController@getInstitutionStudentAbsencesData');
