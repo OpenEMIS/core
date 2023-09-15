@@ -40,17 +40,168 @@ class DirectoriesTable extends ControllerActionTable
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
         $this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
         $this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
-        $this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('Nationalities', ['className' => 'User.UserNationalities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $this->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
         $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
+        $this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('Nationalities', ['className' => 'User.UserNationalities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('SpecialNeeds', ['className' => 'SpecialNeeds.SpecialNeedsAssessments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-
         $this->hasMany('InstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('UserNationalities', ['className' => 'User.UserNationalities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+
+        $this->hasMany('ExaminationCentreRoomsExaminationsInvigilators', ['className' => 'examination_centre_rooms_examinations_invigilators', 'foreignKey' => 'invigilator_id', 'dependent' => true]);
+        $this->hasMany('ExaminationCentreRoomsExaminationsStudents', ['className' => 'examination_centre_rooms_examinations_students', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('ExaminationCentresExaminationsInvigilators', ['className' => 'examination_centres_examinations_invigilators', 'foreignKey' => 'invigilator_id', 'dependent' => true]);
+        $this->hasMany('ExaminationCentresExaminationsStudents', ['className' => 'examination_centres_examinations_students', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('HistoricalStaffLeave', ['className' => 'historical_staff_leave', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionAssociationStaff', ['className' => 'institution_association_staff', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('InstitutionAssociationStudent', ['className' => 'institution_association_student', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('InstitutionCases', ['className' => 'institution_cases', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionClassStudents', ['className' => 'institution_class_students', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionClassesSecondaryStaff', ['className' => 'institution_classes_secondary_staff', 'foreignKey' => 'secondary_staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionCompetencyItemComments', ['className' => 'institution_competency_item_comments', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionCompetencyPeriodComments', ['className' => 'institution_competency_period_comments', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionCompetencyResults', ['className' => 'institution_competency_results', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('CounsellingsCounselor', ['className' => 'counsellings', 'foreignKey' => 'counselor_id', 'dependent' => true]);
+        $this->hasMany('CounsellingsRequester', ['className' => 'counsellings', 'foreignKey' => 'requester_id', 'dependent' => true]);
+        $this->hasMany('CounsellingsStudent', ['className' => 'counsellings', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionCurricularStaff', ['className' => 'institution_curricular_staff', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionCurricularStudents', ['className' => 'institution_curricular_students', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionMealStudents', ['className' => 'institution_meal_students', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionOutcomeResults', ['className' => 'institution_outcome_results', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionOutcomeSubjectComments', ['className' => 'institution_outcome_subject_comments', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionPositions', ['className' => 'institution_positions', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionQualityRubrics', ['className' => 'institution_quality_rubrics', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionQualityVisits', ['className' => 'institution_quality_visits', 'foreignKey' => 'staff_id', 'dependent' => true]);
+//        $this->hasMany('InstitutionStaff', ['className' => 'institution_staff', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffAppraisalsAssignee', ['className' => 'institution_staff_appraisals', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffAppraisals', ['className' => 'institution_staff_appraisals', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffAttendanceActivities', ['className' => 'institution_staff_attendance_activities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffAttendances', ['className' => 'institution_staff_attendances', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffDuties', ['className' => 'institution_staff_duties', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffLeave', ['className' => 'institution_staff_leave', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffPositionProfiles', ['className' => 'institution_staff_position_profiles', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffReleasesAssignee', ['className' => 'institution_staff_releases', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffReleases', ['className' => 'institution_staff_releases', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffShifts', ['className' => 'institution_staff_shifts', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffTransfersAssignee', ['className' => 'institution_staff_transfers', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStaffTransfers', ['className' => 'institution_staff_transfers', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentAbsenceDays', ['className' => 'institution_student_absence_days', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentAbsenceDetails', ['className' => 'institution_student_absence_details', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentAbsences', ['className' => 'institution_student_absences', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentAdmissionAssignee', ['className' => 'institution_student_admission', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentAdmission', ['className' => 'institution_student_admission', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentRisks', ['className' => 'institution_student_risks', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentSurveys', ['className' => 'institution_student_surveys', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentTransfersAssignee', ['className' => 'institution_student_transfers', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentTransfers', ['className' => 'institution_student_transfers', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentVisitRequestsAssignee', ['className' => 'institution_student_visit_requests', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentVisitRequestsEvaluator', ['className' => 'institution_student_visit_requests', 'foreignKey' => 'evaluator_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentVisitRequestsStudent', ['className' => 'institution_student_visit_requests', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentVisitsEvaluator', ['className' => 'institution_student_visits', 'foreignKey' => 'evaluator_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentVisitsStudent', ['className' => 'institution_student_visits', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentWithdrawAssignee', ['className' => 'institution_student_withdraw', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentWithdraw', ['className' => 'institution_student_withdraw', 'foreignKey' => 'student_id', 'dependent' => true]);
+//        $this->hasMany('InstitutionStudents', ['className' => 'institution_students', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentsReportCardsCommentsStaff', ['className' => 'institution_students_report_cards_comments', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentsReportCardsCommentsStudent', ['className' => 'institution_students_report_cards_comments', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentsTmp', ['className' => 'institution_students_tmp', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionSubjectStaff', ['className' => 'institution_subject_staff', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('InstitutionSubjectStudents', ['className' => 'institution_subject_students', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionTripPassengers', ['className' => 'institution_trip_passengers', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionVisitRequestsAssignee', ['className' => 'institution_visit_requests', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('MoodleApiCreatedUsers', ['className' => 'moodle_api_created_users', 'foreignKey' => 'core_user_id', 'dependent' => true]);
+        $this->hasMany('ReportCardEmailProcesses', ['className' => 'report_card_email_processes', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('ReportCardProcesses', ['className' => 'report_card_processes', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipApplicationAttachments', ['className' => 'scholarship_application_attachments', 'foreignKey' => 'applicant_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipApplicationInstitutionChoices', ['className' => 'scholarship_application_institution_choices', 'foreignKey' => 'applicant_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipApplications', ['className' => 'scholarship_applications', 'foreignKey' => 'applicant_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipApplicationsAssignee', ['className' => 'scholarship_applications', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipFinancialAssistancesModified', ['className' => 'scholarship_financial_assistances', 'foreignKey' => 'modified_user_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipFinancialAssistancesCreated', ['className' => 'scholarship_financial_assistances', 'foreignKey' => 'created_user_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipRecipientAcademicStandings', ['className' => 'scholarship_recipient_academic_standings', 'foreignKey' => 'recipient_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipRecipientActivities', ['className' => 'scholarship_recipient_activities', 'foreignKey' => 'recipient_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipRecipientCollections', ['className' => 'scholarship_recipient_collections', 'foreignKey' => 'recipient_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipRecipientDisbursements', ['className' => 'scholarship_recipient_disbursements', 'foreignKey' => 'recipient_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipRecipientPaymentStructureEstimates', ['className' => 'scholarship_recipient_payment_structure_estimates', 'foreignKey' => 'recipient_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipRecipientPaymentStructures', ['className' => 'scholarship_recipient_payment_structures', 'foreignKey' => 'recipient_id', 'dependent' => true]);
+        $this->hasMany('ScholarshipRecipients', ['className' => 'scholarship_recipients', 'foreignKey' => 'recipient_id', 'dependent' => true]);
+        $this->hasMany('SecurityGroupUsers', ['className' => 'security_group_users', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('SecurityUserPasswordRequests', ['className' => 'security_user_password_requests', 'foreignKey' => 'user_id', 'dependent' => true]);
+        $this->hasMany('StaffCustomFieldValues', ['className' => 'staff_custom_field_values', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffCustomTableCells', ['className' => 'staff_custom_table_cells', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffEmploymentStatuses', ['className' => 'staff_employment_statuses', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffExtracurriculars', ['className' => 'staff_extracurriculars', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffMemberships', ['className' => 'staff_memberships', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffPayslips', ['className' => 'staff_payslips', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffQualifications', ['className' => 'staff_qualifications', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffReportCardEmailProcesses', ['className' => 'staff_report_card_email_processes', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffReportCardProcesses', ['className' => 'staff_report_card_processes', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffReportCards', ['className' => 'staff_report_cards', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffSalaries', ['className' => 'staff_salaries', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffTrainingApplicationsAssignee', ['className' => 'staff_training_applications', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('StaffTrainingApplications', ['className' => 'staff_training_applications', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffTrainingNeedsAssignee', ['className' => 'staff_training_needs', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('StaffTrainingNeeds', ['className' => 'staff_training_needs', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffTrainingSelfStudies', ['className' => 'staff_training_self_studies', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('StaffTrainings', ['className' => 'staff_trainings', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StudentCustomFieldValues', ['className' => 'student_custom_field_values', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('StudentCustomTableCells', ['className' => 'student_custom_table_cells', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('StudentExtracurriculars', ['className' => 'student_extracurriculars', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('StudentFees', ['className' => 'student_fees', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('StudentGuardiansGuardian', ['className' => 'student_guardians', 'foreignKey' => 'guardian_id', 'dependent' => true]);
+        $this->hasMany('StudentGuardians', ['className' => 'student_guardians', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('StudentReportCardEmailProcesses', ['className' => 'student_report_card_email_processes', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('StudentReportCardProcesses', ['className' => 'student_report_card_processes', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('StudentReportCards', ['className' => 'student_report_cards', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('StudentStatusUpdates', ['className' => 'student_status_updates', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('TrainingCourses', ['className' => 'training_courses', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('TrainingSessionResults', ['className' => 'training_session_results', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('TrainingSessionTraineeResults', ['className' => 'training_session_trainee_results', 'foreignKey' => 'trainee_id', 'dependent' => true]);
+        $this->hasMany('TrainingSessionTrainers', ['className' => 'training_session_trainers', 'foreignKey' => 'trainer_id', 'dependent' => true]);
+        $this->hasMany('TrainingSessions', ['className' => 'training_sessions', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('TrainingSessionsTrainees', ['className' => 'training_sessions_trainees', 'foreignKey' => 'trainee_id', 'dependent' => true]);
+        $this->hasMany('UserActivities', ['className' => 'user_activities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserAttachments', ['className' => 'user_attachments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserAwards', ['className' => 'user_awards', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserBankAccounts', ['className' => 'user_bank_accounts', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserBodyMasses', ['className' => 'user_body_masses', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserComments', ['className' => 'user_comments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+//        $this->hasMany('UserContacts', ['className' => 'user_contacts', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserDemographics', ['className' => 'user_demographics', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserEmployments', ['className' => 'user_employments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserHealthAllergies', ['className' => 'user_health_allergies', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserHealthConsultations', ['className' => 'user_health_consultations', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserHealthFamilies', ['className' => 'user_health_families', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserHealthHistories', ['className' => 'user_health_histories', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserHealthImmunizations', ['className' => 'user_health_immunizations', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserHealthMedications', ['className' => 'user_health_medications', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserHealthTests', ['className' => 'user_health_tests', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserHealths', ['className' => 'user_healths', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+//        $this->hasMany('UserIdentities', ['className' => 'user_identities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserInsurances', ['className' => 'user_insurances', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserLanguages', ['className' => 'user_languages', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+//        $this->hasMany('UserNationalities', ['className' => 'user_nationalities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+//        $this->hasMany('UserSpecialNeedsAssessments', ['className' => 'user_special_needs_assessments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserSpecialNeedsDevices', ['className' => 'user_special_needs_devices', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserSpecialNeedsPlans', ['className' => 'user_special_needs_plans', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserSpecialNeedsReferrals', ['className' => 'user_special_needs_referrals', 'foreignKey' => 'referrer_id', 'dependent' => true]);
+        $this->hasMany('UserSpecialNeedsReferrals', ['className' => 'user_special_needs_referrals', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('UserSpecialNeedsServices', ['className' => 'user_special_needs_services', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('StudentBehaviours', ['className' => 'student_behaviours', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('StaffBehaviours', ['className' => 'staff_behaviours', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $this->hasMany('StaffLicensesAssignee', ['className' => 'staff_licenses', 'foreignKey' => 'assignee_id', 'dependent' => true]);
+        $this->hasMany('StaffLicenses', ['className' => 'staff_licenses', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('InstitutionStudentsReportCards', ['className' => 'institution_students_report_cards', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionTextbooks', ['className' => 'institution_textbooks', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('ExaminationStudentSubjectResults', ['className' => 'examination_student_subject_results', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('ExaminationCentresExaminationsSubjectsStudents', ['className' => 'examination_centres_examinations_subjects_students', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('ExaminationStudentSubjects', ['className' => 'examination_student_subjects', 'foreignKey' => 'student_id', 'dependent' => true]);
+        $this->hasMany('InstitutionAssets', ['className' => 'institution_assets', 'foreignKey' => 'user_id', 'dependent' => true]);
+
+
 
         $this->addBehavior('User.User');
         $this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
@@ -456,12 +607,14 @@ class DirectoriesTable extends ControllerActionTable
             }
             $this->field('nationality_id', ['visible' => false]);
             $this->field('identity_type_id', ['visible' => false]);
-        } elseif ($this->action == 'edit') {
+        }
+        if ($this->action == 'edit') {
             $this->hideOtherInformationSection($this->controller->name, 'edit');
             $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
             $this->field('openemis_no', ['user_type' => $userType]);
             $this->addCustomUserBehavior($userType);
-        } elseif ($this->action == 'view') {
+        }
+        if ($this->action == 'view') {
             $encodedParam = $this->request->params['pass'][1];
             $securityUserId = $this->ControllerAction->paramsDecode($encodedParam)['id'];
             $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
@@ -1138,6 +1291,7 @@ class DirectoriesTable extends ControllerActionTable
             $this->Session->write('Student.Students.id', $entity->id);
             $this->Session->write('Student.Students.name', $entity->name);
             $isSet = true;
+            $isSet = true;
         }
 
         if ($isStaff) {
@@ -1323,14 +1477,14 @@ class DirectoriesTable extends ControllerActionTable
         //$institutionStudents = $this->institutionstudents;
         //print_r($institutionStudents->exists([$institutionStudents->aliasField($institutionStudents->foreignKey()) => $entity->id]));
         //POCOR-7179[START] delete custom field becouse when user is created from directory it insert value in custom field
-        TableRegistry::get('student_custom_field_values')->deleteAll(['student_id' => $entity->id]);
         //POCOR-7179[END]
-        if ($this->checkUsersChildRecords($entity)) {
+        if ($this->hasAssociatedRecords($this, $entity, $extra)) {
+//            Inflector::humanize(Inflector::underscore());
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
             $event->stopPropagation();
             return $this->controller->redirect($this->url('remove'));
         } else {
-
+            TableRegistry::get('student_custom_field_values')->deleteAll(['student_id' => $entity->id]);
             $user = TableRegistry::get('security_users')
                 ->find()->where(['id' => $$entity->id])->first();
             // echo "<pre>";print_r($entity);die;
