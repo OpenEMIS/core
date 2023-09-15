@@ -519,7 +519,7 @@ class StudentsController extends AppController
         /**
          * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
          */
-        $this->log($model, 'debug');
+//        $this->log($model, 'debug');
         $session = $this->request->session();
         if ($session->check('Student.Students.id')) {
             $header = '';

@@ -391,7 +391,7 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->log('before', 'debug');
+//        $this->log('before', 'debug');
         $this->field('academic_period_level_id');
         $this->fields['start_year']['visible'] = false;
         $this->fields['end_year']['visible'] = false;
@@ -402,13 +402,13 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        $this->log('after', 'debug');
+//        $this->log('after', 'debug');
         $this->field('current');
-        $this->field('copy_data_from', [
-            'type' => 'hidden',
-            'value' => 0,
-            'after' => 'current'
-        ]);
+//        $this->field('copy_data_from', [
+//            'type' => 'hidden',
+//            'value' => 0,
+//            'after' => 'current'
+//        ]);
         $this->field('editable');
         foreach ($this->_fieldOrder as $key => $value) {
             if (!in_array($value, array_keys($this->fields))) {
@@ -436,7 +436,7 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->log('indexBeforeAction', 'debug');
+//        $this->log('indexBeforeAction', 'debug');
         // Add breadcrumb
         $toolbarElements = [
             ['name' => 'AcademicPeriod.breadcrumb', 'data' => [], 'options' => []]
@@ -1512,7 +1512,8 @@ class AcademicPeriodsTable extends ControllerActionTable
             ->matching('InstitutionClasses', function ($q) use ($institutionId) {
                 return $q->where(['InstitutionClasses.institution_id' => $institutionId]);
             })
-            ->where([$this->aliasField('current') => 0, $this->aliasField('name <> ') => $currentYear])
+            ->where([$this->aliasField('current') => 0,
+                $this->aliasField('name <> ') => $currentYear])
             ->group([$this->aliasField('id')])
             ->formatResults(function (ResultSetInterface $results) use ($currentYearId) {
                 return $results->map(function ($row) use ($currentYearId) {
@@ -1533,7 +1534,7 @@ class AcademicPeriodsTable extends ControllerActionTable
             ['institution_id' => $institutionId]);
         $academicPeriodWithArchiveArrayId = [0];
         $academicPeriodWithArchiveArray = array_unique(
-            array_merge($academicPeriodWithRecordsArchiveArray, $academicPeriodWithDetailsArchiveArray)
+          array_merge($academicPeriodWithRecordsArchiveArray, $academicPeriodWithDetailsArchiveArray)
         );
         if (sizeof($academicPeriodWithArchiveArray) > 0) {
             $academicPeriodWithArchiveArrayId = $academicPeriodWithArchiveArray;
