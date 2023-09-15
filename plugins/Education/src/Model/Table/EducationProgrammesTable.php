@@ -317,16 +317,16 @@ class EducationProgrammesTable extends ControllerActionTable {
                 $nextProgrammeOptions = [];
 
                 $currentProgrammSystem = $this->find()->contain(['EducationCycles.EducationLevels.EducationSystems'])->where([$this->aliasField('id') => $entity->id])->first();
-                $systemId = $currentProgrammSystem->education_cycle->education_level->education_system->id;
+//                $systemId = $currentProgrammSystem->education_cycle->education_level->education_system->id;
                 $currentCycleOrder = $currentProgrammSystem->education_cycle->order;
                 $currentLevelOrder = $currentProgrammSystem->education_cycle->education_level->order;
                 $currentLevelId = $currentProgrammSystem->education_cycle->education_level->id;
 
                 $EducationSystems = TableRegistry::get('Education.EducationSystems');
-                $systems = $EducationSystems
-                        ->find()
-                        ->where([$EducationSystems->aliasField('id') => $systemId])
-                        ->contain(['EducationLevels.EducationCycles.EducationProgrammes']);
+//                $systems = $EducationSystems
+//                        ->find()
+//                        ->where([$EducationSystems->aliasField('id') => $systemId])
+//                        ->contain(['EducationLevels.EducationCycles.EducationProgrammes']);
 
                 $educationProgrammesTable = clone $this;
                 $educationProgrammesTable->alias('EducationProgrammesClone');
@@ -354,7 +354,7 @@ class EducationProgrammesTable extends ControllerActionTable {
                                 ')'
                             ]), 'programme_id' => 'EducationProgrammes.id'])
                         ->where([
-                            $EducationSystems->aliasField('id') => $systemId,
+//                            $EducationSystems->aliasField('id') => $systemId,
                             'EducationLevels.order >= ' => $currentLevelOrder,
                             'NOT EXISTS(' . $excludedProgrammes->where([$educationProgrammesTable->aliasField('id') . ' = ' . 'EducationProgrammes.id']) . ')'
                         ])
