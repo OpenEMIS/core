@@ -217,6 +217,7 @@ class RegistrationController extends Controller
     public function institutionStudents(InstitutionStudentStoreRequest $request)
     {
         try {
+            //dd($request->all());
             $resp = $this->registrationService->institutionStudents($request);
 
             if(is_array($resp)){

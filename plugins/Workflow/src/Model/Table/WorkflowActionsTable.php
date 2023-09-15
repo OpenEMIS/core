@@ -555,6 +555,7 @@ class WorkflowActionsTable extends AppTable
                 unset($eventsObject[2]);
                 $eventsObject = $eventsObject;
             }else{
+                unset($eventsObject[2]);//POCOR-7725 for duplicate event in dropdown(Approval Of Student Transfer)
                 unset($eventsObject[3]);
                 unset($eventsObject[4]);
                 $eventsObject = $eventsObject;
