@@ -1969,8 +1969,12 @@ class ControllerActionComponent extends Component
 
     public function field($field, $attr=[])
     {
-        $model = $this->model;
-        $className = $model->alias();
+        // $model = $this->model;
+        $controller = $this->_registry->getController();
+        $plugin = $this->_registry->getController()->getRequest()->getAttribute('params')['plugin'];
+        $table = $this->_registry->getController()->getName();
+        $model = TableRegistry::getTableLocator()->get($plugin.'.'.$table);
+        $className = $model->getAlias();
 
         if (!isset($model->fieldOrder)) {
             $model->fieldOrder = 0;
@@ -1997,7 +2001,7 @@ class ControllerActionComponent extends Component
             'order' => $order ? $order : $model->fieldOrder,
             'visible' => true,
             'field' => $field,
-            'model' => $model->alias(),
+            'model' => $model->getAlias(),
             'className' => $className
         ];
 
@@ -2012,9 +2016,9 @@ class ControllerActionComponent extends Component
         $eventKey = 'ControllerAction.Model.' . $method;
         $params = [$attr, $this->currentAction, $this->request];
         $this->debug(__METHOD__, ': Event -> ' . $eventKey);
-        $event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
-        if (is_array($event->result)) {
-            $model->fields[$field] = $event->result;
+        $event = $this->dispatchEvent($model, $eventKey, $method, $params);
+        if (is_array($event->getResult())) {
+            $model->fields[$field] = $event->getResult();
         }
 
         return $model->fields[$field];

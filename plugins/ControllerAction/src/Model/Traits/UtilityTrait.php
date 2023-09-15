@@ -57,7 +57,7 @@ trait UtilityTrait
         }
 
         if (!is_null($request)) {
-            $query = $request->query;
+            $query = $request->getQuery();
 
             if (isset($query[$key])) {
                 $value = $query[$key];
@@ -101,7 +101,7 @@ trait UtilityTrait
                     $value = $defaultValue;
                 }
             }
-            $request->query[$key] = $value;
+            $request->getQuery[$key] = $value;
         }
         return $value;
     }

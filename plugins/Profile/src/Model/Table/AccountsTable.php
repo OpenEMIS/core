@@ -15,7 +15,7 @@ class AccountsTable extends AppTable
 
 	public function initialize(array $config): void
     {
-		$this->addBehavior('User.Account');
+        $this->addBehavior('User.Account');
 		parent::initialize($config);
 	}
 

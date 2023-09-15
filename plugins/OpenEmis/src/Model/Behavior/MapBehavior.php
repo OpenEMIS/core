@@ -124,7 +124,7 @@ class MapBehavior extends Behavior
             $attr['mapConfig'] = json_encode($mapConfig);
             $attr['mapPosition'] = json_encode($mapPosition);
             
-            return $event->subject()->renderElement('OpenEmis.map', ['attr' => $attr]);
+            return $event->getSubject()->renderElement('OpenEmis.map', ['attr' => $attr]);
         }
 
         return '<span class="error-message">' . __('Both latitude and longitude value have to be set for map to render') . '<span>';

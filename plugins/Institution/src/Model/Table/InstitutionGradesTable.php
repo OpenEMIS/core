@@ -128,7 +128,7 @@ public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 
     // Academic Periods filter
     $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
-    $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
+    $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $AcademicPeriod->getCurrent();
     $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
 
     $query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
@@ -144,7 +144,7 @@ public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     $extra['options']['sortWhitelist'] = $sortList;
     $extra['elements']['controls'] = ['name' => 'Institution.Programmes/controls', 'data' => [], 'options' => [], 'order' => 1];
 
-    $requestQuery = $this->request->query;
+    $requestQuery = $this->request->getQuery();
     $sortable = array_key_exists('sort', $requestQuery) ? true : false;
 
     if (!$sortable) {
@@ -884,7 +884,8 @@ public function onGetEducationSubjectId(Event $event, Entity $entity)
     }
 }
 
-public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+// public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action)
 {
     $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
     if ($action == 'add') {
@@ -899,7 +900,8 @@ public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action
     return $attr;
 }
 
-public function onUpdateFieldLevel(Event $event, array $attr, $action, Request $request)
+// public function onUpdateFieldLevel(Event $event, array $attr, $action, Request $request)
+public function onUpdateFieldLevel(Event $event, array $attr, $action)
 {
     if ($action == 'add') {
         $academicPeriodId = $request->data($this->aliasField('academic_period_id'));
@@ -919,7 +921,8 @@ public function onUpdateFieldLevel(Event $event, array $attr, $action, Request $
     return $attr;
 }
 
-public function onUpdateFieldProgramme(Event $event, array $attr, $action, Request $request)
+// public function onUpdateFieldProgramme(Event $event, array $attr, $action, Request $request)
+public function onUpdateFieldProgramme(Event $event, array $attr, $action)
 {
     if ($action == 'add') {
         $attr['empty'] = true;
@@ -946,7 +949,8 @@ public function onUpdateFieldProgramme(Event $event, array $attr, $action, Reque
     return $attr;
 }
 
-public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+// public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action)
 {
     if ($action == 'add') {
         $attr['type'] = 'element';
@@ -980,7 +984,8 @@ public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action
     return $attr;
 }
 
-public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
+// public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
+public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action)
 {
     if ($action == 'add') {
         $attr['type'] = 'element';

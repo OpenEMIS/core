@@ -9,9 +9,9 @@ use App\Model\Table\ControllerActionTable;
 
 class UnitTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_units');
+        $this->setTable('institution_units');
         parent::initialize($config);
 
         //$this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
