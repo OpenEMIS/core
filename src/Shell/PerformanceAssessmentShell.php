@@ -46,6 +46,7 @@ class PerformanceAssessmentShell extends Shell
             $AssessmentItemsTable = TableRegistry::get('assessment_items');
             $AssessmentPeriodsTable = TableRegistry::get('Assessment.AssessmentPeriods');
             $AssessmentItemGradingTypesTable=TableRegistry::get('assessment_items_grading_types');
+            $ExcludedSecurityRolesTable = TableRegistry::get('assessment_period_excluded_security_roles');
             $connection = ConnectionManager::get('default');
             //POCOR-7723 start
             $assessment_res = $AssessmentTable->find()->where([$AssessmentTable->aliasField('academic_period_id')=>$copyFrom])->toArray();
@@ -74,10 +75,10 @@ class PerformanceAssessmentShell extends Shell
                 ));
                 $newAssessmentId = $connection->execute('SELECT LAST_INSERT_ID()')->fetch('assoc')['LAST_INSERT_ID()'];
                 if ($newAssessmentId != 0) {
+                   
                     $assessment_item_result = $AssessmentItemsTable->find()
                         ->where([$AssessmentItemsTable->aliasField('assessment_id') => $assessmentData->id])
                         ->toArray();
-
                     //Copy Assessment Item[Start]
                     if (!empty($assessment_item_result)) {
                         foreach ($assessment_item_result as $key => $assessmentItemData) {
@@ -155,6 +156,22 @@ class PerformanceAssessmentShell extends Shell
                                     }
                                 }
                                 //Copy Assessment Item Grading Type [END]
+                                //Copy Excluded Security Roles [Start]
+                                $excluded_security_role_result = $ExcludedSecurityRolesTable->find()
+                                                           ->where([$ExcludedSecurityRolesTable->aliasField('assessment_period_id') => $assessmentPeriodData->id])
+                                                           ->toArray();
+                                if (!empty($excluded_security_role_result)) {
+                                    foreach ($excluded_security_role_result as $key => $excludedRolesData) {
+                                        $statement5 = $connection->prepare('INSERT INTO assessment_period_excluded_security_roles(
+                                                                assessment_period_id,security_role_id VALUES (:assessment_period_id,
+                                                                :security_role_id)');
+                                        $statement5->execute([
+                                            'assessment_period_id' => $newAssessmentPeriodId,
+                                            'security_role_id'=> $excludedRolesData->security_role_id
+                                        ]);
+                                    }
+                                }
+                                //Copy Excluded Security Roles [End]
                             }
                 
                         }
