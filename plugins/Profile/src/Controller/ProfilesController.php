@@ -542,13 +542,15 @@ class ProfilesController extends AppController
         $this->Navigation->addCrumb('Personal', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Personal', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
 
         $header = '';
+        $entity = null;
         $user_id = $session->read('Profile.Profiles.primaryKey.id');
         if ($this->Profiles->exists([$this->Profiles->primaryKey() => $loginUserId])) {
             if ($action == 'StudentReportCards') {
                 if (isset($user_ids['id']) && !empty($user_ids['id'])) {
                     $user_id = $user_ids['id'];
                 } else {
-                    $user_id = $user_ids['security_user_id'];
+                    if (isset($user_ids['security_user_id']) && !empty($user_ids['security_user_id']))
+                        $user_id = $user_ids['security_user_id'];
                 }//POCOR-6202 end
             }
             if (!$user_id) {
@@ -557,18 +559,20 @@ class ProfilesController extends AppController
                 if (!empty($user_id_req)) {
                     $user_ids = $this->ControllerAction->paramsDecode($user_id_req);
                     // $security_user_id = $user_ids['id'];
-                    if (isset($user_ids['security_user_id']) && !empty($user_ids['security_user_id'])) {
-                        $user_id = $user_ids['security_user_id'];
-                    } else {
+                    if (isset($user_ids['id']) && !empty($user_ids['id'])) {
                         $user_id = $user_ids['id'];
-                    }
+                    } else {
+                        if (isset($user_ids['security_user_id']) && !empty($user_ids['security_user_id']))
+                            $user_id = $user_ids['security_user_id'];
+                    }//POCOR-6202 end
                 }
             }
         }
         try {
             $entity = $this->Profiles->get($user_id);
             $name = $entity->name;
-        } catch (RecordNotFoundException $e) {
+        } catch
+        (RecordNotFoundException $e) {
             $name = "";
         }
 
@@ -579,8 +583,6 @@ class ProfilesController extends AppController
         if ($entity) {
             $this->activeObj = $entity;
         }
-
-
         $this->set('contentHeader', $header);
     }
 
