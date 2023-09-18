@@ -333,4 +333,114 @@ class StudentService extends Controller
             return $this->sendErrorResponse('Institution Student Absences Data Not Found');
         }
     }
+
+
+    //POCOR-7547 Starts...
+    public function getEducationGrades($request)
+    {
+        try {
+            $data = $this->studentRepository->getEducationGrades($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Education Grade List Not Found');
+        }
+    }
+
+
+    public function getClassesSubjects($request, $institutionId)
+    {
+        try {
+            $data = $this->studentRepository->getClassesSubjects($request, $institutionId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Class Subjects List Not Found');
+        }
+    }
+
+
+    public function addClassAttendances($request)
+    {
+        try {
+            $data = $this->studentRepository->addClassAttendances($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add data in DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Class Attendances Not Added');
+        }
+    }
+
+
+    public function addStudentAbsences($request)
+    {
+        try {
+            $data = $this->studentRepository->addStudentAbsences($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add data in DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student absences Not Added');
+        }
+    }
+
+
+    public function addStaffAttendances($request)
+    {
+        try {
+            $data = $this->studentRepository->addStaffAttendances($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add data in DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Staff attendances Not Added');
+        }
+    }
+
+
+    public function updateStaffDetails($request)
+    {
+        try {
+            $data = $this->studentRepository->updateStaffDetails($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to update data in DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Staff data not updated');
+        }
+    }
+
+    //POCOR-7547 Ends...
+
+
 }

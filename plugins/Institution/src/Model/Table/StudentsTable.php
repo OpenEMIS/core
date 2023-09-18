@@ -754,16 +754,20 @@ class StudentsTable extends ControllerActionTable
     {
         $studentStatuses = $this->StudentStatuses->findCodeList();
         // if user tries to delete record that is not enrolled
-        if ($entity->student_status_id != $studentStatuses['CURRENT']) {
-            $event->stopPropagation();
-            return false;
-        }
+//        if ($entity->student_status_id != $studentStatuses['CURRENT']) {
+//            $event->stopPropagation();
+//            return false;
+//        }
         $body = array();
-
+        $student_id = !empty($entity->student_id) ? $entity->student_id : NULL;
+        $institution_id = !empty($entity->institution_id) ? $entity->institution_id : NULL;
+        $institution_student_id = !empty($entity->id) ? $entity->id : NULL;
         $body = [
-            'institution_student_id' => !empty($entity->student_id) ? $entity->student_id : NULL,
-            'institution_id' => !empty($entity->institution_id) ? $entity->institution_id : NULL,
+            'institution_student_id' => $student_id,
+            'institution_id' => $institution_id,
         ];
+        $affected = $this->removeIndividualChildRecords($student_id, $institution_student_id);
+//        $this->log("removed $affected security records", 'debug');
         if (!empty($this->action) && $this->action == 'remove') {
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
@@ -771,6 +775,109 @@ class StudentsTable extends ControllerActionTable
                 $Webhooks->triggerShell('student_delete', ['username' => $username], $body);
             }
         }
+    }
+
+    private function removeIndividualChildRecords($student_id, $institution_student_id)
+    {
+        $affected = 0;
+        if ($student_id) {
+
+            $table_name = 'security_group_users';
+            $field_name = 'security_user_id';
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+
+//            $table_name = 'institution_class_students';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+
+            $table_name = 'user_activities';
+            $field_name = 'security_user_id';
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+
+            $table_name = 'student_custom_field_values';
+            $field_name = 'student_id';
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+
+//            $table_name = 'institution_competency_results';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'institution_student_absences';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'institution_student_absence_days';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'institution_student_absence_details';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'institution_student_risks';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'institution_subject_students';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'user_special_needs_devices';
+//            $field_name = 'security_user_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'user_special_needs_referrals';
+//            $field_name = 'security_user_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'user_special_needs_services';
+//            $field_name = 'security_user_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'user_special_needs_assessments';
+//            $field_name = 'security_user_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'user_nationalities';
+//            $field_name = 'security_user_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+
+            $table_name = 'institution_student_admission';
+            $field_name = 'student_id';
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+
+            $table_name = 'institution_student_surveys';
+            $field_name = 'student_id';
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+
+            $table_name = 'student_status_updates';
+            $field_name = 'security_user_id';
+            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+
+//            $table_name = 'institution_students_report_cards_comments';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'institution_students_report_cards';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'student_report_cards';
+//            $field_name = 'student_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            $table_name = 'institution_association_student';
+//            $field_name = 'security_user_id';
+//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+//
+//            if($institution_student_id){
+//                $table_name = 'institution_students';
+//                $affected = $affected + $this->removeFromTableTwo($student_id, $institution_student_id, $table_name);
+//            }
+
+        }
+
+        return $affected;
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -3063,6 +3170,57 @@ class StudentsTable extends ControllerActionTable
             'student_education_grade' => 'EducationGrades.name',
         ]);
         return $query;
+    }
+
+    /**
+     * @param $student_id
+     * @param $table_name
+     * @param $field_name
+     * @return int
+     */
+
+    private function removeFromTable($student_id, $table_name, $field_name)
+    {
+        $affected = 0;
+        try {
+            $tableToClean = TableRegistry::get($table_name);
+            $affected = $tableToClean->deleteAll([
+                $tableToClean->aliasField($field_name) => $student_id
+            ]);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch remove from table',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+        }
+        return $affected;
+    }
+
+    /**
+     * @param $student_id
+     * @param $institution_student_id
+     * @param $table_name
+     * @param $field_name
+     * @return int
+     */
+
+
+    private function removeFromTableTwo($student_id, $institution_student_id, $table_name)
+    {
+        $affected = 0;
+        try {
+            $tableToClean = TableRegistry::get($table_name);
+            $affected = $tableToClean->deleteAll([
+                $tableToClean->aliasField('student_id') => $student_id,
+                $tableToClean->aliasField('id != ') => $institution_student_id
+            ]);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch remove from table',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+        }
+        return $affected;
     }
 
 
