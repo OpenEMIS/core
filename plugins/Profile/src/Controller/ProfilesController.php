@@ -534,7 +534,7 @@ class ProfilesController extends AppController
         parent::beforeFilter($event);
 
         $session = $this->request->session();
-        $this->log($session->read(), 'debug');
+//        $this->log($session->read(), 'debug');
         $action = $this->request->params['action'];
 
         $loginUserId = $this->Auth->user('id'); // login user
