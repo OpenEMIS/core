@@ -4992,13 +4992,23 @@ class InstitutionsController extends AppController
     public function checkStudentAdmissionAgeValidation()
     {
         $requestData = $this->request->input('json_decode', true);
+        $this->log($requestData);
         $dateOfBirth = $requestData['params']['date_of_birth'];
         $educationGradeId = $requestData['params']['education_grade_id'];
+        $academic_period_id = $requestData['params']['academic_period_id'];
+        $academic_periods = TableRegistry::get('academic_periods');
+        $academic_periods_result = $academic_periods
+            ->find()
+            ->select(['id', 'name', 'start_date', 'end_date'])
+            ->where(['id' => $academic_period_id])
+            ->first();
+        $start_date = $academic_periods_result->start_date;
+        $startDate = new \DateTime($start_date);
+        $dob = new \DateTime($dateOfBirth);
 
-        $dobYear = date('Y', strtotime($dateOfBirth));
-        $currentYear = date('Y', strtotime(date('Y-m-d')));
-        $yearDiff = $currentYear - $dobYear;
+        $interval = $dob->diff($startDate);
 
+        $ageInYears = $interval->y;
         $ConfigItemTable = TableRegistry::get('config_items');
         $ConfigItemAgePlus = $ConfigItemTable->find('all', ['conditions' => ['code' => 'admission_age_plus']])->first();
         $ConfigItemAgeMinus = $ConfigItemTable->find('all', ['conditions' => ['code' => 'admission_age_minus']])->first();
@@ -5009,11 +5019,22 @@ class InstitutionsController extends AppController
         if ($minAge < 0) {
             $minAge = 0;
         }
-        if ($yearDiff > $maxAge || $yearDiff < $minAge) {
-            $result_array[] = array("max_age" => $maxAge, "min_age" => $minAge, "validation_error" => 1);
+        $result = array(
+            "max_age" => $maxAge,
+            "min_age" => $minAge,
+            "student_age" => $ageInYears,
+//            "startDate" => $startDate,
+//            "dob" => $dob,
+//            "configItemAgePlus" => $ConfigItemAgePlus,
+//            "configItemAgeMinus" => $ConfigItemAgeMinus,
+//            "academic_period_id" => $academic_period_id
+        );
+        if ($ageInYears > $maxAge || $ageInYears < $minAge) {
+            $result["validation_error"] = 1;
         } else {
-            $result_array[] = array("max_age" => $maxAge, "min_age" => $minAge, "validation_error" => 0);
+            $result["validation_error"] = 0;
         }
+        $result_array[] = $result;
         echo json_encode($result_array);
         die;
     }
