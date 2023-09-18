@@ -26,6 +26,7 @@ use App\Models\StudentCustomFieldValues;
 use App\Models\IdentityTypes;
 use App\Models\InstitutionTypes;
 use App\Models\AreaLevels;
+use App\Models\SecurityGroupUsers;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
@@ -422,6 +423,7 @@ class RegistrationRepository extends Controller
                             
 
                             //Creating Institution_student_Admission...
+                            $assigneeId = $this->getAssigneeId();
                             $storeAdmission['start_date'] = $academicPeriod['start_date'];
                             $storeAdmission['end_date'] = $academicPeriod['end_date'];
                             $storeAdmission['student_id'] = $student->id;
@@ -429,7 +431,7 @@ class RegistrationRepository extends Controller
                             $storeAdmission['institution_id'] = $request['institution_id'];
                             $storeAdmission['academic_period_id'] = $academicPeriod['id'];
                             $storeAdmission['education_grade_id'] = $request['education_grade_id'];
-                            $storeAdmission['assignee_id'] = $userData->user_id;
+                            $storeAdmission['assignee_id'] = $assigneeId??$userData->user_id;
                             $storeAdmission['created_user_id'] = $userData->user_id;
                             $storeAdmission['created'] = Carbon::now()->toDateTimeString();
 
@@ -515,6 +517,8 @@ class RegistrationRepository extends Controller
                             
 
                             //Creating Institution_student_Admission...
+                            $assigneeId = $this->getAssigneeId();
+
                             $storeAdmission['start_date'] = $academicPeriod['start_date'];
                             $storeAdmission['end_date'] = $academicPeriod['end_date'];
                             $storeAdmission['student_id'] = $student->id;
@@ -522,7 +526,7 @@ class RegistrationRepository extends Controller
                             $storeAdmission['institution_id'] = $request['institution_id'];
                             $storeAdmission['academic_period_id'] = $academicPeriod['id'];
                             $storeAdmission['education_grade_id'] = $request['education_grade_id'];
-                            $storeAdmission['assignee_id'] = $userData->user_id;
+                            $storeAdmission['assignee_id'] = $assigneeId??$userData->user_id;
                             $storeAdmission['created_user_id'] = $userData->user_id;
                             $storeAdmission['created'] = Carbon::now()->toDateTimeString();
 
@@ -621,6 +625,7 @@ class RegistrationRepository extends Controller
 
 
                         //Creating Institution_student_Admission...
+                        $assigneeId = $this->getAssigneeId();
                         $storeAdmission['start_date'] = $academicPeriod['start_date'];
                         $storeAdmission['end_date'] = $academicPeriod['end_date'];
                         $storeAdmission['student_id'] = $student->id;
@@ -628,7 +633,7 @@ class RegistrationRepository extends Controller
                         $storeAdmission['institution_id'] = $request['institution_id'];
                         $storeAdmission['academic_period_id'] = $academicPeriod['id'];
                         $storeAdmission['education_grade_id'] = $request['education_grade_id'];
-                        $storeAdmission['assignee_id'] = $userData->user_id;
+                        $storeAdmission['assignee_id'] = $assigneeId??$userData->user_id;
                         $storeAdmission['created_user_id'] = $userData->user_id;
                         $storeAdmission['created'] = Carbon::now()->toDateTimeString();
 
@@ -696,7 +701,7 @@ class RegistrationRepository extends Controller
             }
             
             $store = StudentCustomFieldValues::insert($cfArray);
-            Log::info("## Stored in InstitutionStudentAdmission ##", $cfArray);
+            Log::info("## Stored in StudentCustomFieldValues ##", $cfArray);
             DB::commit();
             return true;
             
@@ -945,6 +950,29 @@ class RegistrationRepository extends Controller
             );
 
             return $this->sendErrorResponse('Area Levels List Not Found');
+        }
+    }
+
+
+    public function getAssigneeId()
+    {
+        try {
+            $data = SecurityGroupUsers::join('workflow_steps_roles', 'workflow_steps_roles.security_role_id', '=', 'security_group_users.security_role_id')
+                ->join('workflow_steps', 'workflow_steps.id', '=', 'workflow_steps_roles.workflow_step_id')
+                ->join('workflows', 'workflows.id', '=', 'workflow_steps.workflow_id')
+                ->where('workflows.code', 'STUDENT-ADMISSION-1001')
+                ->where('workflow_steps.name', 'Pending Approval')
+                ->select('security_group_users.security_role_id', 'security_group_users.security_user_id')
+                ->first();
+
+            return $data->security_user_id??Null;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch assignee id from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch assignee id from DB.');
         }
     }
 
