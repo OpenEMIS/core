@@ -163,7 +163,7 @@ class PerformanceAssessmentShell extends Shell
                                 if (!empty($excluded_security_role_result)) {
                                     foreach ($excluded_security_role_result as $key => $excludedRolesData) {
                                         $statement5 = $connection->prepare('INSERT INTO assessment_period_excluded_security_roles(
-                                                                assessment_period_id,security_role_id VALUES (:assessment_period_id,
+                                                                assessment_period_id,security_role_id) VALUES (:assessment_period_id,
                                                                 :security_role_id)');
                                         $statement5->execute([
                                             'assessment_period_id' => $newAssessmentPeriodId,
@@ -213,7 +213,9 @@ class PerformanceAssessmentShell extends Shell
             }
             //education grade updation end
         } catch (\Exception $e) {
-            pr($e->getMessage());
+            echo "<pre>";
+            print_r($e);
+            exit;
         }
     }
 }
