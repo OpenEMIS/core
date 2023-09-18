@@ -700,6 +700,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     async function changeEducationGrade() {
         var educationGrade = StudentController.selectedStudentData.education_grade_id;
+        var academicPeriod = StudentController.selectedStudentData.academic_period_id;
         var educationGradeOptions = StudentController.educationGradeOptions;
         for (var i = 0; i < educationGradeOptions.length; i++) {
             if (educationGradeOptions[i].education_grade_id == educationGrade) {
@@ -710,15 +711,29 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.error.education_grade_id = '';
         StudentController.getClasses();
 
-        const date_of_birth = StudentController.selectedStudentData.date_of_birth.split('-')[2];
-        if (StudentController.selectedStudentData.education_grade_id !== undefined && date_of_birth.length === 4)
+        const date_of_birth = InstitutionsStudentsSvc.formatDate(StudentController.selectedStudentData.date_of_birth);
+        // console.log(date_of_birth);
+        // const params = {
+        //     date_of_birth: StudentController.selectedStudentData.date_of_birth,
+        //     education_grade_id: educationGrade,
+        //     academic_period_id: academicPeriod };
+        // console.log(params);
+        if (StudentController.selectedStudentData.education_grade_id !== undefined &&
+            date_of_birth !== undefined &&
+            academicPeriod !== undefined)
         {
+            const params = {
+                date_of_birth: StudentController.selectedStudentData.date_of_birth,
+                education_grade_id: educationGrade,
+                academic_period_id: academicPeriod };
+            // console.log(params);
             // POCOR-5672
-            const dateOfBirthValidationResponse = await InstitutionsStudentsSvc.getDateOfBirthValidation({ date_of_birth: StudentController.selectedStudentData.date_of_birth, education_grade_id: educationGrade })
-            const { validation_error, min_age, max_age } = dateOfBirthValidationResponse.data[0];
+            const dateOfBirthValidationResponse = await InstitutionsStudentsSvc.getDateOfBirthValidation(params);
+            // console.log(dateOfBirthValidationResponse.data);
+            const { validation_error, min_age, max_age, student_age } = dateOfBirthValidationResponse.data[0];
             if (validation_error === 1)
             {
-                StudentController.error.date_of_birth = `The student should be between ${min_age} to ${max_age} years old`;
+                StudentController.error.date_of_birth = `The student is ${student_age} years old in the given Academic Period. The student should be between ${min_age} to ${max_age} years old`;
             } else if (validation_error === 0)
             {
                 StudentController.error.date_of_birth = "";
