@@ -368,7 +368,12 @@ class RegistrationRepository extends Controller
                 return 7; //Invalid otp...
             }
 
+            $validateAge = $this->validateAge($request['date_of_birth'], $request['education_grade_id'], $request['academic_period_id']);
             
+            if(is_array($validateAge)){
+                return $validateAge;
+            }
+
             if($request['openemis_id'] != ""){
                 Log::info('For User Registration using openemis id.');
                 $student = SecurityUsers::with(
@@ -954,6 +959,60 @@ class RegistrationRepository extends Controller
     }
 
 
+    public function validateAge($dob, $educationGradeId, $academicPeriodId)
+    {
+        try {  
+            $agePlusData = ConfigItem::where('code', 'admission_age_plus')->first();
+
+            $ageMinusData = ConfigItem::where('code', 'admission_age_minus')->first();
+            if($agePlusData && $ageMinusData){
+                $agePlusVal = $agePlusData->value??0;
+                $ageMinusVal = $ageMinusData->value??0;
+
+                $academicPeriod = AcademicPeriod::where('id', $academicPeriodId)->first();
+                if(!$academicPeriod){
+                    return 0;
+                }
+
+                $dobArr = explode("-", $dob);
+                $dobYear = $dobArr[0];
+                $acadmicPeriodYear = $academicPeriod->end_year;
+
+                $studentAge = $acadmicPeriodYear - $dobYear;
+
+                $educationGrade = EducationGrades::where('id', $educationGradeId)->first();
+                if(!$educationGrade){
+                    return 0;
+                }
+
+                $admissionAge = $educationGrade->admission_age;
+
+                $lowerLimit = $admissionAge - $ageMinusVal;
+                $upperLimit = $admissionAge + $agePlusVal;
+
+                if(($studentAge < $lowerLimit) || ($studentAge > $upperLimit)){
+                    $arr['loweAgeLimit'] = $lowerLimit;
+                    $arr['upperAgeLimit'] = $upperLimit;
+
+                    return $arr;
+                } else {
+                    return 1;
+                }
+
+            } else {
+                return 0;
+            }
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to validate age.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to validate age.');
+        }
+    }
+
+    
     public function getAssigneeId()
     {
         try {

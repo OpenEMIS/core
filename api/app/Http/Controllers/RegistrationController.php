@@ -220,6 +220,11 @@ class RegistrationController extends Controller
             //dd($request->all());
             $resp = $this->registrationService->institutionStudents($request);
 
+            if(is_array($resp)){
+                return $this->sendErrorResponse("The student should be between ".$resp['loweAgeLimit']." to ".$resp['upperAgeLimit']. " years old.");
+            }
+
+
             if($resp == 1){
                 return $this->sendSuccessResponse("Registration successful. We will contact you shortly.");
             }elseif($resp == 2){
