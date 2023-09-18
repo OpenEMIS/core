@@ -367,7 +367,7 @@ class EducationProgrammesTable extends ControllerActionTable {
                         ->orderAsc('EducationProgrammes.order')
                         ->toArray();
 
-                $tableHeaders = [__('System - Cycle - (Programme)'), '', ''];
+                $tableHeaders = [__('Cycle - (Programme)'), '', ''];
                 $tableCells = [];
                 $cellCount = 0;
 
