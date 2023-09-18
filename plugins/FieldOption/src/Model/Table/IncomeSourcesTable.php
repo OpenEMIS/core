@@ -13,12 +13,12 @@ use Cake\Log\Log;
 
 class IncomeSourcesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('income_sources');
+        $this->setTable('income_sources');
         parent::initialize($config);
 
-        $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+        $this->behaviors()->get('ControllerAction')->getConfig('actions.remove', 'restrict');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index', 'add'],
             'Staff' => ['index', 'add']

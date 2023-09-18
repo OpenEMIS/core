@@ -13,9 +13,9 @@ use App\Model\Table\ControllerActionTable;
 
 class InfrastructureWashSanitationsTable extends ControllerActionTable {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('infrastructure_wash_sanitations');
+        $this->setTable('infrastructure_wash_sanitations');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods',   ['className' => 'AcademicPeriod.AcademicPeriods', 'foreign_key' => 'academic_period_id']);
@@ -33,7 +33,7 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -177,7 +177,7 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery;
 
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 

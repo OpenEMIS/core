@@ -14,7 +14,7 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
 {
     public function initialize(array $config): void
     {
-        $this->table('institution_staff_duties');
+        $this->setTable('institution_staff_duties');
         parent::initialize($config);
         $this->belongsTo('StaffDuties', ['className' => 'Institution.StaffDuties', 'foreignKey' => 'staff_duties_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -188,7 +188,7 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
     }
     public function onGetInstitution(Event $event, Entity $entity)
     {
-        $Institutions = TableRegistry::get('institutions');
+        $Institutions = TableRegistry::get('Institution.Institutions');
         $InstitutionName=$Institutions->find()->select('name')->where(['id' => $entity->institution_id])->first();
         return $InstitutionName['name'];
     }

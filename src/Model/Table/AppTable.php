@@ -14,7 +14,7 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use ControllerAction\Model\Traits\UtilityTrait;
 use ControllerAction\Model\Traits\ControllerActionTrait;
-// use Page\Traits\OptionListTrait;
+use Page\Traits\OptionListTrait;
 use Cake\I18n\I18n;
 use Cake\Database\Schema\TableSchema;
 
@@ -23,7 +23,7 @@ class AppTable extends Table
     use ControllerActionTrait;
     use UtilityTrait;
     use LogTrait;
-    // use OptionListTrait;
+    use OptionListTrait;
     const OpenEMIS = 'OpenEMIS ID';
     public function initialize(array $config): void
     {
@@ -1007,8 +1007,9 @@ class AppTable extends Table
     {
         $request = $this->request;
         $selectedId = null;
-        if ($request->data($this->aliasField($key))) {
-            $selectedId = $request->data($this->aliasField($key));
+        if ($request->getData($this->aliasField($key))) {
+            $selectedId = $request->getData($this->aliasField($key));
+            
         }
         return $selectedId;
     }

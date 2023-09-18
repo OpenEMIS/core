@@ -18,7 +18,7 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
     private $queryString;
     private $examCentreId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
@@ -70,7 +70,7 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         $this->toggle('search', false);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator
@@ -89,7 +89,7 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         return $events;

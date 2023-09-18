@@ -20,9 +20,9 @@ class InstitutionBudgetsTable extends ControllerActionTable
 {
     use MessagesTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_budgets');
+        $this->setTable('institution_budgets');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
         $this->belongsTo('BudgetTypes', ['className' => 'FieldOption.BudgetTypes', 'foreignKey' => 'budget_type_id']);
@@ -47,7 +47,7 @@ class InstitutionBudgetsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'budget_type_id', 'amount','file_name', 'file_content', 'description']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
