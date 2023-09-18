@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 
 class BanksTable extends ControllerActionTable {
-	public function initialize(array $config)
+	public function initialize(array $config): void
 	{
 		parent::initialize($config);
 

@@ -144,14 +144,14 @@ class InfrastructureNeedsTable extends ControllerActionTable
         ->toArray();
 
         $needTypeOptions = [null => __('All Need Types')] + $needTypes;
-        $extra['needTypes'] = $this->request->query('need_types'); 
+        $extra['needTypes'] = $this->request->getQuery('need_types'); 
         // set need type filter
 
         // set need priority filter
         $needPriorities = $this->needPriorities;
 
         $needPrioritiesOptions = [null => __('All Priorities')] + $needPriorities;
-        $extra['needPriorities'] = $this->request->query('priority'); 
+        $extra['needPriorities'] = $this->request->getQuery('priority'); 
         // set need priority filter
 
         $extra['elements']['control'] = [
@@ -286,10 +286,10 @@ class InfrastructureNeedsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id');
-        $NeedType = ($this->request->query('need_types')) ? $this->request->query('need_types') : 0;
-        $NeedPriority = ($this->request->query('priority')) ? $this->request->query('priority') : 0;
+        $NeedType = ($this->request->getQuery('need_types')) ? $this->request->getQuery('need_types') : 0;
+        $NeedPriority = ($this->request->getQuery('priority')) ? $this->request->getQuery('priority') : 0;
 
         $query
         ->where([
@@ -361,10 +361,10 @@ class InfrastructureNeedsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id');
-        $NeedType = ($this->request->query('need_types')) ? $this->request->query('need_types') : 0;
-        $NeedPriority = ($this->request->query('priority')) ? $this->request->query('priority') : 0;
+        $NeedType = ($this->request->getQuery('need_types')) ? $this->request->getQuery('need_types') : 0;
+        $NeedPriority = ($this->request->getQuery('priority')) ? $this->request->getQuery('priority') : 0;
         
         $query
         ->where([

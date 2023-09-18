@@ -214,17 +214,17 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function onGetCode(Event $event, Entity $entity)
     {
-        $institutionId = $this->request->param('institutionId');
+        $institutionId = $this->request->getParam('institutionId');
         $url = [
             'plugin' => $this->controller->plugin,
             'controller' => $this->controller->name,
             'action' => 'InstitutionBuildings',
             'institutionId' => $institutionId
         ];
-        $url = array_merge($url, $this->request->query);
+        $url = array_merge($url, $this->request->getQuery());
         $url = $this->setQueryString($url, ['institution_land_id' => $entity->id, 'institution_land_name' => $entity->code]);
 
-        return $event->subject()->HtmlField->link($entity->code, $url);
+        return $event->getSubject()->HtmlField->link($entity->code, $url);
     }
 
     public function onGetInfrastructureLevel(Event $event, Entity $entity)
@@ -283,7 +283,7 @@ class InstitutionLandsTable extends ControllerActionTable
         $extra['elements']['toolbarElements'] = $this->addBreadcrumbElement();
         $extra['elements']['control'] = $this->addControlFilterElement();
         /*POCOR-6264 starts*/
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         if ($this->AccessControl->check(['Institutions', 'Lands', 'excel'])) {
             $button = [
@@ -351,9 +351,9 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
-        $sessionKey = $this->registryAlias() . '.warning';
+        $sessionKey = $this->getRegistryAlias() . '.warning';
         if ($session->check($sessionKey)) {
             $warningKey = $session->read($sessionKey);
             $this->Alert->warning($warningKey);
@@ -370,7 +370,7 @@ class InstitutionLandsTable extends ControllerActionTable
     {
         $session = $this->request->session();
 
-        $sessionKey = $this->registryAlias() . '.warning';
+        $sessionKey = $this->getRegistryAlias() . '.warning';
         if ($session->check($sessionKey)) {
             $warningKey = $session->read($sessionKey);
             $this->Alert->warning($warningKey);
@@ -383,7 +383,7 @@ class InstitutionLandsTable extends ControllerActionTable
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
         $session = $this->request->session();
-        $sessionKey = $this->registryAlias() . '.warning';
+        $sessionKey = $this->getRegistryAlias() . '.warning';
         if (!$isEditable) {
             $inUseId = $this->LandStatuses->getIdByCode('IN_USE');
             $endOfUsageId = $this->LandStatuses->getIdByCode('END_OF_USAGE');
@@ -427,7 +427,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
         if (!$isDeletable) {
             $session = $this->request->session();
-            $sessionKey = $this->registryAlias() . '.warning';
+            $sessionKey = $this->getRegistryAlias() . '.warning';
             if ($entity->land_status_id == $inUseId) {
                 $session->write($sessionKey, $this->alias().'.in_use.restrictDelete');
             } elseif ($entity->land_status_id == $endOfUsageId) {
@@ -558,7 +558,8 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action)
     {
         if ($action == 'add') {
             $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
@@ -594,7 +595,8 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldName(Event $event, array $attr, $action)
     {
         if ($action == 'edit') {
             $selectedEditType = $request->query('edit_type');
@@ -606,7 +608,8 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldLandTypeId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldLandTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldLandTypeId(Event $event, array $attr, $action)
     {
         if ($action == 'add') {
             $landTypeOptions = $this->LandTypes
@@ -638,7 +641,8 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStartDate(Event $event, array $attr, $action)
     {
         if ($action == 'add') {
             $startDate = $this->currentAcademicPeriod->start_date->format('d-m-Y');
@@ -669,7 +673,8 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action)
     {
         if ($action == 'view') {
             $attr['visible'] = false;
@@ -706,7 +711,8 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAccessibility(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAccessibility(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAccessibility(Event $event, array $attr, $action)
     {
         if ($action == 'edit' || $action == 'add') {
             $attr['options'] = $this->accessibilityOptions;
@@ -715,7 +721,8 @@ class InstitutionLandsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldInfrastructureConditionId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldInfrastructureConditionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInfrastructureConditionId(Event $event, array $attr, $action)
     {
         if ($action == 'edit') {
             $selectedEditType = $request->query('edit_type');
@@ -773,7 +780,8 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldArea(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldArea(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldArea(Event $event, array $attr, $action)
     {
         if ($action == 'edit') {
             $selectedEditType = $request->query('edit_type');
@@ -843,7 +851,8 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action)
     {
         if ($action == 'index' || $action == 'view') {
             if (!empty($this->getOwnerInstitutionId())) {
@@ -1007,8 +1016,8 @@ class InstitutionLandsTable extends ControllerActionTable
     public function getPeriodOptions($params = [])
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
-        if (is_null($this->request->query('period_id'))) {
-            $this->request->query['period_id'] = $this->AcademicPeriods->getCurrent();
+        if (is_null($this->request->getQuery('period_id'))) {
+            $this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();
         }
         $selectedPeriod = $this->queryString('period_id', $periodOptions);
         $this->advancedSelectOptions($periodOptions, $selectedPeriod);

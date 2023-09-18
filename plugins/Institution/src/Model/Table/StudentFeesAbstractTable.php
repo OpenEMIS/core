@@ -17,8 +17,8 @@ class StudentFeesAbstractTable extends AppTable {
 ** CakePHP default methods
 **
 ******************************************************************************************************************/
-	public function initialize(array $config) {
-		$this->table('student_fees');
+	public function initialize(array $config): void {
+		$this->setTable('student_fees');
 		parent::initialize($config);
 		
 		$this->belongsTo('InstitutionFees', ['className' => 'Institution.InstitutionFees']);
@@ -28,7 +28,7 @@ class StudentFeesAbstractTable extends AppTable {
 		$this->fields = $this->getFields();
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 
 		return $validator
@@ -57,11 +57,11 @@ class StudentFeesAbstractTable extends AppTable {
 
 	public function getFields() {
 		$ignoreFields = [];
-		$schema = $this->schema();
+		$schema = $this->getSchema();
 		$columns = $schema->columns();
 		$fields = [];
 		foreach ($columns as $col) {
-			$fields[$col] = $schema->column($col);
+			$fields[$col] = $schema->getColumn($col);
 		}
 		$visibility = ['view' => true, 'edit' => true, 'index' => true];
 
@@ -70,8 +70,8 @@ class StudentFeesAbstractTable extends AppTable {
 			$fields[$key]['order'] = $i++;
 			$fields[$key]['visible'] = $visibility;
 			$fields[$key]['field'] = $key;
-			$fields[$key]['model'] = $this->alias();
-			$fields[$key]['className'] = $this->registryAlias();
+			$fields[$key]['model'] = $this->getAlias();
+			$fields[$key]['className'] = $this->getRegistryAlias();
 
 			if ($key == 'password') {
 				$fields[$key]['visible'] = false;
@@ -83,7 +83,7 @@ class StudentFeesAbstractTable extends AppTable {
 			*/
 		}
 		
-		$fields[$this->primaryKey()]['type'] = 'hidden';
+		$fields[$this->getPrimaryKey()]['type'] = 'hidden';
 		foreach ($ignoreFields as $field) {
 			if (array_key_exists($field, $fields)) {
 				$fields[$field]['visible']['index'] = false;

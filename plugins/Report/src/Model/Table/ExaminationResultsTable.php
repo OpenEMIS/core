@@ -16,7 +16,7 @@ class ExaminationResultsTable extends AppTable
     private $totalMarks = 0;
     private $totalWeightedMark = 0;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->table('examination_centres_examinations_students');
         parent::initialize($config);

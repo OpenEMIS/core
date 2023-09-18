@@ -63,7 +63,7 @@ class InfrastructureShiftBehavior extends Behavior
     {
         $model = $this->_table;
 
-        $session = $model->request->session();
+        $session = $model->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
 
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -96,9 +96,9 @@ class InfrastructureShiftBehavior extends Behavior
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $model = $this->_table;
-        $session = $model->request->session();
+        $session = $model->request->getSession();
 
-        $sessionKey = $model->registryAlias() . '.warning';
+        $sessionKey = $model->getRegistryAlias() . '.warning';
         if ($session->check($sessionKey)) {
             $messageKey = $session->read($sessionKey);
             $model->Alert->warning($messageKey);

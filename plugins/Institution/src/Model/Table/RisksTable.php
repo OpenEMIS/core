@@ -15,7 +15,7 @@ use App\Model\Traits\HtmlTrait;
 
 class RisksTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -30,7 +30,7 @@ class RisksTable extends ControllerActionTable
         $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.generate'] = 'generate';
@@ -49,7 +49,7 @@ class RisksTable extends ControllerActionTable
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
 
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
@@ -171,7 +171,7 @@ class RisksTable extends ControllerActionTable
     public function onGetGeneratedBy(Event $event, Entity $entity)
     {
         $riskId = $entity->id;
-        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $institutionId = $this->request->getSession()->read('Institution.Institutions.id');
 
         $record = $this->getInstitutionIndexesRecords($riskId, $institutionId)->first();
 
@@ -189,7 +189,7 @@ class RisksTable extends ControllerActionTable
     public function onGetGeneratedOn(Event $event, Entity $entity)
     {
         $riskId = $entity->id;
-        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $institutionId = $this->request->getSession()->read('Institution.Institutions.id');
 
         $record = $this->getInstitutionIndexesRecords($riskId, $institutionId)->first();
 
@@ -205,7 +205,7 @@ class RisksTable extends ControllerActionTable
     {
         $Risks = TableRegistry::get('Risk.Risks');
         $riskId = $entity->id;
-        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $institutionId = $this->request->getSession()->read('Institution.Institutions.id');
 
         $record = $this->getInstitutionIndexesRecords($riskId, $institutionId)->first();
 
@@ -216,7 +216,7 @@ class RisksTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         $userId = $session->read('Auth.User.id');
         $riskId = $entity->id;

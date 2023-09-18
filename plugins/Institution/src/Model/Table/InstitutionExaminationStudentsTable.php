@@ -20,9 +20,9 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
     private $institutionId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('examination_centres_examinations_students');
+        $this->setTable('examination_centres_examinations_students');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsToMany('IdentityTypes', ['className' => 'IdentityTypes.IdentityTypes', 'foreignKey' => 'identity_type_id']);
@@ -52,7 +52,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             'cascadeCallBacks' => true
         ]);
 
-        $this->addBehavior('Examination.RegisteredStudents');
+        // $this->addBehavior('Examination.RegisteredStudents'); //POCOR-7485
         $this->addBehavior('Excel', [
             'excludes' => ['id', 'education_subject_id', 'examination_item_id'],
             'pages' => ['index'],
@@ -62,7 +62,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->addBehavior('CompositeKey');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -305,7 +305,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.onGetFieldLabel'] = 'onGetFieldLabel';
@@ -349,7 +349,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 
-        $examinationId = $this->request->query('examination_id');
+        $examinationId = $this->request->getQuery('examination_id');
 
         if (!$this->AccessControl->check(['Institutions', 'ExaminationStudents', 'excel'])) {
             if (isset($extra['toolbarButtons']['export'])) {
