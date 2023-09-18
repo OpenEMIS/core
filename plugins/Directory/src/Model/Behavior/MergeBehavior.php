@@ -10,7 +10,7 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
-
+use Cake\Datasource\ConnectionManager;
 class MergeBehavior extends Behavior
 {
     public function initialize(array $config)
@@ -34,7 +34,38 @@ class MergeBehavior extends Behavior
     public function merge(Event $event, ArrayObject $extra)
     {
 //        $this->Alert->error($this->aliasField('unableToTransfer'));
-        $model = $this->_table;
+//    use Cake\Datasource\ConnectionManager;
+
+// Get a database connection
+        $connection = ConnectionManager::get('default');
+
+        $query = $connection->newQuery();
+        $query->select(['COLUMN_NAME', 'TABLE_NAME'])
+            ->from('INFORMATION_SCHEMA.COLUMNS')
+            ->where([
+                'COLUMN_NAME IN' => [
+                    'security_user_id', 'student_id', 'user_id', 'core_user_id',
+                    'staff_id', 'secondary_staff_id', 'assignee_id', 'guardian_id'
+                ],
+                'COLUMN_NAME NOT IN' => ['modified_user_id', 'created_user_id'],
+                'TABLE_NAME NOT LIKE' => 'z%',
+                'TABLE_SCHEMA' => 'openemis_core'
+            ]);
+        $results = $query->execute();
+        $i = 0;
+        foreach ($results as $result){
+            $i++;
+            echo "<br \>\n$i<br \>\n";
+            print_r($result['COLUMN_NAME']);
+            echo "<br \>\n";
+            print_r($result['TABLE_NAME']);
+
+        }
+
+//        ConnectionManager::get('default')->schemaCollection()->listTables();
+//        $model = $this->_table;
+//        $model->log($results, 'debug');
+        die();
         $model->log('merge--', 'debug');
         $requestData = $model->request->data;
         $first_id = $requestData[$model->alias()]['first_id'];
