@@ -317,7 +317,8 @@ class EducationProgrammesTable extends ControllerActionTable {
                 $nextProgrammeOptions = [];
 
                 $currentProgrammSystem = $this->find()->contain(['EducationCycles.EducationLevels.EducationSystems'])->where([$this->aliasField('id') => $entity->id])->first();
-//                $systemId = $currentProgrammSystem->education_cycle->education_level->education_system->id;
+                $academic_period_id = $currentProgrammSystem->education_cycle->education_level->education_system->academic_period_id;
+//                $systemId = id;
                 $currentCycleOrder = $currentProgrammSystem->education_cycle->order;
                 $currentLevelOrder = $currentProgrammSystem->education_cycle->education_level->order;
                 $currentLevelId = $currentProgrammSystem->education_cycle->education_level->id;
@@ -348,16 +349,21 @@ class EducationProgrammesTable extends ControllerActionTable {
                         ])
                         ->matching('EducationLevels.EducationCycles.EducationProgrammes')
                         ->select(['cycle_programme_name' => $EducationSystems->find()->func()->concat([
+                                'EducationSystems.name' => 'literal',
+                                ' - ',
                                 'EducationCycles.name' => 'literal',
                                 ' - (',
                                 'EducationProgrammes.name' => 'literal',
                                 ')'
                             ]), 'programme_id' => 'EducationProgrammes.id'])
                         ->where([
-//                            $EducationSystems->aliasField('id') => $systemId,
+                            $EducationSystems->aliasField('academic_period_id') => $academic_period_id,
                             'EducationLevels.order >= ' => $currentLevelOrder,
                             'NOT EXISTS(' . $excludedProgrammes->where([$educationProgrammesTable->aliasField('id') . ' = ' . 'EducationProgrammes.id']) . ')'
                         ])
+                        ->orderAsc('EducationSystems.name')
+                        ->orderAsc('EducationProgrammes.name')
+                        ->orderAsc('EducationCycles.name')
                         ->toArray();
 
                 $tableHeaders = [__('Cycle - (Programme)'), '', ''];
