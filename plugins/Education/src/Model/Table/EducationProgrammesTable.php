@@ -361,9 +361,10 @@ class EducationProgrammesTable extends ControllerActionTable {
                             'EducationLevels.order >= ' => $currentLevelOrder,
                             'NOT EXISTS(' . $excludedProgrammes->where([$educationProgrammesTable->aliasField('id') . ' = ' . 'EducationProgrammes.id']) . ')'
                         ])
-                        ->orderAsc('EducationSystems.name')
-                        ->orderAsc('EducationProgrammes.name')
-                        ->orderAsc('EducationCycles.name')
+                        ->orderAsc('EducationSystems.order')
+                        ->orderAsc('EducationLevels.order')
+                        ->orderAsc('EducationCycles.order')
+                        ->orderAsc('EducationProgrammes.order')
                         ->toArray();
 
                 $tableHeaders = [__('Cycle - (Programme)'), '', ''];
