@@ -681,9 +681,11 @@ class AssessmentItemResultsTable extends AppTable
 
     /**
      * @param array $params
-     * @return array
+     * @param bool $archive
+     * @return float|null
      */
-    private static function getMarksForClass(array $params)
+
+    private static function getMarksForClass(array $params, $archive = false)
     {
         $academic_period_id = self::getFromArray($params, 'academic_period_id');
         $institution_id = self::getFromArray($params, 'institution_id');
@@ -735,7 +737,8 @@ class AssessmentItemResultsTable extends AppTable
             "id" => $id,
             'assessment_grading_option_id' => $assessment_grading_option_id,
             "assessment_period_id" => $assessment_period_id,
-            'assessment_id' => $assessment_id];
+            'assessment_id' => $assessment_id,
+            'archive' => $archive];
         $marks = self::getLastMark($options);
         return $marks;
     }
@@ -774,20 +777,22 @@ class AssessmentItemResultsTable extends AppTable
 
     /**
      * @param $options
-     * @return float|null
+     * @return |null
+     * @throws \Exception
      */
-    public static function getLastMark($options, $archive = false)
+    public static function getLastMark($options)
     {
 //        echo('$options');
 //        Log::write('debug', $options);
         $id = $options['id'];
         $student_id = self::getFromArray($options, 'student_id');
+        $archive = self::getFromArray($options, 'archive');
         $academic_period_id = self::getFromArray($options, 'academic_period_id');
         $education_grade_id = self::getFromArray($options, 'education_grade_id');
         if (!$education_grade_id) {
             $education_grade_id = self::getFromArray($options, 'grade_id');
         }
-        $education_subject_id = self::getFromArray($options, 'education_subject_id');
+        $education_subject_id = self::getFromArray($options,'education_subject_id');
         $assessment_id = self::getFromArray($options, 'assessment_id');
         $assessment_period_id = self::getFromArray($options, 'assessment_period_id');
         $assessment_grading_option_id = self::getFromArray($options, 'assessment_grading_option_id');
