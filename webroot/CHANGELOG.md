@@ -1,3 +1,8 @@
+### [3.94.4] - 2023-09-15
+- Bug Fixed: Administration>Data Management>Archive: Archive is stuck in progress
+- Bug Fixed: Institutions > Survey > Forms: The date field for repeater form alignment seems to be out
+- Bug Fixed: Institutions > Performance > Report Cards: The generated PDF report card format is not as per the desired format
+
 ### [3.94.3] - 2023-09-14
 - Bug Fixed: Institutions>Survey>Forms: Survey form that are uploaded in survey app are not reflected correctly in core interface
 
