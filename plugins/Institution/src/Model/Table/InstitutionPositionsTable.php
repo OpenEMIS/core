@@ -1058,7 +1058,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                     $row['status_name'] = $data->status_name;
                     $row['titles'] = $data->titles;
                     //$row['grades'] = $data->grades;
-                    $row['institution_name'] = $data->titles;
+                    $row['institution_name'] = $data->institution_name; //POCOR-7701
                     $row['assignees_name'] = $data->assignees_name;
                 }
                 return $row;

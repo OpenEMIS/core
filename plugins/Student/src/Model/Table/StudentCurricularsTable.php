@@ -229,10 +229,12 @@ class StudentCurricularsTable extends ControllerActionTable
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         // $this->field('student_id', ['visible' => false]);
+        $InstitutionID = $_SESSION['Institution']['Institutions']['id'];
         $InstitutionCurriculars = TableRegistry::get('institution_curriculars');
         $result = $InstitutionCurriculars
         ->find()
         ->select(['id','name'])
+        ->where(['institution_id' => $InstitutionID])
         ->all();
 
         $ic_arr = [];

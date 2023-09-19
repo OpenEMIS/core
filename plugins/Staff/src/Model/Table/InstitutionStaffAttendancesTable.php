@@ -42,7 +42,7 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
                             'rule' => function($value, $context) {
                                 return !(!empty($context['data']['time_out']) && empty($context['data']['time_in']));
                             },
-                            'message' => __('Record does not exist.')
+                            'message' => __('Please ensure that the "Time Out" entry is removed before the "Time In" entry.')
                         ])
                         ->add('time_out', 'ruleCompareTimeReverse', [
                             'rule' => ['compareDateReverse', 'time_in', false],

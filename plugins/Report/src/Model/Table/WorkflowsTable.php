@@ -153,7 +153,7 @@ class WorkflowsTable extends AppTable
         $validator = parent::validationDefault($validator);
         $validator
             ->notEmpty('institution_id');
-        if($this->request['data']['Workflows']['institution_id'] ==0){
+        if($this->request['data']['Workflows']['institution_id'] == 0){
             $validator
             ->notEmpty('report_start_date');
             $validator
@@ -195,7 +195,7 @@ class WorkflowsTable extends AppTable
                     $attr['type'] = 'chosenSelect';
                     $attr['attr']['multiple'] = false;
                     $attr['select'] = true;
-                    $attr['options'] = ['' => '-- ' . _('Select') . ' --', '-1' => _('All Areas Level')] + $areaOptions->toArray();
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas Level')] + $areaOptions->toArray();
                     $attr['onChangeReload'] = true;
                 } else {
                     $attr['type'] = 'hidden';
@@ -334,7 +334,17 @@ class WorkflowsTable extends AppTable
                 default:
                     break;
             }
-            if ($feature == 'Report.WorkflowRecords' || 'Report.WorkflowInstitutionPosition' || 'Report.WorkflowStaffPositionProfile' || 'Report.WorkflowVisitRequest' || 'Report.WorkflowInstitutionCase' || 'Report.WorkflowStaffTransferIn' || 'Report.WorkflowStaffTransferOut' || 'Report.WorkflowStudentWithdraw' || 'Report.WorkflowStudentAdmission' || 'Report.WorkflowStudentTransferIn' || 'Report.WorkflowStudentTransferOut') {
+            if ($feature == 'Report.WorkflowRecords'
+                || 'Report.WorkflowInstitutionPosition'
+                || 'Report.WorkflowStaffPositionProfile'
+                || 'Report.WorkflowVisitRequest'
+                || 'Report.WorkflowInstitutionCase'
+                || 'Report.WorkflowStaffTransferIn'
+                || 'Report.WorkflowStaffTransferOut'
+                || 'Report.WorkflowStudentWithdraw'
+                || 'Report.WorkflowStudentAdmission'
+                || 'Report.WorkflowStudentTransferIn'
+                || 'Report.WorkflowStudentTransferOut') {
                 $this->ControllerAction->field('area', [
                     'select' => false,
                     'attr' => ['label'=>'Area Name'], //POCOR-7415

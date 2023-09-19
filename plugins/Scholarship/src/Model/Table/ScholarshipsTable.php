@@ -843,10 +843,15 @@ class ScholarshipsTable extends ControllerActionTable
             'attr' => ['label' => __('Duration (Year)')],
             'after' => 'total_amount'
         ]);
+        $this->field('bonded_organisation', [
+           
+            'attr' => ['label' => __('Bonded Organisation')],
+            'after' => 'duration'
+        ]);
         $this->field('bond', [
             'type' => 'select',
             'attr' => ['label' => __('Bond (Year)')],
-            'after' => 'duration'
+            'after' => 'bonded_organisation'
         ]);
         $this->field('attachment_type_id', [
             'type' => 'custom_attachment_type',

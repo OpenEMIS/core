@@ -408,8 +408,8 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
         var success = function(response, deferred) {
             var classStudents = response;
-            console.log("RepeaterEducationGrade");
-            console.log(response);
+            // console.log("RepeaterEducationGrade");
+            // console.log(response);
             $window.localStorage.setItem('repeater_validation', response.data);
             if (angular.isObject(classStudents)) {
                 deferred.resolve(classStudents);
@@ -433,8 +433,8 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
         var success = function(response, deferred) {
             var classStudents = response;
-            console.log("RepeaterEducationGrade");
-            console.log(response);
+            // console.log("RepeaterEducationGrade");
+            // console.log(response);
             $window.localStorage.setItem('repeater_validation', response.data);
             if (angular.isObject(classStudents)) {
                 deferred.resolve(classStudents);
@@ -459,8 +459,8 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         .then(function(response) {
             deferred.resolve(response.data.data.id);
         }, function(error) {
+            console.error(error);
             deferred.reject(error);
-            console.log(error);
         });
         return deferred.promise;
     }
@@ -497,8 +497,8 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
             .then(function(studentRecord) {
                 deferred.resolve([studentRecord.data, {}]);
             }, function(error) {
+                console.error(error);
                 deferred.reject(error);
-                console.log(error);
             });
         } else {
             var newUserRecord = {};
@@ -616,8 +616,8 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
                             .then(function(response) {
                                 deferred.resolve([response.data, userData]);
                             }, function(error) {
+                                console.error(error);
                                 deferred.reject(error);
-                                console.log(error);
                             });
                         },100);
                         //POCOR-6460[END]
@@ -653,6 +653,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
                                         vm.addUserIdentityNew(userId, identityTypeId, identityNumber, nationalityId)
                                             .then(function(promiseArr) {
                                                 }, function(error) {
+                                                console.error(error);
                                             });
                                     }
                                     // Import nationality
@@ -663,18 +664,18 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
                                     deferred.resolve([studentRecord.data, {}]);
                                 }
                             }, function(error) {
+                                console.error(error);
                                 deferred.reject(error);
-                                console.log(error);
                             });
                         }, function(error) {
+                            console.error(error);
                             deferred.reject(error);
-                            console.log(error);
                         });
 
                     }
                 }, function(error) {
+                    console.error(error);
                     deferred.reject(error);
-                    console.log(error);
                 });
             }, function(error) {
                 deferred.reject(error);

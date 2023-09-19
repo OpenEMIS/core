@@ -497,12 +497,18 @@ class WorkflowsTable extends AppTable {
             $paramsPass = $this->ControllerAction->paramsPass();
             if (!empty($paramsPass)) {
                 $workflowId = $this->paramsDecode(current($paramsPass))['id'];
-                $filterOptions = $LicenseTypes->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                            ->leftJoin([$this->WorkflowsFilters->alias() => $this->WorkflowsFilters->table()], [
-                                $this->WorkflowsFilters->aliasField('filter_id = ') . $LicenseTypes->aliasField('id'),
-                            ])
-                            ->where([$this->WorkflowsFilters->aliasField('workflow_id = ') => $workflowId])
-                            ->toArray();
+                //POCOR-7686:: Create if condition for Institution.StaffLeave
+                if($attr['attr']['workflowModel']['model'] == "Institution.StaffLeave"){
+                    $filterOptions = TableRegistry::get($filter)->getList()->toArray();
+                }else{
+                    $filterOptions = $LicenseTypes->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                                ->leftJoin([$this->WorkflowsFilters->alias() => $this->WorkflowsFilters->table()], [
+                                    $this->WorkflowsFilters->aliasField('filter_id = ') . $LicenseTypes->aliasField('id'),
+                                ])
+                                ->where([$this->WorkflowsFilters->aliasField('workflow_id = ') => $workflowId])
+                                ->toArray();
+                }
+                //END
             } else {
                 $filterOptions = TableRegistry::get($filter)->getList()->toArray();
             }

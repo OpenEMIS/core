@@ -157,7 +157,7 @@ class RubricsReportBehavior extends Behavior {
 						'key' => 'Rubric.RubricCriterias',
 						'field' => $type,
 						'type' => 'rubrics',
-						'label' => _('Header').' '.$sectionCounter.'.'.$sectionHeaderCounter,
+						'label' => __('Header').' '.$sectionCounter.'.'.$sectionHeaderCounter,
 						'id' => $criteria['id'],
 						'name' => $criteria['name']
 					];

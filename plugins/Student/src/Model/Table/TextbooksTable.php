@@ -20,7 +20,7 @@ class TextbooksTable extends ControllerActionTable {
         $this->belongsTo('AcademicPeriods',     ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationSubjects',   ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades',     ['className' => 'Education.EducationGrades']);
-        $this->belongsTo('Users',               ['className' => 'User.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Users',               ['className' => 'User.Users', 'foreignKey' => 'security_user_id']); //POCOR-7603
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
@@ -143,7 +143,7 @@ class TextbooksTable extends ControllerActionTable {
         }
         // end POCOR-1893
 
-        $query->where([$this->aliasField('student_id') => $studentId]);
+        $query->where([$this->aliasField('security_user_id') => $studentId]); //POCOR-7603
 
         $searchKey = $this->getSearchKey();
         if (strlen($searchKey)) {

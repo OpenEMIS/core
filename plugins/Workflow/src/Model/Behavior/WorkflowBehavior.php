@@ -371,7 +371,7 @@ class WorkflowBehavior extends Behavior
         if (empty($entity->assignee_id)) {
             $value = '<span>&lt;'.$model->getMessage('general.unassigned').'&gt;</span>';
         }elseif($entity->assignee_id == -1){ //POCOR-7025
-            $value = _('Auto Assign');
+            $value = __('Auto Assign');
         }
 
         return $value;
@@ -1184,7 +1184,6 @@ class WorkflowBehavior extends Behavior
                     $assigneeOptions = $this->getFirstStepAssigneeOptions($entity, $isSchoolBased, $firstStepId, $request);
                 }
             }
-
             if (!$assignToSelf) {
                 if (isset($assigneeOptions) && !empty($assigneeOptions)) {
                     $assigneeOptions = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
@@ -1200,6 +1199,7 @@ class WorkflowBehavior extends Behavior
                 $attr['type'] = 'readonly';
                 $attr['value'] = $userEntity->id;
                 $attr['attr']['value'] = $userEntity->name_with_id;
+              
             } 
             else if($request->data['StaffPositionProfiles']['staff_change_type_id'] == 1 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 2 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 3 || $request->data['StaffPositionProfiles']['staff_change_type_id'] == 4){
                 $attr['type'] = 'chosenSelect';
