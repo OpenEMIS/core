@@ -88,6 +88,7 @@ class AlertsTable extends ControllerActionTable
             [
                 $systemProcess->aliasField('name = ') . $this->aliasField('name'),
             ])
+        ->distinct(  $this->aliasField('id'))
         ->order($this->aliasField('name'));
          //POCOR-7558 start
     }

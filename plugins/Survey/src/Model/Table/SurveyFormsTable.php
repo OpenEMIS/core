@@ -500,7 +500,7 @@ class SurveyFormsTable extends CustomFormsTable
 
         if (!is_null($user)) {
             $todayDate = date('Y-m-d');
-            $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
+            $todayTimestamp = date('Y-m-d', strtotime($todayDate));
 
             $SurveyStatuses = TableRegistry::get('Survey.SurveyStatuses');
             $query
@@ -508,9 +508,9 @@ class SurveyFormsTable extends CustomFormsTable
                     [$SurveyStatuses->alias() => $SurveyStatuses->table()],
                     [
                         $SurveyStatuses->aliasField('survey_form_id = ') . $this->aliasField('id'),
-                        $SurveyStatuses->aliasField('date_disabled >=') => $todayTimestamp
                     ]
                 )
+                ->where([$SurveyStatuses->aliasField('date_disabled >=') => $todayTimestamp])//POCOR-7681
                 ->group($this->aliasField('id'));
 
             $CustomModules = TableRegistry::get('CustomField.CustomModules');

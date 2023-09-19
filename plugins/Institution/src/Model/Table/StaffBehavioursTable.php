@@ -3,6 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 
+use Cake\Datasource\ResultSetInterface;
 use Cake\I18n\Date;
 use Cake\Event\Event;
 use Cake\ORM\Query;
@@ -48,6 +49,10 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Institution.Case');
         $this->addBehavior('Workflow.Workflow');//POCOR-6670
+        $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Dashboard' => ['index'],
+        ]);
         // POCOR-4047 to get staff profile data
         $this->addBehavior('Institution.StaffProfile');
 
@@ -726,7 +731,81 @@ class StaffBehavioursTable extends ControllerActionTable
 
         return compact('isEditable', 'isDeletable');
     }
-    
+
+    /**
+     * @param Query $query
+     * @param array $options
+     * @return Query
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function findWorkbench(Query $query, array $options)
+    {
+        $controller = $options['_controller'];
+        $session = $controller->request->session();
+
+        $userId = $session->read('Auth.User.id');
+        $Statuses = $this->Statuses;
+        $doneStatus = self::DONE;
+
+        $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('modified'),
+                $this->aliasField('created'),
+                $this->Statuses->aliasField('name'),
+                $this->Staff->aliasField('openemis_no'),
+                $this->Staff->aliasField('first_name'),
+                $this->Staff->aliasField('middle_name'),
+                $this->Staff->aliasField('third_name'),
+                $this->Staff->aliasField('last_name'),
+                $this->Staff->aliasField('preferred_name'),
+                $this->Institutions->aliasField('code'),
+                $this->Institutions->aliasField('name'),
+                $this->CreatedUser->aliasField('openemis_no'),
+                $this->CreatedUser->aliasField('first_name'),
+                $this->CreatedUser->aliasField('middle_name'),
+                $this->CreatedUser->aliasField('third_name'),
+                $this->CreatedUser->aliasField('last_name'),
+                $this->CreatedUser->aliasField('preferred_name')
+            ])
+            ->contain([$this->Staff->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
+            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+                return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
+            })
+            ->where([$this->aliasField('assignee_id') => $userId,
+                'Assignees.super_admin IS NOT'=> 1 ]) //POCOR-7102
+            ->order([$this->aliasField('created') => 'DESC'])
+            ->formatResults(function (ResultSetInterface $results) {
+                return $results->map(function ($row) {
+                    $url = [
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'StaffBehaviours',
+                        'view',
+                        $this->paramsEncode(['id' => $row->id]),
+                        'institution_id' => $row->institution_id
+                    ];
+
+                    if (is_null($row->modified)) {
+                        $receivedDate = $this->formatDate($row->created);
+                    } else {
+                        $receivedDate = $this->formatDate($row->modified);
+                    }
+                    $row['url'] = $url;
+                    $row['status'] = __($row->_matchingData['Statuses']->name);
+                    $row['request_title'] = sprintf(__('Behavour request of %s'), $row->staff->name_with_id);
+                    $row['institution'] = $row->institution->code_name;
+                    $row['received_date'] = $receivedDate;
+                    $row['requester'] = $row->created_user->name_with_id;
+
+                    return $row;
+                });
+            });
+
+        return $query;
+    }
+
 
     /*public function deleteBeforeAction(Event $event, ArrayObject $extra)
     {   

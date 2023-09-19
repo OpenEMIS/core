@@ -127,6 +127,7 @@ class InstitutionReportCardsTable extends AppTable
                 'LastYearStudentRepeatedByArea',//POCOR-7421
                 'TeachingStaffTotalAbsences',//POCOR-7449
                 'AreaTeachingStaffTotalAbsenceDays',//POCOR-7449
+                'PublicHolidays',//POCOR-7694
             ]
         ]);
     }
@@ -234,6 +235,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseLastYearStudentRepeatedByArea'] = 'onExcelTemplateInitialiseLastYearStudentRepeatedByArea';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseTeachingStaffTotalAbsences'] = 'onExcelTemplateInitialiseTeachingStaffTotalAbsences';//POCOR-7421
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAreaTeachingStaffTotalAbsenceDays'] = 'onExcelTemplateInitialiseAreaTeachingStaffTotalAbsenceDays';//POCOR-7421
+        $events['ExcelTemplates.Model.onExcelTemplateInitialisePublicHolidays'] = 'onExcelTemplateInitialisePublicHolidays';//POCOR-7694
 
         return $events;
     }
@@ -1994,16 +1996,31 @@ class InstitutionReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutionClassRooms(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
-            $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
-            $entity = $InstitutionRooms
-                ->find()
-                ->contain('RoomTypes')
-                ->where([$InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id']])
-                ->where([$InstitutionRooms->aliasField('institution_id') => $params['institution_id']])
-                ->where('RoomTypes.classification = 1')
-                ->count()
-            ;
-
+            $connection = ConnectionManager::get('default');//POCOR-7642 starts
+            $RoomTypesData = $connection->execute("SELECT MAX(subq.nb_classrooms) nb_classrooms
+                                                    FROM 
+                                                    (
+                                                        SELECT land_area.room_type_name, land_area.nb_classrooms
+                                                        FROM institution_shifts
+                                                        LEFT JOIN
+                                                        (
+                                                            SELECT institution_rooms.institution_id, room_types.name room_type_name, COUNT(DISTINCT(institution_rooms.id)) nb_classrooms
+                                                            FROM institution_rooms
+                                                            INNER JOIN room_types
+                                                            ON room_types.id = institution_rooms.room_type_id
+                                                            WHERE institution_rooms.academic_period_id = ". $params['academic_period_id'] ." 
+                                                            AND institution_rooms.room_status_id = 1
+                                                            AND room_types.classification = 1
+                                                            GROUP BY institution_rooms.institution_id
+                                                        ) land_area
+                                                        ON land_area.institution_id = institution_shifts.institution_id
+                                                        WHERE institution_shifts.academic_period_id = ". $params['academic_period_id'] ."
+                                                        AND institution_shifts.location_institution_id = ". $params['institution_id'] ."
+                                                        GROUP BY institution_shifts.institution_id
+                                                            ,institution_shifts.location_institution_id
+                                                    ) subq")->fetchAll(\PDO::FETCH_ASSOC);//POCOR-7642 ends
+            
+            $entity = ($RoomTypesData) ? $RoomTypesData[0]['nb_classrooms'] : 0;
             return $entity;
         }
     }
@@ -6576,4 +6593,27 @@ class InstitutionReportCardsTable extends AppTable
             return $data;
         }
     }//POCOR-7449 Ends
+    //POCOR-7694 Starts
+    public function onExcelTemplateInitialisePublicHolidays(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $connection = ConnectionManager::get('default');
+            $PublicHolidaysData = $connection->execute("SELECT COUNT(DISTINCT(calendar_event_dates.date)) holidays
+                                            FROM calendar_event_dates
+                                            INNER JOIN calendar_events
+                                            ON calendar_events.id = calendar_event_dates.calendar_event_id
+                                            CROSS JOIN 
+                                            (
+                                                SELECT MAX(CASE WHEN config_items.code = 'first_day_of_week' THEN IF(LENGTH(config_items.value) = 0, config_items.default_value, config_items.value) END) first_day_of_week
+                                                    ,MAX(CASE WHEN config_items.code = 'days_per_week' THEN IF(LENGTH(config_items.value) = 0, config_items.default_value, config_items.value) END) days_per_week
+                                                FROM config_items
+                                            ) working_days
+                                            WHERE calendar_events.academic_period_id = ". $params['academic_period_id'] ."
+                                            AND calendar_events.institution_id = -1
+                                            AND DAYOFWEEK(calendar_event_dates.date) BETWEEN working_days.first_day_of_week + 1 AND working_days.first_day_of_week + days_per_week")->fetch('assoc');
+            
+            $count = !empty($PublicHolidaysData['holidays']) ? $PublicHolidaysData['holidays'] : " 0";
+            return $count;
+        }
+    }//POCOR-7694 Ends
 }

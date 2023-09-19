@@ -370,8 +370,8 @@ class StudentAdmissionTable extends ControllerActionTable
         $Withdraw = $statusList['WITHDRAWN'];
         $institution_id = $student->institution_id;
         $student_id = $student->student_id;
-        $this->log('studentsAfterSave', 'debug');
-        $this->log($student, 'debug');
+//        $this->log('studentsAfterSave', 'debug');
+//        $this->log($student, 'debug');
         //POCOR-6500 starts
         //get student role
         $securityRolesTbl = TableRegistry::get('security_roles');

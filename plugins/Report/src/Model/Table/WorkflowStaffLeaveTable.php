@@ -25,4 +25,15 @@ class WorkflowStaffLeaveTable extends AppTable
             'autoFields' => false
         ]);
     }
+
+    //POCOR-7619
+    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
+    {
+        $openemisNo = '';
+        if(!empty($entity['user'])){
+            $openemisNo = $entity['user']['openemis_no'];
+        }
+        
+        return $openemisNo;
+    }
 }

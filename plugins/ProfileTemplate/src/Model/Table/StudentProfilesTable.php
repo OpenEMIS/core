@@ -390,6 +390,7 @@ class StudentProfilesTable extends ControllerActionTable
                                 ->where([
 									$Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
 								])
+                                ->order([$Institutions->aliasField('name') =>'ASC']) //POCOR-7641
 								->toArray();
         }
         else{
@@ -398,6 +399,7 @@ class StudentProfilesTable extends ControllerActionTable
 									$Institutions->aliasField('area_id') => $selectedArea,
                                     $Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
 								])
+                                ->order([$Institutions->aliasField('name') =>'ASC']) //POCOR-7641
 								->toArray();
         }
         if(!empty($institutionOptions)){

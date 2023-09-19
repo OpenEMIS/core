@@ -17,8 +17,8 @@ class ExaminationsTable extends ControllerActionTable {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-        $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationSubjects', ['className' => 'Examination.ExaminationSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationStudentSubjectResults', ['className' => 'Examination.ExaminationStudentSubjectResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('ExaminationCentres', [
             'className' => 'Examination.ExaminationCentres',
             'joinTable' => 'examination_centres_examinations',
@@ -62,12 +62,12 @@ class ExaminationsTable extends ControllerActionTable {
             ->add('registration_end_date', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             ])
-            ->requirePresence('examination_items');
+            ->requirePresence('examination_subjects');
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['ExaminationItems.EducationSubjects', 'ExaminationItems.ExaminationGradingTypes']);
+        $query->contain(['ExaminationSubjects.EducationSubjects', 'ExaminationSubjects.ExaminationGradingTypes']);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
@@ -139,18 +139,18 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        if (!isset($data[$this->alias()]['examination_items']) || empty($data[$this->alias()]['examination_items'])) {
-            $this->Alert->warning($this->aliasField('noExaminationItems'));
+        if (!isset($data[$this->alias()]['examination_subjects']) || empty($data[$this->alias()]['examination_subjects'])) {
+            $this->Alert->warning($this->aliasField('noExaminationSubjects'));
         }
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         // used to do validation for examination item date
-        if (array_key_exists('examination_items', $data)) {
+        if (array_key_exists('examination_subjects', $data)) {
             $registrationEndDate = $data['registration_end_date'];
-            foreach ($data['examination_items'] as $key => $value) {
-                $data['examination_items'][$key]['registration_end_date'] = $registrationEndDate;
+            foreach ($data['examination_subjects'] as $key => $value) {
+                $data['examination_subjects'][$key]['registration_end_date'] = $registrationEndDate;
             }
         }
     }
@@ -165,21 +165,21 @@ class ExaminationsTable extends ControllerActionTable {
         $this->field('education_grade_id', ['type' => 'select', 'entity' => $entity, 'empty' => true]);
         $this->field('registration_start_date');
         $this->field('registration_end_date');
-        $this->field('examination_items', [
+        $this->field('examination_subjects', [
             'type' => 'element',
-            'element' => 'Examination.examination_items'
+            'element' => 'Examination.examination_subjects'
         ]);
     }
 
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['ExaminationItems.StudentResults']);
+        $query->contain(['ExaminationSubjects.StudentResults']);
     }
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        if (!isset($data[$this->alias()]['examination_items']) || empty($data[$this->alias()]['examination_items'])) {
-            $this->Alert->warning($this->aliasField('noExaminationItems'));
+        if (!isset($data[$this->alias()]['examination_subjects']) || empty($data[$this->alias()]['examination_subjects'])) {
+            $this->Alert->warning($this->aliasField('noExaminationSubjects'));
         }
     }
 
@@ -188,7 +188,7 @@ class ExaminationsTable extends ControllerActionTable {
         $errors = $entity->errors();
         if (empty($errors)) {
             // manually delete hasMany Examination items
-            $fieldKey = 'examination_items';
+            $fieldKey = 'examination_subjects';
             if (!array_key_exists($fieldKey, $data[$this->alias()])) {
                 $data[$this->alias()][$fieldKey] = [];
             }
@@ -199,8 +199,8 @@ class ExaminationsTable extends ControllerActionTable {
                 if (!in_array($item['id'], $savedExamItems)) {
                     // check that there are no results for this examination item
                     if (!$item->has('student_results') || empty($item->student_results)) {
-                        $this->ExaminationItems->delete($item);
-                        unset($entity->examination_items[$key]);
+                        $this->ExaminationSubjects->delete($item);
+                        unset($entity->examination_subjects[$key]);
                     }
                 }
             }
@@ -265,7 +265,7 @@ class ExaminationsTable extends ControllerActionTable {
     {
         $request = $this->request;
         unset($request->query['programme']);
-        unset($data[$this->alias()]['examination_items']);
+        unset($data[$this->alias()]['examination_subjects']);
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
@@ -312,7 +312,7 @@ class ExaminationsTable extends ControllerActionTable {
     {
         $request = $this->request;
         unset($request->query['grade']);
-        unset($data[$this->alias()]['examination_items']);
+        unset($data[$this->alias()]['examination_subjects']);
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
@@ -326,7 +326,7 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function addOnAddExaminationItem(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $fieldKey = 'examination_items';
+        $fieldKey = 'examination_subjects';
 
         if (empty($data[$this->alias()][$fieldKey])) {
             $data[$this->alias()][$fieldKey] = [];
@@ -342,7 +342,7 @@ class ExaminationsTable extends ControllerActionTable {
         }
 
         $options['associated'] = [
-            'ExaminationItems' => ['validate' => false]
+            'ExaminationSubjects' => ['validate' => false]
         ];
     }
 
@@ -379,7 +379,7 @@ class ExaminationsTable extends ControllerActionTable {
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->ExaminationItems->alias(), $this->ExaminationCentreRooms->alias()
+            $this->ExaminationSubjects->alias(), $this->ExaminationCentreRooms->alias()
         ];
     }
 }

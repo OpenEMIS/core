@@ -24,6 +24,27 @@ Route::post('login', 'Authentication\LoginController@login');
 Route::group(
     ["middleware" => "auth.jwt"],
     function () {
+        // POCOR-7547 starts
+        Route::get('attendance-mark-types/education-grades', 'StudentController@getEducationGrades');
+        Route::get('institutions/{institutionId}/classes/subjects', 'StudentController@getClassesSubjects');
+        Route::post('institutions/classes/attendances', 'StudentController@addClassAttendances');
+        Route::post('institutions/students/absences', 'StudentController@addStudentAbsences');
+        Route::post('institutions/staff/attendances', 'StudentController@addStaffAttendances');
+        Route::post('institutions/staff', 'StudentController@updateStaffDetails');
+        // POCOR-7547 ends
+
+
+        //POCOR-7651 starts
+        Route::get('institutions/{institutionId}/students/absences', 'StudentController@getInstitutionStudentAbsences');
+        Route::get('institutions/{institutionId}/students/{studentId}/absences', 'StudentController@getInstitutionStudentAbsencesData');
+        Route::get('institutions/students', 'StudentController@getStudents');
+        Route::get('institutions/{institutionId}/students', 'StudentController@getInstitutionStudents');
+        Route::get('institutions/{institutionId}/students/{studentId}', 'StudentController@getInstitutionStudentData');
+        Route::get('institutions/students/absences', 'StudentController@getStudentAbsences');
+        
+        //POCOR-7651 ends
+
+
         Route::get('institutions', 'InstitutionController@getInstitutionsList')->middleware('auth.jwt');
 
         Route::get('institutions/list', 'RegistrationController@institutionDropdown');
@@ -177,6 +198,10 @@ Route::group(
 
         Route::get('area-administrative/display-birthplace-area-level', 'InstitutionController@displayBirthplaceAreaLevel');
 
+
+        Route::post('institutions/save-student', 'UserController@saveStudentData');
+        Route::post('institutions/save-staff', 'UserController@saveStaffData');
+        Route::post('institutions/save-guardian', 'UserController@saveGuardianData');
         // POCOR-7394-S starts
 
         Route::get('absence-reasons', 'InstitutionController@getAbsenceReasons');
@@ -196,6 +221,26 @@ Route::group(
 
         // POCOR-7394-S ends
 
+        // POCOR-7546 starts
+        Route::get('assessments/education-grades', 'AssessmentController@getEducationGradeList');
+        Route::get('assessments/items', 'AssessmentController@getAssessmentItemList');
+        Route::get('assessments/periods', 'AssessmentController@getAssessmentPeriodList');
+        Route::get('assessments/items/grading-types', 'AssessmentController@getAssessmentItemGradingTypeList');
+        Route::get('assessments/grading-options', 'AssessmentController@getAssessmentGradingOptionList');
+
+        Route::get('behaviours/categories', 'InstitutionController@getBehaviourCategories');
+        Route::get('institutions/{institutionId}/students/{studentId}/behaviours', 'InstitutionController@getInstitutionStudentBehaviour');
+
+
+        Route::get('institutions/{institutionId}/institution-classes/{institutionClassId}/education-grades/{educationGradeId}/students', 'InstitutionController@getInstitutionClassEducationGradeStudents');
+        Route::get('institutions/{institutionId}/education-grades/{educationGradeId}/institution-subjects/students', 'InstitutionController@getInstitutionEducationSubjectStudents');
+        
+        Route::post('institutions/students/assessment-item-results', 'InstitutionController@addStudentAssessmentItemResult');
+        Route::post('institutions/students/behaviours', 'InstitutionController@addStudentBehaviour');
+
+        Route::delete('institutions/{institutionId}/students/{studentId}/behaviours/{behaviourId}', 'InstitutionController@deleteStudentBehaviour');
+
+        // POCOR-7546 starts
         // POCOR-7368 starts
         Route::get('textbooks-statuses', 'TextbookController@getTextbookStatuses');
         Route::get('textbooks-dimensions', 'TextbookController@getTextbookDimensions');

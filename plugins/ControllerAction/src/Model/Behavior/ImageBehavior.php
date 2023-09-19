@@ -34,7 +34,7 @@ class ImageBehavior extends Behavior
 
         $phpResourceFile= null;
 
-        if ($model->table() == 'security_users') {
+        if ($model->getTable() == 'security_users') {
             $photoData = $model->get($idKeys);
             if ($photoData->has('photo_content')) {
                 $phpResourceFile = $photoData->photo_content;
