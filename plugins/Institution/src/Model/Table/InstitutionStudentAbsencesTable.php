@@ -613,7 +613,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
     public function onCaseIndexBeforeQuery(Event $event, $requestQuery, Query $query)
     {
         // if (array_key_exists('institution_class_id', $requestQuery) && $requestQuery['institution_class_id'] != -1) {
-        if (!empty($requestQuery)) {
+            if (!empty($requestQuery)) {
             $institutionClassId = $requestQuery['institution_class_id'];
             $educationGradeId = $requestQuery['education_grade_id'];
             
