@@ -25,7 +25,8 @@ class InstitutionCasesTable extends AppTable
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->hasMany('InstitutionCaseRecords', ['className' => 'Institution.InstitutionCaseRecords', 'foreignKey' => 'institution_case_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-
+        $this->belongsTo('CaseTypes', ['className' => 'Cases.CaseTypes', 'foreignKey' => 'case_type_id']); //POCOR-7786
+        $this->belongsTo('CasePriority', ['className' => 'Cases.CasePriorities', 'foreignKey' => 'case_priority_id']); //POCOR-7786
         $this->addBehavior('Excel', [
             'autoFields' => false
         ]);
@@ -48,13 +49,15 @@ class InstitutionCasesTable extends AppTable
 
         $requestData = json_decode($settings['process']['params']);
 
-        $module = $requestData->module;
+        //POCOR-7786 start
+        // $module = $requestData->module;
 
-        $this->InstitutionCaseRecords->belongsTo($module, [
-            'className' => $this->features[$module],
-            'foreignKey' => 'record_id',
-            'conditions' => ['feature' => $module]
-        ]);
+        // $this->InstitutionCaseRecords->belongsTo($module, [
+        //     'className' => $this->features[$module],
+        //     'foreignKey' => 'record_id',
+        //     'conditions' => ['feature' => $module]
+        // ]);
+        //POCOR-7786 end
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
@@ -70,34 +73,44 @@ class InstitutionCasesTable extends AppTable
         if ($areaId != -1) {
             $where['Institutions.area_id'] = $areaId;
         }
-        $module = $requestData->module;
-        $listener = TableRegistry::get($this->features[$module]);
+        //POCOR-7786 start
+        // $module = $requestData->module;
+        // $listener = TableRegistry::get(]);
         $query
             ->select([
-                'area_code' => 'Areas.code',
-                'area_name' => 'Areas.name',
-                'area_administrative_code' => 'AreaAdministratives.code',
-                'area_administrative_name' => 'AreaAdministratives.name',
+                'case_id'=>'InstitutionCases.id',
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
-                'status_from' => 'WorkflowTransitions.prev_workflow_step_name',
+                'case_number'=> 'InstitutionCases.case_number',
+                'case_title'=> 'InstitutionCases.title',
+                'description' => 'InstitutionCases.description',
+                'type' => 'CaseTypes.name',
+                'priority' => 'CasePriority.name',
                 'status_to' => 'WorkflowTransitions.workflow_step_name',
-                'action' => 'WorkflowTransitions.workflow_action_name',
-                'comment' => 'WorkflowTransitions.comment',
+                'assignee_first_name' => 'Assignees.first_name',
+                'assignee_last_name' => 'Assignees.last_name',
+                'assignee_openemis' => 'Assignees.openemis_no',
                 'executed_by' => 'WorkflowTransitions.created_user_id',
                 'executed_date' => 'WorkflowTransitions.created',
+                'created' => 'InstitutionCases.created',
+                'modified' => 'InstitutionCases.modified',
                 'CreatedUser.first_name',
                 'CreatedUser.middle_name',
                 'CreatedUser.third_name',
                 'CreatedUser.last_name',
-                'CreatedUser.preferred_name'
+                'CreatedUser.preferred_name',
+                'CreatedUser.openemis_no',
             ])
             ->matching('Statuses.Workflows.WorkflowModels.WorkflowTransitions.CreatedUser', function ($q) {
                     return $q->where(['WorkflowTransitions.model_reference = ' . $this->aliasField('id')]);
             })
             ->contain([
                 'Institutions.Areas',
-                'Institutions.AreaAdministratives'
+                'Institutions.AreaAdministratives',
+                'CaseTypes',
+                'CasePriority',
+                'Assignees',
+                
             ])
             ->where([$where])
             ->order([$this->aliasField('case_number')])
@@ -105,13 +118,26 @@ class InstitutionCasesTable extends AppTable
                 $arrayRes = $results->toArray();
                 foreach ($arrayRes as $arr) {
                     Log::write('debug', $arr);
-                    $arr->executed_by = $arr['_matchingData']['CreatedUser']['name'];
+                    $arr->executed_by = $arr['_matchingData']['CreatedUser']['openemis_no']." - ".$arr['_matchingData']['CreatedUser']['name'];
+                    $arr->assignee=$arr['assignee_openemis']." - ".$arr['assignee_first_name']." ".$arr["assignee_last_name"];
+                    
+                    $linkedRecords = TableRegistry::get('institution_case_links'); //POCOR-7786
+                    $institutionCases = TableRegistry::get('institution_cases');
+                    $childCases=$linkedRecords->find()
+                                               ->where([$linkedRecords->aliasField('parent_case_id')=>$arr->case_id])
+                                               ->toArray();
+                    $childCaseNumbers=[];
+                    if(!empty($childCases)){
+                        foreach($childCases as $case){
+                            $childCaseNumbers[]= $institutionCases->get($case->id)->case_number;
+                        }
+                    }
+                    $arr->linked_records = implode(', ', $childCaseNumbers);
                 }
                 return $arrayRes;
             });
-
-        $event = $listener->dispatchEvent('InstitutionCase.onBuildCustomQuery', [$query], $listener);
-        
+        // $event = $listener->dispatchEvent('InstitutionCase.onBuildCustomQuery', [$query], $listener);
+        //POCOR-7786 end
         if ($event->isStopped()) {
             return $event->result;
         }
@@ -136,37 +162,11 @@ class InstitutionCasesTable extends AppTable
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $requestData = json_decode($settings['process']['params']);
-        $module = $requestData->module;
+        //POCOR-7786 start
+        // $module = $requestData->module;  //POCOR-7786
         $newFields = [];
 
-        $newFields[] = [
-            'key' => 'Areas.code',
-            'field' => 'area_code',
-            'type' => 'string',
-            'label' => __('Area Code')
-        ];
-
-        $newFields[] = [
-            'key' => 'Areas.name',
-            'field' => 'area_name',
-            'type' => 'string',
-            'label' => __('Area')
-        ];
-
-        $newFields[] = [
-            'key' => 'AreaAdministratives.code',
-            'field' => 'area_administrative_code',
-            'type' => 'string',
-            'label' => __('Area Administrative Code')
-        ];
-
-        $newFields[] = [
-            'key' => 'AreaAdministratives.name',
-            'field' => 'area_administrative_name',
-            'type' => 'string',
-            'label' => __('Area Administrative')
-        ];
-
+      
         $newFields[] = [
             'key' => 'Institutions.institution_code',
             'field' => 'institution_code',
@@ -190,16 +190,27 @@ class InstitutionCasesTable extends AppTable
 
         $newFields[] = [
             'key' => 'InstitutionCases.title',
-            'field' => 'title',
-            'type' => 'integer',
+            'field' => 'case_title',
+            'type' => 'string',
             'label' => __('Case Title')
         ];
-
         $newFields[] = [
-            'key' => 'WorkflowTransitions.prev_workflow_step_name',
-            'field' => 'status_from',
+            'key' => 'InstitutionCases.description',
+            'field' => 'description',
             'type' => 'string',
-            'label' => __('Previous Status')
+            'label' => __('Description')
+        ];
+        $newFields[] = [
+            'key' => 'CaseTypes.name',
+            'field' => 'type',
+            'type' => 'string',
+            'label' => __('Type')
+        ];
+        $newFields[] = [
+            'key' => 'CasePriority.name',
+            'field' => 'priority',
+            'type' => 'string',
+            'label' => __('Priority')
         ];
 
         $newFields[] = [
@@ -210,36 +221,41 @@ class InstitutionCasesTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'WorkflowTransitions.workflow_action_name',
-            'field' => 'action',
+            'key' => 'Assignee',
+            'field' => 'assignee',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Assignee')
         ];
-
-        $newFields[] = [
-            'key' => 'WorkflowTransitions.comment',
-            'field' => 'comment',
-            'type' => 'string',
-            'label' => ''
-        ];
-
         $newFields[] = [
             'key' => 'WorkflowTransitions.executed_by',
             'field' => 'executed_by',
             'type' => 'string',
-            'label' => ''
+            'label' => 'Creator'
         ];
-
         $newFields[] = [
-            'key' => 'WorkflowTransitions.executed_date',
-            'field' => 'executed_date',
-            'type' => 'date',
-            'label' => ''
+            'key' => 'LinkedRecords',
+            'field' => 'linked_records',
+            'type' => 'string',
+            'label' => 'Linked Records'
+        ];
+        $newFields[] = [
+            'key' => 'InstitutionCases.modified',
+            'field' => 'modified',
+            'type' => 'datetime',
+            'label' => __('Updated')
+        ];
+        $newFields[] = [
+            'key' => 'InstitutionCases.created',
+            'field' => 'created',
+            'type' => 'datetime',
+            'label' => __('Created')
         ];
 
-        $listener = TableRegistry::get($this->features[$module]);
-        $event = $listener->dispatchEvent('InstitutionCase.onIncludeCustomExcelFields', [$newFields], $listener);
-        
+       
+            
+        // $listener = TableRegistry::get($this->features[$module]);  //POCOR-7786 start
+        // $event = $listener->dispatchEvent('InstitutionCase.onIncludeCustomExcelFields', [$newFields], $listener);  //POCOR-7786 start
+         //POCOR-7786 end
         if ($event->isStopped()) {
             return $event->result;
         }

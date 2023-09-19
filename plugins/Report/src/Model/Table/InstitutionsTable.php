@@ -468,11 +468,11 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'format';
                     break;
                 case 'Report.InstitutionCases':
-                    $fieldsOrder[] = 'academic_period_id';
+                    // $fieldsOrder[] = 'academic_period_id';//POCOR-7786
                     $fieldsOrder[] = 'area_level_id';
                     $fieldsOrder[] = 'area_education_id';
                     $fieldsOrder[] = 'institution_id';
-                    $fieldsOrder[] = 'module';
+                    // $fieldsOrder[] = 'module';//POCOR-7786
                     $fieldsOrder[] = 'report_start_date';
                     $fieldsOrder[] = 'report_end_date';
                     $fieldsOrder[] = 'format';
@@ -781,11 +781,11 @@ class InstitutionsTable extends AppTable
             if (in_array($feature, ['Report.InstitutionCases'])) {
                 $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
                 $featureOptions = $WorkflowRules->getFeatureOptions();
-
-                $attr['type'] = 'select';
-                $attr['options'] = $featureOptions;
-                $attr['select'] = false;
-                return $attr;
+                $attr['type']='hidden';//POCOR-7786
+                // $attr['type'] = 'select';
+                // $attr['options'] = $featureOptions;
+                // $attr['select'] = false;
+                // return $attr;
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
@@ -948,7 +948,12 @@ class InstitutionsTable extends AppTable
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
                 $currentPeriod = $AcademicPeriodTable->getCurrent();
                 $attr['options'] = $academicPeriodOptions;
+                if($feature== 'Report.InstitutionCases') {//POCOR-7786
+                    $attr['type'] = 'hidden';
+                }
+                else{
                 $attr['type'] = 'select';
+                }
                 $attr['select'] = false;
                 $attr['onChangeReload'] = true;
                 if (empty($request->data[$this->alias()]['academic_period_id'])) {
