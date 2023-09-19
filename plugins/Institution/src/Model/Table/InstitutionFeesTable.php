@@ -53,7 +53,7 @@ class InstitutionFeesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $this->institutionId = $session->read('Institution.Institutions.id');
 
         $this->field('total', ['type' => 'float', 'visible' => ['add' => false, 'edit' => false, 'index' => true, 'view' => true]]);
@@ -363,10 +363,10 @@ class InstitutionFeesTable extends ControllerActionTable
 
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, $request)
     {
-        if (empty($this->request->data[$this->alias()]['academic_period_id'])) {
-            $this->request->data[$this->alias()]['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        if (empty($this->request->getData[$this->getAlias()]['academic_period_id'])) {
+            $this->request->getData[$this->getAlias()]['academic_period_id'] = $this->AcademicPeriods->getCurrent();
         }
-        $this->_selectedAcademicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+        $this->_selectedAcademicPeriodId = $this->request->getData[$this->getAlias()]['academic_period_id'];
         $this->_gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
         $attr['options'] = $this->_gradeOptions;
         return $attr;

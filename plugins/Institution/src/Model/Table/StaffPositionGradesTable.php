@@ -8,9 +8,9 @@ use App\Model\Table\ControllerActionTable;
 
 class StaffPositionGradesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_position_grades');
+        $this->setTable('staff_position_grades');
         parent::initialize($config);
         // $this->hasMany('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'staff_position_grade_id']);
 

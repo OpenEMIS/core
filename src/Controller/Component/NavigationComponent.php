@@ -322,9 +322,10 @@ class NavigationComponent extends Component
         $institutionId = $session->read('Institution.Institutions.id');
 
         if (!empty($institutionId)) {
-            $Institutions = TableRegistry::get('Institution.Institutions');
+            //$Institutions = TableRegistry::get('Institution.Institutions');
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
-            if ($Institutions->exists([$Institutions->primaryKey() => $institutionId])) {
+            if ($Institutions->exists([$Institutions->getPrimaryKey() => $institutionId])) {
                 $currentInstitution = $Institutions->get($institutionId);
                 $classification = $currentInstitution->classification;
 
@@ -373,236 +374,242 @@ class NavigationComponent extends Component
 
     public function buildNavigation()
     {
-        // $navigations = $this->getNavigation();
-        $navigations = $this->getMainNavigation();
+        $session = $this->getController()->getRequest()->getSession();
+        $isUserId = $session->read('Auth.User.id');
+        if(isset($isUserId)) {
+            //$navigations = $this->getNavigation();
+            $navigations = $this->getMainNavigation();
 
-        $controller = $this->controller;
-        $action = $this->action;
-        $pass = [];
-        if (!empty($this->request->pass)) {
-            $pass = $this->request->pass;
-        } else {
-            $pass[0] = '';
+            $controller = $this->controller;
+            $action = $this->action;
+            $pass = [];
+            if (!empty($this->getController()->getRequest()->getParam('pass'))) {
+                $pass = $this->getController()->getRequest()->getParam('pass');
+            } else {
+                $pass[0] = '';
+            }
+
+            $institutionStudentActions = ['Students',
+                'StudentUser',
+                'StudentAccount',
+                'StudentSurveys',
+                'Students'];
+            $institutionStaffActions = ['Staff',
+                'StaffUser',
+                'StaffAccount'];
+            $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
+            $institutionControllers = [
+                'Counsellings',
+                'StudentBodyMasses',
+                'StaffBodyMasses',
+                'StudentComments',
+                'StaffComments',
+                'InfrastructureNeeds',
+                'InfrastructureProjects',
+                'InfrastructureWashWaters',
+                'InfrastructureWashSanitations',
+                'InfrastructureWashHygienes',
+                'InfrastructureWashWastes',
+                'InfrastructureWashSewages',
+                'InfrastructureUtilityElectricities',
+                'InfrastructureUtilityInternets',
+                'InfrastructureUtilityTelephones',
+                'InstitutionTransportProviders',
+                'InstitutionBuses',
+                'InstitutionTrips',
+                'InstitutionStaffDuties',
+                'StudentHistories',
+                'StaffHistories',
+                'InstitutionCalendars',
+                'InstitutionContactPersons',
+                'StudentInsurances',
+                'StaffInsurances',
+                'InstitutionCommittees',
+                'InstitutionCommitteeAttachments',
+                'InstitutionAssets',
+                'StudentBehaviourAttachments',
+                'StaffBehaviourAttachments',
+                'Guardians',
+                'GuardianComments'
+            ];
+
+            $profileControllers = ['ProfileBodyMasses',
+                'ProfileComments',
+                'ProfileInsurances',
+                'ScholarshipsDirectory',
+                'ProfileApplicationInstitutionChoices',
+                'ProfileApplicationAttachments'];
+            $directoryControllers = ['DirectoryBodyMasses',
+                'DirectoryComments',
+                'DirectoryInsurances'];
+            $guardianNavsControllers = [];
+
+
+            if (in_array($controller->getName(), $institutionControllers) || (
+                    $controller->getName() == 'Institutions'
+                    && $action != 'index'
+                    && (!in_array($action, $institutionActions))
+                )
+            ) {
+                $navigations = $this->appendNavigation('Institutions.Institutions.index', $navigations, $this->getInstitutionNavigation());
+                $navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
+                $navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
+                $this->checkClassification($navigations);
+            } elseif (($controller->getName() == 'Students' && $action != 'index') || ($controller->getName() == 'Institutions' && in_array($action, $institutionStudentActions))) {
+                $navigations = $this->appendNavigation('Institutions.Institutions.index', $navigations, $this->getInstitutionNavigation());
+                $navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
+                $this->checkClassification($navigations);
+            } elseif (($controller->getName() == 'Staff' && $action != 'index') || ($controller->getName() == 'Institutions' && in_array($action, $institutionStaffActions))) {
+                $navigations = $this->appendNavigation('Institutions.Institutions.index', $navigations, $this->getInstitutionNavigation());
+                $navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
+                $this->checkClassification($navigations);
+            } elseif (($controller->getName() == 'Directories' && $action != 'index') || in_array($controller->getName(), $directoryControllers)) {
+                $navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
+
+                $encodedParam = $this->request->params['pass'][1];
+                if (!empty($encodedParam)) {
+                    $securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
+                    /*POCOR-STARTS*/
+                    if (empty($securityUserId)) {
+                        $securityUserId = $this->controller->paramsDecode($encodedParam)['security_user_id'];
+                    }
+                    /*POCOR-ENDS*/
+                }
+                if (!empty($encodedParam)) {
+                    //POCOR-6202 start
+                    if ($action == 'GuardianStudents') {
+                        $userInfo = TableRegistry::get('student_guardians')->get($securityUserId);
+                    } else if ($action == 'StudentGuardians') {
+                        $securityUserId = $this->controller->paramsDecode($this->request->params['pass'][1]);
+                        $userInfo = TableRegistry::get('Student.StudentGuardians')->get($securityUserId);//POCOR-6453 ends
+                        $securityUserId = $userInfo->guardian_id;
+                        $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);//POCOR-6453 ends
+                    } else if ($action == 'Identities') {//POCOR-6453 starts
+                        $securityUserId = $this->controller->paramsDecode($this->request->query['queryString']);
+                        $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);//POCOR-6453 ends
+                    } /*POCOR-6286 : added condition to get selected student id */
+                    elseif ($action == 'StudentProfiles') {
+                        $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
+                        $userInfo = TableRegistry::get('Security.Users')->get($userId);
+                    } //Start POCOR-7055
+                    elseif ($action == 'StudentReportCards') {
+                        $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
+                        $userInfo = TableRegistry::get('Security.Users')->get($userId);
+                    }//End POCOR-7055
+                    /*POCOR-6286 ends*/
+                    // Start POCOR-7384
+                    elseif ($this->request->params['plugin'] == 'Directory' && $this->request->params['controller'] == 'Directories' && $this->request->params['pass'][0] == 'download' && $action == 'Attachments') {
+                        $userId = $this->controller->paramsDecode($this->request->params['pass'][2])['security_user_id'];
+                        $userInfo = TableRegistry::get('Security.Users')->get($userId);
+                    } // End POCOR-7384
+                    else {
+                        $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
+                    }
+                    //POCOR-6202 end
+                }
+
+                $userType = '';
+                if (!empty($userInfo)) {
+                    if ($userInfo->is_student && $userInfo->is_staff == 0 && $userInfo->is_guardian == 0) {
+                        $userType = 1;
+                    } elseif ($userInfo->is_staff && $userInfo->is_student == 0 && $userInfo->is_guardian == 0) {
+                        $userType = 2;
+                    } elseif ($userInfo->is_guardian && $userInfo->is_staff == 0 && $userInfo->is_student == 0) {
+                        $userType = 3;
+                    } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
+                        $userType = 4; //superrole user
+                    } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 0) {
+                        $userType = 5;
+                    } /*POCOR-6332 starts*/ elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 0 && $userInfo->is_guardian == 1) {
+                        $userType = 6;
+                    } elseif ($userInfo->is_student == 0 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
+                        $userType = 7;
+                    }/*POCOR-6332 ends*/
+                }
+
+
+                $userType = '';
+                if (!empty($userInfo)) {
+                    if ($userInfo->is_student) {
+                        $userType = 1;
+                    } elseif ($userInfo->is_staff) {
+                        $userType = 2;
+                    } elseif ($userInfo->is_guardian) {
+                        $userType = 3;
+                    }
+                }
+                $session = $this->getController()->getRequest()->getSession();
+                $isStudent = $session->read('Directory.Directories.is_student');
+                $isStaff = $session->read('Directory.Directories.is_staff');
+                $isGuardian = $session->read('Directory.Directories.is_guardian');
+
+                // POCOR-6372 (start) initially here userType was checking but it did not work for directory navigation so changed with roles
+                if ($isStaff) {
+                    $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
+                    $session->write('Directory.Directories.reload', true);
+                }
+
+                if ($isStudent) {
+                    $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
+                    $session->write('Directory.Directories.reload', true);
+                }
+
+                if ($isGuardian) {
+                    $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
+                    $session->write('Directory.Directories.reload', true);
+                }
+
+                if ($isStudent && $isStaff && $isGuardian) {
+                    $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
+                    $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
+                    $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
+                    $session->write('Directory.Directories.reload', true);
+                }
+
+                if ($isStudent && $isStaff && !$isGuardian) {
+                    $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
+                    $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
+                    $session->write('Directory.Directories.reload', true);
+                }
+                /*POCOR-6332 starts*/
+                if ($isStudent && !$isStaff && $isGuardian) {
+                    $session->write('Directory.Directories.reload', true);
+                }
+                if (!$isStudent && $isStaff && $isGuardian) {
+                    // POCOR-6372 code for showing staff section 
+                    $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
+                    // POCOR-6372 code for showing staff section 
+                    $session->write('Directory.Directories.reload', true);
+                }
+                // POCOR-6372 (end) initially here userType was checking but it did not work for directory navigation so changed with roles
+                /*POCOR-6332 ends*/
+            } elseif (($controller->getName() == 'Profiles' && $action != 'index') || in_array($controller->getName(), $profileControllers)) {
+                $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigation());
+                $navigations = $this->appendNavigation('Profiles.Personal', $navigations, $this->getProfileNavigation());
+
+                $session = $this->getController()->getRequest()->getSession();
+                $isStudent = $session->read('Auth.User.is_student');
+                $isStaff = $session->read('Auth.User.is_staff');
+                $isGuardian = $session->read('Auth.User.is_guardian');
+
+                if ($isStaff) {
+                    $navigations = $this->appendNavigation('Profiles.Profiles.view', $navigations, $this->getProfileStaffNavigation());
+                    $session->write('Profile.Profiles.reload', true);
+                }
+
+                if ($isStudent) {
+                    $navigations = $this->appendNavigation('Profiles.Profiles.view', $navigations, $this->getProfileStudentNavigation());
+                    $session->write('Profile.Profiles.reload', true);
+                }
+            } elseif (($controller->getName() == 'GuardianNavs' && $action != 'index')) {
+                $navigations = $this->appendNavigation('GuardianNavs.GuardianNavs.index', $navigations, $this->getGuardianNavNavigation());
+                $this->checkClassification($navigations);
+            }
+            
+            $navigations = $this->appendNavigation('Reports', $navigations, $this->getReportNavigation());
+            $navigations = $this->appendNavigation('Administration', $navigations, $this->getAdministrationNavigation());
+            return $navigations;
         }
-
-        $institutionStudentActions = ['Students',
-            'StudentUser',
-            'StudentAccount',
-            'StudentSurveys',
-            'Students'];
-        $institutionStaffActions = ['Staff',
-            'StaffUser',
-            'StaffAccount'];
-        $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
-        $institutionControllers = [
-            'Counsellings',
-            'StudentBodyMasses',
-            'StaffBodyMasses',
-            'StudentComments',
-            'StaffComments',
-            'InfrastructureNeeds',
-            'InfrastructureProjects',
-            'InfrastructureWashWaters',
-            'InfrastructureWashSanitations',
-            'InfrastructureWashHygienes',
-            'InfrastructureWashWastes',
-            'InfrastructureWashSewages',
-            'InfrastructureUtilityElectricities',
-            'InfrastructureUtilityInternets',
-            'InfrastructureUtilityTelephones',
-            'InstitutionTransportProviders',
-            'InstitutionBuses',
-            'InstitutionTrips',
-            'InstitutionStaffDuties',
-            'StudentHistories',
-            'StaffHistories',
-            'InstitutionCalendars',
-            'InstitutionContactPersons',
-            'StudentInsurances',
-            'StaffInsurances',
-            'InstitutionCommittees',
-            'InstitutionCommitteeAttachments',
-            'InstitutionAssets',
-            'StudentBehaviourAttachments',
-            'StaffBehaviourAttachments',
-            'Guardians',
-            'GuardianComments'
-        ];
-
-        $profileControllers = ['ProfileBodyMasses',
-            'ProfileComments',
-            'ProfileInsurances',
-            'ScholarshipsDirectory',
-            'ProfileApplicationInstitutionChoices',
-            'ProfileApplicationAttachments'];
-        $directoryControllers = ['DirectoryBodyMasses',
-            'DirectoryComments',
-            'DirectoryInsurances'];
-        $guardianNavsControllers = [];
-        if (in_array($controller->name, $institutionControllers) || (
-                $controller->name == 'Institutions'
-                && $action != 'index'
-                && (!in_array($action, $institutionActions))
-            )
-        ) {
-            $navigations = $this->appendNavigation('Institutions.Institutions.index', $navigations, $this->getInstitutionNavigation());
-            $navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
-            $navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
-            $this->checkClassification($navigations);
-        } elseif (($controller->name == 'Students' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStudentActions))) {
-            $navigations = $this->appendNavigation('Institutions.Institutions.index', $navigations, $this->getInstitutionNavigation());
-            $navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
-            $this->checkClassification($navigations);
-        } elseif (($controller->name == 'Staff' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStaffActions))) {
-            $navigations = $this->appendNavigation('Institutions.Institutions.index', $navigations, $this->getInstitutionNavigation());
-            $navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
-            $this->checkClassification($navigations);
-        } elseif (($controller->name == 'Directories' && $action != 'index') || in_array($controller->name, $directoryControllers)) {
-            $navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
-
-            $encodedParam = $this->request->params['pass'][1];
-            if (!empty($encodedParam)) {
-                $securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
-                /*POCOR-STARTS*/
-                if (empty($securityUserId)) {
-                    $securityUserId = $this->controller->paramsDecode($encodedParam)['security_user_id'];
-                }
-                /*POCOR-ENDS*/
-            }
-            if (!empty($encodedParam)) {
-                //POCOR-6202 start
-                if ($action == 'GuardianStudents') {
-                    $userInfo = TableRegistry::get('student_guardians')->get($securityUserId);
-                } else if ($action == 'StudentGuardians') {
-                    $securityUserId = $this->controller->paramsDecode($this->request->params['pass'][1]);
-                    $userInfo = TableRegistry::get('Student.StudentGuardians')->get($securityUserId);//POCOR-6453 ends
-                    $securityUserId = $userInfo->guardian_id;
-                    $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);//POCOR-6453 ends
-                } else if ($action == 'Identities') {//POCOR-6453 starts
-                    $securityUserId = $this->controller->paramsDecode($this->request->query['queryString']);
-                    $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);//POCOR-6453 ends
-                } /*POCOR-6286 : added condition to get selected student id */
-                elseif ($action == 'StudentProfiles') {
-                    $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
-                    $userInfo = TableRegistry::get('Security.Users')->get($userId);
-                } //Start POCOR-7055
-                elseif ($action == 'StudentReportCards') {
-                    $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
-                    $userInfo = TableRegistry::get('Security.Users')->get($userId);
-                }//End POCOR-7055
-                /*POCOR-6286 ends*/
-                // Start POCOR-7384
-                elseif ($this->request->params['plugin'] == 'Directory' && $this->request->params['controller'] == 'Directories' && $this->request->params['pass'][0] == 'download' && $action == 'Attachments') {
-                    $userId = $this->controller->paramsDecode($this->request->params['pass'][2])['security_user_id'];
-                    $userInfo = TableRegistry::get('Security.Users')->get($userId);
-                } // End POCOR-7384
-                else {
-                    $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
-                }
-                //POCOR-6202 end
-            }
-
-            $userType = '';
-            if (!empty($userInfo)) {
-                if ($userInfo->is_student && $userInfo->is_staff == 0 && $userInfo->is_guardian == 0) {
-                    $userType = 1;
-                } elseif ($userInfo->is_staff && $userInfo->is_student == 0 && $userInfo->is_guardian == 0) {
-                    $userType = 2;
-                } elseif ($userInfo->is_guardian && $userInfo->is_staff == 0 && $userInfo->is_student == 0) {
-                    $userType = 3;
-                } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
-                    $userType = 4; //superrole user
-                } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 0) {
-                    $userType = 5;
-                } /*POCOR-6332 starts*/ elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 0 && $userInfo->is_guardian == 1) {
-                    $userType = 6;
-                } elseif ($userInfo->is_student == 0 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
-                    $userType = 7;
-                }/*POCOR-6332 ends*/
-            }
-
-
-            $userType = '';
-            if (!empty($userInfo)) {
-                if ($userInfo->is_student) {
-                    $userType = 1;
-                } elseif ($userInfo->is_staff) {
-                    $userType = 2;
-                } elseif ($userInfo->is_guardian) {
-                    $userType = 3;
-                }
-            }
-            $session = $this->getController()->getRequest()->getSession();
-            $isStudent = $session->read('Directory.Directories.is_student');
-            $isStaff = $session->read('Directory.Directories.is_staff');
-            $isGuardian = $session->read('Directory.Directories.is_guardian');
-
-            // POCOR-6372 (start) initially here userType was checking but it did not work for directory navigation so changed with roles
-            if ($isStaff) {
-                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
-                $session->write('Directory.Directories.reload', true);
-            }
-
-            if ($isStudent) {
-                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
-                $session->write('Directory.Directories.reload', true);
-            }
-
-            if ($isGuardian) {
-                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
-                $session->write('Directory.Directories.reload', true);
-            }
-
-            if ($isStudent && $isStaff && $isGuardian) {
-                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
-                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
-                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
-                $session->write('Directory.Directories.reload', true);
-            }
-
-            if ($isStudent && $isStaff && !$isGuardian) {
-                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
-                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
-                $session->write('Directory.Directories.reload', true);
-            }
-            /*POCOR-6332 starts*/
-            if ($isStudent && !$isStaff && $isGuardian) {
-                $session->write('Directory.Directories.reload', true);
-            }
-            if (!$isStudent && $isStaff && $isGuardian) {
-                // POCOR-6372 code for showing staff section 
-                $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
-                // POCOR-6372 code for showing staff section 
-                $session->write('Directory.Directories.reload', true);
-            }
-            // POCOR-6372 (end) initially here userType was checking but it did not work for directory navigation so changed with roles
-            /*POCOR-6332 ends*/
-        } elseif (($controller->name == 'Profiles' && $action != 'index') || in_array($controller->name, $profileControllers)) {
-            $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigation());
-            $navigations = $this->appendNavigation('Profiles.Personal', $navigations, $this->getProfileNavigation());
-
-            $session = $this->getController()->getRequest()->getSession();
-            $isStudent = $session->read('Auth.User.is_student');
-            $isStaff = $session->read('Auth.User.is_staff');
-            $isGuardian = $session->read('Auth.User.is_guardian');
-
-            if ($isStaff) {
-                $navigations = $this->appendNavigation('Profiles.Profiles.view', $navigations, $this->getProfileStaffNavigation());
-                $session->write('Profile.Profiles.reload', true);
-            }
-
-            if ($isStudent) {
-                $navigations = $this->appendNavigation('Profiles.Profiles.view', $navigations, $this->getProfileStudentNavigation());
-                $session->write('Profile.Profiles.reload', true);
-            }
-        } elseif (($controller->name == 'GuardianNavs' && $action != 'index')) {
-            $navigations = $this->appendNavigation('GuardianNavs.GuardianNavs.index', $navigations, $this->getGuardianNavNavigation());
-            $this->checkClassification($navigations);
-        }
-
-        $navigations = $this->appendNavigation('Reports', $navigations, $this->getReportNavigation());
-        $navigations = $this->appendNavigation('Administration', $navigations, $this->getAdministrationNavigation());
-        return $navigations;
     }
 
     private function appendNavigation($key, $originalNavigation, $navigationToAppend)
@@ -1761,6 +1768,7 @@ class NavigationComponent extends Component
         //POCOR-5886 starts
         $session = $this->getController()->getRequest()->getSession();
         $profileUserId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        
         //POCOR-5886 ends
         $navigation = [
             'Profiles.Profiles.view' => [

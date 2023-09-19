@@ -31,9 +31,9 @@ class StudentFeesTable extends ControllerActionTable
     protected $InstitutionFeeEntity = null;
     protected $StudentFeesAbstract = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_students');
+        $this->setTable('institution_students');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
@@ -45,7 +45,17 @@ class StudentFeesTable extends ControllerActionTable
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 
         if ($this->behaviors()->has('ControllerAction')) {
-            $this->behaviors()->get('ControllerAction')->config([
+            // $this->behaviors()->get('ControllerAction')->config([
+            //     'actions' => [
+            //         'index' => true,
+            //         'view' => true,
+            //         'edit' => true,
+            //         'add' => false,
+            //         'remove' => false,
+            //         'reorder' => false
+            //     ],
+            // ]);
+            $this->behaviors()->get('ControllerAction')->setConfig([
                 'actions' => [
                     'index' => true,
                     'view' => true,
@@ -63,7 +73,7 @@ class StudentFeesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $this->institutionId = $session->read('Institution.Institutions.id');
 
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
@@ -160,7 +170,7 @@ class StudentFeesTable extends ControllerActionTable
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
@@ -192,7 +202,7 @@ class StudentFeesTable extends ControllerActionTable
             $this->Alert->warning('InstitutionQualityVisits.noPeriods');
         }
         if (empty($this->request->query['academic_period_id'])) {
-            $this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+            $this->request->getQuery['academic_period_id'] = $this->AcademicPeriods->getCurrent();
         }
         $institutionId = $this->institutionId;
         $this->_selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);

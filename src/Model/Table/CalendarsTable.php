@@ -283,7 +283,8 @@ class CalendarsTable extends ControllerActionTable
         //POCOR-5280 : End
     }
 //POCOR-5280 : Start
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action)
     {
         $attr['options'] = $this->AcademicPeriods->getYearList();
         $attr['onChangeReload'] = true;
@@ -294,7 +295,8 @@ class CalendarsTable extends ControllerActionTable
     
     
 
-    public function onUpdateFieldInstitutionShiftId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldInstitutionShiftId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionShiftId(Event $event, array $attr, $action)
     {
         
         if ($action=='add') {
@@ -407,11 +409,11 @@ class CalendarsTable extends ControllerActionTable
         }
         // POCOR-6122 end
 
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id');
 
-        $calendarEventDates = TableRegistry::get('calendar_event_dates');
-        $institutionShifts = TableRegistry::get('shift_options');//institution_shifts
+        $calendarEventDates = TableRegistry::get('CalendarEventDates');
+        $institutionShifts = TableRegistry::get('Institution.ShiftOptions');//institution_shifts
         $CalendarTypes = TableRegistry::get('CalendarTypes');
 
         $query->select([
@@ -432,13 +434,13 @@ class CalendarsTable extends ControllerActionTable
             $this->aliasField('created_user_id'),
             $this->aliasField('created')
         ])
-        ->leftJoin([$institutionShifts->alias() => $institutionShifts->table()], [
+        ->leftJoin([$institutionShifts->getAlias() => $institutionShifts->getTable()], [
             [$institutionShifts->aliasField('id ='). $this->aliasField('institution_shift_id')],
         ])
-        ->leftJoin([$calendarEventDates->alias() => $calendarEventDates->table()], [
+        ->leftJoin([$calendarEventDates->getAlias() => $calendarEventDates->getTable()], [
             [$calendarEventDates->aliasField('calendar_event_id ='). $this->aliasField('id')],
         ])
-        ->innerJoin([$CalendarTypes->alias() => $CalendarTypes->table()], [
+        ->innerJoin([$CalendarTypes->getAlias() => $CalendarTypes->getTable()], [
             [$CalendarTypes->aliasField('id ='). $this->aliasField('calendar_type_id')],
         ])
         ->group($this->aliasField('id'))

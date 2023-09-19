@@ -5,9 +5,9 @@
 			$this->Form->unlockField('education_grade_id_');
 			
 			$baseUrl = $this->Url->build([
-				'plugin' => $this->request->params['plugin'],
-			    'controller' => $this->request->params['controller'],
-			    'action' => $this->request->params['action']
+				'plugin' => $this->request->getParam('plugin'),
+			    'controller' => $this->request->getParam('controller'),
+			    'action' => $this->request->getParam('action')
 			]);
 			$template = $this->ControllerAction->getFormTemplate();
 			$this->Form->templates($template);

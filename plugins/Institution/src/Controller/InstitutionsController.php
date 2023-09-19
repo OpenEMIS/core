@@ -218,7 +218,7 @@ class InstitutionsController extends AppController
 // POCOR-7339-HINDOL redundancy
 //            'ImportAssessmentItemResults'      => ['className' => 'Institution.ImportAssessmentItemResults', 'actions' => ['add']],
             'InstitutionStatistics' => ['className' => 'Institution.InstitutionStatistics', 'actions' => ['index', 'add']],
-            'InstitutionStandards' => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
+            // 'InstitutionStandards' => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
             'ImportStudentCurriculars' => ['className' => 'Institution.ImportStudentCurriculars', 'actions' => ['add']],//POCOR-6673
         ];
 
@@ -234,6 +234,11 @@ class InstitutionsController extends AppController
         if ($this->request->getParam('action') == 'saveStudentData' || $this->request->getParam('action') == 'saveStaffData' || $this->request->getParam('action') == 'saveGuardianData' || $this->request->getParam('action') == 'saveDirectoryData') {
             $this->getEventManager()->off($this->Csrf);
         }//POCOR-5672 ends
+    }
+
+    public function InstitutionStandards()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStandards']);
     }
 
     // CAv4
@@ -961,64 +966,64 @@ class InstitutionsController extends AppController
 
     public function changeUtilitiesHeader($model, $modelAlias, $userType)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = 0;
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
         }
         if (!empty($institutionId)) {
-            if ($this->request->param('action') == 'InfrastructureUtilityElectricities') {
+            if ($this->request->getParam('action') == 'InfrastructureUtilityElectricities') {
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Electricity');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Electricity'));
                 $this->set('contentHeader', $header);
-            } else if ($this->request->param('action') == 'InfrastructureWashWastes') {
+            } else if ($this->request->getParam('action') == 'InfrastructureWashWastes') {
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Waste');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Waste'));
                 $this->set('contentHeader', $header);
-            } else if ($this->request->param('action') == 'InfrastructureUtilityInternets') {
+            } else if ($this->request->getParam('action') == 'InfrastructureUtilityInternets') {
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Internet');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Internet'));
                 $this->set('contentHeader', $header);
-            } else if ($this->request->param('action') == 'InfrastructureWashWaters') {
+            } else if ($this->request->getParam('action') == 'InfrastructureWashWaters') {
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Water');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Water'));
                 $this->set('contentHeader', $header);
-            } else if ($this->request->param('action') == 'InfrastructureWashSanitations') {
+            } else if ($this->request->getParam('action') == 'InfrastructureWashSanitations') {
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Sanitation');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Sanitation'));
                 $this->set('contentHeader', $header);
-            } else if ($this->request->param('action') == 'InfrastructureWashHygienes') {
+            } else if ($this->request->getParam('action') == 'InfrastructureWashHygienes') {
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Hygiene');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Hygiene'));
                 $this->set('contentHeader', $header);
 
-            } else if ($this->request->param('action') == 'InstitutionAssets') { //POCOR-6152 Header breadcrumbs
+            } else if ($this->request->getParam('action') == 'InstitutionAssets') { //POCOR-6152 Header breadcrumbs
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Assets');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Assets'));
-            } else if ($this->request->param('action') == 'InfrastructureWashSewages') {
+            } else if ($this->request->getParam('action') == 'InfrastructureWashSewages') {
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Sewage');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Sewage'));
                 // POCOR-6150 start
-            } else if ($this->request->param('action') == 'InfrastructureNeeds') {
+            } else if ($this->request->getParam('action') == 'InfrastructureNeeds') {
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Needs');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Needs'));
                 $this->set('contentHeader', $header);
             }
@@ -1026,10 +1031,10 @@ class InstitutionsController extends AppController
             // POCOR-6150 end
 
             // POCOR-6151 start
-            else if ($this->request->param('action') == 'InfrastructureProjects') {
+            else if ($this->request->getParam('action') == 'InfrastructureProjects') {
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Projects');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Projects'));
                 $this->set('contentHeader', $header);
             }// POCOR-6151 end
@@ -2143,7 +2148,7 @@ class InstitutionsController extends AppController
         if (($session->check('Institution.Institutions.id')
                 || $this->getRequest()->getParam('institutionId'))
             || $action == 'dashboard'
-            || ($action == 'Institutions' && isset($this->request->pass[0]) && in_array($this->request->pass[0], ['view', 'edit']))) {
+            || ($action == 'Institutions' && isset($this->request->getParam('pass')[0]) && in_array($this->request->getParam('pass')[0], ['view', 'edit']))) {
             $id = 0;
 
             if (isset($this->request->pass[0]) && (in_array($action, ['dashboard']))) {

@@ -286,7 +286,7 @@ class InstitutionShiftsTable extends ControllerActionTable
     }
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        if($this->request->params['pass'][0] == 'add' || $this->request->params['pass'][0] == 'edit'){
+        if($this->request->getParam['pass'][0] == 'add' || $this->request->getParam['pass'][0] == 'edit'){
             switch ($field) {
                 case 'location_institution_id':
                     return __('Owner');

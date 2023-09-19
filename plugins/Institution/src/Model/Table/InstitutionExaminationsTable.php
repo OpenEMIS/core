@@ -11,10 +11,10 @@ use App\Model\Table\ControllerActionTable;
 
 class InstitutionExaminationsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
    
-        $this->table('examinations');
+        $this->setTable('examinations');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -80,7 +80,7 @@ class InstitutionExaminationsTable extends ControllerActionTable
 
         // Academic Periods filter
         $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
-        $selectedPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
 
         $where[$this->aliasField('academic_period_id')] = $selectedPeriod;

@@ -267,7 +267,8 @@ class InstitutionPositionsTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldPositionNo(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldPositionNo(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPositionNo(Event $event, array $attr, $action)
     {
         if ($action == 'add') {
             $attr['attr']['value'] = $this->getUniquePositionNo();
@@ -520,9 +521,9 @@ class InstitutionPositionsTable extends ControllerActionTable
                 $extra['OR'] = [$this->StaffPositionTitles->aliasField('name').' LIKE' => '%' . $search . '%'];
             }
         }
-        if (is_null($this->request->query('sort'))) {
-            $this->request->query['sort'] = 'created';
-            $this->request->query['direction'] = 'desc';
+        if (is_null($this->request->getQuery('sort'))) {
+            $this->request->getQuery['sort'] = 'created';
+            $this->request->getQuery['direction'] = 'desc';
         }
     }
 
@@ -555,8 +556,8 @@ class InstitutionPositionsTable extends ControllerActionTable
         $currentStaff = $this->getCurrentStaff($id)->toArray();
         
         $session = $this->Session;
-        $Staff = TableRegistry::get('institution_staff');
-        $StaffPositionGrades = TableRegistry::get('staff_position_grades');
+        $Staff = TableRegistry::get('Report.InstitutionStaff');
+        $StaffPositionGrades = TableRegistry::get('Institution.StaffPositionGrades');
         if (empty($currentStaff[0])) {
             $value = '-';
         } else {
@@ -573,7 +574,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                                     'staff_position_grade_id'=> $Staff->aliasField('staff_position_grade_id'),
                                     'staff_position_grade_name'=> $StaffPositionGrades->aliasField('name')
                                 ])
-                                ->LeftJoin([$StaffPositionGrades->alias() => $StaffPositionGrades->table()],
+                                ->LeftJoin([$StaffPositionGrades->getAlias() => $StaffPositionGrades->getTable()],
                                         [
                                             $StaffPositionGrades->aliasField('id') . ' = '. $Staff->aliasField('staff_position_grade_id')
                                         ])
@@ -598,7 +599,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $currentStaff = $this->getCurrentStaff($id)->toArray();
         
         $session = $this->Session;
-        $Staff = TableRegistry::get('institution_staff');
+        $Staff = TableRegistry::get('Report.InstitutionStaff');
         if (empty($currentStaff[0])) {
             $value = '';
         } else {
@@ -632,7 +633,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     {
         $extra['auto_contain'] = false;
         $extra['auto_order'] = false;
-        $institutionStaff = TableRegistry::get('institution_staff');
+        $institutionStaff = TableRegistry::get('Report.InstitutionStaff');
 
         $query
             ->select([
@@ -677,7 +678,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                     ]
                 ]
                 
-            ])->leftJoin([$institutionStaff->alias() => $institutionStaff->table()],
+            ])->leftJoin([$institutionStaff->getAlias() => $institutionStaff->getTable()],
                 [$institutionStaff->aliasField('institution_position_id = ') . $this->aliasField('id')])
             ->distinct([$this->aliasField('position_no')]);
         $sortList = ['position_no', 'StaffPositionTitles.order'/*,POCOR-5069 'StaffPositionGrades.order'*/, 'created','Assignees.first_name'];

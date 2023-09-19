@@ -24,9 +24,9 @@ class InfrastructureProjectsTable extends ControllerActionTable
         2 => 'Inactive'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('infrastructure_projects');
+        $this->setTable('infrastructure_projects');
         parent::initialize($config);
 
         $this->belongsTo('InfrastructureProjectFundingSources',   ['className' => 'Institution.InfrastructureProjectFundingSources', 'foreign_key' => 'infrastructure_project_funding_source_id']);
@@ -51,7 +51,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
         ]);
         // POCOR-6151
         // setting this up to be overridden in viewAfterAction(), this code is required
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             true
         );
@@ -62,7 +62,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
@@ -78,7 +78,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -148,14 +148,14 @@ class InfrastructureProjectsTable extends ControllerActionTable
         $this->fundingSourceOptions = $this->getFundingSourceOptions();
 
         $fundingSourceOptions = [null => __('All Funding Source')] + $this->fundingSourceOptions;
-        $extra['fundingSource'] = $this->request->query('funding_source'); 
+        $extra['fundingSource'] = $this->request->getQuery('funding_source'); 
         // set funding source filter
 
         // set need priority filter
         $projectStatuses = $this->projectStatuses;
 
         $projectStatusesOptions = [null => __('All Statuses')] + $projectStatuses;
-        $extra['projectStatuses'] = $this->request->query('status'); 
+        $extra['projectStatuses'] = $this->request->getQuery('status'); 
         // set need priority filter
 
         $extra['elements']['control'] = [
@@ -196,10 +196,10 @@ class InfrastructureProjectsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id');
-        $fundingSource = ($this->request->query('funding_source')) ? $this->request->query('funding_source') : 0;
-        $projectStatuses = ($this->request->query('status')) ? $this->request->query('status') : 0;
+        $fundingSource = ($this->request->getQuery('funding_source')) ? $this->request->getQuery('funding_source') : 0;
+        $projectStatuses = ($this->request->getQuery('status')) ? $this->request->getQuery('status') : 0;
 
         $query
         ->where([
@@ -247,7 +247,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
 
         $this->fields['infrastructure_project_funding_source_id']['type'] = 'select';
@@ -387,10 +387,10 @@ class InfrastructureProjectsTable extends ControllerActionTable
     // POCOR-6151 Export Functionality
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id');
-        $fundingSource = ($this->request->query('funding_source')) ? $this->request->query('funding_source') : 0;
-        $projectStatuses = ($this->request->query('status')) ? $this->request->query('status') : 0;
+        $fundingSource = ($this->request->getQuery('funding_source')) ? $this->request->getQuery('funding_source') : 0;
+        $projectStatuses = ($this->request->getQuery('status')) ? $this->request->getQuery('status') : 0;
 
         $query
         ->where([
