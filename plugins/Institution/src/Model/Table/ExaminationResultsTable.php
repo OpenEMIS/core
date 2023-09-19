@@ -14,9 +14,9 @@ class ExaminationResultsTable extends ControllerActionTable
     private $fieldPrefix = 'examination_item_';
     private $ExaminationSubjects = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('examination_centres_examinations_students');
+        $this->setTable('examination_centres_examinations_students');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -45,7 +45,7 @@ class ExaminationResultsTable extends ControllerActionTable
             'cascadeCallBacks' => true
         ]);
 
-        $this->addBehavior('Examination.RegisteredStudents');
+        // $this->addBehavior('Examination.RegisteredStudents'); //POCOR-7485
 
         // POCOR-6159
         $this->addBehavior('Excel', ['pages' => ['index']]);
@@ -56,7 +56,7 @@ class ExaminationResultsTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.onGetFieldLabel'] = 'onGetFieldLabel';
@@ -85,8 +85,8 @@ class ExaminationResultsTable extends ControllerActionTable
         $extra['auto_contain'] = false;
 
         $query
-            ->select([$this->aliasField('institution_id')])
-            ->autoFields(true);
+            ->select([$this->aliasField('institution_id')]);
+            // ->autoFields(true); //POCOR-7485
 
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Institutions','Results','Examinations');       

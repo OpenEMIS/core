@@ -10,18 +10,20 @@ use Cake\Validation\Validator;
 
 class BankBranchesTable extends ControllerActionTable
 {
-	public function initialize(array $config)
+	public function initialize(array $config): void
 	{
-		$this->table('bank_branches');
+		$this->setTable('bank_branches');
 		parent::initialize($config);
 
 		$this->belongsTo('Banks', ['className' => 'FieldOption.Banks']);
 		$this->hasMany('UserBankAccounts', ['className' => 'User.BankAccounts', 'foreignKey' => 'bank_branch_id']);
 		$this->hasMany('InstitutionBankAccounts', ['className' => 'Institution.InstitutionBankAccounts', 'foreignKey' => 'bank_branch_id']);
 		if ($this->behaviors()->has('Reorder')) {
-			$this->behaviors()->get('Reorder')->config([
-				'filter' => 'bank_id',
-			]);
+			// $this->behaviors()->get('Reorder')->config([
+			// 	'filter' => 'bank_id',
+			// ]);
+			$reorderBehavior = $this->behaviors()->get('Reorder');
+			$reorderBehavior->setConfig('filter', 'bank_id');
 		}
 
         $this->addBehavior('FieldOption.FieldOption');

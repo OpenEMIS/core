@@ -28,7 +28,7 @@ class InstitutionClassStudentsTable extends AppTable
     private $mySubjectsPermission = true;
     private $staffId = 0;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -62,7 +62,7 @@ class InstitutionClassStudentsTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Students.afterSave'] = 'studentsAfterSave';

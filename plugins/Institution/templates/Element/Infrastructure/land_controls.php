@@ -3,10 +3,10 @@
 		<div class="toolbar-wrapper">
 			<?php
 				$url = [
-					'plugin' => $this->request->params['plugin'],
-				    'controller' => $this->request->params['controller'],
-				    'action' => $this->request->params['action'],
-				    'institutionId' => $this->request->param('institutionId')
+					'plugin' => $this->request->getParam('plugin'),
+				    'controller' => $this->request->getParam('controller'),
+				    'action' => $this->request->getParam('action'),
+				    'institutionId' => $this->request->getParam('institutionId')
 				];
 				if (!empty($this->request->pass)) {
 					$url = array_merge($url, $this->request->pass);

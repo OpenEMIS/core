@@ -125,7 +125,7 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 			->find('visible')
 			->where(['bank_id'=>$this->_selectedBankId])
-			->order(['order'])
+			// ->order(['order' => 'ASC'])
 			->toArray();
 
 		$this->fields['bank_branch_id']['options'] = $bankBranches;
@@ -166,10 +166,11 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 			$this->_bankOptions = $this->getBankOptions();
 		}
 		$this->_selectedBankId = $this->postString('bank', $this->_bankOptions);
+		// echo "<pre>";print_r($this->_bankOptions);die;
 		$bankBranches = $this->BankBranches
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 			->find('visible')
-			->where(['bank_id'=>$this->_selectedBankId])
+			// ->where(['bank_id'=>$this->_selectedBankId]) // POCOR-7485 // Not getting the correct value from AppTable
 			->toArray();
 		$attr['options'] = $bankBranches;
 		if (empty($bankBranches)) {
@@ -197,14 +198,14 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 		return $this->_bankOptions = $this->BankBranches->Banks
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 			->find('visible')
-			->order(['order'])
+			// ->order(['order' => 'ASC'])
 			->toArray();
 	}
 
 	// POCOR-6160 starts
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-		$banks = TableRegistry::get('Banks');
+		$banks = TableRegistry::get('FieldOption.Banks');
 
 		$query
 		->select([
@@ -215,10 +216,10 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 			'bank' => 'Banks.name',
 			'bank_branch' => 'BankBranches.name'
 		])
-		->LeftJoin([$this->BankBranches->alias() => $this->BankBranches->table()],[
+		->LeftJoin([$this->BankBranches->getAlias() => $this->BankBranches->getTable()],[
 			$this->BankBranches->aliasField('id ='). 'InstitutionBankAccounts.bank_branch_id'
 		])
-		->LeftJoin([$banks->alias() => $banks->table()],[
+		->LeftJoin([$banks->getAlias() => $banks->getTable()],[
 			$banks->aliasField('id ='). 'BankBranches.bank_id'
 		]);
     }

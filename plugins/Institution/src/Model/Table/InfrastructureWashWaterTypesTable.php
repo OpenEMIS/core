@@ -6,9 +6,9 @@ use Cake\Validation\Validator;
 
 class InfrastructureWashWaterTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('infrastructure_wash_water_types');
+        $this->setTable('infrastructure_wash_water_types');
         parent::initialize($config);
 
         $this->hasMany('InfrastructureWashWaters', ['className' => 'Institution.InfrastructureWashWaters', 'foreignKey' => 'infrastructure_wash_water_type_id']);

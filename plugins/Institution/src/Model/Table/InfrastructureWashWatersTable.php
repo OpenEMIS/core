@@ -56,7 +56,7 @@ class InfrastructureWashWatersTable extends ControllerActionTable
             ->AcademicPeriods
             ->getYearList();
         $requestQuery = $this
-            ->request->query;
+            ->request->getQuery();
 
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this
             ->AcademicPeriods

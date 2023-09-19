@@ -11,9 +11,9 @@ use App\Model\Table\ControllerActionTable;
 
 class ReportCardCommentsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_classes');
+        $this->setTable('institution_classes');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -78,7 +78,7 @@ class ReportCardCommentsTable extends ControllerActionTable
 
         // Academic Periods filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
@@ -103,7 +103,7 @@ class ReportCardCommentsTable extends ControllerActionTable
                 ])
                 ->toArray();
             $reportCardOptions = ['0' => __('All Report Cards')] + $reportCardOptions;
-            $selectedReportCard = !is_null($this->request->query('report_card_id')) ? $this->request->query('report_card_id') : 0;
+            $selectedReportCard = !is_null($this->request->getQuery('report_card_id')) ? $this->request->getQuery('report_card_id') : 0;
             $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
             if (!empty($selectedReportCard)) {
                  $where[$ReportCards->aliasField('id')] = $selectedReportCard;
@@ -160,22 +160,22 @@ class ReportCardCommentsTable extends ControllerActionTable
                 ])
             ])
             ->innerJoin(
-                [$ClassGrades->alias() => $ClassGrades->table()],
+                [$ClassGrades->getAlias() => $ClassGrades->getTable()],
                 [$ClassGrades->aliasField('institution_class_id = ') . $this->aliasField('id')]
             )
             ->innerJoin(
-                [$ReportCards->alias() => $ReportCards->table()],
+                [$ReportCards->getAlias() => $ReportCards->getAlias()],
                 [
                     $ReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $ReportCards->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
                 ]
             )
             ->innerJoin(
-                [$EducationGrades->alias() => $EducationGrades->table()],
+                [$EducationGrades->getAlias() => $EducationGrades->getAlias()],
                 [$EducationGrades->aliasField('id = ') . $ReportCards->aliasField('education_grade_id')]
             )
             ->innerJoin(
-                [$EducationProgrammes->alias() => $EducationProgrammes->table()],
+                [$EducationProgrammes->getAlias() => $EducationProgrammes->getAlias()],
                 [$EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')]
             )
             ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
@@ -201,13 +201,13 @@ class ReportCardCommentsTable extends ControllerActionTable
                     $ReportCards->aliasField('teacher_comments_required') => 1
                 ]
             ])
-            ->orWhere([$orWhere])
+            // ->orWhere([$orWhere]) // POCOR-7485
             ->group([
                 $ClassGrades->aliasField('institution_class_id'),
                 $ReportCards->aliasField('id')
             ]);
     
-        if (is_null($this->request->query('sort'))) {
+        if (is_null($this->request->getQuery('sort'))) {
             $query->order([
                 $EducationProgrammes->aliasField('order'),
                 $EducationGrades->aliasField('order'),

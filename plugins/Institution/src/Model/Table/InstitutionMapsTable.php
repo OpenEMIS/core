@@ -27,9 +27,9 @@ class InstitutionMapsTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institutions');
+        $this->setTable('institutions');
         parent::initialize($config);
 
         $this->addBehavior('CustomField.Record', [
@@ -53,7 +53,7 @@ class InstitutionMapsTable extends ControllerActionTable
         $this->addBehavior('Institution.LatLong');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator = $this->LatLongValidation();
@@ -185,8 +185,8 @@ class InstitutionMapsTable extends ControllerActionTable
 
     public function onGetGoogleMaps(Event $event, Entity $entity)
     {
-        $ControllerActionHelper = $event->subject();
-        $htmlHelper = $event->subject()->Html;
+        $ControllerActionHelper = $event->getSubject();
+        $htmlHelper = $event->getSubject()->Html;
         $longitude  = $entity->longitude;
         $latitude   = $entity->latitude;
         $address    = "https://maps.google.com/?q=". $latitude . ',' . $longitude;
