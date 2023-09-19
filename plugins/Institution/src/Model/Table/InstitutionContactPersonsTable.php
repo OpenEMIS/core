@@ -141,8 +141,8 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
 
     public function onUpdateFieldPreferred(Event $event, array $attr, $action, Request $request)
     {
-        $functionName = __FUNCTION__;
-        $this->log($functionName, 'debug');
+//        $functionName = __FUNCTION__;
+//        $this->log($functionName, 'debug');
         if ($action == 'view' || $action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
             $attr['select'] = false;
