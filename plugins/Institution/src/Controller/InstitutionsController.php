@@ -4767,25 +4767,31 @@ class InstitutionsController extends AppController
         $requestData = $requestData['params'];
         /*$inst = 'eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6InVtcWxsdHNiZmZmN2E4bWNlcXA5aGduYTltIn0.ZjhkNmI0ZmFkYjFhNDQ2YjMwM2FmODQwNWQxYWRjZTBjNzFmYzRiMjViNmY0NmRkZDNiZjI5YTM2MmYyZWYyOA';
         echo "<pre>"; print_r($this->paramsDecode($inst)); die;*/
-        $institution_name = $this->request->session()->read('Institution.Institutions.name');
-        $institutions = TableRegistry::get('institutions');
-        $institution = $institutions
-            ->find()
-            ->select(['id', 'name'])
-            ->where(['name' => $institution_name])
-            ->first();
-        //get instituiton
-        $institution_id = 0;
-        if (!empty($institution)) {
-            $institution_id = $institution->id;
+        if(isset($requestData['institution_id'])){
+            $institution_id = $requestData['institution_id'];
         }
-        //get academic period
-        $academic_period = $requestData['academic_periods'];
+        if(!isset($requestData['institution_id'])) {
+            /*$inst = 'eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6InVtcWxsdHNiZmZmN2E4bWNlcXA5aGduYTltIn0.ZjhkNmI0ZmFkYjFhNDQ2YjMwM2FmODQwNWQxYWRjZTBjNzFmYzRiMjViNmY0NmRkZDNiZjI5YTM2MmYyZWYyOA';
+            echo "<pre>"; print_r($this->paramsDecode($inst)); die;*/
+            $institution_name = $this->request->session()->read('Institution.Institutions.name');
+            $institutions = TableRegistry::get('institutions');
+            $institution = $institutions
+                ->find()
+                ->select(['id', 'name'])
+                ->where(['name' => $institution_name])
+                ->first();
+            //get instituiton
+            $institution_id = 0;
+            if (!empty($institution)) {
+                $institution_id = $institution->id;
+            }
+        }
+        $academic_period_id = $requestData['academic_periods'];
         $academic_periods = TableRegistry::get('academic_periods');
         $academic_periods_result = $academic_periods
             ->find()
             ->select(['id', 'name', 'start_date', 'end_date'])
-            ->where(['id' => $academic_period])
+            ->where(['id' => $academic_period_id])
             ->first();
 
         $startDate = date('Y-m-d', strtotime($academic_periods_result->start_date));
@@ -4796,27 +4802,32 @@ class InstitutionsController extends AppController
             ->find()
             ->select([
                 $institution_grades->aliasField('id'),
+                $institution_grades->aliasField('academic_period_id'),
                 'EducationGrades.id',
-                'EducationGrades.name'
+                'EducationGrades.name',
+                $institution_grades->aliasField('end_date'),
+                $institution_grades->aliasField('start_date'),
+
             ])
-            ->LeftJoin(['EducationGrades' => 'education_grades'], [
+            ->InnerJoin(['EducationGrades' => 'education_grades'], [
                 'EducationGrades.id = ' . $institution_grades->aliasField('education_grade_id')
             ])
-            ->LeftJoin(['EducationProgrammes' => 'education_programmes'], [
+            ->InnerJoin(['EducationProgrammes' => 'education_programmes'], [
                 'EducationProgrammes.id = EducationGrades.education_programme_id'
             ])
-            ->LeftJoin(['EducationCycles' => 'education_cycles'], [
+            ->InnerJoin(['EducationCycles' => 'education_cycles'], [
                 'EducationCycles.id = EducationProgrammes.education_cycle_id'
             ])
-            ->LeftJoin(['EducationLevels' => 'education_levels'], [
+            ->InnerJoin(['EducationLevels' => 'education_levels'], [
                 'EducationLevels.id = EducationCycles.education_level_id'
             ])
-            ->LeftJoin(['EducationSystems' => 'education_systems'], [
+            ->InnerJoin(['EducationSystems' => 'education_systems'], [
                 'EducationSystems.id = EducationLevels.education_system_id'
             ])
             ->where([
                 $institution_grades->aliasField('institution_id') => $institution_id,
-                'EducationSystems.academic_period_id' => $academic_period,
+                $institution_grades->aliasField('academic_period_id') => $academic_period_id,
+                'EducationSystems.academic_period_id' => $academic_period_id,
                 'OR' => [
                     'OR' => [
                         [
@@ -4844,7 +4855,13 @@ class InstitutionsController extends AppController
             ->group([$institution_grades->aliasField('education_grade_id')])
             ->toArray();
         foreach ($institution_grades_result AS $result) {
-            $result_array[] = array("id" => $result['id'], "education_grade_id" => $result->EducationGrades['id'], "name" => $result->EducationGrades['name']);
+            $result_array[] = array("id" => $result['id'],
+                "education_grade_id" => $result->EducationGrades['id'],
+                "name" => $result->EducationGrades['name'],
+                "start_date" => $result['start_date'],
+                "endDate" => $result['end_date'],
+                "academic_period_id" =>  $result['academic_period_id']
+            );
         }
         echo json_encode($result_array);
         die;
