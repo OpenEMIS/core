@@ -252,6 +252,13 @@ Route::group(
         Route::post('institutions/{institutionId}/textbooks', 'TextbookController@addInstitutionTextbooks');
         // POCOR-7368 ends
 
+
+
+        //POCOR-7754 starts
+        Route::get('notices', 'WorkbenchController@getNoticesList');
+        Route::get('workbench/{openemisId}', 'WorkbenchController@getWorkbenchList');
+        //POCOR-7754 ends
+
     }
 );
 
