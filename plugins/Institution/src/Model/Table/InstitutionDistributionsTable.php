@@ -25,14 +25,14 @@ class InstitutionDistributionsTable extends ControllerActionTable
      * @param array $config The configuration for the Table.
      * @return void
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     { 
-        $this->table('institution_meal_programmes');
+        $this->setTable('institution_meal_programmes');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
         $this->belongsTo('MealProgrammes', ['className' => 'Meal.MealProgrammes','foreignKey' => 'meal_programmes_id']);
         $this->belongsTo('MealStatus', ['className' => 'Meal.MealStatusTypes','foreignKey' => 'delivery_status_id']);
-        $this->belongsTo('MealRatings', ['className' => 'Meal.MealRatings', 'foreignKey' => 'meal_rating_id']);//POCOR-7363
+        // $this->belongsTo('MealRatings', ['className' => 'Meal.MealRatings', 'foreignKey' => 'meal_rating_id']);//POCOR-7363 // Commented for POCOR-7484 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
 
         $this->MealProgrammes = TableRegistry::get('Meal.MealProgrammes');
@@ -65,7 +65,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
 	// }
     //END:POCOR-6681
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         //START: POCOR-6681
         $validator->requirePresence('date_received', 'create')->notEmpty('date_received');
@@ -145,12 +145,12 @@ class InstitutionDistributionsTable extends ControllerActionTable
     {            
         $request = $this->request;
         //academic period filter
-        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
 
         $extra['selectedPeriod'] = $selectedPeriod;
         $data['periodOptions'] = $periodOptions;
         $data['selectedPeriod'] = $selectedPeriod;
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         $options['academid_period_id'] = $selectedPeriod;
         $options['institution_id'] = $institutionId;
@@ -166,7 +166,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
             $levelOptions = array(-1 => __('-- Select Programmes Meal --'));
         }
 
-        if ($request->query('level')) {
+        if ($request->getQuery('level')) {
             $selectedLevel = $request->query('level');
         } else {
             $selectedLevel = -1;
@@ -184,7 +184,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
             $programmeOptions = array(-1 => __('-- Please Select week --')) + $programmeOptions;
 
-            if ($request->query('programme')) {
+            if ($request->getQuery('programme')) {
                 $selectedProgramme = $request->query('programme');
             } else {
                 $selectedProgramme = -1;
@@ -239,8 +239,8 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
      public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     { 
-        $hasSearchKey = $this->request->session()->read($this->registryAlias().'.search.key');
-        $institutions = $this->request->session()->read('Institution.Institutions.id');
+        $hasSearchKey = $this->request->getSession()->read($this->getRegistryAlias().'.search.key');
+        $institutions = $this->request->getSession()->read('Institution.Institutions.id');
 
         $conditions = [];
 
@@ -344,14 +344,15 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
     public function onUpdateFieldMealProgrammesId(Event $event, array $attr, $action, $request)
     {
-        $session = $this->request->session();
+        // echo "<pre>";print_r($this->request);die;
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         //POCOR-6434[START]
         // $institutionId = $request->data['InstitutionDistributions'];
         //POCOR-6434[END]
         if(!empty($institutionId)){
-            $options['period'] = $request->data['InstitutionDistributions']['academic_period_id'];
-            $options['level'] = $request->query['level'];
+            $options['period'] = $request->getData['InstitutionDistributions']['academic_period_id'];
+            $options['level'] = $request->getQuery['level'];
             $options['institution_id'] = $institutionId;
         }else{
             $options['period'] = $request->query['period'];
@@ -370,7 +371,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
     public function onUpdateFieldDateReceived(Event $event, array $attr, $action, $request){
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $data = $request->data[$this->alias()];
+        $data = $request->getData[$this->getAlias()];
         //START:POCOR-6681 // Requirment change to show date received in all condition
         // if($data['delivery_status_id'] == 4){
         //      $attr['type'] = 'hidden';          
@@ -400,20 +401,20 @@ class InstitutionDistributionsTable extends ControllerActionTable
         $levelOptions = $MealProgramme
         ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
         ->innerJoin(
-            [$MealInstitutionProgrammes->alias() => $MealInstitutionProgrammes->table()], [
+            [$MealInstitutionProgrammes->getAlias() => $MealInstitutionProgrammes->getTable()], [
                 $MealProgramme->aliasField('id = ') . $MealInstitutionProgrammes->aliasField('meal_programme_id'),
                 $MealProgramme->aliasField('academic_period_id = ') . $academic_period_id
             ]
         )
         ->where([
             $MealInstitutionProgrammes->aliasField('institution_id') => $institutionId])            
-        ->orWhere([ 
-            $MealInstitutionProgrammes->aliasField('institution_id') => $options['institution_id'] ])
+        // ->orWhere([ 
+        //     $MealInstitutionProgrammes->aliasField('institution_id') => $options['institution_id'] ]) // POCOR-7485
         // ->orWhere([ 
         //     $MealInstitutionProgrammes->aliasField('institution_id') => 0 ])
         ->toArray();
 
-        $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+        $selectedLevel = !is_null($this->request->getQuery('level')) ? $this->request->getQuery('level') : key($levelOptions);
 
         return compact('levelOptions', 'selectedLevel');
     }
@@ -433,12 +434,12 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
     public function getDeliveryStatusOptions()
     {
-        $MealStatus = TableRegistry::get('Meal.MealStatusTypes');
+        $MealStatus = TableRegistry::getTableLocator()->get('Meal.MealStatusTypes');
         $levelOptions = $MealStatus
         ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
         ->toArray();
 
-        $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+        $selectedLevel = !is_null($this->request->getQuery('level')) ? $this->request->getQuery('level') : key($levelOptions);
 
         return compact('levelOptions', 'selectedLevel');
     }
@@ -489,12 +490,12 @@ class InstitutionDistributionsTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $academicPeriodId =  ($this->request->query['period']) ? $this->request->query['period'] : $AcademicPeriod->getCurrent();
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id');
         $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
         $query
         ->innerJoin(
-            [$MealInstitutionProgrammes->alias() => $MealInstitutionProgrammes->table()], [
+            [$MealInstitutionProgrammes->getAlias() => $MealInstitutionProgrammes->getTable()], [
                 $this->aliasField('meal_programmes_id = ') . $MealInstitutionProgrammes->aliasField('id'),
             ]
         )

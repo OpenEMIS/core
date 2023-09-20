@@ -195,7 +195,7 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
         // end element control
 
         // Start POCOR-5188
-        $manualTable = TableRegistry::get('Manuals');
+        $manualTable = TableRegistry::getTableLocator()->get('Institution.Manuals');
         $ManualContent =   $manualTable->find()->select(['url'])->where([
                 $manualTable->aliasField('function') => 'Infrastructure WASH Sanitation',
                 $manualTable->aliasField('module') => 'Institutions',

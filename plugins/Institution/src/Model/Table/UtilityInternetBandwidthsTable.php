@@ -6,9 +6,9 @@ use Cake\Validation\Validator;
 
 class UtilityInternetBandwidthsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('utility_internet_bandwidths');
+        $this->setTable('utility_internet_bandwidths');
         parent::initialize($config);
 
         $this->hasMany('InfrastructureUtilityInternets', ['className' => 'Institution.InfrastructureUtilityInternets', 'foreignKey' => 'utility_internet_bandwidth_id']);

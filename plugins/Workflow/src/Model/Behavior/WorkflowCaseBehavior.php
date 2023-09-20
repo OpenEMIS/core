@@ -100,25 +100,25 @@ class WorkflowCaseBehavior extends Behavior
 
     private $workflowSetup = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
-        $models = $this->config('models');
-        if (is_null($this->config('model'))) {
-            $this->_config['model'] = $this->_table->registryAlias();
+        $models = $this->getConfig('models');
+        if (is_null($this->getConfig('model'))) {
+            $this->_config['model'] = $this->_table->getRegistryAlias();
         }
 
         foreach ($models as $key => $model) {
             if (!is_null($model)) {
                 $this->{$key} = TableRegistry::get($model);
-                $this->{lcfirst($key).'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->alias())) . '_id';
+                $this->{lcfirst($key).'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->getAlias())) . '_id';
             } else {
                 $this->{$key} = null;
             }
         }
 
         if ($this->isCAv4()) {
-            $actions = $this->config('actions');
+            $actions = $this->getConfig('actions');
             $model = $this->_table;
             foreach ($actions as $key => $value) {
                 $model->toggle($key, $value);
@@ -131,7 +131,7 @@ class WorkflowCaseBehavior extends Behavior
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
 
         $events = parent::implementedEvents();
@@ -443,7 +443,7 @@ class WorkflowCaseBehavior extends Behavior
     public function indexBeforeAction(Event $event)
     {
         $WorkflowModels = $this->WorkflowModels;
-        $registryAlias = $this->config('model');
+        $registryAlias = $this->getConfig('model');
 
         // Find from workflows table
         $results = $this->Workflows
@@ -480,7 +480,7 @@ class WorkflowCaseBehavior extends Behavior
 
             $filter = $workflowModel->filter;
             $model = $workflowModel->model;
-            $filterConfig = $this->config('filter');
+            $filterConfig = $this->getConfig('filter');
 
             if ($filterConfig['type'] && !empty($filter)) {
                 // Wofkflow Filter Options
@@ -571,7 +571,7 @@ class WorkflowCaseBehavior extends Behavior
 
             if ($filterConfig['period']) {
                 // Year Options
-                $AcademicPeriods = TableRegistry::get('academic_periods');
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $periodsOptions = $AcademicPeriods
                             ->find('list', ['keyField' => 'start_year', 'valueField' => 'start_year'])
                             ->order([$AcademicPeriods->aliasField('start_year') => 'DESC']);

@@ -5,9 +5,9 @@ use App\Model\Table\ControllerActionTable;
 
 class BusTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('bus_types');
+        $this->setTable('bus_types');
         parent::initialize($config);
 
         $this->hasMany('InstitutionBuses', ['className' => 'Institution.InstitutionBuses', 'dependent' => true, 'cascadeCallbacks' => true]);

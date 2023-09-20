@@ -731,7 +731,7 @@ class MealProgrammesTable extends ControllerActionTable
         $list = $MealProgramme
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->innerJoin(
-                [$MealInstitutionProgrammes->alias() => $MealInstitutionProgrammes->table()], [
+                [$MealInstitutionProgrammes->getAlias() => $MealInstitutionProgrammes->getTable()], [
                     $MealProgramme->aliasField('id = ') . $MealInstitutionProgrammes->aliasField('meal_programme_id')
                 ]
             )
@@ -1358,7 +1358,7 @@ class MealProgrammesTable extends ControllerActionTable
         $list = $MealProgramme
              ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->innerJoin(
-                [$MealInstitutionProgrammes->alias() => $MealInstitutionProgrammes->table()], [
+                [$MealInstitutionProgrammes->getAlias() => $MealInstitutionProgrammes->getTable()], [
                     $MealProgramme->aliasField('id = ') . $MealInstitutionProgrammes->aliasField('meal_programme_id')
                 ]
             )

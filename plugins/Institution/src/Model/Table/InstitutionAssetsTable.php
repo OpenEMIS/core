@@ -100,8 +100,8 @@ class InstitutionAssetsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
 //        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
-        $assetType = ($this->request->query('asset_type_id')) ? $this->request->query('asset_type_id') : 0;
-        $accessibility = $this->request->query('accessibility');;
+        $assetType = ($this->request->getQuery('asset_type_id')) ? $this->request->getQuery('asset_type_id') : 0;
+        $accessibility = $this->request->getQuery('accessibility');;
 
         if ($assetType > 0) {
             $query->where([
@@ -210,12 +210,12 @@ class InstitutionAssetsTable extends ControllerActionTable
             'label' => __('Type')
         ];
 
-        $extraField[] = [
-            'key' => 'InstitutionAssets.asset_make_id',
-            'field' => 'asset_make_id',
-            'type' => 'string',
-            'label' => __('Make')
-        ];
+        // $extraField[] = [
+        //     'key' => 'InstitutionAssets.asset_make_id',
+        //     'field' => 'asset_make_id',
+        //     'type' => 'string',
+        //     'label' => __('Make')
+        // ];
 
         $extraField[] = [
             'key' => 'InstitutionAssets.asset_model_id',
@@ -490,14 +490,14 @@ class InstitutionAssetsTable extends ControllerActionTable
             ->toArray();
 
         $assetTypeOptions = ['' => __('All Types')] + $assetTypes;
-        $extra['selectedAssetType'] = $this->request->query('asset_type_id');
+        $extra['selectedAssetType'] = $this->request->getQuery('asset_type_id');
         // set asset types filter POCOR-6152
 
         // set Accessibilities filter POCOR-6152
         $this->accessibilityOptions = $this->getSelectOptions($this->aliasField('accessibility'));
 
         $accessibilityOptions = ['' => __('All Accessibilities')] + $this->accessibilityOptions;
-        $extra['selectedAccessibility'] = $this->request->query('accessibility');
+        $extra['selectedAccessibility'] = $this->request->getQuery('accessibility');
         // set Accessibilities filter POCOR-6152
 
         $extra['elements']['control'] = [

@@ -24,13 +24,13 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     private $studentOptions = [];
     private $availableStudent = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_committees');
+        $this->setTable('institution_committees');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
-        $this->belongsTo('InstitutionCommitteeTypes', ['className' => 'Institutions.InstitutionCommitteeTypes']);
+        // $this->belongsTo('InstitutionCommitteeTypes', ['className' => 'Institutions.InstitutionCommitteeTypes']); POCOR-7485
         $this->hasMany('InstitutionCommitteeAttachments', [
             'className' => 'Institutions.InstitutionCommitteeAttachments',
             'dependent' => true,
@@ -41,12 +41,14 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => false
         ]);
-        $this->behaviors()->get('ControllerAction')->config([
-            'actions' => ['search' => false],
-        ]);
+        // $this->behaviors()->get('ControllerAction')->config([
+        //     'actions' => ['search' => false],
+        // ]);
+        $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
+        $controllerActionBehavior->setConfig(['actions' => ['search' => false]]);
         $this->addBehavior('Excel', ['pages' => ['index']]);
     }
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -86,7 +88,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(); //to show list of academic period for selection
         $committeeTypeOptions = $this->getCommitteeTypeOptions();
 
@@ -150,14 +152,15 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     // Get Options
     public function getCommitteeTypeOptions()
     {
-        $committeeTypeOptions = $this->InstitutionCommitteeTypes
+        $InstitutionCommitteeTypes = TableRegistry::getTableLocator()->get('Institution.InstitutionCommitteeTypes');
+        $committeeTypeOptions = $InstitutionCommitteeTypes
             ->find('list', [
                 'keyField' => 'id',
                 'valueField' => 'name'
             ])
             ->select([
-                'id' => $this->InstitutionCommitteeTypes->aliasField('id'),
-                'name' => $this->InstitutionCommitteeTypes->aliasField('name')
+                'id' => $InstitutionCommitteeTypes->aliasField('id'),
+                'name' => $InstitutionCommitteeTypes->aliasField('name')
             ])
             ->toArray();
 
@@ -202,11 +205,12 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     // OnUpdate Events
     public function onUpdateFieldInstitutionCommitteeTypeId(Event $event, array $attr, $action, Request $request)
     {
+        $InstitutionCommitteeTypes = TableRegistry::getTableLocator()->get('Institution.InstitutionCommitteeTypes');
         if ($action == 'add' || $action == 'edit') {
 
         if ($action == 'edit') {
 
-                $committeType = $this->InstitutionCommitteeTypes->get($attr['entity']->institution_committee_type_id);
+                $committeType = $InstitutionCommitteeTypes->get($attr['entity']->institution_committee_type_id);
 
                 $attr['type'] = 'readonly';
                 $attr['attr']['value'] =  $committeType->name;
@@ -362,7 +366,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $academicPeriod = !empty($this->request->query['period']) ? $this->request->query['period'] : $this->AcademicPeriods->getCurrent();
         $committeType = !empty($this->request->query['type']) ? $this->request->query['type'] : -1;
-
+        $InstitutionCommitteeTypes = TableRegistry::getTableLocator()->get('Institution.InstitutionCommitteeTypes');
 		$query
 		->select(['name' => 'InstitutionTestCommittees.name',
             'chairperson' => 'InstitutionTestCommittees.chairperson',
@@ -375,8 +379,8 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
 		->LeftJoin([$this->AcademicPeriods->alias() => $this->AcademicPeriods->table()],[
 			$this->AcademicPeriods->aliasField('id').' = ' . 'InstitutionTestCommittees.academic_period_id'
 		])
-        ->LeftJoin([$this->InstitutionCommitteeTypes->alias() => $this->InstitutionCommitteeTypes->table()],[
-			$this->InstitutionCommitteeTypes->aliasField('id').' = ' . 'InstitutionTestCommittees.institution_committee_type_id'
+        ->LeftJoin([$InstitutionCommitteeTypes->alias() => $InstitutionCommitteeTypes->table()],[
+			$InstitutionCommitteeTypes->aliasField('id').' = ' . 'InstitutionTestCommittees.institution_committee_type_id'
 		])
         ->where([
             'InstitutionTestCommittees.academic_period_id' =>  $academicPeriod,
