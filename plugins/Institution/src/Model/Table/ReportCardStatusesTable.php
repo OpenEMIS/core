@@ -322,7 +322,9 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $ExcludedSecurityRoleEntity=$this->getExcludedSecurityRolesData($reportCard->id);  //POCOR-7551
                 //POCOR-7400 end
                 if ($this->AccessControl->isAdmin()) {
-                    if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
+                    // if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
+                    // This condition is removed for allowing admin to generate report cards even if it is not within generate start and end date
+                     if ((!empty($generateStartDate) && !empty($generateEndDate)) ) { //POCOR-7761
                         $buttons['generate'] = [
                         'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
                         'attr' => $indexAttr,
@@ -878,7 +880,9 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $date = Time::now()->format('Y-m-d');
     
                     if ($this->AccessControl->isAdmin()) {
-                        if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
+                        // if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
+                        // This condition is removed for allowing admin to generate report cards even if it is not within generate start and end date
+                        if (!empty($generateStartDate) && !empty($generateEndDate)) {//POCOR-7761
                             $extra['toolbarButtons']['generateAll'] = $generateButton;
                         } else { 
                             $generateButton['attr']['data-html'] = true;
