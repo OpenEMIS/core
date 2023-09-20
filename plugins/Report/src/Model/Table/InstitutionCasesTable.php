@@ -133,6 +133,8 @@ class InstitutionCasesTable extends AppTable
                         }
                     }
                     $arr->linked_records = implode(', ', $childCaseNumbers);
+                    $arr->created = (new DateTime($arr->created))->format('F j, Y - H:i:s');
+                    $arr->modified = (new DateTime($arr->modified))->format('F j, Y - H:i:s');
                 }
                 return $arrayRes;
             });
@@ -241,13 +243,13 @@ class InstitutionCasesTable extends AppTable
         $newFields[] = [
             'key' => 'InstitutionCases.modified',
             'field' => 'modified',
-            'type' => 'datetime',
+            'type' => 'string',
             'label' => __('Updated')
         ];
         $newFields[] = [
             'key' => 'InstitutionCases.created',
             'field' => 'created',
-            'type' => 'datetime',
+            'type' => 'string',
             'label' => __('Created')
         ];
 
