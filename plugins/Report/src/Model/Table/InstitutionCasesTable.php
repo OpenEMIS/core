@@ -133,8 +133,8 @@ class InstitutionCasesTable extends AppTable
                         }
                     }
                     $arr->linked_records = implode(', ', $childCaseNumbers);
-                    $arr->created = (new DateTime($arr->created))->format('F j, Y - H:i:s');
-                    $arr->modified = (new DateTime($arr->modified))->format('F j, Y - H:i:s');
+                $arr->created= $arr->created->format('F j, Y - H:i:s');
+                $arr->modified = !isset($arr->modified)? $arr->modified : $arr->modified->format('F j, Y - H:i:s');
                 }
                 return $arrayRes;
             });
