@@ -50,9 +50,9 @@ class ReportCardStatusesTable extends ControllerActionTable
         'zip'   => 'application/zip'
     ];
      // POCOR-7321 end
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_class_students');
+        $this->setTable('institution_class_students');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
@@ -69,10 +69,10 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
 
-        $this->ReportCards = TableRegistry::get('ReportCard.ReportCards');
-        $this->StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-        $this->ReportCardEmailProcesses = TableRegistry::get('ReportCard.ReportCardEmailProcesses');
-        $this->ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
+        $this->ReportCards = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
+        $this->StudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
+        $this->ReportCardEmailProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardEmailProcesses');
+        $this->ReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
 
         $this->statusOptions = [
             self::NEW_REPORT => __('New'),
@@ -83,7 +83,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         ];
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.generate'] = 'generate';
@@ -111,8 +111,8 @@ class ReportCardStatusesTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
         // check if report card request is valid
-        $reportCardId = $this->request->query('report_card_id');
-        if (!is_null($reportCardId) && $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId])) {
+        $reportCardId = $this->request->getQuery('report_card_id');
+        if (!is_null($reportCardId) && $this->ReportCards->exists([$this->ReportCards->getPrimaryKey() => $reportCardId])) {
 
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
             $params = [
@@ -137,10 +137,10 @@ class ReportCardStatusesTable extends ControllerActionTable
 
                 $loginUserIdUser = $this->Auth->user('id');
 
-                $securityGroupInstitutions = TableRegistry::get('Security.securityGroupInstitutions');
+                $securityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.securityGroupInstitutions');
 
-                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+                $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
 
                 $SecurityGroupInstitutionsData = $securityGroupInstitutions
                 ->find()        
@@ -157,7 +157,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
                 $SecurityGroupUsersData = $SecurityGroupUsers
                 ->find()        
-                ->innerJoin([$SecurityRoles->alias() => $SecurityRoles->table()], [
+                ->innerJoin([$SecurityRoles->getAlias() => $SecurityRoles->getTable()], [
                     $SecurityRoles->aliasField('id = ') . $SecurityGroupUsers->aliasField('security_role_id')
                 ])
                 ->where([
@@ -171,14 +171,14 @@ class ReportCardStatusesTable extends ControllerActionTable
 
 
                 //POCOR:6838 START
-                $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+                $SecurityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
                 $SecurityFunctionsDownloadExcelData = $SecurityFunctions
                                     ->find()
                                     ->where([
                                         $SecurityFunctions->aliasField('name') => 'Download Excel'])
                                     ->first();
 
-                $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                $SecurityRoleFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
                 $SecurityRoleFunctionsTableDownloadExcelData = $SecurityRoleFunctionsTable
                 ->find()
                 ->where([
@@ -224,14 +224,14 @@ class ReportCardStatusesTable extends ControllerActionTable
                     '1' => $this->paramsEncode($params)
                 ];
 
-                $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+                $SecurityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
                 $SecurityFunctionsDownloadPdfData = $SecurityFunctions
                                     ->find()
                                     ->where([
                                         $SecurityFunctions->aliasField('name') => 'Download Pdf'])
                                     ->first();
 
-                $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                $SecurityRoleFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
                 $SecurityRoleFunctionsTableDownloadPdfData = $SecurityRoleFunctionsTable
                 ->find()
                 ->where([
@@ -302,14 +302,14 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $date = Time::now()->format('Y-m-d');
 
                 //POCOR-6838: Start
-                $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+                $SecurityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
                 $SecurityFunctionsGenerateData = $SecurityFunctions
                                     ->find()
                                     ->where([
                                         $SecurityFunctions->aliasField('name') => 'Generate'])
                                     ->first();
 
-                $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                $SecurityRoleFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
                 $SecurityRoleFunctionsTableGenerateData = $SecurityRoleFunctionsTable
                 ->find()
                 ->where([
@@ -454,7 +454,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         //POCOR-7067 Starts
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         //POCOR-7581 start
         $ConfigItem =   $ConfigItems
         ->find()
@@ -472,7 +472,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         //Start:POCOR-6785 need to convert this custom query to cake query
         $conn = ConnectionManager::get('default');
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $ReportCardProcessesTable = TableRegistry::get('report_card_processes');
+        $ReportCardProcessesTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
         $entitydata = $ReportCardProcessesTable->find('all',['conditions'=>[
                 'institution_id' =>$institutionId,
                 'status !=' =>'-1'
@@ -504,7 +504,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $entity->status = self::ERROR; //(-1)
                     $entity->modified = $currentTimeZone;//POCOR-6841
                     $ReportCardProcessesTable->save($entity);
-                    $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+                    $StudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
                     $StudentsReportCards->updateAll([
                          'status'=>-1//POCOR-7530
                     ],['student_id' => $entity->student_id, 'report_card_id'=> $entity->report_card_id]);
@@ -540,7 +540,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $this->ReportCardProcesses->aliasField('created'),
                 $this->ReportCardProcesses->aliasField('student_id')
             ])
-            ->hydrate(false)
+            //->hydrate(false)
             ->toArray();
     }
 
@@ -548,11 +548,11 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $Classes = $this->InstitutionClasses;
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
 
         // Academic Periods filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
@@ -577,13 +577,13 @@ class ReportCardStatusesTable extends ControllerActionTable
         }
 
         $reportCardOptions = ['-1' => '-- '.__('Select Report Card').' --'] + $reportCardOptions;
-        $selectedReportCard = !is_null($this->request->query('report_card_id')) ? $this->request->query('report_card_id') : -1;
+        $selectedReportCard = !is_null($this->request->getQuery('report_card_id')) ? $this->request->getQuery('report_card_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
         //End
 
         // Class filter
         $classOptions = [];
-        $selectedClass = !is_null($this->request->query('class_id')) ? $this->request->query('class_id') : -1;
+        $selectedClass = !is_null($this->request->getQuery('class_id')) ? $this->request->getQuery('class_id') : -1;
         $educationGradeByReportCardId = '';//POCOR-7212
         if ($selectedReportCard != -1) {
             $reportCardEntity = $this->ReportCards->find()->where(['id' => $selectedReportCard])->first();
@@ -633,7 +633,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 return $q->where(['StudentStatuses.code NOT IN ' => ['WITHDRAWN']]);
             })
             //POCOR-7153[END]
-            ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
+            ->leftJoin([$this->StudentsReportCards->getAlias() => $this->StudentsReportCards->getTable()],
                 [
                     $this->StudentsReportCards->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $this->StudentsReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
@@ -643,7 +643,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->StudentsReportCards->aliasField('report_card_id = ') . $selectedReportCard
                 ]
             )
-            ->leftJoin([$this->ReportCardEmailProcesses->alias() => $this->ReportCardEmailProcesses->table()],
+            ->leftJoin([$this->ReportCardEmailProcesses->getAlias() => $this->ReportCardEmailProcesses->getTable()],
                 [
                     $this->ReportCardEmailProcesses->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $this->ReportCardEmailProcesses->aliasField('institution_id = ') . $this->aliasField('institution_id'),
@@ -653,11 +653,11 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->ReportCardEmailProcesses->aliasField('report_card_id = ') . $selectedReportCard
                 ]
             )
-            ->autoFields(true)
+            //->autoFields(true)
             ->where($where)
             ->all();
 
-        if (is_null($this->request->query('sort'))) {
+        if (is_null($this->request->getQuery('sort'))) {
             $query
                 ->contain('Users')
                 ->order(['Users.first_name', 'Users.last_name']);
@@ -682,8 +682,8 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $reportCardId = $this->request->query('report_card_id');
-        $classId = $this->request->query('class_id');
+        $reportCardId = $this->request->getQuery('report_card_id');
+        $classId = $this->request->getQuery('class_id');
         //POCOR-7131 starts
         $loginUserIdUser = $this->Auth->User('id');
         $securityRoles = $this->AccessControl->getRolesByUser($loginUserIdUser)->toArray();
@@ -724,14 +724,14 @@ class ReportCardStatusesTable extends ControllerActionTable
                         'report_card_id' => $reportCardId
                     ];
     
-                    $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+                    $SecurityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
                     $SecurityFunctionsAllExcelData = $SecurityFunctions
                                         ->find()
                                         ->where([
                                             $SecurityFunctions->aliasField('name') => 'Download All Excel'])
                                         ->first();
     
-                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                    $SecurityRoleFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
                     $SecurityRoleFunctionsTableAllExcelData = $SecurityRoleFunctionsTable
                                         ->find()
                                         ->where([
@@ -741,14 +741,14 @@ class ReportCardStatusesTable extends ControllerActionTable
                                         ])
                                         ->count();
                     
-                    $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+                    $SecurityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
                     $SecurityFunctionsAllPdfData = $SecurityFunctions
                                         ->find()
                                         ->where([
                                             $SecurityFunctions->aliasField('name') => 'Download All Pdf'])
                                         ->first();
     
-                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                    $SecurityRoleFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
                     $SecurityRoleFunctionsTableAllPdfData = $SecurityRoleFunctionsTable
                                         ->find()
                                         ->where([
@@ -757,14 +757,14 @@ class ReportCardStatusesTable extends ControllerActionTable
                                             ])
                                         ->count();
     
-                    $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+                    $SecurityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
                     $SecurityFunctionsGenerateAllData = $SecurityFunctions
                                         ->find()
                                         ->where([
                                             $SecurityFunctions->aliasField('name') => 'Generate All'])
                                         ->first();
                     
-                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                    $SecurityRoleFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
                     $SecurityRoleFunctionsTableGenerateAllData = $SecurityRoleFunctionsTable
                                         ->find()
                                         ->where([
@@ -857,9 +857,9 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $generateButton['label'] = '<i class="fa fa-refresh"></i>';
                     $generateButton['attr'] = $toolbarAttr;
                     $generateButton['attr']['title'] = __('Generate All');
-                    //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
-                    if (!is_null($this->request->query('report_card_id'))) {
-                        $reportCardId = $this->request->query('report_card_id');
+                    //$ReportCards = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
+                    if (!is_null($this->request->getQuery('report_card_id'))) {
+                        $reportCardId = $this->request->getQuery('report_card_id');
                     }
     
                     $ReportCardsData = $this->ReportCards
@@ -970,14 +970,14 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ];
     
                     //POCOR-6838: Start
-                    $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+                    $SecurityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
                     $SecurityFunctionsAllExcelData = $SecurityFunctions
                                         ->find()
                                         ->where([
                                             $SecurityFunctions->aliasField('name') => 'Download All Excel'])
                                         ->first();
     
-                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                    $SecurityRoleFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
                     $SecurityRoleFunctionsTableAllExcelData = $SecurityRoleFunctionsTable
                                         ->find()
                                         ->where([
@@ -987,14 +987,14 @@ class ReportCardStatusesTable extends ControllerActionTable
                                         ])
                                         ->count();//POCOR-7131
     
-                    $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+                    $SecurityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
                     $SecurityFunctionsAllPdfData = $SecurityFunctions
                                         ->find()
                                         ->where([
                                             $SecurityFunctions->aliasField('name') => 'Download All Pdf'])
                                         ->first();
     
-                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                    $SecurityRoleFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
                     $SecurityRoleFunctionsTableAllPdfData = $SecurityRoleFunctionsTable
                                         ->find()
                                         ->where([
@@ -1003,14 +1003,14 @@ class ReportCardStatusesTable extends ControllerActionTable
                                             $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds])//POCOR-7131
                                         ->count();//POCOR-7131
     
-                    $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+                    $SecurityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
                     $SecurityFunctionsGenerateAllData = $SecurityFunctions
                                         ->find()
                                         ->where([
                                             $SecurityFunctions->aliasField('name') => 'Generate All'])
                                         ->first();
                     
-                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
+                    $SecurityRoleFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
                     $SecurityRoleFunctionsTableGenerateAllData = $SecurityRoleFunctionsTable
                                         ->find()
                                         ->where([
@@ -1102,9 +1102,9 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $generateButton['label'] = '<i class="fa fa-refresh"></i>';
                     $generateButton['attr'] = $toolbarAttr;
                     $generateButton['attr']['title'] = __('Generate All');
-                    //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
-                    if (!is_null($this->request->query('report_card_id'))) {
-                        $reportCardId = $this->request->query('report_card_id');
+                    //$ReportCards = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
+                    if (!is_null($this->request->getQuery('report_card_id'))) {
+                        $reportCardId = $this->request->getQuery('report_card_id');
                     }
     
                     $ReportCardsData = $this->ReportCards
@@ -1292,8 +1292,8 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $params = $this->request->query;
-        $reportCardTable = TableRegistry::get('report_cards');
+        $params = $this->request->getQuery();
+        $reportCardTable = TableRegistry::getTableLocator()->get('report_cards');
         //POCOR-7605 start
         $decodeParam = $this->paramsDecode($this->request->params['pass'][1]);
         $conditions = [];
@@ -1313,7 +1313,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'email_error_message' => $this->ReportCardEmailProcesses->aliasField('error_message'),
                 'gpa' => $this->StudentsReportCards->aliasField('gpa'),//POCOR-7318
             ])
-            ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
+            ->leftJoin([$this->StudentsReportCards->getAlias() => $this->StudentsReportCards->getTable()],
                 [
                     $this->StudentsReportCards->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $this->StudentsReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
@@ -1322,7 +1322,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $this->StudentsReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id')
                 ]
             )
-            ->leftJoin([$this->ReportCardEmailProcesses->alias() => $this->ReportCardEmailProcesses->table()],
+            ->leftJoin([$this->ReportCardEmailProcesses->getAlias() => $this->ReportCardEmailProcesses->getTable()],
                 [
                     $this->ReportCardEmailProcesses->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $this->ReportCardEmailProcesses->aliasField('institution_id = ') . $this->aliasField('institution_id'),
@@ -1334,7 +1334,8 @@ class ReportCardStatusesTable extends ControllerActionTable
             )
             ->where($conditions)
             ->order(['report_card_id' => 'DESC'])
-            ->autoFields(true);
+            //->autoFields(true)
+            ;
 
         
     }
@@ -1356,7 +1357,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         //     $startedOnValue = new Time($entity->report_card_started_on);
         //     $value = $this->formatDateTime($startedOnValue);
         // }
-        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItem =   $ConfigItemTable
                             ->find()
                             ->select(['zonevalue' => 'ConfigItems.value'])
@@ -1384,7 +1385,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         //     $completedOnValue = new Time($entity->report_card_completed_on);
         //     $value = $this->formatDateTime($completedOnValue);
         // }
-        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItem =   $ConfigItemTable
                             ->find()
                             ->select(['zonevalue' => 'ConfigItems.value'])
@@ -1411,8 +1412,8 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         if ($entity->has('report_card_id')) {
             $reportCardId = $entity->report_card_id;
-        } else if (!is_null($this->request->query('report_card_id'))) {
-            $reportCardId = $this->request->query('report_card_id');
+        } else if (!is_null($this->request->getQuery('report_card_id'))) {
+            $reportCardId = $this->request->getQuery('report_card_id');
         }
 
         $search = [
@@ -1446,12 +1447,12 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function onGetReportCard(Event $event, Entity $entity)
     {
         $value = '';
-        $params = $this->request->query;
+        $params = $this->request->getQuery();
         if ($entity->has('report_card_id')) {
             $reportCardId = $params['report_card_id'];
-        } else if (!is_null($this->request->query('report_card_id'))) {
+        } else if (!is_null($this->request->getQuery('report_card_id'))) {
             // used if student report card record has not been created yet
-            $reportCardId = $this->request->query('report_card_id');
+            $reportCardId = $this->request->getQuery('report_card_id');
         }
 
         if (!empty($reportCardId)) {
@@ -1519,7 +1520,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                   die;
                }
 
-            $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
+            $ReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
             //POCOR-6692 start
             if($params['class_id']=='all'){
                 $inProgress = $ReportCardProcesses->find()
@@ -1807,13 +1808,13 @@ class ReportCardStatusesTable extends ControllerActionTable
     private function addReportCardsToProcesses($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
         //POCOR-7067 Starts
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $timeZone= $ConfigItems->value("time_zone");
         date_default_timezone_set($timeZone);//POCOR-7067 Ends
         Log::write('debug', 'Initialize Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
 
-        $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
-        $classStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+        $ReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
+        $classStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         $where = [];
         $where[$classStudentsTable->aliasField('institution_class_id')] = $institutionClassId;
         if (!is_null($studentId)) {
@@ -1894,8 +1895,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                 }
             }else{
                 //POCOR-6431[START]
-                $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-                $ReportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
+                $StudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
+                $ReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
                 if (!$StudentsReportCards->exists($recordIdKeys)) {
                     // insert student report card record if it does not exist
                     $recordIdKeys['status'] = $StudentsReportCards::IN_PROGRESS;
@@ -1920,7 +1921,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     private function triggerGenerateAllReportCardsShell($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
 
         foreach ($runningProcess as $key => $processData) {
@@ -1968,12 +1969,12 @@ class ReportCardStatusesTable extends ControllerActionTable
     private function addReportCardsToEmailProcesses($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
         //POCOR-7067 Starts
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $timeZone= $ConfigItems->value("time_zone");
         date_default_timezone_set($timeZone);//POCOR-7067 Ends
         Log::write('debug', 'Initialize Add All Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to email processes ('.Time::now().')');
 
-        $classStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+        $classStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
 
         $where = [];
         $where[$classStudentsTable->aliasField('institution_class_id')] = $institutionClassId;
@@ -1988,7 +1989,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $classStudentsTable->aliasField('education_grade_id'),
                 $classStudentsTable->aliasField('institution_class_id')
             ])
-            ->innerJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
+            ->innerJoin([$this->StudentsReportCards->getAlias() => $this->StudentsReportCards->getTable()],
                 [
                     $this->StudentsReportCards->aliasField('student_id = ') . $classStudentsTable->aliasField('student_id'),
                     $this->StudentsReportCards->aliasField('institution_id = ') . $classStudentsTable->aliasField('institution_id'),
@@ -2028,7 +2029,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     private function triggerEmailAllReportCardsShell($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($this->ReportCardEmailProcesses->registryAlias());
 
         // to-do: add logic to purge shell which is 30 minutes old
@@ -2079,7 +2080,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     
     private function checkReportCardsToBeProcess($institutionClassId, $reportCardId, $academicPeriodId  = null)
     {
-        $classStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+        $classStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         $where = [];
         $where[$classStudentsTable->aliasField('institution_class_id')] = $institutionClassId;
         $where[$classStudentsTable->aliasField('academic_period_id')] = $academicPeriodId;
@@ -2096,7 +2097,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         }   
         
         $condition = [];
-        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
         $entityAssessment = $Assessments->find()
                 ->where([
                     $Assessments->aliasField('academic_period_id') => $classStudents->academic_period_id,
@@ -2108,7 +2109,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $condition['assessment_id'] = $entityAssessment->id;
         }
         
-        $ReportCards = TableRegistry::get('ReportCard.ReportCards');
+        $ReportCards = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
         $entityReportCards = $ReportCards->get($reportCardId);
         
         $condition['report_card_start_date'] = $entityReportCards->start_date;
@@ -2119,7 +2120,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             && array_key_exists('report_card_end_date', $condition)
            ) {
             
-            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+            $AssessmentPeriods = TableRegistry::getTableLocator()->get('Assessment.AssessmentPeriods');
             $entityAssessmentPeriods = $AssessmentPeriods->find()
                 ->where([
                     $AssessmentPeriods->aliasField('assessment_id') => $condition['assessment_id'],
@@ -2201,7 +2202,7 @@ class ReportCardStatusesTable extends ControllerActionTable
      */
     private function triggerEmailAllExcelReportCardsShell($institutionId, $institutionClassId, $reportCardId, $studentId = null)
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($this->ReportCardEmailProcesses->registryAlias());
 
         // to-do: add logic to purge shell which is 30 minutes old
@@ -2242,10 +2243,10 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     //POCOR-7400 start
     public function getExcludedSecurityRolesData($report_card_id){
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         
-        // $securityGroupInstitutions = TableRegistry::get('Security.securityGroupInstitutions');
+        // $securityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.securityGroupInstitutions');
         // $SecurityGroupInstitutionsData = $securityGroupInstitutions
         //         ->find()        
         //         ->where([
@@ -2261,7 +2262,7 @@ class ReportCardStatusesTable extends ControllerActionTable
        
         $SecurityGroupUsersData = $SecurityGroupUsers
                 ->find()        
-                ->innerJoin([$SecurityRoles->alias() => $SecurityRoles->table()], [
+                ->innerJoin([$SecurityRoles->getAlias() => $SecurityRoles->getTable()], [
                     $SecurityRoles->aliasField('id = ') . $SecurityGroupUsers->aliasField('security_role_id')
                 ])
                 ->where([
@@ -2278,7 +2279,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         }
         $ExcludedSecurityRoleEntity=-1;
         if(!empty($ids)){
-        $ExcludedSecurityRoleTable=TableRegistry::get('report_card_excluded_security_roles');
+        $ExcludedSecurityRoleTable=TableRegistry::getTableLocator()->get('report_card_excluded_security_roles');
         $ExcludedSecurityRoleEntity=$ExcludedSecurityRoleTable->find('all')
                                                               ->where([
                                                                 'security_role_id IN'=>$ids,
@@ -2302,7 +2303,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     private function addGpaReportCards($checkgpaStudent, $reportCardId)
     {
         $studentId = $checkgpaStudent;//POCOR-7656
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods'); 
+        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods'); 
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriodId =  $this->AcademicPeriods->getCurrent();
         $gpa = 0.00;

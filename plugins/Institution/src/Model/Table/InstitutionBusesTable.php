@@ -85,7 +85,7 @@ class InstitutionBusesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         // POCOR-6168 start
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id');
 
         // provider filter
@@ -96,7 +96,7 @@ class InstitutionBusesTable extends ControllerActionTable
         ])
         ->toArray();
         $transportProviderOptions = [-1 => __('All Providers')] + $transportProviders;
-        $extra['transportProviders'] = $this->request->query('provider');  
+        $extra['transportProviders'] = $this->request->getQuery('provider');  
         // provider filter end
           
         // Transport Statuses
@@ -105,7 +105,7 @@ class InstitutionBusesTable extends ControllerActionTable
         ->toArray();
 
         $transportStatusOptions = [-1 => __('All Statuses')] + $transportStatuses;
-        $extra['transportStatuses'] = $this->request->query('status');    
+        $extra['transportStatuses'] = $this->request->getQuery('status');    
         // Transport Statuses end
 
         $extra['elements']['control'] = [
@@ -150,8 +150,8 @@ class InstitutionBusesTable extends ControllerActionTable
     // POCOR-6168 For Filters
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $transportProviderId = $this->request->query('provider');
-        $transportStatusId = $this->request->query('status');
+        $transportProviderId = $this->request->getQuery('provider');
+        $transportStatusId = $this->request->getQuery('status');
         
         if($transportProviderId > 0){
             $query

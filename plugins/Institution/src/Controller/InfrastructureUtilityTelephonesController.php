@@ -9,14 +9,14 @@ class InfrastructureUtilityTelephonesController extends PageController
 {
     private $academicPeriodOptions = [];
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
         $this->loadModel('AcademicPeriod.AcademicPeriods');
         // to disable actions if institution is not active
         $this->loadComponent('Institution.InstitutionInactive');
-
+        $this->loadComponent('Page.Page');
         $this->Page->disable(['search']); // to disable the search function
     }
 

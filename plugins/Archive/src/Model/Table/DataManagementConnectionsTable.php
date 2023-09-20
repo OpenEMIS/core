@@ -447,10 +447,13 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $archiveConnection = ConnectionManager::get($targetTableConnection);
-        /*if($targetTableName == 'assessment_item_results_archived'){
+        if($targetTableName == 'assessment_item_results_archived'){
             $targetTableName = 'AssessmentItemResultsArchived';
-        }  */      
-        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
+        }        
+        /*echo "<pre>"; print_r($targetTableName);
+        echo "<pre>"; print_r($archiveConnection);
+die;*/
+        $tableArchived = TableRegistry::getTableLocator()->get('Institution.'.$targetTableName, [
             'connection' => $archiveConnection,
         ]);
         $count = $tableArchived->find('all')

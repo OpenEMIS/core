@@ -9,19 +9,23 @@
                     'index'
                 ]);
                 $template = $this->ControllerAction->getFormTemplate();
-                $this->Form->templates($template);
+                $this->Form->templates($template); ?>
 
-                if (!empty($academicPeriodOptions)) {
-                    echo $this->Form->input('academic_period', array(
-                        'class' => 'form-control',
-                        'label' => false,
-                        'options' => $academicPeriodOptions,
-                        'default' => $selectedAcademicPeriod,
-                        'url' => $baseUrl,
-                        'data-named-key' => 'academic_period_id'
-                    ));
-                }
-            ?>
+                <?php   if (!empty($academicPeriodOptions)) { ?>
+                    <div class="input select required">
+                        <div class="input-select-wrapper">
+                        <?php   echo $this->Form->input('academic_period', array(
+                            'type' => 'select',
+                            'class' => 'form-control',
+                            'label' => false,
+                            'options' => $academicPeriodOptions,
+                            'default' => $selectedAcademicPeriod,
+                            'url' => $baseUrl,
+                            'data-named-key' => 'academic_period_id'
+                        )); ?>
+                        </div>
+                    </div>
+                <?php   } ?>
         </div>
     </div>
 <?php endif ?>

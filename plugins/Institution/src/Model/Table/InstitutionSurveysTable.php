@@ -244,7 +244,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 
         $fileErrors = [];
         $session = $this->request->session();
-        $sessionErrors = $this->registryAlias().'.parseFileError';
+        $sessionErrors = $this->getRegistryAlias().'.parseFileError';
 
         if ($session->check($sessionErrors)) {
             $fileErrors = $session->read($sessionErrors);
@@ -309,8 +309,8 @@ class InstitutionSurveysTable extends ControllerActionTable
                     if ($institutionFilterCount > 0) {
                         $activeSurveyCount = $SurveyStatusPeriods
                             ->find()
-                            ->matching($AcademicPeriods->alias())
-                            ->matching($SurveyStatuses->alias(), function ($q) use ($SurveyStatuses, $surveyFormId, $todayDate) {
+                            ->matching($AcademicPeriods->getAlias())
+                            ->matching($SurveyStatuses->getAlias(), function ($q) use ($SurveyStatuses, $surveyFormId, $todayDate) {
                                 return $q
                                     ->where([
                                         $SurveyStatuses->aliasField('survey_form_id') => $surveyFormId,
@@ -409,9 +409,9 @@ class InstitutionSurveysTable extends ControllerActionTable
 
         if ($this->attachWorkflow) {
             if ($this->hasWorkflow) {
-                $selectedFilter = $this->request->query('filter');
+                $selectedFilter = $this->request->getQuery('filter');
                 if ($selectedFilter != -1) {
-                    $workflow = $this->getWorkflow($this->registryAlias(), null, $selectedFilter);
+                    $workflow = $this->getWorkflow($this->getRegistryAlias(), null, $selectedFilter);
                     if (!empty($workflow)) {
                         foreach ($workflow->workflow_steps as $workflowStep) {
                             if ($workflowStep->category == WorkflowSteps::TO_DO) {
@@ -427,7 +427,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 
         $this->field('description', ['type' => 'text']);
         $fieldOrder = ['survey_form_id', 'description', 'academic_period_id'];
-        $selectedStatus = $this->request->query('status');
+        $selectedStatus = $this->request->getQuery('status');
 
         if (is_null($selectedStatus) || $selectedStatus == -1) {
             //$this->buildSurveyRecords();
@@ -460,9 +460,9 @@ class InstitutionSurveysTable extends ControllerActionTable
         $filterTwo = $data[2];
         $firstVal = preg_replace('/\D/', '', $filterOne);
         $getdata = ['',$firstVal];
-        $SurveyFormsFilters = TableRegistry::get('survey_forms_filters');
-        $SurveyFilterType = TableRegistry::get('survey_filter_institution_types');
-        $session = $this->controller->request->session();
+        $SurveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+        $SurveyFilterType = TableRegistry::get('Survey.SurveyFilterInstitutionTypes');
+        $session = $this->controller->getRequest()->getSession();
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
         }
@@ -767,7 +767,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity) {
         // to get all the workflow steps for this model
-        $workflow = $this->getWorkflow($this->registryAlias(), $entity);
+        $workflow = $this->getWorkflow($this->getRegistryAlias(), $entity);
         if (!empty($workflow)) {
             foreach ($workflow->workflow_steps as $workflowStep) {
                 if ($entity->status->id == $workflowStep->id && !($workflowStep->is_removable)) {
@@ -785,8 +785,8 @@ class InstitutionSurveysTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $SurveyStatusTable = TableRegistry::get('survey_statuses');
-        $SurveyStatusPeriodTable = TableRegistry::get('survey_status_periods');
+        $SurveyStatusTable = TableRegistry::get('Survey.SurveyStatuses');
+        $SurveyStatusPeriodTable = TableRegistry::get('Survey.SurveyStatusPeriods');
         $SurveyStatusData = $SurveyStatusTable->find('all',['conditions'=>['survey_form_id'=>$entity->survey_form_id,'date_disabled >' => date('Y-m-d')]])->order(['date_disabled'=>'DESC'])->first();
         $SurveyStatusPeriodData = $SurveyStatusPeriodTable->find('all',['conditions'=>['survey_status_id'=>$SurveyStatusData->id]])->toArray();
         $SurveyStatusPeriodDataIds=[];
@@ -932,7 +932,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             $isInstitutionTypeMatch = $filterTypeQuery->count() > 0;
 
             $openStatusId = null;
-            $workflow = $this->getWorkflow($this->registryAlias(), null, $surveyFormId);
+            $workflow = $this->getWorkflow($this->getRegistryAlias(), null, $surveyFormId);
             if ($isInstitutionTypeMatch) {
                 if (!empty($workflow)) {
                     foreach ($workflow->workflow_steps as $workflowStep) {
@@ -1082,7 +1082,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             $isInstitutionTypeMatch = $filterTypeQuery->count() > 0;
 
             $openStatusId = null;
-            $workflow = $this->getWorkflow($this->registryAlias(), null, $surveyFormId);
+            $workflow = $this->getWorkflow($this->getRegistryAlias(), null, $surveyFormId);
             if ($isInstitutionTypeMatch) {
                 if (!empty($workflow)) {
                     foreach ($workflow->workflow_steps as $workflowStep) {
@@ -1281,7 +1281,8 @@ class InstitutionSurveysTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }      
     }
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Survey > Forms';
@@ -1308,7 +1309,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
+            $session = $this->request->getSession();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
             }

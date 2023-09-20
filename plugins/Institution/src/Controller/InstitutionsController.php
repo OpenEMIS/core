@@ -561,17 +561,17 @@ class InstitutionsController extends AppController
             $institutionId = $session->read('Institution.Institutions.id');
         }
         if (!empty($institutionId)) {
-            if ($this->request->param('action') == 'InstitutionTrips') {
+            if ($this->request->getParam('action') == 'InstitutionTrips') {
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Trips');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Trips'));
                 $this->set('contentHeader', $header);
 
-            } elseif ($this->request->param('action') == 'InstitutionCurriculars') { //POCOR-6673
+            } elseif ($this->request->getParam('action') == 'InstitutionCurriculars') { //POCOR-6673
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Curriculars');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Curriculars'));
                 $this->set('contentHeader', $header);
             }
@@ -712,9 +712,9 @@ class InstitutionsController extends AppController
 
     public function ReportCardStatuses()
     {
-        $classId = $this->request->query['class_id'];
-        $academicPeriodId = $this->request->query['academic_period_id'];
-        $reportCardId = $this->request->query['report_card_id'];
+        $classId = $this->request->getQuery('class_id');
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
+        $reportCardId = $this->request->getQuery('report_card_id');
 
         if (!empty($classId) && $classId == 'all') {
             return $this->redirect(['action' => 'ReportCardStatusProgress',
