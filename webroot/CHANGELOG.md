@@ -1,3 +1,23 @@
+### [3.95.0] - 2023-09-20
+- Implemented: Develop type and priority fields for the cases feature
+- Implemented: Develop a function to copy Institution > Performance > Assessments from one academic period to another-Copy of assessment periods
+- Implemented: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Adding page, order and limit to get apis
+- Bug Fixed: Staff > Professional > Awards: When adding the staff awards, even when there is successful message, the record is not showing
+- Bug Fixed: Students > General > Nationalities: The page gives a 404 error
+- Bug Fixed: OpenEMIS Registrations: Other countries is not showing in the drop down list for address area and birthplace area
+- Bug Fixed: Registration: Age validation is not working
+- Bug Fixed: Institutions>Students>Pending Admission: Add another row for OpenEMIS ID and allow user to click on it
+- Bug Fixed: Reports > UIS Statistics: The column "Repeater Students" for all UIS Statistic Report is spell wrongly
+- Bug Fixed: Institution: When only given permission to view the Institutions General page (for example), the user is also able to see other modules for which permission is not given
+- Bug Fixed: Institutions>Students>Add: Education grade is not showing in this school
+- Bug Fixed: Institutions>Performance>Report Cards: Superadmin should be able to generate report cards even if it is not within generate start and end date
+- Bug Fixed: Administrations > System Setup > Education Structure > Cycle Tab > Admission Age: When adding the students, the system will ensure that the Students Age falls between the range of the education grade admission
+- Bug Fixed: Directory>Student>General > Contacts: The system does not allow user to remove email as the following message "There should be atleast one Email record"
+- Bug Fixed: Personal > Contacts> Edit: When editing contact, they face with a 404 error
+- Bug Fixed: Administration > System Setup > Education Structure: When adding the next programme, Education Programmes not seeing other Education System Education Programmes
+- Bug Fixed: Institutions>Performance>Assessments: Report is getting gateway error
+- Bug Fixed: Report>Institutions>Cases: Existing Filters does not cater to Personal > Cases
+
 ### [3.94.4] - 2023-09-15
 - Bug Fixed: Administration>Data Management>Archive: Archive is stuck in progress
 - Bug Fixed: Institutions > Survey > Forms: The date field for repeater form alignment seems to be out
