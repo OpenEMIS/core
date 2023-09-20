@@ -3,6 +3,7 @@
 namespace App\Controller\Component;
 
 use Cake\Controller\Component;
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Controller\Exception\SecurityException;
@@ -457,78 +458,87 @@ class NavigationComponent extends Component
         } elseif (($controller->name == 'Directories' && $action != 'index') || in_array($controller->name, $directoryControllers)) {
             $navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
 
-            $encodedParam = $this->request->params['pass'][1];
-            if (!empty($encodedParam)) {
-                $securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
-                /*POCOR-STARTS*/
-                if (empty($securityUserId)) {
-                    $securityUserId = $this->controller->paramsDecode($encodedParam)['security_user_id'];
-                }
-                /*POCOR-ENDS*/
-            }
-            if (!empty($encodedParam)) {
-                //POCOR-6202 start
-                if ($action == 'GuardianStudents') {
-                    $userInfo = TableRegistry::get('student_guardians')->get($securityUserId);
-                } else if ($action == 'StudentGuardians') {
-                    $securityUserId = $this->controller->paramsDecode($this->request->params['pass'][1]);
-                    $userInfo = TableRegistry::get('Student.StudentGuardians')->get($securityUserId);//POCOR-6453 ends
-                    $securityUserId = $userInfo->guardian_id;
-                    $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);//POCOR-6453 ends
-                } else if ($action == 'Identities') {//POCOR-6453 starts
-                    $securityUserId = $this->controller->paramsDecode($this->request->query['queryString']);
-                    $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);//POCOR-6453 ends
-                } /*POCOR-6286 : added condition to get selected student id */
-                elseif ($action == 'StudentProfiles') {
-                    $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
-                    $userInfo = TableRegistry::get('Security.Users')->get($userId);
-                } //Start POCOR-7055
-                elseif ($action == 'StudentReportCards') {
-                    $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
-                    $userInfo = TableRegistry::get('Security.Users')->get($userId);
-                }//End POCOR-7055
-                /*POCOR-6286 ends*/
-                // Start POCOR-7384
-                elseif ($this->request->params['plugin'] == 'Directory' && $this->request->params['controller'] == 'Directories' && $this->request->params['pass'][0] == 'download' && $action == 'Attachments') {
-                    $userId = $this->controller->paramsDecode($this->request->params['pass'][2])['security_user_id'];
-                    $userInfo = TableRegistry::get('Security.Users')->get($userId);
-                } // End POCOR-7384
-                else {
-                    $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
-                }
-                //POCOR-6202 end
-            }
-
-            $userType = '';
-            if (!empty($userInfo)) {
-                if ($userInfo->is_student && $userInfo->is_staff == 0 && $userInfo->is_guardian == 0) {
-                    $userType = 1;
-                } elseif ($userInfo->is_staff && $userInfo->is_student == 0 && $userInfo->is_guardian == 0) {
-                    $userType = 2;
-                } elseif ($userInfo->is_guardian && $userInfo->is_staff == 0 && $userInfo->is_student == 0) {
-                    $userType = 3;
-                } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
-                    $userType = 4; //superrole user
-                } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 0) {
-                    $userType = 5;
-                } /*POCOR-6332 starts*/ elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 0 && $userInfo->is_guardian == 1) {
-                    $userType = 6;
-                } elseif ($userInfo->is_student == 0 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
-                    $userType = 7;
-                }/*POCOR-6332 ends*/
-            }
-
-
-            $userType = '';
-            if (!empty($userInfo)) {
-                if ($userInfo->is_student) {
-                    $userType = 1;
-                } elseif ($userInfo->is_staff) {
-                    $userType = 2;
-                } elseif ($userInfo->is_guardian) {
-                    $userType = 3;
-                }
-            }
+//  POCOR-7768 - unused code causing error
+//            $encodedParam = $this->request->params['pass'][1];
+//            if (!empty($encodedParam)) {
+//                $securityUserId = $this->controller->paramsDecode($encodedParam)['id'];
+//                /*POCOR-STARTS*/
+//                if (empty($securityUserId)) {
+//                    $securityUserId = $this->controller->paramsDecode($encodedParam)['security_user_id'];
+//                }
+//                /*POCOR-ENDS*/
+//
+//            }
+//            if (!empty($encodedParam)) {
+//                //POCOR-6202 start
+//                if ($action == 'GuardianStudents') {
+//                    $userInfo = TableRegistry::get('student_guardians')->get($securityUserId);
+//                } else if ($action == 'StudentGuardians') {
+//                    $securityUserId = $this->controller->paramsDecode($this->request->params['pass'][1]);
+//                    $userInfo = TableRegistry::get('Student.StudentGuardians')->get($securityUserId);//POCOR-6453 ends
+//                    $securityUserId = $userInfo->guardian_id;
+//                    $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);//POCOR-6453 ends
+//                } else if ($action == 'Identities') {//POCOR-6453 starts
+//                    $securityUserId = $this->controller->paramsDecode($this->request->query['queryString']);
+//                    $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);//POCOR-6453 ends
+//                } /*POCOR-6286 : added condition to get selected student id */
+//                elseif ($action == 'StudentProfiles') {
+//                    $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
+//                    $userInfo = TableRegistry::get('Security.Users')->get($userId);
+//                } //Start POCOR-7055
+//                elseif ($action == 'StudentReportCards') {
+//                    $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
+//                    $userInfo = TableRegistry::get('Security.Users')->get($userId);
+//                }//End POCOR-7055
+//                /*POCOR-6286 ends*/
+//                // Start POCOR-7384
+//                elseif ($this->request->params['plugin'] == 'Directory' && $this->request->params['controller'] == 'Directories' && $this->request->params['pass'][0] == 'download' && $action == 'Attachments') {
+//                    $userId = $this->controller->paramsDecode($this->request->params['pass'][2])['security_user_id'];
+//                    $userInfo = TableRegistry::get('Security.Users')->get($userId);
+//                } // End POCOR-7384
+//                else {
+//                    $this->log('navigation', 'debug');
+//                    $this->log($securityUserId, 'debug');
+//                    try {
+//                        $related = TableRegistry::get('Security.Users')->get($securityUserId);
+//                        $userInfo = $related;
+//                    } catch (RecordNotFoundException $e) {
+//                        $userInfo = null;
+//                    }
+//                }
+//                //POCOR-6202 end
+//            }
+//
+//            $userType = '';
+//            if (!empty($userInfo)) {
+//                if ($userInfo->is_student && $userInfo->is_staff == 0 && $userInfo->is_guardian == 0) {
+//                    $userType = 1;
+//                } elseif ($userInfo->is_staff && $userInfo->is_student == 0 && $userInfo->is_guardian == 0) {
+//                    $userType = 2;
+//                } elseif ($userInfo->is_guardian && $userInfo->is_staff == 0 && $userInfo->is_student == 0) {
+//                    $userType = 3;
+//                } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
+//                    $userType = 4; //superrole user
+//                } elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 0) {
+//                    $userType = 5;
+//                } /*POCOR-6332 starts*/ elseif ($userInfo->is_student == 1 && $userInfo->is_staff == 0 && $userInfo->is_guardian == 1) {
+//                    $userType = 6;
+//                } elseif ($userInfo->is_student == 0 && $userInfo->is_staff == 1 && $userInfo->is_guardian == 1) {
+//                    $userType = 7;
+//                }/*POCOR-6332 ends*/
+//            }
+//
+//
+//            $userType = '';
+//            if (!empty($userInfo)) {
+//                if ($userInfo->is_student) {
+//                    $userType = 1;
+//                } elseif ($userInfo->is_staff) {
+//                    $userType = 2;
+//                } elseif ($userInfo->is_guardian) {
+//                    $userType = 3;
+//                }
+//            }
             $session = $this->request->session();
             $isStudent = $session->read('Directory.Directories.is_student');
             $isStaff = $session->read('Directory.Directories.is_staff');
