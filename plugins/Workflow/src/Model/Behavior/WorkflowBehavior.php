@@ -2194,7 +2194,7 @@ class WorkflowBehavior extends Behavior
                         $entity->assignee_id = $assigneeId;
                     }
                 } else {
-                    $entity->assignee_id = 0;
+                    $entity->assignee_id = $_SESSION['Auth']['User']['id']; //POCOR-7766
                 }
 
                 // change to save instead of update all to trigger after save function.
