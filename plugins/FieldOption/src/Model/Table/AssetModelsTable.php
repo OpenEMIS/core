@@ -12,10 +12,10 @@ use ArrayObject;
 
 class AssetModelsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $i = 1/0;
-        $this->table('asset_models');
+        $this->setTable('asset_models');
         parent::initialize($config);
 
         $this->belongsTo('AssetMakes', ['className' => 'FieldOption.AssetMakes']);

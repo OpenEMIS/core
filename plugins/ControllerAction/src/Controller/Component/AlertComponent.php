@@ -38,7 +38,7 @@ class AlertComponent extends Component {
 			$_options['class'] = $class;
 			$_options['message'] = $message;
 
-			$session = $$this->getController()->getRequest()->getSession();;
+			$session = $this->getController()->getRequest()->getSession();
 			$alerts = [];
 
 			if ($_options['reset'] && $session->check('_alert')) {

@@ -12,7 +12,7 @@ class InstitutionInactiveComponent extends Component
 {
     private $controller = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->controller = $this->_registry->getController();

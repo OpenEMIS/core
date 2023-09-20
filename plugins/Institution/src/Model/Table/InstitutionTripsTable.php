@@ -19,7 +19,7 @@ class InstitutionTripsTable extends ControllerActionTable
 {
     use OptionsTrait;// POCOR-6169 <vikas.rathore@mail.valuecoders.com>
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -38,7 +38,7 @@ class InstitutionTripsTable extends ControllerActionTable
         ]);
     }
 
-	public function validationDefault(Validator $validator)
+	public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -191,7 +191,7 @@ class InstitutionTripsTable extends ControllerActionTable
         ->toArray();
 
         $tripTypeOptions = [-1 => __('All Trip Types')] + $tripTypes;
-        $extra['tripTypes'] = $this->request->query('trip_types'); 
+        $extra['tripTypes'] = $this->request->getQuery('trip_types'); 
         // trips filter
 
         $extra['elements']['control'] = [
@@ -246,12 +246,12 @@ class InstitutionTripsTable extends ControllerActionTable
     // POCOR-6169 start
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId  = $session->read('Institution.Institutions.id');
-        $tripTypes = $this->request->query('trip_types');
+        $tripTypes = $this->request->getQuery('trip_types');
 
-        $institutionProvider = TableRegistry::get('institution_transport_providers');
-        $institutionBuses = TableRegistry::get('institution_buses');
+        $institutionProvider = TableRegistry::get('Institution.InstitutionTransportProviders');
+        $institutionBuses = TableRegistry::get('Institution.InstitutionBuses');
 
         if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
             $query->where([
@@ -274,10 +274,10 @@ class InstitutionTripsTable extends ControllerActionTable
             $this->aliasField('created')
         ])
         ->contain(['InstitutionTripDays'])
-        ->innerJoin([$institutionProvider->alias() => $institutionProvider->table()], [
+        ->innerJoin([$institutionProvider->getAlias() => $institutionProvider->getTable()], [
             [$institutionProvider->aliasField('id ='). $this->aliasField('institution_transport_provider_id')],
         ])
-        ->innerJoin([$institutionBuses->alias() => $institutionBuses->table()], [
+        ->innerJoin([$institutionBuses->getAlias() => $institutionBuses->getTable()], [
             [$institutionBuses->aliasField('id ='). $this->aliasField('institution_bus_id')],
         ])
         ->group($this->aliasField('id'))
@@ -602,22 +602,23 @@ class InstitutionTripsTable extends ControllerActionTable
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
     public function onUpdateFieldInstitutionBusId(Event $event, array $attr, $action, $request) {
 
-        $parentId = $this->request->data['InstitutionTrips']['institution_transport_provider_id'];
+        $parentId = $this->request->getData['InstitutionTrips']['institution_transport_provider_id'];
+        if(!empty($parentId)){
+            $InstitutionBuses = $this->InstitutionBuses
+                ->find('optionList')
+                ->where([
+                    $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $parentId
+                ])
+                ->toArray();
+                
+                $attr['options'] = $InstitutionBuses;
+                unset($attr['options'][0]);
 
-        $InstitutionBuses = $this->InstitutionBuses
-        ->find('optionList')
-        ->where([
-            $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $parentId
-        ])
-        ->toArray();
-        
-		$attr['options'] = $InstitutionBuses;
-        unset($attr['options'][0]);
-
-		if (empty($InstitutionBuses)) {
-			$attr['empty'] = 'Select';
-		}
-		return $attr;
+                if (empty($InstitutionBuses)) {
+                    $attr['empty'] = 'Select';
+                }
+                return $attr;
+        }
 	}
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
 

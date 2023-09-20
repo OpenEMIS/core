@@ -19,9 +19,9 @@ class InstitutionRubricsTable extends AppTable
     private $_fieldOrder = [];
     private $_contain = ['EducationGrades.EducationProgrammes'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_quality_rubrics');
+        $this->setTable('institution_quality_rubrics');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);

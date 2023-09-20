@@ -223,7 +223,7 @@ class StudentFeesTable extends ControllerActionTable
             ->find()
             ->contain(['InstitutionFeeTypes.FeeTypes'])
             ->where([
-                'InstitutionFees.education_grade_id' => $this->_selectedEducationGradeId,
+                // 'InstitutionFees.education_grade_id' => $this->_selectedEducationGradeId, // POCOR-7485
                 'InstitutionFees.academic_period_id' => $this->_selectedAcademicPeriodId,
                 'InstitutionFees.institution_id' => $this->institutionId
             ])
@@ -247,7 +247,7 @@ class StudentFeesTable extends ControllerActionTable
         ->where([
             $this->aliasField('institution_id') => $this->institutionId,
             $this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId,
-            $this->aliasField('education_grade_id') => $this->_selectedEducationGradeId,
+            // $this->aliasField('education_grade_id') => $this->_selectedEducationGradeId, //POCOR-7485
         ])
         ;
 

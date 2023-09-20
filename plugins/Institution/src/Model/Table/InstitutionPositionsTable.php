@@ -407,7 +407,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                         $this->StaffPositionTitles->aliasField('type') => 'DESC',
                         $this->StaffPositionTitles->aliasField('order'),
                     ])
-                    ->autoFields(true)
+                    // ->autoFields(true)
                     ->toArray();
 
             // Filter by role previlege
@@ -420,7 +420,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             // Adding the opt group
             $titles = [];
             foreach ($staffTitleOptions as $title) {
-                $type = __($types[$title->type]);
+                $type = __((string) $types[$title->type]);
                 $titles[$type][$title->id] = $title->name;
             }
         } else {

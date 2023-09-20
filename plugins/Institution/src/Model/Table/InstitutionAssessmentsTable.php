@@ -173,7 +173,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
 
         $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
@@ -219,7 +219,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                 $Assessments->aliasField('id')
                 **/
             ])
-            ->autoFields(true)
+            //->autoFields(true)
             ;
 
         $extra['options']['order'] = [

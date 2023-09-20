@@ -47,6 +47,6 @@ class AngularComponent extends Component
 
     public function addModules($newModules = [])
     {
-        $this->config('modules', $newModules);
+        $this->getConfig('modules', $newModules);
     }
 }

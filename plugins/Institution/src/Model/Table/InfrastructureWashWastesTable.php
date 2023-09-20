@@ -46,7 +46,7 @@ class InfrastructureWashWastesTable extends ControllerActionTable
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
 
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
