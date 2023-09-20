@@ -243,7 +243,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
 
     public function onGetModifiedUserId(Event $event, Entity $entity)
     {
-        $Users = TableRegistry::get('User.Users');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
         $result = $Users
             ->find()
             ->select(['first_name','last_name'])
@@ -255,7 +255,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
 
     public function onGetCreatedUserId(Event $event, Entity $entity)
     {
-        $Users = TableRegistry::get('User.Users');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
         $result = $Users
             ->find()
             ->select(['first_name','last_name'])
@@ -447,7 +447,10 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $archiveConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
+        /*if($targetTableName == 'assessment_item_results_archived'){
+            $targetTableName = 'AssessmentItemResultsArchived';
+        }  */      
+        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $archiveConnection,
         ]);
         $count = $tableArchived->find('all')
@@ -492,7 +495,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
     public static function hasArchiveConnection()
     {
         $archiveConnection = false;
-//        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+//        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 //        $archiveConnection = $ConfigItems->value('remote_archive_data_connection');
 //        if ($archiveConnection) {
 //            $archiveConnection = ($archiveConnection == "1") ? true : false;
@@ -514,7 +517,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
+        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,
         ]);
 //        Log::write('debug', 'getArchiveYears');
@@ -545,7 +548,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
+        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,
         ]);
         $distinctResults = $tableArchived->find('all')
@@ -574,7 +577,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
+        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,
         ]);
         $distinctResults = $tableArchived->find('all')
@@ -603,7 +606,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
+        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,
         ]);
         $distinctResults = $tableArchived->find('all')
@@ -632,7 +635,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
+        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,
         ]);
 //        Log::write('debug', 'getArchiveYears');
@@ -670,7 +673,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
+        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,
         ]);
         return $tableArchived;
@@ -683,7 +686,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
+        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,
         ]);
         $distinctDates = $tableArchived->find('all')
@@ -707,7 +710,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::get($targetTableName, [
+        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,
         ]);
 //        Log::write('debug', 'getArchiveLeaveDays');
