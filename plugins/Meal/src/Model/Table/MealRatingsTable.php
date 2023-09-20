@@ -5,9 +5,9 @@ use App\Model\Table\ControllerActionTable;
 
 class MealRatingsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('meal_ratings');
+        $this->setTable('meal_ratings');
         parent::initialize($config);        
         $this->addBehavior('FieldOption.FieldOption');
        

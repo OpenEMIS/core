@@ -29,9 +29,9 @@ class RubricsReportBehavior extends Behavior {
 	private $_rubricCriteriaOptions = [];
 	private $_rubricTemplateOptions = [];
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
     	$events = parent::implementedEvents();
-    	$events = array_merge($events, $this->config('events'));
+    	$events = array_merge($events, $this->getConfig('events'));
     	return $events;
 	}
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {

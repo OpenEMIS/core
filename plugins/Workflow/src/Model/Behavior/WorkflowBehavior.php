@@ -489,7 +489,7 @@ class WorkflowBehavior extends Behavior
 
                 $params = [];
                 if ($workflowModel->is_school_based) {
-                    $session = $this->controller->request->session();
+                    $session = $this->controller->getRequest()->getSession();
                     if ($session->check('Institution.Institutions.id')) {
                         $params = [
                             'institution_id' => $session->read('Institution.Institutions.id')
@@ -604,12 +604,10 @@ class WorkflowBehavior extends Behavior
         $filter = $workflowModel->filter;
         if ($filterConfig['type'] && !empty($filter)) {
             $selectedFilter = $this->_table->ControllerAction->getVar('selectedFilter');
-
             // Filter key
             list(, $base) = pluginSplit($filter);
             $filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
-
-            if ($selectedFilter != -1) {
+            if (($selectedFilter != -1 && !empty($selectedFilter))) { // POCOR-7485
                 $query->where([
                     $this->_table->aliasField($filterKey) => $selectedFilter
                 ]);

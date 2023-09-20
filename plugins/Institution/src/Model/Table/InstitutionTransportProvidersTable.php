@@ -10,7 +10,7 @@ use App\Model\Table\ControllerActionTable;
 
 class InstitutionTransportProvidersTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -23,7 +23,7 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
 
     }
 
-	public function validationDefault(Validator $validator)
+	public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

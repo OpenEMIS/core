@@ -20,14 +20,9 @@ class InstitutionCasesTable extends ControllerActionTable
     use OptionsTrait;
 
     private $features = [];
-<<<<<<< HEAD
-
-    public function initialize(array $config): void
-=======
     const ACTIVE = 1;//POCOR-7439 for institution active
     const INACTIVE = 1;//POCOR-7439 for institution inactive
-    public function initialize(array $config)
->>>>>>> origin/master
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -178,9 +173,9 @@ class InstitutionCasesTable extends ControllerActionTable
             'after' => 'linked_records'
         ]);
 
-        if (is_null($this->request->query('sort'))) {
-            $this->request->query['sort'] = 'created';
-            $this->request->query['direction'] = 'desc';
+        if (is_null($this->request->getQuery('sort'))) {
+            $this->request->getQuery['sort'] = 'created';
+            $this->request->getQuery['direction'] = 'desc';
         }
 
         $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
@@ -198,11 +193,11 @@ class InstitutionCasesTable extends ControllerActionTable
         $featureOptions = $newFeatureOption;
 
         $featureOptions = ['-1' => '-- ' . __('All') . ' --'] + $featureOptions;
-        if (!is_null($this->request->query('feature')) && array_key_exists($this->request->query('feature'), $featureOptions)) {
-            $selectedFeature = $this->request->query('feature');
+        if (!is_null($this->request->getQuery('feature')) && array_key_exists($this->request->getQuery('feature'), $featureOptions)) {
+            $selectedFeature = $this->request->getQuery('feature');
         } else {
             $selectedFeature = key($featureOptions);
-            $this->request->query['feature'] = $selectedFeature;
+            $this->request->getQuery['feature'] = $selectedFeature;
         }
 
         $this->controller->set(compact('featureOptions', 'selectedFeature'));
@@ -210,7 +205,7 @@ class InstitutionCasesTable extends ControllerActionTable
         $selectedModel = $this->features[$selectedFeature];
         $featureModel = TableRegistry::get($selectedModel);
         $session = $this->request->session();
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery;
         $institutionId = $session->read('Institution.Institutions.id');
 
         $params = new ArrayObject([
@@ -849,7 +844,7 @@ class InstitutionCasesTable extends ControllerActionTable
     }
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request){
        
-        if($request->params['controller']=="Profiles"){
+        if($request->getParam['controller']=="Profiles"){
             
             $institutionList = $this->Institutions
             ->find('list', [
