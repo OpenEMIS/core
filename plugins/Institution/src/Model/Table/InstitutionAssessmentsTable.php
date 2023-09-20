@@ -11,8 +11,8 @@ use Cake\Validation\Validator;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 
 class InstitutionAssessmentsTable extends ControllerActionTable {
-    public function initialize(array $config) {
-        $this->table('institution_classes');
+    public function initialize(array $config): void {
+        $this->setTable('institution_classes');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -24,8 +24,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'dependent' => true]);
         $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
 
-        $this->behaviors()->get('ControllerAction')->config('actions.add', false);
-        $this->behaviors()->get('ControllerAction')->config('actions.search', false);
+        $this->behaviors()->get('ControllerAction')->setConfig('actions.add', false);
+        $this->behaviors()->get('ControllerAction')->setConfig('actions.search', false);
         $this->addBehavior('Excel', [
             'pages' => ['index'],
             'orientation' => 'landscape'
@@ -43,7 +43,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         ini_set('max_execution_time', 9600); //POCOR-7268 ends
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $institutionCode = $this->Institutions->get($institutionId)->code;
-        $settings['file'] = str_replace($this->alias(), str_replace(' ', '_', $institutionCode).'_Results', $settings['file']);
+        $settings['file'] = str_replace($this->getAlias(), str_replace(' ', '_', $institutionCode).'_Results', $settings['file']);
     }
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -51,18 +51,18 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         ini_set('memory_limit', -1);
         ini_set('max_execution_time', 9600); //POCOR-7268 ends
 
-        $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+        $InstitutionClassStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         //POCOR-7268 starts
         //$query = $InstitutionClassStudentsTable->find();
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
-        if(!empty($this->request->query('assessment_id'))){
-            $academic_period_id = $this->request->query('academic_period_id');
-            $assessmentId = $this->request->query('assessment_id');
+        if(!empty($this->request->getQuery('assessment_id'))){
+            $academic_period_id = $this->request->getQuery('academic_period_id');
+            $assessmentId = $this->request->getQuery('assessment_id');
         }else{
             // Assessments
             $academic_period_id = $this->AcademicPeriods->getCurrent();
-            $Assessments = TableRegistry::get('Assessment.Assessments');
+            $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
             $assessmentOptions = $Assessments
                 ->find('list')
                 ->where([$Assessments->aliasField('academic_period_id') => $academic_period_id])
@@ -112,7 +112,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
         if($assessmentId) {
             $sheets[] = [
-                'name' => $this->alias(),
+                'name' => $this->getAlias(),
                 'table' => $InstitutionClassStudentsTable,
                 'query' => $query,
                 'assessmentId' => $assessmentId,
@@ -176,11 +176,11 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
 
-        $Classes = TableRegistry::get('Institution.InstitutionClasses');
-        $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-        $Assessments = TableRegistry::get('Assessment.Assessments');
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $ClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
+        $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
 
         $query
             ->select([
@@ -194,22 +194,22 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                 ])
             ])
             ->innerJoin(
-                [$ClassGrades->alias() => $ClassGrades->table()],
+                [$ClassGrades->getAlias() => $ClassGrades->getTable()],
                 [$ClassGrades->aliasField('institution_class_id = ') . $this->aliasField('id')]
             )
             ->innerJoin(
-                [$Assessments->alias() => $Assessments->table()],
+                [$Assessments->getAlias() => $Assessments->getTable()],
                 [
                     $Assessments->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $Assessments->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
                 ]
             )
             ->innerJoin(
-                [$EducationGrades->alias() => $EducationGrades->table()],
+                [$EducationGrades->getAlias() => $EducationGrades->getTable()],
                 [$EducationGrades->aliasField('id = ') . $Assessments->aliasField('education_grade_id')]
             )
             ->innerJoin(
-                [$EducationProgrammes->alias() => $EducationProgrammes->table()],
+                [$EducationProgrammes->getAlias() => $EducationProgrammes->getTable()],
                 [$EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')]
             )
             ->group([
@@ -292,9 +292,13 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
         // Academic Periods
         $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
-        if (is_null($this->request->query('academic_period_id'))) {
+        /*if (is_null($this->request->query('academic_period_id'))) {
             // default to current Academic Period
             $this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        }*/
+        $requestData = $this->request->getQuery('academic_period_id');
+        if (is_null($requestData)) {
+            $this->request = $this->request->withQueryParams(['academic_period_id' => $this->AcademicPeriods->getCurrent()]);
         }
         $selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
         $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
@@ -303,13 +307,13 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                 return $Classes
                     ->find()
                     ->innerJoin(
-                        [$ClassGrades->alias() => $ClassGrades->table()],
+                        [$ClassGrades->getAlias() => $ClassGrades->getTable()],
                         [
                             $ClassGrades->aliasField('institution_class_id = ') . $Classes->aliasField('id')
                         ]
                     )
                     ->innerJoin(
-                        [$Assessments->alias() => $Assessments->table()],
+                        [$Assessments->getAlias() => $Assessments->getTable()],
                         [
                             $Assessments->aliasField('academic_period_id = ') . $Classes->aliasField('academic_period_id'),
                             $Assessments->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
@@ -343,7 +347,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                     return $Classes
                         ->find()
                         ->innerJoin(
-                            [$ClassGrades->alias() => $ClassGrades->table()],
+                            [$ClassGrades->getAlias() => $ClassGrades->getTable()],
                             [
                                 $ClassGrades->aliasField('institution_class_id = ') . $Classes->aliasField('id'),
                                 $ClassGrades->aliasField('education_grade_id') => $selectedGrade
@@ -364,7 +368,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             }
         }
 
-        $assessmentId = $this->request->query('assessment_id');
+        $assessmentId = $this->request->getQuery('assessment_id');
 
         if ($assessmentId == -1 || !$assessmentId || !$this->AccessControl->check(['Institutions', 'Assessments', 'excel'], $roles)) {
             if (isset($extra['toolbarButtons']['export'])) {
@@ -386,7 +390,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
     }
 
     public function onGetEducationGrade(Event $event, Entity $entity) {
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
         $grade = $EducationGrades->get($entity->education_grade_id);
 
         return $grade->programme_grade_name;
@@ -441,14 +445,14 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $class = $entity->institution_class_id;
         $institutionId = $entity->institution->id;
         $period = $entity->academic_period->id;
-        $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-        $Users = TableRegistry::get('Security.Users');
-        $Genders = TableRegistry::get('User.Genders');
+        $InstitutionClassStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $Users = TableRegistry::getTableLocator()->get('Security.Users');
+        $Genders = TableRegistry::getTableLocator()->get('User.Genders');
         $count = $InstitutionClassStudentsTable->find()
-                ->leftJoin([$Users->alias() => $Users->table()], [
+                ->leftJoin([$Users->getAlias() => $Users->getTable()], [
                     $Users->aliasField('id').' = ' . $InstitutionClassStudentsTable->aliasField('student_id')
                 ])
-                ->leftJoin([$Genders->alias() => $Genders->table()], [
+                ->leftJoin([$Genders->getAlias() => $Genders->getTable()], [
                     $Genders->aliasField('id').' = ' . $Users->aliasField('gender_id')
                 ])
                 ->where([
@@ -473,14 +477,14 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $class = $entity->institution_class_id;
         $institutionId = $entity->institution->id;
         $period = $entity->academic_period->id;
-        $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-        $Users = TableRegistry::get('Security.Users');
-        $Genders = TableRegistry::get('User.Genders');
+        $InstitutionClassStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $Users = TableRegistry::getTableLocator()->get('Security.Users');
+        $Genders = TableRegistry::getTableLocator()->get('User.Genders');
         $count = $InstitutionClassStudentsTable->find()
-                ->leftJoin([$Users->alias() => $Users->table()], [
+                ->leftJoin([$Users->getAlias() => $Users->getTable()], [
                     $Users->aliasField('id').' = ' . $InstitutionClassStudentsTable->aliasField('student_id')
                 ])
-                ->leftJoin([$Genders->alias() => $Genders->table()], [
+                ->leftJoin([$Genders->getAlias() => $Genders->getTable()], [
                     $Genders->aliasField('id').' = ' . $Users->aliasField('gender_id')
                 ])
                 ->where([
@@ -501,7 +505,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
      * @return string 
      */
     public function onGetName(Event $event, Entity $entity) {
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $class = $InstitutionClasses->get($entity->institution_class_id);
 
         return $class->name;

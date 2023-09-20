@@ -17,9 +17,9 @@ class ArchivedAssessmentsTable extends ControllerActionTable
     private $institutionId = null;
     private $studentId = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('assessment_item_results_archived');
+        $this->setTable('assessment_item_results_archived');
         parent::initialize($config);
 
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
