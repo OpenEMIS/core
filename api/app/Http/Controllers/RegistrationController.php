@@ -361,4 +361,41 @@ class RegistrationController extends Controller
             return $this->sendErrorResponse('Area Names List Not Found');
         }
     }
+
+
+    public function areaAdministrativeLevelsDropdown()
+    {
+        try {
+            $data = $this->registrationService->areaAdministrativeLevelsDropdown();
+            
+            return $this->sendSuccessResponse("Area Administrative Levels List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Administrative Levels List Not Found');
+        }
+    }
+
+
+
+    public function areasAdministrativeDropdown(Request $request)
+    {
+        try {
+            $data = $this->registrationService->areasAdministrativeDropdown($request);
+            
+            return $this->sendSuccessResponse("Area Administrative Names List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Administrative Names List Not Found');
+        }
+    }
 }
