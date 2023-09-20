@@ -18,6 +18,7 @@ use App\Model\Table\ControllerActionTable;
 
 use Page\Traits\EncodingTrait;
 use App\Model\Traits\MessagesTrait;
+use Cake\Http\ServerRequest;
 
 class StaffBehavioursTable extends ControllerActionTable
 {
@@ -167,11 +168,13 @@ class StaffBehavioursTable extends ControllerActionTable
     {
         $extra['elements']['controls'] = ['name' => 'Institution.Behaviours/controls', 'data' => [], 'options' => [], 'order' => 1];
         $periodOptions = $this->AcademicPeriods->getYearList();
-        if (empty($this->request->query['academic_period_id'])) {
-            $this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        $requestData = $this->request->getQuery('academic_period_id');
+        if (empty($requestData)) {
+            $academicPeriodId = $this->AcademicPeriods->getCurrent();
+            $this->request = $this->request->withQueryParams(['academic_period_id' => $academicPeriodId]);
         }
 
-        $Staff = TableRegistry::get('Institution.Staff');
+        $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
         $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
@@ -200,13 +203,13 @@ class StaffBehavioursTable extends ControllerActionTable
         $extra['options']['sortWhitelist'] = $sortList;
         //POCOR-6670:start
         $query->contain(['Statuses']);
-        if(!empty($this->request->query('category_id')))
+        if(!empty($this->request->getQuery('category_id')))
         {
-            $query->where(['Statuses.category' => $this->request->query('category_id') ]);
+            $query->where(['Statuses.category' => $this->request->getQuery('category_id') ]);
         }
         //POCOR-6670:end
         // POCOR-2547 sort list of staff and student by name
-        if (!isset($this->request->query['sort'])) {
+        if (($this->request->getQuery('sort') !='')) {
             $query->order([$this->Staff->aliasField('first_name'), $this->Staff->aliasField('last_name')]);
         }
         // end POCOR-2547
@@ -273,7 +276,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $entity->showDeletedValueAs = $entity->description;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $entity = $attr['entity'];
@@ -306,7 +309,7 @@ class StaffBehavioursTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldDateOfBehaviour(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldDateOfBehaviour(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -320,8 +323,8 @@ class StaffBehavioursTable extends ControllerActionTable
             if ($action == 'add') {
                 $todayDate = Date::now();
 
-                if (!empty($request->data[$this->alias()]['date_of_behaviour'])) {
-                    $inputDate = Date::createfromformat('d-m-Y', $request->data[$this->alias()]['date_of_behaviour']); //string to date object
+                if (!empty($request->data[$this->getAlias()]['date_of_behaviour'])) {
+                    $inputDate = Date::createfromformat('d-m-Y', $request->data[$this->getAlias()]['date_of_behaviour']); //string to date object
 
                     // if today date is not within selected academic period, default date will be start of the year
                     if ($inputDate < $startDate || $inputDate > $endDate) {
@@ -348,7 +351,7 @@ class StaffBehavioursTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $staffOptions = [];
@@ -358,7 +361,7 @@ class StaffBehavioursTable extends ControllerActionTable
 
             if (!empty($selectedPeriod)) {
                 $institutionId = $this->Session->read('Institution.Institutions.id');
-                $Staff = TableRegistry::get('Institution.Staff');
+                $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
                 $staffOptions = $Staff
                 ->find('list', ['keyField' => 'staff_id', 'valueField' => 'staff_name'])
                 ->matching('Users')
@@ -379,7 +382,7 @@ class StaffBehavioursTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffBehaviourCategoryId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffBehaviourCategoryId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -392,7 +395,7 @@ class StaffBehavioursTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldBehaviourClassificationId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldBehaviourClassificationId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -410,7 +413,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->field('behaviour_classification_id', ['attr' => ['label' => __('Classification')]]); // POCOR-7441
         $tabElements = $this->getStaffBehaviourTabElements();
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function onSetCustomCaseTitle(Event $event, Entity $entity)
@@ -476,7 +479,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
 
-        $paramPass = $this->request->param('pass');
+        $paramPass = $this->getRequest()->getParam('pass');
         $ids = isset($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : [];
         $studentBehaviourId = $ids['id'];
         $queryString = $this->encode(['staff_behaviour_id' => $studentBehaviourId]);
@@ -543,10 +546,10 @@ class StaffBehavioursTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         // POCOR-6155
-        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
+        $academicPeriod = ($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
         // POCOR-6155
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $User = TableRegistry::get('security_users');
+        $User = TableRegistry::getTableLocator()->get('security_users');
         $query
         ->select([
             'date_of_behaviour' => 'StaffBehaviours.date_of_behaviour',
@@ -559,13 +562,13 @@ class StaffBehavioursTable extends ControllerActionTable
                 'last_name' => 'literal'
             ])
         ])
-        ->LeftJoin([$this->Staff->alias() => $this->Staff->table()],[
+        ->LeftJoin([$this->Staff->getAlias() => $this->Staff->getTable()],[
             $this->Staff->aliasField('id').' = ' . 'StaffBehaviours.staff_id'
         ])
-        ->LeftJoin([$this->StaffBehaviourCategories->alias() => $this->StaffBehaviourCategories->table()],[
+        ->LeftJoin([$this->StaffBehaviourCategories->getAlias() => $this->StaffBehaviourCategories->getTable()],[
             $this->StaffBehaviourCategories->aliasField('id').' = ' . 'StaffBehaviours.staff_behaviour_category_id'
         ])
-        ->LeftJoin([$this->BehaviourClassifications->alias() => $this->BehaviourClassifications->table()],[
+        ->LeftJoin([$this->BehaviourClassifications->getAlias() => $this->BehaviourClassifications->getTable()],[
             $this->BehaviourClassifications->aliasField('id').' = ' . 'StaffBehaviours.behaviour_classification_id'
         ])
         ->where([
@@ -577,8 +580,8 @@ class StaffBehavioursTable extends ControllerActionTable
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 // POCOR-6155 linked cases from caseBehaviour
-                $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
-                $InstitutionCases = TableRegistry::get('Cases.InstitutionCases');
+                $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
+                $InstitutionCases = TableRegistry::getTableLocator()->get('Cases.InstitutionCases');
 
                 $feature = $WorkflowRules->getFeatureByEntity($row);
                 $recordId = $row->id;
@@ -615,19 +618,19 @@ class StaffBehavioursTable extends ControllerActionTable
      * POCOR-6670 Assignee id
      *add assignee dropdown in edit and view page
     */
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Behaviour > Staff';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowModelsTable = TableRegistry::getTableLocator()->get('workflow_models');
+            $workflowStepsTable = TableRegistry::getTableLocator()->get('workflow_steps');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
                             'workflow_id'=>$Workflows->aliasField('id'),
                             'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                                 [
                                     $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
                                 ])
@@ -642,19 +645,19 @@ class StaffBehavioursTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
+            $session = $request->getSession();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
             }
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
-                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
                 if (!empty($stepRoles)) {
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $Areas = TableRegistry::get('Area.Areas');
-                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                    $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                    $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     if ($isSchoolBased) {
                         if (is_null($institutionId)) {                        
                             Log::write('debug', 'Institution Id not found.');
@@ -706,7 +709,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $isEditable = true;
         $isDeletable = true;
 
-        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemsTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $compareDate = $ConfigItemsTable->find()
                         ->select([$ConfigItemsTable->aliasField('value')])
                         ->where([
@@ -741,7 +744,7 @@ class StaffBehavioursTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->getRequest()->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -769,8 +772,8 @@ class StaffBehavioursTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Staff->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->Staff->getAlias(), $this->Institutions->getAlias(), $this->CreatedUser->getAlias(),'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
@@ -813,7 +816,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $jsonData = base64_decode($id);
         preg_match_all('/{(.*?)}/', $jsonData, $matches);
         $requestData = json_decode($matches[0][0]);
-        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemsTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $compareDate = $ConfigItemsTable->find()
                         ->select([$ConfigItemsTable->aliasField('value')])
                         ->where([

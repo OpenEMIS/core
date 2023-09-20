@@ -1,11 +1,11 @@
-<?php if (!empty($academicPeriodOptions) || !empty($reportCardOptions) || !empty($classOptions)) : ?>
+<?php if (!empty($academicPeriodOptions) || !empty($reportCardOptions) || !empty($institutionOptions)) : ?>
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
                 $baseUrl = $this->Url->build([
-                    'plugin' => $this->request->params['plugin'],
-                    'controller' => $this->request->params['controller'],
-                    'action' => $this->request->params['action']
+                    'plugin' => $this->request->getParam('plugin'),
+                    'controller' => $this->request->getParam('controller'),
+                    'action' => $this->request->getParam('action')
                 ]);
                 $template = $this->ControllerAction->getFormTemplate();
                 $this->Form->templates($template);
@@ -23,28 +23,15 @@
                 }
 
                 if (!empty($reportCardOptions)) {
-                    echo $this->Form->input('report_card_id', array(
+                    echo $this->Form->input('student_profile_template_id', array(
                         'type' => 'select',
                         'class' => 'form-control',
                         'label' => false,
                         'options' => $reportCardOptions,
                         'default' => $selectedReportCard,
                         'url' => $baseUrl,
-                        'data-named-key' => 'report_card_id',
+                        'data-named-key' => 'student_profile_template_id',
                         'data-named-group' => 'academic_period_id'
-                    ));
-                }
-
-                if (!empty($classOptions)) {
-                    echo $this->Form->input('class_id', array(
-                        'type' => 'select',
-                        'class' => 'form-control',
-                        'label' => false,
-                        'options' => $classOptions,
-                        'default' => $selectedClass,
-                        'url' => $baseUrl,
-                        'data-named-key' => 'class_id',
-                        'data-named-group' => 'academic_period_id,report_card_id'
                     ));
                 }
             ?>
