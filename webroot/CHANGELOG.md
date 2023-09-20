@@ -1,3 +1,94 @@
+### [3.94.4] - 2023-09-15
+- Bug Fixed: Administration>Data Management>Archive: Archive is stuck in progress
+- Bug Fixed: Institutions > Survey > Forms: The date field for repeater form alignment seems to be out
+- Bug Fixed: Institutions > Performance > Report Cards: The generated PDF report card format is not as per the desired format
+
+### [3.94.3] - 2023-09-14
+- Bug Fixed: Institutions>Survey>Forms: Survey form that are uploaded in survey app are not reflected correctly in core interface
+
+### [3.94.2] - 2023-09-14
+- Implemented: Develop changes to the OpenEMIS Core (CakePHP) v2 upload survey API to include the student list question
+- Bug Fixed: Institutions > Students > Import: Not able to import students
+- Bug Fixed: Institutions > Students: The institutions showing for the selected area are not showing correctly
+- Bug Fixed: Improvements to Tertiary Education feature
+- Bug Fixed: Administrations > Workflows > Student Transfer > Receiving/Sending : Remove Option from Post Event
+- Bug Fixed: Institutions>Survey>Forms: When a user answers a survey question for Student A, then all other questions for the same student get marked simultaneously
+- Bug Fixed: Institutions > Students > Add: Academic Period is showing wrongly when transferred from older academic period to current academic period
+- Bug Fixed: OpenEMIS Registration: Assignee for Pending Approval should follow the security role in workflow step
+- Bug Fixed: Institutions > Students> Add: When adding the students, the page load very slow/does not load at all
+
+### [3.94.1] - 2023-09-08
+- Implemented: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 4
+- Bug Fixed: Institutions>Performance>Assessments: Duplicate queries are found
+- Bug Fixed: Institutions > Academic > Curriculars: When editing, the page goes to 404 error page
+- Bug Fixed: OpenEMIS Registration: The student's custom field for the field type "File" configured in OpenEMIS Core is not working in OpenEMIS Registration
+- Bug Fixed: Migration fix : Renaming POCOR-7395 to run earlier as it affects other migration files
+- Bug Fixed: Administration>Data Management>Copy: Infrastructure custom fields are not copied over
+- Bug Fixed: Home Page > Workbench: Workbench for behaviour is not showing up for assign user in their profile
+- Bug Fixed: Institutions>Students>Add: Other countries is not showing in the drop down list for address area and birthplace area
+- Bug Fixed: Administration > System Setup > Custom Field: When deleting options for the checkbox field type under the institutions custom field, the page gives a successful message but records were not deleted
+- Bug Fixed: Not able to delete users
+
+### [3.94.0] - 2023-08-31
+- Implemented: Develop APIs for OpenEMIS Core add student/staff/guardian functions
+- Implemented: Develop updates for institution student and institution student absence APIs
+- Implemented: Develop a function to copy Institution > Performance > Assessments from one academic period to another
+- Bug Fixed: Administration > Data Management > Copy : Competencies
+- Bug Fixed: Staff > Career > Attendances: The record did not get deleted even when successful message display
+- Bug Fixed: Administration > Security > Groups > Edit Group: When editing the user group page, the records showing is different from the view page and instead it shows empty records
+- Bug Fixed: Institutions > Students>Promote: There is no option for no grade when promoting student
+- Bug Fixed: Institutions>Performance>Assessments: Report is showing empty for transferred students
+- Bug Fixed: Administration > Data Management > Copy: Unable to copy shifts
+- Bug Fixed: Institutions > Appointments > Positions: The column Institutions in the report when exporting Institutions Positions is showing wrong data
+- Bug Fixed: Institutions>Staff>Add: When adding staff thru the api, core does not link staff to the institution
+- Bug Fixed: Institutions > Students > General > Guardian: When clicking the following: Student Name, Students, Institution Name, Institution, the breadcrumbs do not work and it navigates to a page that says page not found
+- Bug Fixed: Institutions > Students > Add: The system should allow the transferred for academic period 2022 to academic period 2023
+
+### [3.93.0] - 2023-08-25
+- Implemented: Develop Tertiary Education feature
+- Implemented: Move copy function from Administration > System Setup > Education Structure to Data Management > Copy
+- Implemented: Develop calendar holiday placeholders for school profiles
+- Bug Fixed: Investigate what is filling up the apache http logs
+- Bug Fixed: Institutions>Cases: Assignee should not be able to see the cases in Personal>Cases
+- Bug Fixed: Institutions > Students > Add: The student custom fields are not in order and the checkbox field type looks incorrect
+- Bug Fixed: Students>Academic>Curriculars>Add: When adding curricular, the records are not showing even when there is a successful message
+- Bug Fixed: Institutions > Appointments > Position: User is not able to import institutions positions as the error message of Shift is showing
+- Bug Fixed: Administration > Workflows: When editing the workflow for Staff Leave, the Staff Leave type is not showing any options
+- Bug Fixed: Reports > Institutions> Institution Position Summaries: The report is stuck in progress
+- Bug Fixed: Administration > System Setup > Custom Field > Student: When deleting options for the checkbox field type under the student custom field, the page gives a successful message but records were not deleted
+
+### [3.92.3] - 2023-08-23
+- Bug Fixed: Institutions>Students>Add: External search tab is missing
+- Bug Fixed: Institutions > Add page : System does not INSERT security_group_institutions when a new Institution is created
+
+### [3.92.2] - 2023-08-22
+- Bug Fixed: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 3 Fixes
+- Bug Fixed: Administration > System Setup > Field Options > Extracurricular Types: Extracurricular should be removed
+- Bug Fixed: Administrative > Meals: A 404 error is showing when adding the meal programme
+- Bug Fixed: Institutions > Survey > Forms: There is no date field type displaying for student_list questions even when it is a date field
+- Bug Fixed: Reports > Staff: Staff Out of School: Report is stuck in progress
+- Bug Fixed: Institutions > General > Shifts: Periods field dropdown is showing all periods that have been configured even though some periods is not in the date enabled and date disabled
+- Bug Fixed: Administration > System Setup > Custom Field > Student: When deleting options for the checkbox field type under the student custom field, the page gives a successful message but records were not deleted
+- Bug Fixed: Institutions > Academic > Subjects: The user is unable to add the same subject more than 1 time
+- Bug Fixed: Institutions>Academic>Classes: User is not able to assign homeroom teachers
+- Bug Fixed: API: Endpoint is not showing the label academic period and institution
+
+### [3.92.1] - 2023-08-18
+- Implemented: Develop changes to asset feature
+- Implemented: Develop a function to add Case Escalation emails to Alerts
+- Implemented: Move all textbook related field options under a separate textbook section heading
+- Implemented: Develop a "Bonded Organisation" field for the scholarship feature
+- Bug Fixed: Develop Institutions > Statistics > Standard: Student Attendance Summary Report(Rule to Calculate Daily Attendance/Absence)
+- Bug Fixed: CLONE - SAME DB ARCHIVE : Institutions > Attendance> Staff page: The page is not showing correctly
+- Bug Fixed: Swagger: Textbook api is not updated properly
+- Bug Fixed: Report>UIS Statistics: Error Message when inserting queries
+- Bug Fixed: Reports > Workflows: Report is stuck in progress
+- Bug Fixed: Administration > Security > Groups > User Group: User Roles configured are not showing in the list
+- Bug Fixed: Institutions > Students > General > Guardian: Not able to add guardian when adding via identity number
+- Bug Fixed: Institutions>Performance>Report Cards: Unable to generate all
+- Bug Fixed: Issues with copying the features in Administration > Data Management > Copy
+- Bug Fixed: Administration > Profiles > Classes: When publishing the class profile, the page navigates to 404 error
+
 ### [3.92.0] - 2023-08-11
 - Implemented: Improvements to the Case feature to allow users to add/update cases from the Personal module
 - Bug Fixed: Institutions > Student/Staff > Export: The page goes to Bad Gateway

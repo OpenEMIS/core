@@ -309,7 +309,8 @@ trait MessagesTrait
             'allSubjectsAlreadyAdded' => 'All Subjects for the assigned grade already added previously',
             'noSubjectsInClass' => 'There are no subjects in the assigned grade',
             'noSubjectSelected' => 'There is no subject selected',
-            'noProgrammes' => 'There is no programme set for available Academic Period on this institution'
+            'noProgrammes' => 'There is no programme set for available Academic Period on this institution',
+            'SubjectAlreadyExist'=> 'Subject with the same name already exist. Please rename the Subject'
         ],
         'InstitutionFees' => [
             'fee_types' => 'Fee Types',
@@ -2573,6 +2574,7 @@ trait MessagesTrait
             ]
         ],
         'Archive' => [
+            'notSuperAdmin' => 'You have no permission to archive.',
             'lessSpace' => 'Please make sure there is enough space for backup.',
             'backupReminder' => 'Please remember to backup first before you proceed to transfer this data. Transfer is not possible for the current Academic Period. After the transfer is completed, the Academic Period will be updated to non-editable and non-visible.',
             'currentAcademic' => 'Please do not transfer data of current Academic Period.'

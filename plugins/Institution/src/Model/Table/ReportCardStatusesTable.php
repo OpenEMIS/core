@@ -724,7 +724,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                         'report_card_id' => $reportCardId
                     ];
     
-                   
                     $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
                     $SecurityFunctionsAllExcelData = $SecurityFunctions
                                         ->find()
@@ -741,7 +740,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                                             
                                         ])
                                         ->count();
-    
+                    
                     $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
                     $SecurityFunctionsAllPdfData = $SecurityFunctions
                                         ->find()
@@ -787,8 +786,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                         //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
                         ])
                         ->count();            
-                        
-
+                    
                     if ($generatedCount > 0 || $publishedCount > 0) {
                         if ($this->AccessControl->isAdmin()) {
                             $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
@@ -810,9 +808,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                             }
                         }
                     }        
-
                     // End POCOR-7320
-                    
                     // Download all button
                      if ($generatedCount > 0 || $publishedCount > 0) {
                         if ($this->AccessControl->isAdmin()) {
@@ -842,7 +838,10 @@ class ReportCardStatusesTable extends ControllerActionTable
                             $downloadButton['attr']['title'] = __('Download All Excel');
                             $extra['toolbarButtons']['downloadAll'] = $downloadButton;
                         }else{
-                            if($SecurityRoleFunctionsTableAllExcelData >= 1){
+                            //POCOR-7656 start
+                            $ExcludedSecurityRoleEntity=$this->getExcludedSecurityRolesData($reportCardId);  //POCOR-7551
+                            //POCOR-7656 end
+                            if(($SecurityRoleFunctionsTableAllExcelData >= 1) || ($ExcludedSecurityRoleEntity == 1)){
                                 $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
                                 $downloadButton['type'] = 'button';
                                 $downloadButton['label'] = '<i class="fa kd-download"></i>';
@@ -852,7 +851,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                             }
                         }
                     }
-    
                     // Generate all button
                     $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
                     $generateButton['type'] = 'button';
@@ -869,8 +867,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                                         ->where([
                                             $this->ReportCards->aliasField('id') => $reportCardId])
                                         ->first();
-    
-    
+        
                     if (!empty($ReportCardsData->generate_start_date)) {
                         $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
                     }
@@ -1022,7 +1019,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                                             $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds])//POCOR-7131
                                         ->count();//POCOR-7131
                     //POCOR-6838: End
-
                     // Start POCOR-7320
                     $SecurityFunctionsMergeGenerateAllData = $SecurityFunctions
                     ->find()
@@ -1037,8 +1033,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                         //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
                         ])
                         ->count();            
-                        
-                        
                     if ($generatedCount > 0 || $publishedCount > 0) {
                         if ($this->AccessControl->isAdmin()) {
                             $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
@@ -1118,8 +1112,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                                         ->where([
                                             $this->ReportCards->aliasField('id') => $reportCardId])
                                         ->first();
-    
-    
                     if (!empty($ReportCardsData->generate_start_date)) {
                         $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
                     }
@@ -1139,8 +1131,11 @@ class ReportCardStatusesTable extends ControllerActionTable
                             $extra['toolbarButtons']['generateAll'] = $generateButton;
                         }
                     }else{
+                        //POCOR-7656 start
+                        $ExcludedSecurityRoleEntity=$this->getExcludedSecurityRolesData($reportCardId);  //POCOR-7551
+                        //POCOR-7656 end
                         if($SecurityRoleFunctionsTableGenerateAllData >= 1){//POCOR-7131 change in if condition
-                            if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
+                            if ((!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) || ($ExcludedSecurityRoleEntity == 1)) {
                                 $extra['toolbarButtons']['generateAll'] = $generateButton;
                             } else { 
                                 $generateButton['attr']['data-html'] = true;
@@ -1190,8 +1185,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                 }
             }
         }
-        
-        
     }
     // Start POCOR-7320
 
@@ -1824,6 +1817,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $where = [];
         $where[$classStudentsTable->aliasField('institution_class_id')] = $institutionClassId;
         if (!is_null($studentId)) {
+            $checkgpaStudent = $studentId; //POCOR-7656
             $where[$classStudentsTable->aliasField('student_id')] = $studentId;
         }
         $classStudents = $classStudentsTable->find()
@@ -1840,6 +1834,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         foreach ($classStudents as $student) {
             // Report card processes
+            $checkgpaStudent  = $student->student_id;//POCOR-7656
             $idKeys = [
                 'report_card_id' => $reportCardId,
                 'institution_class_id' => $student->institution_class_id,
@@ -1867,7 +1862,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $this->ReportCardEmailProcesses->delete($reportCardEmailProcessEntity);
             }
             // end
-            $getGpa = $this->addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId,$educationGradeId);//POCOR-7318 get student GPA
+            $getGpa = $this->addGpaReportCards($checkgpaStudent, $reportCardId);//POCOR-7318 get student GPA//POCOR-7656
             // Student report card
             $recordIdKeys = [
                 'report_card_id' => $reportCardId,
@@ -2304,9 +2299,9 @@ class ReportCardStatusesTable extends ControllerActionTable
     * POCOR-7318
     * query again change in POCOR-7628
     **/
-    private function addGpaReportCards($institutionId, $institutionClassId, $reportCardId, $studentId,$educationGradeId)
+    private function addGpaReportCards($checkgpaStudent, $reportCardId)
     {
-
+        $studentId = $checkgpaStudent;//POCOR-7656
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods'); 
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriodId =  $this->AcademicPeriods->getCurrent();

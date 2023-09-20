@@ -289,7 +289,7 @@ class InstitutionCasesTable extends ControllerActionTable
                     //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
                 ]
             )
-            ->where([$this->aliasField('assignee_id') =>$userId]) //start POCOR-6210
+            ->where([$this->aliasField('created_user_id') =>$userId]) //POCOR-7668
             ->group($this->aliasField('id'));
         }
         else{//POCOR-7437 end
@@ -868,6 +868,7 @@ class InstitutionCasesTable extends ControllerActionTable
             $attr['type'] = 'chosenSelect';
             $attr['attr']['multiple'] = false;
             $attr['options'] = $institutionOptions;
+            $attr['onChangeReload'] = true;//POCOR-7668
             if($action=="edit"){
                 $attr['type'] = 'readOnly';
             }
@@ -875,4 +876,29 @@ class InstitutionCasesTable extends ControllerActionTable
       return $attr;
     }
     //POCOR-7437 end
+    //POCOR-7642 start
+    public function getModelAlertData($threshold)
+    {
+        $dayBefore = $threshold['value'];
+        $workflowCategory = $threshold['workflow_steps'];
+        $sqlConditions = [
+            1 => ('DATEDIFF( NOW(),InstitutionCases.created)' . '>' . $dayBefore), // before
+        ];
+        $caseResults = $this->find()
+            ->contain(['Institutions', 'Assignees', 'Statuses'])
+            ->where([
+                $this->Statuses->aliasField('id In') => $workflowCategory,
+                $this->aliasField('modified is null'),
+                $this->aliasField('modified_user_id is null'),
+                $sqlConditions
+            ]);
+        return $caseResults->toArray();
+    }
+    //POCOR-7642 end
+    //POCOR-7668 start
+    public function onGetAssigneeId(Event $event, Entity $entity)
+    {
+        return $entity->assignee->name;
+    }
+    //POCOR-7668 end
 }

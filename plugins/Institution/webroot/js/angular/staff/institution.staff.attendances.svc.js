@@ -386,11 +386,11 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
     }
 
     function getAllDayTimeInTimeOutElement(params) {
-        console.log(params);
+        // console.log(params);
         var timeIn = params.time_in;
-        console.log(timeIn);
+        // console.log(timeIn);
         var timeOut = params.time_out;
-         console.log(timeOut);
+         // console.log(timeOut);
         var time = '';
         if (timeIn && timeOut){
             time = '<div class="time-view"><font color= "#77B576"><i class="fa fa-external-link-square"></i> '+ convert12Timeformat(timeIn) + '</div><div class="time-view"><i class="fa fa-external-link"></i> ' + convert12Timeformat(timeOut) +  '</font></div>';
@@ -654,7 +654,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             time_out: params.data.attendance[dateString].time_out,
             comment: params.data.attendance[dateString].comment
         };
-        console.log(staffAttendanceData);
+        // console.log(staffAttendanceData);
 
         staffAttendanceData[dataKey] = dataValue;
         if(!params.data.attendance[dateString].isNew) {
