@@ -36,6 +36,9 @@ class StudentsTable extends ControllerActionTable
 
     private $institution_id;
     private $academic_period_id;
+    private $student_status_codes_array;
+    private $student_status_names_array;
+    private $previousStudents;
 
     public function initialize(array $config)
     {
@@ -263,14 +266,13 @@ class StudentsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-        $periodId = $this->request->query['academic_period_id'];
-        if (!$periodId) {
-            $periodId = $this->AcademicPeriods->getCurrent();
-        }
+        $this->setStudentStatusesArray();
 
-        $this->institution_id = $institutionId;
-        $this->academic_period_id = $periodId;
+        $this->setInstitutionID();
+
+        $this->setAcademicPeriodID();
+
+        $this->setPreviousStudents();
 
         $query = $this->setBasicQuery($query);
 
@@ -396,7 +398,7 @@ class StudentsTable extends ControllerActionTable
             'key' => 'student_status_id',
             'field' => 'student_status',
             'type' => 'string',
-            'label' => __('Student Status')
+            'label' => __('Student 1 Status')
         ];
 
 
@@ -721,10 +723,12 @@ class StudentsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('previous_institution_student_id', ['type' => 'hidden']);
+
         $this->triggerAutomatedStudentWithdrawalShell();
 
         $session = $this->request->session();
-        $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+
+        $institutionId = $this->institution_id;
         $assignedStudentToInstitution = $this->find()->where(['institution_id' => $institutionId])->count();
         $session->write('is_any_student', $assignedStudentToInstitution);
 
@@ -1059,22 +1063,20 @@ class StudentsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $request = $this->request;
+
+        $this->setStudentStatusesArray();
+
+        $this->setInstitutionID();
+
+        $this->setAcademicPeriodID();
+
+        $this->setPreviousStudents();
+
         $query->contain(['EducationGrades']);
 
-        // Student Statuses
-        $statusOptions = $this->StudentStatuses
-            ->find('list')
-            ->toArray();
-        $StudentStatusesTable = $this->StudentStatuses;
-        $pendingStatus = [
-            self::PENDING_TRANSFERIN => __('Pending Transfer In'),
-            self::PENDING_TRANSFEROUT => __('Pending Transfer Out'),
-            self::PENDING_ADMISSION => __('Pending Admission'),
-            self::PENDING_WITHDRAW => __('Pending Withdraw'),
-            self::IN_QUEUE => __('In Queue'),
-        ];
 
-        $statusOptions = $statusOptions + $pendingStatus;
+        // Student Statuses
+        list($statusOptions, $selectedStatus) = $this->setStatusOptions();
 
         // Academic Periods
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -1087,7 +1089,6 @@ class StudentsTable extends ControllerActionTable
         if (empty($request->query['academic_period_id'])) {
             $request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
         }
-        $selectedStatus = $this->queryString('status_id', $statusOptions);
         $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
 
         $educationGradesOptions = $InstitutionEducationGrades
@@ -1113,7 +1114,7 @@ class StudentsTable extends ControllerActionTable
         $selectedEducationGrades = $this->queryString('education_grade_id', $educationGradesOptions);
 
         // Advanced Select Options
-        $this->advancedSelectOptions($statusOptions, $selectedStatus);
+
         $studentTable = $this;
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
@@ -1204,6 +1205,8 @@ class StudentsTable extends ControllerActionTable
                         'Users.last_name',
                         'Users.preferred_name',
                         'student_status_id',
+                        'previous_institution_student_id',
+                        'academic_period_id',
                         'identity_type' => $IdentityTypes->aliasField('name'),
 
                         //start:POCRO-6622 quates is removed with ` for loading issue in student on mv-moe server
@@ -1242,7 +1245,9 @@ class StudentsTable extends ControllerActionTable
                 'Users.third_name',
                 'Users.last_name',
                 'Users.preferred_name',
-                'student_status_id'
+                'student_status_id',
+                'previous_institution_student_id',
+                'academic_period_id',
             ])
                 //POCOR-6645 starts - applied join to get result when not $ConfigItem
                 ->leftJoin([$UserIdentities->alias() => $UserIdentities->table()], [
@@ -1255,11 +1260,19 @@ class StudentsTable extends ControllerActionTable
         }//POCOR-6248 ends
 
         // POCOR-2869 implemented to hide the retrieval of records from another school resulting in duplication - proper fix will be done in SOJOR-437
-        $query->group([$this->aliasField('student_id'), $this->aliasField('academic_period_id'), $this->aliasField('institution_id'), $this->aliasField('education_grade_id'), $this->aliasField('student_status_id')]);
+        $query->group([$this->aliasField('student_id'),
+            $this->aliasField('academic_period_id'),
+            $this->aliasField('institution_id'),
+            $this->aliasField('education_grade_id'),
+            $this->aliasField('student_status_id'),
+            $this->aliasField('previous_institution_student_id')]);
 
         // POCOR-2547 sort list of staff and student by name
         if (!isset($request->query['sort'])) {
-            $query->order([$this->Users->aliasField('first_name'), $this->Users->aliasField('last_name')]);
+            $query->order([
+                $this->Users->aliasField('first_name'),
+                $this->Users->aliasField('last_name')
+            ]);
         }
 
         $this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
@@ -1284,49 +1297,50 @@ class StudentsTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
     {
-        foreach ($query->toArray() as $key => $value) {
-            $periodId = $value['academic_period']['id'];//POCOR-6530
-            $InstitutionStudents = TableRegistry::get('InstitutionStudents');
-
-            $InstitutionStudentsCurrentData = $InstitutionStudents
-                ->find()
-                ->select([
-                    'InstitutionStudents.id', 'InstitutionStudents.student_status_id', 'InstitutionStudents.previous_institution_student_id'
-                ])
-                ->where([
-                    $InstitutionStudents->aliasField('student_id') => $value["_matchingData"]["Users"]->id,
-                    $InstitutionStudents->aliasField('academic_period_id') => $periodId //POCOR-6530
-                ])
-                ->order([$InstitutionStudents->aliasField('InstitutionStudents.created') => 'DESC'])
-                ->autoFields(true)
-                ->first();
-            /*POCOR-6400 starts*/
-            if (!empty($InstitutionStudentsCurrentData->previous_institution_student_id)) {
-                $studentStatusId = $InstitutionStudentsCurrentData->student_status_id;
-                $statuses = $this->StudentStatuses->findCodeList();
-                $code = array_search($studentStatusId, $statuses);
-
-                if ($code != 'WITHDRAWN' && $code != 'TRANSFERRED' && $code != 'PROMOTED') {
-                    /**POCOR-6530 starts */
-                    $previousPeriodId = $periodId - 1;
-                    $previousInstitutionStudentId = $InstitutionStudentsCurrentData->previous_institution_student_id;
-                    $previousYearRecord = $InstitutionStudents
-                        ->find()
-                        ->select([
-                            'InstitutionStudents.id', 'InstitutionStudents.student_status_id'
-                        ])
-                        ->where([
-                            $InstitutionStudents->aliasField('academic_period_id') => $previousPeriodId,
-                            $InstitutionStudents->aliasField('id') => $previousInstitutionStudentId
-                        ])->first();
-                    /**POCOR-6530 ends */
-                    if (!empty($previousYearRecord) && $previousYearRecord->student_status_id == 8) {
-                        $query->toArray()[$key]->student_status->name = "Enrolled (Repeater)";
-                    }
-                }
-            }
-            /*POCOR-6400 ends*/
-        }
+//        foreach ($query->toArray() as $key => $value) {
+//            $periodId = $value['academic_period']['id'];//POCOR-6530
+//            $InstitutionStudents = TableRegistry::get('InstitutionStudents');
+//
+//            $InstitutionStudentsCurrentData = $InstitutionStudents
+//                ->find()
+//                ->select([
+//                    'InstitutionStudents.id', 'InstitutionStudents.student_status_id', 'InstitutionStudents.previous_institution_student_id'
+//                ])
+//                ->where([
+//                    $InstitutionStudents->aliasField('student_id') => $value["_matchingData"]["Users"]->id,
+//                    $InstitutionStudents->aliasField('academic_period_id') => $periodId //POCOR-6530
+//                ])
+//                ->order([$InstitutionStudents->aliasField('InstitutionStudents.created') => 'DESC'])
+//                ->autoFields(true)
+//                ->first();
+//            /*POCOR-6400 POCOR-7792 starts*/
+//            if (!empty($InstitutionStudentsCurrentData->previous_institution_student_id)) {
+//                $studentStatusId = $InstitutionStudentsCurrentData->student_status_id;
+//                $statuses = $this->StudentStatuses->findCodeList();
+//                $code = array_search($studentStatusId, $statuses);
+//                $repeatedStatusID = $statuses['REPEATED'];
+//
+//                if ($code != 'WITHDRAWN' && $code != 'TRANSFERRED' && $code != 'PROMOTED') {
+//                    /**POCOR-6530 starts */
+//                    $previousPeriodId = $periodId - 1;
+//                    $previousInstitutionStudentId = $InstitutionStudentsCurrentData->previous_institution_student_id;
+//                    $previousYearRecord = $InstitutionStudents
+//                        ->find()
+//                        ->select([
+//                            'InstitutionStudents.id', 'InstitutionStudents.student_status_id'
+//                        ])
+//                        ->where([
+//                            $InstitutionStudents->aliasField('academic_period_id <') => $periodId,
+//                            $InstitutionStudents->aliasField('id') => $previousInstitutionStudentId
+//                        ])->first();
+//                    /**POCOR-6530 ends */
+//                    if (!empty($previousYearRecord) && $previousYearRecord->student_status_id == $repeatedStatusID) {
+//                        $query->toArray()[$key]->student_status->name = "Enrolled (Repeater)";
+//                    }
+//                }
+//            }
+//            /*POCOR-6400 ends*/
+//        }
         $this->dashboardQuery = clone $query;
     }
 
@@ -1703,6 +1717,16 @@ class StudentsTable extends ControllerActionTable
             $value = $entity->_matchingData['Users']->name;
         }
         return $value;
+    }
+
+
+    public function onGetStudentStatusId(Event $event, Entity $entity)
+    {
+//        return 1;
+        $previous_institution_student_id = $entity->previous_institution_student_id;
+        $student_status_id = $entity->student_status_id;
+
+        return $this->getStudentStatus($student_status_id, $previous_institution_student_id);
     }
 
     public function onGetEducationGradeId(Event $event, Entity $entity)
@@ -2837,6 +2861,8 @@ class StudentsTable extends ControllerActionTable
                     $this->aliasField('student_status_id'),
                     $this->aliasField('start_date'),
                     $this->aliasField('end_date'),
+                    $this->aliasField('previous_institution_student_id'),
+                    $this->aliasField('academic_period_id'),
                 ]
             )
             ->where([
@@ -2887,17 +2913,14 @@ class StudentsTable extends ControllerActionTable
         return $query;
     }
 
-    /**
-     * @param Query $query
-     * @return Query
-     */
+
     private function addStudentStatusField(Query $query)
     {
-        $statuses = self::getRelatedOptions('student_statuses', '`id`');
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
-        use ($statuses) {
-            return $results->map(function ($row) use ($statuses) {
-                $row['student_status'] = $statuses[$row->student_status_id];
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+            return $results->map(function ($row) {
+                $previous_institution_student_id = $row->previous_institution_student_id;
+                $student_status_id = $row->student_status_id;
+                $row['student_status'] = $this->getStudentStatus($student_status_id, $previous_institution_student_id);
                 return $row;
             });
         });
@@ -3223,5 +3246,90 @@ class StudentsTable extends ControllerActionTable
         return $affected;
     }
 
+    private function setStudentStatusesArray()
+    {
+        $this->student_status_codes_array = $this->StudentStatuses->findCodeList();
+        $statusOptions = $this->StudentStatuses
+            ->find('list')
+            ->toArray();
+        $pendingStatus = [
+            self::PENDING_TRANSFERIN => __('Pending Transfer In'),
+            self::PENDING_TRANSFEROUT => __('Pending Transfer Out'),
+            self::PENDING_ADMISSION => __('Pending Admission'),
+            self::PENDING_WITHDRAW => __('Pending Withdraw'),
+            self::IN_QUEUE => __('In Queue'),
+        ];
 
+        $statusOptions = $statusOptions + $pendingStatus;
+        $this->student_status_names_array = $statusOptions;
+    }
+
+    /**
+     * @return array
+     */
+    private function setStatusOptions()
+    {
+        $statusOptions = $this->student_status_names_array;
+        $selectedStatus = $this->queryString('status_id', $statusOptions);
+        $this->advancedSelectOptions($statusOptions, $selectedStatus);
+        return array($statusOptions, $selectedStatus);
+    }
+
+    private function setPreviousStudents()
+    {
+        $statuses = $this->student_status_codes_array;
+        $repeatedStatusID = $statuses['REPEATED'];
+        $withdrawnStatusID = $statuses['WITHDRAWN'];
+        $transferredStatusID = $statuses['TRANSFERRED'];
+        $promotedStatusID = $statuses['PROMOTED'];
+        $current_year_id = $this->academic_period_id;
+        $InstitutionStudents = TableRegistry::get('institution_students');
+        $this->previousStudents = $InstitutionStudents
+            ->find('list', ['keyField' => 'id', 'valueField' => 'student_status_id'])
+            ->innerJoin([$this->alias() => $this->table()],
+                [$InstitutionStudents->aliasField('id = ')
+                    . $this->aliasField('previous_institution_student_id')
+                ])
+            ->where([
+                $InstitutionStudents->aliasField('academic_period_id <') => $current_year_id,
+                $InstitutionStudents->aliasField('student_status_id') => $repeatedStatusID,
+                $this->aliasField('student_status_id NOT IN') => [$withdrawnStatusID,
+                    $transferredStatusID, $promotedStatusID],
+            ])
+            ->toArray();
+    }
+
+    private function setAcademicPeriodID()
+    {
+        $periodId = $this->request->query['academic_period_id'];
+        if (!$periodId) {
+            $periodId = $this->AcademicPeriods->getCurrent();
+        }
+        $this->academic_period_id = $periodId;
+    }
+
+    private function setInstitutionID()
+    {
+        $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->Session->read('Institution.Institutions.id');
+        $this->institution_id = $institutionId;
+    }
+
+    /**
+     * @param $student_status_id
+     * @param $previous_institution_student_id
+     * @return string|null
+     */
+
+    private function getStudentStatus($student_status_id, $previous_institution_student_id)
+    {
+
+        $statusOptions = $this->student_status_names_array;
+        $value = $statusOptions[$student_status_id];
+        $previousStudents = $this->previousStudents;
+        if (isset($previous_institution_student_id)) {
+            if (isset($previousStudents[$previous_institution_student_id]))
+                $value = __("Enrolled (Repeater)");
+        }
+        return $value;
+    }
 }
