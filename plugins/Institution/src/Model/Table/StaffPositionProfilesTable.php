@@ -1547,7 +1547,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                        if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                         $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
                          $options = $attr['options'];
-                         $entity->is_homeroom =  ($entity->is_homeroom) ? __($entity->is_homeroom) : __("0") ;
+                         $entity->is_homeroom =  empty($entity->is_homeroom) ? 0 : __($entity->is_homeroom); // POCOR-7753
                          $attr['attr']['value'] = $options[strval($entity->is_homeroom)];
                        }
                 }
