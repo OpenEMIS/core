@@ -24,6 +24,10 @@ Route::post('login', 'Authentication\LoginController@login');
 Route::group(
     ["middleware" => "auth.jwt"],
     function () {
+        //POCOR-7545 starts
+        Route::get('institutions/{institutionId}/students/meals', 'InstitutionController@getStudentsMealsByInstitutionId');
+        //POCOR-7545 ends
+
         // POCOR-7547 starts
         Route::get('attendance-mark-types/education-grades', 'StudentController@getEducationGrades');
         Route::get('institutions/{institutionId}/classes/subjects', 'StudentController@getClassesSubjects');
@@ -251,6 +255,25 @@ Route::group(
         Route::post('textbooks', 'TextbookController@addTextbooks');
         Route::post('institutions/{institutionId}/textbooks', 'TextbookController@addInstitutionTextbooks');
         // POCOR-7368 ends
+
+
+
+        // POCOR-7545 starts
+
+        Route::get('security-role-functions', 'InstitutionController@getSecurityRoleFunction');
+        Route::get('security-group-users', 'InstitutionController@getSecurityGroupUsers');
+        Route::get('institutions/students/meals', 'InstitutionController@getInstitutionStudentsMeals');
+        
+        Route::get('institutions/students/{studentID}/statuses', 'InstitutionController@getInstitutionStudentStatusByStudentId');
+
+        Route::post('institutions/students', 'InstitutionController@addInstitutionStudent');
+        Route::post('institutions/staff/payslips', 'InstitutionController@addInstitutionStaffPayslip');
+        Route::post('institutions/students/meal-benefits', 'InstitutionController@addInstitutionStudentMealBenefits');
+        Route::post('institutions/meals/distributions', 'InstitutionController@addInstitutionMealDistributions');
+
+        Route::post('institutions', 'InstitutionController@addInstitution');
+        Route::post('users', 'UserController@addUsers');
+        // POCOR-7545 ends  
 
     }
 );

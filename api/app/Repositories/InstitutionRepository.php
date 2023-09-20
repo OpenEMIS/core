@@ -68,6 +68,9 @@ use App\Models\InstitutionStudentAbsenceDetails;
 use App\Models\StaffBehaviourCategories;
 use App\Models\StudentBehaviours;
 use App\Models\StudentBehaviourCategory;
+use App\Models\InstitutionMealProgrammes;
+use App\Models\InstitutionMealStudents;
+use App\Models\StaffPayslip;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -2633,6 +2636,385 @@ class InstitutionRepository extends Controller
         }
     }
     // POCOR-7546 ends
+
+
+    // pocor-7545 starts
+
+    public function getSecurityRoleFunction($request)
+    {
+        try {
+
+            $params = $request->all();
+
+            $securityRoleFunctions = new SecurityRoleFunctions();
+
+            $limit = config('constants.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $list = $securityRoleFunctions->paginate($limit)->toArray();
+            return $list;
+        
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Security Role Function List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Security Role Function List.');
+        }
+    }
+
+    public function getSecurityGroupUsers($request)
+    {
+        try {
+
+            $params = $request->all();
+
+            $securityGroupUsers = new SecurityGroupUsers();
+
+            $limit = config('constants.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $list = $securityGroupUsers->paginate($limit)->toArray();
+            return $list;
+        
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Security Role Function List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Security Group Users List.');
+        }
+    }
+
+    public function getInstitutionStudentsMeals($request)
+    {
+        try {
+
+            $params = $request->all();
+
+            $institutionMealStudents = new InstitutionMealStudents();
+
+            $limit = config('constants.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $list = $institutionMealStudents->paginate($limit)->toArray();
+            return $list;
+        
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Students Meals List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Institution Students Meals List.');
+        }
+    }
+
+    public function getStudentsMealsByInstitutionId($institutionId)
+    {
+        try {
+
+            $isExists = InstitutionMealStudents::where([
+                'institution_id' => $institutionId,
+            ])->first();
+            
+            if($isExists){
+                $institutionMealStudents = InstitutionMealStudents::where('institution_id', $institutionId)->get();
+                return $institutionMealStudents;
+            }
+            else{
+                return false;
+            }
+        
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Students Meals List By Institution Id.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get Students Meals List By Institution Id.');
+        }
+    }
+
+    public function getInstitutionStudentStatusByStudentId($studentId)
+    {
+        try {
+
+            $isExists = InstitutionStudent::where([
+                'student_id' => $studentId,
+            ]);
+
+            if($isExists){
+                $institutionStudent = InstitutionStudent::where('student_id', $studentId)->get();
+                return $institutionStudent;
+            }
+            else{
+                return false;
+            }
+        
+            } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Students Status from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch Institution Students Status from DB.');
+        }
+    }
+
+    public function addInstitutionStudent($request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+
+            $store['id'] = Str::uuid();
+            $store['student_status_id'] = $data['student_status_id'];
+            $store['student_id'] = $data['student_id'];
+            $store['education_grade_id'] = $data['education_grade_id'];
+            $store['academic_period_id'] = $data['academic_period_id'];
+            $store['start_date'] = $data['start_date'];
+            $store['start_year'] = $data['start_year'];
+            $store['end_date'] = $data['end_date'];
+            $store['end_year'] = $data['end_year'];
+            $store['institution_id'] = $data['institution_id'];
+            $store['previous_institution_student_id'] = $data['previous_institution_student_id']??Null;
+            $store['created_user_id'] = JWTAuth::user()->id;
+            $store['created'] = Carbon::now()->toDateTimeString();
+
+            $insert = InstitutionStudent::insert($store);
+            DB::commit();
+            return 1;
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'Student is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student is not created/updated successfully.');
+        }
+    }
+
+    public function addInstitutionStaffPayslip($request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+                
+            $checkStaff = SecurityUsers::where('id', $data['staff_id'])->first();
+            if(!$checkStaff){
+                return 2;
+            }
+
+
+            $file_name = $request->file_content->getClientOriginalName();
+            $file_name = str_replace(' ', "", $file_name);
+            
+            $store['name'] = $data['name'];
+            $store['description'] = $data['description']??Null;
+            $store['file_name'] = $file_name;
+            $store['file_content'] = file_get_contents($data['file_content']);
+            $store['staff_id'] = $data['staff_id'];
+            $store['created_user_id'] = JWTAuth::user()->id;
+            $store['created'] = Carbon::now()->toDateTimeString();
+
+            $insert = StaffPayslip::insert($store);
+            DB::commit();
+            return 1;
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'Payslips is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Payslips is not created/updated successfully.');
+        }
+    }
+
+    public function addInstitutionStudentMealBenefits($request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+            //dd($data);
+
+            if(isset($data['id']) && $data['id'] != ""){
+                $check = InstitutionMealStudents::where('id', $data['id'])->first();
+                if(!$check){
+                    return 2;
+                }
+
+                $id = $data['id'];
+                unset($data['id']);
+                $data['modified_user_id'] = JWTAuth::user()->id;
+                $data['modified'] = Carbon::now()->toDateTimeString();
+                $update = InstitutionMealStudents::where('id', $id)->update($data);
+            } else {
+                $store['student_id'] = $data['student_id'];
+                $store['academic_period_id'] = $data['academic_period_id'];
+                $store['institution_class_id'] = $data['institution_class_id'];
+                $store['institution_id'] = $data['institution_id'];
+                $store['meal_programmes_id'] = $data['meal_programmes_id'];
+                $store['date'] = $data['date'];
+                $store['meal_benefit_id'] = $data['meal_benefit_id'];
+                $store['meal_received_id'] = $data['meal_received_id'];
+                $store['paid'] = $data['paid']??Null;
+                $store['comment'] = $data['comment']??Null;
+
+                $store['created_user_id'] = JWTAuth::user()->id;
+                $store['created'] = Carbon::now()->toDateTimeString();
+
+                $insert = InstitutionMealStudents::insert($store);
+            }
+
+            DB::commit();
+            return 1;
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'Meal Benefit is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Meal Benefit is not created/updated successfully.');
+        }
+    }
+
+    public function addInstitutionMealDistributions($request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+            
+
+            if(isset($data['id']) && $data['id'] != ""){
+                $check = InstitutionMealProgrammes::where('id', $data['id'])->first();
+                if(!$check){
+                    return 2;
+                }
+                $id = $data['id'];
+                unset($data['id']);
+                $data['modified_user_id'] = JWTAuth::user()->id;
+                $data['modified'] = Carbon::now()->toDateTimeString();
+                $update = InstitutionMealProgrammes::where('id', $id)->update($data);
+            } else {
+                $store['academic_period_id'] = $data['academic_period_id'];
+                $store['meal_programmes_id'] = $data['meal_programmes_id'];
+                $store['institution_id'] = $data['institution_id']??Null;
+                $store['date_received'] = $data['date_received'];
+                $store['quantity_received'] = $data['quantity_received'];
+                $store['delivery_status_id'] = $data['delivery_status_id'];
+                $store['comment'] = $data['comment']??Null;
+                $store['meal_rating_id'] = $data['meal_rating_id']??Null;
+
+                $store['created_user_id'] = JWTAuth::user()->id;
+                $store['created'] = Carbon::now()->toDateTimeString();
+
+                $insert = InstitutionMealProgrammes::insert($store);
+            }
+            
+            DB::commit();
+            return 1;
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'Meal Distribution is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Meal Distribution is not created/updated successfully.');
+        }
+    }
+
+    public function addInstitution($request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+
+            if(isset($data['id']) && $data['id'] != ""){
+
+                $check = Institutions::where('id', $data['id'])->first();
+                if(!$check){
+                    return 2;
+                }
+
+                $id = $data['id'];
+                unset($data['id']);
+                $data['modified_user_id'] = JWTAuth::user()->id;
+                $data['modified'] = Carbon::now()->toDateTimeString();
+                $update = Institutions::where('id', $id)->update($data);
+            } else {
+                
+                $store['name'] = $data['name'];
+                $store['alternative_name'] = $data['alternative_name'];
+                $store['code'] = $data['code'];
+                $store['address'] = $data['address'];
+                $store['postal_code'] = $data['postal_code'];
+                $store['contact_person'] = $data['contact_person'];
+                $store['telephone'] = $data['telephone'];
+                $store['fax'] = $data['fax'];
+                $store['email'] = $data['email'];
+                $store['website'] = $data['website'];
+                $store['date_opened'] = $data['date_opened'];
+                $store['year_opened'] = $data['year_opened'];
+                $store['date_closed'] = $data['date_closed'];
+                $store['year_closed'] = $data['year_closed'];
+                $store['longitude'] = $data['longitude'];
+                $store['latitude'] = $data['latitude'];
+                
+                // $store['logo_content'] = $data['logo_content']??Null;
+                if(isset($data['logo_content'])){
+                    $store['logo_content'] = file_get_contents($data['logo_content']);
+                    $store['logo_name'] = $request->logo_content->getClientOriginalName()??NULL;
+                }
+                $store['shift_type'] = $data['shift_type'];
+                $store['classification'] = $data['classification']??1;
+                $store['area_id'] = $data['area_id'];
+                $store['area_administrative_id'] = $data['area_administrative_id'];
+                $store['institution_locality_id'] = $data['institution_locality_id'];
+                $store['institution_type_id'] = $data['institution_type_id'];
+                $store['institution_ownership_id'] = $data['institution_ownership_id'];
+                $store['institution_status_id'] = $data['institution_status_id'];
+                $store['institution_sector_id'] = $data['institution_sector_id'];
+                $store['institution_provider_id'] = $data['institution_provider_id'];
+                $store['institution_gender_id'] = $data['institution_gender_id'];
+                $store['security_group_id'] = $data['security_group_id']??0;
+
+
+                $store['created_user_id'] = JWTAuth::user()->id;
+                $store['created'] = Carbon::now()->toDateTimeString();
+
+                $insert = Institutions::insert($store);
+            }
+
+            
+            DB::commit();
+            return 1;
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'Institution is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Institution is not created/updated successfully.');
+        }
+    }
+
+    //pocor-7545 ends
 
 }
 
