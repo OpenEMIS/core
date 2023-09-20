@@ -8,10 +8,12 @@
                     'action' => $this->request->getParam('action')
                 ]);
                 $template = $this->ControllerAction->getFormTemplate();
-                $this->Form->templates($template);
+                $this->Form->templates($template); ?>
 
-                if (!empty($academicPeriodOptions)) {
-                    echo $this->Form->input('academic_period_id', array(
+            <?php if (!empty($academicPeriodOptions)) { ?>
+                <div class="input select required">
+                    <div class="input-select-wrapper">
+                    <?php echo $this->Form->input('academic_period_id', array(
                         'type' => 'select',
                         'class' => 'form-control',
                         'label' => false,
@@ -19,11 +21,15 @@
                         'default' => $selectedAcademicPeriod,
                         'url' => $baseUrl,
                         'data-named-key' => 'academic_period_id'
-                    ));
-                }
+                    )); ?>
+                    </div>
+                </div>
+            <?php  } ?>
 
-                if (!empty($reportCardOptions)) {
-                    echo $this->Form->input('class_profile_template_id', array(
+            <?php if (!empty($reportCardOptions)) { ?>
+                <div class="input select required">
+                    <div class="input-select-wrapper">
+                    <?php echo $this->Form->input('class_profile_template_id', array(
                         'type' => 'select',
                         'class' => 'form-control',
                         'label' => false,
@@ -32,11 +38,15 @@
                         'url' => $baseUrl,
                         'data-named-key' => 'class_profile_template_id',
                         'data-named-group' => 'academic_period_id'
-                    ));
-                }
+                    )); ?>
+                    </div>
+                </div>
+            <?php  } ?>
 
-                if (!empty($classOptions)) {
-                    echo $this->Form->input('class_id', array(
+            <?php if (!empty($classOptions)) { ?>
+                <div class="input select required">
+                    <div class="input-select-wrapper">
+                    <?php echo $this->Form->input('class_id', array(
                         'type' => 'select',
                         'class' => 'form-control',
                         'label' => false,
@@ -45,11 +55,15 @@
                         'url' => $baseUrl,
                         'data-named-key' => 'class_id',
                         'data-named-group' => 'academic_period_id,class_profile_template_id'
-                    ));
-                }
+                    )); ?>
+                    </div>
+                </div>
+            <?php  } ?>
 
-                if (!empty($areaLevelOptions)) {
-                    echo $this->Form->input('area_level_id', array(
+            <?php if (!empty($areaLevelOptions)) { ?>
+                <div class="input select required">
+                    <div class="input-select-wrapper">
+                    <?php echo $this->Form->input('area_level_id', array(
                         'type' => 'select',
                         'class' => 'form-control',
                         'label' => false,
@@ -58,11 +72,15 @@
                         'url' => $baseUrl,
                         'data-named-key' => 'area_level_id',
                         'data-named-group' => 'academic_period_id,class_profile_template_id'
-                    ));
-                }
+                    )); ?>
+                    </div>
+                </div>
+            <?php  } ?>
                 
-                if (!empty($areaOptions)) {
-                    echo $this->Form->input('area_id', array(
+            <?php if (!empty($areaOptions)) { ?>
+                <div class="input select required">
+                    <div class="input-select-wrapper">
+                    <?php echo $this->Form->input('area_id', array(
                         'type' => 'select',
                         'class' => 'form-control',
                         'label' => false,
@@ -71,22 +89,27 @@
                         'url' => $baseUrl,
                         'data-named-key' => 'area_id',
                         'data-named-group' => 'academic_period_id,class_profile_template_id, area_level_id'
-                    ));
-                }
+                    )); ?>
+                    </div>
+                </div>
+            <?php  } ?>
 
-                if (!empty($institutionOptions)) {
-                    echo $this->Form->input('institution_id', array(
-                        'type' => 'select',
-                        'class' => 'form-control',
-                        'label' => false,
-                        'options' => $institutionOptions,
-                        'default' => $selectedInstitution,
-                        'url' => $baseUrl,
-                        'data-named-key' => 'institution_id',
-                        'data-named-group' => 'academic_period_id,class_profile_template_id,area_id, area_level_id'
-                    ));
-                }
-            ?>
+            <?php if (!empty($institutionOptions)) { ?>
+                <div class="input select required">
+                    <div class="input-select-wrapper">
+                    <?php echo $this->Form->input('institution_id', array(
+                            'type' => 'select',
+                            'class' => 'form-control',
+                            'label' => false,
+                            'options' => $institutionOptions,
+                            'default' => $selectedInstitution,
+                            'url' => $baseUrl,
+                            'data-named-key' => 'institution_id',
+                            'data-named-group' => 'academic_period_id,class_profile_template_id,area_id, area_level_id'
+                        )); ?>
+                    </div>
+                </div>
+            <?php  } ?>
         </div>
     </div>
 <?php endif ?>

@@ -1,7 +1,7 @@
 <?php
 $description = __d('open_emis', $_productName);
 $icon = strpos($_productName, 'School') !== false ? '_school' : '';
-echo "<pre>";print_r($languageOptions);die;
+//echo "<pre>";print_r($languageOptions);die;
 ?>
 
 <!DOCTYPE html>
