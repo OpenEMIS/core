@@ -1040,7 +1040,7 @@ class Html extends BaseWriter
         $css['color'] = '#' . $pStyle->getColor()->getRGB();
         $css['font-family'] = '\'' . $pStyle->getName() . '\'';
         $css['font-size'] = $pStyle->getSize() . 'pt';
-
+        $css['font-size'] = $css['font-size'] == '12pt' ? '8.7pt' : $css['font-size'];//POCOR-7750 for pdf generation.
         return $css;
     }
 

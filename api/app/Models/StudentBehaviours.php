@@ -8,5 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class StudentBehaviours extends Model
 {
     use HasFactory;
+    
+    public $timestamps = false;
     protected $table = "student_behaviours";
 }

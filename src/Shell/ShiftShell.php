@@ -37,7 +37,7 @@ class ShiftShell extends Shell
         if ($count == 0) {
             $canCopy = true;
             $ins_shift = $InstitutionShifts->find('all')
-                                           ->where(['academic_period_id' =>  $copyTo])
+                                           ->where(['academic_period_id' =>  $copyFrom])
                                            ->toArray();
             $data = [];
                 foreach($ins_shift as $ke => $ins_data){
@@ -94,9 +94,9 @@ class ShiftShell extends Shell
             $connection = ConnectionManager::get('default');
             $Institutions = TableRegistry::get('Institution.Institutions');
             $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
-         
-           if(!empty($data)){
-                    $connection->query("INSERT INTO `institution_shifts` (
+            $connection->query("SET FOREIGN_KEY_CHECKS=0"); 
+            if(!empty($data)){
+                $connection->query("INSERT INTO `institution_shifts` (
                         `start_time`, `end_time`, `academic_period_id`, `institution_id`, `location_institution_id`, `shift_option_id`,
                         `previous_shift_id`, `created_user_id`, `created`)
                         SELECT `start_time`, `end_time`, $copyTo, `institution_id`, `location_institution_id`, `shift_option_id`,
@@ -104,10 +104,9 @@ class ShiftShell extends Shell
                         FROM `institution_shifts`
                         WHERE `academic_period_id` = $copyFrom and `id` In (" .implode(",",$data). ")");
                 }
-            }
-        
-
-        catch (Exception $e) {
+            $connection->query("SET FOREIGN_KEY_CHECKS=1"); 
+        }
+        catch (\Exception $e) {
             pr($e->getMessage());
         }
     }

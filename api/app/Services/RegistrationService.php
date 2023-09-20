@@ -277,6 +277,7 @@ class RegistrationService extends Controller
             $resp = [];
 
             foreach($data as $k => $d){
+                //dd($d);
                 $section = $d['section'];
                 $arr['student_custom_form_id'] = $d['student_custom_form_id'];
                 $arr['student_custom_field_id'] = $d['student_custom_field_id'];
@@ -286,10 +287,13 @@ class RegistrationService extends Controller
                 $arr['is_unique'] = $d['is_unique'];
                 $arr['order'] = $d['order'];
                 $arr['is_unique'] = $d['is_unique'];
-                $arr['params'] = $d['studentCustomField']['params']??Null;
-                $arr['field_type'] = $d['studentCustomField']['field_type']??Null;
-                $arr['options'] = $d['studentCustomField']['studentCustomFieldOption']??Null;
-                $arr['description'] = $d['studentCustomField']['description']??Null;
+                //$arr['params'] = $d['studentCustomField']['params']??Null;
+                $arr['params'] = $d['student_custom_field']['params']??Null;
+                //$arr['field_type'] = $d['studentCustomField']['field_type']??Null;
+                $arr['field_type'] = $d['student_custom_field']['field_type']??Null;
+                //$arr['options'] = $d['studentCustomField']['studentCustomFieldOption']??Null;
+                $arr['options'] = $d['student_custom_field']['student_custom_field_option']??Null;
+                $arr['description'] = $d['student_custom_field']['description']??Null;
 
 
                 $resp[$section][] = $arr;

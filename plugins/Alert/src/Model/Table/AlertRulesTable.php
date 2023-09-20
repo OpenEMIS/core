@@ -50,6 +50,7 @@ class AlertRulesTable extends ControllerActionTable
         $this->addBehavior('Alert.AlertRuleStaffType');
         $this->addBehavior('Alert.AlertRuleScholarshipApplication');
         $this->addBehavior('Alert.AlertRuleScholarshipDisbursement');
+        $this->addBehavior('Alert.AlertRuleCaseEscalation');//POCOR-7642
     }
 
     public function validationDefault(Validator $validator)
@@ -453,6 +454,7 @@ class AlertRulesTable extends ControllerActionTable
                     // for threshold with type chosenSelect type
                     if ($fieldType == 'chosenSelect') {
                         $lookupModel = $thresholdConfig[$field]['lookupModel'];
+                        if(isset($lookupModel)){//POCOR-7462 
                         $Model = TableRegistry::get($lookupModel);
                         if (is_array($value)) {
                             $entity->{$field} = [];
@@ -460,10 +462,25 @@ class AlertRulesTable extends ControllerActionTable
                                 $entity->{$field}[] = $Model->get($modelId);
                             }
                         }
+                        }
+                        //POCOR-7462 start
+                        if($thresholdConfig[$field]['options']=="Cases.workflow_steps"){
+                            $Model = TableRegistry::get('workflow_steps');
+                            if (is_array($value)) {
+                                $entity->{$field} = [];
+                                foreach ($value as $modelId) {
+                                    $entity->{$field}[] = $Model->get($modelId);
+                                }
+                            }
+                        }
+                        //POCOR-7462 end
+                        
+                    
                     }
                 }
             }
         }
+       
     }
      //POCOR-7558 start
     public function getLastRunDate(){
