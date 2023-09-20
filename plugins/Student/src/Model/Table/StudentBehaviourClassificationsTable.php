@@ -13,10 +13,10 @@ use App\Model\Table\ControllerActionTable;
 //POCOR-7223
 class StudentBehaviourClassificationsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
 
-        $this->table('student_behaviour_classifications');
+        $this->setTable('student_behaviour_classifications');
         parent::initialize($config);
 
         $this->hasMany('StudentBehaviours', ['className' => 'Student.StudentBehaviours', 'foreignKey' => 'student_behaviour_classification_id']);

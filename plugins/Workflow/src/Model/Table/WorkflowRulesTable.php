@@ -235,7 +235,7 @@ class WorkflowRulesTable extends ControllerActionTable
         if (array_key_exists('options', $attr) && !empty($attr['options'])) {
             $options = $this->getSelectOptions($this->alias().".".$attr['options']);
         } else if (array_key_exists('lookupModel', $attr) && !empty($attr['lookupModel'])) {
-            $modelTable = TableRegistry::get($attr['lookupModel']);
+            $modelTable = TableRegistry::getTableLocator()->get($attr['lookupModel']);
             $options = $modelTable->getList()->toArray();
         }
 
@@ -483,8 +483,8 @@ class WorkflowRulesTable extends ControllerActionTable
 
     public function getFeatureByEntity(Entity $entity)
     {
-        $model = TableRegistry::get($entity->source());
-        $registryAlias = $model->registryAlias();
+        $model = TableRegistry::getTableLocator()->get($entity->getSource());
+        $registryAlias = $model->getRegistryAlias();
         $feature = $this->getFeatureByRegistryAlias($registryAlias);
 
         return $feature;
@@ -549,7 +549,7 @@ class WorkflowRulesTable extends ControllerActionTable
             return $emptyOptions;
         } else {
             $registryAlias = $this->getRegistryAliasByFeature($feature);
-            $subject = TableRegistry::get($registryAlias);
+            $subject = TableRegistry::getTableLocator()->get($registryAlias);
             $eventsObject = new ArrayObject();
             $subjectEvent = $subject->dispatchEvent('Workflow.getRuleEvents', [$eventsObject], $subject);
             if ($subjectEvent->isStopped()) {

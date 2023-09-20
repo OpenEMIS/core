@@ -100,25 +100,25 @@ class WorkflowCaseBehavior extends Behavior
 
     private $workflowSetup = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
-        $models = $this->config('models');
-        if (is_null($this->config('model'))) {
-            $this->_config['model'] = $this->_table->registryAlias();
+        $models = $this->getConfig('models');
+        if (is_null($this->getConfig('model'))) {
+            $this->_config['model'] = $this->_table->getRegistryAlias();
         }
 
         foreach ($models as $key => $model) {
             if (!is_null($model)) {
-                $this->{$key} = TableRegistry::get($model);
-                $this->{lcfirst($key).'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->alias())) . '_id';
+                $this->{$key} = TableRegistry::getTableLocator()->get($model);
+                $this->{lcfirst($key).'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->getAlias())) . '_id';
             } else {
                 $this->{$key} = null;
             }
         }
 
         if ($this->isCAv4()) {
-            $actions = $this->config('actions');
+            $actions = $this->getConfig('actions');
             $model = $this->_table;
             foreach ($actions as $key => $value) {
                 $model->toggle($key, $value);
@@ -131,7 +131,7 @@ class WorkflowCaseBehavior extends Behavior
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
 
         $events = parent::implementedEvents();
@@ -312,7 +312,7 @@ class WorkflowCaseBehavior extends Behavior
     {
         $id = 0;
         $statusId = $workflowStepEntity->id;
-        $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+        $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
         $entity = $WorkflowSteps
             ->find()
             ->matching('Workflows.WorkflowModels')
@@ -321,8 +321,8 @@ class WorkflowCaseBehavior extends Behavior
 
         $workflowModelEntity = $entity->_matchingData['WorkflowModels'];
         // only trigger update assignee shell where the workflow step belongs to
-        if ($workflowModelEntity->model == $this->config('model')) {
-            $this->triggerUpdateAssigneeShell($this->config('model'), $id, $statusId);
+        if ($workflowModelEntity->model == $this->getConfig('model')) {
+            $this->triggerUpdateAssigneeShell($this->getConfig('model'), $id, $statusId);
         }
     }
 
@@ -419,11 +419,11 @@ class WorkflowCaseBehavior extends Behavior
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
-            $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+            $WorkflowTransitions = TableRegistry::getTableLocator()->get('Workflow.WorkflowTransitions');
             $WorkflowTransitions->dispatchEvent('Model.Workflow.add.afterSave', [$entity], $this->_table);
         } elseif (!$entity->isNew() && $entity->dirty('assignee_id')) {
             // Trigger event on the alert log model (status and assignee transition triggered here)
-            $AlertLogs = TableRegistry::get('Alert.AlertLogs');
+            $AlertLogs = TableRegistry::getTableLocator()->get('Alert.AlertLogs');
             $event = $AlertLogs->dispatchEvent('Model.Workflow.afterSave', [$entity], $this->_table);
             if ($event->isStopped()) {
                 return $event->result;
@@ -443,7 +443,7 @@ class WorkflowCaseBehavior extends Behavior
     public function indexBeforeAction(Event $event)
     {
         $WorkflowModels = $this->WorkflowModels;
-        $registryAlias = $this->config('model');
+        $registryAlias = $this->getConfig('model');
 
         // Find from workflows table
         $results = $this->Workflows
@@ -480,14 +480,14 @@ class WorkflowCaseBehavior extends Behavior
 
             $filter = $workflowModel->filter;
             $model = $workflowModel->model;
-            $filterConfig = $this->config('filter');
+            $filterConfig = $this->getConfig('filter');
 
             if ($filterConfig['type'] && !empty($filter)) {
                 // Wofkflow Filter Options
-                $filterOptions = TableRegistry::get($filter)->getList()->toArray();
+                $filterOptions = TableRegistry::getTableLocator()->get($filter)->getList()->toArray();
 
                 // Trigger event to get the correct wofkflow filter options
-                $subject = TableRegistry::get($model);
+                $subject = TableRegistry::getTableLocator()->get($model);
 
                 $params = [];
                 if ($workflowModel->is_school_based) {
@@ -532,7 +532,7 @@ class WorkflowCaseBehavior extends Behavior
             }
             $selectedLevel = '-1';
             if (in_array($registryAlias, ['Training.TrainingSessions','Training.TrainingSessionResults'])) {
-                $Level = TableRegistry::get('Area.AreaLevels');
+                $Level = TableRegistry::getTableLocator()->get('Area.AreaLevels');
                 $levelOptions = $Level->find('list')->toArray();
                 $levelOptions = ['-1' => '-- '.__('Select Area Level').' --'] + $levelOptions;
                 $selectedLevel = $this->_table->queryString('level', $levelOptions);
@@ -545,7 +545,7 @@ class WorkflowCaseBehavior extends Behavior
             //POCOR-5695 starts
             if ($filterConfig['area']) {
                 // Area Options
-                $Areas = TableRegistry::get('Area.Areas');
+                $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                 /*
                 $areaOptions = $Areas
                             ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
@@ -571,7 +571,7 @@ class WorkflowCaseBehavior extends Behavior
 
             if ($filterConfig['period']) {
                 // Year Options
-                $AcademicPeriods = TableRegistry::get('academic_periods');
+                $AcademicPeriods = TableRegistry::getTableLocator()->get('academic_periods');
                 $periodsOptions = $AcademicPeriods
                             ->find('list', ['keyField' => 'start_year', 'valueField' => 'start_year'])
                             ->order([$AcademicPeriods->aliasField('start_year') => 'DESC']);
@@ -599,9 +599,9 @@ class WorkflowCaseBehavior extends Behavior
     {
         $options = $this->isCAv4() ? $extra['options'] : $extra;
 
-        $registryAlias = $this->config('model');
+        $registryAlias = $this->getConfig('model');
         $workflowModel = $this->getWorkflowSetup($registryAlias);
-        $filterConfig = $this->config('filter');
+        $filterConfig = $this->getConfig('filter');
 
         $filter = $workflowModel->filter;
         if ($filterConfig['type'] && !empty($filter)) {
@@ -630,7 +630,7 @@ class WorkflowCaseBehavior extends Behavior
         
         //POCOR-5695 starts
         if(($this->_table->alias == 'Results') || ($this->_table->alias == 'Sessions')){
-            $TrainingSessions = TableRegistry::get('training_sessions');
+            $TrainingSessions = TableRegistry::getTableLocator()->get('training_sessions');
             if($this->_table->alias == 'Results'){
                 $query->leftJoin(
                         [$TrainingSessions->alias() => $TrainingSessions->table()],
@@ -643,7 +643,7 @@ class WorkflowCaseBehavior extends Behavior
                 $selectedArea = $this->_table->ControllerAction->getVar('selectedArea');
                 if (!is_null($selectedArea) && $selectedArea != -1) {
                     $areaIds= []; 
-                    $Areas = TableRegistry::get('Area.Areas');
+                    $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                     $AreasOptions = $Areas
                                     ->find()
                                     ->where([$Areas->aliasField('parent_id') => $selectedArea])
@@ -714,7 +714,7 @@ class WorkflowCaseBehavior extends Behavior
 
         //POCOR-5695 starts
         if(($this->_table->alias == 'Results') || ($this->_table->alias == 'Sessions')){
-            $TrainingSessions = TableRegistry::get('training_sessions');
+            $TrainingSessions = TableRegistry::getTableLocator()->get('training_sessions');
             if($this->_table->alias == 'Results'){
                 $query->leftJoin(
                         [$TrainingSessions->alias() => $TrainingSessions->table()],
@@ -727,7 +727,7 @@ class WorkflowCaseBehavior extends Behavior
                 $selectedArea = $this->_table->ControllerAction->getVar('selectedArea');
                 if (!is_null($selectedArea) && $selectedArea != -1) {
                     $areaIds= []; 
-                    $Areas = TableRegistry::get('Area.Areas');
+                    $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                     $AreasOptions = $Areas
                                     ->find()
                                     ->where([$Areas->aliasField('parent_id') => $selectedArea])
@@ -834,7 +834,7 @@ class WorkflowCaseBehavior extends Behavior
                 $modelName = $workflowStep->_matchingData['WorkflowModels']->model;
             }
 
-            $workflowModel = isset($modelName) ? $modelName : $this->config('model');
+            $workflowModel = isset($modelName) ? $modelName : $this->getConfig('model');
             $workflow = $this->getWorkflow($workflowModel, $entity);
 
             if (!empty($workflow)) {
@@ -920,7 +920,7 @@ class WorkflowCaseBehavior extends Behavior
                 }
 
                 //Link Records
-                $caselinksTable = TableRegistry::get('institution_case_links');
+                $caselinksTable = TableRegistry::getTableLocator()->get('institution_case_links');
                 $LInkRecords11=[];
                 $LInkRecords = $caselinksTable->find()
                                 ->select([
@@ -1220,7 +1220,7 @@ class WorkflowCaseBehavior extends Behavior
         } elseif ($action == 'add') {
             $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
             $entity = $attr['entity'];
-            $registryAlias = $this->config('model');
+            $registryAlias = $this->getConfig('model');
             $workflowModelEntity = $this->getWorkflowSetup($registryAlias);
             // find the filter type column key
             $filterKey = null;
@@ -1326,7 +1326,7 @@ class WorkflowCaseBehavior extends Behavior
             }
         }
 
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
         return $assigneeOptions;
     }
@@ -1364,7 +1364,7 @@ class WorkflowCaseBehavior extends Behavior
                 $session = $model->request->session();
                 $institutionId = isset($model->request->params['institutionId']) ? $model->paramsDecode($model->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
 
-                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
                 $params = [
                     'is_school_based' => $actionAttr['is_school_based'],
                     'workflow_step_id' => $actionAttr['next_step_id'],
@@ -2098,7 +2098,7 @@ class WorkflowCaseBehavior extends Behavior
     {
         // Unset edit buttons and add action buttons
         // POCOR-4529: Added disableWorkflow for view/index of features to view workflow pages without action buttons
-        if ($this->attachWorkflow && !$this->config('disableWorkflow')) {
+        if ($this->attachWorkflow && !$this->getConfig('disableWorkflow')) {
             if ($action == 'index') {
                 if ($this->hasWorkflow == false && $toolbarButtons->offsetExists('add')) {
                     unset($toolbarButtons['add']);
@@ -2448,7 +2448,7 @@ class WorkflowCaseBehavior extends Behavior
         $model = $this->_table;
 
         if ($model->hasBehavior('Workflow')) {
-            $workflow = $this->getWorkflow($this->config('model'), $entity);
+            $workflow = $this->getWorkflow($this->getConfig('model'), $entity);
             if (!empty($workflow)) {
                 $workflowId = $workflow->id;
                 $workflowStep = $this->WorkflowSteps
@@ -2496,7 +2496,7 @@ class WorkflowCaseBehavior extends Behavior
             $params = $event->result;
         }
 
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $assigneeId = $SecurityGroupUsers->getFirstAssignee($params);
 
         if($entity->assignee_id == -1){ //POCOR-7025
@@ -2557,7 +2557,7 @@ class WorkflowCaseBehavior extends Behavior
             //POCOR-5677 & POCOR-6028 starts
             if ($entity->has('status_id') && $entity->status_id == 95) {
                 // update in institution_student_transfers table start and end date after change status open to pending approval
-                $AcademicPeriods = TableRegistry::get('academic_periods');
+                $AcademicPeriods = TableRegistry::getTableLocator()->get('academic_periods');
                 $AcademicData = $AcademicPeriods
                             ->find()
                             ->where([$AcademicPeriods->aliasField('id') => $entity->academic_period_id])
@@ -2580,7 +2580,7 @@ class WorkflowCaseBehavior extends Behavior
             // used to get correct workflow model for StaffTransferIn and StaffTransferOut
             $workflowModel = $workflowStep->_matchingData['WorkflowModels'];
         } else {
-            $workflowModel = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $this->config('model')])->first();
+            $workflowModel = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $this->getConfig('model')])->first();
         }
 
         $this->WorkflowTransitions->deleteAll([
@@ -2619,7 +2619,7 @@ class WorkflowCaseBehavior extends Behavior
         if ($request->is(['post', 'put'])) {
             $requestData = $request->data;
 
-            $subject = $this->config('model') == null ? $this->_table : TableRegistry::get($this->config('model'));
+            $subject = $this->getConfig('model') == null ? $this->_table : TableRegistry::getTableLocator()->get($this->getConfig('model'));
             // Trigger workflow before save event here
             $event = $subject->dispatchEvent('Workflow.beforeTransition', [$requestData], $subject);
             if ($event->isStopped()) {
@@ -2634,8 +2634,8 @@ class WorkflowCaseBehavior extends Behavior
             if ($this->WorkflowTransitions->save($entity)) {
                 //POCOR-6500 starts
                 //remove user's data from `security_group_users` table
-                $WorkflowStepsTable = TableRegistry::get('workflow_steps');
-                $WorkflowsTable = TableRegistry::get('workflows');
+                $WorkflowStepsTable = TableRegistry::getTableLocator()->get('workflow_steps');
+                $WorkflowsTable = TableRegistry::getTableLocator()->get('workflows');
                 $WithdrawStudents = $WorkflowStepsTable
                                     ->find()
                                     ->leftJoin([$WorkflowsTable->alias() => $WorkflowsTable->table()],
@@ -2649,7 +2649,7 @@ class WorkflowCaseBehavior extends Behavior
                 
                 if($entity->workflow_step_id == $WithdrawStudents->id){
                     //get user's data from `institution_student_withdraw` table
-                    $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
+                    $StudentWithdrawTable = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw');
                     $StudentWithdrawData = $StudentWithdrawTable
                                         ->find()
                                         ->where([
@@ -2658,21 +2658,21 @@ class WorkflowCaseBehavior extends Behavior
                                         ->first();
                     if(!empty($StudentWithdrawData)){
                         //get student role
-                        $securityRolesTbl = TableRegistry::get('security_roles');
+                        $securityRolesTbl = TableRegistry::getTableLocator()->get('security_roles');
                         $securityRoles = $securityRolesTbl->find()
                                                 ->where([
                                                     $securityRolesTbl->aliasField('code') => 'STUDENT',
                                                 ])
                                                 ->first();
                         //get student institution
-                        $institutionTbl = TableRegistry::get('institutions');
+                        $institutionTbl = TableRegistry::getTableLocator()->get('institutions');
                         $institutions = $institutionTbl->find()
                                                 ->where([
                                                     $institutionTbl->aliasField('id') => $StudentWithdrawData->institution_id
                                                 ])
                                                 ->first();
                         if(!empty($institutions) && $institutions->security_group_id !=''){
-                            $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+                            $securityGroupUsersTbl = TableRegistry::getTableLocator()->get('security_group_users');
                             $securityGroupUsers = $securityGroupUsersTbl->find()
                                                     ->where([
                                                         $securityGroupUsersTbl->aliasField('security_group_id') => $institutions->security_group_id,
@@ -2681,7 +2681,7 @@ class WorkflowCaseBehavior extends Behavior
                                                     ])->first();
                             if(!empty($securityGroupUsers)){
                                     $id = $securityGroupUsers->id;
-                                    $SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+                                    $SecurityGroupUsersTable = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
                                     $SecurityGroupUsersTable->deleteAll(['id' => $id ]);
                             }
                         }
@@ -2737,10 +2737,10 @@ class WorkflowCaseBehavior extends Behavior
 
         if ($request->is(['post', 'put'])) {
             $requestData = $request->data;
-            $workflowModelEntity = $this->getWorkflowSetup($this->config('model'));
+            $workflowModelEntity = $this->getWorkflowSetup($this->getConfig('model'));
             $pcaseId = $requestData['id'];
             $caseId = $requestData['case_id'];
-            $caselinksTable = TableRegistry::get('institution_case_links');
+            $caselinksTable = TableRegistry::getTableLocator()->get('institution_case_links');
             $newEntity = $caselinksTable->newEntity([
                 'parent_case_id'=>$pcaseId,
                 'child_case_id' => $caseId,
@@ -2760,7 +2760,7 @@ class WorkflowCaseBehavior extends Behavior
         if ($request->is(['post', 'put'])) {
             $requestData = $request->data;
 
-            $workflowModelEntity = $this->getWorkflowSetup($this->config('model'));
+            $workflowModelEntity = $this->getWorkflowSetup($this->getConfig('model'));
 
             $assigneeId = $requestData['assignee_id'];
             $entity = $model
@@ -2792,7 +2792,7 @@ class WorkflowCaseBehavior extends Behavior
         if ($request->is(['post', 'put'])) {
             $requestData = $request->data;
 
-            $workflowModelEntity = $this->getWorkflowSetup($this->config('model'));
+            $workflowModelEntity = $this->getWorkflowSetup($this->getConfig('model'));
 
             $assigneeId = $requestData['assignee_id'];
             $entity = $model
@@ -2818,7 +2818,7 @@ class WorkflowCaseBehavior extends Behavior
 
     public function getAssigneeEntity($userId)
     {
-        $Users = TableRegistry::get('User.Users');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
 
         $userEntity = $Users
             ->find()
@@ -2842,24 +2842,24 @@ class WorkflowCaseBehavior extends Behavior
         $model = $this->_table;
 
         if ($model->action == 'edit') {
-            $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+            $WorkflowModels = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
             $results = $WorkflowModels
                 ->find()
-                ->where([$WorkflowModels->aliasField('model') => $this->config('model')])
+                ->where([$WorkflowModels->aliasField('model') => $this->getConfig('model')])
                 ->first();
 
             if (!empty($results) && !empty($results->filter)) {
                 $filterAlias = $results->filter;
-                $modelAlias = $this->config('model');
+                $modelAlias = $this->getConfig('model');
 
-                $filterKey = $this->getFilterKey($filterAlias, $this->config('model'));
+                $filterKey = $this->getFilterKey($filterAlias, $this->getConfig('model'));
                 if (empty($filterKey)) {
                     list($modelplugin, $modelAlias) = explode('.', $filterAlias, 2);
                     $filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
                 }
 
                 $filterId = $entity->{$filterKey};
-                $filterName = TableRegistry::get($filterAlias)->get($filterId)->name;
+                $filterName = TableRegistry::getTableLocator()->get($filterAlias)->get($filterId)->name;
 
                 $model->fields[$filterKey]['type'] = 'readonly';
                 $model->fields[$filterKey]['value'] = $filterId;
@@ -2871,7 +2871,7 @@ class WorkflowCaseBehavior extends Behavior
     private function getFilterKey($filterAlias, $modelAlias)
     {
         $filterKey = '';
-        $associations = TableRegistry::get($filterAlias)->associations();
+        $associations = TableRegistry::getTableLocator()->get($filterAlias)->associations();
         foreach ($associations as $assoc) {
             if ($assoc->registryAlias() == $modelAlias) {
                 $filterKey = $assoc->foreignKey();
@@ -2883,7 +2883,7 @@ class WorkflowCaseBehavior extends Behavior
 
     public function getPendingRecords(Event $event, $params = [])
     {
-        $institutionKey = $this->config('institution_key');
+        $institutionKey = $this->getConfig('institution_key');
         $model = $this->_table;
         $doneStatus = WorkflowSteps::DONE;
         $institutionId = $params['institution_id'];
@@ -2908,7 +2908,7 @@ class WorkflowCaseBehavior extends Behavior
         if ($isSchoolBased) {
             $isActive = true;
             if ($entity->has('institution_id')) {
-                $Institutions = TableRegistry::get('Institution.Institutions');
+                $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                 $institutionId = $entity->institution_id;
                 $isActive = $Institutions->isActive($institutionId);
             }
