@@ -78,6 +78,8 @@ class InstitutionRepository extends Controller
     public function getInstitutions($request)
     {
         try {
+            $checkAccess = checkAccess();
+            dd("checkAccess", $checkAccess);
             $params = $request->all();
 
             $limit = config('constantvalues.defaultPaginateLimit');
