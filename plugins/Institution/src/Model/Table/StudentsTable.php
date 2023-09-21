@@ -723,7 +723,7 @@ class StudentsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('previous_institution_student_id', ['type' => 'hidden']);
-
+        $this->setInstitutionID();
         $this->triggerAutomatedStudentWithdrawalShell();
 
         $session = $this->request->session();
