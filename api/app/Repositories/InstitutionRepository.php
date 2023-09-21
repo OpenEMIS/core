@@ -71,6 +71,8 @@ use App\Models\StudentBehaviourCategory;
 use App\Models\InstitutionMealProgrammes;
 use App\Models\InstitutionMealStudents;
 use App\Models\StaffPayslip;
+use App\Models\SecurityGroupUsers;
+use App\Models\SecurityRoleFunctions;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
