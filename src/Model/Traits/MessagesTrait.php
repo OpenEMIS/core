@@ -514,6 +514,11 @@ trait MessagesTrait
         'WorkflowStatuses' => [
             'noSteps' => 'No Available Workflow Steps'
         ],
+        //POCOR-7613 start
+        'Cases'=>[
+            'noAssignee' => 'Configuration for Workflow Assignee is incomplete. Please contact System Administrator.'
+        ],
+        //POCOR-7613 end
         'InstitutionQualityVisits' => [
             'noPeriods' => 'No Available Periods',
             'noClasses' => 'No Available Classes',
