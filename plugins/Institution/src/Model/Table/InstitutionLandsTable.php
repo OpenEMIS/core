@@ -175,6 +175,15 @@ class InstitutionLandsTable extends ControllerActionTable
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         $data['name'] = $data['code'];
+        //POCOR-7769
+        if(array_key_exists('custom_table_cells',$data)){
+            if(empty($data['start_date'])){
+                $data['start_date'] = date('Y-m-d',strtotime($data['start_date']));
+                $event->stopPropagation();
+                $this->Alert->warning('general.dateCheck');
+            }
+        }
+        //POCOR-7769
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
