@@ -16,7 +16,7 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
 use Cake\I18n\Date;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
-
+use Cake\Datasource\ConnectionManager;
 class AcademicPeriodsTable extends AppTable
 {
     private $_fieldOrder = ['visible', 'current', 'editable', 'code', 'name', 'start_date', 'end_date', 'academic_period_level_id'];
@@ -1532,6 +1532,25 @@ class AcademicPeriodsTable extends AppTable
                     $schoolClosed = false;
                 } else {
                     $schoolClosed = $this->isSchoolClosed($firstDayOfWeek, $institutionId);
+                    //POCOR-7787 start
+                    if ($schoolClosed) {
+                        $connection = ConnectionManager::get('default');
+                        $sql = "SELECT institution_shift_periods.period_id  FROM calendar_event_dates
+                            INNER JOIN calendar_events ON calendar_events.id = calendar_event_dates.calendar_event_id 
+                            INNER JOIN institution_shifts ON calendar_events.academic_period_id = institution_shifts.academic_period_id 
+                                    AND calendar_events.institution_id = institution_shifts.institution_id 
+                                    AND calendar_events.institution_shift_id = institution_shifts.shift_option_id 
+                            INNER JOIN calendar_types ON calendar_types.id = calendar_events.calendar_type_id
+                            INNER JOIN institution_shift_periods ON institution_shift_periods.institution_shift_period_id = institution_shifts.id 
+                            WHERE calendar_event_dates.date = '" . $firstDayOfWeek->format('Y-m-d') . "' AND calendar_types.is_attendance_required = 0";
+
+                        $result = $connection->execute($sql)->fetchAll('assoc');
+                        $closedPeriods = [];
+                        foreach ($result as $data) {
+                            $closedPeriods[] = $data['period_id'];
+                        }
+                    }
+                    //POCOR-7787 end
                 }
                 $suffix = $schoolClosed ? __('School Closed') : '';
 
@@ -1546,6 +1565,7 @@ class AcademicPeriodsTable extends AppTable
 
                 if ($schoolClosed) {
                     $data['closed'] = true;
+                    $data['periods'] = $closedPeriods;//POCOR-7787
                 }
 
                 $dayOptions[] = $data;
