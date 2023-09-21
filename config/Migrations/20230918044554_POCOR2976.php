@@ -20,6 +20,7 @@ class POCOR2976 extends AbstractMigration
                 'type' => 'System',
                 'label' => 'Account will be locked after a number of unsuccessful login attempts',
                 'value' => 5,
+                'value_selection' => '',
                 'default_value' => 10,
                 'editable' => 1,
                 'visible' => 1,
@@ -27,8 +28,8 @@ class POCOR2976 extends AbstractMigration
                 'option_type' => "",
                 'created_user_id' => 1,
                 'created' => date('Y-m-d H:i:s'),
-                'modified' =>"",
-                'modified_user_id' => ""
+                'modified' => null,
+                'modified_user_id' => null
         ];
         $this->insert('config_items', $configData);
     }
