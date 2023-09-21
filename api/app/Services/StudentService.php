@@ -340,6 +340,34 @@ class StudentService extends Controller
     {
         try {
             $data = $this->studentRepository->getEducationGrades($request);
+
+            $resp = [];
+            
+            foreach($data['data'] as $k => $d){
+                //dd($d);
+                $resp[$k]['academic_period_name'] = $d->academic_period_name;
+                $resp[$k]['academic_period_id'] = $d->academic_period_id;
+                $resp[$k]['education_grade_name'] = $d->education_grade_name;
+                $resp[$k]['education_grade_id'] = $d->education_grade_id;
+                $resp[$k]['attendance_by'] = $d->attendance_by;
+                //$resp[$k]['period_name'] = Null;
+                if($d->id == Null && $d->code == 'DAY'){
+                    $resp[$k]['period_name'] = 'Period 1';
+                } else {
+                    $resp[$k]['period_name'] = $d->name;
+                }
+                $resp[$k]['attendance_per_day'] = $d->attendance_per_day;
+                $resp[$k]['date_enabled'] = $d->date_enabled;
+                $resp[$k]['date_disabled'] = $d->date_disabled;
+                $resp[$k]['value'] = $d->value;
+                if($d->value == 1){
+                    $resp[$k]['day_configuration'] = 'Mark absent if one or more records absent';
+                } else {
+                    $resp[$k]['day_configuration'] = 'Mark present if one or more records present';
+                }
+            }
+
+            $data['data'] = $resp;
             return $data;
             
         } catch (\Exception $e) {
