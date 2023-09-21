@@ -791,4 +791,14 @@ class FieldOptionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
     }
     //POCOR-7363 end
+    //POCOR-7613 start
+    public function CaseTypes()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
+    }
+    public function CasePriorities()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
+    } 
+    //POCOR-7613 end
 }
