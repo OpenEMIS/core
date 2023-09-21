@@ -383,6 +383,16 @@ class AcademicPeriodsTable extends ControllerActionTable
         }
     }
 
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        if ($parentId != null) {
+            $query->where([$this->aliasField('parent_id') => $parentId]);
+        } else {
+            $query->where([$this->aliasField('parent_id') . ' IS NULL']);
+        }
+    }
+
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
 
