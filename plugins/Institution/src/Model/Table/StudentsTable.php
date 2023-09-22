@@ -317,7 +317,7 @@ class StudentsTable extends ControllerActionTable
             'key' => '',
             'field' => 'institution_code',
             'type' => 'string',
-            'label' => '',
+            'label' => 'Institution Code',
         ];
 
         $extraField[] = [
