@@ -6,11 +6,14 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
+
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Datasource\ConnectionManager;
+use Cake\Log\Log;
+
 class MergeBehavior extends Behavior
 {
     public function initialize(array $config)
@@ -36,71 +39,30 @@ class MergeBehavior extends Behavior
 //        $this->Alert->error($this->aliasField('unableToTransfer'));
 //    use Cake\Datasource\ConnectionManager;
 
-// Get a database connection
-        $connection = ConnectionManager::get('default');
 
-        $query = $connection->newQuery();
-        $query->select(['COLUMN_NAME', 'TABLE_NAME'])
-            ->from('INFORMATION_SCHEMA.COLUMNS')
-            ->where([
-                'COLUMN_NAME IN' => [
-                    'security_user_id', 'student_id', 'user_id', 'core_user_id',
-                    'staff_id', 'secondary_staff_id', 'assignee_id', 'guardian_id'
-                ],
-                'COLUMN_NAME NOT IN' => ['modified_user_id', 'created_user_id'],
-                'TABLE_NAME NOT LIKE' => 'z%',
-                'TABLE_SCHEMA' => 'openemis_core'
-            ]);
-        $results = $query->execute();
-        $i = 0;
-        foreach ($results as $result){
-            $i++;
-            echo "<br \>\n$i<br \>\n";
-            print_r($result['COLUMN_NAME']);
-            echo "<br \>\n";
-            print_r($result['TABLE_NAME']);
-
-        }
-
-//        ConnectionManager::get('default')->schemaCollection()->listTables();
-//        $model = $this->_table;
-//        $model->log($results, 'debug');
-        die();
-        $model->log('merge--', 'debug');
-        $requestData = $model->request->data;
-        $first_id = $requestData[$model->alias()]['first_id'];
-        $merge_id = $requestData[$model->alias()]['merge_id'];
-
-//        $model->log($first_id, 'debug');
-//        $model->log($merge_id, 'debug');
-//
-        $session = $model->request->session();
-        $first_ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
-        $merge_ids = empty($merge_id) ? [] : ['id' => $merge_id];
-        $first_id_keys = $model->getIdKeys($model, $first_ids);
-        $merge_id_keys = $model->getIdKeys($model, $merge_ids);
+////        ConnectionManager::get('default')->schemaCollection()->listTables();
+        $model = $this->_table;
+////        $model->log($results, 'debug');
+//        die();
+//        $model->log('merge--', 'debug');
         $first_entity = false;
         $merge_entity = false;
-        $contain = [];
-        // need to change this part
-//        $model->log($first_ids, 'debug');
-//        $model->log($first_id_keys, 'debug');
-        if ($model->exists([$first_id_keys])) {
-            $query = $model->find()->where($first_id_keys)->contain($contain);
-            $first_entity = $query->first();
-        }
 
-        if ($model->exists([$merge_id_keys])) {
-            $query = $model->find()->where($merge_id_keys)->contain($contain);
-            $merge_entity = $query->first();
-        }
+        $first_entity = $this->getUserEntity($model, 'first_id');
+        $model->log('$first_entity', 'debug');
+        $model->log($first_entity, 'debug');
+
+        $merge_entity = $this->getUserEntity($model, 'merge_id');
+        $model->log('$merge_entity', 'debug');
+        $model->log($merge_entity, 'debug');
+
 
         $extra['config']['form'] = true;
         $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit'];
         $model->fields = []; // reset all the fields
 
         $model->field('first_id', [
-            'type' => 'readonly',
+//            'type' => 'readonly',
             'entity' => $first_entity
         ]);
 
@@ -108,55 +70,41 @@ class MergeBehavior extends Behavior
 
         $extra = $this->addBackButton($extra, $model);
         // end back button
-
-        $associations = $model->getAssociatedRecords($model, $merge_entity, $extra);
-
-        if ($extra->offsetExists('excludedModels')) {
-            $associations = array_diff_key($associations, array_flip($extra['excludedModels']));
+        $associations = [];
+        if ($merge_entity) {
+            $associations = $this->getRelatedRecords($merge_entity->id);
         }
-        if ($extra->offsetExists('associatedRecords')) {
-            $associations = array_merge($associations, $extra['associatedRecords']);
-        }
-        //        $model->log('$associations', 'debug');
 //        $model->log($associations, 'debug');
         $cells = [];
         $totalCount = 0;
-        $associatedRecordLimit = 100;
-        $exceedAssociatedRecordLimit = false;
-
-        foreach ($associations as $row) {
-            $modelName = Inflector::humanize(Inflector::underscore($row['model']));
+        Log::write('debug', '$associations');
+        Log::write('debug', $associations);
+        foreach ($associations as $key=>$row) {
+            Log::write('debug', '$row');
+            Log::write('debug', $row);
+            $modelName = $row['model'];
             $cells[] = [0 => __($modelName), 1 => $row['count']];
-            if ($row['count'] > $associatedRecordLimit) {
-                $exceedAssociatedRecordLimit = true;
-            }
             $totalCount += $row['count'];
         }
-        if ($extra['associatedRecordsss'][0]['count'] > 0) { //POCOR-6964
-            $model->Alert->error('general.delete.restrictDeleteBecauseAssociation');
-            $this->recordHasAssociatedRecords = true;
-        } elseif ($extra['associatedRecords'][1]['count'] > 0) {// POCOR-6975
-            $model->Alert->error('general.delete.restrictDeleteBecauseAssociation');
-            $this->recordHasAssociatedRecords = true;
-        } else {
-            // Change the method to delete if the record can be deleted
-            $extra['config']['form'] = ['type' => 'DELETE'];
-            $this->recordHasAssociatedRecords = false;
-        }
 
-        $extra['cells'] = $cells;
-//        $model->log($cells,'debug');
         $model->field('associated_fields', [
             'type' => 'table',
             'headers' => [__('Field'), __('New Value'), __('Old Value')],
             'cells' => [[1 => 2, 3 => 4, 5 => 6]],
         ]);
 
-        $model->field('associated_records', [
-            'type' => 'table',
-            'headers' => [__('Feature'), __('No of Records')],
-            'cells' => $cells,
-        ]);
+        if ($totalCount > 0) { //POCOR-6964
+            $model->Alert->error(__('There are related records. They will be overwritten. This operation can not be undone'), ['type' => 'string', 'reset' => true]);
+            $extra['cells'] = $cells;
+//        $model->log($cells,'debug');
+            $model->field('associated_records', [
+                'type' => 'table',
+                'headers' => [__('External Table'), __('No of Records')],
+                'cells' => $cells,
+            ]);
+            Log::write('debug', '$cells');
+            Log::write('debug', $cells);
+        }
         $model->controller->set('data', $first_entity);
         return $first_entity;
     }
@@ -301,6 +249,84 @@ class MergeBehavior extends Behavior
         }
 
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+    }
+
+    /**
+     * @param $model
+     * @param $user_field
+     * @return Entity|null
+     */
+
+    private function getUserEntity($model, $user_field)
+    {
+        $requestData = $model->request->data;
+        Log::write('debug', $requestData);
+        if ($user_field == 'first_id') {
+            $encodedParam = $model->request->params['pass'][1];
+            $user_id = $model->ControllerAction->paramsDecode($encodedParam)['id'];
+        } else {
+            $user_id = $requestData[$model->alias()][$user_field];
+        }
+        $user_entity = null;
+        $user_ids = empty($user_id) ? ['id' => -1] : ['id' => $user_id];
+        $user_id_keys = $model->getIdKeys($model, $user_ids);
+        $contain = [];
+        if ($model->exists([$user_id_keys])) {
+            $query = $model->find()->where($user_id_keys)->contain($contain);
+            $user_entity = $query->first();
+        }
+        return $user_entity;
+    }
+
+    /**
+     * @param $merge_id
+     * @return array
+     */
+    private function getRelatedRecords($merge_id)
+    {
+//         Get a database connection
+        $relatedRecords = [];
+        $connection = ConnectionManager::get('default');
+        $connectionConfig = $connection->config();
+        $database = $connectionConfig['database'];
+        $query = $connection->newQuery();
+        $query->select(['COLUMN_NAME', 'TABLE_NAME'])
+            ->from('INFORMATION_SCHEMA.COLUMNS')
+            ->where([
+                'COLUMN_NAME IN' => [
+                    'security_user_id', 'student_id', 'user_id', 'core_user_id',
+                    'staff_id', 'secondary_staff_id', 'assignee_id', 'guardian_id'
+                ],
+                'COLUMN_NAME NOT IN' => ['modified_user_id', 'created_user_id'],
+                'TABLE_NAME NOT LIKE' => 'z%',
+                'TABLE_SCHEMA' => $database
+            ]);
+        $results = $query->execute();
+        $i = 0;
+        foreach ($results as $result) {
+
+//            Log::write('debug', $result);
+            $column_name = $result['COLUMN_NAME'];
+            $table_name = $result['TABLE_NAME'];
+            $table = TableRegistry::get($table_name);
+            $count = 0;
+            try {
+                $count = $table->find()
+                    ->where([$table->aliasField($column_name) => $merge_id])
+                    ->count();
+            } catch (\Exception $exception) {
+                Log::write('error', $exception->getMessage());
+            }
+            $title = Inflector::humanize(Inflector::underscore($table_name));
+            if ($count > 0) {
+                $result = ['model' => $title, 'count' => $count];
+                $relatedRecords[$i] = $result;
+            }
+            $i++;
+        }
+        Log::write('debug', '$relatedRecords');
+        Log::write('debug', $relatedRecords);
+        return $relatedRecords;
     }
 
 
