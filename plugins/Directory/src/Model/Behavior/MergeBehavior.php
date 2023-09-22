@@ -3,6 +3,7 @@
 namespace Directory\Model\Behavior;
 
 use ArrayObject;
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
@@ -14,8 +15,17 @@ use Cake\Utility\Inflector;
 use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
 
+/**
+ * Class MergeBehavior
+ * @package Directory\Model\Behavior
+ * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+ */
 class MergeBehavior extends Behavior
 {
+    /**
+     * @param array $config
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function initialize(array $config)
     {
         $this->_table->addBehavior('User.AdvancedNameSearch');
@@ -23,46 +33,44 @@ class MergeBehavior extends Behavior
         $this->_table->addBehavior('OpenEmis.Autocomplete');
     }
 
+    /**
+     * @return array
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.merge'] = 'merge';
         $events['ControllerAction.Model.beforeAction'] = 'beforeAction';
+        $events['ControllerAction.Model.merge.beforeSave'] = ['callable' => 'mergeBeforeSave', 'priority' => 100];
+        $events['ControllerAction.Model.merge.afterSave'] = ['callable' => 'mergeAfterSave', 'priority' => 100];
         $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
         $events['ControllerAction.Model.merge.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
         $events['ControllerAction.Model.onGetFieldLabel'] = ['callable' => 'onGetFieldLabel', 'priority' => 100];
+        $events['ControllerAction.Model.onGetFormButtons'] = 'onGetFormButtons';
         return $events;
     }
 
-    public function merge(Event $event, ArrayObject $extra)
+    /**
+     * @param Event $mainEvent
+     * @param ArrayObject $extra
+     * @return Entity|mixed|null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function merge(Event $mainEvent, ArrayObject $extra)
     {
-//        $this->Alert->error($this->aliasField('unableToTransfer'));
-//    use Cake\Datasource\ConnectionManager;
-
-
-////        ConnectionManager::get('default')->schemaCollection()->listTables();
         $model = $this->_table;
-////        $model->log($results, 'debug');
-//        die();
-//        $model->log('merge--', 'debug');
-        $first_entity = false;
-        $merge_entity = false;
 
         $first_entity = $this->getUserEntity($model, 'first_id');
-        $model->log('$first_entity', 'debug');
-        $model->log($first_entity, 'debug');
 
         $merge_entity = $this->getUserEntity($model, 'merge_id');
-        $model->log('$merge_entity', 'debug');
-        $model->log($merge_entity, 'debug');
-
 
         $extra['config']['form'] = true;
         $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit'];
         $model->fields = []; // reset all the fields
 
         $model->field('first_id', [
-//            'type' => 'readonly',
+            'type' => 'readonly',
             'entity' => $first_entity
         ]);
 
@@ -70,45 +78,67 @@ class MergeBehavior extends Behavior
 
         $extra = $this->addBackButton($extra, $model);
         // end back button
-        $associations = [];
         if ($merge_entity) {
-            $associations = $this->getRelatedRecords($merge_entity->id);
-        }
-//        $model->log($associations, 'debug');
-        $cells = [];
-        $totalCount = 0;
-        Log::write('debug', '$associations');
-        Log::write('debug', $associations);
-        foreach ($associations as $key=>$row) {
-            Log::write('debug', '$row');
-            Log::write('debug', $row);
-            $modelName = $row['model'];
-            $cells[] = [0 => __($modelName), 1 => $row['count']];
-            $totalCount += $row['count'];
-        }
-
-        $model->field('associated_fields', [
-            'type' => 'table',
-            'headers' => [__('Field'), __('New Value'), __('Old Value')],
-            'cells' => [[1 => 2, 3 => 4, 5 => 6]],
-        ]);
-
-        if ($totalCount > 0) { //POCOR-6964
-            $model->Alert->error(__('There are related records. They will be overwritten. This operation can not be undone'), ['type' => 'string', 'reset' => true]);
-            $extra['cells'] = $cells;
-//        $model->log($cells,'debug');
-            $model->field('associated_records', [
-                'type' => 'table',
-                'headers' => [__('External Table'), __('No of Records')],
-                'cells' => $cells,
-            ]);
-            Log::write('debug', '$cells');
-            Log::write('debug', $cells);
+            $merging_fields = $this->getMergeFields($extra, $first_entity, $merge_entity, $model);
+            $extra['merge_fields'] = $merging_fields;
+            $model->controller->set('merge_fields', $merging_fields);
+            $associations = $this->getAssociations($extra, $merge_entity, $first_entity, $model);
+            $extra['associations'] = $associations;
+            $model->controller->set('associations', $associations);
         }
         $model->controller->set('data', $first_entity);
+
+        $request = $model->request;
+
+        if ($request->is(['post', 'put'])) {
+            $entity = $first_entity;
+            $submit = isset($request->data['submit']) ? $request->data['submit'] : 'merge';
+            $patchOptions = new ArrayObject([]);
+            $patchOptions['associations'] = $associations;
+            $requestData = new ArrayObject($request->data);
+
+            $params = [$entity, $requestData, $extra];
+
+            if ($submit == 'merge') {
+                $process = function ($model, $entity) {
+                    return $model->save($entity);
+                };
+
+                $event = $model->dispatchEvent('ControllerAction.Model.merge.beforeSave', [$entity, $requestData, $extra], $this);
+                if ($event->isStopped()) {
+                    $mainEvent->stopPropagation();
+                    return $event->result;
+                }
+                if (is_callable($event->result)) {
+                    $process = $event->result;
+                }
+                $result = $process($model, $entity);
+
+                if (!$result) {
+                    Log::write('debug', $entity->errors());
+                }
+
+                $event = $model->dispatchEvent('ControllerAction.Model.merge.afterSave', $params, $this);
+                if ($event->isStopped()) {
+                    return $event->result;
+                }
+                if ($result) {
+                    $mainEvent->stopPropagation();
+                    return $model->controller->redirect($model->url('view'));
+                }
+            }
+        }
         return $first_entity;
     }
 
+    /**
+     * @param Event $event
+     * @param array $attr
+     * @param $action
+     * @param Request $request
+     * @return array
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onUpdateFieldFirstId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'merge') {
@@ -121,6 +151,14 @@ class MergeBehavior extends Behavior
         return $attr;
     }
 
+    /**
+     * @param Event $event
+     * @param array $attr
+     * @param $action
+     * @param Request $request
+     * @return array
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onUpdateFieldMergeId(Event $event, array $attr, $action, Request $request)
     {
         $model = $this->_table;
@@ -137,18 +175,19 @@ class MergeBehavior extends Behavior
                 $mergeId = $requestData[$model->alias()]['merge_id'];
                 $mergeName = $Users->get($mergeId)->name_with_id;
                 $attr['attr']['value'] = $mergeName;
-//                $requestData[$model->alias()]['merge_id'] = $mergeId;
+
             }
-//
-//            $iconSave = '<i class="fa fa-check"></i> ' . __('Save');
-//            $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
-//            $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
-//            $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+            $iconSave = '<i class="fa fa-check"></i> ' . __('Merge');
+            $attr['onNoResults'] = "$('.btn-save').hide()";
+            $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('merge')";
             $attr['onSelect'] = "$('#reload').click();";
         }
         return $attr;
     }
 
+    /**
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function ajaxUserAutocomplete()
     {
         $this->_table->controller->autoRender = false;
@@ -200,10 +239,18 @@ class MergeBehavior extends Behavior
         }
     }
 
+    /**
+     * @param Event $event
+     * @param $module
+     * @param $field
+     * @param $language
+     * @param bool $autoHumanize
+     * @return string|null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-//        $this->_table->log('onGetFieldLabel', 'debug');
-//        $this->_table->log($field, 'debug');
+
         switch ($field) {
             case 'first_id':
                 return __('Base Account');
@@ -217,6 +264,8 @@ class MergeBehavior extends Behavior
     /**
      * @param ArrayObject $extra
      * @param \Cake\ORM\Table $model
+     * @return ArrayObject
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private function addBackButton(ArrayObject $extra, \Cake\ORM\Table $model)
     {
@@ -237,6 +286,11 @@ class MergeBehavior extends Behavior
         return $extra;
     }
 
+    /**
+     * @param Event $event
+     * @param ArrayObject $extra
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
@@ -245,22 +299,104 @@ class MergeBehavior extends Behavior
             $toolbarButtonsArray['merge']['url'][0] = 'merge';
             $toolbarButtonsArray['merge']['label'] = '<i class="fa kd-reassign"></i>';
             $toolbarButtonsArray['merge']['attr']['title'] = __('Merge');
-//                unset($toolbarButtonsArray['edit']);
         }
 
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
     /**
+     * @param Event $event
+     * @param Entity $entity
+     * @param ArrayObject $options
+     * @param ArrayObject $extra
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function mergeBeforeSave(Event $event, Entity $entity, ArrayObject $options, ArrayObject $extra)
+    {
+        $model = $this->_table;
+        try {
+            $merge_fields = $extra['merge_fields'];
+            foreach ($merge_fields as $merge_field) {
+                if ($merge_field['to_change']) {
+                    $field = $merge_field['field'];
+                    $entity->{$field} = $merge_field['result_value'];
+                }
+            }
+        } catch (\Exception $exception) {
+            $model->log($exception->getMessage(), 'debug');
+        }
+    }
+
+    /**
+     * @param Event $event
+     * @param Entity $entity
+     * @param ArrayObject $options
+     * @param ArrayObject $extra
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function mergeAfterSave(Event $event, Entity $entity, ArrayObject $options, ArrayObject $extra)
+    {
+        /** POCOR-6677 starts- added AND condition to not do anything when model is SecurityRoles*/
+        $model = $this->_table;
+
+        $associations = $extra['associations'];
+
+        $base_id = $options[$model->alias()]['first_id'];
+        $merge_id = $options[$model->alias()]['merge_id'];
+        $connection = ConnectionManager::get('default'); // Replace 'default' with your connection name
+        $connection->disableForeignKeys();
+        $connection->execute("SET FOREIGN_KEY_CHECKS = 0");
+
+        try {
+            foreach ($associations as $key => $association) {
+                $table_name = $association['table_name'];
+                $column_name = $association['column_name'];
+                try {
+                    $connection->execute("ALTER TABLE $table_name DISABLE KEYS");
+                } catch (\Exception $exception) {
+                    $model->log($exception->getMessage(), 'debug');
+                }
+                $sql = "UPDATE $table_name SET $column_name = $base_id WHERE $column_name = $merge_id";
+                try {
+                    $connection->execute($sql);
+                } catch (\Exception $exception) {
+                    $model->log($exception->getMessage(), 'debug');
+                }
+                try {
+                    $connection->execute("ALTER TABLE $table_name ENABLE KEYS");
+                } catch (\Exception $exception) {
+                    $model->log($exception->getMessage(), 'debug');
+                }
+            }
+            if ($base_id && $merge_id) {
+                $sql = "UPDATE security_users set `status` = 0 where `id` = $merge_id";
+                try {
+                    $connection->execute($sql);
+                } catch (\Exception $exception) {
+                    $model->log($exception->getMessage(), 'debug');
+                }
+            }
+            $connection->commit();
+        } catch (Exception $e) {
+            // Handle any exceptions or errors that occur during the operation
+            $connection->rollback();
+        }
+        $connection->execute("SET FOREIGN_KEY_CHECKS = 1");
+
+        $connection->enableForeignKeys();
+
+    }
+
+    /**
      * @param $model
      * @param $user_field
      * @return Entity|null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-
     private function getUserEntity($model, $user_field)
     {
         $requestData = $model->request->data;
-        Log::write('debug', $requestData);
+//        Log::write('debug', $requestData);
         if ($user_field == 'first_id') {
             $encodedParam = $model->request->params['pass'][1];
             $user_id = $model->ControllerAction->paramsDecode($encodedParam)['id'];
@@ -281,8 +417,9 @@ class MergeBehavior extends Behavior
     /**
      * @param $merge_id
      * @return array
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private function getRelatedRecords($merge_id)
+    private function getRelatedRecords($base_id, $merge_id)
     {
 //         Get a database connection
         $relatedRecords = [];
@@ -305,7 +442,7 @@ class MergeBehavior extends Behavior
         $i = 0;
         foreach ($results as $result) {
 
-//            Log::write('debug', $result);
+
             $column_name = $result['COLUMN_NAME'];
             $table_name = $result['TABLE_NAME'];
             $table = TableRegistry::get($table_name);
@@ -319,130 +456,213 @@ class MergeBehavior extends Behavior
             }
             $title = Inflector::humanize(Inflector::underscore($table_name));
             if ($count > 0) {
-                $result = ['model' => $title, 'count' => $count];
+                $result = ['model' => $title,
+                    'count' => $count,
+                    'table_name' => $table_name,
+                    'column_name' => $column_name,
+                    'base_id' => $base_id,
+                    'merge_id' => $merge_id];
                 $relatedRecords[$i] = $result;
             }
             $i++;
         }
-        Log::write('debug', '$relatedRecords');
-        Log::write('debug', $relatedRecords);
+
         return $relatedRecords;
     }
 
+    /**
+     * @param ArrayObject $extra
+     * @param Entity $merge_entity
+     * @param Entity $first_entity
+     * @param \Cake\ORM\Table $model
+     * @return array
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function getAssociations(ArrayObject $extra, Entity $merge_entity, Entity $first_entity, \Cake\ORM\Table $model)
+    {
+        $associations = [];
+        if ($merge_entity) {
+            $associations = $this->getRelatedRecords($first_entity->id, $merge_entity->id);
+        }
+        $cells = [];
+        $totalCount = 0;
+        foreach ($associations as $key => $row) {
+            $modelName = $row['model'];
+            $cells[] = [0 => __($modelName), 1 => $row['count']];
+            $totalCount += $row['count'];
+        }
+
+        if ($totalCount > 0) { //POCOR-6964
+            $model->Alert->warning(__('There are related records. They will be overwritten. This operation can not be undone'), ['type' => 'string', 'reset' => true]);
+            $extra['cells'] = $cells;
+            $model->field('associated_records', [
+                'type' => 'table',
+                'headers' => [__('External Table'), __('No of Records')],
+                'cells' => $cells,
+            ]);
+        }
+        return $associations;
+    }
 
 
-//
-//	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-//		$options['auto_search'] = false;
-//		$search = $this->_table->ControllerAction->getSearchKey();
-//		if (!empty($search)) {
-//			// function from AdvancedNameSearchBehavior
-//			$query = $this->_table->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
-//		}
-//	}
-//
-//	public function getAbsenceDaysBySettings($firstDateAbsent, $lastDateAbsent, $settingWeekdays){
-//		$stampFirstDateAbsent = strtotime($firstDateAbsent);
-//		$stampLastDateAbsent = strtotime($lastDateAbsent);
-//
-//		$totalWeekdays = 0;
-//		while($stampFirstDateAbsent <= $stampLastDateAbsent){
-//			$weekday = strtolower(date('l', $stampFirstDateAbsent));
-//			if(in_array($weekday, $settingWeekdays)){
-//				$totalWeekdays++;
-//			}
-//
-//			$stampFirstDateAbsent = strtotime('+1 day', $stampFirstDateAbsent);
-//		}
-//
-//		return $totalWeekdays;
-//	}
-//
-//	public function getWeekdaysBySetting(){
-//		$weekdaysArr = array(
-//			1 => 'monday',
-//			2 => 'tuesday',
-//			3 => 'wednesday',
-//			4 => 'thursday',
-//			5 => 'friday',
-//			6 => 'saturday',
-//			7 => 'sunday'
-//		);
-//
-//		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-//
-//		$settingFirstWeekDay = $ConfigItems->value('first_day_of_week');
-//		if(empty($settingFirstWeekDay) || !in_array($settingFirstWeekDay, $weekdaysArr)){
-//			$settingFirstWeekDay = 'monday';
-//		}
-//
-//		$settingDaysPerWek = intval($ConfigItems->value('days_per_week'));
-//		if(empty($settingDaysPerWek)){
-//			$settingDaysPerWek = 5;
-//		}
-//
-//		foreach($weekdaysArr AS $index => $weekday){
-//			if($weekday == $settingFirstWeekDay){
-//				$firstWeekdayIndex = $index;
-//				break;
-//			}
-//		}
-//
-//		$newIndex = $firstWeekdayIndex + $settingDaysPerWek;
-//
-//		$weekdays = array();
-//		for($i=$firstWeekdayIndex; $i<$newIndex; $i++){
-//			if($i<=7){
-//				$weekdays[] = $weekdaysArr[$i];
-//			}else{
-//				$weekdays[] = $weekdaysArr[$i%7];
-//			}
-//		}
-//
-//		return $weekdays;
-//	}
-//
-//	// public function beforeFind(Event $event, Query $query, $options) {
-//	// 	$query
-//	// 		->join([
-//	// 			'table' => 'institution_students',
-//	// 			'alias' => 'InstitionStudents',
-//	// 			'type' => 'INNER',
-//	// 			'conditions' => 'Users.id = InstitionStudents.security_user_id',
-//	// 		])
-//	// 		->group('Users.id');
-//	// }
-//
-//	// public function implementedEvents() {
-//	// 	$events = parent::implementedEvents();
-//	// 	$newEvent = [
-//	// 		'ControllerAction.Model.beforeAction' => 'beforeAction',
-//	// 		'ControllerAction.Model.index.beforeAction' => 'indexBeforeAction'
-//	// 	];
-//	// 	$events = array_merge($events,$newEvent);
-//	// 	return $events;
-//	// }
-//
-//	// public function beforeAction(Event $event) {
-//	// 	$this->_table->fields['super_admin']['visible'] = false;
-//	// 	$this->_table->fields['status']['visible'] = false;
-//	// 	$this->_table->fields['date_of_death']['visible'] = false;
-//	// 	$this->_table->fields['last_login']['visible'] = false;
-//	// 	$this->_table->fields['photo_name']['visible'] = false;
-//	// }
-//
-//	// public function indexBeforeAction(Event $event) {
-//	// 	$this->_table->ControllerAction->addField('Picture', [
-//	// 		'type' => 'element',
-//	// 		'element' => 'Student.Students/picture'
-//	// 	]);
-//	// 	$this->_table->fields['username']['visible']['index'] = false;
-//	// 	$this->_table->fields['birthplace_area_id']['visible']['index'] = false;
-//	// 	$this->_table->fields['photo_content']['visible']['index'] = false;
-//
-//	// 	$indexDashboard = 'Student.Students/dashboard';
-//	// 	$this->_table->controller->set('indexDashboard', $indexDashboard);
-//	// }
+    /**
+     * Compare two Cake\ORM\Entity objects and generate a comparison array.
+     *
+     * @param Entity $base_entity The old entity.
+     * @param Entity $merge_entity The new entity.
+     * @param array $exclude_fields An array of field names to exclude from comparison.
+     * @return array An array of field comparisons with 'field', 'old_value', 'new_value', and 'changed' keys.
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function compareEntities(Entity $base_entity, Entity $merge_entity, $exclude_fields = [])
+    {
+        $comparison = [];
+        if (empty($exclude_fields)) {
+            $exclude_fields = ['id',
+                'password',
+                'status',
+                'created_user_id',
+                'created',
+                'modified_user_id',
+                'modified',
+                'name',
+                'name_with_id',
+                'name_with_id_role',
+                'default_identity_type',
+                'has_special_needs'];
+        }
+
+        $related_fields = [
+            'address_area_id' => 'area_administratives',
+            'birthplace_area_id' => 'area_administratives',
+            'gender_id' => 'genders',
+            'nationality_id' => 'nationalities',
+            'identity_type_id' => 'identity_types',
+        ];
+
+        $date_fields = ['date_of_birth', 'date_of_death'];
+
+        // Get the list of fields in both entities
+        $fields = array_merge($base_entity->toArray(), $merge_entity->toArray());
+
+        foreach ($fields as $field => $merge_value) {
+            if (in_array($field, $exclude_fields)) {
+                continue; // Skip excluded fields
+            }
+
+            $base_value = trim($base_entity->get($field)) ? trim($base_entity->get($field)) : null;
+            $merge_value = trim($merge_value) ? trim($merge_value) : null;
+            $result_value = $base_value;
+            $to_change = false;
+            if (empty($result_value)) {
+                $result_value = $merge_value;
+                $to_change = true;
+            }
+            $changed = ($base_value !== $merge_value);
+            if ($changed) {
+                $field_name = Inflector::humanize(Inflector::underscore($field));
+                $base_value_to_show = $base_value;
+                $merge_value_to_show = $merge_value;
+                $result_value_to_show = $result_value;
+                if (array_key_exists($field, $related_fields)) {
+                    $base_value_to_show = self::getRelatedName($related_fields[$field], $base_value);
+                    $merge_value_to_show = self::getRelatedName($related_fields[$field], $merge_value_to_show);
+                    $result_value_to_show = self::getRelatedName($related_fields[$field], $result_value_to_show);
+                }
+                if (in_array($field, $date_fields)) {
+                    $base_value_to_show = date_create($base_value)->format('Y-m-d');
+                    $merge_value_to_show = date_create($merge_value_to_show)->format('Y-m-d');
+                    $result_value_to_show = date_create($result_value_to_show)->format('Y-m-d');
+                }
+                $comparison[] = [
+                    'field_name' => $field_name,
+                    'field' => $field,
+                    'base_value' => $base_value,
+                    'merge_value' => $merge_value,
+                    'result_value' => $result_value,
+                    'base_value_to_show' => $base_value_to_show,
+                    'merge_value_to_show' => $merge_value_to_show,
+                    'result_value_to_show' => $result_value_to_show,
+                    'to_change' => $to_change,
+                ];
+            }
+        }
+        return $comparison;
+    }
+
+    /**
+     * @param $tableName
+     * @param $relatedField
+     * @return string|null
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public static function getRelatedName($tableName, $relatedField)
+    {
+        if (!$relatedField) {
+            return null;
+        }
+        $Table = TableRegistry::get($tableName);
+        try {
+            $related = $Table->get($relatedField);
+            return $related->name;
+        } catch (RecordNotFoundException $e) {
+            return 'RecordNotFoundException';
+        }
+        return null;
+    }
+
+    /**
+     * @param Event $event
+     * @param ArrayObject $buttons
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    {
+        $model = $this->_table;
+        switch ($model->action) {
+            case 'merge':
+                $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Merge');
+                $buttons[0]['attr']['value'] = 'merge';
+                $buttons[1]['url'] = $model->url('view');
+                break;
+        }
+    }
+
+    /**
+     * @param ArrayObject $extra
+     * @param Entity $first_entity
+     * @param Entity $merge_entity
+     * @param \Cake\ORM\Table $model
+     * @return array
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function getMergeFields(ArrayObject $extra, Entity $first_entity, Entity $merge_entity, \Cake\ORM\Table $model)
+    {
+        $merging_fields = $this->compareEntities($first_entity, $merge_entity);
+
+        $cells = [];
+        $totalCount = 0;
+        foreach ($merging_fields as $key => $row) {
+
+            $cells[] = [
+                0 => $row['field_name'],
+                1 => $row['base_value_to_show'],
+                2 => $row['merge_value_to_show'],
+                3 => $row['result_value_to_show']
+            ];
+            $totalCount += 1;
+        }
+
+        if ($totalCount > 0) { //POCOR-6964
+//            $model->Alert->error(__('There are related records. They will be overwritten. This operation can not be undone'), ['type' => 'string', 'reset' => true]);
+            $model->field('merge_fields', [
+                'type' => 'table',
+                'headers' => [__('Field'), __('Base Value'), __('Merge Value'), __('Result')],
+                'cells' => $cells,
+            ]);
+        }
+        return $merging_fields;
+    }
 
 
 }
