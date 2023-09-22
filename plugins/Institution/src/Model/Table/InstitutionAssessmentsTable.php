@@ -400,8 +400,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (isset($buttons['view']['url'])) {
             $url = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => 'Results'
             ];
 
@@ -423,8 +423,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
      */
     public function onGetTotalMaleStudents(Event $event, Entity $entity) {
         $url = [
-            'plugin' => $this->controller->plugin,
-            'controller' => $this->controller->name,
+            'plugin' => $this->controller->getPlugin(),
+            'controller' => $this->controller->getName(),
             'action' => 'AssessmentItemResultsArchived'
         ];
         //

@@ -40,8 +40,11 @@ class UsersController extends AppController
         $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords', 'forgotPassword', 'forgotUsername', 'resetPassword', 'postForgotPassword', 'postForgotUsername', 'postResetPassword', 'twoFactorAuthentication', 'sendOtp', 'verifyOtp']);
 
         //$action = $this->request->params['action'];
+
         $request = new ServerRequest();
-        $action = $request->getAttribute('action');
+        //$action = $request->getAttribute('action');
+        $action = $this->request->getParam('action');
+        
         if ($action == 'login_remote' || ($action == 'login' && $this->request->is('put'))) {
             $this->getEventManager()->off($this->Csrf);
             $this->Security->config('unlockedActions', [$action]);
