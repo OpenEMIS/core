@@ -309,14 +309,12 @@ class ImportStudentAdmissionTable extends AppTable
 
     private function populateInstitutionClassesData()
     {
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $availableAcademicPeriods = $AcademicPeriods->getAvailableAcademicPeriods(false);
 
+        $academicPeriodId = $this->academicPeriodId;
+        $academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $modelData = [];
-        foreach ($availableAcademicPeriods as $key => $value) {
-            $modelData[$value->code] = $InstitutionClasses->getClassOptions($value->id, $this->institutionId);
-        }
+        $modelData[$academicPeriod->code] = $InstitutionClasses->getClassOptions($academicPeriodId, $this->institutionId);
         return $modelData;
     }
 
