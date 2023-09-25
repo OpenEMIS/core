@@ -394,7 +394,7 @@ class ImportStudentAdmissionTable extends AppTable
 
     private function checkStudent(ArrayObject &$tempRow, ArrayObject &$rowInvalidCodeCols)
     {
-        $this->log($tempRow, 'debug');
+//        $this->log($tempRow, 'debug');
         if (empty($tempRow['student_id'])) {
             $rowInvalidCodeCols['student_id'] = __('No student ID');
             return false;
@@ -417,9 +417,9 @@ class ImportStudentAdmissionTable extends AppTable
 
     private function checkStartDate(ArrayObject &$tempRow, ArrayObject &$rowInvalidCodeCols, $dateTimeZone)
     {
-        $this->log(__FUNCTION__, 'debug');
+//        $this->log(__FUNCTION__, 'debug');
 //        $this->log($tempRow, 'debug');
-        $this->log($rowInvalidCodeCols, 'debug');
+//        $this->log($rowInvalidCodeCols, 'debug');
         // from string to dateObject
         if (empty($tempRow['start_date'])) {
             $rowInvalidCodeCols['start_date'] = __('No start date specified');
