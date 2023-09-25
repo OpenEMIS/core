@@ -438,6 +438,17 @@ class UsersController extends AppController
             ->find()
             ->where([$ConfigItems->aliasField('code') => 'two_factor_authentication'])
             ->first();
+        //POCOR-2976 start
+        $LoginAttemptsEntity = $ConfigItems
+                                ->find()
+                                ->where([$ConfigItems->aliasField('code') => 'login_attempts'])
+                                ->first();
+        $session = $this->request->session();
+        $loginAttempts = isset($LoginAttemptsEntity->value) ? $LoginAttemptsEntity->value : $LoginAttemptsEntity->default_value;
+        if (!($session->check('login.attempts'))) {
+            $session->write('login.attempts', $loginAttempts);
+        }
+        //POCOR-2976 end
         if ($this->request->is('post') && $this->request->data('submit') == 'login' && $ConfigItemsEntity->value == 1) {
             if($this->request->data['username'] == '' || $this->request->data['password'] == ''){
                 $this->Alert->error('security.login.fail', ['reset' => true]);
@@ -639,15 +650,41 @@ class UsersController extends AppController
 
     public function afterCheckLogin(Event $event, $extra)
     {
+        //POCOR-2976 start
+        $SecurityUser = TableRegistry::get('security_users');
+        $userData = $SecurityUser->find()
+                                 ->where(
+                                        [$SecurityUser->aliasField('username') => $this->request->data['username']]
+                                 )->first();
+        //POCOR-2976 end
         if (!$extra['loginStatus']) {
             if (!$extra['status']) {
                 $this->Alert->error('security.login.inactive', ['reset' => true]);
             } else if ($extra['fallback']) {
                 $url = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'submit' => 'retry']);
-                $retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="'.$url.'">Click here</a> to try again';
+                $retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="' . $url . '">Click here</a> to try again';
                 $this->Alert->error($retryMessage, ['type' => 'string', 'reset' => true]);
             } else {
-                $this->Alert->error('security.login.fail', ['reset' => true]);
+                //POCOR-2976 start
+                if ($userData->status == 0) {
+                    $this->Alert->error('security.login.locked_account', ['reset' => true]);
+                    return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+                }
+                // $this->Alert->error('security.login.fail', ['reset' => true]);
+                $session=$this->request->session();
+                $noOfPendingAttempts = $session->read('login.attempts');
+                $noOfPendingAttempts--;
+                $session->write('login.attempts', $noOfPendingAttempts);
+                if($noOfPendingAttempts<=0){
+                    $SecurityUser->updateAll(['status'=>0],
+                                             ['username'=>$this->request->data['username']]);
+                    $this->Alert->error('security.login.locked_account', ['reset' => true]);
+                }
+                else{
+                    $message= "You have {$noOfPendingAttempts} more login attempts before your account will be locked.";
+                    $this->Alert->warning($message, ['type'=>'string' ,'reset' => true]);
+                }
+                //POCOR-2976 end
             }
             $event->stopPropagation();
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
