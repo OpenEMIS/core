@@ -414,11 +414,10 @@ class ImportStudentAdmissionTable extends AppTable
             $rowInvalidCodeCols['date_of_birth'] = __('Student\'s date of birth is empty. Please correct it at Directory page');
             return false;
         }
-        $tempRow['student_name'] = $tempRow['student_id'];
         return $student;
     }
 
-    private function checkStartDate(ArrayObject &$tempRow, ArrayObject &$rowInvalidCodeCols, $timeZone)
+    private function checkStartDate(ArrayObject &$tempRow, ArrayObject &$rowInvalidCodeCols, $dateTimeZone)
     {
         $this->log(__FUNCTION__, 'debug');
 //        $this->log($tempRow, 'debug');
@@ -428,18 +427,17 @@ class ImportStudentAdmissionTable extends AppTable
             $rowInvalidCodeCols['start_date'] = __('No start date specified');
             return false;
         }
-        $this->log($tempRow['start_date'], 'debug');
         try {
-            $formattedDate = DateTime::createFromFormat('d/m/Y', $tempRow['start_date'], new \DateTimeZone($timeZone));
+            $formattedDate = DateTime::createFromFormat('d/m/Y', $tempRow['start_date'], $dateTimeZone);
         } catch (\Exception $exception) {
             $rowInvalidCodeCols['start_date'] = $exception->getMessage() . ": " . $tempRow['start_date'];
             return false;
         }
-        $this->log($formattedDate->format('Y-m-d'), 'debug');
         if (!($formattedDate instanceof DateTimeInterface)) {
             $rowInvalidCodeCols['start_date'] = __('Unknown date format') . __('Date format should be d/m/Y');
             return false;
         }
+
         return $formattedDate;
     }
 
@@ -462,9 +460,9 @@ class ImportStudentAdmissionTable extends AppTable
         return array($originalEducationGradeCode, $educationGradeId);
     }
 
-    private function checkAcademicPeriod(ArrayObject &$tempRow, ArrayObject &$originalRow)
+    private function checkAcademicPeriodId(ArrayObject &$tempRow, ArrayObject &$rowInvalidCodeCols)
     {
-        $academicPeriodId = $this->academicPeriodId;
+
         $academicPeriodId = $this->academicPeriodId;
         $academicPeriodLevel = $this->getAcademicPeriodLevel($academicPeriodId);
         if (count($academicPeriodLevel) > 0) {
@@ -476,47 +474,16 @@ class ImportStudentAdmissionTable extends AppTable
         return $academicPeriodId;
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    private function checkAcademicPeriod(ArrayObject &$tempRow, ArrayObject &$rowInvalidCodeCols)
     {
-
-        $institution_id = $this->checkInstitution($tempRow, $rowInvalidCodeCols);
-        if (!$institution_id) {
-            return false;
-        }
-
-        $tempRow['institution_id'] = $institution_id;
-
-        $student = $this->checkStudent($tempRow, $rowInvalidCodeCols);
-        if (!$student) {
-            return false;
-        }
-
-        $timeZone = $this->getTimeZone();
-
-        $start_date = $this->checkStartDate($tempRow, $rowInvalidCodeCols, $timeZone);
-        if (!$start_date) {
-            return false;
-        }
-
-        $academicPeriodId = $this->checkAcademicPeriod($tempRow, $rowInvalidCodeCols);
-        if (!$academicPeriodId) {
-            return false;
-        }
-        $tempRow['academic_period_id'] = $academicPeriodId;
-
-        list($originalEducationGradeCode, $educationGradeId) = $this->checkEducationGrade($tempRow, $originalRow);
-        if(!$educationGradeId){
-            return false;
-        }
-        $tempRow['education_grade_id'] = $educationGradeId;
-        $tempRow['education_grade_code'] = $originalEducationGradeCode;
-
+        $academicPeriodId = $this->academicPeriodId;
+        $start_date = $tempRow['start_date'];
         $periods = $this->getAcademicPeriodByStartDate($start_date);
         if (!$periods) {
             $rowInvalidCodeCols['start_date'] = __('The given start date is not within present academic periods');
             return false;
         }
-        $this->log('checkAcademicPeriod2', 'debug');
+
         $period = false;
         foreach ($periods as $value) {
             if ($value->id == $academicPeriodId) {
@@ -529,22 +496,25 @@ class ImportStudentAdmissionTable extends AppTable
             $rowInvalidCodeCols['start_date'] = __('Start date is not within selected academic period');
             return false;
         }
-        $this->log('checkAcademicPeriod3', 'debug');
 
         if (!$period->start_date instanceof DateTimeInterface) {
             $rowInvalidCodeCols['academic_period_id'] = __('Please check the selected academic period start date in Administration');
             return false;
         }
-        $this->log('checkAcademicPeriod4', 'debug');
-        $periodStartDate = $period->start_date->toUnixString();
+
         if (!$period->end_date instanceof DateTimeInterface) {
             $rowInvalidCodeCols['academic_period_id'] = __('Please check the selected academic period end date in Administration');
             return false;
         }
-        $periodEndDate = $period->end_date->toUnixString();
-        $tempRow['end_date'] = $period->end_date;
 
-        if (!in_array($tempRow['education_grade_id'], $this->gradesInInstitution)) {
+        return $period;
+
+    }
+
+    private function checkInstitutionGrade(ArrayObject &$tempRow, ArrayObject &$rowInvalidCodeCols)
+    {
+        $gradesInInstitution = $this->gradesInInstitution;
+        if (!in_array($tempRow['education_grade_id'], $gradesInInstitution)) {
             $rowInvalidCodeCols['education_grade_id'] = __('Selected education grade is not being offered in this institution');
             return false;
         }
@@ -561,38 +531,87 @@ class ImportStudentAdmissionTable extends AppTable
         }
 
         $institutionGrade = $institutionGrade->first();
-        if (!$institutionGrade->start_date instanceof DateTimeInterface) {
-            $rowInvalidCodeCols['education_grade_id'] = __('Please check the selected education grade start date at the institution');
+        return $institutionGrade;
+
+    }
+
+    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    {
+
+        $institution_id = $this->checkInstitution($tempRow, $rowInvalidCodeCols);
+        if (!$institution_id) {
             return false;
         }
 
-        $gradeStartDate = $institutionGrade->start_date->toUnixString();
-        if (empty($institutionGrade->end_date)) {
-            $gradeEndDate = "";
-        }
-        if ($institutionGrade->end_date instanceof DateTimeInterface) {
-            $gradeEndDate = $institutionGrade->end_date->toUnixString();
-        }
-        (
-            !empty($institutionGrade->end_date)
-            && (!$institutionGrade->end_date instanceof DateTimeInterface))
-            ? $institutionGrade->end_date->toUnixString() : '';
-        if (!empty($gradeEndDate) && $gradeEndDate < $periodEndDate) {
-            $rowInvalidCodeCols['education_grade_id'] = __('Selected education grade will end before academic period ends');
+        $tempRow['institution_id'] = $institution_id;
+
+        $student = $this->checkStudent($tempRow, $rowInvalidCodeCols);
+        if (!$student) {
             return false;
         }
-        /* POCOR-7703 remove `$gradeStartDate > $periodStartDate` condition Starts
-        if ($gradeStartDate > $periodStartDate) {
-            $rowInvalidCodeCols['education_grade_id'] = __('Selected education grade start date should be before academic period starts');
+        $tempRow['student_name'] = $tempRow['student_id'];
+
+        $timeZone = $this->getTimeZone();
+        $dateTimeZone = new \DateTimeZone($timeZone);
+        $start_date = $this->checkStartDate($tempRow, $rowInvalidCodeCols, $dateTimeZone);
+        if (!$start_date) {
             return false;
-        }POCOR-7703 Ends*/
-        //POCOR-7703 Starts
-        if (($gradeStartDate >= $periodStartDate) && ($gradeStartDate <= $periodEndDate)) {
-            //condition passed
-        } else {
-            $rowInvalidCodeCols['education_grade_id'] = __('Selected education grade start date should be between academic period starts and end date');
+        }
+        $tempRow['start_date'] = $start_date;
+
+        $academicPeriodId = $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols);
+        if (!$academicPeriodId) {
             return false;
-        }//POCOR-7703 Ends
+        }
+        $tempRow['academic_period_id'] = $academicPeriodId;
+
+        list($originalEducationGradeCode, $educationGradeId) = $this->checkEducationGrade($tempRow, $originalRow);
+        if (!$educationGradeId) {
+            return false;
+        }
+        $tempRow['education_grade_id'] = $educationGradeId;
+        $tempRow['education_grade_code'] = $originalEducationGradeCode;
+
+        $period = $this->checkAcademicPeriod($tempRow, $rowInvalidCodeCols);
+        if (!$period) {
+            return false;
+        }
+
+//        $periodStartDay = $period->start_date->format('d/m/Y');
+//        $periodStartDate = DateTime::createFromFormat('d/m/Y', $periodStartDay, $dateTimeZone);
+
+        $periodEndDay = $period->end_date->format('d/m/Y');
+        $periodEndDate = DateTime::createFromFormat('d/m/Y', $periodEndDay, $dateTimeZone);
+
+        $tempRow['end_date'] = $periodEndDate;
+//        $institutionGrade = $this->checkInstitutionGrade($tempRow, $rowInvalidCodeCols);
+//        if (!$institutionGrade) {
+//            return false;
+//        }
+//
+//        if (!$institutionGrade->start_date instanceof DateTimeInterface) {
+//            $rowInvalidCodeCols['education_grade_id'] = __('Please check the selected education grade start date at the institution');
+//            return false;
+//        }
+//        $institutionGradeEndDate = "";
+//
+//        $institutionGradeStartDay = $institutionGrade->start_date->format('d/m/Y');
+//        $institutionGradeStartDate = DateTime::createFromFormat('d/m/Y', $institutionGradeStartDay, $dateTimeZone);
+//
+//        if ($institutionGrade->end_date instanceof DateTimeInterface) {
+//            $institutionGradeEndDay = $institutionGrade->end_date->format('d/m/Y');
+//            $institutionGradeEndDate = DateTime::createFromFormat('d/m/Y', $institutionGradeEndDay, $dateTimeZone);
+//        }
+//
+//        if (($institutionGradeEndDate instanceof DateTimeInterface) && $institutionGradeEndDate < $periodEndDate) {
+//            $tempRow['end_date'] = $institutionGradeEndDate;
+//        }
+//        if (($institutionGradeStartDate >= $periodStartDate) && ($institutionGradeStartDate <= $periodEndDate)) {
+//            //condition passed
+//        } else {
+//            $rowInvalidCodeCols['education_grade_id'] = __('Selected education grade start date should be within selected academic period');
+//            return false;
+//        }//POCOR-7703 Ends
 
         if (!empty($tempRow['institution_class_id'])) {
             if (empty($this->availableClasses)) {
@@ -623,6 +642,7 @@ class ImportStudentAdmissionTable extends AppTable
                                         $classCapacity = $InstitutionClasses->get($id)->capacity;
 
                                         if ($countStudent + 1 > $classCapacity) {
+                                            $rowInvalidCodeCols['institution_class_id'] = __('Class capacity is exceeded');
                                             return false;
                                         }
                                     }
@@ -807,7 +827,6 @@ class ImportStudentAdmissionTable extends AppTable
         date_default_timezone_set($timeZone);
         return $timeZone;
     }
-
 
 
 }
