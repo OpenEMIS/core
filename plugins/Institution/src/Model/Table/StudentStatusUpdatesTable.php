@@ -100,12 +100,12 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $today = $today->format('Y-m-d');
         
         if($academicPeriodEndDate >= $today && $academicPeriodEffectiveDate <= $today){
-            Log::write('debug', 'End date');
-            Log::write('debug', $academicPeriodEndDate);
-             Log::write('debug', 'Start date');
-             Log::write('debug', $academicPeriodEffectiveDate);
-             Log::write('debug', 'Today date');
-             Log::write('debug', $today);
+//             Log::write('debug', 'End date');
+//             Log::write('debug', $academicPeriodEndDate);
+//             Log::write('debug', 'Start date');
+//             Log::write('debug', $academicPeriodEffectiveDate);
+//             Log::write('debug', 'Today date');
+//             Log::write('debug', $today);
             $query = $this
                 ->find()
                 ->where([
