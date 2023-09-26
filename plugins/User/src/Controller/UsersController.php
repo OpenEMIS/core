@@ -162,23 +162,26 @@ class UsersController extends AppController
                 ->first();
 
             if (!is_null($userEntity) && !is_null($userEntity->email)) {
-
+//                Log::write('debug', "1");
                 $userId = $userEntity->id;
                 $now = new DateTime();
                 $expiry = (new DateTime())->modify('+ 1hour');
                 $expiryFormat = $expiry->format('Y-m-d H:i:s');
+//                Log::write('debug', "2");
 
                 // remove any request that is passed expiry date
                 $SecurityUserPasswordRequests = TableRegistry::get('User.SecurityUserPasswordRequests');
                 $SecurityUserPasswordRequests->deleteAll([
                     $SecurityUserPasswordRequests->aliasField('expiry_date < ') => $now
                 ]);
+//                Log::write('debug', "3");
 
                 // check if the user previously requested for reset password that is not expired. If requested before, reject the current request
                 $userRequestCount = $SecurityUserPasswordRequests
                     ->find()
                     ->where([$SecurityUserPasswordRequests->aliasField('user_id') => $userId])
                     ->count();
+//                Log::write('debug', "4");
 
                 // user still have active reset request - redirect to login page with info message
                 if ($userRequestCount > 0) {
@@ -186,55 +189,72 @@ class UsersController extends AppController
                     $this->Alert->info($message, ['type' => 'string', 'reset' => true]);
                     return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
                 }
+//                Log::write('debug', "5");
+
+
+                $checksum = Security::hash($userId . $expiryFormat, 'sha256');
+                $storedChecksum = Security::hash($checksum, 'sha256');
+
+                $passwordRequestData = [
+                    'user_id' => $userId,
+                    'expiry_date' => $expiry,
+                    'id' => $storedChecksum
+                ];
+//                Log::write('debug', "6");
+                $saveEntity = $SecurityUserPasswordRequests->newEntity($passwordRequestData);
+                $SecurityUserPasswordRequests->save($saveEntity);
+
+                $userEmail = $userEntity->email;
+                $name = $userEntity->name;
+                $url = Router::url([
+                    'plugin' => 'User',
+                    'controller' => 'Users',
+                    'action' => 'resetPassword',
+                    'token' => $checksum
+                ], true);
+
+                /*POCOR-5284 Starts*/
+                $Themes = TableRegistry::get('Theme.Themes');
+                $getData = $Themes->find()
+                    ->where([$Themes->aliasField('name') => 'Application Name'])
+                    ->first();
+                if (!empty($getData) && !is_null($getData->value) && !empty($getData->value)) {
+                    $emailSubject = $getData->value;
+                } else {
+                    $emailSubject = $getData->default_value;
+                }
 
                 try {
-                    $checksum = Security::hash($userId . $expiryFormat, 'sha256');
-                    $storedChecksum = Security::hash($checksum, 'sha256');
-
-                    $passwordRequestData = [
-                        'user_id' => $userId,
-                        'expiry_date' => $expiry,
-                        'id' => $storedChecksum
-                    ];
-
-                    $saveEntity = $SecurityUserPasswordRequests->newEntity($passwordRequestData);
-                    $SecurityUserPasswordRequests->save($saveEntity);
-
-                    $userEmail = $userEntity->email;
-                    $name = $userEntity->name;
-                    $url = Router::url([
-                        'plugin' => 'User',
-                        'controller' => 'Users',
-                        'action' => 'resetPassword',
-                        'token' => $checksum
-                    ], true);
-
-                    /*POCOR-5284 Starts*/
-                    $Themes = TableRegistry::get('Theme.Themes');
-                    $getData = $Themes->find()
-                        ->where([$Themes->aliasField('name') => 'Application Name'])
-                        ->first();
-                    if (!empty($getData) && !is_null($getData->value) && !empty($getData->value)) {
-                        $emailSubject = $getData->value;
-                    } else {
-                        $emailSubject = $getData->default_value;
-                    }
-
-
                     $email = new Email('openemis');
+                } catch (\Exception $exception) {
+                    Log::write('error', __METHOD__ . ' 1: ' . $exception->getMessage() . ": $userEmail");
+                }
+                try {
                     $emailSubject = $emailSubject . ' - Password Reset Request';
-                    //$emailSubject = __('OpenEMIS - Password Reset Request');
-                    $emailMessage = "Dear " . $name . ",\n\nWe received a password reset request for your account.\n\nIf you didn’t request a password reset, kindly ignore this email and your password will not be changed.\n\nTo reset your password, please click the link below:\n" . $url . "\n\nThank you.";
-                    $email
+                } catch (\Exception $exception) {
+                    Log::write('error', __METHOD__ . ' 2: ' . $exception->getMessage() . ": $userEmail");
+                }
+                //$emailSubject = __('OpenEMIS - Password Reset Request');
+                try {
+                    $emailMessage = "Dear " . $name . ",
+                    \n\nWe received a password reset request for your account.
+                    \n\nIf you didn’t request a password reset, kindly ignore 
+                    this email and your password will not be changed.
+                    \n\nTo reset your password, please click the link below:
+                    \n" . $url . "\n\nThank you.";
+                } catch (\Exception $exception) {
+                    Log::write('error', __METHOD__ . ' 3: ' . $exception->getMessage() . ": $userEmail");
+                }
+                try {
+                    $e = $email
                         ->to($userEmail)
                         ->subject($emailSubject)
                         ->send($emailMessage);
-                } catch (InvalidArgumentException $ex) {
-                    Log::write('error', __METHOD__ . ': ' . $ex->getMessage());
-                    $message = __('An unexpected error has been encountered. Please contact the administrator for assistance.');
-                    $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-                    return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+                    Log::write('debug', $e);
+                } catch (\Exception $exception) {
+                    Log::write('error', __METHOD__ . ' 4: ' . $exception->getMessage() . ": $userEmail");
                 }
+
             }
 
             $message = __('Please check your email for further instructions.');
@@ -277,6 +297,10 @@ class UsersController extends AppController
 
                     try {
                         $updateUserName = $this->updateUserName($username, $userId); //POCOR-7159
+                    } catch (\Exception $exception) {
+                        Log::write('error', __METHOD__ . ' 1: ' . $exception->getMessage() . ": $userEmail");
+                    }
+                    try {
                         /*
                         Subject: OpenEMIS - Username Recovery Request
                         Message Body:
