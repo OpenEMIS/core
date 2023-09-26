@@ -271,16 +271,22 @@ class ControllerActionBehavior extends Behavior
 
     private function mergeRequestParams(array &$url)
     {
-        //comment cakephp4
-        //$requestParams =$this->_table->request->params;
         $requestParams = $this->table()->request->getAttribute('params');
+
         foreach ($requestParams as $key => $value) {
-            if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
-                unset($requestParams[$key]);
+            //comment cakephp4
+          //  if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
+            if (is_numeric($key)) {
+                if(in_array($key, $this->cakephpReservedPassKeys))
+                {
+                    unset($requestParams[$key]);
+                }
+               
             }
         }
-        $url = array_merge($url, $requestParams);
-        return $url;
+               $url = array_merge($url, $requestParams);
+               
+
     }
 
     public function url($action, $params = true /* 'PASS' | 'QUERY' | false */)
@@ -292,7 +298,6 @@ class ControllerActionBehavior extends Behavior
             'action' => $this->_table->getAlias(),
             0 => $action
         ];
-
         $this->mergeRequestParams($url);
         
         if ($params === true) {
@@ -303,14 +308,13 @@ class ControllerActionBehavior extends Behavior
         } elseif ($params === 'QUERY') {
             $url = array_merge($url, $this->paramsQuery());
         }
-       // print_r($url);die('dgd');
         return $url;
     }
 
     public function getUrlParams($action, $hash)
     {
         $model = $this->_table;
-        $session = $model->request->session();
+        $session = $model->request->getSession();
         $sessionKey = 'Url.params.' . implode('.', $action) . '.' . $hash;
         $params = $session->read($sessionKey);
         return $params;
@@ -318,7 +322,7 @@ class ControllerActionBehavior extends Behavior
 
     public function setUrlParams($action, $params = [])
     {
-        $session = $this->_table->request->session();
+        $session = $this->_table->request->getSession();
         $hash = sha1(time());
         $sessionKey = 'Url.params.' . implode('.', $action);
         $session->delete($sessionKey);
@@ -367,8 +371,8 @@ class ControllerActionBehavior extends Behavior
 
         $method = 'onUpdateField' . Inflector::camelize($name);
         $eventKey = 'ControllerAction.Model.' . $method;
-        $serverRequest = new ServerRequest();
-        $params = [$attr, $model->action, $serverRequest, /*$model->request*/];
+       // $serverRequest = new ServerRequest();
+        $params = [$attr, $model->action, $model->request];
         $event = $this->dispatchEvent($model, $eventKey, $method, $params, true);
         if (is_array($event->getResult())) {
             $model->fields[$name] = $event->getResult();

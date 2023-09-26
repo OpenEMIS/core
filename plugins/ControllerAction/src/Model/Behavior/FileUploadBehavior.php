@@ -123,7 +123,6 @@ class FileUploadBehavior extends Behavior
     public function afterAction(Event $event)
     {
         if (isset($this->_table->fields[$this->getConfig('content')])) {
-            // pr();
             $comment = '* ' . sprintf(__('File size should not be larger than %s.'), $this->getConfig('size'));
             $comment .= '<br/>* ' . sprintf(__('Format Supported: %s'), $this->fileTypesForView());
             $this->_table->fields[$this->getConfig('content')]['comment'] = $comment ;
