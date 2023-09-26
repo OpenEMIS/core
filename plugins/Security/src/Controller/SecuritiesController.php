@@ -15,9 +15,9 @@ class SecuritiesController extends AppController
         parent::initialize();
 
         $this->ControllerAction->models = [
-            'Accounts' => ['className' => 'Security.Accounts', 'actions' => ['view', 'edit']],
-            'Users' => ['className' => 'Security.Users'],
-            // 'SystemGroups'  => ['className' => 'Security.SystemGroups', 'actions' => ['!add', '!edit', '!remove']]
+            'Accounts'      => ['className' => 'Security.Accounts', 'actions' => ['view', 'edit']],
+            'Users'             => ['className' => 'Security.Users'],
+           // 'SystemGroups'  => ['className' => 'Security.SystemGroups', 'actions' => ['!add', '!edit', '!remove']]
         ];
         $this->attachAngularModules();
     }
@@ -25,120 +25,68 @@ class SecuritiesController extends AppController
     // CAv4
     public function Roles()
     {
-        $controller = $this->name;
-        $action = $this->action;
-        $this->log("$controller.$action", 'debug');
-        $check = $this->AccessControl->check();
-        $this->log($check, 'debug');
-        if ($check) {
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.SecurityRoles']);
-        }
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.SecurityRoles']);
     }
-
     // end
 
     public function Permissions($subaction = 'index', $roleId = null)
     {
-        $controller = $this->name;
-        $action = $this->action;
-        $this->log("$controller.$action", 'debug');
-        $check = $this->AccessControl->check();
-        $this->log($check, 'debug');
-        if ($check) {
+        if ($subaction == 'edit') {
+            $indexUrl = [
+                'plugin' => 'Security',
+                'controller' => 'Securities',
+                'action' => 'Permissions'
+            ];
+            $viewUrl = [
+                'plugin' => 'Security',
+                'controller' => 'Securities',
+                'action' => 'Permissions',
+                'index',
+                $roleId
+            ];
 
-            if ($subaction == 'edit') {
-                $indexUrl = [
-                    'plugin' => 'Security',
-                    'controller' => 'Securities',
-                    'action' => 'Permissions'
-                ];
-                $viewUrl = [
-                    'plugin' => 'Security',
-                    'controller' => 'Securities',
-                    'action' => 'Permissions',
-                    'index',
-                    $roleId
-                ];
-
-                $alertUrl = [
-                    'plugin' => 'Configuration',
-                    'controller' => 'Configurations',
-                    'action' => 'setAlert'
-                ];
-                $moduleKey = is_null($this->request->query('module')) ? '' : $this->request->query('module');
-                $this->set('roleId', $this->ControllerAction->paramsDecode($roleId)['id']);
-                $this->set('indexUrl', $indexUrl);
-                $this->set('viewUrl', $viewUrl);
-                $this->set('alertUrl', $alertUrl);
-                $this->set('moduleKey', $moduleKey);
-                $header = __('Security') . ' - ' . TableRegistry::get('Security.SecurityRoles')->get($this->ControllerAction->paramsDecode($roleId))->name;
-                $this->set('contentHeader', __($header));
-                $this->render('Permissions/permission_edit');
-            } else {
-                $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.Permissions']);
-            }
+            $alertUrl = [
+                'plugin' => 'Configuration',
+                'controller' => 'Configurations',
+                'action' => 'setAlert'
+            ];
+            $moduleKey = is_null($this->request->query('module')) ? '' : $this->request->query('module');
+            $this->set('roleId', $this->ControllerAction->paramsDecode($roleId)['id']);
+            $this->set('indexUrl', $indexUrl);
+            $this->set('viewUrl', $viewUrl);
+            $this->set('alertUrl', $alertUrl);
+            $this->set('moduleKey', $moduleKey);
+            $header = __('Security') . ' - ' . TableRegistry::get('Security.SecurityRoles')->get($this->ControllerAction->paramsDecode($roleId))->name;
+            $this->set('contentHeader', __($header));
+            $this->render('Permissions/permission_edit');
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.Permissions']);
         }
     }
 
     public function UserGroups()
     {
-        $controller = $this->name;
-        $action = $this->action;
-        $this->log("$controller.$action", 'debug');
-        $check = $this->AccessControl->check();
-        $this->log($check, 'debug');
-        if ($check) {
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.UserGroups']);
-        }
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.UserGroups']);
     }
 
     public function SystemGroups()
     {
-        $controller = $this->name;
-        $action = $this->action;
-        $this->log("$controller.$action", 'debug');
-        $check = $this->AccessControl->check();
-        $this->log($check, 'debug');
-        if ($check) {
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.SystemGroups']);
-
-        }
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.SystemGroups']);
     }
 
     public function UserGroupsList()
     {
-        $controller = $this->name;
-        $action = $this->action;
-        $this->log("$controller.$action", 'debug');
-        $check = $this->AccessControl->check();
-        $this->log($check, 'debug');
-        if ($check) {
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.UserGroupsList']);
-        }
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.UserGroupsList']);
     }
 
     public function SystemGroupsList()
     {
-        $controller = $this->name;
-        $action = $this->action;
-        $this->log("$controller.$action", 'debug');
-        $check = $this->AccessControl->check();
-        $this->log($check, 'debug');
-        if ($check) {
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.SystemGroupsList']);
-        }
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.SystemGroupsList']);
     }
 
     public function RefreshToken()
     {
-        $controller = $this->name;
-        $action = $this->action;
-        $this->log("$controller.$action", 'debug');
-        $check = $this->AccessControl->check();
-        $this->log($check, 'debug');
-        if ($check) {
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.RefreshTokens']);
-        }
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.RefreshTokens']);
     }
 
     private function attachAngularModules()
@@ -173,64 +121,50 @@ class SecuritiesController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         //change header in POCOR-7175
-        if ($model->alias == 'SystemGroupsList') {
-            $header = __('System Groups');
+        if($model->alias =='SystemGroupsList') {
+             $header = __('System Groups');
             $listId = $this->request->query['userGroupId'];
-            $table = TableRegistry::get('security_groups');
+            $table= TableRegistry::get('security_groups');
             $headerName = $table->find()->where(['id' => $listId])->first()->name;
             $header .= ' - ' . __($model->getHeader($headerName));
             $this->set('contentHeader', $header);
-        } elseif ($model->alias == 'UserGroupsList') {
+        }elseif($model->alias == 'UserGroupsList') {
             $header = __('User Groups');
             $listId = $this->request->query['userGroupId'];
-            $table = TableRegistry::get('security_groups');
+            $table= TableRegistry::get('security_groups');
             $headerName = $table->find()->where(['id' => $listId])->first()->name;
             $header .= ' - ' . __($model->getHeader($headerName));
             $this->set('contentHeader', $header);
-        } else {
-            $header = __('Security');
-            $header .= ' - ' . __($model->getHeader($model->alias));
-            $this->set('contentHeader', $header);
+        }else {
+             $header = __('Security');
+             $header .= ' - ' . __($model->getHeader($model->alias));
+             $this->set('contentHeader', $header);
         }
     }
 
     public function index()
     {
-        $controller = $this->name;
-        $action = $this->action;
-        $this->log("$controller.$action", 'debug');
-        $check = $this->AccessControl->check();
-        $this->log($check, 'debug');
-        if ($check) {
-            return $this->redirect(['action' => 'Users']);
-        }
+        return $this->redirect(['action' => 'Users']);
     }
 
     public function getUserTabElements($options = [])
     {
-        $controller = $this->name;
-        $action = $this->action;
-        $this->log("$controller.$action", 'debug');
-        $check = $this->AccessControl->check();
-        $this->log($check, 'debug');
-        if ($check) {
-            $plugin = $this->plugin;
-            $name = $this->name;
+        $plugin = $this->plugin;
+        $name = $this->name;
 
-            $id = (array_key_exists('id', $options)) ? $options['id'] : $this->request->session()->read($name . '.id');
+        $id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
 
-            $tabElements = [
-                $this->name => [
-                    'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Users', 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
-                    'text' => __('Details')
-                ],
-                'Accounts' => [
-                    'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
-                    'text' => __('Account')
-                ]
-            ];
+        $tabElements = [
+            $this->name => [
+                'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Users', 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
+                'text' => __('Details')
+            ],
+            'Accounts' => [
+                'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
+                'text' => __('Account')
+            ]
+        ];
 
-            return $this->TabPermission->checkTabPermission($tabElements);
-        }
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 }
