@@ -250,7 +250,7 @@ class UsersController extends AppController
                         ->to($userEmail)
                         ->subject($emailSubject)
                         ->send($emailMessage);
-                    Log::write('debug', $e);
+
                 } catch (\Exception $exception) {
                     Log::write('error', __METHOD__ . ' 4: ' . $exception->getMessage() . ": $userEmail");
                 }
