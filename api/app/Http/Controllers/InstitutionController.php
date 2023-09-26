@@ -13,6 +13,11 @@ use App\Http\Requests\CompetencyCommentAddRequest;
 use App\Http\Requests\CompetencyPeriodCommentAddRequest;
 use App\Http\Requests\DeleteClassAttendanceRequest;
 use App\Http\Requests\StudentBehavioursRequest;
+use App\Http\Requests\InstitutionStudentAddRequest;
+use App\Http\Requests\StaffPayslipsRequest;
+use App\Http\Requests\InstitutionMealStudentsRequest;
+use App\Http\Requests\InstitutionMealDistributionRequest;
+use App\Http\Requests\InstitutionsAddRequest;
 use Exception;
 
 
@@ -1368,4 +1373,218 @@ class InstitutionController extends Controller
 
     // POCOR-7546 ends
 
+
+    // pocor-7545 starts
+
+    public function getSecurityRoleFunction(Request $request)
+    {
+        try {
+            
+            $data = $this->institutionService->getSecurityRoleFunction($request);
+            return $this->sendSuccessResponse("Security Role Function List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Security Role Function List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Security Role Function List Not Found');
+        }
+    }
+
+    public function getSecurityGroupUsers(Request $request)
+    {
+        try {
+            
+            $data = $this->institutionService->getSecurityGroupUsers($request);
+            return $this->sendSuccessResponse("Security Group Users List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Security Group Users List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Security Group Users List Not Found');
+        }
+    }
+
+    public function getInstitutionStudentsMeals(Request $request)
+    {
+        try {
+            
+            $data = $this->institutionService->getInstitutionStudentsMeals($request);
+            return $this->sendSuccessResponse("Institution Students Meals List Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Students Meals List from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution Students Meals List Not Found');
+        }
+    }
+
+    public function getStudentsMealsByInstitutionId(int $institutionId)
+    {
+        try {
+            
+            $data = $this->institutionService->getStudentsMealsByInstitutionId($institutionId);
+
+            if($data){
+                return $this->sendSuccessResponse("Students Meals List By Institution Id Found", $data);
+            }
+            else {
+                return $this->sendErrorResponse('Students Meals List By Institution Id Not Found');
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Students Meals List By Institution Id from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Students Meals List By Institution Id Not Found');
+        }
+    }
+
+    public function getInstitutionStudentStatusByStudentId(int $studentId)
+    {
+        try {
+            
+            $data = $this->institutionService->getInstitutionStudentStatusByStudentId($studentId);
+
+            if($data){
+            return $this->sendSuccessResponse("Institution Students Status By Student Id Found", $data);
+            }
+            else {
+                return $this->sendErrorResponse('Institution Students Status By Student Id Not Found');
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Students Status from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution Students Status By Student Id Not Found');
+        }
+    }
+
+    public function addInstitutionStudent(InstitutionStudentAddRequest $request)
+    {
+        try {
+            $data = $this->institutionService->addInstitutionStudent($request);
+            
+            if($data == 1){
+                return $this->sendSuccessResponse("Student is created/updated successfully.");
+            } else {
+                return $this->sendErrorResponse("Student is not created/updated successfully.");
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Student is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student is not created/updated successfully.');
+        }
+    }
+
+    public function addInstitutionStaffPayslip(StaffPayslipsRequest $request)
+    {
+        try {
+            $data = $this->institutionService->addInstitutionStaffPayslip($request);
+            
+            if($data == 1){
+                return $this->sendSuccessResponse("Payslips is created/updated successfully.");
+            } elseif($data == 2){
+                return $this->sendErrorResponse("Invalid staff id.");
+            } else {
+                return $this->sendErrorResponse("Payslips is not created/updated successfully.");
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Payslips is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Payslips is not created/updated successfully.');
+        }
+    }
+
+    public function addInstitutionStudentMealBenefits(InstitutionMealStudentsRequest $request)
+    {
+        try {
+            $data = $this->institutionService->addInstitutionStudentMealBenefits($request);
+            
+            if($data == 1){
+                return $this->sendSuccessResponse("Meal Benefit is created/updated successfully.");
+            } elseif ($data == 2) {
+                return $this->sendErrorResponse("Invalid meal distribution id.");
+            } else {
+                return $this->sendErrorResponse("Meal Benefit is not created/updated successfully.");
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Meal Benefit is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Benefit is not created/updated successfully.');
+        }
+    }
+
+    public function addInstitutionMealDistributions(InstitutionMealDistributionRequest $request)
+    {
+        try {
+            $data = $this->institutionService->addInstitutionMealDistributions($request);
+            
+            if($data == 1){
+                return $this->sendSuccessResponse("Meal Distribution is created/updated successfully.");
+            } elseif ($data == 2) {
+                return $this->sendErrorResponse("Invalid meal distribution id.");
+            } else {
+                return $this->sendErrorResponse("Meal Distribution is not created/updated successfully.");
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Meal Distribution is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Distribution is not created/updated successfully.');
+        }
+    }
+
+    public function addInstitution(InstitutionsAddRequest $request)
+    {
+        try {
+            $data = $this->institutionService->addInstitution($request);
+            
+            if($data == 1){
+                return $this->sendSuccessResponse("Institution is created/updated successfully.");
+            } elseif ($data == 2) {
+                return $this->sendErrorResponse("Invalid institution id.");
+            } else {
+                return $this->sendErrorResponse("Institution is not created/updated successfully.");
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Institution is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution is not created/updated successfully.');
+        }
+    }
+
+    //pocor-7545 ends
 }
