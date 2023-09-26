@@ -82,7 +82,7 @@ class FileUploadBehavior extends Behavior
 
     public function initialize(array $config)
     {
-        $this->_table->log('fileUpload', 'debug');
+
         $this->config(array_merge($this->_defaultConfig, $config));
         $this->fileTypesMap = array_merge($this->fileImagesMap, $this->fileDocumentsMap);
 
