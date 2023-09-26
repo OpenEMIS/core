@@ -1886,4 +1886,214 @@ class InstitutionService extends Controller
 
 // POCOR-7546 ends
 
+
+    // pocor-7545 starts
+
+    public function getSecurityRoleFunction($request)
+    {
+        try {
+            $data = $this->institutionRepository->getSecurityRoleFunction($request);
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Security Role Function List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Security Role Function List.');
+        }
+    }
+
+    public function getSecurityGroupUsers($request)
+    {
+        try {
+            $data = $this->institutionRepository->getSecurityGroupUsers($request);
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Security Group Users List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Security Group Users List.');
+        }
+    }
+
+    public function getInstitutionStudentsMeals($request)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionStudentsMeals($request);
+            $list = [];
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
+                    $list[$k]['institution_id'] = $d['institution_id'];
+                    $list[$k]['institution_class_id'] = $d['institution_class_id'];
+                    $list[$k]['academic_period_id'] = $d['academic_period_id'];
+                    $list[$k]['date'] = $d['date'];
+                    $list[$k]['meal_programmes_id'] = $d['meal_programmes_id'];
+                    $list[$k]['meal_received_id'] = $d['meal_received_id'];
+                    $list[$k]['meal_benefit_id'] = $d['meal_benefit_id'];
+                    
+                }
+            }
+
+            $data['data'] = $list;
+
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Students Meals List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Institution Students Meals List.');
+        }
+    }
+
+    public function getStudentsMealsByInstitutionId($institutionId)
+    {
+        try {
+
+            $data = $this->institutionRepository->getStudentsMealsByInstitutionId($institutionId);
+            $list = [];
+            if(count($data) > 0){
+                foreach($data as $k => $d){
+                    $list[$k]['institution_id'] = $d['institution_id'];
+                    $list[$k]['institution_class_id'] = $d['institution_class_id'];
+                    $list[$k]['academic_period_id'] = $d['academic_period_id'];
+                    $list[$k]['date'] = $d['date'];
+                    $list[$k]['student_id'] = $d['student_id'];
+                    $list[$k]['meal_programmes_id'] = $d['meal_programmes_id'];
+                    $list[$k]['meal_received_id'] = $d['meal_received_id'];
+                    $list[$k]['meal_benefit_id'] = $d['meal_benefit_id'];
+                    
+                }
+            }
+
+            return $list;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Students Meals List By Institution Id.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Students Meals List By Institution Id.');
+        }
+    }
+
+    public function getInstitutionStudentStatusByStudentId($studentId)
+    {
+        try {
+
+            $data = $this->institutionRepository->getInstitutionStudentStatusByStudentId($studentId);
+            $list = [];
+            if(count($data) > 0){
+                foreach($data as $k => $d){
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['security_user_id'] = $d['student_id'];
+                    $list[$k]['student_status_id'] = $d['student_status_id'];
+                    $list[$k]['created_user_id'] = $d['created_user_id'];
+                    $list[$k]['created'] = $d['created'];
+                    
+                }
+            }
+
+            return $list;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Students Status from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch Institution Students Status from DB.');
+        }
+    }
+
+    public function addInstitutionStudent($request)
+    {
+        try {
+            $data = $this->institutionRepository->addInstitutionStudent($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Student is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student is not created/updated successfully.');
+        }
+    }
+
+    public function addInstitutionStaffPayslip($request)
+    {
+        try {
+            $data = $this->institutionRepository->addInstitutionStaffPayslip($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Payslips is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Payslips is not created/updated successfully.');
+        }
+    }
+
+    public function addInstitutionStudentMealBenefits($request)
+    {
+        try {
+            $data = $this->institutionRepository->addInstitutionStudentMealBenefits($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Meal Benefit is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Benefit is not created/updated successfully.');
+        }
+    }
+
+    public function addInstitutionMealDistributions($request)
+    {
+        try {
+            $data = $this->institutionRepository->addInstitutionMealDistributions($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Meal Distribution is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Distribution is not created/updated successfully.');
+        }
+    }
+
+    public function addInstitution($request)
+    {
+        try {
+            $data = $this->institutionRepository->addInstitution($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Institution is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution is not created/updated successfully.');
+        }
+    }
+
+    //pocor-7545 ends
+
 }
