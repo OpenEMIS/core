@@ -69,7 +69,7 @@ class ViewBehavior extends Behavior
         $event = $model->dispatchEvent('ControllerAction.Model.view.afterAction', [$entity, $extra], $this);
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();
-            return $event->result;
+            return $event->getResult();
         }
         if (!empty($entity)) {
             $model->Session->write($sessionKey, $ids);

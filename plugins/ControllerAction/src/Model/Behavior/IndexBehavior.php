@@ -37,7 +37,7 @@ class IndexBehavior extends Behavior
 
     public function index(Event $mainEvent, ArrayObject $extra)
     {     
-        $serverRequest = new ServerRequest();
+        //$serverRequest = $this->controller->request->getSession();
         $model = $this->_table;
         $extra['pagination'] = true;
         $extra['options'] = [];
@@ -101,14 +101,13 @@ class IndexBehavior extends Behavior
         }  
         if ($extra['pagination']) {
             $alias = $model->getRegistryAlias();
-            $session = new Session();
-            // $session = $model->request->session();
+            $session = $model->request->getSession();
             $request = $model->request;
             $pageOptions = $extra['config']['pageOptions'];
 
             $limit = $session->check($alias.'.search.limit') ? $session->read($alias.'.search.limit') : $defaults;
         //END: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
-            if ($serverRequest->is(['post', 'put'])) {
+            if ($request->is(['post', 'put'])) {
                 if (isset($request->data['Search'])) {
                     //if (array_key_exists('limit', $request->data['Search'])) {
                     if (array_key_exists('limit', $request->getData()['Search'])) {
@@ -176,7 +175,7 @@ class IndexBehavior extends Behavior
         $event = $model->dispatchEvent('ControllerAction.Model.index.afterAction', [$query, $data, $extra], $this);
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();
-            return $event->result;
+            return $event->getResult();
         }
         if ($event->getResult()) {
             $data = $event->getResult();
