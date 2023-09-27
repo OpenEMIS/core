@@ -1033,6 +1033,7 @@ class RestSurveyComponent extends Component
                             ,institution_forms.name institution_survey_form_name
                             ,survey_questions.id institution_survey_question_id
                             ,survey_forms_questions.section
+                            ,student_list_survey_forms_questions.order
                             ,survey_questions.name institution_survey_question_name
                             ,student_list_survey_forms_questions.survey_form_id student_list_survey_form_id
                             ,survey_list_forms.name student_list_survey_form_name
@@ -1163,7 +1164,7 @@ class RestSurveyComponent extends Component
                         // 'institution_form_name' => "institution_form.name",
                         // 'student_list_form_id' => "student_list_form.id",
                         // 'student_list_form_name' => "student_list_form.name",
-                        // 'section' => "institution_forms_questions.section",
+                        'question_order' => 'main_query.order',
                         // 'name' => "institution_forms_questions.name",
                         // 'institutiton_survey_question_id' => "institution_survey_questions.id",
                         // 'institutiton_survey_question_name' => "institution_survey_questions.name",
@@ -1199,7 +1200,7 @@ class RestSurveyComponent extends Component
             //echo "<pre>";print_r($students);die;
             // $students = $query2->where(['institution_student_surveys.institutiton_survey_question_id' => 109])->toArray();
              
-            $questions = $query3->group(['student_list_survey_question_id'])->toArray();
+            $questions = $query3->group(['student_list_survey_question_id'])->order(['question_order' =>'ASC'])->toArray(); //POCOR-7771
             $finalData = [];
 
             $AnswerKeyArr = [];

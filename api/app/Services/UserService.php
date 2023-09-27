@@ -247,4 +247,24 @@ class UserService extends Controller
         }
     }
 
+
+
+    //pocor-7545 starts
+    public function addUsers($request)
+    {
+        try {
+            $data = $this->userRepository->addUsers($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'User is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('User is not created/updated successfully.');
+        }
+    }
+    //pocor-7545 ends
+
 }

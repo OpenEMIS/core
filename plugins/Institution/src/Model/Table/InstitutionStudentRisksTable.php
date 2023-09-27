@@ -289,6 +289,8 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
     public function afterSaveOrDelete(Event $mainEvent, Entity $afterSaveOrDeleteEntity)
     {
+        $role = null;
+        $user_id = null;
         $criteriaModel = $afterSaveOrDeleteEntity->source();
         // on student admission this will be updated (student gender, guardians, student repeated)
         $consolidatedModel = ['Institution.StudentUser', 'Student.Guardians', 'Institution.IndividualPromotion'];
@@ -307,7 +309,9 @@ class InstitutionStudentRisksTable extends ControllerActionTable
             // for gender will be using security_user table the student_id is the ID
             $studentId = $this->getStudentId($criteriaTable, $afterSaveOrDeleteEntity);
         }
-
+        if(!$studentId){
+            return; //No Student Is Updated
+        }
         // to get the academicPeriodId
         if (isset($afterSaveOrDeleteEntity->academic_period_id)) {
             $academicPeriodId = $afterSaveOrDeleteEntity->academic_period_id;
@@ -477,22 +481,27 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 								'Users.Contacts.ContactTypes'
 							],
 						])->where([
-							$InstitutionStudents->aliasField('student_id') => $afterSaveOrDeleteEntity->id
+							$InstitutionStudents->aliasField('student_id') => $studentId
 						]);
 
 			if (!empty($bodyData)) { 
-				foreach ($bodyData as $key => $value) { 
-					$user_id = $value->user->id;
-					$openemis_no = $value->user->openemis_no;
-					$first_name = $value->user->first_name;
-					$middle_name = $value->user->middle_name;
-					$third_name = $value->user->third_name;
-					$last_name = $value->user->last_name;
-					$preferred_name = $value->user->preferred_name;
-					$gender = $value->user->gender->name;
-					$nationality = $value->user->main_nationality->name;
+				foreach ($bodyData as $key => $value) {
+                    $user = $value->user;
+                    $user_id = $user->id;
+					$openemis_no = $user->openemis_no;
+					$first_name = $user->first_name;
+					$middle_name = $user->middle_name;
+					$third_name = $user->third_name;
+					$last_name = $user->last_name;
+					$preferred_name = $user->preferred_name;
+					$gender = $user->gender->name;
+                    try {
+                        $nationality = $user->main_nationality->name;
+                    } catch (\Exception $exception) {
+                        $nationality = null;
+                    }
                     // POCOR-6283 start
-					$dateOfBirth = $value->user->date_of_birth; 
+					$dateOfBirth = $user->date_of_birth;
                     // commented because date can be converted directly no need to use loop
 					/* if(!empty($value->user->date_of_birth)) {
 						foreach ($value->user->date_of_birth as $key => $date) {
@@ -500,34 +509,59 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 						}
 					} */
                     // POCOR-6283 end
-					$address = $value->user->address;
-					$postalCode = $value->user->postal_code;
-					$addressArea = $value->user->address_area->name;
-					$birthplaceArea = $value->user->birthplace_area->name;
-                    $role = $value->user->is_student;
+					$address = $user->address;
+					$postalCode = $user->postal_code;
+                    try {
+                        $addressArea = $user->address_area->name;
+                    } catch (\Exception $exception) {
+                        $addressArea = null;
+                    }
+                    try {
+                        $birthplaceArea = $user->birthplace_area->name;
+                    } catch (\Exception $exception) {
+                        $birthplaceArea = null;
+                    }
+                    $role = $user->is_student;
 					
 					$contactValue = [];
 					$contactType = [];
-					if(!empty($value->user['contacts'])) {
-						foreach ($value->user['contacts'] as $key => $contact) {
-							$contactValue[] = $contact->value;
-							$contactType[] = $contact->contact_type->name;
+					if(!empty($user['contacts'])) {
+						foreach ($user['contacts'] as $key => $contact) {
+                            try {
+                                $contactValue[] = $contact->value;
+                            } catch (\Exception $exception) {
+
+                            }
+                            try {
+                                $contactType[] = $contact->contact_type->name;
+                            } catch (\Exception $exception) {
+
+                            }
 						}
 					}
 					
 					$identityNumber = [];
 					$identityType = [];
-					if(!empty($value->user['identities'])) {
-						foreach ($value->user['identities'] as $key => $identity) {
-							$identityNumber[] = $identity->number;
-							$identityType[] = $identity->identity_type->name;
+					if(!empty($user['identities'])) {
+						foreach ($user['identities'] as $key => $identity) {
+                            try {
+                                $identityNumber[] = $identity->number;
+                            } catch (\Exception $exception) {
+
+                            }
+                            try {
+                                $identityType[] = $identity->identity_type->name;
+                            } catch (\Exception $exception) {
+
+                            }
 						}
 					}
 					
-					$username = $value->user->username;
-					$institution_id = $value->institution->id;
-					$institutionName = $value->institution->name;
-					$institutionCode = $value->institution->code;
+					$username = $user->username;
+                    $institution = $value->institution;
+                    $institution_id = $institution->id;
+					$institutionName = $institution->name;
+					$institutionCode = $institution->code;
 					$educationGrade = $value->education_grade->name;
 					$academicCode = $value->academic_period->code;
 					$academicGrade = $value->academic_period->name;
@@ -578,7 +612,8 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 				'institution_students_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
                 'role_name' => ($role == 1) ? 'student' : NULL	
 			];
-
+            $custom_field = array();
+			if($user_id){
             //POCOR-7078 start
             $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
             $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
@@ -612,7 +647,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                     ->where([
                     $studentCustomFieldValues->aliasField('student_id') => $user_id,
                     ])->hydrate(false)->toArray();
-            $custom_field = array();
+
             $count = 0;
             if(!empty($studentCustomData)){
                 foreach ($studentCustomData as $val) {
@@ -641,6 +676,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
                     }
                     $count++;
                 }
+            }
             }
             $body = array_merge($bodys, $custom_field);//POCOR-7078 end
 			if (!$afterSaveOrDeleteEntity->isNew()) {
@@ -807,6 +843,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
 
     public function getStudentId($criteriaTable, $afterSaveOrDeleteEntity)
     {
+        $studentId = null;
         switch ($criteriaTable->alias()) {
             case 'Students': // The student_id is the Id
                 $studentId = $afterSaveOrDeleteEntity->id;

@@ -1,3 +1,15 @@
+### [3.95.1] - 2023-09-26
+- Implemented: Create a config item to lock an account after "n" number of failed login attempts
+- Implemented: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 2
+- Bug Fixed: Institutions>Staff>Import: User is not able to import staff
+- Bug Fixed: Administration > System Setup > Academic Periods: When deleting academic period, the page goes to 404 error
+- Bug Fixed: Directory > Professional > Licenses: 404 error when approving licenses
+- Bug Fixed: Institutions > Infrastructures > Overview: When adding Infrastructure, they face with a 404 error
+- Bug Fixed: Institutions>Survey>Forms: User should be able to submit multiple entries for different classes without saving and uploading
+- Bug Fixed: Institutions > Attendance: Not able to mark attendance even though calender have indicated that is half day
+- Bug Fixed: Institutions > Students>Export: Student who is repeated from previous academic year is showing as "Enrolled"
+- Bug Fixed: Webhook is triggering multiple sleep processes
+
 ### [3.95.0] - 2023-09-20
 - Implemented: Develop type and priority fields for the cases feature
 - Implemented: Develop a function to copy Institution > Performance > Assessments from one academic period to another-Copy of assessment periods
