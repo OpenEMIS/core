@@ -71,6 +71,7 @@ use App\Models\StudentBehaviourCategory;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Session;
 
 class InstitutionRepository extends Controller
 {
@@ -78,9 +79,18 @@ class InstitutionRepository extends Controller
     public function getInstitutions($request)
     {
         try {
-            $checkAccess = checkAccess();
-            dd("checkAccess", $checkAccess);
+            
             $params = $request->all();
+
+            //For POCOR-7772 Start
+
+            $permissions = checkAccess();
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
 
             $limit = config('constantvalues.defaultPaginateLimit');
 
@@ -90,12 +100,20 @@ class InstitutionRepository extends Controller
             
             //$institutions = new Institutions();
             $institutions = Institutions::with('institutionLocalities', 'institutionOwnerships', 'institutionProviders', 'institutionSectors', 'institutionTypes', 'institutionStatus', 'institutionGender');
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $institutions = $institutions->whereIn('institutions.id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
+
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
                 $institutions = $institutions->orderBy($col, $orderBy);
             }
-            //$list = $institutions->paginate($limit)->toArray();
+
             $list = $institutions->paginate($limit)->toArray();
             
             $resp = [];
@@ -123,9 +141,26 @@ class InstitutionRepository extends Controller
     public function getInstitutionData($id)
     {
         try {
-            $institution = Institutions::with('institutionLocalities', 'institutionOwnerships', 'institutionProviders', 'institutionSectors', 'institutionTypes', 'institutionStatus', 'institutionGender')->where('id', $id)->first();
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+
             
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
+            $institution = Institutions::with('institutionLocalities', 'institutionOwnerships', 'institutionProviders', 'institutionSectors', 'institutionTypes', 'institutionStatus', 'institutionGender')->where('id', $id);
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $institution = $institution->whereIn('institutions.id', $institution_Ids);
+            }
+            //For POCOR-7772 End
             
+            $institution = $institution->first();
             return $institution;
         } catch (\Exception $e) {
             Log::error(
@@ -143,6 +178,15 @@ class InstitutionRepository extends Controller
         try {
             $params = $request->all();
 
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
 
             $limit = config('constantvalues.defaultPaginateLimit');
 
@@ -150,7 +194,15 @@ class InstitutionRepository extends Controller
                 $limit = $params['limit'];
             }
             
-            $grades = new EducationGrades();
+            $grades = EducationGrades::join('institution_grades', 'institution_grades.education_grade_id', '=', 'education_grades.id')->select('education_grades.*');
+
+            
+            //For POCOR-7772 Start
+            if($institution_Ids){
+                $grades = $grades->whereIn('institution_grades.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
@@ -175,6 +227,16 @@ class InstitutionRepository extends Controller
         try {
             $params = $request->all();
 
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
@@ -182,6 +244,12 @@ class InstitutionRepository extends Controller
             }
 
             $institutionGrade = InstitutionGrades::where('institution_id', $institutionId)->with('educationGrades');
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $institutionGrade = $institutionGrade->whereIn('institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -208,7 +276,25 @@ class InstitutionRepository extends Controller
     public function getInstitutionGradeData(int $institutionId, int $gradeId)
     {
         try {
-            $educationGrade = EducationGrades::where('id', $gradeId)->first();
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
+            $educationGrade = EducationGrades::join('institution_grades', 'institution_grades.education_grade_id', '=', 'education_grades.id')->select('education_grades.*')->where('education_grades.id', $gradeId);
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $educationGrade = $educationGrade->whereIn('institution_grades.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
+            $educationGrade = $educationGrade->first();
             return $educationGrade;
             
         } catch (\Exception $e) {
@@ -227,6 +313,18 @@ class InstitutionRepository extends Controller
         try {
             $params = $request->all();
             //$classes = new InstitutionClasses();
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
+
             $classes = InstitutionClasses::with(
                 'grades:institution_class_id,education_grade_id as grade_id', 
                 'subjects:institution_class_id,institution_subject_id as subject_id',
@@ -238,6 +336,13 @@ class InstitutionRepository extends Controller
                 $academic_period_id = $params['academic_period_id'];
                 $classes = $classes->where('academic_period_id', $academic_period_id);
             }
+
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $classes = $classes->whereIn('institution_classes.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -270,6 +375,16 @@ class InstitutionRepository extends Controller
         try {
             $params = $request->all();
 
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $institutionClasses = InstitutionClasses::with(
                 'grades:institution_class_id,education_grade_id as grade_id', 
                 'subjects:institution_class_id,institution_subject_id as subject_id',
@@ -282,6 +397,11 @@ class InstitutionRepository extends Controller
                 $institutionClasses = $institutionClasses->where('academic_period_id', $academic_period_id);
             }
 
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $institutionClasses = $institutionClasses->whereIn('institution_classes.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -314,13 +434,32 @@ class InstitutionRepository extends Controller
     public function getInstitutionClassData(int $institutionId, int $classId)
     {
         try {
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $data = InstitutionClasses::with(
                     'grades:institution_class_id,education_grade_id as grade_id', 
                     'subjects:institution_class_id,institution_subject_id as subject_id',
                     'students:institution_class_id,student_id',
                     'secondary_teachers:institution_class_id,secondary_staff_id as staff_id'
-                )->where('id', $classId)
-                ->first();
+                )->where('id', $classId);
+
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $data = $data->whereIn('institution_classes.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
+            $data = $data->first();
 
             return $data;
             
@@ -341,6 +480,16 @@ class InstitutionRepository extends Controller
 
             $params = $request->all();
 
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $subjects = InstitutionSubjects::with(
                     'educationGrades:id,name', 'educationSubjects:id,name', 
                     'classes:institution_subject_id,institution_class_id as class_id', 
@@ -353,6 +502,12 @@ class InstitutionRepository extends Controller
                 $academic_period_id = $params['academic_period_id'];
                 $subjects = $subjects->where('academic_period_id', $academic_period_id);
             }
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $subjects = $subjects->whereIn('institution_subjects.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -388,6 +543,16 @@ class InstitutionRepository extends Controller
         try {
             $params = $request->all();
 
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $subjects = InstitutionSubjects::with(
                     'educationGrades:id,name', 'educationSubjects:id,name', 
                     'classes:institution_subject_id,institution_class_id as class_id', 
@@ -400,6 +565,12 @@ class InstitutionRepository extends Controller
                 $academic_period_id = $params['academic_period_id'];
                 $subjects = $subjects->where('academic_period_id', $academic_period_id);
             }
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $subjects = $subjects->whereIn('institution_subjects.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -433,15 +604,33 @@ class InstitutionRepository extends Controller
     public function getInstitutionSubjectsData(int $institutionId, int $subjectId)
     {
         try {
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $subjects = InstitutionSubjects::with(
                     'educationGrades:id,name', 'educationSubjects:id,name', 
                     'classes:institution_subject_id,institution_class_id as class_id', 
                     'rooms:institution_subject_id,institution_room_id as room_id',
                     'staff:institution_subject_id,staff_id',
                     'students:institution_subject_id,student_id as user_id'
-                )->where('id', $subjectId)->get();
+                )->where('id', $subjectId);
 
 
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $subjects = $subjects->whereIn('institution_subjects.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
+            $subjects = $subjects->get();
             return $subjects;
             
         } catch (\Exception $e) {
@@ -459,12 +648,29 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
-            $shifts = new InstitutionShifts();
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
+            $shifts = InstitutionShifts::join('institutions', 'institution_shifts.institution_id', '=', 'institutions.id')->select('institution_shifts.*');
 
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
                 $shifts = $shifts->where('academic_period_id', $academic_period_id);
             }
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $shifts = $shifts->whereIn('institution_shifts.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -483,6 +689,7 @@ class InstitutionRepository extends Controller
             return $list;
             
         } catch (\Exception $e) {
+            dd($e);
             Log::error(
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -497,12 +704,31 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
-            $institutionShifts = InstitutionShifts::with('shiftOption:id,name');
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
+            $institutionShifts = InstitutionShifts::join('institutions', 'institution_shifts.institution_id', '=', 'institutions.id')->select('institution_shifts.*')->with('shiftOption:id,name');
 
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
                 $institutionShifts = $institutionShifts->where('academic_period_id', $academic_period_id);
             }
+
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $institutionShifts = $institutionShifts->whereIn('institution_shifts.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -537,7 +763,28 @@ class InstitutionRepository extends Controller
     public function getInstitutionShiftsData(int $institutionId, int $shiftId)
     {
         try {
-            $institutionShift = InstitutionShifts::with('shiftOption:id,name')->where('id', $shiftId)->where('institution_id', $institutionId)->first();
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
+            $institutionShift = InstitutionShifts::join('institutions', 'institution_shifts.institution_id', '=', 'institutions.id')->select('institution_shifts.*')->with('shiftOption:id,name')->where('institution_shifts.id', $shiftId)->where('institution_id', $institutionId);
+
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $institutionShift = $institutionShift->whereIn('institution_shifts.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
+
+            $institutionShift = $institutionShift->first();
 
             return $institutionShift;
             
@@ -557,6 +804,16 @@ class InstitutionRepository extends Controller
         try {
             $params = $request->all();
 
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $areas = Institutions::select('id', 'area_administrative_id', 'area_id')
                 ->with(
                     'areaAdministratives:id,code,name,parent_id', 
@@ -564,6 +821,13 @@ class InstitutionRepository extends Controller
                     'areaEducation:id,code,name,parent_id',
                     'areaEducation.areaEducationChild:id,code,name,parent_id'
                 );
+
+            
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $areas = $areas->whereIn('institutions.id', $institution_Ids);
+            }
+            //For POCOR-7772 End
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -599,6 +863,17 @@ class InstitutionRepository extends Controller
         try {
             $params = $request->all();
 
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $areas = Institutions::select('id', 'area_administrative_id', 'area_id')
                 ->with(
                     'areaAdministratives:id,code,name,parent_id', 
@@ -606,6 +881,12 @@ class InstitutionRepository extends Controller
                     'areaEducation:id,code,name,parent_id',
                     'areaEducation.areaEducationChild:id,code,name,parent_id'
                 )->where('id', $institutionId);
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $areas = $areas->whereIn('institutions.id', $institution_Ids);
+            }
+            //For POCOR-7772 End
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -639,6 +920,16 @@ class InstitutionRepository extends Controller
     public function getInstitutionAreasData(int $institutionId, int $areaAdministrativeId)
     {
         try {
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $data =  Institutions::select('id', 'area_administrative_id', 'area_id')
                 ->with(
                     'areaAdministratives:id,code,name,parent_id', 
@@ -647,8 +938,15 @@ class InstitutionRepository extends Controller
                     'areaEducation.areaEducationChild:id,code,name,parent_id'
                 )
                 ->where('id', $institutionId)
-                ->where('area_administrative_id', $areaAdministrativeId)
-                ->first();
+                ->where('area_administrative_id', $areaAdministrativeId);
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $data = $data->whereIn('institutions.id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
+            $data = $data->first();
 
             return $data;
             
@@ -667,12 +965,30 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $summaries = new SummaryInstitutions();
             
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
                 $summaries = $summaries->where('academic_period_id', $academic_period_id);
             }
+
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $summaries = $summaries->whereIn('summary_institutions.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -706,12 +1022,29 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $summaries = new SummaryInstitutions();
             
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
                 $summaries = $summaries->where('academic_period_id', $academic_period_id);
             }
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $summaries = $summaries->whereIn('summary_institutions.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -745,12 +1078,31 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $summaries = new SummaryInstitutionGrades();
             
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
                 $summaries = $summaries->where('academic_period_id', $academic_period_id);
             }
+
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $summaries = $summaries->whereIn('summary_institution_grades.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -784,12 +1136,29 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $summaries = new SummaryInstitutionGrades();
             
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
                 $summaries = $summaries->where('academic_period_id', $academic_period_id);
             }
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $summaries = $summaries->whereIn('summary_institution_grades.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -822,7 +1191,26 @@ class InstitutionRepository extends Controller
     public function getInstitutionGradeSummariesData(int $institutionId, int $gradeId)
     {
         try {
-            $gradeSummary = SummaryInstitutionGrades::where('institution_id', $institutionId)->where('grade_id', $gradeId)->get();
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
+            $gradeSummary = SummaryInstitutionGrades::where('institution_id', $institutionId)->where('grade_id', $gradeId);
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $gradeSummary = $gradeSummary->whereIn('summary_institution_grades.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
+            $gradeSummary = $gradeSummary->get();
             
             return $gradeSummary;
             
@@ -841,12 +1229,31 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $nationalitySummaries = new SummaryInstitutionNationalities();
             
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
                 $nationalitySummaries = $nationalitySummaries->where('academic_period_id', $academic_period_id);
             }
+
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $nationalitySummaries = $nationalitySummaries->whereIn('summary_institution_nationalities.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -880,12 +1287,31 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $nationalitySummaries = new SummaryInstitutionNationalities();
             
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
                 $nationalitySummaries = $nationalitySummaries->where('academic_period_id', $academic_period_id);
             }
+
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $nationalitySummaries = $nationalitySummaries->whereIn('summary_institution_nationalities.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -920,12 +1346,29 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $nationalitySummaries = new SummaryInstitutionGradeNationalities();
             
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
                 $nationalitySummaries = $nationalitySummaries->where('academic_period_id', $academic_period_id);
             }
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $nationalitySummaries = $nationalitySummaries->whereIn('summary_institution_grade_nationalities.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -960,12 +1403,31 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $nationalitySummaries = new SummaryInstitutionGradeNationalities();
             
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
                 $nationalitySummaries = $nationalitySummaries->where('academic_period_id', $academic_period_id);
             }
+
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $nationalitySummaries = $nationalitySummaries->whereIn('summary_institution_grade_nationalities.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -999,12 +1461,31 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['userId'] > 2){
+                    $institution_Ids = $permissions['institutionIds'];
+                }
+            }
+            //For POCOR-7772 End
+
             $nationalitySummaries = new SummaryInstitutionGradeNationalities();
             
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
                 $nationalitySummaries = $nationalitySummaries->where('academic_period_id', $academic_period_id);
             }
+
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $nationalitySummaries = $nationalitySummaries->whereIn('summary_institution_grade_nationalities.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+            
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
