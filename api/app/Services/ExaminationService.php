@@ -54,6 +54,12 @@ class ExaminationService
 
     public function getCenterExaminationStudentDetails($examinationId, $centerId, $studentId)
     {
-        return $this->examinationRepository->getCenterExaminationStudentDetails($examinationId, $centerId, $studentId);
+        $result =  $this->examinationRepository->getCenterExaminationStudentDetails($examinationId, $centerId, $studentId);
+
+        if ($result->isEmpty()) {
+            return null;
+        }
+
+        return $result;
     }
 }
