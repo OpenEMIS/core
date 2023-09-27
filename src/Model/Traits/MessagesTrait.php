@@ -131,7 +131,8 @@ trait MessagesTrait
                     'telephone' => 'Telephone cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
                     'fax' => 'Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
                     'both' => 'Telephone & Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution'
-            ]
+            ],
+            'dateCheck' =>'Please enter effective date.' //POCOR-7769
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
@@ -398,7 +399,9 @@ trait MessagesTrait
                 'fail' => 'You have entered an invalid username or password.',
                 'inactive' => 'Your account has been disabled.',
                 'remoteFail' => 'Remote authentication failed, please try local login.',
-                'changePassword' => 'This is the first time that you are logging in, please change your password.'
+                'changePassword' => 'This is the first time that you are logging in, please change your password.',
+                'locked_account'=> 'Your account has been locked. Please contact system administrator for assistance.'//POCOR-2976
+            
             ],
             'noAccess' => 'You do not have access to this location.',
             'emptyFields' => 'Some of the required fields for this authentication type are empty.'

@@ -1472,5 +1472,83 @@ class UserRepository extends Controller
             return $this->sendErrorResponse('Failed to get new openemis number.');
         }
     }
+
+
+
+    //pocor-7545 starts
+    public function addUsers($request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+
+            if(isset($data['id']) && $data['id'] != ""){
+                $check = SecurityUsers::where('id', $data['id'])->first();
+                if(!$check){
+                    return 2;
+                }
+
+                $id = $data['id'];
+                unset($data['id']);
+                $data['modified_user_id'] = JWTAuth::user()->id;
+                $data['modified'] = Carbon::now()->toDateTimeString();
+                $update = SecurityUsers::where('id', $id)->update($data);
+            } else {
+                $store['username'] = $data['username']??"";
+                $store['password'] = $data['password']??"";
+                $store['openemis_no'] = $data['openemis_no']??"";
+                $store['first_name'] = $data['first_name'];
+                $store['middle_name'] = $data['middle_name']??"";
+                $store['third_name'] = $data['third_name']??"";
+                $store['last_name'] = $data['last_name'];
+                $store['preferred_name'] = $data['preferred_name']??"";
+                $store['email'] = $data['email']??"";
+                $store['address'] = $data['address']??"";
+                $store['postal_code'] = $data['postal_code']??"";
+                $store['address_area_id'] = $data['address_area_id']??Null;
+                $store['birthplace_area_id'] = $data['birthplace_area_id']??Null;
+                $store['gender_id'] = $data['gender_id'];
+                $store['date_of_birth'] = $data['date_of_birth'];
+                
+                $store['date_of_death'] = $data['date_of_death']??Null;
+                $store['nationality_id'] = $data['nationality_id']??Null;
+                $store['identity_type_id'] = $data['identity_type_id']??Null;
+                $store['identity_number'] = $data['identity_number']??Null;
+                $store['status'] = $data['status']??1;
+               
+                $store['external_reference'] = $data['external_reference']??Null;
+                $store['super_admin'] = $data['super_admin']??0;
+                $store['last_login'] = $data['last_login']??Null;
+                $store['photo_name'] = $data['photo_name']??Null;
+                // $store['photo_content'] = $data['photo_content']??Null;
+                if(isset($data['photo_content'])){
+                    $store['photo_content'] = file_get_contents($data['photo_content']);
+                }
+                $store['preferred_language'] = $data['preferred_language']??"en";
+                $store['is_student'] = $data['is_student']??0;
+                $store['is_staff'] = $data['is_staff']??0;
+                $store['is_guardian'] = $data['is_guardian']??0;
+
+
+                $store['created_user_id'] = JWTAuth::user()->id;
+                $store['created'] = Carbon::now()->toDateTimeString();
+
+                $insert = SecurityUsers::insert($store);
+            }
+
+            DB::commit();
+            return 1;
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'User is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('User is not created/updated successfully.');
+        }
+    }
+    //pocor-7545 ends
 }
 
