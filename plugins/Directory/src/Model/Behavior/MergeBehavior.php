@@ -345,6 +345,7 @@ class MergeBehavior extends Behavior
         $merge_id = $options[$model->alias()]['merge_id'];
         $connection = ConnectionManager::get('default'); // Replace 'default' with your connection name
         $connection->disableForeignKeys();
+        $success = true;
         $connection->execute("SET FOREIGN_KEY_CHECKS = 0");
 
         try {
@@ -380,9 +381,15 @@ class MergeBehavior extends Behavior
         } catch (Exception $e) {
             // Handle any exceptions or errors that occur during the operation
             $connection->rollback();
+            $success = false;
         }
         $connection->execute("SET FOREIGN_KEY_CHECKS = 1");
-
+        if ($success) {
+            $model->Alert->success(__('User Accounts Are Merged Successfully'), ['type' => 'string', 'reset' => true]);
+        }
+        if (!$success) {
+            $model->Alert->error(__('User Accounts Were Not Merged'), ['type' => 'string', 'reset' => true]);
+        }
         $connection->enableForeignKeys();
 
     }
