@@ -706,12 +706,30 @@ class AppController extends Controller
 
     private function checkAccessControl()
     {
+
         $params = $this->request->params;
+        $this->log($params, 'debug');
         if ($params['controller'] == 'Errors') {
             return;
         }
         if($params['controller'] == 'Users' &&
             $params['action'] == 'logout'){
+            return;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'forgotUsername'){
+            return;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'postForgotUsername'){
+            return;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'forgotPassword'){
+            return;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'postForgotPassword'){
             return;
         }
         if($params['controller'] == 'Users' &&
