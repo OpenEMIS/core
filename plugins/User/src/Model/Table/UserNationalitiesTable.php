@@ -35,6 +35,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             'Staff' => ['index', 'add']
         ]);
         $this->addBehavior('User.SetupTab');
+        $this->addBehavior('User.CreateUser');//POCOR-7727
         $this->addBehavior('CompositeKey');
 	}
 
@@ -606,21 +607,63 @@ class UserNationalitiesTable extends ControllerActionTable {
         $scope = $attributes['scope'];
         $tokenUri = $attributes['token_uri'];
         $privateKey = $attributes['private_key'];
-  
-        $token = $ExternalAttributes->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
+        //POCOR-7727 start
+        $ConfigItems = TableRegistry::get('config_items');
+        $config_item_result = $ConfigItems->find()->select(["config_value" => $ConfigItems->aliasField('value')])
+        ->where([$ConfigItems->aliasField('code') => 'external_data_source_type'])->first();
         
-        $data = [
+        if ($config_item_result->config_value != "Jordan CSPD") { //POCOR-7727 end
+            $token = $ExternalAttributes->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
+            $data = [
             'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
             'assertion' => $token
-        ];
-
+            ];
+        } 
         $this->request->query['number'] = $this->request->data['UserNationalities']['number'];
         $this->request->query['identity_number'] =  trim($this->request->query['number']);
-
         if($this->request->query['identity_number'] == ''){
             $this->request->query['validate_number'] = 0;
             $this->Alert->error('UserNationalities.IdentityNumberNotExist', ['reset' => true]);
-        } else {
+        }elseif($config_item_result->config_value == "Jordan CSPD"){//POCOR-7727 start
+            if (!empty($attributes['username']) && !empty($attributes['password']) && !empty($attributes['url'])) {
+                $national_no= $this->request->query['identity_number'];
+                $soapUrl = $attributes['url'];
+                $soapUser = $attributes['username'];
+                $soapPassword = $attributes['password'];
+                // xml post structure
+                $xml_post_string = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">
+                       <soapenv:Header>
+                            <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+                                <wsse:UsernameToken wsu:Id="UsernameToken-459">
+                                    <wsse:Username>' . $soapUser . '</wsse:Username>
+                                    <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">' . $soapPassword . '</wsse:Password>
+                                </wsse:UsernameToken>
+                            </wsse:Security>
+                        </soapenv:Header>
+                       <soapenv:Body>
+                          <tem:gePersonal>
+                             <!--Optional:-->
+                             <tem:nationalNo>' . $national_no . '</tem:nationalNo>
+                          </tem:gePersonal>
+                       </soapenv:Body>
+                    </soapenv:Envelope>
+                    ';
+                $response = $this->getResponseForJordanCSPD($soapUrl, $soapUser, $soapPassword, $xml_post_string);
+                $nationalNumberExist=$this->getXmlResponseTextNodeCount($response);
+                if ($nationalNumberExist) {
+                    $this->request->query['validate_number'] = 1;
+                    $this->Alert->success('UserNationalities.ValidateNumberSuccess', ['reset' => true]);
+                } else {
+                    $this->request->query['validate_number'] = 0;
+                    $this->Alert->error('UserNationalities.ValidateNumberFail', ['reset' => true]);
+                }
+               
+            } else {
+                $this->request->query['validate_number'] = 0;
+                $this->Alert->error('UserNationalities.ValidateNumberFail', ['reset' => true]);
+            }
+        } //POCOR-7727 end
+        else {
 
             $fieldMapping = [
                 '{page}' => 1,
