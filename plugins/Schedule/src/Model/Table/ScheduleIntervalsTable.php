@@ -10,12 +10,13 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 
 class ScheduleIntervalsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_schedule_intervals');
+        $this->setTable('institution_schedule_intervals');
         parent::initialize($config);
 
         $this->belongsTo('Institutions', [
@@ -52,7 +53,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $this->addBehavior('Schedule.Schedule');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -100,7 +101,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
         // filter options
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         if (isset($requestQuery) && array_key_exists('period', $requestQuery)) {
             $selectedPeriodId = $requestQuery['period'];
         } else {
@@ -279,7 +280,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
     }
 
     // OnUpdate Events
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['type'] = 'select';
@@ -293,12 +294,12 @@ class ScheduleIntervalsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionShiftId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionShiftId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $requestData = $request->data;
-            if (isset($requestData) && isset($requestData[$this->alias()]) && array_key_exists('academic_period_id', $requestData[$this->alias()])) {
-                $selectedPeriodId = $requestData[$this->alias()]['academic_period_id'];
+            if (isset($requestData) && isset($requestData[$this->getAlias()]) && array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
+                $selectedPeriodId = $requestData[$this->getAlias()]['academic_period_id'];
             } else {
                 $selectedPeriodId = $this->AcademicPeriods->getCurrent();
             }
@@ -318,12 +319,12 @@ class ScheduleIntervalsTable extends ControllerActionTable
     {
         $fieldKey = 'timeslots';
 
-        if (empty($data[$this->alias()][$fieldKey])) {
-            $data[$this->alias()][$fieldKey] = [];
+        if (empty($data[$this->getAlias()][$fieldKey])) {
+            $data[$this->getAlias()][$fieldKey] = [];
         }
 
-        if ($data->offsetExists($this->alias())) {
-            $data[$this->alias()][$fieldKey][] = [
+        if ($data->offsetExists($this->getAlias())) {
+            $data[$this->getAlias()][$fieldKey][] = [
                 'intervals' => '',
             ];
         }
@@ -335,8 +336,8 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
     public function addOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $data[$this->alias()]['institution_shift_id'] = '';
-        unset($data[$this->alias()]['timeslots']);
+        $data[$this->getAlias()]['institution_shift_id'] = '';
+        unset($data[$this->getAlias()]['timeslots']);
     }
 
     // Get Options

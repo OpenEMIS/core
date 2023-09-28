@@ -4,23 +4,25 @@
 			$this->Form->unlockField('academic_period_id_');
 			
 			$baseUrl = $this->Url->build([
-				'plugin' => $this->request->params['plugin'],
-			    'controller' => $this->request->params['controller'],
-			    'action' => $this->request->params['action']
+				'plugin' => $this->request->getParam('plugin'),
+	            'controller' => $this->request->getParam('controller'),
+	            'action' => $this->request->getParam('action')
 			]);
 			$template = $this->ControllerAction->getFormTemplate();
-			$this->Form->templates($template);
-
-			if (!empty($academicPeriodOptions)) {
-				echo $this->Form->input('academic_period_id_', array(
-					'class' => 'form-control',
-					'label' => false,
-					'options' => $academicPeriodOptions,
-					'url' => $baseUrl,
-					'data-named-key' => 'academic_period_id',
-				));
-			}
-
-		?>
+			$this->Form->templates($template); ?>
+			<?php if (!empty($academicPeriodOptions)) { ?>
+				<div class="input select required">
+		            <div class="input-select-wrapper">
+		            <?php echo $this->Form->input('academic_period_id_', array(
+						'type' => 'select',
+						'class' => 'form-control',
+						'label' => false,
+						'options' => $academicPeriodOptions,
+						'url' => $baseUrl,
+						'data-named-key' => 'academic_period_id',
+					)); ?>
+		            </div>
+		        </div>
+			<?php } ?>
 		</div>
 	</div>
