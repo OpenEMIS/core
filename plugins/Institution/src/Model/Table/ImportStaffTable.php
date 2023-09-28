@@ -146,6 +146,33 @@ class ImportStaffTable extends AppTable
             ];
         }
     }
+    //POCOR-7711 :: Start
+    public function onImportPopulateStaffPositionGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
+        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . "StaffPositionGrades");
+        $InstitutionShiftsResults = $lookedUpTable
+            ->find()
+            ->select([
+                'id' => 'StaffPositionGrades.id',
+                'name' => 'StaffPositionGrades.name'
+            ])
+            ->autoFields(false)
+            ->all();
+        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
+        $data[$columnOrder]['lookupColumn'] = 2;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+        if (!$InstitutionShiftsResults->isEmpty()) {
+            $modelData = $InstitutionShiftsResults->toArray();
+            foreach ($modelData as $row) {
+                $data[$columnOrder]['data'][] = [
+                    $row->name,
+                    $row->id
+                ];
+            }
+        }
+    }
+    //POCOR-7711 :: End
 
     public function onImportGetFTEId(Event $event, $cellValue)
     {

@@ -26,7 +26,9 @@ class InstitutionClassBehavior extends Behavior
     {
         // This logic is dependent on SecurityAccessBehavior because it relies on SecurityAccess join table
         // This logic will only be triggered when the table is accessed by RestfulController
-        if (isset($options['user']) && is_array($options['user']) && !isset($options['user']['iss'])) { // the user object is set by RestfulComponent
+        if (isset($options['user']) &&
+            is_array($options['user']) &&
+            !isset($options['user']['iss'])) { // the user object is set by RestfulComponent
             $user = $options['user'];
             if ($user['super_admin'] == 0) { // if he is not super admin
                 $userId = $user['id'];
