@@ -1,0 +1,9 @@
+*.sql filter=lfs diff=lfs merge=lfs -text
+webroot/sql_dump/tst_cor_dmo_2021-02-17.sql filter=lfs diff=lfs merge=lfs -text
+prd_cor_dmo.sql filter=lfs diff=lfs merge=lfs -text
+webroot/sql_dump/prd_sch_dmo_2021-03-19.sql filter=lfs diff=lfs merge=lfs -text
+webroot/sql_dump/prd_cen_dmo_2021-03-19.sql filter=lfs diff=lfs merge=lfs -text
+webroot/sql_dump/prd_vac_dmo_2021-03-19.sql filter=lfs diff=lfs merge=lfs -text
+webroot/sql_dump/prd_cor_zip.sql filter=lfs diff=lfs merge=lfs -text
+www_openemis_demo_04APR2013.sql filter=lfs diff=lfs merge=lfs -text
+tst_cor_dmo_2021-04-22.sql filter=lfs diff=lfs merge=lfs -text
