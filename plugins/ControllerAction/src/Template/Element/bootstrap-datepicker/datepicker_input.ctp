@@ -29,7 +29,7 @@
 		}
 
 		$inputAttr = [
-			'class' => 'form-control ' . $inputErrorCSS,
+			'class' => 'form-control datepkr' . $inputErrorCSS,
 			'value' => isset($attr['value']) ? $attr['value'] : '',
 			'type' => 'text',
 			'label' => false,
@@ -52,3 +52,13 @@
 	<?php if ($label) : ?>
 		</div>
 	<?php endif; ?>
+	<!-- POCOR-7793 -->
+	<?php if($attr['className'] == "Institution.InstitutionSurveys"){ ?>
+		<style>
+			.datepkr{
+				margin-bottom: 16px !important;
+			}
+		</style>
+
+	<?php } ?>
+	<!-- POCOR-7793 -->
