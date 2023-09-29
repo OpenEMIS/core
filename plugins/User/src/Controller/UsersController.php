@@ -710,7 +710,7 @@ class UsersController extends AppController
                 //POCOR-2976 start
                 if ($userData->status == 0) {
                     if (empty($userData)) {
-                        $this->Alert->error('User not found', ['type' => 'string', 'reset' => true]);
+                        $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
                     } else {
                         $this->Alert->error('security.login.locked_account', ['reset' => true]);
                     }
@@ -725,7 +725,7 @@ class UsersController extends AppController
                     $SecurityUser->updateAll(['status' => 0],
                         ['username' => $this->request->data['username']]);
                     if (empty($userData)) {
-                        $this->Alert->error('User not found', ['type' => 'string', 'reset' => true]);
+                        $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
                     } else {
                         $this->Alert->error('security.login.locked_account', ['reset' => true]);
                     }
