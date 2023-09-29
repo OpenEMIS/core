@@ -93,16 +93,10 @@ trait SecurityTrait
 
     public function paramsEncode($params = [])
     {
-        $sessionToken = bin2hex(random_bytes(32));
+        $sessionToken = session_id();
         $cookieName = 'session_token';
         $desiredPath = "/";
         // Set the session token as an HTTP cookie
-        setcookie($cookieName, $sessionToken, [
-            'expires' => 0,
-            'path' => $desiredPath,
-            'secure' => true,
-            'httponly' => true
-        ]);
         foreach ($_COOKIE as $name => $value) {
             if ($name === $cookieName) {
                 $cookiePath = $_SERVER['REQUEST_URI']; // Get the current request path
@@ -111,6 +105,13 @@ trait SecurityTrait
                     break; // Exit the loop once the desired cookie is found
                 }
             }
+            setcookie($cookieName, $sessionToken,
+                0,
+                $desiredPath,
+                null,
+                true,
+                true
+            );
         }
         $sessionToken = $selectedSessionToken ?? null;
         $jsonParam = json_encode($params);
