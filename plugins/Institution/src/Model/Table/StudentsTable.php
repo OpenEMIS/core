@@ -7,7 +7,6 @@ use ArrayObject;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
 use Cake\I18n\Time;
-use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
@@ -18,7 +17,7 @@ use Cake\Chronos\Date;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Core\Configure;
 use Cake\Log\Log;
-
+use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 
 class StudentsTable extends ControllerActionTable
@@ -36,14 +35,14 @@ class StudentsTable extends ControllerActionTable
 
     private $institution_id;
     private $academic_period_id;
+    public $foreignKey = 'student_id';
 
     public function initialize(array $config): void
     {
         $this->setTable('institution_students');
         parent::initialize($config);
-
         // Associations
-        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
+        $this->hasOne('Users', ['className' => 'Security.Users', 'foreignKey' => 'id']);
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -55,7 +54,7 @@ class StudentsTable extends ControllerActionTable
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->addBehavior('AcademicPeriod.Period');
         $this->addBehavior('User.User');
-        $this->addBehavior('User.AdvancedNameSearchStudent');//POCOR-6647 using copy behavior of AdvancedNameSearchBehavior
+       // $this->addBehavior('User.AdvancedNameSearchStudent');//POCOR-6647 using copy behavior of AdvancedNameSearchBehavior
         $this->addBehavior('Institution.StudentCascadeDelete'); // for cascade delete on student related tables from an institution
         $this->addBehavior('AcademicPeriod.AcademicPeriod'); // to make sure it is compatible with v4
         $this->addBehavior('User.MoodleCreateUser');
@@ -111,7 +110,7 @@ class StudentsTable extends ControllerActionTable
             'contact_number', 'identity_type', 'identity_number'
         ];
 
-        $this->addBehavior('AdvanceSearch', [
+        /*$this->addBehavior('AdvanceSearch', [
             'exclude' => [
                 'student_id',
                 'institution_id',
@@ -131,7 +130,7 @@ class StudentsTable extends ControllerActionTable
         ]);
         $this->addBehavior('User.AdvancedSpecificNameTypeSearch', [
             'modelToSearch' => $this->Users
-        ]);
+        ]);*/
         /**
          * End Advance Search Types
          */
@@ -626,7 +625,7 @@ class StudentsTable extends ControllerActionTable
         return $query
             ->select([$Classes->aliasField('name')])
             ->leftJoin(
-                [$ClassStudents->alias() => $ClassStudents->table()],
+                [$ClassStudents->getAlias() => $ClassStudents->getTable()],
                 [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
@@ -634,7 +633,7 @@ class StudentsTable extends ControllerActionTable
                 ]
             )
             ->leftJoin(
-                [$Classes->alias() => $Classes->table()],
+                [$Classes->getAlias() => $Classes->getTable()],
                 [
                     $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id'),
                     $Classes->aliasField('academic_period_id') => $periodId,
@@ -723,8 +722,8 @@ class StudentsTable extends ControllerActionTable
         $this->field('previous_institution_student_id', ['type' => 'hidden']);
         $this->triggerAutomatedStudentWithdrawalShell();
 
-        $session = $this->request->session();
-        $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
         $assignedStudentToInstitution = $this->find()->where(['institution_id' => $institutionId])->count();
         $session->write('is_any_student', $assignedStudentToInstitution);
 
@@ -903,8 +902,8 @@ class StudentsTable extends ControllerActionTable
             }
         }
 
-        $session = $this->request->session();
-        $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
 
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('class', ['after' => 'education_grade_id']);
@@ -918,7 +917,7 @@ class StudentsTable extends ControllerActionTable
 
         $StudentStatusesTable = $this->StudentStatuses;
         $status = $StudentStatusesTable->findCodeList();
-        $selectedStatus = $this->request->query('status_id');
+        $selectedStatus = $this->request->getQuery('status_id');
 
         // To redirect to Pending statuses page
         $pendingStatuses = [
@@ -982,7 +981,7 @@ class StudentsTable extends ControllerActionTable
         }
 
         //POCOR-6248 starts    
-        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItem = $ConfigItemTable
             ->find()
             ->where([
@@ -1080,13 +1079,12 @@ class StudentsTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
         // Education Grades
-        $InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $InstitutionEducationGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $session = $this->Session;
         $institutionId = $session->read('Institution.Institutions.id');
 
-        if (empty($request->query['academic_period_id'])) {
-            $request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
-        }
+        $this->request = $this->request->withQueryParams(['period' => $request->getData($this->getAlias())['academic_period_id']]);
+       // $this->request = $this->AcademicPeriods->getCurrent();
         $selectedStatus = $this->queryString('status_id', $statusOptions);
         $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
 
@@ -1122,7 +1120,7 @@ class StudentsTable extends ControllerActionTable
             }
         ]);
 
-        $request->query['academic_period_id'] = $selectedAcademicPeriod;
+        $this->request = $this->request->withQueryParams(['period' => $request->getData($this->getAlias())['academic_period_id']]);
 
         // To add the academic_period_id to export
         if (isset($extra['toolbarButtons']['export']['url'])) {
@@ -1138,7 +1136,7 @@ class StudentsTable extends ControllerActionTable
         $query->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod]);
 
         // Start: sort by class column
-        $session = $request->session();
+        $session = $request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
 
         $query->find('withClass', ['institution_id' => $institutionId, 'period_id' => $selectedAcademicPeriod]);
@@ -1160,7 +1158,7 @@ class StudentsTable extends ControllerActionTable
              * @ticket POCOR-6532
              */
             // Starts POCOR-6532
-            $UserIdentitiesnumber = TableRegistry::get('User.Identities');
+            $UserIdentitiesnumber = TableRegistry::getTableLocator()->get('User.Identities');
             $useridentites = $UserIdentitiesnumber->aliasField('number');
 
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'aliasidentity' => 'Identities', 'searchTerm' => $search]);
@@ -1173,13 +1171,12 @@ class StudentsTable extends ControllerActionTable
                 $query->where([$this->aliasField('student_status_id') => $selectedStatus]);
             }
         }
-
         //select specific field that is used on the page, photo_content is generated by LazyEagerLoader (javascript)
         //the rest of fields are called by onGet function.
         //POCOR-6248 starts
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-        $UserIdentities = TableRegistry::get('User.Identities');
-        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+        $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItem = $ConfigItemTable
             ->find()
             ->where([
@@ -1217,14 +1214,14 @@ class StudentsTable extends ControllerActionTable
                      */
                     // Starts POCOR-6532
                     ->leftJoin(
-                        [$UserIdentities->alias() => $UserIdentities->table()],
+                        [$UserIdentities->getAlias() => $UserIdentities->getTable()],
                         [
                             $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('student_id'),
                             $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id //POCOR-7115 uncomment line
                         ]
                     )
                     ->leftJoin(
-                        [$IdentityTypes->alias() => $IdentityTypes->table()],
+                        [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
                         [
                             $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
                             // $IdentityTypes->aliasField('id = ') . $typesIdentity->id
@@ -1245,10 +1242,10 @@ class StudentsTable extends ControllerActionTable
                 'student_status_id'
             ])
                 //POCOR-6645 starts - applied join to get result when not $ConfigItem
-                ->leftJoin([$UserIdentities->alias() => $UserIdentities->table()], [
+                ->leftJoin([$UserIdentities->getAlias() => $UserIdentities->getTable()], [
                     $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('student_id')
                 ])
-                ->leftJoin([$IdentityTypes->alias() => $IdentityTypes->table()], [
+                ->leftJoin([$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
                     $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
                 ]);
             //POCOR-6645 ends
@@ -1268,7 +1265,7 @@ class StudentsTable extends ControllerActionTable
     //POCOR-6248 starts
     public function getIdentityTypeData($value_selection)
     {
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $typesIdentity = $IdentityTypes
             ->find()
             ->select([
@@ -1286,7 +1283,7 @@ class StudentsTable extends ControllerActionTable
     {
         foreach ($query->toArray() as $key => $value) {
             $periodId = $value['academic_period']['id'];//POCOR-6530
-            $InstitutionStudents = TableRegistry::get('InstitutionStudents');
+            $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
 
             $InstitutionStudentsCurrentData = $InstitutionStudents
                 ->find()
@@ -1298,7 +1295,7 @@ class StudentsTable extends ControllerActionTable
                     $InstitutionStudents->aliasField('academic_period_id') => $periodId //POCOR-6530
                 ])
                 ->order([$InstitutionStudents->aliasField('InstitutionStudents.created') => 'DESC'])
-                ->autoFields(true)
+                ->enableAutoFields(true)
                 ->first();
             /*POCOR-6400 starts*/
             if (!empty($InstitutionStudentsCurrentData->previous_institution_student_id)) {
@@ -1435,10 +1432,11 @@ class StudentsTable extends ControllerActionTable
 
             $indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [], 'options' => [], 'order' => 0];
 
-            if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
-                $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            //Comment cakephp 4
+           // if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+                $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $currentYearId = $AcademicPeriod->getCurrent();
-                $periodId = $this->request->query['academic_period_id'];
+                $periodId = $this->request->getQuery('academic_period_id');
                 if ($currentYearId == $periodId) {
                     $indexElements[] = [
                         'name' => $indexDashboard,
@@ -1451,7 +1449,7 @@ class StudentsTable extends ControllerActionTable
                         'order' => 2
                     ];
                 }
-            }
+            //}
 
             foreach ($indexElements as $key => $value) {
                 if ($value['name'] == 'OpenEmis.ControllerAction/index') {
