@@ -371,7 +371,6 @@ class ControllerActionBehavior extends Behavior
 
         $method = 'onUpdateField' . Inflector::camelize($name);
         $eventKey = 'ControllerAction.Model.' . $method;
-       // $serverRequest = new ServerRequest();
         $params = [$attr, $model->action, $model->request];
         $event = $this->dispatchEvent($model, $eventKey, $method, $params, true);
         if (is_array($event->getResult())) {

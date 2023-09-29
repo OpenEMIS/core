@@ -28,7 +28,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 {	
 	use MessagesTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -48,21 +48,22 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $query = $this->request->query;
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $query = $this->request->getQuery();
+        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $session = $this->controller->request->session();
+        $session = $this->controller->getRequest()->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         $curricularIdGet = $_SESSION['curricularId'];
-        $curriculars = TableRegistry::get('institution_curriculars');
+        $curriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
         $getAcademicPeriodId = $curriculars->find()
                             ->where([$curriculars->aliasField('id') => $curricularIdGet])
                             ->first()->academic_period_id;
         $selectedAcademicPeriodId = $getAcademicPeriodId;
-        $this->Institutions = TableRegistry::get('Institution.Institutions');
+        $this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $extra['selectedEducationGradeId'] = $selectedEducationGradeId;
         if (!empty($selectedAcademicPeriodId)) {
-            $this->request->query['academic_period_id'] = $selectedAcademicPeriodId;
+            //$this->request->getQuery('academic_period_id') = $selectedAcademicPeriodId;
+            $this->request = $this->request->withQueryParams(['academic_period_id' => $selectedAcademicPeriodId]);
             $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($institutionId, $selectedAcademicPeriodId);
             $gradeOptions = [-1 => __('All Grades')] + $gradeOptions;
             $selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
@@ -89,19 +90,19 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $curricularIdGet = $_SESSION['curricularId'];
-        $gradeId  = $this->request->query['education_grade_id'];
-        $session = $this->controller->request->session();
+        $gradeId  = $this->request->getQuery('education_grade_id');
+        $session = $this->controller->getRequest()->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
-        $institutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-        $grades = TableRegistry::get('education_grades');
-        $institutionClass = TableRegistry::get('institution_classes');
-        $curricularPositions = TableRegistry::get('curricular_positions');
-        $InstitutionCurriculars = TableRegistry::get('institution_curriculars');
-        $institutionClassGrades = TableRegistry::get('institution_class_grades');
-        $academicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $curricular_types = TableRegistry::get('curricular_types');
-        $Users = TableRegistry::get('security_users');
+        $institutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+        $grades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $institutionClass = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $curricularPositions = TableRegistry::getTableLocator()->get('FieldOption.CurricularPositions');
+        $InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
+        $institutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
+        $academicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $curricular_types = TableRegistry::getTableLocator()->get('FieldOption.CurricularTypes');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
         $curricularIdGet = $_SESSION['curricularId'];
         $conditions = [];
         $conditions[$this->aliasField('institution_curricular_id')]  = $curricularIdGet;
@@ -128,32 +129,32 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
                         $InstitutionCurriculars->aliasField('name') ,      
                         $InstitutionCurriculars->aliasField('id')       
                 ])
-                ->LeftJoin([$institutionStudents->alias() => $institutionStudents->table()],
+                ->LeftJoin([$institutionStudents->getAlias() => $institutionStudents->getTable()],
                     [$institutionStudents->aliasField('student_id').' = ' . $this->aliasField('student_id')
                 ])
-                ->LeftJoin([$Users->alias() => $Users->table()],
+                ->LeftJoin([$Users->getAlias() => $Users->getTable()],
                     [$Users->aliasField('id').' = ' . $this->aliasField('student_id')
                 ])
-                ->LeftJoin([$grades->alias() => $grades->table()],
+                ->LeftJoin([$grades->getAlias() => $grades->getTable()],
                     [$grades->aliasField('id').' = ' . $institutionStudents->aliasField('education_grade_id')
                 ])
                 ->LeftJoin(
-                    [$institutionClassGrades->alias() => $institutionClassGrades->table()],
+                    [$institutionClassGrades->getAlias() => $institutionClassGrades->getTable()],
                     [$institutionClassGrades->aliasField('education_grade_id').' = ' . $institutionStudents->aliasField('education_grade_id')]
                 )
-                ->LeftJoin([$institutionClass->alias() => $institutionClass->table()],
+                ->LeftJoin([$institutionClass->getAlias() => $institutionClass->getTable()],
                     [$institutionClass->aliasField('id').' = ' . $institutionClassGrades->aliasField('institution_class_id')
                 ])
-                ->LeftJoin([$curricularPositions->alias() => $curricularPositions->table()],
+                ->LeftJoin([$curricularPositions->getAlias() => $curricularPositions->getTable()],
                     [$curricularPositions->aliasField('id').' = ' . $this->aliasField('curricular_position_id')
                 ])
-                ->LeftJoin([$InstitutionCurriculars->alias() => $InstitutionCurriculars->table()],
+                ->LeftJoin([$InstitutionCurriculars->getAlias() => $InstitutionCurriculars->getTable()],
                     [$InstitutionCurriculars->aliasField('id').' = ' . $this->aliasField('institution_curricular_id')
                 ])
-                ->LeftJoin([$academicPeriods->alias() => $academicPeriods->table()],
+                ->LeftJoin([$academicPeriods->getAlias() => $academicPeriods->getTable()],
                 [$academicPeriods->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('academic_period_id')
                 ])
-                ->LeftJoin([$curricular_types->alias() => $curricular_types->table()],
+                ->LeftJoin([$curricular_types->getAlias() => $curricular_types->getTable()],
                 [$curricular_types->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('curricular_type_id')
             ])
                 ->where($conditions)->group([$this->aliasField('student_id')]);
@@ -175,7 +176,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         }
 
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
-        $query = $this->request->query;
+        $query = $this->request->getQuery();
         $this->field('academic_period_id', ['visible' => true]);
         $this->field('student_id', ['visible' => false]);
         $this->field('student_name', ['visible' => true]);
@@ -231,18 +232,18 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         $curricularIdGet = $_SESSION['curricularId'];
-        $curriculars = TableRegistry::get('institution_curriculars');
-        $academicPeriod = TableRegistry::get('academic_periods');
-        $curricularType = TableRegistry::get('curricular_types');
+        $curriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
+        $academicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $curricularType = TableRegistry::getTableLocator()->get('FieldOption.CurricularTypes');
         $curricularData = $curriculars->find()
                             ->select(['name'=>$curriculars->aliasField('name'),'category'=>$curriculars->aliasField('category'),
                                 'academic_period'=>$academicPeriod->aliasField('name'),
                                 'curricularType'=>$curricularType->aliasField('name')
                                         ])
-                            ->LeftJoin([$academicPeriod->alias() => $academicPeriod->table()],[
+                            ->LeftJoin([$academicPeriod->getAlias() => $academicPeriod->getTable()],[
                                 $academicPeriod->aliasField('id').' = ' . $curriculars->aliasField('academic_period_id')
                             ])
-                            ->LeftJoin([$curricularType->alias() => $curricularType->table()],[
+                            ->LeftJoin([$curricularType->getAlias() => $curricularType->getTable()],[
                                 $curricularType->aliasField('id').' = ' . $curriculars->aliasField('curricular_type_id')
                             ])
                             ->where([$curriculars->aliasField('id') => $curricularIdGet])->first();
@@ -285,10 +286,10 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
     // Misc
     private function updateDateRangeField($key, $attr, Request $request)
     {
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $requestData = $request->data;
-        if (array_key_exists($this->alias(), $requestData) && array_key_exists('academic_period_id', $requestData[$this->alias()])) {
-            $selectedPeriodId = $requestData[$this->alias()]['academic_period_id'];
+        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $requestData = $request->getData();
+        if (array_key_exists($this->getAlias(), $requestData) && array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
+            $selectedPeriodId = $requestData[$this->getAlias()]['academic_period_id'];
         } else {
             $selectedPeriodId = $this->AcademicPeriods->getCurrent();
         }
@@ -298,7 +299,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $attr['date_options']['startDate'] = $selectedPeriod->start_date->format('d-m-Y');
         $attr['date_options']['endDate'] = $selectedPeriod->end_date->format('d-m-Y');
         
-        if (!array_key_exists($this->alias(), $requestData) || !array_key_exists($key, $requestData[$this->alias()])) {
+        if (!array_key_exists($this->getAlias(), $requestData) || !array_key_exists($key, $requestData[$this->getAlias()])) {
             if ($selectedPeriodId != $this->AcademicPeriods->getCurrent()) {
                 $attr['value'] = $selectedPeriod->start_date;
             } else {
@@ -311,7 +312,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function onUpdateFieldCurricularPositionId(Event $event, array $attr, $action, Request $request)
     {
-        $curricularPositions = TableRegistry::get('curricular_positions');
+        $curricularPositions = TableRegistry::getTableLocator()->get('FieldOption.CurricularPositions');
         $curricularPositionsList = $curricularPositions->find('list')->where(['visible'=>1])->toArray();
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'chosenSelect';
@@ -325,9 +326,9 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request)
     {
-        $institutionStudents = TableRegistry::get('institution_students');
-        $securityUsers = TableRegistry::get('security_users');
-        $InstitutionCurriculars = TableRegistry::get('institution_curriculars');
+        $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+        $securityUsers = TableRegistry::getTableLocator()->get('User.Users');
+        $InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
         $curricularIdGet = $_SESSION['curricularId'];
         $academicPeriodId = $InstitutionCurriculars->find()->where(['id'=>$curricularIdGet])->first()->academic_period_id;
         $session = $this->controller->request->session();
@@ -339,7 +340,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
                             'first_name' => $securityUsers->aliasField('first_name'),
                             'last_name' => $securityUsers->aliasField('last_name'),
                         ])
-                        ->LeftJoin([$securityUsers->alias() => $securityUsers->table()],[
+                        ->LeftJoin([$securityUsers->getAlias() => $securityUsers->getTable()],[
                             $securityUsers->aliasField('id').' = ' . $institutionStudents->aliasField('student_id')
                         ])
                         ->where(['student_status_id'=>1,'institution_id'=>$institutionId,'academic_period_id'=>$academicPeriodId])->toArray();
@@ -422,11 +423,11 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
     public function onGetCurricularTypeId(Event $event, Entity $entity)
     {
         $curricularsID =  $entity->institution_curricular_id;
-        $InstitutionCurriculars = TableRegistry::get('institution_curriculars');
-        $curricular_type = TableRegistry::get('curricular_types');
+        $InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
+        $curricular_type = TableRegistry::getTableLocator()->get('FieldOption.CurricularTypes');
         $data = $InstitutionCurriculars->find()
                 ->select(['name' => $curricular_type->aliasField('name')])
-                ->LeftJoin([$curricular_type->alias() => $curricular_type->table()],
+                ->LeftJoin([$curricular_type->getAlias() => $curricular_type->getTable()],
                     [$curricular_type->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('curricular_type_id')
                 ])
                 ->where([$InstitutionCurriculars->aliasField('id') => $curricularsID])
@@ -438,11 +439,11 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
     public function onGetAcademicPeriodId(Event $event, Entity $entity)
     {
         $curricularsID =  $entity->institution_curricular_id;
-        $InstitutionCurriculars = TableRegistry::get('institution_curriculars');
-        $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
+        $academicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $data = $InstitutionCurriculars->find()
                 ->select(['name' => $academicPeriod->aliasField('name')])
-                ->LeftJoin([$academicPeriod->alias() => $academicPeriod->table()],
+                ->LeftJoin([$academicPeriod->getAlias() => $academicPeriod->getTable()],
                     [$academicPeriod->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('academic_period_id')
                 ])
                 ->where([$InstitutionCurriculars->aliasField('id') => $curricularsID])
@@ -454,9 +455,9 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
     public function onGetStudentName(Event $event, Entity $entity)
     {
         $StudentId = $entity->student_id;
-        $users = TableRegistry::get('security_users'); 
+        $users = TableRegistry::getTableLocator()->get('User.Users'); 
         $data = $this->find()->select(['first_name'=>$users->aliasField('first_name'),'middle_name'=>$users->aliasField('middle_name'),'third_name'=>$users->aliasField('third_name'),'last_name'=>$users->aliasField('last_name')])
-                ->leftJoin([$users->alias() => $users->table()],
+                ->leftJoin([$users->getAlias() => $users->getTable()],
                     [$users->aliasField('id').' = ' . $this->aliasField('student_id')
                 ])
                 ->where([$this->aliasField('student_id') => $StudentId ])->first();
@@ -517,7 +518,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $curricularStudent = TableRegistry::get('institution_curricular_students'); 
+        $curricularStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStudents'); 
         $checkStudent =  $curricularStudent->find()->where([$curricularStudent->aliasField('student_id')=>$entity->student_id])->first();     
              
         if(!empty($checkStudent)){
@@ -529,8 +530,8 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $curricularStudent = TableRegistry::get('institution_curricular_students');
-        $users = TableRegistry::get('security_users');
+        $curricularStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStudents');
+        $users = TableRegistry::getTableLocator()->get('User.Users');
         $countMaleFemale = $curricularStudent->find()
                      ->select(['male_students' => "
                                  (COUNT(DISTINCT(CASE WHEN security_users.gender_id = 1 THEN institution_curricular_students.student_id END))) ",
@@ -538,7 +539,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
                                  (COUNT(DISTINCT(CASE WHEN security_users.gender_id = 2 THEN institution_curricular_students.student_id END))) "
 
                                 ])
-                    ->InnerJoin([$users->alias() => $users->table()],
+                    ->InnerJoin([$users->getAlias() => $users->getTable()],
                     [$users->aliasField('id').' = ' . $curricularStudent->aliasField('student_id')])
                     ->where([$curricularStudent->aliasField('institution_curricular_id') => $entity->institution_curricular_id])
                     ->group([$curricularStudent->aliasField('institution_curricular_id')])->toArray();
@@ -546,7 +547,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
             $maleStudents  = $value->male_students;
             $femaleStudents  = $value->female_students;
         }
-        $InstitutionCurriculars = TableRegistry::get('institution_curriculars');
+        $InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
         $updateCurricular =   $InstitutionCurriculars->updateAll(
                                 ['total_male_students' => $maleStudents,'total_female_students'=>$femaleStudents],    //field
                                 [

@@ -858,7 +858,7 @@ class WorkflowCaseBehavior extends Behavior
 
                 //Get workflow model ids for those related workflow.Eg. StaffTransferIn and StaffTransferOut
                 $workflowModelIds = $this->getWorkflowModelIds($workflow->workflow_model_id);
-//echo "<pre>";print_r($entity);die;
+
                 $transitionResults = $this->WorkflowTransitions
                     ->find()
                     ->contain(['CreatedUser'])

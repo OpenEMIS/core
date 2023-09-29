@@ -1,5 +1,4 @@
 <?php
-
 namespace Institution\Model\Table;
 
 use ArrayObject;
@@ -19,6 +18,7 @@ use Cake\Datasource\ResultSetInterface;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
+use Cake\Http\ServerRequest;
 
 class InstitutionSubjectsTable extends ControllerActionTable
 {
@@ -81,8 +81,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
         /**
          * Short cuts
          */
-        $this->InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-        $this->InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $this->InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+        $this->InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
 
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -94,6 +94,9 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         $this->setDeleteStrategy('restrict');
         $this->addBehavior('SubjectExcel', ['excludes' => ['security_group_id', 'identity_number', 'identity_type', 'student_status', 'openEMIS_ID', 'gender', 'student_name'], 'pages' => ['view']]);
+        //$Classes = $this->Classes;
+        //$this->Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        //$this->ClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
     }
 
     public function implementedEvents(): array
@@ -125,7 +128,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     }
                     $institutionSubjectId = $global['data']['id'];
                     // die;
-                    $ClassSubjectsTable = TableRegistry::get('Institution.InstitutionClassSubjects');
+                    $ClassSubjectsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
 
                     $conditions = [];
                     $conditions['OR'] = [];
@@ -160,7 +163,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         $extra['institution_id'] = $this->Session->read('Institution.Institutions.id');
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $this->enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
 
         // $this->field('education_grade_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>false, 'add'=>true], 'onChangeReload' => true, 'sort' => ['field' => 'EducationGrades.name']]);
@@ -202,7 +205,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->field('teachers', [
             'type' => 'chosenSelect',
             'fieldNameKey' => 'teachers',
-            'fieldName' => $this->alias() . '.teachers._ids',
+            'fieldName' => $this->getAlias() . '.teachers._ids',
             'placeholder' => $this->getMessage('Users.select_teacher'),
             'valueWhenEmpty' => '<span>&lt;' . __('No Teacher Assigned') . '&gt;</span>',
             'visible' => ['index' => true, 'view' => true, 'edit' => true]
@@ -217,7 +220,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->field('rooms', [
             'type' => 'chosenSelect',
             'fieldNameKey' => 'rooms',
-            'fieldName' => $this->alias() . '.rooms._ids',
+            'fieldName' => $this->getAlias() . '.rooms._ids',
             'placeholder' => $this->getMessage('Users.select_room'),
             'valueWhenEmpty' => '<span>&lt;' . __('No Room Allocated') . '&gt;</span>',
             'visible' => ['index' => true, 'view' => true, 'edit' => true]
@@ -238,22 +241,25 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $extra['noProgrammes'] = true;
         }
         //POCOR-5852 starts
-        if (empty($this->request->query['academic_period_id'])) {
-            $this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
-            $Classes = $this->Classes;
+        if (empty($this->request->getQuery('academic_period_id'))) {
+            $this->request = $this->request->withQueryParams(['academic_period_id' => $this->AcademicPeriods->getCurrent()]);
+            //$this->request->getQuery('academic_period_id') = $this->AcademicPeriods->getCurrent();
+            //$Classes = $this->Classes;
+            $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
             $classOptions = $Classes->find('list')
                 ->where([
-                    $Classes->aliasField('academic_period_id') => $this->request->query['academic_period_id'],
+                    $Classes->aliasField('academic_period_id') => $this->request->getQuery('academic_period_id'),
                     $Classes->aliasField('institution_id') => $extra['institution_id']
                 ])
                 ->toArray();
             $selectedClassId = $this->queryString('class_id', $classOptions);
-            $this->request->query['class_id'] = $selectedClassId;
+            $this->request->withQueryParams(['class_id' => $selectedClassId]);
+            //$this->request->getQuery('class_id') = $selectedClassId;
         }
         //POCOR-5852 ends
         $extra['selectedAcademicPeriodId'] = $this->queryString('academic_period_id', $academicPeriodOptions);
         $extra['selectedClassId'] = 0;
-        $className = $this->request->query['class_id'];
+        $className = $this->request->getQuery('class_id');
         $this->Session->write('is_className', $className);
     }
 
@@ -265,7 +271,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
      ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $Classes = $this->Classes;
+        //$Classes = $this->Classes;
+        $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $Subjects = $this;
 
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -285,7 +292,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $AccessControl = $this->AccessControl;
         $userId = $this->Auth->user('id');
         $controller = $this->controller;
-
+        
         $classOptions = $Classes->find('list')
             ->where([
                 $Classes->aliasField('academic_period_id') => $selectedAcademicPeriodId,
@@ -321,9 +328,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         [
                             'table' => 'institution_class_subjects',
                             'alias' => 'InstitutionClassSubjects',
+                            'type' => 'INNER',
                             'conditions' => [
                                 'InstitutionClassSubjects.institution_subject_id = ' . $Subjects->aliasField('id'),
-                                'InstitutionClassSubjects.institution_class_id' => $id
+                                'InstitutionClassSubjects.institution_class_id = ' . $id
                             ]
                         ]
                     ])
@@ -331,7 +339,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         $Subjects->aliasField('institution_id') => $institutionId,
                         $Subjects->aliasField('academic_period_id') => $selectedAcademicPeriodId,
                     ]);
-
                 return $query->count();
             }
         ]);
@@ -373,8 +380,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
         // End POCOR-5188
-
-
     }
 
     public function findTranslateItem(Query $query, array $options)
@@ -406,14 +411,14 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $academicPeriodId = $options['academic_period_id'];
         $gradeId = $options['education_grade_id'];
         $student_id = $options['student_id'];
-        $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $InstitutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
 
         return $query
             ->matching('ClassSubjects', function ($q) use ($classId) {
                 return $q->where(['ClassSubjects.institution_class_id' => $classId]);
             })
             ->contain(['EducationSubjects'])
-            ->leftJoin([$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()], [
+            ->leftJoin([$InstitutionSubjectStudents->getAlias() => $InstitutionSubjectStudents->getTable()], [
 
                 $this->aliasField('id = ') . $InstitutionSubjectStudents->aliasField('institution_subject_id'),
                 $this->aliasField('institution_id = ') . $InstitutionSubjectStudents->aliasField('institution_id'),
@@ -434,7 +439,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         // POCOR-2547 sort list of staff and student by name
         // move the contain from institution.subject.student.ctrl.js since its using finder method
-        $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $InstitutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
         return $query
             ->find('translateItem')
             ->contain([
@@ -459,7 +464,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     'alias' => 'InstitutionClassSubjects',
                     'conditions' => [
                         'InstitutionClassSubjects.institution_subject_id = InstitutionSubjects.id',
-                        'InstitutionClassSubjects.institution_class_id' => $options['selectedClassId']
+                        'InstitutionClassSubjects.institution_class_id = ' . $options['selectedClassId']
                     ]
                 ]
             ]) : $query;
@@ -473,9 +478,9 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $classId = $options['institution_class_id'];
         $staffId = $options['staff_id'];
 
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-        $ReportCardSubjects = TableRegistry::get('ReportCards.ReportCardSubjects');
+        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+        $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
+        $ReportCardSubjects = TableRegistry::getTableLocator()->get('ReportCards.ReportCardSubjects');
 
         return $query
             ->find('list', [
@@ -516,7 +521,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $extra['options']['sortWhitelist'] = $sortList;
 
         // by default sorting by EducationSubjectsOrder followed by EducationGradesOrder
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $sortable = array_key_exists('sort', $requestQuery) ? true : false;
 
         if (!$sortable) {
@@ -580,8 +585,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         /**POCOR-6768 starts - added innerjoin to get correct student records*/
-        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-        $encodedSubjectId = $this->request->params['pass'][1];
+        $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
+        $encodedSubjectId = $this->request->getParam('pass')[1];
         $decodedSubjectId = $this->paramsDecode($encodedSubjectId);
         $subjectId = $decodedSubjectId['id'];
         $getClassesObj = $InstitutionClassSubjects->find()
@@ -595,14 +600,14 @@ class InstitutionSubjectsTable extends ControllerActionTable
             }
         }
 
-        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         $query->contain([
             'Classes.ClassesSecondaryStaff',
             'Teachers',
             'Rooms',
             'SubjectStudents'  => function ($q) use ($InstitutionClassStudents,  $classIds, $subjectId) {
                 return $q
-                    ->innerJoin([$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()], [
+                    ->innerJoin([$InstitutionClassStudents->getAlias() => $InstitutionClassStudents->getTable()], [
                         //'SubjectStudents.student_id = ' . $InstitutionClassStudents->aliasField('student_id'),
                         'SubjectStudents.institution_id = ' . $InstitutionClassStudents->aliasField('institution_id'),
                         'SubjectStudents.academic_period_id = ' . $InstitutionClassStudents->aliasField('academic_period_id'),
@@ -631,7 +636,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->fields['students']['data']['students'] = $entity->subject_students;
         $this->fields['past_teachers']['data'] = $this->getPastTeachers($entity);
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $configureStudentName = $ConfigItems->value("configure_student_name");
         $this->fields['students']['data']['configure_student_name'] = $configureStudentName;
         return $entity;
@@ -699,7 +704,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ->toArray();
 
         $ClassGrades = $this->InstitutionClassGrades;
-        $query = $this->request->query;
+        $query = $this->request->getQuery();
 
         // $selectedClassId = isset($query['class_id']) && !empty($query['class_id']) ? $query['class_id'] : '';
         //POCOR-7110
@@ -737,13 +742,14 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         // $className = isset($request->query) ? $request->query['class_id'] : $request['data']['InstitutionSubjects']['class_name'];
         $className = '';
-        $className = $request['data']['InstitutionSubjects']['class_name'];
+        $request = $this->request;
+        $className = $request->getData('InstitutionSubjects')['class_name'];
         // $className = $request->query['class_id'];
 
         if ($className == '') {
             $className = $this->Session->read('is_className');
         }
-
+        
         list($levelOptions, $selectedLevel) = array_values($this->getEducationGradeOptions($className));
 
         $attr['options'] = $levelOptions;
@@ -769,7 +775,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $Grade->aliasField('institution_class_id') => $className,
             ])
             ->toArray();
-
+        
         $selectedLevel = '';
 
         return compact('levelOptions', 'selectedLevel');
@@ -900,7 +906,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
         $institutionSubjectId = $entity->id;
 
         $query = $InstitutionClassSubjects
@@ -1062,7 +1068,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 'security_users_openemis_no_subject_teachers' => !empty($teacherData) ? $teacherData : NULL,
                 'security_users_openemis_no_students' =>  !empty($studentData) ? $studentData : NULL,
             ];
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             if (!empty($entity->modified_user_id)) {
                 $Webhooks->triggerShell('subject_update', ['username' => ''], $body);
             }
@@ -1166,7 +1172,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     'security_users_openemis_no_students' =>  !empty($studentData) ? $studentData : NULL,
                 ];
                 if ($this->action == 'add') {
-                    $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                    $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
                     if ($this->Auth->user()) {
                         $Webhooks->triggerShell('subject_create', ['username' => $username], $body);
                     }
@@ -1178,7 +1184,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $Staff = TableRegistry::get('Institution.Staff');
+        $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
         $query = $Staff->find('all')
             ->select([
                 'Users.id',
@@ -1219,17 +1225,17 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
-        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects'); //POCOR-6242
+        $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects'); //POCOR-6242
         $extra['excludedModels'] = [
-            $this->ClassSubjects->alias(),
-            $this->SubjectStudents->alias(),
-            $this->SubjectStaff->alias(),
-            $this->Classes->alias(),
-            $InstitutionClassSubjects->alias() //POCOR-6242
+            $this->ClassSubjects->getAlias(),
+            $this->SubjectStudents->getAlias(),
+            $this->SubjectStaff->getAlias(),
+            $this->Classes->getAlias(),
+            $InstitutionClassSubjects->getAlias() //POCOR-6242
         ];
 
         //check textbook
-        $InstitutionTextbooks = TableRegistry::get('Textbook.InstitutionTextbooks');
+        $InstitutionTextbooks = TableRegistry::getTableLocator()->get('Textbook.InstitutionTextbooks');
         $associatedTextbooksCount = $InstitutionTextbooks->find()
             ->where([
                 $InstitutionTextbooks->aliasField('education_subject_id') => $entity->education_subject_id,
@@ -1249,7 +1255,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 'institution_subjects_id' => !empty($entity->id) ? $entity->id : NULL,
             ];
             if ($this->action == 'remove') {
-                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
                 if ($this->Auth->user()) {
                     $username = $this->Auth->user()['username'];
                     $Webhooks->triggerShell('subject_delete', ['username' => $username], $body);
@@ -1337,7 +1343,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         if (isset($data['MultiSubjects'])) {
             foreach ($data['MultiSubjects'] as $key => $row) {
                 if (isset($row['education_subject_id']) && isset($row['subject_staff'])) {
-                    $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+                    $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
                     $results = $InstitutionSubjects->find('all')
                         ->where([
                             $InstitutionSubjects->aliasField('academic_period_id') => $academicPeriodId,
@@ -1352,7 +1358,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     if ($results) {
                         $subject = [];
                         foreach ($results as $k => $value) {
-                            $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+                            $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
                             $subject[] = $InstitutionClassSubjects->find('all')
                                 ->where([
                                     $InstitutionClassSubjects->aliasField('institution_class_id') => $className,
@@ -1388,7 +1394,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         if (strtolower($persona) == 'students') {
             // find the latest student status id of student in the class
-            $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
             $userData = $ClassStudents->find()
                 ->contain(['Users.Genders', 'StudentStatuses'])
                 ->where([
@@ -1401,7 +1407,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 ->first();
 
             if (empty($userData)) {
-                $this->Alert->warning($this->alias() . ".studentRemovedFromInstitution");
+                $this->Alert->warning($this->getAlias() . ".studentRemovedFromInstitution");
             } else {
                 $data['student_status_id'] = $userData->student_status_id;
                 $data['education_grade_id'] = $userData->education_grade_id;
@@ -1411,7 +1417,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         } else {
             $userData = $this->Institutions->Staff->find()->contain(['Users' => ['Genders']])->where(['staff_id' => $id])->first();
             if (empty($userData)) {
-                $this->Alert->warning($this->alias() . ".staffRemovedFromInstitution");
+                $this->Alert->warning($this->getAlias() . ".staffRemovedFromInstitution");
             } else {
                 $data['user'] = [];
             }
@@ -1452,7 +1458,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     private function getAcademicPeriodOptions($institutionId)
     {
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $conditions = [$InstitutionGrades->aliasField('institution_id') => $institutionId];
         // pr($InstitutionGrades->getAcademicPeriodOptions($this->Alert, $conditions));
         return $InstitutionGrades->getAcademicPeriodOptions($this->Alert, $conditions);
@@ -1472,7 +1478,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ->toArray();
         $data = [];
         if (!empty($gradeOptions)) {
-            $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+            $EducationGradesSubjects = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');
             /**
              * Do not check for the visible attribute in sql query,
              * message the data in the view file instead so that we could counter-check for
@@ -1552,7 +1558,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
      */
     protected function getTeacherOptions($entity)
     {
-        $Staff = TableRegistry::get('Institution.Staff');
+        $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
         $query = $Staff->find('all')
             ->select([
                 'Users.id',
@@ -1621,7 +1627,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         foreach ($entity->class_subjects as $classSubjects) {
             $classKeys[] = $classSubjects->institution_class_id;
         }
-        $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+        $EducationGradesSubjects = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');
         $grades = $EducationGradesSubjects
             ->find('list', [
                 'keyField' => 'id',
@@ -1633,7 +1639,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ])
             ->toArray();
 
-        $Students = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Students = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         if (!empty($grades)) {
             $conditions[$Students->aliasField('education_grade_id') . ' IN'] = $grades;
         }
@@ -1679,7 +1685,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
              * get the list of education_grade_id from the education_grades array
              */
             $grades = (new Collection($entity->education_grades))->extract('id')->toArray();
-            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
             /**
              * from the list of grades, find the list of subjects group by grades in (education_grades_subjects) where visible = 1
              */
@@ -1714,7 +1720,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     if (!empty($gradeSubject->education_subjects)) {
                         foreach ($gradeSubject->education_subjects as $subject) {
                             /*POCOR-6368 starts*/
-                            $institutionProgramGradeSubjects = TableRegistry::get('InstitutionProgramGradeSubjects')
+                            $institutionProgramGradeSubjects = TableRegistry::getTableLocator()->get('InstitutionProgramGradeSubjects')
                                 ->find()
                                 ->where([
                                     'InstitutionProgramGradeSubjects.education_grade_id' => $gradeSubject->id,
@@ -1744,7 +1750,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 /**
                  * for each education subjects, find the primary key of institution_classes using (entity->academic_period_id and institution_id and education_subject_id)
                  */
-                $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+                $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
                 $institutionSubjects = $InstitutionSubjects->find('list', [
                     'keyField' => 'id',
                     'valueField' => 'education_subject_id'
@@ -1768,7 +1774,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                  * else create a record in institution_subjects (InstitutionSubjects)
                  * and link to the subject in institution_class_subjects (InstitutionClassSubjects) with status 1
                  */
-                $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+                $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
                 $newSchoolSubjects = [];
 
                 foreach ($educationSubjects as $key => $educationSubject) {
@@ -1806,7 +1812,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     foreach ($newSchoolSubjects as $subject) {    //POCOR 5001
                         //POCOR-5932 starts
                         /*$institutionProgramGradeSubjects =
-                            TableRegistry::get('InstitutionProgramGradeSubjects')
+                            TableRegistry::getTableLocator()->get('InstitutionProgramGradeSubjects')
                             ->find('list')
                             ->where(['InstitutionProgramGradeSubjects.education_grade_id' => $subject->education_grade_id,
                                 'InstitutionProgramGradeSubjects.education_grade_subject_id' => $subject->education_subject_id,
@@ -1833,7 +1839,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             }
             //subject create webhook start----
             if ($entity->isNew()) {
-                $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+                $ClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
                 $bodyData = $ClassSubjects->find(
                     'all',
                     [
@@ -1912,7 +1918,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                             'security_users_openemis_no_subject_teachers' => !empty($teacherData) ? $teacherData : NULL,
                             'security_users_openemis_no_students' =>  !empty($studentData) ? $studentData : NULL,
                         ];
-                        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                        $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
                         if ($entity->created_user_id) {
                             $Webhooks->triggerShell('subject_create', ['username' => $username], $body);
                         }
@@ -1996,7 +2002,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $subjectId = $entity->id;
         $institutionId = $entity->institution_id;
         $periodId = $entity->academic_period_id;
-        $institutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+        $institutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
         $totalStudentCount = $institutionSubjectStudents->find()
             ->where([
                 $institutionSubjectStudents->aliasField('institution_subject_id') => $subjectId,
@@ -2024,10 +2030,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $genderId = 1; // male
         $institutionId = $entity->institution_id;
         $periodId = $entity->academic_period_id;
-        $institutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-        $users = TableRegistry::get('User.Users');
+        $institutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
+        $users = TableRegistry::getTableLocator()->get('User.Users');
         $totalMaleStudentCount = $institutionSubjectStudents->find()
-            ->leftJoin([$users->alias() => $users->table()], [
+            ->leftJoin([$users->getAlias() => $users->getTable()], [
                 $users->aliasField('id = ') . $institutionSubjectStudents->aliasField('student_id')
             ])
             ->where([
@@ -2048,10 +2054,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $genderId = 2; // female
         $institutionId = $entity->institution_id;
         $periodId = $entity->academic_period_id;
-        $institutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-        $users = TableRegistry::get('User.Users');
+        $institutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
+        $users = TableRegistry::getTableLocator()->get('User.Users');
         $totalFemaleStudentCount = $institutionSubjectStudents->find()
-            ->leftJoin([$users->alias() => $users->table()], [
+            ->leftJoin([$users->getAlias() => $users->getTable()], [
                 $users->aliasField('id = ') . $institutionSubjectStudents->aliasField('student_id')
             ])
             ->where([
@@ -2102,7 +2108,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function getSubjectsByClass($classId)
     {
-
         $classSubjects = $this->ClassSubjects
             ->find()
             ->contain(['InstitutionSubjects'])
@@ -2154,7 +2159,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         $query
             ->select([
@@ -2172,7 +2177,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
          * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
          * @ticket POCOR-6635 starts
          */
-        $encodedSubjectId = $this->request->params['pass'][1];
+        $encodedSubjectId = $this->request->getParams('pass')[1];
         if (!empty($encodedSubjectId)) {
             $query;
         } else {
@@ -2182,8 +2187,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 // GETTING ROOMS FOR EACH SUBJECT
-                $institutionRooms = TableRegistry::get('institution_rooms');
-                $institutionSubjectRooms = TableRegistry::get('institution_subjects_rooms');
+                $institutionRooms = TableRegistry::getTableLocator()->get('institution_rooms');
+                $institutionSubjectRooms = TableRegistry::getTableLocator()->get('institution_subjects_rooms');
                 $institutionRoomsRow = $institutionRooms
                     ->find()
                     ->select([
@@ -2191,10 +2196,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         $institutionRooms->aliasField('name')
                     ])
                     ->leftJoin(
-                        [$institutionSubjectRooms->alias() => $institutionSubjectRooms->table()],
+                        [$institutionSubjectRooms->getAlias() => $institutionSubjectRooms->getTable()],
                         [$institutionRooms->aliasField('id  = ') . $institutionSubjectRooms->aliasField('institution_room_id')]
                     )
-                    ->where([$institutionSubjectRooms->alias('institution_subject_id') => $row->institution_subject_id])
+                    ->where([$institutionSubjectRooms->getAlias('institution_subject_id') => $row->institution_subject_id])
                     ->first();
 
                 if (!empty($institutionRoomsRow)) {
@@ -2205,8 +2210,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 // GETTING ROOMS FOR EACH SUBJECT
 
                 // GET TEACHERS FOR EACH SUBJECT 
-                $institutionSubjectStaff = TableRegistry::get('institution_subject_staff');
-                $staffTable = TableRegistry::get('security_users');
+                $institutionSubjectStaff = TableRegistry::getTableLocator()->get('institution_subject_staff');
+                $staffTable = TableRegistry::getTableLocator()->get('security_users');
 
                 $institutionStaffTeachers = $staffTable
                     ->find()
@@ -2216,10 +2221,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         $staffTable->aliasField('last_name')
                     ])
                     ->innerJoin(
-                        [$institutionSubjectStaff->alias() => $institutionSubjectStaff->table()],
+                        [$institutionSubjectStaff->getAlias() => $institutionSubjectStaff->getTable()],
                         [$staffTable->aliasField('id  = ') . $institutionSubjectStaff->aliasField('staff_id')]
                     )
-                    ->where([$institutionSubjectStaff->alias('institution_subject_id') => $row->institution_subject_id])
+                    ->where([$institutionSubjectStaff->getAlias('institution_subject_id') => $row->institution_subject_id])
                     ->first();
 
                 if (!empty($institutionStaffTeachers)) {

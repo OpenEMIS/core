@@ -10,12 +10,13 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 
 class ScheduleTermsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_schedule_terms');
+        $this->setTable('institution_schedule_terms');
         parent::initialize($config);
 
         $this->belongsTo('Institutions', [
@@ -36,7 +37,7 @@ class ScheduleTermsTable extends ControllerActionTable
         $this->addBehavior('Schedule.Schedule');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator
@@ -117,7 +118,7 @@ class ScheduleTermsTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $institutionId = $this->Session->read('Institution.Institutions.id');
 
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         if (isset($requestQuery) && array_key_exists('period', $requestQuery)) {
             $selectedPeriodId = $requestQuery['period'];
         } else {
@@ -166,7 +167,7 @@ class ScheduleTermsTable extends ControllerActionTable
     }
 
     // OnUpdate Events
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -178,14 +179,14 @@ class ScheduleTermsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             return $this->updateDateRangeField('start_date', $attr, $request);
         }
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             return $this->updateDateRangeField('end_date', $attr, $request);
@@ -193,11 +194,11 @@ class ScheduleTermsTable extends ControllerActionTable
     }
 
     // Misc
-    private function updateDateRangeField($key, $attr, Request $request)
+    private function updateDateRangeField($key, $attr, ServerRequest $request)
     {
         $requestData = $request->data;
-        if (array_key_exists($this->alias(), $requestData) && array_key_exists('academic_period_id', $requestData[$this->alias()])) {
-            $selectedPeriodId = $requestData[$this->alias()]['academic_period_id'];
+        if (array_key_exists($this->getAlias(), $requestData) && array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
+            $selectedPeriodId = $requestData[$this->getAlias()]['academic_period_id'];
         } else {
             $selectedPeriodId = $this->AcademicPeriods->getCurrent();
         }
@@ -207,7 +208,7 @@ class ScheduleTermsTable extends ControllerActionTable
         $attr['date_options']['startDate'] = $selectedPeriod->start_date->format('d-m-Y');
         $attr['date_options']['endDate'] = $selectedPeriod->end_date->format('d-m-Y');
         
-        if (!array_key_exists($this->alias(), $requestData) || !array_key_exists($key, $requestData[$this->alias()])) {
+        if (!array_key_exists($this->getAlias(), $requestData) || !array_key_exists($key, $requestData[$this->getAlias()])) {
             if ($selectedPeriodId != $this->AcademicPeriods->getCurrent()) {
                 $attr['value'] = $selectedPeriod->start_date;
             } else {
