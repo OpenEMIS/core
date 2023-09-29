@@ -35,28 +35,45 @@ class FileUploadBehavior extends Behavior
         'allowable_file_types' => 'all'
     ];
 
-    public $fileImagesMap = array(
-        'jpeg'  => 'image/jpeg',
-        'jpg'   => 'image/jpeg',
-        'gif'   => 'image/gif',
-        'png'   => 'image/png'
-        // 'jpeg'=>'image/pjpeg',
-        // 'jpeg'=>'image/x-png'
-    );
+    public $fileImagesMap = [
+        'jpeg' => 'image/jpeg',
+        'jpg' => 'image/jpeg',
+        'gif' => 'image/gif',
+        'png' => 'image/png'
+    ];
 
-    public $fileDocumentsMap = array(
-        'rtf'   => 'text/rtf',
-        'txt'   => 'text/plain',
-        'csv'   => 'text/csv',
-        'pdf'   => 'application/pdf',
-        'ppt'   => 'application/vnd.ms-powerpoint',
-        'pptx'  => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        'doc'   => 'application/msword',
-        'docx'  => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'xls'   => 'application/vnd.ms-excel',
-        'xlsx'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'zip'   => 'application/zip',
-    );
+    public $fileDocumentsMap = [
+        'rtf' => 'text/rtf',
+        'txt' => 'text/plain',
+        'csv' => 'text/csv',
+        'pdf' => 'application/pdf',
+        'ppt' => 'application/vnd.ms-powerpoint',
+        'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'doc' => 'application/msword',
+        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'xls' => 'application/vnd.ms-excel',
+        'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'zip' => 'application/zip'
+    ];
+
+// Combine both image and document extensions into a single array
+    public $fileSignatureMap = [
+        'jpeg' => "\xFF\xD8\xFF",    // JPEG
+        'jpg' => "\xFF\xD8\xFF",     // JPEG
+        'gif' => "GIF",              // GIF
+        'png' => "\x89\x50\x4E\x47", // PNG
+        'rtf' => "{\\rtf",           // RTF
+        'txt' => null,               // Plain text (no specific signature)
+        'csv' => null,               // CSV (no specific signature)
+        'pdf' => "%PDF-",            // PDF
+        'ppt' => "\xD0\xCF\x11\xE0", // PPT (Magic number)
+        'pptx' => "PK\x03\x04",      // PPTX (Magic number)
+        'doc' => "\xD0\xCF\x11\xE0", // DOC (Magic number)
+        'docx' => "PK\x03\x04",      // DOCX (Magic number)
+        'xls' => "\xD0\xCF\x11\xE0", // XLS (Magic number)
+        'xlsx' => "PK\x03\x04",      // XLSX (Magic number)
+        'zip' => "PK\x03\x04"        // ZIP (Magic number)
+    ];
 
     public $fileTypesMap = [];
     private $allowableFileTypes = [];
@@ -65,6 +82,7 @@ class FileUploadBehavior extends Behavior
 
     public function initialize(array $config)
     {
+
         $this->config(array_merge($this->_defaultConfig, $config));
         $this->fileTypesMap = array_merge($this->fileImagesMap, $this->fileDocumentsMap);
 
@@ -171,7 +189,7 @@ class FileUploadBehavior extends Behavior
                         unset($data[$model->alias()][$fileContentField]);
                     }
                 } else {
-                    $entity->errors($fileContentField, ['Only the following formats are allowed: ' . $this->fileTypesForView()]);
+                    $entity->errors($fileContentField, ['Only the following formats are allowed: ' . $this->fileTypesForView() . ', check the type of the file please.']);
                     unset($data[$model->alias()][$fileContentField]);
                 }
             } elseif ($fileContentFieldRules->isEmptyAllowed() && !empty($file)) {
@@ -320,12 +338,27 @@ class FileUploadBehavior extends Behavior
 
     public function uploadedFileIsAllowed($file)
     {
-        $isValid = true;
-
-        if (isset($file['type']) && !in_array($file['type'], $this->allowableFileTypes)) {
-            $isValid = false;
+//        $this->_table->log(__FUNCTION__, 'debug');
+//        $this->_table->log($file, 'debug');
+        if(!isset($file['type'])){
+            return false;
         }
-        return $isValid;
+        if (isset($file['type']) && !in_array($file['type'], $this->allowableFileTypes)) {
+            return false;
+        }
+
+        $pathInfo = pathinfo($file['name']);
+        $fileExtension = strtolower($pathInfo['extension']);
+
+        if (isset($this->allowableFileTypes[$fileExtension]) && $this->fileSignatureMap[$fileExtension]) {
+            $expectedSignature = $this->fileSignatureMap[$fileExtension];
+            $fileContent = file_get_contents($file['tmp_name'], false, null, 0, strlen($expectedSignature));
+            if ($fileContent === $expectedSignature) {
+                return true;
+            }
+        }
+        return false;
+
     }
 
     public function uploadedFileSizeIsAcceptable($file)
