@@ -591,6 +591,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('openemis_no');//POCOR-7738
         $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'start_date', 'end_date', 'comment']);
     }
 
@@ -598,11 +599,35 @@ class StudentAdmissionTable extends ControllerActionTable
     {
         $value = '';
         if ($entity->has('user')) {
-            $value = $entity->user->name_with_id;
+            //POCOR-7738 start
+            if (($this->request->pass)[0] == "view"){
+                 $value = $entity->user->name; 
+            }
+            else{
+                 $value = $entity->user->name_with_id;
+            }
+            //POCOR-7738 end
         }
         return $value;
     }
-
+    //POCOR-7738 start
+    public function onGetOpenemisNo(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('user')) {
+            $value = $entity->user->openemis_no;
+        }
+        $encodedUserId = $this->paramsEncode(['id' => $entity->student_id]);
+        $url = [
+            'plugin' => 'Directory',
+            'controller' => 'Directories',
+            'action' => 'Directories',
+            'view',
+            $encodedUserId
+        ];
+        return $event->subject()->HtmlField->link($value, $url);
+    }
+    //POCOR-7738 end
     public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request)
     {
         if ($action == 'edit') {

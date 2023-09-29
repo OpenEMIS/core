@@ -184,7 +184,14 @@ class FieldOptionComponent extends Component
             return "FieldOption.AssetMakes";
         }elseif($key== "AssetModels" ){
             return "FieldOption.AssetModels";
-        }else{
+        //POCOR-7613 start
+        }elseif($key== "CaseTypes"){
+            return "Cases.CaseTypes";
+        }elseif($key== "CasePriorities" ){
+            return "Cases.CasePriorities";
+        }
+        //POCOR-7613 end
+        else{
            $className =  $FieldOptions->category.".".$key;
            return $className;
          }
