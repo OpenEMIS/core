@@ -712,6 +712,15 @@ class InstitutionController extends Controller
     public function reportCardCommentAdd(ReportCardCommentAdd $request, int $institutionId, int $classId)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'ReportCardComments', 'add'], ['institution_id' => $institutionId]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->institutionService->reportCardCommentAdd($request, $institutionId, $classId);
             
             if($data == 0){
@@ -736,6 +745,15 @@ class InstitutionController extends Controller
     public function reportCardCommentHomeroomAdd(ReportCardCommentHomeroomAdd $request, int $institutionId, int $classId)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'ReportCardComments', 'add'], ['institution_id' => $institutionId]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->institutionService->reportCardCommentHomeroomAdd($request, $institutionId, $classId);
             
             if($data == 0){
@@ -759,6 +777,16 @@ class InstitutionController extends Controller
     public function reportCardCommentPrincipalAdd(ReportCardCommentHomeroomAdd $request, int $institutionId, int $classId)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'ReportCardComments', 'add'], ['institution_id' => $institutionId]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
+
             $data = $this->institutionService->reportCardCommentPrincipalAdd($request, $institutionId, $classId);
             
             if($data == 0){
@@ -801,6 +829,16 @@ class InstitutionController extends Controller
     public function addCompetencyResults(CompetencyResultsAddRequest $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'StudentCompetencies', 'add'], ['institution_id' => $request['institution_id']??0]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
+
             $data = $this->institutionService->addCompetencyResults($request);
             
             if($data == 1){
@@ -823,6 +861,15 @@ class InstitutionController extends Controller
     public function addCompetencyComments(CompetencyCommentAddRequest $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'StudentCompetencyComments', 'add'], ['institution_id' => $request['institution_id']??0]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->institutionService->addCompetencyComments($request);
             
             if($data == 1){
@@ -846,6 +893,15 @@ class InstitutionController extends Controller
     public function addCompetencyPeriodComments(CompetencyPeriodCommentAddRequest $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'StudentCompetencyComments', 'add'], ['institution_id' => $request['institution_id']??0]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+            
             $data = $this->institutionService->addCompetencyPeriodComments($request);
             
             if($data == 1){
@@ -1211,6 +1267,16 @@ class InstitutionController extends Controller
     public function deleteClassAttendance(DeleteClassAttendanceRequest $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'StudentAttendances', 'delete'], ['institution_id' => $request['institution_id']]);
+
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            
+            //For POCOR-7772 End
+
             $data = $this->institutionService->deleteClassAttendance($request);
             if($data == 1){
                 return $this->sendSuccessResponse("Student attendance deleted successfully.");
@@ -1234,6 +1300,16 @@ class InstitutionController extends Controller
     public function deleteStudentAttendance(DeleteClassAttendanceRequest $request, $studentId)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'StudentAttendances', 'delete'], ['institution_id' => $request['institution_id']]);
+
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            
+            //For POCOR-7772 End
+
             $data = $this->institutionService->deleteStudentAttendance($request, $studentId);
             if($data == 1){
                 return $this->sendSuccessResponse("Student attendance deleted successfully.");
@@ -1297,6 +1373,17 @@ class InstitutionController extends Controller
     public function addStudentAssessmentItemResult(AssessmentItemResultRequest $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'Assessments', 'add'], ['institution_id' => $request['institution_id']]);
+
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            
+            //For POCOR-7772 End
+
+
             $data = $this->institutionService->addStudentAssessmentItemResult($request);
             
             if($data == 1){
@@ -1322,6 +1409,16 @@ class InstitutionController extends Controller
     public function addStudentBehaviour(StudentBehavioursRequest $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'StudentBehaviours', 'add'], ['institution_id' => $request['institution_id']]);
+
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            
+            //For POCOR-7772 End
+            
             $data = $this->institutionService->addStudentBehaviour($request);
             
             if($data == 1){
