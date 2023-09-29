@@ -1,3 +1,9 @@
+### [3.95.2] - 2023-09-28
+- Bug Fixed: OpenEMIS Core(Security): Security Fixes
+- Bug Fixed: Institutions > Survey > Forms: The date field for repeater form alignment seems to be out
+- Bug Fixed: Institutions > Positions > Import: The error message displaying is empty when importing institutions position fail
+- Bug Fixed: OpenEMIS Core(Security): Security Fixes Part 3
+
 ### [3.95.1] - 2023-09-26
 - Implemented: Create a config item to lock an account after "n" number of failed login attempts
 - Implemented: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 2
