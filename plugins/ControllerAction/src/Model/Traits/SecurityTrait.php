@@ -4,6 +4,7 @@ namespace ControllerAction\Model\Traits;
 use Cake\Utility\Security;
 use Cake\Controller\Exception\SecurityException;
 use Cake\ORM\Table;
+use Cake\Log\Log;
 
 trait SecurityTrait
 {
@@ -59,37 +60,64 @@ trait SecurityTrait
 
     public function paramsDecode($params)
     {
+        $cookieName = 'session_token';
+        $desiredPath = "/";
         $paramArr = explode('.', $params);
         if (count($paramArr) != 2) {
             throw new SecurityException('Wrong number of segments');
         }
-        list($payload, $signature) = $paramArr;
-        $payload = $this->urlsafeB64Decode($payload);
-        $signature = $this->urlsafeB64Decode($signature);
-
+        $payload = $this->urlsafeB64Decode($paramArr[0]);
+        $signature = $this->urlsafeB64Decode($paramArr[1]);
         $payload = json_decode($payload, true);
-        $sessionId = Security::hash('session_id', 'sha256');
-        if (!isset($payload[$sessionId])) {
-            throw new SecurityException('No session id in payload');
-        } else {
-            $checkPayload = $payload;
-            $checkPayload[$sessionId] = session_id();
-            $checkSignature = Security::hash(json_encode($checkPayload), 'sha256', true);
-            if ($signature !== $checkSignature) {
-                throw new SecurityException('Query String has been tampered');
+        $params = $payload;
+        foreach ($_COOKIE as $name => $value) {
+            if ($name === $cookieName) {
+                // Check if the cookie's path matches the desired path
+                $cookiePath = $_SERVER['REQUEST_URI']; // Get the current request path
+                if ($cookiePath === $desiredPath) {
+                    // Select this cookie
+                    $selectedSessionToken = $value;
+                    break; // Exit the loop once the desired cookie is found
+                }
             }
         }
-        unset($payload[$sessionId]);
+        $sessionToken = $selectedSessionToken ?? null;
+        $params['session_token'] = $sessionToken;
+        $jsonParamWithSessionTocken = json_encode($params);
+        $new_signature = Security::hash($jsonParamWithSessionTocken, 'sha256', true);
+        if ($signature !== $new_signature) {
+            throw new SecurityException('Wrong session token');
+        }
         return $payload;
     }
 
     public function paramsEncode($params = [])
     {
-        $sessionId = Security::hash('session_id', 'sha256');
-        $params[$sessionId] = session_id();
+        $sessionToken = bin2hex(random_bytes(32));
+        $cookieName = 'session_token';
+        $desiredPath = "/";
+        // Set the session token as an HTTP cookie
+        setcookie($cookieName, $sessionToken, [
+            'expires' => 0,
+            'path' => $desiredPath,
+            'secure' => true,
+            'httponly' => true
+        ]);
+        foreach ($_COOKIE as $name => $value) {
+            if ($name === $cookieName) {
+                $cookiePath = $_SERVER['REQUEST_URI']; // Get the current request path
+                if ($cookiePath === $desiredPath) {
+                    $selectedSessionToken = $value;
+                    break; // Exit the loop once the desired cookie is found
+                }
+            }
+        }
+        $sessionToken = $selectedSessionToken ?? null;
         $jsonParam = json_encode($params);
         $base64Param = $this->urlsafeB64Encode($jsonParam);
-        $signature = Security::hash($jsonParam, 'sha256', true);
+        $params['session_token'] = $sessionToken;
+        $jsonParamWithSessionTocken = json_encode($params);
+        $signature = Security::hash($jsonParamWithSessionTocken, 'sha256', true);
         $base64Signature = $this->urlsafeB64Encode($signature);
         return "$base64Param.$base64Signature";
     }
