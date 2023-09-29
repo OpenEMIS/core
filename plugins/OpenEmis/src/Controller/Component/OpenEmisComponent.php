@@ -87,7 +87,7 @@ class OpenEmisComponent extends Component
             $controller->set('SystemLayout_rightPanel', 'width: 90%');
         }
         if (!file_exists(CONFIG . 'datasource.php')) {
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $footer = $ConfigItems->value('footer');
             $controller->set('footerText', $footer);
         }

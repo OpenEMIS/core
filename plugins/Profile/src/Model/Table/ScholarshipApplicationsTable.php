@@ -22,7 +22,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     private $interestRateOptions = [];
     private $currency = '';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -50,7 +50,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

@@ -23,7 +23,7 @@ class SpecialNeedsBehavior extends Behavior
         'Directories' => 'Directory.Directories.name'
     ];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 100];
@@ -38,13 +38,13 @@ class SpecialNeedsBehavior extends Behavior
 
         // Breadcrumbs
         $navigation = $model->Navigation;
-        $oldTitle = $model->getHeader($model->alias());
-        $newTitle = $this->_tabFeatures[$model->alias()];
+        $oldTitle = $model->getHeader($model->getAlias());
+        $newTitle = $this->_tabFeatures[$model->getAlias()];
         $newTitle = $model->getHeader($newTitle);
         $navigation->substituteCrumb($oldTitle, $newTitle);
 
         // Header
-        $session = $model->request->session();
+        $session = $model->request->getSession();
         $sessionKey = $this->_sessionReadKeys[$controllerName];
         $username = $session->read($sessionKey);
         $postfix = $newTitle;
@@ -55,7 +55,7 @@ class SpecialNeedsBehavior extends Behavior
         $tabElements = $this->getSpecialNeedsTab();
         $tabElements = $controller->TabPermission->checkTabPermission($tabElements);
         $controller->set('tabElements', $tabElements);
-        $controller->set('selectedAction', $model->alias());
+        $controller->set('selectedAction', $model->getAlias());
     }
 
     public function getSpecialNeedsTab()

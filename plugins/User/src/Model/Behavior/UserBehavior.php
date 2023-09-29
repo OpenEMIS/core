@@ -328,7 +328,7 @@ class UserBehavior extends Behavior
             case 'Directories':
                 $tableClass = get_class($this->_table);
                 $userType = $tableClass::OTHER;
-                $session = $this->_table->request->session();
+                $session = $this->_table->request->getSession();
                 if ($session->check('Directories.advanceSearch.belongsTo.user_type')) {
                     $userType = $session->read('Directories.advanceSearch.belongsTo.user_type');
                 }

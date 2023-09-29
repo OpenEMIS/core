@@ -13,18 +13,23 @@ class ScholarshipsDirectoryController extends PageController
 {
     use OptionsTrait;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Profile.ScholarshipsDirectory');
         $this->loadModel('Education.EducationFieldOfStudies');
         $this->loadModel('Configuration.ConfigItems');
-        $this->Page->loadElementsFromTable($this->ScholarshipsDirectory);
+        if ($this->Page !== null && $this->ScholarshipsDirectory !== null) {
+            $this->Page->loadElementsFromTable($this->ScholarshipsDirectory);
+        }
 
-        $this->Page->disable(['add', 'edit', 'delete']);
+        if ($this->Page !== null) {
+            $this->Page->disable(['add', 'edit', 'delete']);
+        }
+
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderFieldOfStudies'] = 'onRenderFieldOfStudies';
@@ -204,5 +209,10 @@ class ScholarshipsDirectoryController extends PageController
         if ($page->is(['index', 'view'])) {
             return $entity->duration . ' ' . __('Years');
         }
+    }
+
+    public function beforeRender(Event $event)
+    {
+        $this->viewBuilder()->setHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
     }
 }

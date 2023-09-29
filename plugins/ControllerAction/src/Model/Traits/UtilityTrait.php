@@ -161,7 +161,7 @@ trait UtilityTrait
                     }
                 }
             } else { // normal array
-                $label = __($val);
+                $label = __((string)$val);
                 if (strlen($id) > 0) {
                     $options[$id] = ['value' => $id, 'text' => $label];
                 }

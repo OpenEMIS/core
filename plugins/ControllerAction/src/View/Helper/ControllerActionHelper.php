@@ -164,9 +164,9 @@ class ControllerActionHelper extends Helper
     public function locale($locale = null)
     {
         if (!empty($locale)) {
-            return I18n::setLocale($locale);
+            return I18n::getLocale($locale);
         } else {
-            return I18n::setLocale();
+            return I18n::getLocale();
         }
     }
 
@@ -200,7 +200,7 @@ class ControllerActionHelper extends Helper
 
                 if (!in_array($type, $excludedTypes)) {
                     if (is_null($table)) {
-                        $table = TableRegistry::get($attr['className']);
+                        $table = TableRegistry::getTableLocator()->get($attr['className']);
                     }
 
                     // attach event to get labels for fields
@@ -374,6 +374,7 @@ class ControllerActionHelper extends Helper
             $pageOptions = $config['pageOptions'];
             if (!empty($pageOptions)) {
                 $html .= $this->Form->input('Search.limit', [
+                    'type' =>'select',
                     'label' => false,
                     'options' => $pageOptions,
                     'onchange' => "$(this).closest('form').submit()",
@@ -381,7 +382,6 @@ class ControllerActionHelper extends Helper
                 ]);
             }
         }
-        // echo "<pre>";print_r($html);die;
         //ENDS: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         return $html;
     }
@@ -433,7 +433,7 @@ class ControllerActionHelper extends Helper
                 $options = isset($_fieldAttr['attr']) ? $_fieldAttr['attr'] : array();
 
                 if (is_null($table)) {
-                    $table = TableRegistry::get($attr['className']);
+                    $table = TableRegistry::getTableLocator()->get($attr['className']);
                 }
 
                 // attach event to get labels for fields
@@ -548,7 +548,7 @@ class ControllerActionHelper extends Helper
                 $options = isset($_fieldAttr['attr']) ? $_fieldAttr['attr'] : array();
 
                 if (is_null($table)) {
-                    $table = TableRegistry::get($attr['className']);
+                    $table = TableRegistry::getTableLocator()->get($attr['className']);
                 }
 
                 // attach event to get labels for fields

@@ -19,13 +19,13 @@ class CsvBehavior extends Behavior
         'pages' => []
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
+        $this->setConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->setConfig('excludes')));
         if (!array_key_exists('filename', $config)) {
-            $this->config('filename', $this->_table->alias());
+            $this->getConfig('filename', $this->_table->getAlias());
         }
-        $folder = WWW_ROOT . $this->config('folder');
+        $folder = WWW_ROOT . $this->setConfig('folder');
 
         if (!file_exists($folder)) {
             umask(0);

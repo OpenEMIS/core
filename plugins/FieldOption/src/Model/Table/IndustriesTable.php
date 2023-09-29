@@ -5,9 +5,9 @@ use App\Model\Table\ControllerActionTable;
 
 class IndustriesTable extends ControllerActionTable {
 
-	public function initialize(array $config)
+	public function initialize(array $config): void
     {
-        $this->table('industries');
+        $this->setTable('industries');
         parent::initialize($config);
     
         $this->addBehavior('FieldOption.FieldOption');

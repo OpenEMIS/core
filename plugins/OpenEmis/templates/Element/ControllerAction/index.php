@@ -9,7 +9,8 @@ $table = $ControllerAction['table'];
 $tableHeaders = $this->ControllerAction->getTableHeaders($ControllerAction['fields'], $table->getAlias(), $dataKeys);
 
 $displayAction = is_array($indexButtons) ? count($indexButtons) : $indexButtons->count() > 0;
-$displayReorder = isset($reorder) && $reorder && $data->count() > 1;
+//$displayReorder = isset($reorder) && $reorder && $data->count() > 1;//commnet cakephp4
+$displayReorder = isset($reorder) && $reorder;
 
 if ($displayAction) {
 	$tableHeaders[] = [__('Actions') => ['class' => 'cell-action']];
