@@ -64,7 +64,7 @@ $icon = strpos($_productName, 'School') !== false ? '_school' : '';
 			?>
 			
 			<?php 
-			echo $this->Form->create('Users', [
+			echo $this->Form->create($users, [
 				'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'postForgotPassword'],
 				'class' => 'form-horizontal'
 			]);
@@ -73,11 +73,11 @@ $icon = strpos($_productName, 'School') !== false ? '_school' : '';
 			<div class="form-description">
 				<?= __('To reset your password, enter the email address or username you used in this system. A link will be emailed to you which will let you reset your password.') ?>
 			</div>
-
+			<div class="input text">
 			<?php 
 			echo $this->Form->input('username', ['placeholder' => __('Username or Email'), 'label' => false]);
 			?>
-
+			</div>
 			<div class="form-group">
 				<?= $this->Form->button(__('Reset Password'), ['type' => 'submit', 'name' => 'submit', 'class' => 'btn btn-primary btn-login']) ?>
 			</div>

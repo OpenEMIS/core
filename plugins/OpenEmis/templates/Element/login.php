@@ -66,22 +66,35 @@ $icon = strpos($_productName, 'School') !== false ? '_school' : '';
 				'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin'],
 				'class' => 'form-horizontal'
 			]);
+			?>
+			<div class="input text">
+			<?php
 			if ($enableLocalLogin) {
-				echo $this->Form->input('username', ['placeholder' => __('Username'), 'label' => false, 'value' => $username]);
-				echo $this->Form->input('password', ['placeholder' => __('Password'), 'label' => false, 'value' => $password]);
+				echo $this->Form->input('username', ['type'=>'text', 'placeholder' => __('Username'), 'label' => false, 'value' => $username]);
 			}
 			?>
+			</div>
+			<div class="input password">
+			<?php
+			if ($enableLocalLogin) {
+				echo $this->Form->input('password', ['type'=>'password', 'placeholder' => __('Password'), 'label' => false, 'value' => $password]);
+			}
+			?>
+			</div>
 			<?php
 				if (isset($showLanguage) && $showLanguage) :
 			?>
 				<div class="input-select-wrapper">
+				<div class="input select">
 				<?= $this->Form->input('System.language', [
+						'type' => 'select',
 						'label' => false,
 						'options' => $languageOptions,
 						'value' => $htmlLang,
 						'onchange' => "$('#reload').click()"
 					]);
 				?>
+				</div>
 				</div>
 			<?php endif;?>
 			<div class="form-group">
@@ -107,13 +120,16 @@ $icon = strpos($_productName, 'School') !== false ? '_school' : '';
 			<hr />
 			<?php endif;?>
 				<div class="input-select-wrapper sso-options">
+				<div class="input select">
 				<?php
 					echo $this->Form->input('idp', [
+						'type' => 'select',
 						'options' => $authentications,
 						'label' => false,
 						'onchange' => 'window.document.location.href=this.options[this.selectedIndex].value;'
 					]);
 				?>
+				</div>
 				</div>
 			<?php endif; ?>
 

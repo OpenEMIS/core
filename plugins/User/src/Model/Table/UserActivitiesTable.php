@@ -5,7 +5,7 @@ use App\Model\Table\AppTable;
 use Cake\Event\Event;
 
 class UserActivitiesTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
         parent::initialize($config);
 
 		$this->belongsTo('Users', 		['className' => 'User.Users', 'foreignKey'=>'security_user_id']);

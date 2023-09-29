@@ -64,7 +64,7 @@ $icon = strpos($_productName, 'School') !== false ? '_school' : '';
 			?>
 			
 			<?php 
-			echo $this->Form->create(null, [
+			echo $this->Form->create($users, [
 				'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'postForgotUsername'],
 				'class' => 'form-horizontal'
 			]);
@@ -73,11 +73,11 @@ $icon = strpos($_productName, 'School') !== false ? '_school' : '';
 			<div class="form-description">
 				<?= __('To recover your username, enter the email address you use in this system.') ?>
 			</div>
-
+			<div class="input text">
 			<?php 
 			echo $this->Form->input('username', ['placeholder' => __('Email'), 'label' => false, 'value' => $username]);
 			?>
-
+			</div>
 			<div class="form-group">
 				<?= $this->Form->button(__('Recover Username'), ['type' => 'submit', 'name' => 'submit', 'class' => 'btn btn-primary btn-login']) ?>
 			</div>
