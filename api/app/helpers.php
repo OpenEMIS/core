@@ -179,18 +179,40 @@ if(!function_exists('checkAccess')){
 		}
 	}
 	
-	if(!function_exists('getAccessPermission')){
-		function getAccessPermission($params = []){
+	if(!function_exists('checkPermission')){
+		function checkPermission($params = [], $additionalParams = []){
+			
+			$permissions = checkAccess($params); //Fetching role and permissions.
 
-			$permissions = checkAccess($params);
-            if(JWTAuth::user()->id > 2){
+            if(JWTAuth::user()->id > 2){ //Checking if not admin.
                 if($permissions){
-                    if(!isset($permissions['permissions']['Institutions']['Institutions']['index'])){
-                        return false;
-                    } else {
-                    	return true;
+                    if(isset($permissions['permissions'][$params[0]])){
+                    	if(isset($permissions['permissions'][$params[0]][$params[1]])){
+                    		
+                    		if(isset($permissions['permissions'][$params[0]][$params[1]][$params[2]]) && isset($params[2])){
+                    			
+
+                    			if(count($additionalParams) > 0) {
+                    				if(isset($additionalParams['institution_id'])){
+                    					if(in_array($additionalParams['institution_id'], $permissions['institutionIds'])){
+                    						return true;
+                    					} else {
+                    						return false;
+                    					}
+                    					
+                    				} else {
+                    					return false;
+                    				}
+                    			} else {
+                    				return true;
+                    			}
+                    		}
+                    	}
                     }
+                    
+                    return false;
                 } else {
+                	
                     return false;
                 }  
             } else {

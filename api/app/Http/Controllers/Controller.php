@@ -60,4 +60,16 @@ class Controller extends BaseController
             config('constantvalues.statusCodes.deleteError')
         );
     }
+
+
+    public function sendAuthorizationErrorResponse($message = '', $data = [])
+    {
+        return response()->json(
+            [
+                'message' => "You are not authorized to access this API.",
+                'data' => $data,
+            ],
+            403
+        );
+    }
 }
