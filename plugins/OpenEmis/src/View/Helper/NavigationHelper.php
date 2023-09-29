@@ -16,8 +16,6 @@ class NavigationHelper extends Helper
     public function printNavigation($navigations)
     {
         $serverRequest = new ServerRequest();
-        //echo "<pre>"; print_r($navigations); die;
-        // Processing variables
         $parentStack = [];
         $html = '';
         $index = 1;
@@ -30,8 +28,6 @@ class NavigationHelper extends Helper
         $ul = '<ul id="nav-menu-%s" class="nav %s" role="tabpanel" data-level="%s">';
         $class = 'nav-level-' . $level . ' collapse';
         $html .= sprintf($ul, $index++, ($class.' in'), $level);
-        //$controller = $this->request->params['controller'];
-        //$action = $this->request->params['action'];
         $controller = $this->_View->getRequest()->getParam('controller');
         $action = $this->_View->getRequest()->getParam('action');
         $pass = [];

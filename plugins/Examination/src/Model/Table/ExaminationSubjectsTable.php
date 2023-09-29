@@ -13,7 +13,7 @@ use App\Model\Table\AppTable;
 
 class ExaminationSubjectsTable extends AppTable {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
@@ -52,7 +52,7 @@ class ExaminationSubjectsTable extends AppTable {
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

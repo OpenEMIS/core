@@ -10,9 +10,9 @@ use Cake\Event\Event;
 
 class SpecialNeedsTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('special_need_types');
+        $this->setTable('special_need_types');
 
         parent::initialize($config);
         

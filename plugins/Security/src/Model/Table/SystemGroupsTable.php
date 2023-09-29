@@ -18,9 +18,9 @@ class SystemGroupsTable extends ControllerActionTable
     use MessagesTrait;
     use HtmlTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_groups');
+        $this->SetTable('security_groups');
         parent::initialize($config);
 
         $this->hasMany('Roles', ['className' => 'Security.SecurityRoles', 'dependent' => true]);
@@ -85,7 +85,7 @@ class SystemGroupsTable extends ControllerActionTable
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [

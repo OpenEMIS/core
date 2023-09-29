@@ -14,7 +14,7 @@ use Cake\Validation\Validator;
 class SpecialNeedsAssessmentsTable extends ControllerActionTable
 {
     const COMMENT_MAX_LENGTH = 350;
-    public function initialize(array $config): array
+    public function initialize(array $config): void
     {
         $this->SetTable('user_special_needs_assessments');
         parent::initialize($config);

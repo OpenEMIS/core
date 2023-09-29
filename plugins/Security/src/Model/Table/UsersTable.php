@@ -30,6 +30,9 @@ class UsersTable extends AppTable
         parent::initialize($config);
         $this->getEntityClass('User.User');
 
+        $this->belongsTo('Students', [
+    'foreignKey' => 'student_id', // Replace with your actual foreign key field
+]);
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
         $this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
         $this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
@@ -97,12 +100,11 @@ class UsersTable extends AppTable
     public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
     {
         if ($primary) {
-            $schema = $this->schema();
+            $schema = $this->getSchema();
             $fields = $schema->columns();
             foreach ($fields as $key => $field) {
                 //POCOR-6380 - added OR condition to unset pre-defined fields only for Administration >> Security> Users listing
-                //echo "<pre>";print_r($this->action);die();
-                if ($schema->column($field)['type'] == 'binary') {
+                if ($schema->getColumn($field)['type'] == 'binary') {
                     if ($this->table() == 'security_users' || $this->action == 'index') {
                         unset($fields[$key]);
                     }

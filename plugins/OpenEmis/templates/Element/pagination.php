@@ -7,8 +7,7 @@ $totalRecords = array_key_exists('count', $params) ? $params['count'] : 0;
 <div class="pagination-wrapper" ng-class="disableElement">
 	<?php
 	$totalPages = $params['pageCount'];
-
-	if ($totalPages > 1) :
+	if ($totalPages >1) :
 	?>
 	<ul class="pagination">
 		<?php
@@ -20,22 +19,25 @@ $totalRecords = array_key_exists('count', $params) ? $params['count'] : 0;
 	<?php endif ?>
 	<div class="counter">
 		<?php
-		$defaultLocale = $this->ControllerAction->getLocale();
-		$this->ControllerAction->getLocale('en_US');
+		$defaultLocale = $this->ControllerAction->locale();
+		$this->ControllerAction->locale('en_US');
 		?>
 		<?php
-			$paginateCountString = $this->Paginator->counter((string) [
+			/*$paginateCountString = $this->Paginator->counter((string) [
 				'format' => '{{start}} {{end}} {{count}}'
-			]);
+			]);*/
+			$paginateCountString = $this->Paginator->counter('{{start}} {{end}} {{count}}');
 
 			$paginateCountArray = explode(' ', $paginateCountString);
-			$this->ControllerAction->getLocale($defaultLocale);
+			$this->ControllerAction->locale($defaultLocale);
 			echo sprintf(__('Showing %s to %s of %s records'), $paginateCountArray[0], $paginateCountArray[1], $paginateCountArray[2])
 		?>
 	</div>
 	<div class="display-limit">
 		<span><?= __('Display') ?></span>
-		<?= $this->ControllerAction->getPageOptions() ?>
+		<div class="input-select-wrapper">
+			<?= $this->ControllerAction->getPageOptions() ?>
+		</div>
 		<p><?= __('records') ?></p>
 	</div>
 </div>

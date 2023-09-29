@@ -3,11 +3,11 @@ use Cake\Utility\Inflector;
 ?>
 
 <div class="adv-search" ng-show="showAdvSearch" ng-init="showAdvSearch=<?= $showOnLoad?>">
-	<button class="btn btn-xs close" type="button" alt="Collapse" ng-click="removeAdvSearch()">×</button>
-	<div class="adv-search-label">
-		<i class="fa fa-search-plus"></i>
-		<label><?= __('Advanced Search')?></label>
-	</div>
+    <button class="btn btn-xs close" type="button" alt="Collapse" ng-click="removeAdvSearch()">×</button>
+    <div class="adv-search-label">
+        <i class="fa fa-search-plus"></i>
+        <label><?= __('Advanced Search')?></label>
+    </div>
 
     <?php
         /*
@@ -23,10 +23,10 @@ use Cake\Utility\Inflector;
                     <?= $this->Html->script('Area.tree/sg.tree.svc', ['block' => true]); ?>
                     <div class="select">
                         <label><?= $filters[$field]['label'] ?></label>
-                        <?
+                        <?php
                          $this->Form->unlockField("AdvanceSearch.$model.belongsTo.$field");
                          $this->Form->unlockField($field.'-tree');
-                        $userId = $this->request->session()->read('Auth.User.id');
+                        $userId = $this->request->getSession()->read('Auth.User.id');
                         ?>
                         <div
                             class="tree-form"
@@ -97,20 +97,20 @@ use Cake\Utility\Inflector;
         }
     ?>
 
-	<div class="search-action-btn">
-		<input type="hidden" name="AdvanceSearch[<?= $model ?>][isSearch]" value="" id="isSearch" />
-		<button class="btn btn-default btn-xs" href="" ng-click="submitSearch()"><?= __('Search') ?></button>
-		<button id="reset" class="btn btn-outline btn-xs" name="reset" value="Reset"><?= __('Reset') ?></button>
-		<?php
-			$this->Form->unlockField('reset');
-			$this->Form->unlockField('AdvanceSearch');
-		?>
-	</div>
+    <div class="search-action-btn">
+        <input type="hidden" name="AdvanceSearch[<?= $model ?>][isSearch]" value="" id="isSearch" />
+        <button class="btn btn-default btn-xs" href="" ng-click="submitSearch()"><?= __('Search') ?></button>
+        <button id="reset" class="btn btn-outline btn-xs" name="reset" value="Reset"><?= __('Reset') ?></button>
+        <?php
+            $this->Form->unlockField('reset');
+            $this->Form->unlockField('AdvanceSearch');
+        ?>
+    </div>
 
 </div>
 
 <?php if($advancedSearch):?>
 <h4 ng-class="disableElement">
-	<?= __('Search Results') ?>
+    <?= __('Search Results') ?>
 </h4>
 <?php endif;?>

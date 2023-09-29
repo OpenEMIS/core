@@ -13,9 +13,9 @@ use App\Model\Table\ControllerActionTable;
 
 class StudentBehaviourCategoriesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_behaviour_categories');
+        $this->setTable('student_behaviour_categories');
         parent::initialize($config);
 
         $this->hasMany('StudentBehaviours', ['className' => 'Student.StudentBehaviours', 'foreignKey' => 'student_behaviour_category_id']);
@@ -86,7 +86,7 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
     public function checkStudentRecords($entity)
     {
         $categoryId = $entity->id ?? 0;
-        $behaviorCategory = TableRegistry::get('student_behaviours');
+        $behaviorCategory = TableRegistry::getTableLocator()->get('student_behaviours');
 
         $data = $behaviorCategory->find()->where(['student_behaviour_category_id'=>$categoryId])->count(); 
         if($data > 0)

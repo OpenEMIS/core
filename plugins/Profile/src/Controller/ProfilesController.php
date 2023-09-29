@@ -332,7 +332,7 @@ class ProfilesController extends AppController
                 $name = $entity->first_name;
             } else {
                 $entity = $this->Profiles->get($loginUserId);
-                $name = $entity->name;
+                $name = $entity->first_name;
             }
             $header = $action == 'StudentResults' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
             $this->Navigation->addCrumb($name);
@@ -765,7 +765,7 @@ class ProfilesController extends AppController
 
     public function getProfessionalTabElements($options = [])
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $isStudent = $session->read('Auth.User.is_student');
         $isStaff = $session->read('Auth.User.is_staff');
 

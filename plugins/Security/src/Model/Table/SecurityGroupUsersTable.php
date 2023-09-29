@@ -255,9 +255,9 @@ class SecurityGroupUsersTable extends AppTable {
                     $this->Users->aliasField('last_name'),
                     $this->Users->aliasField('preferred_name')
                 ])
-                ->contain([$this->Users->alias()])
+                ->contain([$this->Users->getAlias()])
                 //POCOR-5688 starts
-                ->leftJoin([$this->SecurityRoles->alias() => $this->SecurityRoles->table()], [
+                ->leftJoin([$this->SecurityRoles->getAlias() => $this->SecurityRoles->getTable()], [
                     $this->SecurityRoles->aliasField('id =') . $this->aliasField('security_role_id')
                 ])
                 ->order([

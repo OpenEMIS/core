@@ -266,8 +266,8 @@ class InstitutionShiftsTable extends ControllerActionTable
     public function onGetShiftOptionId(Event $event, Entity $entity)
     {
         if ($this->action == 'index') {
-            $ControllerActionHelper = $event->subject();
-            $htmlHelper = $event->subject()->Html;
+            $ControllerActionHelper = $event->getSubject();
+            $htmlHelper = $event->getSubject()->Html;
             $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Shifts', 'view'];
             $url[] = $ControllerActionHelper->paramsEncode(['id' => $entity->id]);
             return $htmlHelper->link(__($entity->shift_option->name), $url);
@@ -276,10 +276,10 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function onGetInstitutionId(Event $event, Entity $entity)
     {
-        $ControllerActionHelper = $event->subject();
-        return $event->subject()->Html->link($entity->institution->name, [
-            'plugin' => $this->controller->plugin,
-            'controller' => $this->controller->name,
+        $ControllerActionHelper = $event->getSubject();
+        return $event->getSubject()->Html->link($entity->institution->name, [
+            'plugin' => $this->controller->getPlugin(),
+            'controller' => $this->controller->getName(),
             'action' => 'dashboard',
             $ControllerActionHelper->paramsEncode(['id' => $entity->institution_id])
         ]);

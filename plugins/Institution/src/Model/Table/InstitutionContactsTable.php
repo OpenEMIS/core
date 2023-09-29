@@ -5,16 +5,16 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 
 class InstitutionContactsTable extends ControllerActionTable {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     { 
-        $this->table('institutions');
+        $this->SetTable('institutions');
         parent::initialize($config);
         /**
          * fieldOption tables
@@ -32,7 +32,7 @@ class InstitutionContactsTable extends ControllerActionTable {
 
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
-        $this->belongsTo('SecurityGroups', ['className' => 'Security.SystemGroups']);
+        //$this->belongsTo('SecurityGroups', ['className' => 'Security.SystemGroups']);
 
         $this->excludeDefaultValidations(['area_id', 'institution_provider_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_gender_id','area_administrative_id']); //POCOR-6826
 
@@ -40,7 +40,7 @@ class InstitutionContactsTable extends ControllerActionTable {
         $this->toggle('remove', false);
         $this->addBehavior('Excel', ['excludes' => ['name','alternative_name','code','address','postal_code','contact_person','date_opened','year_opened','date_closed','year_closed','longitude','latitude','logo_name','logo_content','shift_type','classification','area_id','area_administrative_id','institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','security_group_id'], 'pages' => ['view']]);    }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
 
         $validator
@@ -68,23 +68,31 @@ class InstitutionContactsTable extends ControllerActionTable {
         return $validator;
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
          $Navigation->substituteCrumb('Contacts', 'Contacts (Institution)');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $institutionId = null;
+        $institutionParam = $this->request->getParam('institutionId');
+        if ($institutionParam !== null) {
+            $institutionId = $this->paramsDecode($institutionParam);
+            $institutionId = $institutionId['id'];
 
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        } else {
+            $institutionId = $session->read('Institution.Institutions.id');
+        }
+
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $entity = $Institutions->get($institutionId);
         $institutionName = $entity->name;
 
@@ -105,9 +113,9 @@ class InstitutionContactsTable extends ControllerActionTable {
             }
         }
 
-        // prevent users from manually accessing other insitution's pages
-        if (isset($this->request->pass[1])) {
-            $passId = $this->paramsDecode($this->request->pass[1])['id'];
+        if ($this->request->getParam('pass.1') !=null) {
+            $passId = $this->paramsDecode($this->request->getParam('pass.1'));
+            $passId = $passId['id'];
             $id = $this->Session->read('Institution.Institutions.id');
             if ($passId != $id) {
                 $url = $this->url('view');
@@ -115,7 +123,6 @@ class InstitutionContactsTable extends ControllerActionTable {
                 $this->controller->redirect($url);
             }
         }
-
 
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Institutions','Contacts - Institution','General');       

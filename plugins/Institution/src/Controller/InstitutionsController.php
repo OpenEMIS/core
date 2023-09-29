@@ -1256,7 +1256,7 @@ class InstitutionsController extends AppController
                 'add'
             ];
 
-            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
             $this->Navigation->addCrumb($crumbTitle);
 
             $this->set('_edit', $_edit);
@@ -1572,18 +1572,18 @@ class InstitutionsController extends AppController
     public function Classes($subaction = 'index', $classId = null)
     {
         if ($subaction == 'edit') {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $roles = [];
             $classId = $this->ControllerAction->paramsDecode($classId);
             $institutionId = $this->getInstitutionId();
             if (!$this->AccessControl->isAdmin() && $institutionId) {
                 $userId = $this->Auth->user('id');
-                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+                $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
                 $AccessControl = $this->AccessControl;
                 $action = 'edit';
                 if (!$AccessControl->check(['Institutions', 'AllClasses', $action], $roles)) {
                     if ($AccessControl->check(['Institutions', 'Classes', $action], $roles)) {
-                        $ClassTable = TableRegistry::get('Institution.InstitutionClasses');
+                        $ClassTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
 
                         $classResults = $ClassTable
                             ->find('byAccess', [
@@ -1640,15 +1640,15 @@ class InstitutionsController extends AppController
             $session = $this->request->session();
             $roles = [];
             $institutionSubjectId = $this->ControllerAction->paramsDecode($institutionSubjectId);
-            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
             if (!$this->AccessControl->isAdmin() && $institutionId) {
                 $userId = $this->Auth->user('id');
-                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+                $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
                 $AccessControl = $this->AccessControl;
                 $action = 'edit';
                 if (!$AccessControl->check(['Institutions', 'AllSubjects', $action], $roles)) {
                     if ($AccessControl->check(['Institutions', 'Subjects', $action], $roles)) {
-                        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+                        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
                         $subjectRecord = $InstitutionSubjects->get($institutionSubjectId, ['contain' => ['Teachers']])->toArray();
                         if (in_array($userId, array_column($subjectRecord['teachers']), 'id')) {
                             $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
@@ -1717,13 +1717,13 @@ class InstitutionsController extends AppController
     public function Staff($pass = 'index')
     {
         if ($pass == 'add') {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $roles = [];
 
             if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')) {
                 $userId = $this->Auth->user('id');
                 $institutionId = $session->read('Institution.Institutions.id');
-                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+                $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
             $this->set('ngController', 'InstitutionsStaffCtrl as InstitutionStaffController');
             $this->set('_createNewStaff', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
@@ -8337,9 +8337,9 @@ class InstitutionsController extends AppController
      */
     private function getInstitutionId()
     {
-        $session = $this->request->session();
-        $institutionId = !empty($this->request->param('institutionId'))
-            ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id']
+        $session = $this->request->getSession();
+        $institutionId = !empty($this->request->getParam('institutionId'))
+            ? $this->ControllerAction->paramsDecode($this->request->getParam('institutionId'))['id']
             : $session->read('Institution.Institutions.id');
         return $institutionId;
     }

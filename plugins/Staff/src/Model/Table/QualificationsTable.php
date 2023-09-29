@@ -9,16 +9,16 @@ use Cake\I18n\Date;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
 
 class QualificationsTable extends ControllerActionTable
 {
-	public function initialize(array $config)
+	public function initialize(array $config): void
     {
-		$this->table('staff_qualifications');
+		$this->setTable('staff_qualifications');
 		parent::initialize($config);
 
 		$this->addBehavior('ControllerAction.FileUpload', [
@@ -61,14 +61,14 @@ class QualificationsTable extends ControllerActionTable
         ]);
 
 		// setting this up to be overridden in viewAfterAction(), this code is required
-		$this->behaviors()->get('ControllerAction')->config(
+		$this->behaviors()->get('ControllerAction')->setConfig(
 			'actions.download.show',
 			true
 		);
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportStaffQualifications']);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 
 		return $validator
@@ -111,7 +111,7 @@ class QualificationsTable extends ControllerActionTable
         // END: POCOR-6551 sort by level
 
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){
+        if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Qualifications','Staff - Professional');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -129,7 +129,7 @@ class QualificationsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getParam('controller') == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Qualifications','Staff - Professional');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -187,9 +187,14 @@ class QualificationsTable extends ControllerActionTable
         $this->setupFields($entity);
 	}
 
-    public function onUpdateFieldQualificationTitleId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldQualificationTitleId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        unset($request->query['title']);
+        $queryParams = $request->getQueryParams();
+        // Unset a specific parameter, for example 'title'
+        unset($queryParams['title']);
+
+        // Set the modified query parameters back to the request object
+        $request = $request->withQueryParams($queryParams);
         $attr['onChangeReload'] = 'changeQualificationTitleId';
         return $attr;
     }
@@ -208,11 +213,11 @@ class QualificationsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldQualificationLevel(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldQualificationLevel(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
-            if (array_key_exists('title', $this->request->query)) {
+            if (array_key_exists('title', $this->request->getQuery())) {
                 $qualificationTitle = $this->request->query('title');
             } else {
                 if (!empty($attr['entity'])) {
@@ -239,7 +244,7 @@ class QualificationsTable extends ControllerActionTable
         }
     }
 
-	public function onUpdateFieldGraduateYear(Event $event, array $attr, $action, Request $request)
+	public function onUpdateFieldGraduateYear(Event $event, array $attr, $action, ServerRequest $request)
     {
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $lowestYear = $ConfigItems->value('lowest_year');
@@ -255,7 +260,7 @@ class QualificationsTable extends ControllerActionTable
 		return $attr;
 	}
 
-    public function onUpdateFieldEducationFieldOfStudyId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationFieldOfStudyId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $fieldOfStudyOptions = $this->FieldOfStudies
             ->find('list')
@@ -277,15 +282,15 @@ class QualificationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldQualificationSpecialisations(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldQualificationSpecialisations(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
-            $requestData = $request->data;
+            $requestData = $request->getData();
             $fieldOfStudyId = 0;
 
-            if (array_key_exists($this->alias(), $requestData) && !empty($requestData[$this->alias()]['education_field_of_study_id'])) {
-                $fieldOfStudyId = $requestData[$this->alias()]['education_field_of_study_id'];
+            if (array_key_exists($this->getAlias(), $requestData) && !empty($requestData[$this->getAlias()]['education_field_of_study_id'])) {
+                $fieldOfStudyId = $requestData[$this->getAlias()]['education_field_of_study_id'];
             } else {
                 $entity = $attr['entity'];
                 if ($entity->has('education_field_of_study_id')) {
@@ -312,15 +317,15 @@ class QualificationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationSubjects(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationSubjects(Event $event, array $attr, $action, ServerRequest $request)
     {
         switch ($action) {
             case 'edit': case 'add':
-                $requestData = $request->data;
+                $requestData = $request->getData();
                 $fieldOfStudyId = 0;
 
-                if (array_key_exists($this->alias(), $requestData) && !empty($requestData[$this->alias()]['education_field_of_study_id'])) {
-                    $fieldOfStudyId = $requestData[$this->alias()]['education_field_of_study_id'];
+                if (array_key_exists($this->getAlias(), $requestData) && !empty($requestData[$this->getAlias()]['education_field_of_study_id'])) {
+                    $fieldOfStudyId = $requestData[$this->getAlias()]['education_field_of_study_id'];
                 } else {
                     $entity = $attr['entity'];
                     if ($entity->has('education_field_of_study_id')) {
@@ -331,7 +336,7 @@ class QualificationsTable extends ControllerActionTable
                 $subjectData = $this->EducationSubjects
                     ->find()
                     ->select([
-                        $this->EducationSubjects->aliasField($this->EducationSubjects->primaryKey()),
+                        $this->EducationSubjects->aliasField($this->EducationSubjects->getPrimaryKey()),
                         $this->EducationSubjects->aliasField('name'),
                         $this->EducationSubjects->aliasField('code')
                     ])
@@ -403,7 +408,7 @@ class QualificationsTable extends ControllerActionTable
     {
 		$tabElements = $this->controller->getProfessionalTabElements();
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
 	public function afterAction(Event $event, ArrayObject $extra)

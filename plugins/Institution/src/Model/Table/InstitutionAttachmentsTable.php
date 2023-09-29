@@ -16,13 +16,13 @@ class InstitutionAttachmentsTable extends ControllerActionTable
 {
 	use MessagesTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
 
         parent::initialize($config);
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-        $this->belongsTo('InstitutionAttachmentTypes', ['className' => 'InstitutionAttachmentTypes', 'foreignKey' => 'institution_attachment_type_id']);//POCOR-5067
+       // $this->belongsTo('InstitutionAttachmentTypes', ['className' => 'InstitutionAttachmentTypes', 'foreignKey' => 'institution_attachment_type_id']);//POCOR-5067 // comment in cakephp4
         $this->addBehavior('ControllerAction.FileUpload', [
             'size' => '2MB',
             'contentEditable' => false,
@@ -31,7 +31,7 @@ class InstitutionAttachmentsTable extends ControllerActionTable
         ]);
 
         if ($this->behaviors()->has('ControllerAction')) {
-            $this->behaviors()->get('ControllerAction')->config([
+            $this->behaviors()->get('ControllerAction')->setConfig([
                 'actions' => [
                     'download' => ['show' => true] // to show download on toolbar
                 ]
@@ -112,7 +112,7 @@ class InstitutionAttachmentsTable extends ControllerActionTable
     //START:POCOR-5067
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $InsAttachmentTypeTable = TableRegistry::get('institution_attachment_types');
+        $InsAttachmentTypeTable = TableRegistry::getTableLocator()->get('Institution.InstitutionAttachmentTypes');
         $InsAttachmentTypeOptions = $InsAttachmentTypeTable->find('list',['keyField'=>'id','valueField'=>'name'])->toArray();
         $this->fields['institution_attachment_type_id']['type'] = 'select';
         $this->fields['institution_attachment_type_id']['default'] = '1';
@@ -125,7 +125,7 @@ class InstitutionAttachmentsTable extends ControllerActionTable
             'name', 'institution_attachment_type_id','description','file_content',  'date_on_file'
         ]);
     }
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator->requirePresence('institution_attachment_type_id', 'create')->notEmpty('institution_attachment_type_id');
         return $validator;

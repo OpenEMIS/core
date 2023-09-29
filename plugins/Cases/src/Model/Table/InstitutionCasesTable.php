@@ -14,6 +14,7 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use Workflow\Model\Behavior\WorkflowBehavior;
+use Cake\Http\ServerRequest;
 
 class InstitutionCasesTable extends ControllerActionTable
 {
@@ -38,7 +39,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
         // $this->toggle('add', false);
 
-        $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+        $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
         $this->features = $WorkflowRules->getFeatureOptionsWithClassName();
 
         $this->addBehavior('Excel', ['pages' => ['index']]);
@@ -54,8 +55,8 @@ class InstitutionCasesTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //POCOR-7367::Start
-        $workflows = TableRegistry::get('workflows');
-        $workflowSteps = TableRegistry::get('workflow_steps');
+        $workflows = TableRegistry::getTableLocator()->get('workflows');
+        $workflowSteps = TableRegistry::getTableLocator()->get('workflow_steps');
         $wfData = $workflows->find()->where(['name' => 'Cases - General'])->first();
         $WFSdata = $workflowSteps->find()->where(['name' => 'Open','workflow_id'=>$wfData->id])->first();
         $entity->status_id = $WFSdata->id;
@@ -78,17 +79,19 @@ class InstitutionCasesTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
-            $linkedRecord = TableRegistry::get('Institution.InstitutionCaseRecords');
+            $linkedRecord = TableRegistry::getTableLocator()->get('Institution.InstitutionCaseRecords');
             $newCaseNumber = $entity->case_number . "-" . $entity->id;
             $this->updateAll(
                 ['case_number' => $newCaseNumber],
                 ['id' => $entity->id]
             );
             if ($entity->submit == 'save') {
-                if (is_null($this->request->query('feature'))) {
-                   $this->request->query['feature'] = 'StudentAttendances';
+                $requestData = $this->request->getQuery('feature');
+                if (empty($requestData)) {
+                    $this->request = $this->request->withQueryParams(['feature' => 'StudentAttendances']);
                 }
-                $features = $this->request->query['feature'];
+                
+                $features = $this->request->getQuery('feature');
 
                 $params['feature'] = $features;
                 $params['institution_case_id'] =  $entity->id;
@@ -130,7 +133,7 @@ class InstitutionCasesTable extends ControllerActionTable
                                             'created_user_id'=>$value['created_user_id'],
                                             'created'=>$value['created'],
                                             'case_number'=>$autoGenerateCaseNumber);
-                        $institutionCases=TableRegistry::get('Institution.InstitutionCases');
+                        $institutionCases=TableRegistry::getTableLocator()->get('Institution.InstitutionCases');
                         $caseEntity = $institutionCases->newEntity($newData);
                         if($institutionCases->save($caseEntity)){
                             $newCaseNumber =  $caseEntity->case_number . "-" .  $caseEntity->id;
@@ -173,12 +176,12 @@ class InstitutionCasesTable extends ControllerActionTable
             'after' => 'linked_records'
         ]);
 
-        if (is_null($this->request->getQuery('sort'))) {
-            $this->request->getQuery['sort'] = 'created';
-            $this->request->getQuery['direction'] = 'desc';
+        if (is_null($this->request->getQuery('sort'))) { // comment cakephp4
+            //$this->request->getQuery('sort') = 'created';
+            //$this->request->getQuery('direction') = 'desc';
         }
 
-        $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+        $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
         $featureOptions = $WorkflowRules->getFeatureOptions();
 
         $newFeatureOption = [];
@@ -197,21 +200,22 @@ class InstitutionCasesTable extends ControllerActionTable
             $selectedFeature = $this->request->getQuery('feature');
         } else {
             $selectedFeature = key($featureOptions);
-            $this->request->getQuery['feature'] = $selectedFeature;
+           // $this->request->getQuery('feature') = $selectedFeature; cakephp4
+            $this->request = $this->request->withQueryParams(['period' => $request->data[$this->getAlias()]['academic_period_id']]);         
         }
 
         $this->controller->set(compact('featureOptions', 'selectedFeature'));
 
         $selectedModel = $this->features[$selectedFeature];
-        $featureModel = TableRegistry::get($selectedModel);
-        $session = $this->request->session();
-        $requestQuery = $this->request->getQuery;
+        $featureModel = TableRegistry::getTableLocator()->get($selectedModel);
+        $session = $this->request->getSession();
+        $requestQuery = $this->request->getQuery();
         $institutionId = $session->read('Institution.Institutions.id');
 
         $params = new ArrayObject([
             'element' => ['filter' => ['name' => 'Cases.controls', 'order' => 2]],
             'options' => [],
-            'query' => $this->request->query
+            'query' => $this->request->getQuery()
         ]);
 
         $featureModel->dispatchEvent('InstitutionCase.onSetFilterToolbarElement', [$params, $institutionId], $featureModel);
@@ -243,14 +247,14 @@ class InstitutionCasesTable extends ControllerActionTable
             $extra['toolbarButtons']['help'] = $helpBtn;
         
     
-		// End POCOR-5188
+        // End POCOR-5188
         }}
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $selectedFeature = $requestQuery['feature'];
-        $featureModel = TableRegistry::get($this->features[$selectedFeature]);
+        $featureModel = TableRegistry::getTableLocator()->get($this->features[$selectedFeature]);
         $session = $this->Session;
         $username = $session->read('Auth.User');
         // if(strtolower($username['username']) == 'superrole' || strtolower($username['username']) == 'admin' || strtolower($username['username']) == 'administrator')
@@ -261,7 +265,7 @@ class InstitutionCasesTable extends ControllerActionTable
         // }
         $userId = $session->read('Auth.User.id');
         //POCOR-7437 start
-        if($this->request->params['controller']=="Profiles"){
+        if($this->request->getParam('controller')=="Profiles"){
             $query
             ->select([
                 $this->aliasField('id'),
@@ -283,7 +287,7 @@ class InstitutionCasesTable extends ControllerActionTable
             ])
             ->contain(['LinkedRecords'])
             ->innerJoin(
-                [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                 [
                     [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
                     //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
@@ -315,7 +319,7 @@ class InstitutionCasesTable extends ControllerActionTable
             ])
             ->contain(['LinkedRecords'])
             ->innerJoin(
-                [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                 [
                     [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
                      [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
@@ -346,7 +350,7 @@ class InstitutionCasesTable extends ControllerActionTable
             ])
             ->contain(['LinkedRecords'])
             ->innerJoin(
-                [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                 [
                     [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
                     //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
@@ -397,7 +401,7 @@ class InstitutionCasesTable extends ControllerActionTable
             if ($entity->has('linked_records')) {
                 if ($entity->linked_records[0]['record_id'] != 0) {//start POCOR-6210
                     //link Record count
-                    $caselinktable = TableRegistry::get('institution_case_links');
+                    $caselinktable = TableRegistry::getTableLocator()->get('institution_case_links');
                     $caseLinkCount = $caselinktable->find()->where(['parent_case_id'=>$entity->id])->count();
                     $attr['value'] = $caseLinkCount;
                 }
@@ -407,7 +411,7 @@ class InstitutionCasesTable extends ControllerActionTable
             $tableCells = [];
 
             if ($entity->has('linked_records')) {
-                $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+                $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
                 $featureOptions = $WorkflowRules->getFeatureOptions();
                 $featureAttr = $this->getSelectOptions('WorkflowRules.features');
 
@@ -418,7 +422,7 @@ class InstitutionCasesTable extends ControllerActionTable
                     $feature = $recordEntity->feature;
 
                     $className = $featureAttr[$feature]['className'];
-                    $recordModel = TableRegistry::get($className);
+                    $recordModel = TableRegistry::getTableLocator()->get($className);
                     $summary = $recordId;
                     $event = $recordModel->dispatchEvent('InstitutionCase.onSetCustomCaseSummary', [$recordId], $recordModel);
                     if ($event->isStopped()) {
@@ -464,8 +468,8 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function autoLinkRecordWithCases($linkedRecordEntity)
     {
-        $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
-        $linkedRecordModel = TableRegistry::get($linkedRecordEntity->source());
+        $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
+        $linkedRecordModel = TableRegistry::getTableLocator()->get($linkedRecordEntity->source());
         $registryAlias = $linkedRecordModel->registryAlias();
         $feature = $WorkflowRules->getFeatureByRegistryAlias($registryAlias);
 
@@ -672,11 +676,11 @@ class InstitutionCasesTable extends ControllerActionTable
     // POCOR-6170
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-		$institutionId = $this->Session->read('Institution.Institutions.id');
-        $assignee = TableRegistry::get('security_users');
+        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $assignee = TableRegistry::getTableLocator()->get('security_users');
 
         // for getting selected feature
-        $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+        $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
         $featureOptions = $WorkflowRules->getFeatureOptions();
         $newFeatureOption = [];
         //Order to follow what is defined at OptionsTrait
@@ -694,7 +698,7 @@ class InstitutionCasesTable extends ControllerActionTable
         }
         // for getting selected feature
 
-		// query start
+        // query start
         $query
         ->select([
             $this->aliasField('id'),
@@ -745,7 +749,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
         // when user select academic period , feature ,instituion class and grade filter 
         $requestQuery = $this->request->query;
-        $featureModel = TableRegistry::get($this->features[$selectedFeature]);
+        $featureModel = TableRegistry::getTableLocator()->get($this->features[$selectedFeature]);
 
         $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
     }
@@ -844,7 +848,7 @@ class InstitutionCasesTable extends ControllerActionTable
     }
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request){
        
-        if($request->getParam['controller']=="Profiles"){
+        if($request->getParam('controller')=="Profiles"){
             
             $institutionList = $this->Institutions
             ->find('list', [

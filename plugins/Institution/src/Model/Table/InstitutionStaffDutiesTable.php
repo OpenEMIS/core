@@ -116,7 +116,7 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
      */
     public function getStaffList () {
 
-        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $institutionId = $this->request->getSession()->read('Institution.Institutions.id');
         $Staff = TableRegistry::get('Institution.Staff');
         $staffOptions = array();
         $result = $Staff->find()
