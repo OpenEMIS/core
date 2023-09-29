@@ -2,27 +2,34 @@
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
-                $baseUrl = $this->Url->build([
-                    'plugin' => $this->request->params['plugin'],
-                    'controller' => $this->request->params['controller'],
-                    'action' => $this->request->params['action']
-                ]);
-                $template = $this->ControllerAction->getFormTemplate();
-                $this->Form->templates($template);
-
-                if (!empty($periodOptions)) {
-                    echo $this->Form->input('period', array(
+            $baseUrl = $this->Url->build([
+                'plugin' => $this->request->getParam('plugin'),
+                'controller' => $this->request->getParam('controller'),
+                'action' => $this->request->getParam('action')
+            ]);
+            $template = $this->ControllerAction->getFormTemplate();
+            $this->Form->templates($template); ?>
+            <?php   if (!empty($periodOptions)) { ?>
+                <div class="input select required">
+                    <div class="input-select-wrapper">
+                    <?php   echo $this->Form->input('period', array(
+                        'type' => 'select',
                         'class' => 'form-control',
                         'label' => false,
                         'options' => $periodOptions,
                         'default' => $selectedPeriod,
                         'url' => $baseUrl,
                         'data-named-key' => 'period'
-                    ));
-                }
+                    )); ?>
+                    </div>
+                </div>
+            <?php   } ?>  
 
-                if (!empty($outcomeOptions)) {
-                    echo $this->Form->input('outcome', array(
+            <?php   if (!empty($outcomeOptions)) { ?>
+                <div class="input select required">
+                    <div class="input-select-wrapper">
+                    <?php   echo $this->Form->input('outcome', array(
+                        'type' => 'select',
                         'class' => 'form-control',
                         'label' => false,
                         'options' => $outcomeOptions,
@@ -30,9 +37,10 @@
                         'url' => $baseUrl,
                         'data-named-key' => 'outcome',
                         'data-named-group' => 'period'
-                    ));
-                }
-            ?>
+                    )); ?>
+                    </div>
+                </div>
+            <?php   } ?>   
         </div>
     </div>
 <?php endif ?>

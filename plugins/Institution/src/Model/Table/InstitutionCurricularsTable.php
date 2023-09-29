@@ -19,13 +19,14 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Network\Session;
+use Cake\Http\ServerRequest;
 
 //POCOR-6673
 class InstitutionCurricularsTable extends ControllerActionTable
 {
     use MessagesTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -39,10 +40,10 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {   
-        $query = $this->request->query;
+        $query = $this->request->getQuery();
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $institutionId = $extra['institution_id'];
-        $selectedAcademicPeriodId = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriodId = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
        
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId);
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
@@ -60,11 +61,11 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $sortable = !is_null($this->request->query('sort')) ? true : false;
-        $session = $this->controller->request->session();
+        $sortable = !is_null($this->request->getQuery('sort')) ? true : false;
+        $session = $this->controller->getRequest()->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
-        $curricularStudent = TableRegistry::get('institution_curricular_students');
-        $users = TableRegistry::get('security_users');
+        $curricularStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStudents');
+        $users = TableRegistry::getTableLocator()->get('User.Users');
 
         $query->select([
                 'id',
@@ -89,7 +90,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
                 ]);
         }
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
-        $query = $this->request->query;
+        $query = $this->request->getQuery();
         $this->field('modified_user_id', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('modified', ['visible' => false]);
@@ -132,7 +133,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $this->setFieldOrder([
             'academic_period_id','name','category', 'curricular_type_id']);
         $entity->institution_curricular_id = $_SESSION['curricularId'];
-        $curricularStaff = TableRegistry::get('institution_curricular_staff');
+        $curricularStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStaff');
         $getStaff = $curricularStaff->find()->select(['staff_id'])
                     ->where([$curricularStaff->aliasField('institution_curricular_id') => $entity->institution_curricular_id]);
         $staff = [];
@@ -142,13 +143,13 @@ class InstitutionCurricularsTable extends ControllerActionTable
             }
         }
 
-        $InstitutionStaff = TableRegistry::get('institution_staff');
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $UserData = TableRegistry::get('User.Users');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $UserData = TableRegistry::getTableLocator()->get('User.Users');
         $session = $this->controller->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
-        $this->InstitutionCurriculars = TableRegistry::get('institution_curriculars');
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $this->InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $curriculardecode = $entity->institution_curricular_id;
         $selectedPeriod = $this->InstitutionCurriculars->get($curriculardecode)->academic_period_id;
         $join = [];
@@ -191,7 +192,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         
     }
 
-    public function onUpdateFieldCategory(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCategory(Event $event, array $attr, $action, ServerRequest $request)
     {
         $categories = array(1 =>'Curricular', 0=>'Extracurricular');
         $entity = $attr['entity'];
@@ -213,15 +214,15 @@ class InstitutionCurricularsTable extends ControllerActionTable
     }
 
 
-    public function onUpdateFieldCurricularTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCurricularTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $entity->institution_curricular_id = $_SESSION['curricularId'];
-        $categoryId = $this->request->data[$this->alias()]['category'];
+        $categoryId = $this->request->getData($this->getAlias())['category'];
         if($categoryId == null){
             $categoryId = $categoryData ? 0 : 1;
         }
-        $type = TableRegistry::get('curricular_types');
-        $this->InstitutionCurriculars = TableRegistry::get('institution_curriculars');
+        $type = TableRegistry::getTableLocator()->get('FieldOption.CurricularTypes');
+        $this->InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
         $getCurricularsType = $type->find('list')->where(['category'=>$categoryId])->toArray();
         if ($action == 'add') {
             $attr['type'] = 'chosenSelect';
@@ -239,15 +240,15 @@ class InstitutionCurricularsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $entity->institution_curricular_id = $_SESSION['curricularId'];
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
-        $this->InstitutionCurriculars = TableRegistry::get('institution_curriculars');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
+        $this->InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
-                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('academic_period_id')));
+                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('academic_period_id')));
                 $attr['options'] = $periodOptions;
                 $attr['default'] = $selectedPeriod;
                 $attr['onChangeReload'] = true;
@@ -279,7 +280,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
         $entity->institution_curricular_id = $_SESSION['curricularId'];
-        $curricularStaff = TableRegistry::get('institution_curricular_staff'); 
+        $curricularStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStaff'); 
         $curricularId = $entity->institution_curricular_id;
         $currentTimeZone = date("Y-m-d H:i:s");
             if(!empty($entity->staff_id['_ids'])){
@@ -345,8 +346,8 @@ class InstitutionCurricularsTable extends ControllerActionTable
     public function onGetStaffId(Event $event, Entity $entity)
     {
         $curricularId = $entity->id ;
-        $curricularStaff = TableRegistry::get('institution_curricular_staff'); 
-        $users = TableRegistry::get('security_users'); 
+        $curricularStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStaff'); 
+        $users = TableRegistry::getTableLocator()->get('User.Users'); 
         $data = $curricularStaff->find()->select(['openemis_no'=>$users->aliasField('openemis_no'),'first_name'=>$users->aliasField('first_name'),'middle_name'=>$users->aliasField('middle_name'),'third_name'=>$users->aliasField('third_name'),'last_name'=>$users->aliasField('last_name')])
                 ->leftJoin([$users->alias() => $users->table()],
                     [$users->aliasField('id').' = ' . $curricularStaff->aliasField('staff_id')
@@ -361,10 +362,10 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $curricularStaff = TableRegistry::get('institution_curricular_staff'); 
-        $curricularStudent = TableRegistry::get('institution_curricular_students'); 
-        $curriculars = TableRegistry::get('institution_curriculars'); 
-        $users = TableRegistry::get('security_users'); 
+        $curricularStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStaff'); 
+        $curricularStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStudents'); 
+        $curriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars'); 
+        $users = TableRegistry::getTableLocator()->get('User.Users'); 
         $checkStudent =  $curricularStudent->find()->where([$curricularStudent->aliasField('institution_curricular_id')=>$entity->id])->first();     
         $checkStaff =  $curricularStaff->find()->where([$curricularStaff->aliasField('institution_curricular_id')=>$entity->id])->first();     
         if(!empty($checkStudent) || !empty($checkStaff)){
@@ -384,7 +385,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
     {
         //show staff selected in multiselected dropdown, chosenselec
         $entity->institution_curricular_id = $_SESSION['curricularId'];
-        $curricularStaff = TableRegistry::get('institution_curricular_staff');
+        $curricularStaff = TableRegistry::getTableLocator()->get('institution_curricular_staff');
         $getStaff = $curricularStaff->find()->select(['staff_id'])
                     ->where([$curricularStaff->aliasField('institution_curricular_id') => $entity->institution_curricular_id])->toArray();
         $staff = [];
@@ -405,7 +406,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $selectedAcademicPeriodId = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriodId = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $query
             ->select([
                 'name' => $this->aliasField('name'),
@@ -486,7 +487,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
     }
     //POCOR-7691 start
     public function beforeAction(Event $event, ArrayObject $extra)
-    {
+    {   
         if(!empty($this->request->pass[1])){
             $curricularId = $this->paramsDecode($this->request->pass[1])['id'];
             $_SESSION["curricularId"] = $curricularId;

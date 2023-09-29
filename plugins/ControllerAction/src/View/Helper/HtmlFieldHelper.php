@@ -760,6 +760,8 @@ class HtmlFieldHelper extends Helper
                 $table = TableRegistry::getTableLocator()->get($attr['className']);
                 $event = new Event('ControllerAction.Model.onFormatTime', $this, compact('value'));
                 $event = $table->getEventManager()->dispatch($event);
+                /*echo "<pre>"; print_r($event);
+die;*/
                 if (strlen($event->getResult()) > 0) {
                     $value = $event->getResult();
                 }
@@ -878,7 +880,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         $table = TableRegistry::getTableLocator()->get($attr['className']);
-        $fileUpload = $table->behaviors()->get('FileUploadBehavior');
+        $fileUpload = $table->behaviors()->get('FileUpload');
         $name = '&nbsp;';
         if (!empty($fileUpload)) {
             $name = $fileUpload->getConfig('name');

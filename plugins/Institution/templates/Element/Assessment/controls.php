@@ -3,26 +3,32 @@
 		<div class="toolbar-wrapper">
 			<?php
 				$baseUrl = $this->Url->build([
-					'plugin' => $this->request->params['plugin'],
-				    'controller' => $this->request->params['controller'],
-				    'action' => $this->request->params['action']
-				]);
+					'plugin' => $this->request->getParam('plugin'),
+	                'controller' => $this->request->getParam('controller'),
+	                'action' => $this->request->getParam('action')
+				]); 
 				$template = $this->ControllerAction->getFormTemplate();
-				$this->Form->templates($template);
-
-				if (!empty($periodOptions)) {
-					echo $this->Form->input('academic_period', array(
+				$this->Form->templates($template); ?>
+			<?php   if (!empty($periodOptions)) { ?>
+                <div class="input select required">
+                    <div class="input-select-wrapper">
+                    <?php   echo $this->Form->input('academic_period', array(
+						'type' => 'select',
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $periodOptions,
 						'default' => $selectedPeriod,
 						'url' => $baseUrl,
 						'data-named-key' => 'academic_period_id'
-					));
-				}
-
-				if (!empty($assessmentOptions)) {
-					echo $this->Form->input('assessment', array(
+					)); ?>
+                    </div>
+                </div>
+            <?php   } ?> 
+            <?php   if (!empty($assessmentOptions)) { ?>
+                <div class="input select required">
+                    <div class="input-select-wrapper">
+                    <?php   echo $this->Form->input('assessment', array(
+						'type' => 'select',
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $assessmentOptions,
@@ -30,11 +36,15 @@
 						'url' => $baseUrl,
 						'data-named-key' => 'assessment_id',
 						'data-named-group' => 'academic_period_id'
-					));
-				}
-
-				if (!empty($AssessmentPeriodsOptions)) {
-					echo $this->Form->input('assessment', array(
+					)); ?>
+                    </div>
+                </div>
+            <?php   } ?> 
+            <?php   if (!empty($AssessmentPeriodsOptions)) { ?>
+                <div class="input select required">
+                    <div class="input-select-wrapper">
+                    <?php  echo $this->Form->input('assessment', array(
+						'type' => 'select',
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $AssessmentPeriodsOptions,
@@ -42,9 +52,27 @@
 						'url' => $baseUrl,
 						'data-named-key' => 'assessment_period_id',
 						'data-named-group' => 'assessment_id'
-					));
-				}
-
+					)); ?>
+                    </div>
+                </div>
+            <?php   } ?> 
+            <?php   if (!empty($classOptions)) { ?>
+                <div class="input select required">
+                    <div class="input-select-wrapper">
+                    <?php  echo $this->Form->input('assessment', array(
+						'type' => 'select',
+						'class' => 'form-control',
+						'label' => false,
+						'options' => $classOptions,
+						'default' => $selectedClassId,
+						'url' => $baseUrl,
+						'data-named-key' => 'institution_class_id',
+						'data-named-group' => 'academic_period_id'
+					)); ?>
+                    </div>
+                </div>
+            <?php   } ?> 	
+			<?php
 				// if (!empty($subjectOptions)) {
 				// 	echo $this->Form->input('assessment', array(
 				// 		'class' => 'form-control',
@@ -56,18 +84,6 @@
 				// 		'data-named-group' => 'academic_period_id'
 				// 	));
 				// }
-
-				if (!empty($classOptions)) {
-					echo $this->Form->input('assessment', array(
-						'class' => 'form-control',
-						'label' => false,
-						'options' => $classOptions,
-						'default' => $selectedClassId,
-						'url' => $baseUrl,
-						'data-named-key' => 'institution_class_id',
-						'data-named-group' => 'academic_period_id'
-					));
-				}
 			?>
 		</div>
 	</div>

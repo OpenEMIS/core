@@ -7,7 +7,7 @@ use Cake\Utility\Inflector;
 
 class ScheduleBehavior extends Behavior
 {
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 100];
@@ -18,8 +18,8 @@ class ScheduleBehavior extends Behavior
     {
         $model = $this->_table;
         $controller = $this->_table->controller;
-        $controllerName = $controller->name;
-        $modelAlias = $model->alias();
+        $controllerName = $controller->getName();
+        $modelAlias = $model->getAlias();
 
         if ($modelAlias == 'ScheduleTimetables') {
             $modelAlias = 'ScheduleTimetableOverview';
@@ -33,7 +33,7 @@ class ScheduleBehavior extends Behavior
         $navigation->substituteCrumb($oldTitle, $newTitle);
 
         // Header
-        $session = $model->request->session();
+        $session = $model->request->getSession();
         $institutionName = $session->read('Institution.Institutions.name');
         $postfix = $newTitle;
         $header = $institutionName . ' - ' . $postfix;

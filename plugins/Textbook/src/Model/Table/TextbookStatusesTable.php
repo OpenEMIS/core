@@ -6,7 +6,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class TextbookStatusesTable extends ControllerActionTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->hasMany('InstitutionTextbooks', ['className' => 'Institution.InstitutionTextbooks', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->addBehavior('FieldOption.FieldOption');  //POCOR-7362

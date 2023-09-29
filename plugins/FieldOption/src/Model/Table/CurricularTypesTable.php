@@ -13,9 +13,9 @@ use App\Model\Table\ControllerActionTable;
 //POCOR-6673
 class CurricularTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('curricular_types');
+        $this->setTable('curricular_types');
         parent::initialize($config);
         
         $this->addBehavior('FieldOption.FieldOption');
@@ -27,7 +27,7 @@ class CurricularTypesTable extends ControllerActionTable
 
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $curricularStudent = TableRegistry::get('institution_curriculars'); 
+        $curricularStudent = TableRegistry::get('Institution.InstitutionCurriculars'); 
         $checktype =  $curricularStudent->find()->where([$curricularStudent->aliasField('curricular_type_id')=>$entity->id])->first();     
              
         if(!empty($checktype)){
@@ -44,7 +44,7 @@ class CurricularTypesTable extends ControllerActionTable
             'name','default','category', 'international_code','national_code']);
     }
 
-    public function onUpdateFieldCategory(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCategory(Event $event, array $attr, $action, ServerRequest $request)
     {
         $categories = array(1 =>'Curricular', 0=>'Extracurricular');
         $entity = $attr['entity'];

@@ -10,6 +10,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 
 class ScheduleTimetablesTable extends ControllerActionTable
 {
@@ -18,9 +19,9 @@ class ScheduleTimetablesTable extends ControllerActionTable
     const DEFAULT = -1;
     private $_status = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_schedule_timetables');
+        $this->setTable('institution_schedule_timetables');
         parent::initialize($config);
 
         $this->belongsTo('Institutions', [
@@ -66,7 +67,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         ];
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator
@@ -90,7 +91,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $validator;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.onGetFormButtons'] = 'onGetFormButtons';
@@ -180,7 +181,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         $this->setFieldOrder(['status', 'institution_schedule_term_id', 'name', 'institution_class_id', 'shift']);
 
         // filter options
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
 
         // academic_period_id filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -192,6 +193,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         }
 
         $extra['selectedAcademicPeriodOptions'] = $selectedPeriodId;
+
         // academic_period_id filter - END
         
         // institution_schedule_term_id filter
@@ -315,20 +317,20 @@ class ScheduleTimetablesTable extends ControllerActionTable
         $tabElements = [
             'ScheduleTimetableOverview' => [
                 'url' => [
-                    'plugin' => $this->controller->plugin,
-                    'controller' => $this->controller->name,
+                    'plugin' => $this->controller->getPlugin(),
+                    'controller' => $this->controller->getName(),
                     'action' => 'ScheduleTimetableOverview'
                 ],
                 'text' => __('Overview')
             ],
             'ScheduleTimetable' => [
                 'url' => [
-                    'plugin' => $this->controller->plugin,
-                    'controller' => $this->controller->name,
+                    'plugin' => $this->controller->getPlugin(),
+                    'controller' => $this->controller->getName(),
                     'action' => 'ScheduleTimetable',
                     'view',
-                    'timetableId'=>$this->request->params['pass'][1],
-                    'period'=>$this->request->query('period')
+                    'timetableId'=>$this->request->getParam('pass')[1],
+                    'period'=>$this->request->getQuery('period')
                     
                 ],
                 'text' => __('Timetable')
@@ -347,8 +349,8 @@ class ScheduleTimetablesTable extends ControllerActionTable
             $institutionId = $entity->institution_id;
 
             $timetableEditUrl = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => 'ScheduleTimetable',
                 'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                 'edit',
@@ -399,7 +401,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
     }
 
     // OnUpdate Events
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['type'] = 'select';
@@ -411,7 +413,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionScheduleTermId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionScheduleTermId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $academicPeriodId = $this->extractRequestData($request, 'academic_period_id');
@@ -422,7 +424,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $academicPeriodId = $this->extractRequestData($request, 'academic_period_id');
@@ -435,7 +437,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $academicPeriodId = $this->extractRequestData($request, 'academic_period_id');
@@ -447,7 +449,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldShift(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldShift(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $academicPeriodId = $this->extractRequestData($request, 'academic_period_id');
@@ -460,7 +462,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionScheduleIntervalId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionScheduleIntervalId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $shiftId = $this->extractRequestData($request, 'shift');
@@ -474,7 +476,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['type'] = 'readonly';
@@ -487,9 +489,9 @@ class ScheduleTimetablesTable extends ControllerActionTable
     // Change Events
     public function addOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        unset($data[$this->alias()]['institution_schedule_interval_id']);
-        unset($data[$this->alias()]['shift']);
-        unset($data[$this->alias()]['education_grade_id']);
+        unset($data[$this->getAlias()]['institution_schedule_interval_id']);
+        unset($data[$this->getAlias()]['shift']);
+        unset($data[$this->getAlias()]['education_grade_id']);
     }
 
     public function addOnSaveSchedule(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
@@ -502,8 +504,8 @@ class ScheduleTimetablesTable extends ControllerActionTable
             $timetableId = $result->id;
             $institutionId = $result->institution_id;
             $timetableEditUrl = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => 'ScheduleTimetable',
                 'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                 'edit',
@@ -543,7 +545,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         }
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $InstitutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
+        $InstitutionGradesTable = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $educationGradeOptions = $InstitutionGradesTable->getGradeOptions($institutionId, $academicPeriodId);
 
         if ($withDefault) {
@@ -609,7 +611,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         }
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $ShiftsTable = TableRegistry::get('Institution.InstitutionShifts');
+        $ShiftsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
 
         $shiftOptions = $ShiftsTable
             ->find('list', [
@@ -649,10 +651,10 @@ class ScheduleTimetablesTable extends ControllerActionTable
     }
 
     // Misc 
-    private function extractRequestData(Request $request, $field)
+    private function extractRequestData(serverRequest $request, $field)
     {
-        if (isset($request->data) && array_key_exists($this->alias(), $request->data)) {
-            $requestData = $request->data[$this->alias()];
+        if (isset($request->data) && array_key_exists($this->getAlias(), $request->data)) {
+            $requestData = $request->data[$this->getAlias()];
 
             if (array_key_exists($field, $requestData)) {
                 return $requestData[$field];

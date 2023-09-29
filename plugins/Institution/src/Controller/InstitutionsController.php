@@ -712,9 +712,9 @@ class InstitutionsController extends AppController
 
     public function ReportCardStatuses()
     {
-        $classId = $this->request->query['class_id'];
-        $academicPeriodId = $this->request->query['academic_period_id'];
-        $reportCardId = $this->request->query['report_card_id'];
+        $classId = $this->request->getQuery('class_id');
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
+        $reportCardId = $this->request->getQuery('report_card_id');
 
         if (!empty($classId) && $classId == 'all') {
             return $this->redirect(['action' => 'ReportCardStatusProgress',

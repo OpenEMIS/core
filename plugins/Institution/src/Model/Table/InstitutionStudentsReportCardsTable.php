@@ -17,7 +17,7 @@ class InstitutionStudentsReportCardsTable extends ControllerActionTable
      CONST GENERATED = 3;
      CONST PUBLISHED = 4;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('ReportCards', ['className' => 'ReportCard.ReportCards']);

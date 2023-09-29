@@ -95,8 +95,8 @@ class RisksTable extends ControllerActionTable
 
     public function generate(Event $event, ArrayObject $extra)
     {
-        $Risks = TableRegistry::get('Risk.Risks');
-        $requestQuery = $this->request->query;
+        $Risks = TableRegistry::getTableLocator()->get('Risk.Risks');
+        $requestQuery = $this->request->getQuery();
         $params = $this->paramsDecode($requestQuery['queryString']);
 
         $institutionId = $params['institution_id'];
@@ -179,7 +179,7 @@ class RisksTable extends ControllerActionTable
         if (isset($record->generated_by)) {
             $generatedById = $record->generated_by;
 
-            $Users = TableRegistry::get('Security.Users');
+            $Users = TableRegistry::getTableLocator()->get('Security.Users');
             $userName = $Users->get($generatedById)->first_name . ' ' . $Users->get($generatedById)->last_name;
         }
 
@@ -203,7 +203,7 @@ class RisksTable extends ControllerActionTable
 
     public function onGetStatus(Event $event, Entity $entity)
     {
-        $Risks = TableRegistry::get('Risk.Risks');
+        $Risks = TableRegistry::getTableLocator()->get('Risk.Risks');
         $riskId = $entity->id;
         $institutionId = $this->request->getSession()->read('Institution.Institutions.id');
 
@@ -263,7 +263,7 @@ class RisksTable extends ControllerActionTable
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
     
-        $User = TableRegistry::get('security_users');
+        $User = TableRegistry::getTableLocator()->get('User.Users');
 		$query
 		->select(['name' => 'Risks.name', 
         'generated_by' => $User->find()->func()->concat([

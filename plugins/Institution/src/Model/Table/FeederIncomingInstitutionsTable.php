@@ -13,9 +13,9 @@ use App\Model\Table\ControllerActionTable;
 
 class FeederIncomingInstitutionsTable  extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('feeders_institutions');
+        $this->setTable('feeders_institutions');
         parent::initialize($config);
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -42,8 +42,8 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
         if ($this->action == 'index') {
             $areaName = $entity->feeder_institution->area->name;
             // Getting the system value for the area
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-            $AreasTable = TableRegistry::get('Area.Areas');
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $AreasTable = TableRegistry::getTableLocator()->get('Area.Areas');
             $areaLevel = $ConfigItems->value('institution_area_level_id');
 
             // Getting the current area id
@@ -73,10 +73,10 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
     {
         if ($field == 'area_education' && $this->action == 'index') {
             // Getting the system value for the area
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $areaLevel = $ConfigItems->value('institution_area_level_id');
 
-            $AreaTable = TableRegistry::get('Area.AreaLevels');
+            $AreaTable = TableRegistry::getTableLocator()->get('Area.AreaLevels');
             $value = $AreaTable->find()
                     ->where([$AreaTable->aliasField('level') => $areaLevel])
                     ->first();
@@ -95,7 +95,7 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
     {
         $noOfStudents = 0;
 
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
         $noOfStudents = $InstitutionStudents
             ->find()
             ->matching('StudentStatuses', function ($q) {
@@ -144,7 +144,8 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
                 'institution_id',
                 'feeder_institution_id',
                 'academic_period_id',
-                'education_grade_id'
+                'education_grade_id',
+                'code' => 'Institutions.code'
             ])
             ->contain([
                 'Institutions' => [
@@ -245,8 +246,9 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
         $selectedAcademicPeriod = '';
 
         if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
-            if (isset($request->query) && array_key_exists('period', $request->query)) {
-                $selectedAcademicPeriod = $request->query['period'];
+            $requestData = $request->getQuery();
+            if (isset($requestData) && array_key_exists('period', $requestData)) {
+                $selectedAcademicPeriod = $requestData('period');
             } else {
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }
