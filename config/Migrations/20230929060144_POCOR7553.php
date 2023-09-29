@@ -2,14 +2,14 @@
 
 use Phinx\Migration\AbstractMigration;
 
-class POCOR7732 extends AbstractMigration
+class POCOR7553 extends AbstractMigration
 {
     public function up()
     {
         //creating backup
-        $this->execute('DROP TABLE IF EXISTS `z_7732_security_functions`');
-        $this->execute('CREATE TABLE `z_7732_security_functions` LIKE `security_functions`');
-        $this->execute('INSERT INTO `z_7732_security_functions` SELECT * FROM `security_functions`');
+        $this->execute('DROP TABLE IF EXISTS `z_7553_security_functions`');
+        $this->execute('CREATE TABLE `z_7553_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `z_7553_security_functions` SELECT * FROM `security_functions`');
 
         //getting parent_id value
         $row = $this->fetchRow("SELECT * FROM `security_functions` WHERE 
@@ -46,6 +46,6 @@ class POCOR7732 extends AbstractMigration
     public function down()
     {
         $this->execute('DROP TABLE IF EXISTS `security_functions`');
-        $this->execute('RENAME TABLE `z_7732_security_functions` TO `security_functions`');
+        $this->execute('RENAME TABLE `z_7553_security_functions` TO `security_functions`');
     }
 }
