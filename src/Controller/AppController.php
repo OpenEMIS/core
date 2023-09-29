@@ -708,7 +708,7 @@ class AppController extends Controller
     {
 
         $params = $this->request->params;
-        $this->log($params, 'debug');
+//        $this->log($params, 'debug');
         if ($params['controller'] == 'Errors') {
             return;
         }
@@ -748,14 +748,19 @@ class AppController extends Controller
             $params['action'] == 'translate'){
             return;
         }
+        if(isset($params['controller']) &&
+        isset($params['action']) &&
+        isset($params['pass'])
+            && isset($params['pass'][0])){
+            $params[0] = $params['pass'][0];
 
+        }
         $check = $this->AccessControl->check($params);
-        $this->log($check, 'debug');
+//        $this->log($check, 'debug');
         if (!$check) {
-//            $this->log($params, 'debug');
+            $this->log($params, 'debug');
             $this->redirect($this->referer());
             $this->Alert->warning('general.notAccess');
-//            throw new \Exception("No Rights for $class!");
         }
     }
 }
