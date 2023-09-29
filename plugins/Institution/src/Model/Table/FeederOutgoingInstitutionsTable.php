@@ -17,9 +17,9 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
 {
     private $institutionId = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('feeders_institutions');
+        $this->setTable('feeders_institutions');
         parent::initialize($config);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('FeederInstitutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'feeder_institution_id']);
@@ -29,7 +29,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         $this->toggle('edit','delete', false);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator
@@ -44,7 +44,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');     
+        $this->institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');     
     } 
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -233,8 +233,8 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         if ($this->action == 'index') {
             $areaName = $entity->institution->area->name;
             // Getting the system value for the area
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-            $AreasTable = TableRegistry::get('Area.Areas');
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $AreasTable = TableRegistry::getTableLocator()->get('Area.Areas');
             $areaLevel = $ConfigItems->value('institution_area_level_id');
 
             // Getting the current area id
@@ -265,10 +265,10 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
     {
         if ($field == 'area_education' && $this->action == 'index') {
             // Getting the system value for the area
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $areaLevel = $ConfigItems->value('institution_area_level_id');
 
-            $AreaTable = TableRegistry::get('Area.AreaLevels');
+            $AreaTable = TableRegistry::getTableLocator()->get('Area.AreaLevels');
             $value = $AreaTable->find()
                     ->where([$AreaTable->aliasField('level') => $areaLevel])
                     ->first();
@@ -301,7 +301,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
             $entity = $attr['entity'];
 
             if ($entity->has('academic_period_id')) {
-                $InstitutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
+                $InstitutionGradesTable = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
                 $institutionId = $this->institutionId;
                 $academicPeriodId = $entity->academic_period_id;
 
@@ -369,7 +369,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
                     $nextPeriodStartDate = date('Y-m-d', strtotime($nextPeriodData->start_date));
                 }
 
-                $AreasTable = TableRegistry::get('Area.Areas');
+                $AreasTable = TableRegistry::getTableLocator()->get('Area.Areas');
                 $areaEducationList = $AreasTable->find('list', [
                         'keyField' => 'id',
                         'valueField' => 'code_name'
@@ -436,8 +436,8 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
                     $nextPeriodStartDate = date('Y-m-d', strtotime($nextPeriodData->start_date));
                 }
 
-                $InstitutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
-                $InstitutionStatusesTable = TableRegistry::get('Institution.Statuses');
+                $InstitutionGradesTable = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+                $InstitutionStatusesTable = TableRegistry::getTableLocator()->get('Institution.Statuses');
                 $activeStatus = $InstitutionStatusesTable->getIdByCode('ACTIVE');
 
                 $institutionList = $this->Institutions
@@ -455,8 +455,8 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
                         ]
                     ])
                     ->join([
-                        'table' => $InstitutionGradesTable->table(),
-                        'alias' => $InstitutionGradesTable->alias(),
+                        'table' => $InstitutionGradesTable->getTable(),
+                        'alias' => $InstitutionGradesTable->getAlias(),
                         'conditions' => [
                             $InstitutionGradesTable->aliasField('institution_id = ') . $this->Institutions->aliasField('id'),
                             $InstitutionGradesTable->aliasField('education_grade_id IN ') => $nextEducationGrades,
@@ -499,8 +499,9 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
     private function getSelectedAcademicPeriod($request)
     {
         $selectedAcademicPeriod = '';
-        if (isset($request->query) && array_key_exists('period', $request->query)) {
-            $selectedAcademicPeriod = $request->query['period'];
+        $requestData = $request->getQuery();
+        if (isset($requestData) && array_key_exists('period', $requestData)) {
+            $selectedAcademicPeriod = $requestData('period');
         } else {
             $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
         }

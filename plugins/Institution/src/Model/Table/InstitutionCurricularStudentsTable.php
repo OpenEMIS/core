@@ -176,7 +176,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         }
 
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
-        $query = $this->request->query;
+        $query = $this->request->getQuery();
         $this->field('academic_period_id', ['visible' => true]);
         $this->field('student_id', ['visible' => false]);
         $this->field('student_name', ['visible' => true]);
