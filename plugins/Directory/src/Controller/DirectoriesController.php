@@ -13,6 +13,7 @@ use Cake\Routing\Router;
 use App\Controller\AppController;
 use Cake\Network\Response;
 use Cake\Http\Client;
+use Cake\Http\ServerRequest;
 
 class DirectoriesController extends AppController
 {
@@ -20,7 +21,7 @@ class DirectoriesController extends AppController
     const STAFF = 2;
     const GUARDIAN = 3;
     const OTHER = 4;
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->ControllerAction->models = [
@@ -52,12 +53,12 @@ class DirectoriesController extends AppController
         $this->loadComponent('Institution.CreateUsers');
         $this->loadModel('FieldOption.Nationalities');
         $this->loadModel('Directory.Directories');
-        $this->loadModel('Directory.AreaAdministratives');
+        $this->loadModel('Area.AreaAdministratives');
         $this->attachAngularModules();
         $this->attachAngularModulesForDirectory();
         //POCOR-5672 it is used for removing csrf token mismatch condition in directory external search 
         if ($this->request->action == 'directoryExternalSearch') {
-            $this->eventManager()->off($this->Csrf);
+            $this->getEventManager()->off($this->Csrf);
         }//POCOR-5672 ends
 
         $this->set('contentHeader', 'Directories');
@@ -65,7 +66,7 @@ class DirectoriesController extends AppController
 
     public function Directories()
     {
-        $action = $this->request->pass[0];
+        $action = $this->request->getParam('pass')[0];
         if($action == 'add'){
             $this->attachAngularModulesForDirectory();
             $this->set('ngController', 'DirectoryAddCtrl as $ctrl');
@@ -331,14 +332,9 @@ class DirectoriesController extends AppController
         $requestDataa = json_decode($requestDataa, true);
         $UsersTable = TableRegistry::get('User.Users');
         $InstitutionTable = TableRegistry::get('Institution.Institutions');
-        $student_id = $requestDataa['student_id'];
-        $institution_id = $requestDataa['institution_id'];
-        $UserData = $UsersTable->find('all',['conditions'=>['id'=> $student_id]])->first();
-        $InstitutionData = $InstitutionTable->find('all',['conditions'=>['id'=> $institution_id]])->first();
+        $UserData = $UsersTable->find('all',['conditions'=>['id'=>$requestDataa['student_id']]])->first();
+        $InstitutionData = $InstitutionTable->find('all',['conditions'=>['id'=>$requestDataa['institution_id']]])->first();
         $queryStng = $this->paramsEncode(['id' => $UserData->id]);
-//        $this->Navigation->addCrumb($student_name, ['plugin' => 'Directory',
-//            'controller' => 'Directories', 'action' => 'Directories', 'view', $this->ControllerAction->paramsEncode(['id' => $student_id])]);
-        $this->Navigation->addCrumb(__('Add Guardians'), []);
         $this->set('InstitutionData', $InstitutionData);
         $this->set('UserData', $UserData);
         $this->set('queryStng', $queryStng);//POCOR-7231 :: END
@@ -384,7 +380,7 @@ class DirectoriesController extends AppController
 
     public function StudentExaminationResults()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
         if ($session->check('Directory.Directories.id')) {
             $studentId = $session->read('Directory.Directories.id');
@@ -483,9 +479,9 @@ class DirectoriesController extends AppController
 
     private function attachAngularModulesForDirectory()
     {
-        $action = $this->request->pass[0];
-        if($action == '' || $this->request->params['action'] != 'Directories'){
-            $action = $this->request->params['action'];
+        $action = $this->request->getParam('pass')[0];
+        if($action == '' || $this->request->getParam('action') != 'Directories'){
+            $action = $this->request->getParam('action');
         }
         switch ($action) {
             case 'add':
@@ -508,14 +504,14 @@ class DirectoriesController extends AppController
         parent::beforeFilter($event);
         $this->Navigation->addCrumb('Directory', ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories']);
         $header = __('Directory');
-        $session = $this->request->session();
-        $action = $this->request->params['action'];
+        $session = $this->request->getSession();
+        $action = $this->request->getParam('action');
 
-        $query = $this->request->query;
+        $query = $this->request->getQuery();
         // pass user id from request query and set to session
         if (array_key_exists('user_id', $query)) {
             $userId = $query['user_id'];
-            $Directories = TableRegistry::get('Directory.Directories');
+            $Directories = TableRegistry::getTableLocator()->get('Directory.Directories');
             $entity = $Directories->get($userId);
 
             $session->write('Directory.Directories.id', $entity->id);
@@ -582,12 +578,12 @@ class DirectoriesController extends AppController
     {
         if ($model instanceof \Staff\Model\Table\StaffClassesTable || $model instanceof \Staff\Model\Table\StaffSubjectsTable) {
             $model->toggle('add', false);
-        } else if ($model->alias() == 'Guardians') {
+        } else if ($model->getAlias() == 'Guardians') {
             $model->editButtonAction('StudentGuardianUser');
         }
 
         if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
-            $alias = $model->alias();
+            $alias = $model->getAlias();
             $includedModel = ['Leave'];
 
             if (in_array($alias, $includedModel)) {
@@ -600,7 +596,7 @@ class DirectoriesController extends AppController
         /**
          * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
          */
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if ($session->check('Directory.Directories.id')) {
             $header = '';
             $userId = $session->read('Directory.Directories.id');
@@ -733,11 +729,11 @@ class DirectoriesController extends AppController
                 }
             }
         } else {
-            if ($model->alias() == 'ImportUsers') {
+            if ($model->getAlias() == 'ImportUsers') {
                 $this->Navigation->addCrumb($model->getHeader($model->alias()));
                 $header = __('Users') . ' - ' . $model->getHeader($model->alias());
                 $this->set('contentHeader', $header);
-            } else if ($model->alias() != 'Directories') {
+            } else if ($model->getAlias() != 'Directories') {
                 $this->Alert->warning('general.notExists');
                 $event->stopPropagation();
                 return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'index']);
@@ -747,8 +743,8 @@ class DirectoriesController extends AppController
 
     public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
-        $session = $this->request->session();
-        if ($model->alias() != 'Directories') {
+        $session = $this->request->getSession();
+        if ($model->getAlias() != 'Directories') {
             if ($session->check('Directory.Directories.id')) {
                 $userId = $session->read('Directory.Directories.id');
                 $guardianId = $session->read('Guardian.Guardians.id');
@@ -947,7 +943,7 @@ class DirectoriesController extends AppController
             'ExaminationResults' => ['text' => __('Examinations')],
             'ReportCards' => ['text' => __('Report Cards')],
             'Awards' => ['text' => __('Awards')],
-            //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7648
+            'Extracurriculars' => ['text' => __('Extracurriculars')],
             'Textbooks' => ['text' => __('Textbooks')],
             'Risks' => ['text' => __('Risks')],
             'Associations' => ['text' => __('Associations')]
@@ -1029,7 +1025,7 @@ class DirectoriesController extends AppController
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
                 'Qualifications' => ['text' => __('Qualifications')],
-                //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR7648
+                'Extracurriculars' => ['text' => __('Extracurriculars')],
                 'Memberships' => ['text' => __('Memberships')],
                 'Licenses' => ['text' => __('Licenses')],
                 'Awards' => ['text' => __('Awards')],
@@ -1038,7 +1034,6 @@ class DirectoriesController extends AppController
             $user=0;//POCOR-7528 
             $professionalTabElements = [
                 'Employments' => ['text' => __('Employments')],
-                'Qualifications' => ['text' => __('Qualifications')],
                 'Licenses' => ['text' => __('Licenses')],
             ];
         }
@@ -1170,24 +1165,24 @@ class DirectoriesController extends AppController
         echo json_encode($result_array);die;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
         //for api purpose POCOR-5672 starts
-        if($this->request->params['action'] == 'directoryInternalSearch'){
+        if($this->request->getParam('action') == 'directoryInternalSearch'){
            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'directoryInternalSearch';
         }
-        if($this->request->params['action'] == 'directoryExternalSearch'){
+        if($this->request->getParam('action') == 'directoryExternalSearch'){
            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'directoryExternalSearch';
         }
-        if($this->request->params['action'] == 'getContactType'){
+        if($this->request->getParam('action') == 'getContactType'){
            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getContactType';
         }
-        if($this->request->params['action'] == 'getRedirectToGuardian'){
+        if($this->request->getParam('action') == 'getRedirectToGuardian'){
            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getRedirectToGuardian';
         }
-        if($this->request->params['action'] == 'getRelationshipType'){
+        if($this->request->getParam('action') == 'getRelationshipType'){
            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getRelationshipType';
         }//for api purpose POCOR-5672 ends
         return $events;

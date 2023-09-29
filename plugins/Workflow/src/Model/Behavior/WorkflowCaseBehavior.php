@@ -571,7 +571,7 @@ class WorkflowCaseBehavior extends Behavior
 
             if ($filterConfig['period']) {
                 // Year Options
-                $AcademicPeriods = TableRegistry::getTableLocator()->get('academic_periods');
+                $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $periodsOptions = $AcademicPeriods
                             ->find('list', ['keyField' => 'start_year', 'valueField' => 'start_year'])
                             ->order([$AcademicPeriods->aliasField('start_year') => 'DESC']);

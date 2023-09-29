@@ -18,9 +18,9 @@ class InstitutionStatisticsTable extends AppTable
 
 	private $formatOptions = [];
 
-	public function initialize(array $config)
+	public function initialize(array $config): void
     {
-        $this->table('institution_statistics');
+        $this->setTable('institution_statistics');
         parent::initialize($config);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.InstitutionStatistics');
@@ -31,7 +31,7 @@ class InstitutionStatisticsTable extends AppTable
             'purge' => false,
             'variableSource' => 'database'
         ]);
-        $this->addBehavior('Report.Csv');
+        //$this->addBehavior('Report.Csv');  //comment cakephp 4
 
         $this->formatOptions = [
             self::CSV => ['key' => 'csv', 'value' => 'CSV'],
@@ -39,7 +39,7 @@ class InstitutionStatisticsTable extends AppTable
         ];
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
@@ -49,7 +49,7 @@ class InstitutionStatisticsTable extends AppTable
         return $events;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator->notEmpty('feature');

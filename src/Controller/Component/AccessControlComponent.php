@@ -25,7 +25,7 @@ class AccessControlComponent extends Component
     public function initialize(array $config): void
     {
         $this->controller = $this->_registry->getController();
-        $this->action = $this->request->params['action'];
+        $this->action = $this->getController()->getRequest()->getParam('action');
         $this->Session = $this->getController()->getRequest()->getSession();
         $this->accessMap = [];
 
@@ -63,7 +63,7 @@ class AccessControlComponent extends Component
 
             foreach ($actions as $action => $value) {
                 if ($value == true && in_array($action, $allowedActions)) {
-                    $check = $this->check(['controller' => $this->controller->name, 'action' => $action]);
+                    $check = $this->check(['controller' => $this->controller->getName(), 'action' => $action]);
                     if ($check == false) {
                         $disabledActions[] = $action;
                     }

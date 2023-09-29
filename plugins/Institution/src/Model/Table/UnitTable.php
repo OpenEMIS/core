@@ -24,7 +24,7 @@ class UnitTable extends ControllerActionTable
 
     public function getUnitOptions($institutionsId, $periodId)
     {
-        $institutionClasses = TableRegistry::get('institution_units');
+        $institutionClasses = TableRegistry::getTableLocator()->get('Institution.Unit');
         $query = $institutionClasses->find('list',['keyField' => 'id', 'valueField' => 'name']);
         return $query;
     }
@@ -34,7 +34,7 @@ class UnitTable extends ControllerActionTable
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
         
-        $institutionClasses = TableRegistry::get('institution_units');
+        $institutionClasses = TableRegistry::getTableLocator()->get('Institution.Unit');
         $query = $institutionClasses->find('list',['keyField' => 'id', 'valueField' => 'name']);
         return $query->toArray();
     }

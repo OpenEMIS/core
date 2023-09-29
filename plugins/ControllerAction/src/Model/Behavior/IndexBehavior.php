@@ -117,12 +117,12 @@ class IndexBehavior extends Behavior
                     }
                 }
                 //cakephp4 add
-                $request->data['Search']['limit'] = $limit;
+              //  $request->data['Search']['limit'] = $limit;
             }
 
             
             $extra['options']['limit'] = $pageOptions[$limit];
-            //$request->data['Search']['limit'] = $limit;
+            $request->getData('Search')['limit'] = $limit;
         }
 
         if ($event->isStopped()) {
@@ -163,7 +163,7 @@ class IndexBehavior extends Behavior
                     return $model->controller->redirect($action);
                 }
             } else {
-                $data = $query->all();
+                $data = $query->toArray();
             }
         }
 

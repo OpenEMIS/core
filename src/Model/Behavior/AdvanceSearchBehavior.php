@@ -57,26 +57,26 @@ class AdvanceSearchBehavior extends Behavior
 
     public function afterAction(Event $event, $extra)
     {
-        $order = $this->config('order');
+        $order = $this->getConfig('order');
         if ($this->_table->action == 'index') {
-            $labels = TableRegistry::get('Labels');
+            $labels = TableRegistry::getTableLocator()->get('Labels');
             $filters = [];
             $advancedSearch = false;
-            $session = $this->_table->request->session();
+            $session = $this->_table->request->getSession();
             $language = $session->read('System.language');
-            $fields = $this->_table->schema()->columns();
-            $customFields = $this->config('customFields');
+            $fields = $this->_table->getSchema()->columns();
+            $customFields = $this->getConfig('customFields');
             $fields = array_merge($fields, $customFields);
 
-            $requestData = $this->_table->request->data;
+            $requestData = $this->_table->request->getData();
             $advanceSearchData = isset($requestData['AdvanceSearch']) ? $requestData['AdvanceSearch'] : [];
-            $advanceSearchModelData = isset($advanceSearchData[$this->_table->alias()]) ? $advanceSearchData[$this->_table->alias()] : [];
+            $advanceSearchModelData = isset($advanceSearchData[$this->_table->getAlias()]) ? $advanceSearchData[$this->_table->getAlias()] : [];
             $searchables = new ArrayObject();
             $includedFields = new ArrayObject(); //new type of advance search, field from the database table.
 
             foreach ($fields as $key) {
-                $label = $labels->getLabel($this->_table->alias(), $key, $language);
-                if (!in_array($key, $this->config('exclude'))) {
+                $label = $labels->getLabel($this->_table->getAlias(), $key, $language);
+                if (!in_array($key, $this->getConfig('exclude'))) {
                     $selected = (isset($advanceSearchModelData['belongsTo']) && isset($advanceSearchModelData['belongsTo'][$key])) ? $advanceSearchModelData['belongsTo'][$key] : '' ;
 
                     if ($this->isForeignKey($key)) {
@@ -89,12 +89,12 @@ class AdvanceSearchBehavior extends Behavior
                             $value = __($value);
                         };
                         array_walk_recursive($list, $translate);
-                        $relatedModelTable = $relatedModel->table();
+                        $relatedModelTable = $relatedModel->getTable();
                         if ($relatedModelTable == 'areas' || $relatedModelTable == 'area_administratives') {
                             switch ($relatedModelTable) {
                                 case 'areas':
                                     $filters[$key] = [
-                                        'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
+                                        'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->getAlias()),
                                         'selected' => $selected,
                                         'type' => 'areapicker',
                                         'source_model' => 'Area.Areas'
@@ -103,8 +103,8 @@ class AdvanceSearchBehavior extends Behavior
 
                                 case 'area_administratives':
                                     $filters[$key] = [
-                                        'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
-                                        'displayCountry' => $this->config('display_country'),
+                                        'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->getAlias()),
+                                        'displayCountry' => $this->getConfig('display_country'),
                                         'selected' => $selected,
                                         'type' => 'areapicker',
                                         'source_model' => 'Area.AreaAdministratives'
@@ -113,7 +113,7 @@ class AdvanceSearchBehavior extends Behavior
                             }
                         } else {
                             $filters[$key] = [
-                                'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
+                                'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->getAlias()),
                                 'options' => $list,
                                 'selected' => $selected,
                                 'type' => 'select'
@@ -124,8 +124,8 @@ class AdvanceSearchBehavior extends Behavior
 
                     $customFilter  = $this->_table->dispatchEvent('AdvanceSearch.getCustomFilter'); //get custom filter set by the table
 
-                    if ($customFilter->result) {
-                        $result = $customFilter->result;
+                    if ($customFilter->getResult()) {
+                        $result = $customFilter->getResult();
                         foreach ($result as $customFilterKey => $item) {
                             if ($key == $customFilterKey) {
                                 $filters[$customFilterKey] = [
@@ -138,7 +138,7 @@ class AdvanceSearchBehavior extends Behavior
                     }
                 }
 
-                if (in_array($key, $this->config('include'))) {
+                if (in_array($key, $this->getConfig('include'))) {
                     $includedFields[$key] = [
                         'label' => ($label) ? $label : __(Inflector::humanize($key)),
                         'value' => (isset($advanceSearchModelData['tableField']) && isset($advanceSearchModelData['tableField'][$key])) ? $advanceSearchModelData['tableField'][$key] : '',
@@ -176,7 +176,7 @@ class AdvanceSearchBehavior extends Behavior
 
             // trigger events for additional searchable fields
             $this->_table->dispatchEvent('AdvanceSearch.onSetupFormField', [$searchables, $advanceSearchModelData], $this);
-            $showOnLoad = $this->config('showOnLoad');
+            $showOnLoad = $this->getConfig('showOnLoad');
 
 
             if (empty($order)) { //if no order declared, then build the default order.
@@ -222,8 +222,8 @@ class AdvanceSearchBehavior extends Behavior
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $request = $this->_table->request;
-        $reset = $request->data('reset');
-        if (!empty($reset)) {
+        $reset = $request->getData('reset');
+        if (!empty($reset) && isset($reset)) {
             if ($reset == 'Reset') {
                 $model = $this->_table;
                 $alias = $model->getAlias();
@@ -259,13 +259,13 @@ class AdvanceSearchBehavior extends Behavior
         return $this->advancedSearchQuery($request, $query);
     }
 
-    public function advancedSearchQuery(Request $request, Query $query)
+    public function advancedSearchQuery(ServerRequest $request, Query $query)
     {
         $conditions = [];
         $tableFieldConditions = [];
 
         $model = $this->_table;
-        $alias = $model->alias();
+        $alias = $model->getAlias();
 
         $advancedSearchBelongsTo = $model->Session->check($alias.'.advanceSearch.belongsTo') ? $model->Session->read($alias.'.advanceSearch.belongsTo') : [];
         $advancedSearchHasMany = $model->Session->check($alias.'.advanceSearch.hasMany') ? $model->Session->read($alias.'.advanceSearch.hasMany') : [];
@@ -379,7 +379,7 @@ class AdvanceSearchBehavior extends Behavior
         $relatedModel = null;
         foreach ($this->_table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     $relatedModel = $assoc;
                     break;
                 }
@@ -392,7 +392,7 @@ class AdvanceSearchBehavior extends Behavior
     {
         foreach ($this->_table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     return true;
                 }
             }
@@ -419,11 +419,11 @@ class AdvanceSearchBehavior extends Behavior
 
     public function isAdvancedSearchEnabled()
     {
-        $requestData = $this->_table->request->data;
+        $requestData = $this->_table->request->getData();
         $advanceSearchData = isset($requestData['AdvanceSearch']) ? $requestData['AdvanceSearch'] : [];
 
         if ($advanceSearchData) {
-            foreach ($advanceSearchData[$this->_table->alias()] as $key => $value) {
+            foreach ($advanceSearchData[$this->_table->getAlias()] as $key => $value) {
                 if (!empty($value)) {
                     foreach ($value as $key => $searchValue) {
                         if (!empty($searchValue) || strlen($searchValue) > 0) {

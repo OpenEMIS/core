@@ -6,9 +6,9 @@ use Cake\Validation\Validator;
 
 class QualificationLevelsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('qualification_levels');
+        $this->setTable('qualification_levels');
         parent::initialize($config);
         $this->hasMany('QualificationTitles', ['className' => 'FieldOption.QualificationTitles']);
         $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices']);

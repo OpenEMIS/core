@@ -12,7 +12,7 @@ use Cake\Validation\Validator;
 
 class QualificationTitlesTable extends ControllerActionTable
 {
-	public function initialize(array $config)
+	public function initialize(array $config): void
 	{
 		parent::initialize($config);
 		$this->hasMany('Qualifications', ['className' => 'Staff.Qualifications']);
@@ -23,7 +23,7 @@ class QualificationTitlesTable extends ControllerActionTable
 		$this->setDeleteStrategy('restrict');
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 
 		return $validator

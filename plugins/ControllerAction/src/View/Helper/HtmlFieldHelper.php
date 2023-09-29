@@ -629,7 +629,7 @@ class HtmlFieldHelper extends Helper
 
         if ($action == 'index' || $action == 'view') {
             if (!is_null($value)) {
-                $table = TableRegistry::get($attr['className']);
+                $table = TableRegistry::getTableLocator()->get($attr['className']);
                 $event = new Event('ControllerAction.Model.onFormatDateTime', $this, compact('value'));
                 $event = $table->getEventManager()->dispatch($event);
                 if (strlen($event->getResult()) > 0) {
@@ -654,7 +654,7 @@ class HtmlFieldHelper extends Helper
         $defaultDate = true;
 
         if (isset($attr['className'])) {
-            $table = TableRegistry::get($attr['className']);
+            $table = TableRegistry::getTableLocator()->get($attr['className']);
             $schema = $table->getSchema();
             $columnAttr = $schema->getColumn($field);
             if ($columnAttr['null'] == true) {
@@ -757,11 +757,11 @@ class HtmlFieldHelper extends Helper
 
         if ($action == 'index' || $action == 'view') {
             if (!is_null($value)) {
-                $table = TableRegistry::get($attr['className']);
+                $table = TableRegistry::getTableLocator()->get($attr['className']);
                 $event = new Event('ControllerAction.Model.onFormatTime', $this, compact('value'));
                 $event = $table->getEventManager()->dispatch($event);
-                if (strlen($event->result) > 0) {
-                    $value = $event->result;
+                if (strlen($event->getResult()) > 0) {
+                    $value = $event->getResult();
                 }
             }
         } elseif ($action == 'edit') {
@@ -835,8 +835,8 @@ class HtmlFieldHelper extends Helper
             'type' => 'select'
         ];
         
-        $Locales = TableRegistry::get('Locales');
-        $langDir = $Locales->getLangDir(I18n::locale());
+        $Locales = TableRegistry::getTableLocator()->get('Locales');
+        $langDir = $Locales->getLangDir(I18n::getLocale());
 
         if ($langDir == 'rtl') {
             $_options['class'] = 'chosen-select chosen-rtl';
@@ -877,11 +877,11 @@ class HtmlFieldHelper extends Helper
     public function binary($action, Entity $data, $attr, $options = [])
     {
         $value = '';
-        $table = TableRegistry::get($attr['className']);
-        $fileUpload = $table->behaviors()->get('FileUpload');
+        $table = TableRegistry::getTableLocator()->get($attr['className']);
+        $fileUpload = $table->behaviors()->get('FileUploadBehavior');
         $name = '&nbsp;';
         if (!empty($fileUpload)) {
-            $name = $fileUpload->config('name');
+            $name = $fileUpload->getConfig('name');
         }
 
         if ($action == 'index' || $action == 'view') {

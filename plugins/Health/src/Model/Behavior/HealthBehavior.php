@@ -149,14 +149,14 @@ class HealthBehavior extends Behavior
             ];
         }
         /*POCOR-6307 Starts*/
-        $modelName = $model->alias();
-        if($name == 'Staff' && $model->alias() == 'UserInsurances'){
+        $modelName = $model->getAlias();
+        if($name == 'Staff' && $model->getAlias() == 'UserInsurances'){
             $modelName = 'StaffInsurances';
         }
-        elseif($name == 'Students' && $model->alias() == 'UserBodyMasses'){
+        elseif($name == 'Students' && $model->getAlias() == 'UserBodyMasses'){
             $modelName = 'StudentBodyMasses';
         }
-        elseif($name == 'Students' && $model->alias() == 'UserInsurances'){
+        elseif($name == 'Students' && $model->getAlias() == 'UserInsurances'){
             $modelName = 'StudentInsurances';
         }
         /*POCOR-6307 Ends*/

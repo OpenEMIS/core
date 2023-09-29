@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
 
@@ -845,7 +845,7 @@ public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra
     $this->fields['programme']['value'] = $programme->id;
     $this->fields['education_grade_id']['attr']['value'] = $entity->education_grade->name;
 
-    $Institution = TableRegistry::get('Institution.Institutions');
+    $Institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
     $institution = $Institution->find()->where([$Institution->aliasField($Institution->primaryKey()) => $this->institutionId])->first();
     $this->fields['start_date']['date_options']['startDate'] = $institution->date_opened->format('d-m-Y');
     $this->fields['end_date']['date_options']['startDate'] = $institution->date_opened->format('d-m-Y');
@@ -871,7 +871,7 @@ public function onGetEducationSubjectId(Event $event, Entity $entity)
 {  
     $gradeId = $entity->education_grade_id;
     $institution_id = $entity->institution['id'];
-    $EducationGradesSubjects = TableRegistry::get('institution_program_grade_subjects');
+    $EducationGradesSubjects = TableRegistry::getTableLocator()->get('institution_program_grade_subjects');
     $subjectCount = $EducationGradesSubjects->find()
     ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId,
     $EducationGradesSubjects->aliasField('institution_id') => $institution_id])

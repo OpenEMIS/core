@@ -14,6 +14,7 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use Workflow\Model\Behavior\WorkflowBehavior;
+use Cake\Http\ServerRequest;
 
 class InstitutionCasesTable extends ControllerActionTable
 {
@@ -175,9 +176,9 @@ class InstitutionCasesTable extends ControllerActionTable
             'after' => 'linked_records'
         ]);
 
-        if (is_null($this->request->query('sort'))) {
-            $this->request->query['sort'] = 'created';
-            $this->request->query['direction'] = 'desc';
+        if (is_null($this->request->getQuery('sort'))) { // comment cakephp4
+            //$this->request->getQuery('sort') = 'created';
+            //$this->request->getQuery('direction') = 'desc';
         }
 
         $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
@@ -195,25 +196,26 @@ class InstitutionCasesTable extends ControllerActionTable
         $featureOptions = $newFeatureOption;
 
         $featureOptions = ['-1' => '-- ' . __('All') . ' --'] + $featureOptions;
-        if (!is_null($this->request->query('feature')) && array_key_exists($this->request->query('feature'), $featureOptions)) {
-            $selectedFeature = $this->request->query('feature');
+        if (!is_null($this->request->getQuery('feature')) && array_key_exists($this->request->getQuery('feature'), $featureOptions)) {
+            $selectedFeature = $this->request->getQuery('feature');
         } else {
             $selectedFeature = key($featureOptions);
-            $this->request->query['feature'] = $selectedFeature;
+           // $this->request->getQuery('feature') = $selectedFeature; cakephp4
+            $this->request = $this->request->withQueryParams(['period' => $request->data[$this->getAlias()]['academic_period_id']]);         
         }
 
         $this->controller->set(compact('featureOptions', 'selectedFeature'));
 
         $selectedModel = $this->features[$selectedFeature];
         $featureModel = TableRegistry::getTableLocator()->get($selectedModel);
-        $session = $this->request->session();
-        $requestQuery = $this->request->query;
+        $session = $this->request->getSession();
+        $requestQuery = $this->request->getQuery();
         $institutionId = $session->read('Institution.Institutions.id');
 
         $params = new ArrayObject([
             'element' => ['filter' => ['name' => 'Cases.controls', 'order' => 2]],
             'options' => [],
-            'query' => $this->request->query
+            'query' => $this->request->getQuery()
         ]);
 
         $featureModel->dispatchEvent('InstitutionCase.onSetFilterToolbarElement', [$params, $institutionId], $featureModel);
@@ -250,7 +252,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $selectedFeature = $requestQuery['feature'];
         $featureModel = TableRegistry::getTableLocator()->get($this->features[$selectedFeature]);
         $session = $this->Session;
@@ -263,7 +265,7 @@ class InstitutionCasesTable extends ControllerActionTable
         // }
         $userId = $session->read('Auth.User.id');
         //POCOR-7437 start
-        if($this->request->params['controller']=="Profiles"){
+        if($this->request->getParam('controller')=="Profiles"){
             $query
             ->select([
                 $this->aliasField('id'),
@@ -285,7 +287,7 @@ class InstitutionCasesTable extends ControllerActionTable
             ])
             ->contain(['LinkedRecords'])
             ->innerJoin(
-                [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                 [
                     [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
                     //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
@@ -317,7 +319,7 @@ class InstitutionCasesTable extends ControllerActionTable
             ])
             ->contain(['LinkedRecords'])
             ->innerJoin(
-                [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                 [
                     [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
                      [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
@@ -348,7 +350,7 @@ class InstitutionCasesTable extends ControllerActionTable
             ])
             ->contain(['LinkedRecords'])
             ->innerJoin(
-                [$this->LinkedRecords->alias() => $this->LinkedRecords->table()],
+                [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                 [
                     [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
                     //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
@@ -846,7 +848,7 @@ class InstitutionCasesTable extends ControllerActionTable
     }
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request){
        
-        if($request->params['controller']=="Profiles"){
+        if($request->getParam('controller')=="Profiles"){
             
             $institutionList = $this->Institutions
             ->find('list', [

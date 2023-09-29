@@ -19,7 +19,7 @@ class AdvancedSpecificNameTypeSearchBehavior extends Behavior {
 	public function initialize(array $getConfig): void {
 		$model = $this->getConfig('modelToSearch');
 		if (empty($model)) {
-			$this->getConfig('modelToSearch', $this->_table);
+			$this->setConfig('modelToSearch', $this->_table);
 		} else {
 			if (! $model instanceof Table && ! $model instanceof BelongsTo) {
 				throw new MissingModelException('AdvancedSpecificNameTypeSearchBehavior requires a registered model for "modelToSearch" parameter. <br/>"'.$model.'" defined as "modelToSearch" is not a model object.');

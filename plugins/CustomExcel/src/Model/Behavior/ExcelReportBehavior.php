@@ -20,6 +20,7 @@ use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use Cake\ORM\Table;
 
 class ExcelReportBehavior extends Behavior
 {
@@ -53,21 +54,21 @@ class ExcelReportBehavior extends Behavior
         'pdf' => 'Mpdf'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $model = $this->_table;
-        $folder = WWW_ROOT . $this->config('folder');
-        $subfolder = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder');
+        $folder = WWW_ROOT . $this->getConfig('folder');
+        $subfolder = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder');
         if (!isset($config['filename'])) {
-            $this->config('filename', $model->alias());
+            $this->getConfig('filename', $model->getAlias());
         }
 
         new Folder($folder, true, 0777);
         new Folder($subfolder, true, 0777);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onRenderExcelTemplate'] = 'onRenderExcelTemplate';
@@ -1044,7 +1045,7 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    private function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
+    public function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): table
     {
         $rowValue = $attr['rowValue'];
         $columnIndex = $attr['columnIndex'];
