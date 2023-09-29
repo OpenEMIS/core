@@ -23,9 +23,9 @@ use Cake\Utility\Inflector;
                     <?= $this->Html->script('Area.tree/sg.tree.svc', ['block' => true]); ?>
                     <div class="select">
                         <label><?= $filters[$field]['label'] ?></label>
-                        <?php
-                        echo $this->Form->unlockField("AdvanceSearch.$model.belongsTo.$field");
-                        echo $this->Form->unlockField($field.'-tree');
+                        <?
+                         $this->Form->unlockField("AdvanceSearch.$model.belongsTo.$field");
+                         $this->Form->unlockField($field.'-tree');
                         $userId = $this->request->session()->read('Auth.User.id');
                         ?>
                         <div

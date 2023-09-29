@@ -62,7 +62,7 @@ $icon = strpos($_productName, 'School') !== false ? '_school' : '';
 			<?php
 			echo $this->element('OpenEmis.alert');
 
-			echo $this->Form->create('Users', [
+			echo $this->Form->create($users, [
 				'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp',$encryptdata],
 				'class' => 'form-horizontal'
 			]);

@@ -175,7 +175,8 @@ class ReportListBehavior extends Behavior {
 		return $query;
 	}
 
-	public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request) {
+	// public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request) {
+		public function onUpdateFieldFormat(Event $event, array $attr, $action) {
 		
 		
 		if($request->data['Staff']['feature'] == 'Report.StaffPhoto' || $request->data['Students']['feature'] == 'Report.StudentsPhoto'){

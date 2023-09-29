@@ -63,7 +63,7 @@ class LocalizationComponent extends Component
         $this->controller = $this->_registry->getController();
         $this->Cookie->name = str_replace(' ', '_', $config['productName']) . '_COOKIE';
         $this->Cookie->time = 3600 * 24 * 30; // expires after one month
-       // list($this->language, $this->showLanguage) = $this->detectLanguage();
+        list($this->language, $this->showLanguage) = $this->detectLanguage();
         $this->Session = $session;
     }
 
@@ -114,20 +114,20 @@ class LocalizationComponent extends Component
         $showLanguage = $this->showLanguage;
         $lang = $this->language;
         $eventManager = $this->getController()->getEventManager();
-        $event = $eventManager->dispatch($this->controller, 'Controller.Localization.getLanguageOptions', 'getLanguageOptions', [], true);
-        if ($event->result) {
-            if (is_array($event->result)) {
-                list($showLanguage, $lang) = $event->result;
+        $event = $eventManager->dispatch($this->getController()->getName(), 'Controller.Localization.getLanguageOptions', 'getLanguageOptions', [], true);
+        if ($event->getResult()) {
+            if (is_array($event->getResult())) {
+                list($showLanguage, $lang) = $event->getResult();
             }
         }
 
         // Language menu enabled
         if ($session->read('System.language_menu')) {
-            if ($request->query('lang')) {
-                $lang = $request->query('lang');
+            if ($this->getController()->getRequest()->getQuery()) {
+                $lang = $this->getController()->getRequest()->getQuery();
                 $user = $this->Auth->user();
                 if ($user) {
-                    $event = $eventManager->dispatch($this->controller, 'Controller.Localization.updateLoginLanguage', 'updateLoginLanguage', [$user, $lang], true);
+                    $event = $eventManager->dispatch($this->getController()->getName(), 'Controller.Localization.updateLoginLanguage', 'updateLoginLanguage', [$user, $lang], true);
                 }
                 $this->Cookie->write('System.language', $lang);
             } else if ($this->Cookie->check('System.language')) {
@@ -144,7 +144,7 @@ class LocalizationComponent extends Component
             // $lang = $session->read('System.language');
             $user = $this->Auth->user();
             if ($user) {
-                $event = $eventManager->dispatch($this->controller, 'Controller.Localization.updateLoginLanguage', 'updateLoginLanguage', [$user, $lang], true);
+                $event = $eventManager->dispatch($this->getController()->getName(), 'Controller.Localization.updateLoginLanguage', 'updateLoginLanguage', [$user, $lang], true);
             }
             $this->Cookie->write('System.language', $lang);
         }
@@ -314,7 +314,7 @@ class LocalizationComponent extends Component
         $Locales = TableRegistry::getTableLocator()->get('Locales');
         $langDir = $Locales->getLangDir($htmlLang);
         $htmlLangDir = array_key_exists($htmlLang, $languages) ? $languages[$htmlLang]['direction'] : $langDir;
-
+        // echo "<pre>";print_r($this->getOptions());die;
         $controller->set('showLanguage', $this->showLanguage);
         $controller->set('languageOptions', $this->getOptions());
         $controller->set(compact('htmlLang', 'htmlLangDir'));
@@ -338,7 +338,7 @@ class LocalizationComponent extends Component
                 $options[$locale->iso] = $locale->name;
             }
         }
-
+        // echo "<pre>";print_r($options);die;
         return $options;
     }
 

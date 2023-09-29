@@ -25,7 +25,7 @@ class DemographicTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
         $query = $this
             ->find()

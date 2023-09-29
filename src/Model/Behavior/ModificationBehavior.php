@@ -16,7 +16,7 @@ class ModificationBehavior extends Behavior
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-        $schema = $this->_table->schema();
+        $schema = $this->_table->getSchema();
         $columns = $schema->columns();
 
         $userId = null;

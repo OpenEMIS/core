@@ -74,6 +74,7 @@ class ProfilesController extends AppController
         $this->set('contentHeader', 'Personal');
     }
 
+    public function Accounts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Accounts', 'actions' => ['index', 'view']]); }
     public function Personal() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
     //public function Profiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
 

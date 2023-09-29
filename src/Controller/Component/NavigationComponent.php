@@ -2308,7 +2308,13 @@ class NavigationComponent extends Component
     public function getReportNavigation()
     {
         $navigation = [
-            'Reports.Directory' => [
+            // 'Reports.Directory' => [
+            //     'title' => 'Directory',
+            //     'parent' => 'Reports',
+            //     'params' => ['plugin' => 'Report'],
+            // ],
+
+            'Reports.Directory.index' => [
                 'title' => 'Directory',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
