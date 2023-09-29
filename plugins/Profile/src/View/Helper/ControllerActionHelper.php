@@ -17,7 +17,7 @@ use ControllerAction\Model\Traits\SecurityTrait;
 class ControllerActionHelper extends Helper
 {
     use SecurityTrait;
-    public $helpers = ['Html', 'ControllerAction.HtmlField', 'Form', 'Paginator', 'Label', 'Url'];
+    //public $helpers = ['Html', 'ControllerAction.HtmlField', 'Form', 'Paginator', 'Label', 'Url'];
 
     public function getColumnLetter($columnNumber)
     {

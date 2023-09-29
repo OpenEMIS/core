@@ -12,9 +12,9 @@ use App\Model\Table\ControllerActionTable;
 
 class BehaviourClassificationsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('behaviour_classifications');
+        $this->setTable('behaviour_classifications');
         parent::initialize($config);
 
         $this->hasMany('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -25,7 +25,7 @@ class BehaviourClassificationsTable extends ControllerActionTable
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
-        $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+        $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
 
         $search = sprintf('%%"%s":"%s"%%', 'behaviour_classification_id', $entity->id);
         $WorkflowRuleResults = $WorkflowRules

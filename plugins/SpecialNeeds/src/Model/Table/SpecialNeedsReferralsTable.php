@@ -5,6 +5,7 @@ use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -14,9 +15,9 @@ use Cake\Validation\Validator;
 class SpecialNeedsReferralsTable extends ControllerActionTable
 {
     const COMMENT_MAX_LENGTH = 350;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_special_needs_referrals');
+        $this->setTable('user_special_needs_referrals');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -40,14 +41,14 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $this->addBehavior('Excel', ['pages' => ['index']]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.ajaxReferrerAutocomplete'] = 'ajaxReferrerAutocomplete';
         return $events;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -82,7 +83,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
     {
         // Academic Periods Filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : '-1';
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : '-1';
 
         $academicPeriodOptions = ['-1' => 'All Academic Period'] + $academicPeriodOptions;
         if ($selectedAcademicPeriod != '-1') {
@@ -98,9 +99,9 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        if (is_null($this->request->query('academic_period_id'))) {
+        if (is_null($this->request->getQuery('academic_period_id'))) {
             $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
-            $url = $this->ControllerAction->url($this->alias());
+            $url = $this->ControllerAction->url($this->getAlias());
             $url['academic_period_id'] = '-1';
             $this->controller->redirect($url);
         }
@@ -112,7 +113,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $this->setFieldOrder(['referrer_id', 'referrer_type_id', 'date', 'reason_type_id']);
 
         // Start POCOR-5188
-         if($this->request->params['controller'] == 'Staff'){
+         if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Referrals','Staff - Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -130,7 +131,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
+        }elseif($this->request->getParam('controller') == 'Students'){
             $is_manual_exist = $this->getManualUrl('Institutions','Referrals','Students - Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -149,7 +150,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getParam('controller') == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Referrals','Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -168,7 +169,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Profiles'){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){ 
             $is_manual_exist = $this->getManualUrl('Personal','Referrals','Special Needs');       
             if(!empty($is_manual_exist)){ 
                 $btnAttr = [
@@ -206,7 +207,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];

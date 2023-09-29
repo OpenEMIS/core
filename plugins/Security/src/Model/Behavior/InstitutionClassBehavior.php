@@ -281,8 +281,8 @@ class InstitutionClassBehavior extends Behavior
         $controller = $this->_table->controller;
         $roles = [];
         $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-        if ($event->result) {
-            $roles = $event->result;
+        if ($event->getResult()) {
+            $roles = $event->getResult();
         }
         $allClassesPermission = $AccessControl->check(['Institutions', 'AllClasses', $action], $roles);
         if ($allClassesPermission) {

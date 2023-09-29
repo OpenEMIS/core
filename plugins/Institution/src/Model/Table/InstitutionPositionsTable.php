@@ -10,7 +10,7 @@ use Cake\ORM\Entity;
 use Cake\I18n\Date;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Collection\Collection;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
@@ -407,7 +407,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                         $this->StaffPositionTitles->aliasField('type') => 'DESC',
                         $this->StaffPositionTitles->aliasField('order'),
                     ])
-                    // ->autoFields(true)
+                    ->enableAutoFields(true)
                     ->toArray();
 
             // Filter by role previlege
@@ -420,7 +420,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             // Adding the opt group
             $titles = [];
             foreach ($staffTitleOptions as $title) {
-                $type = __((string) $types[$title->type]);
+                $type = __((string)$types[$title->type]);
                 $titles[$type][$title->id] = $title->name;
             }
         } else {
@@ -1322,19 +1322,19 @@ class InstitutionPositionsTable extends ControllerActionTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Positions';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
                             'workflow_id'=>$Workflows->aliasField('id'),
                             'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                                 [
                                     $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
                                 ])
@@ -1349,19 +1349,19 @@ class InstitutionPositionsTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
+            $session = $request->getSession();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
             }
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
-                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
                 if (!empty($stepRoles)) {
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $Areas = TableRegistry::get('Area.Areas');
-                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                    $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                    $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     if ($isSchoolBased) {
                         if (is_null($institutionId)) {                        
                             Log::write('debug', 'Institution Id not found.');
@@ -1411,21 +1411,22 @@ class InstitutionPositionsTable extends ControllerActionTable
      * POCOR-6971 change in POCOR-7221
      * add shift dropdown
     */
-    public function onUpdateFieldShiftId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldShiftId(Event $event, array $attr, $action, ServerRequest $request)
     {   
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
         $this->currentAcademicPeriod = $this->AcademicPeriods->get($currentAcademicPeriodId);
         $currentAcademicPeriodIdd = $this->currentAcademicPeriod->id;
-        $institutionShifts = TableRegistry::get('institution_shifts');
-        $shiftOptions = TableRegistry::get('shift_options'); //POCOR-7233 add shift name
+        $institutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
+        $shiftOptions = TableRegistry::getTableLocator()->get('Institution.ShiftOptions'); //POCOR-7233 add shift name
         $institutionId = $this->Session->read('Institution.Institutions.id');
+
         $option = [];
         $optionAll = $institutionShifts->find('all')->select(['stime'=>$institutionShifts->aliasField('start_time'),'          etime'=>$institutionShifts->aliasField('end_time'),
                       'shift_option_id'=>$institutionShifts->   aliasField('shift_option_id'),
                       'name'=>$shiftOptions->aliasField('name')
                     ])
-                    ->leftJoin([$shiftOptions->alias() => $shiftOptions->table()],
+                    ->leftJoin([$shiftOptions->getAlias() => $shiftOptions->getTable()],
                     [$shiftOptions->aliasField('id = ') . $institutionShifts->aliasField('shift_option_id')])
                     ->where([$institutionShifts->aliasField('location_institution_id')=>$institutionId, $institutionShifts->aliasField('academic_period_id')=>$currentAcademicPeriodIdd])->toArray();
         foreach($optionAll as $key => $result){

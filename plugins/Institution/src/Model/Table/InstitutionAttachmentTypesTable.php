@@ -9,9 +9,9 @@ class InstitutionAttachmentTypesTable extends ControllerActionTable {
 	// 	//$this->hasMany('InstitutionCommittees', ['className' => 'Institution.InstitutionCommittees', 'foreignKey' =>'institution_committee_type_id']);
 	// 	$this->addBehavior('FieldOption.FieldOption');
 	// }
-	public function initialize(array $config)
+	public function initialize(array $config): void
     {
-        $this->table('institution_attachment_types');
+        $this->SetTable('institution_attachment_types');
         parent::initialize($config);
 
         // $this->hasMany('StudentBehaviours', ['className' => 'Student.StudentBehaviours', 'foreignKey' => 'student_behaviour_category_id']);

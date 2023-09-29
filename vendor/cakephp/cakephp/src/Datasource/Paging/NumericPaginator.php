@@ -268,7 +268,7 @@ class NumericPaginator implements PaginatorInterface
     protected function buildParams(array $data): array
     {
         $limit = $data['options']['limit'];
-
+        $limit = 10;
         $paging = [
             'count' => $data['count'],
             'current' => $data['numResults'],

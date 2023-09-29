@@ -16,7 +16,7 @@ class SingleGradeBehavior extends Behavior
 {
     use EventTrait;
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.add.afterSave'] = ['callable' => 'addAfterSave', 'priority' => 9];

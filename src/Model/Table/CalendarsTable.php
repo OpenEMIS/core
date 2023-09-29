@@ -116,7 +116,7 @@ class CalendarsTable extends ControllerActionTable
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         //for showing start date and end date on edit page
-        if(!$entity->errors()){
+        if(!$entity->getErrors()){
             $calendarEventId = $entity->id;
             $query = $this->CalendarEventDates->find();
     
@@ -258,7 +258,7 @@ class CalendarsTable extends ControllerActionTable
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
-        $ShiftOptionTable = TableRegistry::get('shift_options');
+        $ShiftOptionTable = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');
        
         $this->field('name', ['attr' => ['label' => __('Name')]]);
 
@@ -277,9 +277,9 @@ class CalendarsTable extends ControllerActionTable
 
         $this->field('end_time', ['type' => 'time','attr' => ['label' => __('End Time')]]);
 
-        $this->fields['institution_shift_id']['type'] = 'select';
+        //$this->fields['institution_shift_id']['type'] = 'select';
         
-        $this->field('institution_shift_id', ['attr' => ['label' => __('Shift')]]);
+        //$this->field('institution_shift_id', ['attr' => ['label' => __('Shift')]]);
         //POCOR-5280 : End
     }
 //POCOR-5280 : Start

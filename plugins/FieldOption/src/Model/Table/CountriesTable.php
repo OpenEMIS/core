@@ -8,9 +8,9 @@ use Cake\ORM\Query;
 
 class CountriesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('countries');
+        $this->setTable('countries');
         parent::initialize($config);
 
         $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices']);
@@ -19,7 +19,7 @@ class CountriesTable extends ControllerActionTable
         $this->setDeleteStrategy('cascade');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

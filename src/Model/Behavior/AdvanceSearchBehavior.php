@@ -59,7 +59,7 @@ class AdvanceSearchBehavior extends Behavior
     {
         $order = $this->getConfig('order');
         if ($this->_table->action == 'index') {
-            $labels = TableRegistry::get('Labels');
+            $labels = TableRegistry::getTableLocator()->get('Labels');
             $filters = [];
             $advancedSearch = false;
             $session = $this->_table->request->getSession();
@@ -94,7 +94,7 @@ class AdvanceSearchBehavior extends Behavior
                             switch ($relatedModelTable) {
                                 case 'areas':
                                     $filters[$key] = [
-                                        'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
+                                        'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->getAlias()),
                                         'selected' => $selected,
                                         'type' => 'areapicker',
                                         'source_model' => 'Area.Areas'
@@ -103,7 +103,7 @@ class AdvanceSearchBehavior extends Behavior
 
                                 case 'area_administratives':
                                     $filters[$key] = [
-                                        'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
+                                        'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->getAlias()),
                                         'displayCountry' => $this->getConfig('display_country'),
                                         'selected' => $selected,
                                         'type' => 'areapicker',
@@ -113,7 +113,7 @@ class AdvanceSearchBehavior extends Behavior
                             }
                         } else {
                             $filters[$key] = [
-                                'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
+                                'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->getAlias()),
                                 'options' => $list,
                                 'selected' => $selected,
                                 'type' => 'select'
@@ -223,7 +223,7 @@ class AdvanceSearchBehavior extends Behavior
     {
         $request = $this->_table->request;
         $reset = $request->getData('reset');
-        if (!empty($reset)) {
+        if (!empty($reset) && isset($reset)) {
             if ($reset == 'Reset') {
                 $model = $this->_table;
                 $alias = $model->getAlias();
@@ -259,7 +259,6 @@ class AdvanceSearchBehavior extends Behavior
         return $this->advancedSearchQuery($request, $query);
     }
 
-    // public function advancedSearchQuery(Request $request, Query $query)
     public function advancedSearchQuery(ServerRequest $request, Query $query)
     {
         $conditions = [];
@@ -420,11 +419,11 @@ class AdvanceSearchBehavior extends Behavior
 
     public function isAdvancedSearchEnabled()
     {
-        $requestData = $this->_table->request->data;
+        $requestData = $this->_table->request->getData();
         $advanceSearchData = isset($requestData['AdvanceSearch']) ? $requestData['AdvanceSearch'] : [];
 
         if ($advanceSearchData) {
-            foreach ($advanceSearchData[$this->_table->alias()] as $key => $value) {
+            foreach ($advanceSearchData[$this->_table->getAlias()] as $key => $value) {
                 if (!empty($value)) {
                     foreach ($value as $key => $searchValue) {
                         if (!empty($searchValue) || strlen($searchValue) > 0) {

@@ -8,15 +8,15 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class UserEmploymentsTable extends ControllerActionTable {
-	public function initialize(array $config) {
-		$this->table('user_employments');
+	public function initialize(array $config): void {
+		$this->setTable('user_employments');
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('Industries', ['className' => 'FieldOption.Industries', 'foreignKey' => 'industry_id']);//POCOR-7376
 	}
 
-	public function validationDefault(Validator $validator)
+	public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -30,7 +30,7 @@ class UserEmploymentsTable extends ControllerActionTable {
         $this->setupTabElements();
 		
 		// Start POCOR-5188
-		if($this->request->params['controller'] == 'Students'){
+		if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Employment','Students - Professional');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -49,7 +49,7 @@ class UserEmploymentsTable extends ControllerActionTable {
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
 
-		}else if($this->request->params['controller'] == 'Staff'){
+		}else if($this->request->getParam('controller') == 'Staff'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Employment','Staff - Professional');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -68,7 +68,7 @@ class UserEmploymentsTable extends ControllerActionTable {
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
 
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Employment','Professional');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -87,7 +87,7 @@ class UserEmploymentsTable extends ControllerActionTable {
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Profiles'){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){ 
             $is_manual_exist = $this->getManualUrl('Personal','Employments','Professional');       
             if(!empty($is_manual_exist)){ 
                 $btnAttr = [

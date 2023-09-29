@@ -9,7 +9,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Collection\Collection;
 use Cake\I18n\Time;
@@ -733,7 +733,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     }
 
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         // $className = isset($request->query) ? $request->query['class_id'] : $request['data']['InstitutionSubjects']['class_name'];
         $className = '';

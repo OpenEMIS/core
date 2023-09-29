@@ -12,7 +12,7 @@ use Cake\Core\Configure;
 
 class ExternalDataSourceAttributesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->addBehavior('Restful.RestfulAccessControl', [

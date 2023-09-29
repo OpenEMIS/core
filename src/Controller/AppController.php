@@ -281,6 +281,7 @@ class AppController extends Controller
         $this->viewBuilder()->addHelper('ControllerAction.HtmlField');
         $this->viewBuilder()->addHelper('OpenEmis.Navigation');
         $this->viewBuilder()->addHelper('OpenEmis.Resource');
+        $this->viewBuilder()->setHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
     }
 
     // Triggered from LocalizationComponent
