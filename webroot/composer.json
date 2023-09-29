@@ -1,0 +1,82 @@
+{
+    "name": "korditpteltd/openemis-phpoe",
+    "description": "KORDIT OpenEMIS CORE",
+    "homepage": "https://demo.openemis.org/core",
+    "type": "project",
+    "license": "GPL-2.0",
+    "require": {
+        "php": ">=5.4.16",
+        "cakephp/cakephp": "3.3.*",
+        "mobiledetect/mobiledetectlib": "2.*",
+        "PHPOffice/PHPExcel": "dev-master",
+        "korditpteltd/kd-cakephp-restful": "^1.1",
+        "admad/cakephp-jwt-auth": "2.0.1",
+        "korditpteltd/kd-cakephp-webhooks": "^1.0",
+        "mk-j/php_xlsxwriter": "^0.32",
+        "korditpteltd/kd-cakephp-sso": "^1.2",
+        "korditpteltd/kd-cakephp-page": "^1.0.2",
+        "phpoffice/phpspreadsheet": "^1.3",
+        "mpdf/mpdf": "^7.1"
+    },
+    "require-dev": {
+        "psy/psysh": "@stable",
+        "phpunit/phpunit": "*",
+        "cakephp/plugin-installer": "*",
+        "cakephp/migrations": "~1.0",
+        "cakephp/debug_kit": "~3.2",
+        "cakephp/bake": "~1.1"
+    },
+    "suggest": {
+        "phpunit/phpunit": "Allows automated tests to be run without system-wide install.",
+        "cakephp/cakephp-codesniffer": "Allows to check the code against the coding standards used in CakePHP."
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src",
+            "ControllerAction\\": "./plugins/ControllerAction/src",
+            "OAuth\\": "./plugins/OAuth/src",
+            "Archive\\": "./plugins/Archive/src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "App\\Test\\": "tests",
+            "Cake\\Test\\": "./vendor/cakephp/cakephp/tests",
+            "ControllerAction\\Test\\": "./plugins/ControllerAction/tests",
+            "OAuth\\Test\\": "./plugins/OAuth/tests",
+            "Archive\\Test\\": "./plugins/Archive/tests"
+        }
+    },
+    "scripts": {
+        "post-install-cmd": "App\\Console\\Installer::postInstall",
+        "post-create-project-cmd": "App\\Console\\Installer::postInstall",
+        "post-autoload-dump": "Cake\\Composer\\Installer\\PluginInstaller::postAutoloadDump",
+        "check": [
+            "@test",
+            "@cs-check"
+        ],
+        "cs-check": "phpcs --colors -p --standard=vendor/cakephp/cakephp-codesniffer/CakePHP ./src ./tests",
+        "cs-fix": "phpcbf --colors --standard=vendor/cakephp/cakephp-codesniffer/CakePHP ./src ./tests",
+        "test": "phpunit --colors=always"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "git",
+            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git"
+        },
+        {
+            "type": "git",
+            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git"
+        },
+        {
+            "type": "git",
+            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-webhooks.git"
+        },
+        {
+            "type": "git",
+            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-page.git"
+        }
+    ]
+}

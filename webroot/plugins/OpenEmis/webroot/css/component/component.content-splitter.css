@@ -1,0 +1,349 @@
+/* CONTENT SPLITTER v.1.0.1 */
+
+
+/* === Split Containers === */
+
+.content-splitter {
+    z-index: 1;
+    top: 0 !important;
+}
+
+.content-splitter .main-content,
+.content-splitter .split-content,
+.content-splitter .split-handler {
+    background-color: #FFF;
+}
+
+.overlay-content {
+    width: 100% !important;
+}
+
+.content-splitter .main-content {
+    padding: 5px 10px 5px 0;
+}
+
+.content-splitter .split-content {
+    padding: 5px;
+    margin: 0 0 0 10px;
+    z-index: 99;
+}
+
+/* === End of Split Containers === */
+
+
+/* === Splitter Transition === */
+
+.splitter-slide-in {
+    right: 0;
+    display: block !important;
+}
+
+.splitter-slide-out {
+    /* FIX IOSTG-331
+    left: 4000px !important;*/
+    left: 100vw !important;
+    right: -4000px !important;
+    display: block !important;
+}
+
+.slide-transition {
+    -webkit-transition: all 0.5s ease;
+    -moz-transition: all 0.5s ease;
+    -ms-transition: all 0.5s ease;
+    -o-transition: all 0.5s ease;
+    transition: all 0.5s ease;
+}
+
+
+/* === End of Splitter Transition === */
+
+
+/* === Basic Splitter Mobile Buttons === */
+
+.mobile-split-btn {
+    display: none;
+}
+
+/* === End of Basic Splitter Mobile Buttons === */
+
+
+/* === Handler === */
+
+.content-splitter.split-panes.horizontal > .split-handler {
+    border-left: 1px solid #DDD;
+    top: 0 !important;
+    bottom: 0 !important;
+    -webkit-box-shadow: inset 2px -2px 4px rgba(0, 0, 0, 0.04);
+    box-shadow: inset 2px -2px 4px rgba(0, 0, 0, 0.04);
+    background-color: #FEFEFE;
+}
+
+.content-splitter.split-panes.horizontal > .split-handler:after {
+    left: -3px !important;
+    top: 45%;
+    margin-top: 4px;
+}
+
+.content-splitter.split-panes.horizontal > .split-handler:hover:after,
+.content-splitter.split-panes.horizontal > .split-handler:active:after {
+    margin-left: 0;
+}
+
+.content-splitter.split-panes > .split-handler:hover,
+.split-panes > .split-handler:active {
+    border-color: #555;
+    border-style: dashed;
+    background-color: #FFF;
+}
+
+.content-splitter.split-panes.horizontal > .split-handler:hover:after,
+.split-panes.horizontal > .split-handler:active:after {
+    background-color: transparent;
+    color: #999;
+}
+
+
+/* === End of Handler === */
+
+
+/* === Split Content Header === */
+
+/*.split-content-header,
+.main-content-header {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+    background-color: #FFF;
+}*/
+
+.split-content-header {
+    padding: 0;
+}
+
+
+/* === End of Split Content Header === */
+
+
+/* === Split Content Area === */
+
+/*.main-content-area,
+.split-content-area {
+    position: absolute;
+    width: 100%;
+    top: 40px;
+    left: 0;
+    overflow: scroll;
+    display: block;
+}*/
+
+.main-content-area {
+    padding: 5px 0 40px;
+}
+
+.split-content-area {
+    padding: 0;
+}
+
+
+/* === End of Split Content Area === */
+
+
+/* === Split Action Buttons === */
+
+.split-content-header h3,
+.split-content-header .split-content-btn {
+    vertical-align: top;
+}
+
+.split-with-btn .split-content-header h3 {
+    display: inline-block;
+    width: 70%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.split-content-header .split-content-btn {
+    display: inline-block;
+    width: calc(30% - 5px);
+    text-align: right;
+}
+
+.split-content-header .split-content-btn button:first-child {
+    float: right;
+    margin-left: 5px;
+    margin-bottom: 5px;
+}
+
+.split-content-btn button {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+}
+
+.btn-close,
+.btn-close:hover,
+.btn-close:focus {
+    background-color: transparent;
+    border: 0;
+    color: #999;
+    padding: 0;
+    margin-left: 10px;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
+.btn-close:hover {
+    color: #6B6B6B;
+}
+
+.content-splitter .btn {
+    position: relative;
+}
+
+.content-splitter .btn i {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    -o-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    margin: 0;
+}
+
+.content-splitter .btn .caret {
+    display: none;
+}
+
+.content-splitter .btn-group .action-dropdown {
+    left: auto !important;
+    top: 75% !important;
+}
+
+.content-splitter .action-dropdown .dropdown-arrow {
+    right: 0 !important;
+}
+
+@media only screen and (max-width: 1024px) {
+    .content-splitter .split-content {
+        margin: 0 !important;
+    }
+    .split-content-header,
+    .split-content-area {
+        padding-left: 0;
+    }
+    .main-content {
+        width: 100% !important;
+    }
+    .mobile-split-btn {
+        display: block;
+    }
+}
+
+
+/* === End of Split Action Buttons === */
+
+
+/* === RTL CONTENT SPLITTER === */
+
+
+/* === RTL Split Containers === */
+
+.rtl .content-splitter .split-pane2 {
+    left: 0;
+}
+
+.rtl .content-splitter .split-content {
+    margin: 0 10px 0 0;
+}
+
+.rtl .split-content-area {
+    padding: 5px 10px 40px 0;
+}
+
+
+/* === End of RTL Split Containers === */
+
+
+/* === RTL Handler === */
+
+.rtl .content-splitter.split-panes.horizontal > .split-handler {
+    top: 0;
+    bottom: 0;
+    border-left: 0;
+    border-right: 1px solid #DDD;
+    -webkit-box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.04);
+    -moz-box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.04);
+    box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.04);
+}
+
+
+/* === End of RTL Handler === */
+
+
+/* === RTL Split Content Header === */
+
+.rtl .split-content-header {
+    padding: 0 10px 0 0;
+}
+
+.rtl .split-content-header .split-content-btn {
+    text-align: left;
+}
+
+.rtl .content-splitter.split-panes.horizontal > .split-handler {
+    top: 0 !important;
+    bottom: 0 !important;
+}
+
+.rtl .split-content-header .split-content-btn button:first-child {
+    float: left;
+    margin-left: 0;
+    margin-right: 5px;
+}
+
+.rtl .content-splitter .fa-close {
+    line-height: inherit;
+    width: auto;
+}
+
+.rtl .content-splitter.split-panes.horizontal > .split-handler:after {
+    margin-top: 13px;
+}
+
+.rtl .content-splitter .btn-group .action-dropdown {
+    right: -124px !important;
+    left: 4px !important;
+}
+
+.rtl .content-splitter .action-dropdown .dropdown-arrow {
+    left: 3px;
+    right: auto !important;
+}
+
+.rtl .content-splitter .main-content {
+    padding: 5px 0 5px 10px;
+}
+
+
+/* === End of RTL Split Content Header === */
+
+
+/* === RTL Splitter Transition === */
+
+.rtl .splitter-slide-in {
+    left: 0;
+}
+
+.rtl .splitter-slide-out {
+    /* FIX IOSTG-331
+    right: 2000px !important;*/
+    right: 100vw !important;
+    left: -2000px !important;
+}
+
+
+/* === End of RTL Splitter Transition === */

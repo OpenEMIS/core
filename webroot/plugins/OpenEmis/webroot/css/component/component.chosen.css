@@ -1,0 +1,124 @@
+/* CHOSEN v.1.0.3 */
+
+.chosen-container-multi .chosen-choices li.search-field input[type="text"] {
+    font-family: Helvetica, Arial !important;
+}
+
+.chosen-container-single .chosen-single abbr,
+.chosen-container-single .chosen-search {
+    display: none !important;
+}
+
+.has-reset .chosen-container-single .chosen-single abbr,
+.has-search .chosen-container-single .chosen-search,
+.has-search .chosen-container-single .chosen-single abbr {
+    display: block !important;
+}
+
+.chosen-container .chosen-results {
+    clear: both;
+}
+
+.chosen-container-single .chosen-single {
+    background-color: #FFF;
+    background: none !important;
+    box-shadow: none !important;
+    border: 1px solid #CCC !important;
+    color: #444;
+    -webkit-border-radius: 3px !important;
+    -moz-border-radius: 3px !important;
+    -ms-border-radius: 3px !important;
+    border-radius: 3px !important;
+    padding: 5px 10px !important;
+    height: 30px !important;
+}
+
+.chosen-container.chosen-with-drop .chosen-drop {
+    margin-top: -6px;
+}
+
+.chosen-container-single .chosen-single span {
+    line-height: 20px;
+}
+
+.chosen-container-single .chosen-single div {
+    padding: 3px 0;
+}
+
+.chosen-container-single .chosen-single abbr {
+    top: 9px !important;
+}
+
+.chosen-container .chosen-results {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.chosen-container .chosen-results li.active-result {
+    border: 1px solid transparent;
+}
+
+.form-horizontal table .chosen-container {
+    width: 100% !important;
+    margin: 5px 0;
+}
+
+.chosen-drop {
+    border: 1px solid #CCC !important;
+    -webkit-border-top-left-radius: 0 !important;
+    -moz-border-top-left-radius: 0 !important;
+    -ms-border-top-left-radius: 0 !important;
+    border-top-left-radius: 0 !important;
+    -webkit-border-top-right-radius: 0 !important;
+    -moz-border-top-right-radius: 0 !important;
+    -ms-border-top-right-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+}
+
+.chosen-container-single a:hover {
+    text-decoration: none !important;
+}
+
+.chosen-container-multi .chosen-choices li.search-field input[type="text"] {
+    padding: 2px 4px 0 !important;
+    height: 30px;
+}
+
+.chosen-container-multi .chosen-choices li.search-choice .search-choice-close {
+    top: 6px !important;
+}
+
+.chosen-container .chosen-results li.active-result:hover {
+    border-left-color: transparent !important;
+    border-right-color: transparent !important;
+}
+
+.chosen-container .chosen-results li {
+    font-size: 12px !important;
+}
+
+.input-multiple-select {
+    display: block;
+    float: left;
+    width: 30%;
+}
+
+.input-multiple-select select {
+    padding: 5px;
+}
+
+.search-choice {
+    border: 1px solid #CCC !important;
+    background: #EEE !important;
+    padding: 5px 20px 5px 6px !important;
+}
+
+/* RTL */
+
+.rtl .search-choice {
+    padding: 5px 6px 5px 20px !important;
+}
+
+.rtl .chosen-container .chosen-results li {
+    font-size: 14px !important;
+}

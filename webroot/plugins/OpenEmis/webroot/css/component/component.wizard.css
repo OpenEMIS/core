@@ -1,0 +1,632 @@
+/* WIZARD v.1.0.8 */
+
+.fuelux .wizard {
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+    border: 0;
+    background-color: #FFF;
+    margin-bottom: 10px;
+}
+
+.fuelux .wizard .steps-container {
+    border-radius: 4px 4px 0 0;
+    overflow: hidden;
+    border: 1px solid #DDD;
+    height: 48px;
+    border-bottom: none;
+}
+
+.fuelux .wizard > ul.steps li:first-child,
+.fuelux .wizard > .steps-container > ul.steps li:first-child {
+    -webkit-border-radius: 4px 0 0 0;
+    border-radius: 4px 0 0 0;
+}
+
+.fuelux .wizard > ul.steps.previous-disabled li.complete:hover,
+.fuelux .wizard > .steps-container > ul.steps.previous-disabled li.complete:hover {
+    background: #999;
+    color: #FFF;
+    cursor: default;
+}
+
+.fuelux .wizard > ul.steps.previous-disabled li.complete:hover .chevron:before,
+.fuelux .wizard > .steps-container > ul.steps.previous-disabled li.complete:hover .chevron:before {
+    border-left-color: #999;
+}
+
+.fuelux .wizard > ul.steps li,
+.fuelux .wizard > .steps-container > ul.steps li {
+    float: left;
+    margin: 0;
+    padding: 8px 20px 0 30px;
+    height: 48px;
+    line-height: 32px;
+    position: relative;
+    background: #ededed;
+    color: #999999;
+    font-size: 12px;
+    cursor: not-allowed;
+    border-bottom: none;
+}
+
+.fuelux .wizard > ul.steps li.active,
+.fuelux .wizard > .steps-container > ul.steps li.active {
+    line-height: 30px;
+}
+
+.fuelux .wizard > ul.steps li .chevron,
+.fuelux .wizard > .steps-container > ul.steps li .chevron {
+    border: 24px solid transparent;
+    border-left: 14px solid #d4d4d4;
+    border-right: 0;
+    display: block;
+    position: absolute;
+    right: -15px;
+    top: -5px;
+    z-index: 1;
+    margin-top: 5px;
+    transform: scale(1.1, 1.1);
+    -ms-transform: scale(1.1, 1.1);
+    -webkit-transform: scale(1.1, 1.1);
+}
+
+.fuelux .wizard > ul.steps li .chevron:before,
+.fuelux .wizard > .steps-container > ul.steps li .chevron:before {
+    border: 24px solid transparent;
+    border-left: 14px solid #ededed;
+    border-right: 0;
+    content: "";
+    display: block;
+    position: absolute;
+    right: 1px;
+    top: -24px;
+}
+
+.fuelux .wizard > ul.steps li.complete,
+.fuelux .wizard > .steps-container > ul.steps li.complete {
+    background-color: #FFF !important;
+    color: #6B6B6B;
+    width: 100px;
+}
+
+.fuelux .wizard > ul.steps li.complete:hover,
+.fuelux .wizard > .steps-container > ul.steps li.complete:hover {
+    background-color: #6B6B6B !important;
+    color: #FFF;
+    cursor: pointer;
+}
+
+.fuelux .wizard > ul.steps li.complete:hover .chevron:before,
+.fuelux .wizard > .steps-container > ul.steps li.complete:hover .chevron:before {
+    border-left: 14px solid #6B6B6B;
+}
+
+.fuelux .wizard > ul.steps li.complete .chevron:before,
+.fuelux .wizard > .steps-container > ul.steps li.complete .chevron:before {
+    border-left: 14px solid #FFF;
+}
+
+.fuelux .wizard > ul.steps li.active,
+.fuelux .wizard > .steps-container > ul.steps li.active {
+    background-color: #999;
+    color: #FFF;
+    cursor: default;
+    border-bottom: none;
+}
+
+.fuelux .wizard > ul.steps li.active .chevron:before,
+.fuelux .wizard > .steps-container > ul.steps li.active .chevron:before {
+    border-left: 14px solid #999;
+}
+
+.fuelux .wizard > ul.steps li.active .badge,
+.fuelux .wizard > .steps-container > ul.steps li.active .badge {
+    background-color: #555;
+}
+
+.fuelux .wizard > ul.steps li .badge-success,
+.fuelux .wizard > .steps-container > ul.steps li .badge-success {
+    background-color: #FFF;
+}
+
+.fuelux .wizard .btn-default[disabled] {
+    background-color: #EDEDED !important;
+    color: #999 !important;
+    border-color: #CCC !important;
+}
+
+.fuelux .wizard .btn-prev span {
+    margin-right: 2px;
+}
+
+.fuelux .wizard > .actions .btn-next[disabled] {
+    cursor: not-allowed;
+}
+
+.fuelux .wizard > .actions2 .btn-next[disabled] {
+    cursor: not-allowed;
+}
+
+.fuelux .wizard .btn-next span {
+    margin-left: 5px;
+}
+
+.fuelux .wizard[data-last]:after {
+    display: none;
+}
+
+.fuelux .wizard .step-content {
+    border-top: 1px solid #DDD;
+    border-right: 1px solid #DDD;
+    border-left: 1px solid #DDD;
+    float: left;
+    width: 100%;
+}
+
+.fuelux .wizard .steps {
+    margin-left: 0 !important;
+}
+
+.fuelux .wizard .table-responsive {
+    margin-top: -1px;
+    clear: both;
+}
+
+.fuelux .wizard > .actions.bottom {
+    position: relative;
+    background-color: #F9F9F9;
+    padding: 0 15px 2px;
+    border: 1px solid #DDD;
+    text-align: right;
+    width: 100%;
+    top: 0px;
+    right: 0px;
+    -webkit-border-top-right-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.step-wrapper {
+    overflow: hidden;
+    width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.fuelux .wizard > .actions {
+    background-color: #f9f9f9;
+    border-left: 1px solid #d4d4d4;
+    border-radius: 0 4px 0 0;
+    float: right;
+    line-height: 47px;
+    padding-left: 15px;
+    padding-right: 15px;
+    position: absolute;
+    right: 1px;
+    top: 1px;
+    vertical-align: middle;
+    z-index: 500;
+}
+
+.fuelux .wizard form {
+    padding: 0;
+}
+
+.fuelux .wizard .btn-prev,
+.fuelux .wizard .btn-next {
+    position: relative;
+}
+
+.fuelux .wizard .btn-prev:after,
+.fuelux .wizard .btn-next:before {
+    float: none;
+    position: absolute;
+}
+
+.fuelux .wizard .btn-prev:after {
+    font-family: "FontAwesome";
+    content: "\f0d9";
+    margin-left: 5px;
+    float: right;
+    left: 4px;
+}
+
+.fuelux .wizard .btn-next:before {
+    font-family: "FontAwesome";
+    content: "\f0da";
+    margin-right: 5px;
+    float: left;
+    right: 4px;
+}
+
+.fuelux .wizard .btn-prev {
+    text-align: right;
+    padding-left: 20px;
+}
+
+.fuelux .wizard .btn-next {
+    text-align: left;
+    padding-right: 20px;
+}
+
+.complete .btn-next {
+    padding-right: 10px !important;
+    -webkit-transition: none !important;
+       -moz-transition: none !important;
+        -ms-transition: none !important;
+         -o-transition: none !important;
+            transition: none !important;
+}
+
+.complete .btn-next:before {
+    display: none;
+}
+
+/* Wizard > Search */
+
+.wizard .table-responsive {
+    clear: both;
+}
+
+.wizard-filter {
+    margin-bottom: 10px;
+}
+
+.wizard-filter .search input {
+    margin-left: 0;
+    position: relative;
+    border: 1px solid #ccc;
+    height: 30px!important;
+    padding: 0 30px 0 8px;
+    max-width: 230px;
+    min-width: 230px;
+}
+
+.wizard-filter .input-select-wrapper {
+    display: inline-block;
+    float: none;
+}
+
+
+/*.wizard-filter select,*/
+
+.wizard-filter .input-select-wrapper,
+.wizard-filter input {
+    max-width: 230px !important;
+    width: 100%;
+}
+
+.wizard-filter .input-select-wrapper + .input-select-wrapper {
+    margin-left: 10px;
+}
+
+.wizard-filter .search {
+    display: inline-block;
+    margin-top: 0;
+    width: auto !important;
+}
+
+.wizard-filter .search button {
+    position:absolute;
+    right: 0;
+    top: 0;
+    padding: 0;
+    height: 30px;
+}
+
+.wizard-filter .input-select-wrapper {
+    margin-bottom: 0;
+    margin-right: 10px;
+}
+
+.chrome .wizard-filter .search {
+    display: inline-block;
+    width: auto;
+}
+
+.wizard-filter .btn-reset,
+.wizard-filter .btn-reset:hover {
+    margin-left: -25px !important;
+}
+
+.wizard table .dropdown-menu > li > a {
+    white-space: inherit !important;
+}
+
+/*==========  Non-Mobile First Method  ==========*/
+
+/* Small Devices, Tablets */
+@media only screen and (max-width : 800px) {
+    .wizard .actions.bottom {
+        display: none;
+    }
+    .wizard .actions.top {
+        position: fixed !important;
+        bottom: 35px !important;
+        top: auto !important;
+        height: 50px;
+        left: 0 !important;
+        right: 0 !important;
+        border-top: 1px solid #DDD;
+        border-left-color: transparent;
+        -webkit-border-radius: 0 !important;
+                border-radius: 0 !important;
+    }
+    .wizard .actions.top .btn-next,
+    .wizard .actions.top .btn-prev {
+        position: absolute;
+        top: 10px;
+    }
+    .wizard .actions.top .btn-next {
+        right: 10px;
+    }
+    .wizard .actions.top .btn-prev {
+        left: 10px;
+    }
+    .wizard {
+        position: relative;
+        padding-bottom: 50px;
+    }
+    .wizard .step-content {
+        border-bottom: 1px solid #DDD;
+        -webkit-border-bottom-left-radius: 5px;
+                border-bottom-left-radius: 5px;
+        -webkit-border-bottom-right-radius: 5px;
+                border-bottom-right-radius: 5px;    
+    }
+    .wizard-filter .search {
+        position: relative; 
+        max-width: auto;
+        min-width: auto;
+        width: 100% !important;
+        margin-top: 10px !important; 
+    }
+    .wizard-filter .search input,
+    .wizard-filter .input-select-wrapper {
+        min-width: 100%;
+        max-width: 100%;
+        width: 100% !important;
+    }
+    .wizard-filter .search button {
+        right: 0;
+        top: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .wizard-filter .search input {
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+
+/* RTL */
+
+.rtl .step-wrapper {
+    font-size: 14px;
+}
+
+.rtl .fuelux .wizard > ul.steps,
+.rtl .fuelux .wizard > .steps-container > ul.steps {
+    right: 0;
+    left: auto;
+    float: right;
+}
+
+.rtl .fuelux .wizard > ul.steps.previous-disabled li.complete:hover .chevron:before,
+.rtl .fuelux .wizard > .steps-container > ul.steps.previous-disabled li.complete:hover .chevron:before {
+    border-right-color: #999;
+}
+
+.rtl .fuelux .wizard > ul.steps li,
+.rtl .fuelux .wizard > .steps-container > ul.steps li {
+    float: right;
+}
+
+.rtl .fuelux .wizard > ul.steps li .chevron,
+.rtl .fuelux .wizard > .steps-container > ul.steps li .chevron {
+    right: auto;
+    left: -15px;
+    border-right: 14px solid #d4d4d4;
+    border-left: 0;
+}
+
+.rtl .fuelux .wizard > ul.steps li .chevron:before,
+.rtl .fuelux .wizard > .steps-container > ul.steps li .chevron:before {
+    right: auto;
+    left: 1px;
+    border-right: 14px solid #ededed;
+    border-left: 0;
+}
+
+.rtl .fuelux .wizard > ul.steps li.active .chevron:before,
+.rtl .fuelux .wizard > .steps-container > ul.steps li.active .chevron:before {
+    border-right: 14px solid #999;
+    border-left: 0;
+}
+
+.rtl .fuelux .wizard > ul.steps li.complete .chevron:before,
+.rtl .fuelux .wizard > .steps-container > ul.steps li.complete .chevron:before {
+    border-right: 14px solid #FFF;
+    border-left: 0;
+}
+
+.rtl .fuelux .wizard > ul.steps li.complete:hover .chevron:before,
+.rtl .fuelux .wizard > .steps-container > ul.steps li.complete:hover .chevron:before {
+    border-right: 14px solid #6B6B6B;
+    border-left: none;
+}
+
+.rtl .fuelux .wizard > ul.steps li .badge,
+.rtl .fuelux .wizard > .steps-container > ul.steps li .badge {
+    margin-left: 8px;
+}
+
+.rtl .fuelux .wizard > .actions {
+    right: auto;
+    left: 0;
+    float: left;
+    border-left: 1px solid #d4d4d4 !important;
+    border-right: 1px solid #d4d4d4;
+    border-radius: 0 0 4px 4px;
+}
+
+.rtl .fuelux .wizard > .actions2 {
+    right: auto;
+    left: 0;
+    float: left;
+    border-left: none;
+    border-right: 1px solid #d4d4d4;
+    border-radius: 4px 0 0 0;
+}
+
+.rtl .fuelux .wizard .btn-prev {
+    text-align: left;
+    padding-right: 20px;
+    padding-left: 10px;
+}
+
+.rtl .fuelux .wizard .btn-next {
+    text-align: right;
+    padding-left: 20px;
+    padding-right: 10px;
+}
+
+.rtl .fuelux .wizard .btn-prev:after,
+.rtl .fuelux .wizard .btn-next:before {
+    float: none;
+    position: absolute;
+}
+
+.rtl .fuelux .wizard .btn-prev:after {
+    content: "\f0da";
+    left: auto !important;
+    right: 8px;
+}
+
+.rtl .fuelux .wizard .btn-next:before {
+    content: "\f0d9";
+    right: auto !important;
+    left: 8px;
+}
+
+.rtl .fuelux .wizard .btn-next span:before {
+    display: none;
+}
+
+.rtl .complete .btn-next {
+    padding-left: 12px !important;
+    -webkit-transition: none !important;
+       -moz-transition: none !important;
+        -ms-transition: none !important;
+         -o-transition: none !important;
+            transition: none !important;
+}
+
+.rtl .fuelux .wizard > ul.steps li,
+.rtl .fuelux .wizard > .steps-container > ul.steps li {
+    padding: 8px 30px 0 20px;
+    -webkit-border-top-left-radius: 0 !important;
+    border-top-left-radius: 0 !important;
+}
+
+.rtl .fuelux .wizard .footer-buttons .actions {
+    text-align: right;
+}
+
+.rtl .fuelux .wizard .footer-buttons .actions2 {
+    text-align: right;
+}
+
+.rtl .fuelux .wizard > .actions.bottom {
+    text-align: left;
+}
+
+.rtl .wizard-filter .input-select-wrapper {
+    margin-left: 10px;
+    margin-right: 0;
+}
+
+.rtl .wizard-filter .input-select-wrapper + .input-select-wrapper {
+    margin-right: 10px;
+    margin-left: 0;
+}
+
+.rtl .wizard-filter .btn-reset,
+.rtl .wizard-filter .btn-reset:hover {
+    margin-right: -28px !important;
+}
+
+.rtl .wizard-filter .search {
+    display: inline-block;
+    margin-top: 0;
+    margin-bottom: 10px;
+    width: 228px;
+}
+
+.rtl .wizard-filter .search button {
+    left: 0;
+    right: auto!important;
+    margin: 0!important;
+    height: 30px;
+    padding: 0;
+    top: 0;
+}
+
+.rtl .wizard-filter .search input {
+    padding: 0 8px 0 30px !important;    
+    position: relative;
+}
+
+.rtl .complete .btn-next:before {
+    display: none;
+}
+
+
+/*==========  Non-Mobile First Method  ==========*/
+
+/* Small Devices, Tablets */
+@media only screen and (max-width : 800px) {
+    .rtl .wizard .btn-next {
+        right: auto !important;
+        left: 10px !important;
+    }
+    .rtl .wizard .btn-prev {
+        right: 10px !important;
+        left: auto !important;
+    }
+    .rtl .wizard .actions.top {
+        height: 60px;
+    }
+    .rtl .wizard-filter .search {
+        position: relative; 
+        max-width: auto;
+        min-width: auto;
+        width: 100% !important;
+        margin-top: 10px !important; 
+    }
+    .rtl .wizard-filter .search input,
+    .rtl .wizard-filter .input-select-wrapper {
+        min-width: 100%;
+        max-width: 100%;
+        width: 100% !important;
+    }
+    .rtl .wizard-filter .search button {
+        right: 0;
+        top: 0;
+    }
+} 
+
+/* Extra Small Devices, Phones */ 
+@media only screen and (max-width : 480px) {
+    .rtl .wizard-filter .search {
+        display: block !important;
+        margin: 10px 0 10px 10px;
+        padding-top: 0;
+        width: 100%;
+    }
+    .rtl .wizard-filter .search input {
+        margin-right: 0;
+    }
+}

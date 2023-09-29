@@ -1,0 +1,304 @@
+/* ADVANCED SEARCH v.1.0.1 */
+
+select:focus,
+.close:focus {
+    outline: none !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    box-shadow: none !important;
+}
+
+.adv-search {
+    display: block;
+    text-align: left;
+    border: 1px solid #CCC;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    position: relative;
+    margin: 14px 0;
+    padding: 20px 10px 10px;
+    position: relative;
+    -webkit-animation: display-block-transition 0.2s;
+    -moz-animation: display-block-transition 0.2s;
+    -o-animation: display-block-transition 0.2s;
+    animation: display-block-transition 0.2s;
+}
+
+@keyframes display-block-transition {
+  0% {
+    opacity: 0;
+    margin-top: -20px;
+  }
+  100% {
+    margin-top: 0;
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes display-block-transition {
+  0% {
+    opacity: 0;
+    margin-top: -20px;
+  }
+  100% {
+    margin-top: 0;
+    opacity: 1;
+  }
+}
+
+@-moz-keyframes display-block-transition {
+  0% {
+    opacity: 0;
+    margin-top: -20px;
+  }
+  100% {
+    margin-top: 0;
+    opacity: 1;
+  }
+}
+
+@-o-keyframes display-block-transition {
+  0% {
+    opacity: 0;
+    margin-top: -20px;
+  }
+  100% {
+    margin-top: 0;
+    opacity: 1;
+  }
+}
+
+.disable-element {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+.adv-search form {
+    margin: 0 !important;
+}
+
+.adv-search .adv-search-label {
+    display: block;
+    background-color: #FFF;
+    color: #999;
+    vertical-align: middle;
+    position: absolute;
+    top: -15px;
+    left: 5px;
+    margin: 0;
+    padding: 5px;
+    width: auto !important;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.adv-search .adv-search-label label {
+    display: inline !important;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.adv-search .close {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    font-size: 16px !important;
+    z-index: 1;
+}
+
+.adv-search .adv-search-label i {
+    line-height: normal;
+    vertical-align: text-top;
+}
+
+.adv-search label,
+.adv-search select {
+    font-size: 12px;
+}
+
+.adv-search label {
+    font-weight: normal;
+    margin: 0 5px 5px 0 !important;
+    display: block !important;
+    border-left: 0 !important;
+    border-bottom: 0 !important;
+    background-color: #FFF !important;
+    padding: 0 !important;
+    width: 100% !important;
+}
+
+.adv-search .text input,
+.adv-search .input-select-wrapper,
+.adv-search select,
+.adv-search .tree-dropdown {
+    background-color: #FFF;
+    width: 100% !important;
+    min-width: 150px;
+    height: 25px;
+}
+
+.adv-search multi-select-tree .tree-control .tree-input {
+    height: 25px !important;
+}
+
+.adv-search multi-select-tree .tree-control .tree-view {
+    top: 23px !important;
+}
+
+.adv-search multi-select-tree .tree-control .tree-selection-text {
+    padding: 2px 20px 2px 5px;
+    height: 25px;
+    line-height: 21px;
+}
+
+.rtl .adv-search multi-select-tree .tree-control .tree-selection-text {
+    padding: 2px 5px 2px 20px;
+}
+
+.chrome .adv-search select,
+.safari .adv-search select {
+    padding: 4px 25px 4px 5px !important;
+}
+
+.adv-search .input-select-wrapper:after {
+    top: 40%;
+    z-index: 10;
+}
+
+.adv-search .input-select-wrapper:before {
+    top: -1px !important;
+    right: 4px !important;
+    height: 23px !important;
+}
+
+.adv-search .select,
+.adv-search .text {
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 10px;
+    width: 15%;
+    padding: 0;
+}
+
+.adv-search hr {
+    margin: 0 0 10px 0;
+}
+
+.adv-search select,
+.adv-search .text input {
+    padding: 0 5px !important;
+}
+
+.adv-search .checkbox .input-selection,
+.adv-search .checkbox .input-selection-inline {
+    border: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.adv-search .checkbox .input-selection .selection-label,
+.adv-search .checkbox .input-selection-inline .selection-label {
+    width: auto !important;
+    display: inline !important;
+    line-height: 25px;
+}
+
+.adv-search .search-action-btn {
+    display: block;
+    clear: both;
+    width: 100%;
+}
+
+
+/* Bigger Screen */
+
+@media only screen and (max-width: 1240px) {
+    .adv-search form label {
+        width: 100% !important;
+    }
+    .adv-search .select,
+    .adv-search .text {
+        width: 35% !important;
+        margin: 0 5px;
+    }
+    .adv-search form .input-select-wrapper,
+    .adv-search form select {
+        width: 100% !important;
+    }
+}
+
+@media only screen and (max-width: 480px) {
+    .adv-search .select,
+    .adv-search .text {
+        width: 100% !important;
+        margin: 0;
+    }
+    .adv-search .adv-search-label {
+        left: 50%;
+        -webkit-transform: translate(-50%, 0);
+        -moz-transform: translate(-50%, 0);
+        -ms-transform: translate(-50%, 0);
+        -o-transform: translate(-50%, 0);
+        transform: translate(-50%, 0);
+    }
+    .adv-search .checkbox .input {
+        display: block;
+    }
+}
+
+
+/* RTL */
+
+.rtl .adv-search {
+    text-align: right;
+}
+
+.rtl .adv-search .input-select-wrapper {
+    float: none;
+}
+
+.rtl .adv-search label {
+    margin: 0 0 5px 5px !important;
+    border-right: 0 !important;
+}
+
+.rtl .adv-search label,
+.rtl .adv-search select {
+    font-size: 14px;
+}
+
+.rtl .adv-search select {
+    padding: 2px 5px 2px 25px !important;
+}
+
+.rtl .adv-search .checkbox {
+    min-height: 75px;
+}
+
+.rtl .adv-search .close {
+    right: auto !important;
+    left: 8px;
+}
+
+.rtl .adv-search .adv-search-label {
+    right: 20px;
+    left: auto;
+    width: 68px;
+}
+
+.rtl .adv-search .checkbox .input-selection .selection-label, 
+.rtl .adv-search .checkbox .input-selection-inline .selection-label {
+    line-height: 22px;
+}
+
+@media only screen and (max-width: 480px) {
+    .rtl .adv-search .adv-search-label {
+        left: auto !important;
+        right: 50% !important;
+        -webkit-transform: translate(50%, 0);
+        -moz-transform: translate(50%, 0);
+        -ms-transform: translate(50%, 0);
+        -o-transform: translate(50%, 0);
+        transform: translate(50%, 0);
+    }
+}
