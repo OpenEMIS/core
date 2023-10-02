@@ -60,63 +60,31 @@ trait SecurityTrait
 
     public function paramsDecode($params)
     {
-        $cookieName = 'session_token';
-        $desiredPath = "/";
         $paramArr = explode('.', $params);
         if (count($paramArr) != 2) {
             throw new SecurityException('Wrong number of segments');
         }
-        $payload = $this->urlsafeB64Decode($paramArr[0]);
-        $signature = $this->urlsafeB64Decode($paramArr[1]);
+        list($payload, $signature) = $paramArr;
+        $payload = $this->urlsafeB64Decode($payload);
+        $signature = $this->urlsafeB64Decode($signature);
+
         $payload = json_decode($payload, true);
-        $params = $payload;
-        foreach ($_COOKIE as $name => $value) {
-            if ($name === $cookieName) {
-                // Check if the cookie's path matches the desired path
-                $cookiePath = $_SERVER['REQUEST_URI']; // Get the current request path
-                if ($cookiePath === $desiredPath) {
-                    // Select this cookie
-                    $selectedSessionToken = $value;
-                    break; // Exit the loop once the desired cookie is found
-                }
+        $sessionId = Security::hash('session_id', 'sha256');
+            $checkPayload = $payload;
+            $checkPayload[$sessionId] = session_id();
+            $checkSignature = Security::hash(json_encode($checkPayload), 'sha256', true);
+            if ($signature !== $checkSignature) {
+                throw new SecurityException('Query String has been tampered');
             }
-        }
-        $sessionToken = $selectedSessionToken ?? null;
-        $params['session_token'] = $sessionToken;
-        $jsonParamWithSessionTocken = json_encode($params);
-        $new_signature = Security::hash($jsonParamWithSessionTocken, 'sha256', true);
-        if ($signature !== $new_signature) {
-            throw new SecurityException('Wrong session token');
-        }
         return $payload;
     }
 
     public function paramsEncode($params = [])
     {
-        $sessionToken = session_id();
-        $cookieName = 'session_token';
-        $desiredPath = "/";
-        // Set the session token as an HTTP cookie
-        foreach ($_COOKIE as $name => $value) {
-            if ($name === $cookieName) {
-                $cookiePath = $_SERVER['REQUEST_URI']; // Get the current request path
-                if ($cookiePath === $desiredPath) {
-                    $selectedSessionToken = $value;
-                    break; // Exit the loop once the desired cookie is found
-                }
-            }
-            setcookie($cookieName, $sessionToken,
-                0,
-                $desiredPath,
-                null,
-                true,
-                true
-            );
-        }
-        $sessionToken = $selectedSessionToken ?? null;
+        $sessionId = Security::hash('session_id', 'sha256');
         $jsonParam = json_encode($params);
         $base64Param = $this->urlsafeB64Encode($jsonParam);
-        $params['session_token'] = $sessionToken;
+        $params[$sessionId] = session_id();
         $jsonParamWithSessionTocken = json_encode($params);
         $signature = Security::hash($jsonParamWithSessionTocken, 'sha256', true);
         $base64Signature = $this->urlsafeB64Encode($signature);
