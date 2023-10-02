@@ -1,7 +1,5 @@
 <?php
-
 use Migrations\AbstractMigration;
-use Cake\Log\Log;
 
 class POCOR7395 extends AbstractMigration
 {
@@ -15,8 +13,8 @@ class POCOR7395 extends AbstractMigration
     public function up()
     {
         // Backup Table
-        try {
-            $this->execute("CREATE TABLE IF NOT EXISTS `field_options` (
+
+        $this->execute("CREATE TABLE `field_options` (
             `id` int NOT NULL,
             `name` varchar(200) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
             `category` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
@@ -27,11 +25,8 @@ class POCOR7395 extends AbstractMigration
             `created_by` int NOT NULL,
             `created` datetime NOT NULL
           ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-        } catch (Exception $exception) {
-            Log::write('error', $exception->getMessage());
-        }
-        try {
-            $this->execute("INSERT IGNORE INTO `field_options` (`id`, `name`, `category`, `table_name`, `order`, `modified_by`, `modified`, `created_by`, `created`) VALUES
+
+        $this->execute("INSERT INTO `field_options` (`id`, `name`, `category`, `table_name`, `order`, `modified_by`, `modified`, `created_by`, `created`) VALUES
         (1, 'Localities', 'Institution', 'institution_localities', 1, NULL, NULL, 1, '2023-05-09 12:00:00'),
         (2, 'Duties', 'Institution', 'staff_duties', 2, NULL, NULL, 1, '2023-05-09 12:00:00'),
         (3, 'Ownerships', 'Institution', 'institution_ownerships', 3, NULL, NULL, 1, '2023-05-09 12:00:00'),
@@ -166,22 +161,12 @@ class POCOR7395 extends AbstractMigration
         (132, 'Curricular Positions', 'Others', 'curricular_positions', 132, NULL, NULL, 1, '2023-05-09 12:00:00'),
         (133, 'Curricular Types', 'Others', 'curricular_types', 133, NULL, NULL, 1, '2023-05-09 12:00:00'),
         (134, 'Language Proficiencies', 'Others', 'language_proficiencies', 134, NULL, NULL, 1, '2023-05-09 12:00:00')");
-        } catch (Exception $exception) {
-            Log::write('error', $exception->getMessage());
-        }
 
-        try {
-            $this->execute("ALTER TABLE `field_options` ADD PRIMARY KEY (`id`)");
-        } catch (\Exception $exception) {
-            Log::write('error', $exception->getMessage());
-        }
-        try {
-            $this->execute("ALTER TABLE `field_options`
+
+        $this->execute("ALTER TABLE `field_options` ADD PRIMARY KEY (`id`)");
+        $this->execute("ALTER TABLE `field_options`
         MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=133;
       COMMIT");
-        } catch (\Exception $exception) {
-            Log::write('error', $exception->getMessage());
-        }
     }
 
     public function down()
