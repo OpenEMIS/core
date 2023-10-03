@@ -1128,7 +1128,7 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                             if (isMarksType) {
                                 // console.log("isMarksType");
                                 var marks = parseFloat(subjectStudent.mark);
-                                studentResults['period_' + parseInt(assessmentPeriodId)] = 0;
+                                studentResults['period_' + parseInt(assessmentPeriodId)] = '';
                                 if (!isNaN(marks)) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = marks;
                                 }
