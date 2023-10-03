@@ -1,0 +1,328 @@
+@charset "UTF-8";
+@import "./variables.scss";
+
+/* Themes v.1.0.4 */
+
+/*-------- {{ Start of Theme Colors }} --------*/
+
+$analyzerBgColor: #CC3300;
+$assessmentsBgColor: #006699;
+$communityBgColor: #00CCFF;
+$connectBgColor: #666699;
+$coreBgColor: #6699CC;
+$datamanagerBgColor: #993366;
+$dashboardBgColor: #990000;
+$examsBgColor: #003366;
+$identityBgColor: #6666FF;
+$insightBgColor: #9966CC;
+$integratorBgColor: #CC6699;
+$learningBgColor: #0099FF;
+$logisticsBgColor: #003399;
+$modellingBgColor: #FF3366;
+$monitoringBgColor: #CC0066;
+$schoolBgColor: #3366CC;
+$visualizerBgColor: #CC9933;
+$styleguideBgColor: #000000;
+
+$analyzerBg: "../../img/background-image/login/bg-visualizer.jpg";
+// $assessmentsBg: "../../img/background-image/login/bg-assessments.jpg";
+$assessmentsBg : "../../img/background-image/login/bg-assessments.jpg";
+$communityBg: "";
+$connectBg: "";
+$coreBg: "../../img/background-image/login/bg-core.jpg";
+$datamanagerBg: "../../img/background-image/login/bg-datamanager.jpg";
+$dashboardBg: "../../img/background-image/login/bg-dashboard.jpg";
+$examsBg: "../../img/background-image/login/bg-exams.jpg";
+$identityBg: "../../img/background-image/login/bg-identity.jpg";
+$insightBg: "../../img/background-image/login/bg-insight.jpg";
+$integratorBg: "../../img/background-image/login/bg-integrator.jpg";
+$learningBg: "";
+$logisticsBg: "../../img/background-image/login/bg-logistics.jpg";
+$modellingBg: "";
+$monitoringBg: "";
+$schoolBg: "../../img/background-image/login/bg-school.jpg";
+$visualizerBg: "../../img/background-image/login/bg-visualizer.jpg";
+$styleguideBg: "";
+
+$themes: (analyzer, $analyzerBgColor, $analyzerBg, false),
+(assessments, $assessmentsBgColor, $assessmentsBg, false),
+(community, $communityBgColor, $communityBg, false),
+(connect, $connectBgColor, $connectBg, false),
+(core, $coreBgColor, $coreBg, false),
+(datamanager, $datamanagerBgColor, $datamanagerBg, false),
+(dashboard, $dashboardBgColor, $dashboardBg, false),
+(exams, $examsBgColor, $examsBg, false),
+(identity, $identityBgColor, $identityBg, false),
+(insight, $insightBgColor, $insightBg, false),
+(integrator, $integratorBgColor, $integratorBg, false),
+(learning, $learningBgColor, $learningBg, false),
+(logistics, $logisticsBgColor, $logisticsBg, false),
+(modelling, $modellingBgColor, $modellingBg, false),
+(monitoring, $monitoringBgColor, $monitoringBg, false),
+(school, $schoolBgColor, $schoolBg, false),
+(visualizer, $visualizerBgColor, $visualizerBg, false),
+(styleguide, $styleguideBgColor, $styleguideBg, true);
+
+
+@each $productName,
+$color,
+$bgImg,
+$isMixWhite in $themes {
+
+    .openemis-#{$productName},
+    body {
+        //BACKGROUND
+        .kdx-navbar,
+        .btn,
+        .dropdown-menu .btn,
+        .content-area .btn-text,
+        .btn-color,
+        .toolbar .btn-icon:before,
+        .progressbar-wrapper .progress-bar {
+            background-color: $color;
+        }
+        .kdx-login .kdx-body-wrapper {
+            @if $bgImg !='' {
+                background-image: url($bgImg);
+            }
+            @else {
+                background-color: $lightGreyColor;
+                background-image: none;
+            }
+            .kdx-login-container .kdx-title {
+                background-color: $color;
+            }
+        }
+        .kdx-input-autocomplete .ui-state-highlight,
+        .kdx-input-autocomplete .ui-widget-content .ui-state-highlight,
+        .kdx-input-autocomplete .ui-widget-header .ui-state-highlight,
+        .kdx-text-input .ui-state-highlight,
+        .kdx-text-input .ui-widget-content .ui-state-highlight,
+        .kdx-text-input .ui-widget-header .ui-state-highlight,
+        .kdx-input-with-btn+.kdx-input-loader-wrapper,
+        .rtl .kdx-input-with-btn+.kdx-input-loader-wrapper,
+        .kdx-text-input .ui-autocomplete-dd .ui-autocomplete-dropdown.ui-corner-all,
+        .kdx-wizard .kdx-step-selected .kdx-step-icon,
+        .kdx-slider .kdx-slider-track-fill,
+        .kdx-slider .kdx-slider-thumb,
+        .kdx-slider .kdx-sliderthumb:before {
+            background-color: $color !important;
+        }
+
+        .kdx-mindmap .kdx-mindmap-node.kdx-mindmap-node-active .kdx-mindmap-node-wrapper,
+        .kdx-mindmap .kdx-mindmap-link.kdx-mindmap-link-active {
+            stroke: $color !important;
+        }
+
+        .kdx-mindmap #arrowEndActive.kdx-mindmap-link-active,
+        .kdx-mindmap #arrowStartActive.kdx-mindmap-link-active {
+            fill: $color !important;
+        }
+
+        .btn:hover,
+        .btn-color:hover,
+        .btn-text,
+        .btn-outline:hover,
+        .content-area .btn-text:hover,
+        .dropdown-menu .btn:hover,
+        .kdx-navbar .kdx-btn-group-wrapper .btn-group:hover,
+        .kdx-navbar .kdx-btn-group-wrapper .btn-group .btn:hover,
+        .kdx-navbar .kdx-user-profile .btn:hover,
+        .kdx-left-menu .panel-group .nav li a:hover,
+        .kdx-tabs .scroll-left:hover,
+        .kdx-tabs .scroll-right:hover,
+        .action-btn:hover,
+        .action-btn:active,
+        .action-btn:focus,
+        .ui-autocomplete-dd .ui-autocomplete-dropdown.ui-corner-all:hover,
+        .ui-autocomplete-dd .ui-autocomplete-dropdown.ui-corner-all:focus,
+        .kdx-calendar .cal-month-view .cal-day-cell.cal-today .cal-day-number {
+            background-color: getMixColor($isMixWhite, $color);
+        } //BORDER
+        .kdx-tabs .scroll-left:hover,
+        .kdx-tabs .scroll-right:hover,
+        .kdx-calendar .cal-month-view .cal-day-cell.cal-today .cal-day-number {
+            border: 1px solid getMixColor($isMixWhite, $color);
+        }
+        .ag-filter-checkbox .ag-icon-checkbox-unchecked:before,
+        .ag-filter-checkbox .ag-icon-checkbox-indeterminate:before,
+        .ag-filter-checkbox .ag-icon-checkbox-checked:before,
+        [type="checkbox"]:checked:hover+label:before,
+        [type="checkbox"]:not(:checked):hover+label:before,
+        [type="checkbox"]:checked:hover+.ag-cell-value:before,
+        [type="checkbox"]:not(:checked):hover+.ag-cell-value:before,
+        [type="checkbox"]:checked:hover+.ag-filter-value:before,
+        [type="checkbox"]:not(:checked):hover+.ag-filter-value:before,
+        [type="radio"]:checked:hover+label:before,
+        [type="radio"]:not(:checked):hover+label:before,
+        [type="radio"]:checked:hover+.ag-cell-value:before,
+        [type="radio"]:not(:checked):hover+.ag-cell-value:before,
+        [type="radio"]:checked:hover+.ag-filter-value:before,
+        [type="radio"]:not(:checked):hover+.ag-filter-value:before,
+        [type="checkbox"]:checked+label:before,
+        [type="checkbox"]:checked+.ag-cell-value:before,
+        [type="checkbox"]:checked+.ag-filter-value:before,
+        [type="radio"]:checked+label:before,
+        [type="radio"]:checked+.ag-cell-value:before,
+        [type="radio"]:checked+.ag-filter-value:before,
+        .kdx-table .stg-theme .ag-tool-panel .ag-icon-checkbox-checked,
+        .kdx-table .stg-theme .ag-tool-panel .ag-icon-checkbox-unchecked,
+        .kdx-table .stg-theme .ag-tool-panel .ag-icon-checkbox-indeterminate,
+        .kdx-table .stg-theme .ag-tool-panel .ag-column-drop span.ag-column-drop-cell {
+            border: 1px solid getMixColor($isMixWhite, $color) !important;
+        }
+        [type="checkbox"]+label:hover:before,
+        [type="radio"]+label:hover:before,
+        .ag-cell-value:hover:before {
+            border: 1px solid $color !important;
+        }
+        .input-single-btn .btn:hover,
+        .input-double-btn .btn:hover {
+            border-right: 1px solid getMixColor($isMixWhite, $color);
+        }
+        .ag-paging-button:hover,
+        .action-btn:hover {
+            border: 1px solid getMixColor($isMixWhite, $color) !important;
+        } //BACKGROUND + BORDER + COLOR
+        .btn-outline,
+        .kdx-page-header .btn,
+        .toolbar .btn,
+        .kdx-search-wrapper .kdx-search-icon:hover {
+            background-color: $whiteColor;
+            border: 1px solid getMixColor($isMixWhite, $color);
+            &:hover {
+                background-color: getMixColor($isMixWhite, $color) !important;
+                color: $whiteColor !important;
+            }
+        }
+
+        .btn-outline:not(:disabled):not(.disabled).active,
+        .btn-outline:not(:disabled):not(.disabled):active{
+            background-color: $color;
+            @if $isMixWhite==true {
+                color: $whiteColor !important;
+            }
+        }
+        .kdx-tabs .nav-item a:hover,
+        .ag-paging-button:hover,
+        .kdx-text-input .ui-state-highlight:hover,
+        .kdx-text-input .ui-widget-content .ui-state-highlight:hover,
+        .kdx-text-input .ui-widget-header .ui-state-highlight:hover {
+            background-color: getMixColor($isMixWhite, $color) !important;
+            border: 1px solid getMixColor($isMixWhite, $color);
+            color: $whiteColor !important;
+        } //COLOR
+        .btn-outline:hover,
+        .toolbar .btn-icon:hover,
+        .dropdown-item:hover,
+        ngb-datepicker.dropdown-menu table td .bg-primary,
+        ngb-datepicker table td .bg-primary:hover,
+        .input-single-btn .btn:hover,
+        .input-single-btn .btn:focus,
+        .input-double-btn .btn:hover,
+        .input-double-btn .btn:focus,
+        .btn:focus,
+        .btn-icon:focus,
+        .btn-text:focus,
+        .kdx-text-input .ui-autocomplete-dd .ui-autocomplete-dropdown.ui-corner-all:hover,
+        ngb-datepicker.dropdown-menu .ngb-dp-day .bg-primary,
+        &>.ui-menu .ui-menuitem-link:hover {
+            background-color: getMixColor($isMixWhite, $color) !important;
+            color: $whiteColor !important;
+        }
+        .important-note a,
+        .kdx-navbar .kdx-user-thumbnail i,
+        .panel-breadcrumb li a:hover,
+        .breadcrumb.panel-breadcrumb li a:hover,
+        .openemis-icon,
+        .ui-treenode-label label,
+        .kdx-table .stg-theme .ag-tool-panel .ag-icon-checkbox-checked:before,
+        .kdx-table .stg-theme .ag-tool-panel .ag-icon-checkbox-unchecked:before,
+        .kdx-table .stg-theme .ag-tool-panel .ag-icon-checkbox-indeterminate:before,
+        .kdx-table .stg-theme .ag-tool-panel .ag-column-drop span.ag-column-drop-cell {
+            color: $color;
+        }
+
+        .kdx-wizard .step-selected .step-label,
+        .kdx-visualization .kdx-visualization-menu-item-wrapper {
+            color: $color !important;
+        }
+
+        .section-header h6 {
+            color: getMixColor($isMixWhite, $color);
+        }
+        .toolbar .btn-icon,
+        .btn-outline,
+        .panel-breadcrumb li a,
+        .breadcrumb.panel-breadcrumb li a,
+        .kdx-page-header .btn,
+        .toolbar .btn,
+        .kdx-tabs .scroll-left,
+        .kdx-tabs .scroll-right,
+        .ag-filter-checkbox .ag-icon-checkbox-unchecked:after,
+        .ag-filter-checkbox .ag-icon-checkbox-indeterminate:after,
+        .ag-filter-checkbox .ag-icon-checkbox-checked:after,
+        [type="checkbox"]:not(:checked)+label:after,
+        [type="checkbox"]:checked+label:after,
+        [type="checkbox"]:not(:checked)+.ag-cell-value:after,
+        [type="checkbox"]:checked+.ag-cell-value:after,
+        [type="checkbox"]:not(:checked)+.ag-filter-value:after,
+        [type="checkbox"]:checked+.ag-filter-value:after,
+        [type="radio"]:not(:checked)+label:after,
+        [type="radio"]:checked+label:after,
+        [type="radio"]:not(:checked)+.ag-cell-value:after,
+        [type="radio"]:checked+.ag-cell-value:after,
+        [type="radio"]:not(:checked)+.ag-filter-value:after,
+        [type="radio"]:checked+.ag-filter-value:after,
+        .ag-paging-button,
+        .kdx-timepicker .kdx-timepicker-wrapper .ngb-tp .chevron.bottom:after,
+        .kdx-timepicker .kdx-timepicker-wrapper .ngb-tp .chevron:after,
+        ngb-datepicker.ngb-dp-navigation-chevron,
+        ngb-datepicker.ngb-dp-day .btn-light:hover,
+        .ui-treenode-label label:hover,
+        .ui-tree .ui-tree-toggler:hover,
+        .input-loader,
+        .kdx-calendar .cal-cell-row .cal-cell:hover .cal-day-number {
+            color: getMixColor($isMixWhite, $color);
+        }
+        .important-note a:hover,
+        .kdx-search-wrapper>.btn.btn-icon:last-child:hover,
+        .kdx-left-menu .panel-group .nav li a.selected,
+        .kdx-left-menu .panel-group .nav li a.selected:hover,
+        .kdx-left-menu .panel-group .nav li a.accordion-toggle.expand,
+        .kdx-left-menu .panel-group .nav li a.accordion-toggle.expand:after,
+        .kdx-fileinput .btn-remove:hover,
+        .input-single-btn .btn,
+        .input-double-btn .btn,
+        ngb-datepicker.dropdown-menu .ngb-dp-weekday {
+            color: getMixColor($isMixWhite, $color) !important;
+        }
+        .btn:before,
+        .kdx-navbar .kdx-btn-group-wrapper .btn-group .btn:before,
+        .kdx-navbar .kdx-user-profile .btn:before,
+        .kdx-left-menu .panel-group .nav li a:before,
+        .kdx-tabs .nav-tabs .nav-item a.nav-link:before,
+        .btn-outline:before {
+            background-color: rgba(225, 225, 225, 0.1) !important;
+        }
+        .spinner {
+            border-top: 4px solid $color;
+        }
+        .kdx-load-page .kdx-loader {
+            border-top: 5px solid $color;
+        }
+        @media #{$tabletLandscape} {
+            .kdx-navbar .kdx-btn-group-wrapper .btn-group:hover {
+                color: getMixColor($isMixWhite, $color);
+            }
+        }
+    }
+}
+
+@function getMixColor($isMixWhite, $color) {
+    $mixColor: black;
+    @if $isMixWhite==true {
+        $mixColor: white;
+    }
+    @return mix($mixColor, $color, 20%);
+}

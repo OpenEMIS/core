@@ -195,6 +195,10 @@ class Security
      */
     public static function encrypt(string $plain, string $key, ?string $hmacSalt = null): string
     {
+        if($key == null){
+            $key = random_bytes(32);
+        }
+        // echo "<pre>";print_r($key);die;
         self::_checkKey($key, 'encrypt()');
 
         if ($hmacSalt === null) {

@@ -65,7 +65,7 @@ trait CookieCryptTrait
             $key = $this->_getCookieEncryptionKey();
         }
         if ($encrypt === 'aes') {
-            $cipher = Security::encrypt($value, $key);
+            $cipher = Security::encrypt((string) $value, (string) $key);
         }
 
         return $prefix . base64_encode($cipher);
