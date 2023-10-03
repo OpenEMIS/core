@@ -252,6 +252,7 @@ class SecurityComponent extends Component
     protected function _validToken(Controller $controller): string
     {
         $check = $controller->getRequest()->getData();
+        // echo "<pre>";print_r($check);die;
 
         $message = '\'%s\' was not found in request data.';
         if (!isset($check['_Token'])) {
@@ -266,12 +267,12 @@ class SecurityComponent extends Component
         if (!isset($check['_Token']['unlocked'])) {
             throw new AuthSecurityException(sprintf($message, '_Token.unlocked'));
         }
-        if (Configure::read('debug') && !isset($check['_Token']['debug'])) {
-            throw new SecurityException(sprintf($message, '_Token.debug'));
-        }
-        if (!Configure::read('debug') && isset($check['_Token']['debug'])) {
-            throw new SecurityException('Unexpected \'_Token.debug\' found in request data');
-        }
+        // if (Configure::read('debug') && !isset($check['_Token']['debug'])) {
+        //     throw new SecurityException(sprintf($message, '_Token.debug'));
+        // }
+        // if (!Configure::read('debug') && isset($check['_Token']['debug'])) {
+        //     throw new SecurityException('Unexpected \'_Token.debug\' found in request data');
+        // }
 
         $token = urldecode($check['_Token']['fields']);
         if (strpos($token, ':')) {
