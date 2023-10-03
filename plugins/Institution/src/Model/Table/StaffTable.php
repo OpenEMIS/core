@@ -2,6 +2,7 @@
 
 namespace Institution\Model\Table;
 
+use Cake\Collection\Collection;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use DateTime;
 use ArrayObject;
@@ -1522,15 +1523,18 @@ class StaffTable extends ControllerActionTable
     {
 
         $staff_id = !empty($entity->staff_id) ? $entity->staff_id : NULL;
-        $affected = $this->removeIndividualChildRecords($staff_id);
+        $institution_id = !empty($entity->institution_id) ? $entity->institution_id : 0;
+        $affected = $this->removeIndividualChildRecords($staff_id, $institution_id);
+
 //        $this->log("deleted $affected children", 'debug');
     }
 
     /**
      * @param $staff_id
+     * @param int $institution_id
      * @return int
      */
-    private function removeIndividualChildRecords($staff_id)
+    private function removeIndividualChildRecords($staff_id, $institution_id = 0)
     {
         $affected = 0;
         if ($staff_id) {
@@ -1547,27 +1551,44 @@ class StaffTable extends ControllerActionTable
             $field_name = 'staff_id';
             $affected = $affected + $this->removeFromTable($staff_id, $table_name, $field_name);
 
+            $table_name = 'institution_staff_shifts';
+            $field_name = 'staff_id';
+            $affected = $affected + $this->removeFromTable($staff_id, $table_name, $field_name, $institution_id);
+
         }
 
         return $affected;
 
     }
 
-
     /**
      * @param $user_id
      * @param $table_name
      * @param $field_name
+     * @param int $institution_id
      * @return int
      */
-    private function removeFromTable($user_id, $table_name, $field_name)
+    private function removeFromTable($user_id, $table_name, $field_name, $institution_id = 0)
     {
         $affected = 0;
         try {
-            $tableToClean = TableRegistry::get($table_name);
-            $affected = $tableToClean->deleteAll([
+
+
+            if($institution_id == 0){
+                $tableToClean = TableRegistry::get($table_name);
+            $where = [
                 $tableToClean->aliasField($field_name) => $user_id
-            ]);
+
+            ];
+            $affected = $tableToClean->deleteAll($where);
+            }
+
+            if($institution_id != 0){
+                if($table_name == 'institution_staff_shifts'){
+                    $affected = $this->deleteFromInstitutionStaffShifts($user_id, $table_name, $field_name, $institution_id);
+                }
+            }
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch remove from table',
@@ -4281,6 +4302,30 @@ class StaffTable extends ControllerActionTable
             null;
         }
         return null;
+    }
+
+    /**
+     * @param $user_id
+     * @param $table_name
+     * @param $field_name
+     * @param $institution_id
+     * @return int
+     */
+    private function deleteFromInstitutionStaffShifts($user_id, $table_name, $field_name, $institution_id)
+    {
+        $tableToClean = TableRegistry::get($table_name);
+        $Shifts = TableRegistry::get('institution_shifts');
+        $allShifts = $Shifts
+            ->find('all')
+            ->select('id')
+            ->where([$Shifts->aliasField('institution_id') => $institution_id]);
+        $allShifts = new Collection($allShifts->toArray());
+        $where = [
+            $tableToClean->aliasField($field_name) => $user_id,
+            $tableToClean->aliasField('shift_id IN') => $allShifts->extract('id')->toArray()
+        ];
+        $affected = $tableToClean->deleteAll($where);
+        return $affected;
     }
 
 
