@@ -420,6 +420,7 @@ class InstitutionClassesTable extends AppTable
             })
             ->where([$InstitutionClassStudents->Users->aliasField('gender_id') => $gender_id])
             ->where([$InstitutionClassStudents->aliasField('institution_class_id') => $classId])
+            ->hydrate(false)
             ->count();
         return $count;
     }
