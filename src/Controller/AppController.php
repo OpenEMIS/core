@@ -748,8 +748,8 @@ class AppController extends Controller
             $params['action'] == 'translate'){
             return;
         }
-        $this->log('params before', 'debug');
-        $this->log($params, 'debug');
+//        $this->log('params before', 'debug');
+//        $this->log($params, 'debug');
         if(isset($params['controller']) &&
         isset($params['action']) &&
         isset($params['pass'])
