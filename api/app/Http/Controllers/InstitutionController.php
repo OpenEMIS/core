@@ -31,20 +31,6 @@ class InstitutionController extends Controller
     public function getInstitutionsList(Request $request)
     {
         try {
-            //For POCOR-7772 Start
-            $permissions = checkAccess();
-            
-            if(JWTAuth::user()->id > 2){
-                if($permissions){
-                    if(!isset($permissions['permissions']['Institutions']['Institutions']['index'])){
-                        return $this->sendErrorResponse('The user is not authorized to access this API.');
-                    }
-                } else {
-                    return $this->sendErrorResponse('The user is not authorized to access this API.');
-                }
-                
-            }
-            //For POCOR-7772 End
 
             $data = $this->institutionService->getInstitutions($request);
             return $this->sendSuccessResponse("Institutions List Found", $data);
@@ -63,14 +49,6 @@ class InstitutionController extends Controller
     public function getInstitutionData(int $id)
     {
         try {
-            //For POCOR-7772 Start
-            //$permissions = getAccessPermission(['institution_id' => $id]);
-            $permissions = getAccessPermission();
-            
-            if(!$permissions){
-                return $this->sendErrorResponse('The user is not authorized to access this API.');
-            }
-            //For POCOR-7772 End
 
             $data = $this->institutionService->getInstitutionData($id);
             return $this->sendSuccessResponse("Institutions Data Found", $data);
@@ -1483,6 +1461,16 @@ class InstitutionController extends Controller
     public function deleteStudentBehaviour(int $institutionId, int $studentId, int $behaviourId)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'StudentBehaviours', 'delete'], ['institution_id' => $institutionId]);
+
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            
+            //For POCOR-7772 End
+
             $data = $this->institutionService->deleteStudentBehaviour($institutionId, $studentId, $behaviourId);
             if($data == 1){
                 return $this->sendSuccessResponse("Student Behaviour is deleted successfully.");
