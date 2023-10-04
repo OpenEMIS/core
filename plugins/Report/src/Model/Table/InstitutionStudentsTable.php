@@ -28,7 +28,7 @@ class InstitutionStudentsTable extends AppTable  {
             'autoFields' => false
         ]);
         $this->addBehavior('Report.InstitutionSecurity');
-
+        $this->addBehavior('Report.AreaList');//POCOR-7794
         $this->statuses = $this->StudentStatuses->findCodeList();
     }
 
@@ -64,6 +64,7 @@ class InstitutionStudentsTable extends AppTable  {
         $UserIdentities = TableRegistry::get('User.UserIdentities');
         $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
         $institution_id = $requestData->institution_id;
+        $areaLevelId = $requestData->area_level_id;//POCOR-7794
         $areaId = $requestData->area_education_id;
         $grades = [];
         if ($academicPeriodId != 0) {
@@ -90,9 +91,21 @@ class InstitutionStudentsTable extends AppTable  {
         if ($institution_id != 0) {
             $query->where([$this->aliasField('institution_id') => $institution_id]);
         }
-        if ($areaId > 1) { //POCOR-6571
-            $query->where(['Institutions.area_id' => $areaId]);
+        //POCOR-7794 start
+        $areaList = [];
+        if ($areaLevelId > 1 && $areaId > 1
+        ) {
+            $areaList = $this->getAreaList($areaLevelId, $areaId);
+        } elseif ($areaLevelId > 1) {
+
+            $areaList = $this->getAreaList($areaLevelId,0);
+        } elseif ($areaId > 1) {
+            $areaList = $this->getAreaList(0,$areaId);
         }
+        if (!empty($areaList)) {
+            $query->where(['Institutions.area_id IN' => $areaList]);
+        }
+        //POCOR-7794 end
         /**POCOR-6919 starts - modified query to fetch result on the basis of selected education level*/
         if ($educationlevelId > 0) {
             $gradesArr = $this->EducationGrades
