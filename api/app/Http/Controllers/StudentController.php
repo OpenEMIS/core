@@ -165,6 +165,15 @@ class StudentController extends Controller
     public function addClassAttendances(ClassAttendanceAdd $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'StudentAttendances', 'add'], ['institution_id' => $request['institution_id']]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->studentService->addClassAttendances($request);
             
             if($data == 1){
@@ -189,6 +198,15 @@ class StudentController extends Controller
     public function addStudentAbsences(StudentAbsenceAdd $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'Absences', 'add'], ['institution_id' => $request['institution_id']]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->studentService->addStudentAbsences($request);
             
             if($data == 1){
@@ -213,6 +231,15 @@ class StudentController extends Controller
     public function addStaffAttendances(StaffAttendanceAdd $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'InstitutionStaffAttendances', 'add'], ['institution_id' => $request['institution_id']]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->studentService->addStaffAttendances($request);
             
             if($data == 1){
@@ -237,6 +264,15 @@ class StudentController extends Controller
     public function updateStaffDetails(UpdateStaffDetails $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'Staff', 'add']);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->studentService->updateStaffDetails($request);
             
             if($data == 1){
