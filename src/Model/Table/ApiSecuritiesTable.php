@@ -7,7 +7,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
-use Cake\Routing\Router;
 
 class ApiSecuritiesTable extends AppTable
 {
