@@ -748,7 +748,12 @@ class AppController extends Controller
             $params['action'] == 'translate'){
             return;
         }
-
+        //POCOR-7731 start
+        if($params['controller'] == 'ApiSecurities' &&
+            $params['action'] == 'index'){
+            return $this->redirect(['controller' => 'Errors', 'action' => 'error404']);
+        }
+        //POCOR-7731 end
         $check = $this->AccessControl->check($params);
         $this->log($check, 'debug');
         if (!$check) {

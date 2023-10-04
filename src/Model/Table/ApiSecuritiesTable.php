@@ -7,18 +7,13 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
+use Cake\Routing\Router;
 
 class ApiSecuritiesTable extends AppTable
 {
     public function initialize(array $config)
     {
         parent::initialize($config);
-        //POCOR-7731 start
-        if (strpos($this->request->url, '/ApiSecurities') === 0) {
-            // Redirect to an error page to restrict access to ApiSecurities
-            return $this->redirect(['controller' => 'Pages', 'action' => 'error404']);
-        }
-        //POCOR-7731 end
         $this->belongsToMany('ApiScopes', [
             'className' => 'ApiScopes',
             'joinTable' => 'api_securities_scopes',
