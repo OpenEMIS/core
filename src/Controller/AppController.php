@@ -766,26 +766,37 @@ class AppController extends Controller
     {
 
         $params = $this->request->params;
+
 // POCOR-7833 REMOVE UNNECESSARY LOGGING
 //        $this->log($params, 'debug');
 // END
+
+        // POCOR-7833 MOVE ALL SKIP ACCESS TO ONE FUNCTION
         if($this->skipCheckAccessControl($params)){
             return;
         }
+        // END
+
         //POCOR-7731 start
         if($params['controller'] == 'ApiSecurities' &&
             $params['action'] == 'index'){
             return $this->redirect(['controller' => 'Errors', 'action' => 'error404']);
         }
         //POCOR-7731 end
+
         $check = $this->AccessControl->check($params);
+
 // POCOR-7833 REMOVE UNNECESSARY LOGGING
 //        $this->log($check, 'debug');
 // POCOR-7833 END
+
         if (!$check) {
+
 // POCOR-7833 ADD CHECKING LOGGING
+            $this->log(__FUNCTION__, 'debug');
             $this->log($params, 'debug');
 // POCOR-7833 END
+
 // POCOR-7833 REDIRECT TO DASHBOARD
             $this->Alert->warning('general.notAccess');
             return $this->redirect(['controller' => 'Dashboard', 'action' => 'index']);
