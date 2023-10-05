@@ -1,4 +1,5 @@
 <?php
+
 namespace Security\Controller;
 
 use ArrayObject;
@@ -80,7 +81,7 @@ class SecuritiesController extends AppController
 
     public function UserGroupsList()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.UserGroupsList']);    
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.UserGroupsList']);
     }
 
     public function SystemGroupsList()

@@ -18,7 +18,6 @@ use Cake\Datasource\ResultSetInterface;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
-use Cake\Http\ServerRequest;
 
 class InstitutionSubjectsTable extends ControllerActionTable
 {
