@@ -704,57 +704,87 @@ class AppController extends Controller
         return count($dataArray);
     }//POCOR-7534 ends
 
+
+    private function skipCheckAccessControl($params){
+        $skip = true;
+        if ($params['controller'] == 'Errors') {
+            return $skip;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'logout'){
+            return $skip;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'forgotUsername'){
+            return $skip;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'postForgotUsername'){
+            return $skip;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'forgotPassword'){
+            return $skip;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'postForgotPassword'){
+            return $skip;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'login'){
+            return $skip;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'postLogin'){
+            return $skip;
+        }
+        if($params['controller'] == 'Dashboard' &&
+            $params['action'] == 'index'){
+            return $skip;
+        }
+        if($params['controller'] == 'Translations' &&
+            $params['action'] == 'translate'){
+            return $skip;
+        }
+// POCOR-7833 SKIP WORKFLOW AJAX REQUESTS
+        if($params['controller'] == 'Workflows' &&
+            $params['action'] == 'ajaxGetCases'){
+            return $skip;
+        }
+
+        if($params['controller'] == 'Workflows' &&
+            $params['action'] == 'ajaxGetAssignees'){
+            return $skip;
+        }
+// POCOR-7833
+        $skip = false;
+        return $skip;
+
+    }
+
     private function checkAccessControl()
     {
 
         $params = $this->request->params;
-        $this->log($params, 'debug');
-        if ($params['controller'] == 'Errors') {
-            return;
-        }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'logout'){
-            return;
-        }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'forgotUsername'){
-            return;
-        }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'postForgotUsername'){
-            return;
-        }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'forgotPassword'){
-            return;
-        }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'postForgotPassword'){
-            return;
-        }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'login'){
-            return;
-        }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'postLogin'){
-            return;
-        }
-        if($params['controller'] == 'Dashboard' &&
-            $params['action'] == 'index'){
-            return;
-        }
-        if($params['controller'] == 'Translations' &&
-            $params['action'] == 'translate'){
+// POCOR-7833 REMOVE UNNECESSARY LOGGING
+//        $this->log($params, 'debug');
+// END
+        if($this->skipCheckAccessControl($params)){
             return;
         }
 
         $check = $this->AccessControl->check($params);
-        $this->log($check, 'debug');
+// POCOR-7833 REMOVE UNNECESSARY LOGGING
+//        $this->log($check, 'debug');
+// POCOR-7833 END
         if (!$check) {
-//            $this->log($params, 'debug');
-            $this->redirect($this->referer());
+// POCOR-7833 ADD CHECKING LOGGING
+            $this->log($params, 'debug');
+// POCOR-7833 END
+// POCOR-7833 REDIRECT TO DASHBOARD
             $this->Alert->warning('general.notAccess');
+            return $this->redirect(['controller' => 'Dashboard', 'action' => 'index']);
+// POCOR-7833 END
 //            throw new \Exception("No Rights for $class!");
         }
     }
