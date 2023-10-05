@@ -4,8 +4,8 @@
 			<?php
 				$baseUrl = $this->Url->build([
 					'plugin' => $this->request->getParam('plugin'),
-				    'controller' => $this->request->getParam('controller'),
-				    'action' => $this->request->getParam('action'),
+            		'controller' => $this->request->getParam('controller'),
+            		'action' => $this->request->getParam('action'),
 				    '0' => 'index'
 				]);
 				$template = $this->ControllerAction->getFormTemplate();
