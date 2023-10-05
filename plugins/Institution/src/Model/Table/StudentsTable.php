@@ -32,6 +32,8 @@ class StudentsTable extends ControllerActionTable
     private $dashboardQuery = null;
     // POCOR-6129 custome fields code
     private $_dynamicFieldName = 'custom_field_data';
+    private $customFieldData = null;
+    private $customFieldTableName = 'student_custom_fields';
     // POCOR-6129 custome fields code
 
     private $institution_id;
@@ -146,6 +148,26 @@ class StudentsTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'InstitutionStudents' => ['add']
         ]);
+        $custom_fields = TableRegistry::get($this->customFieldTableName);
+        $bigCustomFieldData = $custom_fields->find('all')->select([
+            'custom_field_id' => $custom_fields->aliasfield('id'),
+            'custom_field_name' => $custom_fields->aliasfield('name'),
+            'custom_field_type' => $custom_fields->aliasfield('field_type'),
+            'custom_field_description' => $custom_fields->aliasfield('description')
+        ])->innerJoin(
+            ['StudentCustomFormsFields' => 'student_custom_forms_fields'], // Class Object => table_name
+            ['StudentCustomFormsFields.student_custom_field_id = ' . $custom_fields->aliasField('id'), // Where
+            ])
+            ->group($custom_fields->aliasfield('id'))
+            ->toArray();
+        $customFieldData = [];
+        foreach ($bigCustomFieldData as $customFieldDatum){
+            $customFieldData[$customFieldDatum->custom_field_id] = $customFieldDatum;
+        }
+//        $this->log('$customFieldData', 'debug');
+//        $this->log($customFieldData, 'debug');
+        $this->customFieldData = $customFieldData;
+
     }
 
     public function implementedEvents()
@@ -486,37 +508,29 @@ class StudentsTable extends ControllerActionTable
         // $InfrastructureCustomFields = TableRegistry::get('student_custom_fields');
         // $customFieldData = $InfrastructureCustomFields->find()->select([
         //     'custom_field_id' => $InfrastructureCustomFields->aliasfield('id'),
-        //     'custom_field' => $InfrastructureCustomFields->aliasfield('name')
+        //     'custom_field_name' => $InfrastructureCustomFields->aliasfield('name')
         // ])->group($InfrastructureCustomFields->aliasfield('id'))->toArray();
 
 
         /**
-         * Get all those custom fields of a student which are which are selected in "Parents and Guardian Informations" in page tab
+         * Get all those custom fields of a student
          * Page: Administartion > System Setup > Custom Fields > Student > Page
          * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+         * @author Khindol Madraimov <khindol.madraimov@gmail.com>
          * Ticket: POCOR-6531
+         * Ticket: POCOR-7732
          */
-        // START: POCOR-6531 - Anand Malvi <anand.malvi@mail.valuecoders.com>
-        $custom_fields = TableRegistry::get('student_custom_fields');
-        $customFieldData = $custom_fields->find()->select([
-            'custom_field_id' => $custom_fields->aliasfield('id'),
-            'custom_field' => $custom_fields->aliasfield('name')
-        ])->innerJoin(
-            ['StudentCustomFormsFields' => 'student_custom_forms_fields'], // Class Object => table_name
-            ['StudentCustomFormsFields.student_custom_field_id = ' . $custom_fields->aliasField('id'), // Where
-            ])
-            ->group($custom_fields->aliasfield('id'))
-            ->toArray();
-        // END: POCOR-6531 - Anand Malvi <anand.malvi@mail.valuecoders.com>
+
+        $customFieldData = $this->customFieldData;
         if (!empty($customFieldData)) {
             foreach ($customFieldData as $data) {
                 $custom_field_id = $data->custom_field_id;
-                $custom_field = $data->custom_field;
+                $custom_field_name = $data->custom_field_name;
                 $extraField[] = [
                     'key' => 'student_id',
                     'field' => $this->_dynamicFieldName . '_' . $custom_field_id,
                     'type' => 'string',
-                    'label' => __($custom_field)
+                    'label' => __($custom_field_name)
                 ];
             }
         }
@@ -3094,12 +3108,12 @@ class StudentsTable extends ControllerActionTable
             return;
         }
         $custom_field_values = TableRegistry::get('student_custom_field_values');
-        $custom_field_options = TableRegistry::get('student_custom_field_options');
-        $custom_fields = TableRegistry::get('student_custom_fields');
+//        $custom_fields = TableRegistry::get('student_custom_fields');
         $custom_options = self::getRelatedOptions('student_custom_field_options');
+        $customFieldData = $this->customFieldData;
         $custom_values = $custom_field_values->find('all')->select([
             'student_id' => $custom_field_values->aliasField('student_id'),
-            'custom_field_id' => $custom_fields->aliasField('id'),
+            'custom_field_id' => $custom_field_values->aliasField('student_custom_field_id'),
             'custom_field_value_id' => $custom_field_values->aliasField('id'),
             'custom_text_value' => $custom_field_values->aliasField('text_value'),
             'custom_number_value' => $custom_field_values->aliasField('number_value'),
@@ -3107,23 +3121,25 @@ class StudentsTable extends ControllerActionTable
             'custom_textarea_value' => $custom_field_values->aliasField('textarea_value'),
             'custom_date_value' => $custom_field_values->aliasField('date_value'),
             'custom_time_value' => $custom_field_values->aliasField('time_value'),
-            'custom_field_name' => $custom_fields->aliasField('name'),
-            'custom_field_type' => $custom_fields->aliasField('field_type'),
-            'custom_field_description' => $custom_fields->aliasField('description'),
-        ])->where([$custom_field_values->aliasField('student_id IN') => $student_ids])
-            ->leftJoin(
-                [$custom_fields->alias() => $custom_fields->table()],
-                [
-                    $custom_fields->aliasField('id = ') . $custom_field_values->aliasField('student_custom_field_id')
-                ]
-            )->toArray();
+        ])->innerJoin([$institution_students->alias() => $institution_students->table()],
+            [$custom_field_values->aliasField('student_id = ') . $institution_students->aliasField('student_id'),
+                $institution_students->aliasField('academic_period_id = ') . $this->academic_period_id,
+                    $institution_students->aliasField('institution_id = ') . $this->institution_id])
+            ->toArray();
+//        $this->log('$customFieldData', 'debug');
+//        $this->log($customFieldData, 'debug');
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
-        use ($custom_options, $custom_values) {
-            return $results->map(function ($row) use ($custom_options, $custom_values) {
+        use ($custom_options, $custom_values, $customFieldData) {
+            return $results->map(function ($row) use ($custom_options, $custom_values, $customFieldData) {
                 foreach ($custom_values as $custom_row) {
-                    if ($custom_row->student_id == $row->student_id) {
-                        $fieldType = $custom_row->custom_field_type;
+                    $custom_field = $customFieldData[intval($custom_row->custom_field_id)];
+//                    $this->log(($custom_row->custom_field_id), 'debug');
+//                    $this->log($custom_row->custom_field_id, 'debug');
+//                    $this->log($custom_field, 'debug');
+//                    $this->log($custom_row, 'debug');
+                    if ($row->student_id == $custom_row->student_id) {
+                        $fieldType = $custom_field->custom_field_type;
                         if ($fieldType == 'TEXT') {
                             $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_text_value;
                         }
@@ -3160,7 +3176,7 @@ class StudentsTable extends ControllerActionTable
                             $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_text_value;
                         }
                         if ($fieldType == 'NOTE') {
-                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_field_description;
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_field->custom_field_description;
                         }
                     }
                 }
