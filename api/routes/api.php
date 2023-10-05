@@ -287,5 +287,12 @@ Route::group(
         Route::post('users', 'UserController@addUsers');
         // POCOR-7545 ends  
 
+
+        //POCOR - 7773
+        Route::post('institutions/{institutionId}/classes/{classId}', 'InstitutionController@updateInstitutionClass');
+        Route::post('institutions/{institutionId}/subject/{subjectId}', 'InstitutionController@updateInstitutionSubject');
+
+        //POCOR - 7773 ends
+
     }
 );

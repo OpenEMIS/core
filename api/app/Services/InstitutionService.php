@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Http\Controllers\Controller;
 use App\Repositories\InstitutionRepository;
+use Exception;
 use JWTAuth;
 use Illuminate\Support\Facades\Log;
 
@@ -2095,5 +2096,21 @@ class InstitutionService extends Controller
     }
 
     //pocor-7545 ends
+
+    public function updateInstitutionClass($institutionId, $classId, $data) {
+        try {
+            return $this->institutionRepository->updateInstitutionClass($institutionId, $classId, $data);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    public function updateInstitutionSubject($institutionId, $subjectId, $data) {
+        try {
+            return $this->institutionRepository->updateInstitutionSubject($institutionId, $subjectId, $data);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
 
 }

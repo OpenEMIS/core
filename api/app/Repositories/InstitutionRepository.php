@@ -44,6 +44,7 @@ use App\Models\InstitutionProviders;
 use App\Models\InstitutionSectors;
 use App\Models\InstitutionSubjectStaff;
 use App\Models\AcademicPeriod;
+use App\Models\EducationGradesSubject;
 use App\Models\StudentStatuses;
 use App\Models\Nationalities;
 use App\Models\Workflows;
@@ -51,6 +52,7 @@ use App\Models\InstitutionStudentTransfers;
 use App\Models\SecurityUsers;
 use App\Models\UserNationalities;
 use App\Models\IdentityTypes;
+use App\Models\InstitutionClassSecondaryStaff;
 use App\Models\UserIdentities;
 use App\Models\StaffPositionTitles;
 use App\Models\SecurityRoles;
@@ -70,12 +72,17 @@ use App\Models\StudentBehaviours;
 use App\Models\StudentBehaviourCategory;
 use App\Models\InstitutionMealProgrammes;
 use App\Models\InstitutionMealStudents;
+use App\Models\InstitutionSubjectRooms;
 use App\Models\StaffPayslip;
 use App\Models\SecurityGroupUsers;
 use App\Models\SecurityRoleFunctions;
+use Exception;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Institution\Model\Entity\Institution;
+use Institution\Model\Entity\InstitutionClass;
+use Institution\Model\Entity\InstitutionSubject;
 
 class InstitutionRepository extends Controller
 {
@@ -3018,5 +3025,330 @@ class InstitutionRepository extends Controller
 
     //pocor-7545 ends
 
-}
+    public function updateInstitutionClass($institutionId, $classId, $data)
+    {
+        try {
 
+            DB::beginTransaction();
+            $institutionClass = InstitutionClasses::find($classId);
+
+            $femaleCount = 0;
+            $maleCount = 0;
+
+            if (isset($data['classStudents']) && !empty($data['classStudents'])) {
+                $newStudents = [];
+
+                foreach ($data['classStudents'] as $classStudent) {
+                    $newStudents[$classStudent['student_id']] = $classStudent;
+                }
+
+                foreach($institutionClass->students as $student) {
+                    if (in_array($student->status->code, ['TRANSFERRED', 'WITHDRAWN'])) {
+                        continue;
+                    }
+
+                    $student->securityUser->gender->code == 'F' ?  $femaleCount++ : $maleCount++;
+
+                    if (!array_key_exists($student->student_id, $newStudents)) { // if current student does not 
+
+                        $student->delete();
+
+                        InstitutionSubjectStudents::where('student_id', $student->student_id)->where('institution_class_id', $classId)->delete();
+
+                    } else {
+                        unset($newStudents[$student->student_id]);
+                    }
+                }
+
+                foreach ($newStudents as $key => $student) {
+
+                    $user = SecurityUsers::where('id', $student['student_id'])->first();
+                    $user->gender->code == 'F' ?  $femaleCount++ : $maleCount++;
+
+                    $institutionClassStudent['id'] = Str::uuid();
+                    $institutionClassStudent['student_id'] = $student['student_id'];
+                    $institutionClassStudent['institution_class_id'] = $classId;
+                    $institutionClassStudent['education_grade_id'] = $student['education_grade_id'];
+                    $institutionClassStudent['academic_period_id'] = $student['academic_period_id'];
+                    $institutionClassStudent['institution_id'] = $institutionId;
+                    $institutionClassStudent['student_status_id'] = $student['student_status_id'];
+                    $institutionClassStudent['created_user_id'] = JWTAuth::user()->id;
+                    $institutionClassStudent['created'] = Carbon::now()->toDateTimeString();
+
+                    InstitutionClassStudents::insert($institutionClassStudent);
+
+                    $studentEducationGradeId = $student['education_grade_id'];
+
+                    $classSubjectsData = InstitutionClassSubjects::with('institutionSubject')->where('institution_class_id', $classId)->get()->toArray();
+
+                    foreach ($classSubjectsData as $classSubject) {
+                        $isAutoAddSubject = $this->isAutoAddSubject($classSubject);
+
+                        $subjectEducationGradeId = $classSubject['institution_subject']['education_grade_id'];
+
+                        // only add subjects that have auto_allocation flag set as true
+                        if ($isAutoAddSubject && $subjectEducationGradeId == $studentEducationGradeId) {
+                            $institutionSubjectStudent['id'] = Str::uuid();
+                            $institutionSubjectStudent['student_id'] = $student['student_id'];
+                            $institutionSubjectStudent['education_subject_id'] = $classSubject['institution_subject']['education_subject_id'];
+                            $institutionSubjectStudent['institution_subject_id'] = $classSubject['institution_subject_id'];
+                            $institutionSubjectStudent['institution_class_id'] = $student['institution_class_id'];
+                            $institutionSubjectStudent['institution_id'] = $student['institution_id'];
+                            $institutionSubjectStudent['academic_period_id'] = $student['academic_period_id'];
+                            $institutionSubjectStudent['education_grade_id'] = $student['education_grade_id'];
+                            $institutionSubjectStudent['student_status_id'] = $student['student_status_id'];
+                            $institutionSubjectStudent['created_user_id'] = JWTAuth::user()->id;
+                            $institutionSubjectStudent['created'] = Carbon::now()->toDateTimeString();
+
+                            InstitutionSubjectStudents::insert($institutionSubjectStudent);
+
+                            // 1 for male and 2 for female
+                            $countMale = $this->getGenderCountBySubject(1, $classSubject['institution_subject_id']);
+
+                            $countFemale = $this->getGenderCountBySubject(2, $classSubject['institution_subject_id']);
+
+                            InstitutionSubjects::where('id', $classSubject['institution_subject_id'])->update(['total_male_students' => $countMale, 'total_female_students' => $countFemale]);
+                        }
+                    }
+                }
+            } else {
+
+                foreach($institutionClass->studentSubjects as $student) {
+                    $institutionSubject = InstitutionSubjects::find($student->institution_subject_id);
+
+                    if ($student->securityUser->gender->code == 'F' ) {
+                        if ($institutionSubject->total_female_students > 0) {
+                            $institutionSubject->decrement('total_female_students', 1);
+                        }
+                    } else{
+                        if ($institutionSubject->total_female_students > 0) {
+                            $institutionSubject->decrement('total_male_students', 1);
+                        }
+                    }
+                }
+
+                InstitutionClasses::where('id', $classId)->update(['total_male_students' => $maleCount, 'total_female_students' => $femaleCount]);
+
+                InstitutionClassStudents::where('institution_class_id', $classId)->delete();
+
+                InstitutionSubjectStudents::where('institution_class_id', $classId)->delete();
+            }
+
+            $institutionClass['name'] = $data['name'];
+            $institutionClass['staff_id'] = $data['staff_id'];
+            $institutionClass['institution_shift_id'] = $data['institution_shift_id'];
+            $institutionClass['institution_unit_id'] = $data['institution_unit_id'];
+            $institutionClass['institution_course_id'] = $data['institution_course_id'];
+            $institutionClass['capacity'] = $data['capacity'];
+            $institutionClass['total_male_students'] = $maleCount;
+            $institutionClass['total_female_students'] = $femaleCount;
+
+            $institutionClass->save();
+
+            $records = [];
+            if (isset($data['classes_secondary_staff']) && !empty($data['classes_secondary_staff'])) {
+                foreach($data['classes_secondary_staff'] as $key => $staff) {
+                    $staffExists = InstitutionClassSecondaryStaff::where('institution_class_id', $classId)->where('secondary_staff_id', $staff['secondary_staff_id'])->first();
+
+                    if (!$staffExists) {
+                        $records[$key]['institution_class_id'] = $staff['institution_class_id'];
+                        $records[$key]['secondary_staff_id'] = $staff['secondary_staff_id'];
+                        $records[$key]['created_user_id'] = JWTAuth::user()->id;
+                        $records[$key]['created'] = Carbon::now()->toDateTimeString();
+                    }
+                }
+                InstitutionClassSecondaryStaff::insert($records);
+            } else {
+                InstitutionClassSecondaryStaff::where('institution_class_id', $classId)->delete();
+            }
+            DB::commit();
+            return true;
+        } catch (Exception $e) {
+            
+            DB::rollback();
+            dd($e);
+            throw $e;
+        }
+    }
+
+    public function updateInstitutionSubject($institutionId, $subjectId, $data) 
+    {
+        try {
+            DB::beginTransaction();
+
+            $institutionSubjectId =  $data['id'];
+            $institutionSubject = InstitutionSubjects::find($subjectId);
+            $institutionSubject->name = $data['name'];
+            $institutionSubject->save();
+
+            InstitutionClassSubjects::where('institution_subject_id', $subjectId)->delete();
+
+            if (isset($data['class_subjects']) && !empty($data['class_subjects'])) {
+                foreach($data['class_subjects'] as $key => $classSubject) {
+                    $classSubjectRecord[$key]['id'] = Str::uuid();
+                    $classSubjectRecord[$key]['institution_class_id'] = $classSubject['institution_class_id'];
+                    $classSubjectRecord[$key]['institution_subject_id'] = $classSubject['institution_subject_id'];
+                    $classSubjectRecord[$key]['status'] = $classSubject['status'];
+                    $classSubjectRecord[$key]['created_user_id'] = JWTAuth::user()->id;
+                    $classSubjectRecord[$key]['created'] = Carbon::now()->toDateTimeString();
+                }
+
+                InstitutionClassSubjects::insert($classSubjectRecord);
+            }
+            
+            InstitutionSubjectStaff::where('institution_subject_id', $subjectId)->delete();
+
+            if (isset($data['subject_staff']) && !empty($data['subject_staff'])) {
+                foreach($data['subject_staff'] as $key => $subjectStaff) {
+                    $subjectStaffRecord[$key]['id'] = Str::uuid();
+                    $subjectStaffRecord[$key]['start_date'] = Carbon::today();
+                    $subjectStaffRecord[$key]['staff_id'] = $subjectStaff['staff_id'];
+                    $subjectStaffRecord[$key]['institution_id'] = $subjectStaff['institution_id'];
+                    $subjectStaffRecord[$key]['institution_subject_id'] = $subjectStaff['institution_subject_id'];
+                    $subjectStaffRecord[$key]['created_user_id'] = JWTAuth::user()->id;
+                    $subjectStaffRecord[$key]['created'] = Carbon::now()->toDateTimeString();
+                }
+
+                InstitutionSubjectStaff::insert($subjectStaffRecord);
+            }
+
+            InstitutionSubjectRooms::where('institution_subject_id', $subjectId)->delete();
+
+            if (isset($data['rooms']) && !empty($data['rooms'])) {
+                foreach($data['rooms'] as $key => $room) {
+                    $roomData[$key]['id'] = Str::uuid();
+                    $roomData[$key]['institution_subject_id'] = $subjectId;
+                    $roomData[$key]['institution_room_id'] = $room;
+                }
+                InstitutionSubjectRooms::insert($roomData);
+            }
+
+            if (isset($data['subject_students']) && !empty($data['subject_students'])) {
+                $newStudents = [];
+                //decode string sent through form
+                foreach ($data['subject_students'] as $student) {
+                    $newStudents[$student['student_id']] = $student;
+                }
+                
+                //find existing subject student to make comparison
+                $educationGradeId = $data['education_grade_id'];
+                $educationSubjectId = $data['education_subject_id'];
+                $institutionSubjectId = $data['id'];
+
+                $institutionClassIds = InstitutionClassSubjects::where('institution_subject_id', $institutionSubjectId)
+                    ->pluck('institution_class_id', 'id')
+                    ->toArray();
+
+                $existingStudents = InstitutionSubjectStudents::select([
+                    'id', 'student_id', 'institution_class_id', 'education_grade_id',
+                    'academic_period_id', 'institution_id', 'student_status_id',
+                    'institution_subject_id', 'education_subject_id'
+                ])
+                ->whereIn('institution_class_id', $institutionClassIds)
+                ->where('education_subject_id', $educationSubjectId)
+                ->where('institution_subject_id', $institutionSubjectId)
+                ->get();
+
+                InstitutionSubjectStudents::where('institution_subject_id', $subjectId)
+                ->where('institution_id', $institutionId)->delete();
+
+                foreach ($newStudents as $key => $student) {
+                    $institutionSubjectStudent = new InstitutionSubjectStudents();
+                    $institutionSubjectStudent['id'] = Str::uuid();
+                    $institutionSubjectStudent['student_id'] = $student['student_id'];
+                    $institutionSubjectStudent['education_subject_id'] = $student['education_subject_id'];
+                    $institutionSubjectStudent['institution_subject_id'] = $student['institution_subject_id'];
+                    $institutionSubjectStudent['institution_class_id'] = $student['institution_class_id'];
+                    $institutionSubjectStudent['institution_id'] = $student['institution_id'];
+                    $institutionSubjectStudent['academic_period_id'] = $student['academic_period_id'];
+                    $institutionSubjectStudent['education_grade_id'] = $student['education_grade_id'];
+                    $institutionSubjectStudent['student_status_id'] = $student['student_status_id'];
+                    $institutionSubjectStudent['created_user_id'] = JWTAuth::user()->id;
+                    $institutionSubjectStudent['created'] = Carbon::now()->toDateTimeString();
+
+                    $institutionSubjectStudent->save();
+                }
+
+                // 1 for male and 2 for female
+                $countMale = $this->getGenderCountBySubject(1, $subjectId);
+
+                $countFemale = $this->getGenderCountBySubject(2, $subjectId);
+
+                InstitutionSubjects::where('id', $student['institution_subject_id'])->update(['total_male_students' => $countMale, 'total_female_students' => $countFemale]);
+
+                // $instutionSubjectId = InstitutionSubjects::where('education_grade_id', $data['education_grade_id'])
+                // ->where('academic_period_id', $data['academic_period_id'])
+                // ->where('education_subject_id', $data['education_subject_id'])
+                // ->where('institution_class_id', $data['class_subjects'][0]['institution_class_id'])
+                // ->where('institution_subject_id', '!=', $subjectId)
+                // ->select('institution_subject_id')
+                // ->first();
+
+                // if ($instutionSubjectId) {
+                //     $countMale = $this->getGenderCountBySubject(1, $instutionSubjectId);
+
+                //     $countFemale = $this->getGenderCountBySubject(2, $instutionSubjectId);
+
+                //     InstitutionSubjects::where('id', $student['institution_subject_id'])->update(['total_male_students' => $countMale, 'total_female_students' => $countFemale]);
+                // }
+
+
+            } else {
+                $institutionSubject = InstitutionSubjects::with('students')->where('id', $subjectId)->first();
+                foreach($institutionSubject->students as $student) {
+                    $institutionSubject = InstitutionSubjects::find($student->institution_subject_id);
+
+                    if ($student->securityUser->gender->code == 'F' ) {
+                        if ($institutionSubject->total_female_students > 0) {
+                            $institutionSubject->decrement('total_female_students', 1);
+                        }
+                    } else{
+                        if ($institutionSubject->total_female_students > 0) {
+                            $institutionSubject->decrement('total_male_students', 1);
+                        }
+                    }
+                }
+
+                InstitutionSubjectStudents::where('institution_subject_id', $subjectId)
+                ->where('institution_id', $institutionId)->delete();
+
+                InstitutionSubjects::where('id', $subjectId)->update(['total_male_students' => 0, 'total_female_students' => 0]);
+            }
+
+            DB::commit();
+            return true;
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            throw $e;
+        }
+    }
+
+    private function isAutoAddSubject($subject)
+    {
+        $educationGradeId = $subject['institution_subject']['education_grade_id'];
+        $educationSubjectId = $subject['institution_subject']['education_subject_id'];
+
+        $educationGradesSubjectsData = EducationGradesSubject::where('education_grade_id', $educationGradeId)
+            ->where('education_subject_id', $educationSubjectId)
+            ->first();
+
+        return $educationGradesSubjectsData['auto_allocation'];
+    }
+
+    private function getGenderCountBySubject($genderId, $subjectId) {
+
+        $result = InstitutionSubjectStudents::with(['securityUser', 'status'])
+        ->whereHas('status', function ($query) {
+            $query->whereNotIn('code', ['TRANSFERRED', 'WITHDRAWN']);
+        })
+        ->whereHas('securityUser', function ($query) use ($genderId) {
+            $query->where('gender_id', $genderId);
+        })
+        ->where('institution_subject_id', $subjectId)
+        ->count();
+
+        return $result;
+    }
+
+}
