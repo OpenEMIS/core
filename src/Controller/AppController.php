@@ -799,7 +799,7 @@ class AppController extends Controller
 
 // POCOR-7833 REDIRECT TO DASHBOARD
             $this->Alert->warning('general.notAccess');
-            return $this->redirect(['controller' => 'Dashboard', 'action' => 'index']);
+            return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
 // POCOR-7833 END
 //            throw new \Exception("No Rights for $class!");
         }
