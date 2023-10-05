@@ -1028,6 +1028,116 @@ paths:
                 "400":
                     description: Invalid status value
 
+        post:
+            tags:
+                - Institution Classes
+            summary: Update class of institution
+            parameters:
+                - name: institutionId
+                  in: path
+                  description: The ID of the institution.
+                  required: true
+                  schema:
+                      type: integer
+                - name: classId
+                  in: path
+                  description: The ID of the class.
+                  required: true
+                  schema:
+                      type: integer
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                id:
+                                    type: string
+                                    description: The ID of the class.
+                                    example: 12
+                                name:
+                                    type: string
+                                    description: The name of the class.
+                                    example: test
+                                staff_id:
+                                    type: integer
+                                    description: The ID of the staff member.
+                                    example: 345
+                                institution_shift_id:
+                                    type: integer
+                                    description: The ID of the institution shift.
+                                    example: 456
+                                institution_unit_id:
+                                    type: integer
+                                    nullable: true
+                                    description: The ID of the institution unit.
+                                    example: null
+                                institution_course_id:
+                                    type: integer
+                                    nullable: true
+                                    example: null
+                                    description: The ID of the institution course.
+                                classStudents:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            student_id:
+                                                type: integer
+                                                description: The ID of the student.
+                                                example: 456
+                                            institution_class_id:
+                                                type: string
+                                                description: The ID of the institution class.
+                                                example: 456
+                                            education_grade_id:
+                                                type: integer
+                                                description: The ID of the education grade.
+                                                example: 1
+                                            academic_period_id:
+                                                type: integer
+                                                description: The ID of the academic period.
+                                                example: 1
+                                            institution_id:
+                                                type: integer
+                                                description: The ID of the institution.
+                                                example: 1
+                                            student_status_id:
+                                                type: integer
+                                                description: The ID of the student status.
+                                                example: 1
+                                            gender_id:
+                                                type: integer
+                                                description: The ID of the gender.
+                                                example: 1
+                                academic_period_id:
+                                    type: integer
+                                    description: The ID of the academic period.
+                                    example: 1
+                                capacity:
+                                    type: integer
+                                    description: The capacity of the class.
+                                    example: 16
+                                classes_secondary_staff:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            secondary_staff_id:
+                                                type: integer
+                                                description: The ID of the secondary staff member.
+                                                example: 144
+                                            institution_class_id:
+                                                type: string
+                                                description: The ID of the institution class.
+                                                example: 167
+            responses:
+                "200":
+                    description: Class updated successfully.
+                "404":
+                    description: Class not updated.
+
     /api/v4/institutions/subjects:
         get:
             tags:
@@ -1192,6 +1302,134 @@ paths:
                                     $ref: "#/components/schemas/Institution-Subjects"
                 "400":
                     description: Invalid status value
+
+        post:
+            tags:
+                - Institution Subjects
+            summary: Update insititution subject by id
+            parameters:
+                - name: institutionId
+                  in: path
+                  description: The ID of the institution.
+                  required: true
+                  schema:
+                      type: integer
+                - name: subjectId
+                  in: path
+                  description: The ID of the subject.
+                  required: true
+                  schema:
+                      type: integer
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                id:
+                                    type: integer
+                                    description: The ID of the subject.
+                                name:
+                                    type: string
+                                    description: The name of the subject.
+                                subject_students:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            student_id:
+                                                type: integer
+                                                description: The ID of the student.
+                                                example: 156
+                                            institution_class_id:
+                                                type: integer
+                                                description: The ID of the institution class.
+                                                example: 132
+                                            institution_subject_id:
+                                                type: integer
+                                                description: The ID of the institution subject.
+                                                example: 156
+                                            education_grade_id:
+                                                type: integer
+                                                description: The ID of the education grade.
+                                                example: 178
+                                            education_subject_id:
+                                                type: integer
+                                                description: The ID of the education subject.
+                                                example: 17
+                                            academic_period_id:
+                                                type: integer
+                                                description: The ID of the academic period.
+                                                example: 15
+                                            institution_id:
+                                                type: integer
+                                                description: The ID of the institution.
+                                                example: 156
+                                            student_status_id:
+                                                type: integer
+                                                description: The ID of the student status.
+                                                example: 1
+                                            gender_id:
+                                                type: integer
+                                                description: The ID of the gender.
+                                                example: 1
+                                institution_id:
+                                    type: integer
+                                    description: The ID of the institution.
+                                    example: 1
+                                academic_period_id:
+                                    type: integer
+                                    description: The ID of the academic period.
+                                    example: 1
+                                subject_staff:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            institution_class_id:
+                                                type: integer
+                                                description: The ID of the institution class.
+                                                example: 1
+                                            institution_subject_id:
+                                                type: integer
+                                                description: The ID of the institution subject.
+                                                example: 1
+                                            status:
+                                                type: integer
+                                                description: The status.
+                                                example: 1
+                                class_subjects:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            institution_class_id:
+                                                type: integer
+                                                description: The ID of the institution class.
+                                                example: 1
+                                            institution_subject_id:
+                                                type: integer
+                                                description: The ID of the institution subject.
+                                                example: 1
+                                            status:
+                                                type: integer
+                                                description: The status.
+                                                example: 1
+                                rooms:
+                                    type: array
+                                    description: List of rooms (if applicable).
+                                    example: [34, 56]
+                                    items:
+                                        type: string
+                            required:
+                                - id
+                                - name
+            responses:
+                "200":
+                    description: Subject updated successfully.
+                "404":
+                    description: Subject not updated..
 
     /api/v4/institutions/shifts:
         get:
