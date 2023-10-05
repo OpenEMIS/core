@@ -772,7 +772,12 @@ class AppController extends Controller
         if($this->skipCheckAccessControl($params)){
             return;
         }
-
+        //POCOR-7731 start
+        if($params['controller'] == 'ApiSecurities' &&
+            $params['action'] == 'index'){
+            return $this->redirect(['controller' => 'Errors', 'action' => 'error404']);
+        }
+        //POCOR-7731 end
         $check = $this->AccessControl->check($params);
 // POCOR-7833 REMOVE UNNECESSARY LOGGING
 //        $this->log($check, 'debug');

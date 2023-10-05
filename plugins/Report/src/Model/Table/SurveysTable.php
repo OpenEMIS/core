@@ -429,6 +429,45 @@ class SurveysTable extends AppTable
         if($institutionID > 0){
             $condition['Institutions.id'] = $institutionID;
         }
+        //POCOR-7821 start(for filtering data based on status(completed, not completed))
+        $status= $requestData->status;
+        if(!empty($status) && $status != "all"){
+            $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+            $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+            $WorkflowStatuses = TableRegistry::get('Workflow.WorkflowStatuses');
+            $WorkflowStatusesSteps = TableRegistry::get('Workflow.WorkflowStatusesSteps');
+            $statusData = $this->find()->select([
+                    "status_id" => $this->aliasField('status_id'),
+                    "status_name" => $WorkflowSteps->aliasField('name')
+                    ])
+                    ->innerJoin([$WorkflowSteps->alias() => $WorkflowSteps->table()], [
+                        $WorkflowSteps->aliasField('id=') . $this->aliasField('status_id')
+                    ])
+                    ->innerJoin([$WorkflowStatusesSteps->alias() => $WorkflowStatusesSteps->table()], [
+                        $WorkflowStatusesSteps->aliasField('workflow_step_id=') . $WorkflowSteps->aliasField('id')
+                    ])
+                    ->innerJoin([$WorkflowStatuses->alias() => $WorkflowStatuses->table()], [
+                        $WorkflowStatuses->aliasField('id=') . $WorkflowStatusesSteps->aliasField('workflow_status_id')
+                    ])
+                    ->innerJoin([$WorkflowModels->alias() => $WorkflowModels->table()], [
+                        $WorkflowModels->aliasField('id=') . $WorkflowStatuses->aliasField('workflow_model_id')
+                    ])->where([
+                        $WorkflowModels->aliasField('name') => "Institutions > Survey > Forms",
+                        $WorkflowStatuses->aliasField('id') => $status
+                    ])->group($this->aliasField('status_id'))
+                    ->toArray();
+
+            foreach ($statusData as $key => $value) {
+                    $statusList[] = $value['status_id'];
+            }
+            $statusCondition = [
+                    $this->aliasField('status_id').' IN ' => array_values($statusList)
+            ];
+            $condition = array_merge($condition, $statusCondition);
+        }
+        //POCOR-7821 end
+       
+        
         // POCOR-6440 end
 
         $query->select([
