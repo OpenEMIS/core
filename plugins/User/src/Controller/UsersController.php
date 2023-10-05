@@ -1,4 +1,5 @@
 <?php
+
 namespace User\Controller;
 
 use ArrayObject;
@@ -88,8 +89,8 @@ class UsersController extends AppController
 
         $consoleDir = ROOT . DS . 'bin' . DS;
         $cmd = sprintf("%scake %s %s", $consoleDir, $script, 'User.Users');
-        $nohup = '%s > %slogs/'.$script.'.log & echo $!';
-        $shellCmd = sprintf($nohup, $cmd, ROOT.DS);
+        $nohup = '%s > %slogs/' . $script . '.log & echo $!';
+        $shellCmd = sprintf($nohup, $cmd, ROOT . DS);
         \Cake\Log\Log::write('debug', $shellCmd);
         exec($shellCmd);
     }
@@ -174,23 +175,26 @@ class UsersController extends AppController
                 ->first();
 
             if (!is_null($userEntity) && !is_null($userEntity->email)) {
-
+//                Log::write('debug', "1");
                 $userId = $userEntity->id;
                 $now = new DateTime();
                 $expiry = (new DateTime())->modify('+ 1hour');
                 $expiryFormat = $expiry->format('Y-m-d H:i:s');
+//                Log::write('debug', "2");
 
                 // remove any request that is passed expiry date
                 $SecurityUserPasswordRequests = TableRegistry::getTableLocator()->get('User.SecurityUserPasswordRequests');
                 $SecurityUserPasswordRequests->deleteAll([
                     $SecurityUserPasswordRequests->aliasField('expiry_date < ') => $now
                 ]);
+//                Log::write('debug', "3");
 
                 // check if the user previously requested for reset password that is not expired. If requested before, reject the current request
                 $userRequestCount = $SecurityUserPasswordRequests
                     ->find()
                     ->where([$SecurityUserPasswordRequests->aliasField('user_id') => $userId])
                     ->count();
+//                Log::write('debug', "4");
 
                 // user still have active reset request - redirect to login page with info message
                 if ($userRequestCount > 0) {
@@ -198,16 +202,8 @@ class UsersController extends AppController
                     $this->Alert->info($message, ['type' => 'string', 'reset' => true]);
                     return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
                 }
+//                Log::write('debug', "5");
 
-                try {
-                    $checksum = Security::hash($userId . $expiryFormat, 'sha256');
-                    $storedChecksum = Security::hash($checksum, 'sha256');
-
-                    $passwordRequestData = [
-                        'user_id' => $userId,
-                        'expiry_date' => $expiry,
-                        'id' => $storedChecksum
-                    ];
 
                     $saveEntity = $SecurityUserPasswordRequests->newEntity($passwordRequestData);
                     $SecurityUserPasswordRequests->save($saveEntity);
@@ -232,7 +228,36 @@ class UsersController extends AppController
                         $emailSubject = $getData->default_value;
                     }
 
+                $passwordRequestData = [
+                    'user_id' => $userId,
+                    'expiry_date' => $expiry,
+                    'id' => $storedChecksum
+                ];
+//                Log::write('debug', "6");
+                $saveEntity = $SecurityUserPasswordRequests->newEntity($passwordRequestData);
+                $SecurityUserPasswordRequests->save($saveEntity);
 
+                $userEmail = $userEntity->email;
+                $name = $userEntity->name;
+                $url = Router::url([
+                    'plugin' => 'User',
+                    'controller' => 'Users',
+                    'action' => 'resetPassword',
+                    'token' => $checksum
+                ], true);
+
+                /*POCOR-5284 Starts*/
+                $Themes = TableRegistry::get('Theme.Themes');
+                $getData = $Themes->find()
+                    ->where([$Themes->aliasField('name') => 'Application Name'])
+                    ->first();
+                if (!empty($getData) && !is_null($getData->value) && !empty($getData->value)) {
+                    $emailSubject = $getData->value;
+                } else {
+                    $emailSubject = $getData->default_value;
+                }
+
+                try {
                     $email = new Email('openemis');
                     $emailSubject =  $emailSubject.' - Password Reset Request';
                     //$emailSubject = __('OpenEMIS - Password Reset Request');
@@ -241,12 +266,11 @@ class UsersController extends AppController
                         ->setTo($userEmail)
                         ->setSubject($emailSubject)
                         ->send($emailMessage);
-                } catch (InvalidArgumentException $ex) {
-                    Log::write('error', __METHOD__ . ': ' . $ex->getMessage());
-                    $message = __('An unexpected error has been encountered. Please contact the administrator for assistance.');
-                    $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-                    return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+
+                } catch (\Exception $exception) {
+                    Log::write('error', __METHOD__ . ' 4: ' . $exception->getMessage() . ": $userEmail");
                 }
+
             }
 
             $message = __('Please check your email for further instructions.');
@@ -281,15 +305,18 @@ class UsersController extends AppController
                         $this->Users->aliasField('email') => $userEmail
                     ])
                     ->first();
-                    $userId = $userEntity->id;
+                $userId = $userEntity->id;
                 if (!is_null($userEntity) && !is_null($userEntity->email)) {
                     $userEmail = $userEntity->email;
                     $username = $userEntity->username;
                     $name = $userEntity->name;
 
-
                     try {
-                        $updateUserName = $this->updateUserName($username ,$userId); //POCOR-7159
+                        $updateUserName = $this->updateUserName($username, $userId); //POCOR-7159
+                    } catch (\Exception $exception) {
+                        Log::write('error', __METHOD__ . ' 1: ' . $exception->getMessage() . ": $userEmail");
+                    }
+                    try {
                         /*
                         Subject: OpenEMIS - Username Recovery Request
                         Message Body:
@@ -301,19 +328,35 @@ class UsersController extends AppController
                             Thank you.
                          */
                         $email = new Email('openemis');
+                    } catch (\Exception $exception) {
+                        Log::write('error', __METHOD__ . ' 1: ' . $exception->getMessage() . ": $userEmail");
+                    }
+                    try {
                         $emailSubject = __('OpenEMIS - Username Recovery Request');
-
+                    } catch (\Exception $exception) {
+                        Log::write('error', __METHOD__ . ' 2: ' . $exception->getMessage() . ": $userEmail");
+                    }
+                    try {
                         $emailMessage = "Dear " . $name . ",\n\nWe received a username recovery request for your account.\nYour username is: " . $username . "\n\nThank you.";
+                    } catch (\Exception $exception) {
+                        Log::write('error', __METHOD__ . ' 3: ' . $exception->getMessage() . ": $userEmail");
+                    }
+                    try {
                         $email
                             ->setTo($userEmail)
                             ->setSubject($emailSubject)
                             ->send($emailMessage);
-                    } catch (InvalidArgumentException $ex) {
-                        Log::write('error', __METHOD__ . ': ' . $ex->getMessage());
-                        $message = __('An unexpected error has been encountered. Please contact the administrator for assistance.');
-                        $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-                        return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+                    } catch (\Exception $exception) {
+                        Log::write('error', __METHOD__ . ' 4: ' . $exception->getMessage() . ": $userEmail");
                     }
+
+//                    catch (InvalidArgumentException $ex) {
+//                        Log::write('error', __METHOD__ . ': ' . $ex->getMessage());
+//                        $message = __('An unexpected error has been encountered. Please contact the administrator for assistance.');
+//                        $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+//                        return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+//                    }
+
                 }
 
                 $message = __('Please check your email for more information.');
@@ -354,7 +397,7 @@ class UsersController extends AppController
                     $errors = $userEntity->errors();
                     if (empty($errors)) {
                         if ($Passwords->save($userEntity)) {
-                            $setdata =  $this->updateUserPassword($userId); //POCOR-7159
+                            $setdata = $this->updateUserPassword($userId); //POCOR-7159
                             $SecurityUserPasswordRequests->delete($passwordRequestEntity);
                             $message = __('Your password has been reset successfully.');
                             $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
@@ -447,8 +490,10 @@ class UsersController extends AppController
     {
         $request = new ServerRequest();
         if ($_SERVER['REQUEST_METHOD']=='POST' && $this->getRequest()->getData('submit') == 'reload') {
+            // echo "<pre>";print_r("Hii");die();
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
         }
+        // echo "<pre>";print_r("Hello");die();
        
         //POCOR-7156 starts
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
@@ -498,17 +543,17 @@ class UsersController extends AppController
             $encrypt_otp = base64_encode($six_digit_random_number);
             $SystemUserOtpTbl = TableRegistry::getTableLocator()->get('User.SecurityUserCodes');
             $SystemUserOtpEntity = $SystemUserOtpTbl
-                        ->find()
-                        ->where([$SystemUserOtpTbl->aliasField('security_user_id') => $userEntity->id])
-                        ->first();
+                ->find()
+                ->where([$SystemUserOtpTbl->aliasField('security_user_id') => $userEntity->id])
+                ->first();
             $now = new DateTime();
             $create_date = $now->format('Y-m-d H:i:s');
-            if(!empty($SystemUserOtpEntity)){
+            if (!empty($SystemUserOtpEntity)) {
                 $SystemUserOtpTbl->updateAll(
                     ['verification_otp' => $encrypt_otp, 'created' => $create_date],
                     ['id' => $SystemUserOtpEntity->id]
                 );
-            }else{
+            } else {
                 $data = [
                     'security_user_id' => $userEntity->id,
                     'verification_otp' => $encrypt_otp,
@@ -521,7 +566,7 @@ class UsersController extends AppController
             $name = $userEntity->name;
             $email = new Email('openemis');
             $emailSubject = __('OpenEMIS - One-time Password (OTP)');
-            $emailMessage = "Dear " . $name . ",\n\nOne-time Password (OTP) is ". $six_digit_random_number ." . This OTP expires in 1 hour. \n\nBest regards,\nOpenEMIS Support\n\nThis is a system - generated email. Please do not reply to this email address.";
+            $emailMessage = "Dear " . $name . ",\n\nOne-time Password (OTP) is " . $six_digit_random_number . " . This OTP expires in 1 hour. \n\nBest regards,\nOpenEMIS Support\n\nThis is a system - generated email. Please do not reply to this email address.";
             $email
                 ->setTo($userEmail)
                 ->setSubject($emailSubject)
@@ -533,12 +578,14 @@ class UsersController extends AppController
             $userPass = $this->encrypt($this->request->getData('password'), Security::getSalt());
             $encodedUserData = $this->paramsEncode(['username' => $userName, 'email'=>$userEmail, 'password' => $userPass]);
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp', $encodedUserData]);
-        }else{//POCOR-7156 ends
+        } else {//POCOR-7156 ends
             $this->SSO->doAuthentication($authenticationType, $code);
         }
     }
+
     //POCOR-7156 starts
-    public  function encrypt($pure_string, $secretHash) {
+    public function encrypt($pure_string, $secretHash)
+    {
         $iv = substr($secretHash, 0, 16);
         $encryptedMessage = openssl_encrypt($pure_string, "AES-256-CBC", $secretHash, $raw_input = false, $iv);
         $encrypted = base64_encode(
@@ -547,7 +594,8 @@ class UsersController extends AppController
         return $encrypted;
     }
 
-    public function decrypt($encrypted_string, $secretHash) {
+    public function decrypt($encrypted_string, $secretHash)
+    {
         $iv = substr($secretHash, 0, 16);
         $data = base64_decode($encrypted_string);
         $decryptedMessage = openssl_decrypt($data, "AES-256-CBC", $secretHash, $raw_input = false, $iv);
@@ -566,24 +614,24 @@ class UsersController extends AppController
             $userData['email'] = $this->decrypt($userData['email'], Security::getSalt());
             $userData['password'] = $this->decrypt($userData['password'], Security::getSalt());
             $userEntity = $this->Users
-                    ->find()
-                    ->select([
-                        $this->Users->aliasField('id'),
-                        $this->Users->aliasField('username'),
-                        $this->Users->aliasField('password'),
-                        $this->Users->aliasField('email'),
-                        $this->Users->aliasField('first_name'),
-                        $this->Users->aliasField('middle_name'),
-                        $this->Users->aliasField('third_name'),
-                        $this->Users->aliasField('last_name'),
-                        $this->Users->aliasField('preferred_name')
-                    ])
-                    ->where([
-                        $this->Users->aliasField('username') => $userData['username'],
-                        $this->Users->aliasField('email') => $userData['email']
-                    ])
-                    ->first();
-            if(empty($userEntity)){
+                ->find()
+                ->select([
+                    $this->Users->aliasField('id'),
+                    $this->Users->aliasField('username'),
+                    $this->Users->aliasField('password'),
+                    $this->Users->aliasField('email'),
+                    $this->Users->aliasField('first_name'),
+                    $this->Users->aliasField('middle_name'),
+                    $this->Users->aliasField('third_name'),
+                    $this->Users->aliasField('last_name'),
+                    $this->Users->aliasField('preferred_name')
+                ])
+                ->where([
+                    $this->Users->aliasField('username') => $userData['username'],
+                    $this->Users->aliasField('email') => $userData['email']
+                ])
+                ->first();
+            if (empty($userEntity)) {
                 $message = __('An email address is not registered for this account. Please contact your system administrator.');
                 $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
@@ -602,7 +650,7 @@ class UsersController extends AppController
                             $authenticationType = 'Local';
                             $code = null;
                             $this->SSO->doAuthentication($authenticationType, $code);
-                        }else{
+                        } else {
                             $message = __('Incorrect OTP code entered. Please try again.');
                             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp', $this->request->params['pass'][0]]);
@@ -610,7 +658,7 @@ class UsersController extends AppController
                     }
                 }
             }
-        }else{
+        } else {
             $message = __('There was an error in sending the OTP. Please enter a valid email id or username.');
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
@@ -662,15 +710,40 @@ class UsersController extends AppController
 
     public function afterCheckLogin(EventInterface $event, $extra)
     {
+        //POCOR-2976 start
+        $SecurityUser = TableRegistry::getTableLocator()->get('User.Users');
+        $userData = $SecurityUser->find()
+            ->where(
+                [$SecurityUser->aliasField('username') => $this->request->getData('username')]
+            )->first();
+        //POCOR-2976 end
         if (!$extra['loginStatus']) {
             if (!$extra['status']) {
                 $this->Alert->error('security.login.inactive', ['reset' => true]);
             } else if ($extra['fallback']) {
                 $url = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'submit' => 'retry']);
-                $retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="'.$url.'">Click here</a> to try again';
+                $retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="' . $url . '">Click here</a> to try again';
                 $this->Alert->error($retryMessage, ['type' => 'string', 'reset' => true]);
             } else {
-                $this->Alert->error('security.login.fail', ['reset' => true]);
+                //POCOR-2976 start
+                if ($userData->status == 0) {
+                    $this->Alert->error('security.login.locked_account', ['reset' => true]);
+                    return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+                }
+                // $this->Alert->error('security.login.fail', ['reset' => true]);
+                $session = $this->request->session();
+                $noOfPendingAttempts = $session->read('login.attempts');
+                $noOfPendingAttempts--;
+                $session->write('login.attempts', $noOfPendingAttempts);
+                if ($noOfPendingAttempts <= 0) {
+                    $SecurityUser->updateAll(['status' => 0],
+                        ['username' => $this->request->data['username']]);
+                    $this->Alert->error('security.login.locked_account', ['reset' => true]);
+                } else {
+                    $message = "You have {$noOfPendingAttempts} more login attempts before your account will be locked.";
+                    $this->Alert->warning($message, ['type' => 'string', 'reset' => true]);
+                }
+                //POCOR-2976 end
             }
             $event->stopPropagation();
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
@@ -713,15 +786,14 @@ class UsersController extends AppController
 
         // Expiry change to 24 hours
         return JWT::encode([
-                    'sub' => $user['id'],
-                    'exp' =>  time() + 10800
-                ], Configure::read('Application.private.key'), 'RS256');
+            'sub' => $user['id'],
+            'exp' => time() + 10800
+        ], Configure::read('Application.private.key'), 'RS256');
     }
 
     public function afterIdentify(EventInterface $event, $user)
     {
         $user = $this->Users->get($user['id']);
-
 
 
         $this->log('[' . $user->username . '] Login successfully.', 'debug');
@@ -743,7 +815,7 @@ class UsersController extends AppController
             $pid = exec($shellCmd);
             Log::write('debug', $shellCmd);
         } catch (Exception $ex) {
-            Log::write('error', __METHOD__ . ' exception when removing inactive roles : '. $ex);
+            Log::write('error', __METHOD__ . ' exception when removing inactive roles : ' . $ex);
         }
     }
 
@@ -759,7 +831,7 @@ class UsersController extends AppController
             $executedCount = $process['executed_count'];
             $modelTable = TableRegistry::getTableLocator()->get($model);
             if (!empty($eventName)) {
-                $event = $modelTable->dispatchEvent('Shell.'.$eventName, [$id, $executedCount, $params]);
+                $event = $modelTable->dispatchEvent('Shell.' . $eventName, [$id, $executedCount, $params]);
             }
         }
     }
@@ -767,49 +839,49 @@ class UsersController extends AppController
     /**
      * POCOR-7159
      * add data in user_activities table while updating password
-    */
+     */
     public function updateUserPassword($userId)
     {
         $userActivities = TableRegistry::getTableLocator()->get('user_activities');
         $currentTimeZone = date("Y-m-d H:i:s");
         $data = [
-                    'model' => 'Users',
-                    'model_reference' => $userId,
-                    'field' => 'password',
-                    'field_type' => 'string',
-                    'old_value' => '',
-                    'new_value' => '',
-                    'operation' => 'resetPass',
-                    'security_user_id' => $userId,
-                    'created_user_id' => $userId,
-                    'created' => $currentTimeZone,
-                ];
+            'model' => 'Users',
+            'model_reference' => $userId,
+            'field' => 'password',
+            'field_type' => 'string',
+            'old_value' => '',
+            'new_value' => '',
+            'operation' => 'resetPass',
+            'security_user_id' => $userId,
+            'created_user_id' => $userId,
+            'created' => $currentTimeZone,
+        ];
         $entity = $userActivities->newEntity($data);
-        $save =  $userActivities->save($entity);
+        $save = $userActivities->save($entity);
     }
 
 
     /**
      * POCOR-7159
      * add data in user_activities table while updating password
-    */
-    public function updateUserName($username ,$userId)
+     */
+    public function updateUserName($username, $userId)
     {
         $userActivities = TableRegistry::getTableLocator()->get('User.UserActivities');
         $currentTimeZone = date("Y-m-d H:i:s");
         $data = [
-                    'model' => 'Users',
-                    'model_reference' => $userId,
-                    'field' => 'username',
-                    'field_type' => 'string',
-                    'old_value' => $username,
-                    'new_value' => $username,
-                    'operation' => 'resetName',
-                    'security_user_id' => $userId,
-                    'created_user_id' => $userId,
-                    'created' => $currentTimeZone,
-                ];
+            'model' => 'Users',
+            'model_reference' => $userId,
+            'field' => 'username',
+            'field_type' => 'string',
+            'old_value' => $username,
+            'new_value' => $username,
+            'operation' => 'resetName',
+            'security_user_id' => $userId,
+            'created_user_id' => $userId,
+            'created' => $currentTimeZone,
+        ];
         $entity = $userActivities->newEntity($data);
-        $save =  $userActivities->save($entity);
+        $save = $userActivities->save($entity);
     }
 }
