@@ -1,4 +1,6 @@
+### [3.96.0] - 2023-10-05
 - Implemented: Develop OpenEMIS Core v4 APIs for the examination features
+- Bug Fixed: Administration>Data Management>Archive: Data is showing 0 but user is able to see archive when clicking archive button
 - Bug Fixed: Institutions > Infrastructures > Overview: Change warning message
 - Bug Fixed: Institution > Statistics > Standard: The report is stuck in progress
 - Bug Fixed: Institutions > Contacts > People: The preferred field is showing as number text
