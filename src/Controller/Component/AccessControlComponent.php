@@ -253,21 +253,21 @@ class AccessControlComponent extends Component
         if (empty($url)) {
             $url = ['controller' => $this->controller->name, 'action' => $this->action];
         } else {
-            if (!array_key_exists('controller', $url)) {
+            if (!isset($url['controller'])) {
                 $url['controller'] = $this->controller->name;
             }
         }
         $url = $this->checkAccessMap($url);
         $checkUrl = [];
 
-        if (!(array_key_exists('controller', $url) && array_key_exists('action', $url) && array_key_exists('0', $url))) {
-            if (array_key_exists('0', $url) && array_key_exists('1', $url) && array_key_exists('2', $url)) {
+        if (!(isset($url['controller']) && isset($url['action']) && isset($url[0]))) {
+            if (isset($url[0]) && isset($url[1]) && isset($url[2])) {
                 $url['controller'] = $url[0];
                 $url['action'] = $url[1];
                 $url[0] = $url[2];
                 unset($url[1]);
                 unset($url[2]);
-            } elseif (array_key_exists('0', $url) && array_key_exists('1', $url)) {
+            } elseif (isset($url[0]) && isset($url[1])) {
                 $url['controller'] = $url[0];
                 $url['action'] = $url[1];
                 unset($url[0]);
@@ -278,17 +278,26 @@ class AccessControlComponent extends Component
         // exclude profile controllers
         /*commenting Profiles, ProfileInsurances and ProfileBodyMasses as per task POCOR-5312 permission requirement*/
         if($this->request->params['action'] == 'TrainingNeeds'){//POCOR-6292 starts
-           $excludedController = ['ProfileApplicationAttachments', 'ProfileApplicationInstitutionChoices' /*'ProfileBodyMasses'*/, 'ProfileComments', /*'ProfileInsurances', 'Profiles', */ 'ScholarshipsDirectory'];//POCOR-6292 ends
+           $excludedController = ['ProfileApplicationAttachments',
+               'ProfileApplicationInstitutionChoices'
+               /*'ProfileBodyMasses'*/,
+               'ProfileComments',
+               /*'ProfileInsurances', 'Profiles', */
+               'ScholarshipsDirectory'];//POCOR-6292 ends
         }else{
             //For POCOR-6202 uncomment the profile module  
-            $excludedController = ['ProfileApplicationAttachments', 'ProfileApplicationInstitutionChoices' /*'ProfileBodyMasses'*/, 'ProfileComments', /*'ProfileInsurances', 'Profiles', */ 'Profiles', 'ScholarshipsDirectory'];
+            $excludedController = ['ProfileApplicationAttachments',
+                'ProfileApplicationInstitutionChoices' /*'ProfileBodyMasses'*/,
+                'ProfileComments',
+                /*'ProfileInsurances', 'Profiles', */ 'Profiles',
+                'ScholarshipsDirectory'];
         }
 
-        if (array_key_exists('controller', $url)) {
+        if (isset($url['controller'])) {
             $checkUrl[] = $url['controller'];
             unset($url['controller']);
         }
-        if (array_key_exists('action', $url)) {
+        if (isset($url['action'])) {
             $checkUrl[] = $url['action'];
             unset($url['action']);
         }
@@ -340,7 +349,7 @@ class AccessControlComponent extends Component
         $request = $this->request;
         $accessMap = $this->accessMap;
 
-        if (array_key_exists($key, $accessMap)) {
+        if (isset($accessMap[$key])) {
             $action = 'index';
             if (isset($urlValues[2])) {
                 if (!is_numeric($urlValues[2]) && !$this->isUuid($urlValues[2])) { // this is an action

@@ -124,16 +124,16 @@ class TransferLogsTable extends ControllerActionTable
         $this->field('p_id', ['visible' => false]);
         $this->field('features', ['sort' => false]); // POCOR-6816
         $this->setFieldOrder(['academic_period_id', 'features', 'generated_on', 'generated_by']);
-        $alreadytransferring = $this->find('all')
-            ->where(['process_status' => self::IN_PROGRESS,
-            ])
-            ->count();
-        if ($alreadytransferring === 1) {
-            $this->Alert->warning('There is an archive process currently running. Please try again later', ['type' => 'string', 'reset' => true]);;
-        }
-        if ($alreadytransferring > 1) {
-            $this->Alert->warninf("There are $alreadytransferring archive processes currently running. Please try again later", ['type' => 'string', 'reset' => true]);;
-        }
+//        $alreadytransferring = $this->find('all')
+//            ->where(['process_status' => self::IN_PROGRESS,
+//            ])
+//            ->count();
+//        if ($alreadytransferring === 1) {
+//            $this->Alert->warning('There is an archive process currently running. Please try again later', ['type' => 'string', 'reset' => true]);;
+//        }
+//        if ($alreadytransferring > 1) {
+//            $this->Alert->warning("There are $alreadytransferring archive processes currently running. Please try again later", ['type' => 'string', 'reset' => true]);;
+//        }
         //$this->Alert->info('Archive.backupReminder', ['reset' => false]);
 
         // Start POCOR-5188
@@ -252,6 +252,7 @@ class TransferLogsTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
+//        $this->log($entity, 'debug');
         if ($entity->isNew()) {
             $superAdmin = $this->checkSuperAdmin();
             if (!$superAdmin) {
@@ -264,14 +265,25 @@ class TransferLogsTable extends ControllerActionTable
                 $this->Alert->error('Archive.currentAcademic');
                 return false;
             }
+            $inputString = $entity->features;
+
+// Use a regular expression to extract the desired string
+            if (preg_match('/^([^\.]+)/', $inputString, $matches)) {
+                $feature = $matches[1];
+            } else {
+                // Handle the case where the pattern doesn't match
+                $feature = "Pattern not found";
+            }
             $alreadytransferring = $this->find('all')
-                ->where(['process_status' => self::IN_PROGRESS,
+                ->where([
+                    'process_status' => self::IN_PROGRESS,
+                    'features LIKE' => '%' . $feature . '%'
                 ])
                 ->count();
             if ($alreadytransferring > 0) {
-                $this->Alert->error('There is an archive process currently running. Please try again later', ['type' => 'string', 'reset' => true]);
-//                $event->stopPropagation();
-//                return false;
+                $this->Alert->error("There is $feature archive process currently running. Please try again once the process has ended", ['type' => 'string', 'reset' => true]);
+                $event->stopPropagation();
+                return false;
             }
             $entity->p_id = random_int(100000, 999999);
 //        $entity->process_status = 0;
@@ -479,9 +491,9 @@ class TransferLogsTable extends ControllerActionTable
                     $recordsInArchive = $recordsInArchive + $archiveTableRecordsCount;
                 }
 
-                $recordsInArchiveStr = number_format($recordsInArchive, 0, '', ' ');
-                $recordsToArchiveStr = number_format($recordsToArchive, 0, '', ' ');
-                $todoing = trim($entity['features']) . '. 0 /' . $recordsToArchiveStr;
+                $recordsInArchiveStr = number_format($recordsInArchive, 0, '', ',');
+                $recordsToArchiveStr = number_format($recordsToArchive, 0, '', ',');
+                $todoing = trim($entity['features']) . '. ' . $recordsToArchiveStr . ' / ' . $recordsInArchiveStr;
 
                 $alreadytransferring = $this->find('all')
                     ->where(['academic_period_id' => $entity->academic_perid_id,

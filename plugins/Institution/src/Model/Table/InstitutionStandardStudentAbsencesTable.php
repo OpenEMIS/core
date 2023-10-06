@@ -198,7 +198,11 @@ class InstitutionStandardStudentAbsencesTable extends AppTable
             'institution_code' =>'institutions.code',
             'institution_name' =>'institutions.name',
             'education_grade_name' => 'MAX(education_grades.name)',
-            'class_name' => 'IFNULL(MAX(institution_classes.name), \'\')',
+            // 'class_name' => 'IFNULL(MAX(institution_classes.name), \'\')',
+            'class_name' =>   $query->func()->coalesce([//POCOR-7802
+                $query->func()->max('institution_classes.name'),
+                '\'\''
+            ]),
             'openemis_no' => 'security_users.openemis_no',
             'identity_number' => 'IFNULL(StudentIdentities.identity_number, \'\')',
             'student_name' => "CONCAT_WS(' ', security_users.first_name, security_users.middle_name, security_users.third_name, security_users.last_name)",

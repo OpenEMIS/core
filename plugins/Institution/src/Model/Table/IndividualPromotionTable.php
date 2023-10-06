@@ -623,7 +623,9 @@ class IndividualPromotionTable extends ControllerActionTable
                     }
                     $students =  $institutionStudents->find()->where(
                         [
-                            $institutionStudents->aliasField('education_grade_id') => $studentStatusesValidateRepeater,
+                            $institutionStudents->aliasField('education_grade_id')
+                            => $studentStatusesValidateRepeater,
+                            $institutionStudents->aliasField('student_id') => $studentId
                         ])
                         ->first();
                     if(empty($students)){

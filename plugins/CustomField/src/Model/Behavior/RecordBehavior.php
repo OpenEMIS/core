@@ -582,10 +582,10 @@ class RecordBehavior extends Behavior
                         }
                     }
 
-                    Log::write('debug', 'entity Errors:');
-                    Log::write('debug', $entity->errors());
-                    Log::write('debug', 'file Errors:');
-                    Log::write('debug', $fileErrors);
+//                    Log::write('debug', 'entity Errors:');
+//                    Log::write('debug', $entity->errors());
+//                    Log::write('debug', 'file Errors:');
+//                    Log::write('debug', $fileErrors);
 
                     return false;
                 }

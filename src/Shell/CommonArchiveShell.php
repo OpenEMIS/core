@@ -42,10 +42,10 @@ class CommonArchiveShell extends Shell
     public static
     function setTransferLogsBatch($caller, $step = 1, $proc = "", $baseCount = 0, $baseCountStr="")
     {
-        $recordsInArchive = number_format($caller->recordsInArchive, 0, '', ' ');
-        $recordsToArchive = number_format($caller->recordsToArchive, 0, '', ' ');
+        $recordsInArchive = number_format($caller->recordsInArchive, 0, '', ',');
+        $recordsToArchive = number_format($caller->recordsToArchive, 0, '', ',');
         $recordsMoved = $baseCount - $caller->recordsToArchive;
-        $recordsMovedStr = number_format($recordsMoved, 0, '', ' ');
+//        $recordsMovedStr = number_format($recordsMoved, 0, '', ' ');
         $featureName = $caller->featureName;
         $pid = $caller->pid;
         $TransferLogs = TableRegistry::get('Archive.TransferLogs');
@@ -55,9 +55,9 @@ class CommonArchiveShell extends Shell
         $moved = "{$featureName}. {$recordsToArchive} / {$recordsInArchive}. {$proc} {$step}.";
         $caller->out($moved);
         Log::write('debug', $moved);
-        $moved = "{$featureName}. {$recordsMovedStr} / {$baseCountStr}.";
+        $moved = "{$featureName}. {$recordsToArchive} / {$recordsInArchive}";
         $transferlog->features = $moved;
-        Log::write('debug', $moved);
+//        Log::write('debug', $moved);
         try {
             $TransferLogs->save($transferlog);
         } catch (\Exception $e) {

@@ -1112,27 +1112,45 @@ class WorkflowBehavior extends Behavior
         // check line by line, whether to show / hide the action buttons
         if ($this->attachWorkflow) {
             $model = $this->_table;
-            if (!$model->AccessControl->isAdmin()) {
-                $buttons = $model->onUpdateActionButtons($event, $entity, $buttons);
-
-                $workflowStep = $this->getWorkflowStep($entity);
-                $isEditable = false;
-                $isDeletable = false;
-                if (!empty($workflowStep)) {
-                    $isEditable = $workflowStep->is_editable == 1 ? true : false;
-                    $isDeletable = $workflowStep->is_removable == 1 ? true : false;
+            //POCOR-7669
+            if( $model->alias() == "InstitutionPositions"){
+                if (!$model->AccessControl->isAdmin()) {
+                    $buttons = $model->onUpdateActionButtons($event, $entity, $buttons);
+    
+                    $workflowStep = $this->getWorkflowStep($entity);
+                    $isEditable = false;
+                    $isDeletable = false;
+                    if (!empty($workflowStep)) {
+                        $isEditable = $workflowStep->is_editable == 1 ? true : false;
+                        $isDeletable = $workflowStep->is_removable == 1 ? true : false;
+                    }
+    
+                    return $buttons;
                 }
+            }else{
+                if (!$model->AccessControl->isAdmin()) {
+                    $buttons = $model->onUpdateActionButtons($event, $entity, $buttons);
 
-                if (array_key_exists('edit', $buttons) && !$isEditable) {
-                    unset($buttons['edit']);
+                    $workflowStep = $this->getWorkflowStep($entity);
+                    $isEditable = false;
+                    $isDeletable = false;
+                    if (!empty($workflowStep)) {
+                        $isEditable = $workflowStep->is_editable == 1 ? true : false;
+                        $isDeletable = $workflowStep->is_removable == 1 ? true : false;
+                    }
+
+                    if (array_key_exists('edit', $buttons) && !$isEditable) {
+                        unset($buttons['edit']);
+                    }
+
+                    if (array_key_exists('remove', $buttons) && !$isDeletable) {
+                        unset($buttons['remove']);
+                    }
+
+                    return $buttons;
                 }
-
-                if (array_key_exists('remove', $buttons) && !$isDeletable) {
-                    unset($buttons['remove']);
-                }
-
-                return $buttons;
             }
+            //POCOR-7669
         }
     }
 

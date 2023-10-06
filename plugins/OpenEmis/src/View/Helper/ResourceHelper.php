@@ -67,10 +67,11 @@ class ResourceHelper extends Helper {
         public function paramsEncode($params = [])
         {
             $sessionId = Security::hash('session_id', 'sha256');
-            $params[$sessionId] = session_id();
             $jsonParam = json_encode($params);
             $base64Param = $this->urlsafeB64Encode($jsonParam);
-            $signature = Security::hash($jsonParam, 'sha256', true);
+            $params[$sessionId] = session_id();
+            $jsonParamWithSessionTocken = json_encode($params);
+            $signature = Security::hash($jsonParamWithSessionTocken, 'sha256', true);
             $base64Signature = $this->urlsafeB64Encode($signature);
             return "$base64Param.$base64Signature";
         }

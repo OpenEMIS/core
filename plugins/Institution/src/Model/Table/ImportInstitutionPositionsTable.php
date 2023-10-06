@@ -258,6 +258,37 @@ class ImportInstitutionPositionsTable extends AppTable
         //POCOR-7417:end
         $tempRow['institution_id'] = $this->institutionId;
 
+        //POCOR-7800::Start
+        if(empty($tempRow['assignee_id'])){
+            $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+            $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $stepRoles = $WorkflowStepsRoles->getRolesByStep($tempRow['status_id']);
+            $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $tempRow['institution_id']])->contain(['Areas'])->first();
+            $securityGroupId = $institutionObj->security_group_id;
+            $areaObj = $institutionObj->area;
+
+
+            $where = [
+                'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
+                        ['Institutions.id' => $institutionId]],
+                $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
+            ];
+            $schoolBasedAssigneeQuery = $SecurityGroupUsers
+                    ->find('userList', ['where' => $where])
+                    ->leftJoinWith('SecurityGroups.Institutions');
+            $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
+
+
+            $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+            $regionBasedAssigneeQuery = $SecurityGroupUsers
+                                            ->find('UserList', ['where' => $where, 'area' => $areaObj]);
+            $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
+            $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
+            $tempRow['assignee_id'] = array_key_first($assigneeOptions);
+        }
+        //POCOR-7800::End
+
         if (!isset($tempRow['position_no'])) {
             $tempRow['position_no'] = $this->InstitutionPositions->getUniquePositionNo($this->institutionId);
         }

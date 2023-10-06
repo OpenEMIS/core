@@ -1,3 +1,35 @@
+### [3.96.1] - 2023-10-06
+- Bug Fixed: OpenEMIS Registration: When institutions are inactive in OpenEMIS Core, the institutions still show in the dropdown list in OpenEMIS Registrations
+- Bug Fixed: Administration>Workflows: Users given permission for workflows not seeing assignee
+- Bug Fixed: Report > Student > Contacts : Report is taking too long for user
+
+### [3.96.0] - 2023-10-05
+- Implemented: Develop OpenEMIS Core v4 APIs for the examination features
+- Bug Fixed: Administration>Data Management>Archive: Data is showing 0 but user is able to see archive when clicking archive button
+- Bug Fixed: Institutions > Infrastructures > Overview: Change warning message
+- Bug Fixed: Institution > Statistics > Standard: The report is stuck in progress
+- Bug Fixed: Institutions > Contacts > People: The preferred field is showing as number text
+- Bug Fixed: Administration>System Setup>API>Securities: Page should be removed
+- Bug Fixed: Administration > System Setup > Field Options > Curricular Types: Change Curriculars to Co-curricular
+- Bug Fixed: Directory > Delete users: Not able to delete user (staff specifically) as the associated records "Institutions Staff Shifts" are showing even though the user is no longer assigned to an institution
+- Bug Fixed: Reports > Staff>Staff Subjects: The report is stuck in progress when generating 
+- Bug Fixed: Institutions>Performance>Assessments: When an user did not enter marks, it should not show as 0.00
+- Bug Fixed: Reports > Institutions> Classes: The data in the report is inconsistent
+- Bug Fixed: Reports > Surveys: Institutions - Not Completed are not showing
+- Bug Fixed: OpenEMIS Core(Security): Security Fixes Part 4
+- Bug Fixed: Institutions > Students > Import: Not able to import students
+- Bug Fixed: Institutions > Students > Promote: 404 error when promoting students
+- Bug Fixed: Institutions > Staff>Position: When changing from not homeroom teacher staff type to homeroom teacher staff type, there is an error message
+- Bug Fixed: Institutions > Students/Staff > Export: Less queries to run to get better results and high system performance
+- Bug Fixed: Administration>Data Management>Archive: Data is showing 0 but user is able to see archive when clicking archive button
+- Bug Fixed: Institutions > Appointments > Positions: When permission is given to a security role to delete delete institution positions, users is still unable to delete institution positions
+
+### [3.95.2] - 2023-09-28
+- Bug Fixed: OpenEMIS Core(Security): Security Fixes
+- Bug Fixed: Institutions > Survey > Forms: The date field for repeater form alignment seems to be out
+- Bug Fixed: Institutions > Positions > Import: The error message displaying is empty when importing institutions position fail
+- Bug Fixed: OpenEMIS Core(Security): Security Fixes Part 3
+
 ### [3.95.1] - 2023-09-26
 - Implemented: Create a config item to lock an account after "n" number of failed login attempts
 - Implemented: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 2

@@ -874,7 +874,10 @@ class RegistrationRepository extends Controller
     public function getInstitutionGradesList($request, $gradeId)
     {
         try {
-            $institutions = Institutions::whereHas('educationGrades',
+            $institutions = new Institutions();
+
+            $institutions = $institutions->where('institutions.institution_status_id', '!=', 2);
+            $institutions = $institutions->whereHas('educationGrades',
                     function ($query) use ($gradeId) {
                         $query->where('education_grade_id', $gradeId);
                     })->select('id', 'name', 'code');

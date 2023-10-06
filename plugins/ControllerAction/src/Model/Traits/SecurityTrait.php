@@ -4,6 +4,7 @@ namespace ControllerAction\Model\Traits;
 use Cake\Utility\Security;
 use Cake\Controller\Exception\SecurityException;
 use Cake\ORM\Table;
+use Cake\Log\Log;
 
 trait SecurityTrait
 {
@@ -69,27 +70,23 @@ trait SecurityTrait
 
         $payload = json_decode($payload, true);
         $sessionId = Security::hash('session_id', 'sha256');
-        if (!isset($payload[$sessionId])) {
-            throw new SecurityException('No session id in payload');
-        } else {
             $checkPayload = $payload;
             $checkPayload[$sessionId] = session_id();
             $checkSignature = Security::hash(json_encode($checkPayload), 'sha256', true);
             if ($signature !== $checkSignature) {
                 throw new SecurityException('Query String has been tampered');
             }
-        }
-        unset($payload[$sessionId]);
         return $payload;
     }
 
     public function paramsEncode($params = [])
     {
         $sessionId = Security::hash('session_id', 'sha256');
-        $params[$sessionId] = session_id();
         $jsonParam = json_encode($params);
         $base64Param = $this->urlsafeB64Encode($jsonParam);
-        $signature = Security::hash($jsonParam, 'sha256', true);
+        $params[$sessionId] = session_id();
+        $jsonParamWithSessionTocken = json_encode($params);
+        $signature = Security::hash($jsonParamWithSessionTocken, 'sha256', true);
         $base64Signature = $this->urlsafeB64Encode($signature);
         return "$base64Param.$base64Signature";
     }
