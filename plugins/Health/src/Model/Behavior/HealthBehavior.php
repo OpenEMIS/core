@@ -22,8 +22,8 @@ class HealthBehavior extends Behavior
     {
         $controller = $this->_table->controller;
         $model = $this->_table;
-        $plugin = $controller->plugin;
-        $name = $controller->name;
+        $plugin = $controller->getPlugin();
+        $name = $controller->getName();
 
         $tabElements = [];
         if ($controller->AccessControl->check([$name, 'Healths', 'index'])) {

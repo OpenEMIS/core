@@ -100,11 +100,11 @@ class SystemGroupsTable extends ControllerActionTable
         $controller = $this->controller;
         $tabElements = [
             'UserGroups' => [
-                'url' => ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => 'UserGroups'],
+                'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => 'UserGroups'],
                 'text' => $this->getMessage('UserGroups.tabTitle')
             ],
             $this->alias() => [
-                'url' => ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => $this->alias()],
+                'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => $this->getAlias()],
                 'text' => $this->getMessage($this->aliasField('tabTitle'))
             ]
         ];

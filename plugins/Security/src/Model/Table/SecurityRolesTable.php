@@ -254,14 +254,14 @@ class SecurityRolesTable extends ControllerActionTable
         $tabElements = [];
         if ($this->AccessControl->check(['Securities', 'UserRoles', 'view'])) {
             $tabElements['user'] = [
-                'url' => ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => 'Roles', 'type' => 'user'],
+                'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => 'Roles', 'type' => 'user'],
                 'text' => $this->getMessage($this->aliasField('userRoles'))
             ];
         }
 
         if ($this->AccessControl->check(['Securities', 'SystemRoles', 'view'])) {
             $tabElements['system'] = [
-                'url' => ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => 'Roles', 'type' => 'system'],
+                'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => 'Roles', 'type' => 'system'],
                 'text' => $this->getMessage($this->aliasField('systemRoles'))
             ];
         }

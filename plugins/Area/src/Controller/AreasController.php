@@ -27,7 +27,6 @@ class AreasController extends AppController
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-
 		$tabElements = [
 			'Levels' => [
 				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Levels'],
@@ -46,9 +45,11 @@ class AreasController extends AppController
 				'text' => __('Areas (Administrative)')
 			]
 		];
+
 		$tabElements = $this->TabPermission->checkTabPermission($tabElements);
 		$this->set('tabElements', $tabElements);
-		$this->set('selectedAction', $this->request->action);
+		$this->set('selectedAction', $this->request->getParam('action'));
+
 	}
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
@@ -68,7 +69,7 @@ class AreasController extends AppController
 		$condition = [];
 		$accessControlAreaCount = 0;
 		$AccessControl = $this->AccessControl;
-		$Table = TableRegistry::get($tableName);
+		$Table = TableRegistry::getTableLocator()->get($tableName);
 		if ($id == 0) {
 			$areaEntity = $Table->find()->first();
 		} else {
@@ -76,7 +77,7 @@ class AreasController extends AppController
 		}
 		$pathId = $areaEntity->id;
 		$hasChildren = false;
-		$formError = $this->request->query('formerror');
+		$formError = $this->request->getQuery('formerror');
 		if (!$displayCountry) {
 			if ($tableName == 'Area.AreaAdministratives') {
 				$worldId = $Table->find()->where([$Table->aliasField('parent_id') . ' IS NULL'])->first()->id;

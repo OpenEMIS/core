@@ -312,8 +312,8 @@ class UserBehavior extends Behavior
 
     public function indexAfterAction(Event $event)
     {
-        $plugin = $this->_table->controller->plugin;
-        $name = $this->_table->controller->name;
+        $plugin = $this->_table->controller->getPlugin();
+        $name = $this->_table->controller->getName();
 
         switch ($this->_table->getAlias()) {
             case 'Students':

@@ -76,7 +76,10 @@ class ProfilesController extends AppController
         $this->set('contentHeader', 'Personal');
     }
 
-    public function Accounts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Accounts', 'actions' => ['index', 'view']]); }
+    public function Accounts() 
+    {
+        return $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Accounts', 'actions' => ['index', 'view']]);
+    }
     public function Personal() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
     //public function Profiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
 
@@ -576,8 +579,8 @@ class ProfilesController extends AppController
             }
         }
         try {
-            $entity = $this->Profiles->get($user_id);
-            $name = $entity->name;
+            $entity = $this->Profiles->get($loginUserId);
+            $name = $entity->first_name;
         } catch
         (RecordNotFoundException $e) {
             $name = "";
@@ -704,7 +707,7 @@ class ProfilesController extends AppController
                 if ($session->read('Auth.User.is_guardian') == 1) {
                     //$studentId = $this->ControllerAction->paramsDecode($studentId)['id'];//POCOR-6202 uncomment $studentId
                     if ($action == 'Personal') {
-                        $studentId = $this->ControllerAction->paramsDecode($this->request->params['pass'][1]);
+                        $studentId = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1]);
                     } /*POCOR-6324 starts*/ else {
                         $studentId = $this->Auth->user('id');
                     } /*POCOR-6324 ends*/
@@ -934,7 +937,7 @@ class ProfilesController extends AppController
         $type = (array_key_exists('type', $options)) ? $options['type'] : null;
         $tabElements = [];
         $studentUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
-        $plugin = $this->plugin;
+        $plugin = $this->getPlugin();
         $studentTabElements = [
             'Programmes' => ['text' => __('Programmes')],
             'Classes' => ['text' => __('Classes')],
@@ -968,8 +971,8 @@ class ProfilesController extends AppController
     function getFinanceTabElements($options = [])
     {
         $type = (array_key_exists('type', $options)) ? $options['type'] : null;
-        $plugin = $this->plugin;
-        $name = $this->name;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
         $tabElements = [];
         $studentUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
         $studentTabElements = [
@@ -1274,5 +1277,10 @@ class ProfilesController extends AppController
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+    }
+
+    public function Cases()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Cases.InstitutionCases']);
     }
 }

@@ -22,7 +22,7 @@ class InstitutionWorkflowAccessControlBehavior extends Behavior {
 		$session = $this->_table->Session;
 		$controller = $this->_table->controller;
 		$restrictedController = ['Institutions', 'Students', 'Staff'];
-		if (!$controller->AccessControl->isAdmin() && $session->check('Institution.Institutions.id') && in_array($controller->name, $restrictedController)) {
+		if (!$controller->AccessControl->isAdmin() && $session->check('Institution.Institutions.id') && in_array($controller->getName(), $restrictedController)) {
 			$userId = $controller->Auth->user('id');
 			$institutionId = $session->read('Institution.Institutions.id');
 			return $this->Institutions->getInstitutionRoles($userId, $institutionId);

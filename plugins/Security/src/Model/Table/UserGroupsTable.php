@@ -80,11 +80,11 @@ class UserGroupsTable extends ControllerActionTable
         $controller = $this->controller;
         $tabElements = [
             $this->getAlias() => [
-                'url' => ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => $this->getAlias()],
+                'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => $this->getAlias()],
                 'text' => $this->getMessage($this->aliasField('tabTitle'))
             ],
             'SystemGroups' => [
-                'url' => ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => 'SystemGroups'],
+                'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => 'SystemGroups'],
                 'text' => $this->getMessage('SystemGroups.tabTitle')
             ]
         ];

@@ -49,7 +49,7 @@ class WorkflowsController extends AppController
 
         $tabElements = [];
         if ($hasWorkflowsAccess) {
-            $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Workflows'];
+            $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Workflows'];
             $paramsQuery = $this->paramsQuery(['model']);
             $url = array_merge($url, $paramsQuery);
 
@@ -60,7 +60,7 @@ class WorkflowsController extends AppController
         }
 
         if ($hasStepsAccess) {
-            $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Steps'];
+            $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Steps'];
             $paramsQuery = $this->paramsQuery(['model', 'workflow']);
             $url = array_merge($url, $paramsQuery);
 
@@ -71,7 +71,7 @@ class WorkflowsController extends AppController
         }
 
         if ($hasActionsAccess) {
-            $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Actions'];
+            $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Actions'];
             $paramsQuery = $this->paramsQuery();
             $url = array_merge($url, $paramsQuery);
 
@@ -82,7 +82,7 @@ class WorkflowsController extends AppController
         }
 
         if ($hasRulesAccess) {
-            $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Rules'];
+            $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Rules'];
             $paramsQuery = $this->paramsQuery();
             $url = array_merge($url, $paramsQuery);
 
@@ -93,7 +93,7 @@ class WorkflowsController extends AppController
         }
 
         if ($hasStatusesAccess) {
-            $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Statuses'];
+            $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Statuses'];
             $paramsQuery = $this->paramsQuery(['model']);
             $url = array_merge($url, $paramsQuery);
 
@@ -129,7 +129,7 @@ class WorkflowsController extends AppController
         $header = __('Workflow');
 
         $header .= ' - ' . $model->getHeader($model->alias);
-        $this->Navigation->addCrumb('Workflow', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
+        $this->Navigation->addCrumb('Workflow', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->alias]);
         $this->Navigation->addCrumb($model->getHeader($model->alias));
 
         $this->set('contentHeader', $header);

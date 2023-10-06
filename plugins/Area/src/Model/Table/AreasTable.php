@@ -565,8 +565,8 @@ class AreasTable extends ControllerActionTable
     public function onGetName(Event $event, Entity $entity)
     {
         return $event->getSubject()->HtmlField->link($entity->name, [
-            'plugin' => $this->controller->plugin,
-            'controller' => $this->controller->name,
+            'plugin' => $this->controller->getPlugin(),
+            'controller' => $this->controller->getName(),
             'action' => $this->alias,
             'index',
             'parent' => $entity->id

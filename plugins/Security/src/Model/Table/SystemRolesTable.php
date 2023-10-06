@@ -33,11 +33,11 @@ class SystemRolesTable extends AppTable
         $controller = $this->controller;
         $tabElements = [
             'UserRoles' => [
-                'url' => ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => 'UserRoles'],
+                'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => 'UserRoles'],
                 'text' => $this->getMessage('UserRoles.tabTitle')
             ],
             $this->alias() => [
-                'url' => ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => $this->alias()],
+                'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => $this->alias()],
                 'text' => $this->getMessage($this->aliasField('tabTitle'))
             ]
         ];
