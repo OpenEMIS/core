@@ -53,6 +53,7 @@ class InstitutionFeesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        
         $session = $this->request->getSession();
         $this->institutionId = $session->read('Institution.Institutions.id');
 

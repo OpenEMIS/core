@@ -225,8 +225,8 @@ class InstitutionLandsTable extends ControllerActionTable
     {
         $institutionId = $this->request->getParam('institutionId');
         $url = [
-            'plugin' => $this->controller->plugin,
-            'controller' => $this->controller->name,
+            'plugin' => $this->controller->getPlugin(),
+            'controller' => $this->controller->getName(),
             'action' => 'InstitutionBuildings',
             'institutionId' => $institutionId
         ];

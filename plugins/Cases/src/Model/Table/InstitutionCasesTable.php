@@ -150,13 +150,15 @@ class InstitutionCasesTable extends ControllerActionTable
             $selectedFeature = $this->request->getQuery('feature');
         } else {
             $selectedFeature = key($featureOptions);
-           // $this->request->getQuery('feature') = $selectedFeature; cakephp4
-            $this->request = $this->request->withQueryParams(['period' => $request->data[$this->getAlias()]['academic_period_id']]);         
+           // $this->request->getQuery('feature') = $selectedFeature; cakephp4  
+            $newRequest = $this->request->withQueryParams(['feature' => $selectedFeature]);
+            $this->request = $newRequest;       
         }
 
         $this->controller->set(compact('featureOptions', 'selectedFeature'));
 
         $selectedModel = $this->features[$selectedFeature];
+
         $featureModel = TableRegistry::getTableLocator()->get($selectedModel);
         $session = $this->request->getSession();
         $requestQuery = $this->request->getQuery();
@@ -768,7 +770,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
         // when user select academic period , feature ,instituion class and grade filter 
         $requestQuery = $this->request->query;
-        $$featureModel = TableRegistry::getTableLocator()->get($this->features[$selectedFeature]);
+        $featureModel = TableRegistry::getTableLocator()->get($this->features[$selectedFeature]);
         //POCOR-7613 for proper records in excel
         if ($selectedFeature != 'StudentAttendances') {
             $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
@@ -949,7 +951,7 @@ class InstitutionCasesTable extends ControllerActionTable
     }
     public function onUpdateFieldCaseTypeId(Event $event, array $attr, $action, $request)
     {
-        $CaseTypes = TableRegistry::get('case_types');
+        $CaseTypes = TableRegistry::getTableLocator()->get('Cases.CaseTypes');
         $CaseTypeList = $CaseTypes
             ->find('list', [
                 'keyField' => 'id',
@@ -958,7 +960,7 @@ class InstitutionCasesTable extends ControllerActionTable
             ->toArray();
         $attr['type'] = 'select';
         $attr['options'] = $CaseTypeList;
-        if ($request->params['controller'] == "Profiles") {//POCOR-7613
+        if ($request->getParam('controller') == "Profiles") {//POCOR-7613
            if($action=="edit"){
                 $attr['type'] = 'readonly';
             }
@@ -967,7 +969,7 @@ class InstitutionCasesTable extends ControllerActionTable
     }
     public function onUpdateFieldCasePriorityId(Event $event, array $attr, $action, $request)
     {
-        $CasePriority = TableRegistry::get('case_priorities');
+        $CasePriority = TableRegistry::getTableLocator()->get('Cases.CasePriorities');
         $CasePriorityList = $CasePriority
             ->find('list', [
                 'keyField' => 'id',
@@ -976,7 +978,7 @@ class InstitutionCasesTable extends ControllerActionTable
             ->toArray();
         $attr['type'] = 'select';
         $attr['options'] = $CasePriorityList;
-        if ($request->params['controller'] == "Profiles") {//POCOR-7613
+        if ($request->getParam('controller') == "Profiles") {//POCOR-7613
             if ($action == "edit") {
                 $attr['type'] = 'readonly';
             }

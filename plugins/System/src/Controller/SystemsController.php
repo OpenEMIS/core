@@ -23,7 +23,7 @@ class SystemsController extends AppController
 		$action = "Updates";
 		$actionName = __(Inflector::humanize($action));
 		$header = $name .' - '.$actionName;
-		$this->Navigation->addCrumb(__($name), ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $action]);
+		$this->Navigation->addCrumb(__($name), ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $action]);
 		$this->Navigation->addCrumb($actionName);
 		$this->set('contentHeader', $header);
         $this->set('selectedAction', $this->request->action);

@@ -44,8 +44,8 @@ class PermissionsTable extends ControllerActionTable
 
     public function afterAction(Event $event, ArrayObject $options)
     {
-        $plugin = __($this->controller->plugin);
-        $id = $this->request->pass[1];
+        $plugin = __($this->controller->getPlugin());
+        $id = $this->request->getParam('pass')[1];
         try {
             $name = $this->SecurityRoles->get($this->paramsDecode($id))->name;
             $this->controller->set('contentHeader', $plugin.' - '.$name);
@@ -73,7 +73,7 @@ class PermissionsTable extends ControllerActionTable
         $modules = ['Institutions', 'Directory', 'Reports', 'Administration', 'Personal', 'Guardian'];
         $this->setupTabElements($modules);
 
-        $module = $this->request->query('module');
+        $module = $this->request->getQuery('module');
         if (empty($module)) {
             $module = current($modules);
             $this->request->query['module'] = $module;
@@ -92,17 +92,17 @@ class PermissionsTable extends ControllerActionTable
             $event->stopPropagation();
             return $this->controller->redirect(['action' => 'Roles']);
         }
-        $roleId = $this->paramsDecode($this->request->pass[1])['id'];
+        $roleId = $this->paramsDecode($this->request->getParam('pass')[1])['id'];
         if (! $this->checkRolesHierarchy($roleId)) {
             $action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->alias(), '0' => 'index']);
             $event->stopPropagation();
             return $this->controller->redirect($action);
         }
-        $module = $this->request->query('module');
+        $module = $this->request->getQuery('module');
         $extra['pagination'] = false;
         $extra['auto_contain'] = false;
 
-        $id = $this->request->pass[1];
+        $id = $this->request->getParam('pass')[1];
         $attr = [
             'escape' => false,
             'data-placement' => 'bottom',
@@ -166,7 +166,7 @@ class PermissionsTable extends ControllerActionTable
         if ($user['super_admin'] == 1) { // super admin will show all roles
             $userId = null;
         }
-        $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+        $GroupRoles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $userRole = $GroupRoles
             ->find()
             ->contain('SecurityRoles')
@@ -192,12 +192,12 @@ class PermissionsTable extends ControllerActionTable
     {
         $controller = $this->controller;
         $tabElements = [];
-        $url = ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => $this->alias()];
-        if (!empty($this->request->pass)) {
-            $url = array_merge($url, $this->request->pass);
+        $url = ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => $this->getAlias()];
+        if (!empty($this->request->getParam('pass')) {
+            $url = array_merge($url, $this->request->getParam('pass'));
         }
-        if (!empty($this->request->query)) {
-            $url = array_merge($url, $this->request->query);
+        if (!empty($this->request->getQuery())) {
+            $url = array_merge($url, $this->request->getQuery());
         }
 
         foreach ($modules as $module) {
