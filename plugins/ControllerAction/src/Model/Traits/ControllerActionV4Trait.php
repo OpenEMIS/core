@@ -30,6 +30,7 @@ trait ControllerActionV4Trait {
 	}
 
 	private function _render($model) {
+
 		list($plugin, $alias) = pluginSplit($model->getRegistryAlias());
 
 		if (empty($plugin)) {
@@ -40,7 +41,7 @@ trait ControllerActionV4Trait {
 		$this->ctpFolder = $model->getAlias();
 		$ctp = $this->ctpFolder . DS . $model->action;
 
-		if (file_exists($path . DS . $ctp . '.ctp')) {
+		if (file_exists($path . DS . $ctp . '.php')) {
 			if ($this->autoRender) {
 				$this->autoRender = false;
 				$this->controller->render($ctp);
@@ -52,6 +53,7 @@ trait ControllerActionV4Trait {
 					// $this->controller->render($this->templatePath . $view);
 					$this->controller->render($this->templatePath . 'template');
 				} else {
+					
 					$this->controller->render($this->view);
 				}
 			}
@@ -187,11 +189,11 @@ trait ControllerActionV4Trait {
 	}
 
 	private function _validateOptions($options) {
+
 		if (!array_key_exists('alias', $options)) {
 			pr('There is no alias set for ' . $this->request->action);
 			die;
 		}
-
 		if (!array_key_exists('className', $options)) {
 			pr('There is no className set for ' . $this->request->action);
 			die;
@@ -201,7 +203,6 @@ trait ControllerActionV4Trait {
 		$alias = $options['alias'];
 		$model = $this->controller->loadModel($className);
 		$model->alias = $alias;
-
 		return $model;
 	}
 
@@ -210,6 +211,7 @@ trait ControllerActionV4Trait {
 		$controller = $this->controller;
 
 		$model = $this->_validateOptions($options);
+
 
 		$this->_initComponents($model);
 
@@ -229,13 +231,13 @@ trait ControllerActionV4Trait {
 
 		$model->action = $action;
 		$entity = null;
-
 		$event = $controller->dispatchEvent('ControllerAction.Controller.onInitialize', [$model, $extra], $this);
+
 		if ($event->isStopped()) { return $event->getResult(); }
 
 		$event = $model->dispatchEvent('ControllerAction.Model.beforeAction', [$extra], $this);
-		if ($event->isStopped()) { return $event->getResult(); }
 
+		if ($event->isStopped()) { return $event->getResult(); }
 		// dispatch event for specific action
 		$event = $model->dispatchEvent("ControllerAction.Model.$action", [$extra], $this);
 		if ($event->isStopped()) { return $event->getResult(); }
@@ -255,22 +257,21 @@ trait ControllerActionV4Trait {
 		$extra['entity'] = $entity;
 		$event = $model->dispatchEvent('ControllerAction.Model.afterAction', [$extra], $this);
 		if ($event->isStopped()) { return $event->getResult(); }
-
 		$elements = $extra['elements'];
 		uasort($elements, [$this, '_sortByOrder']);
-
 		$this->_renderFields($model);
 		uasort($model->fields, [$this, '_sortByOrder']);
 
 		$extra['config']['action'] = $model->action;
 		$extra['config']['table'] = $model;
 		$extra['config']['fields'] = $model->fields;
-
 		$this->deprecatedFunctions(['model' => $model->getAlias()]);
 
 		$controller->set('ControllerAction', $extra['config']);
+
 		$controller->set('elements', $elements);
 		$this->_render($model);
+
 	}
 
 	private function deprecatedFunctions($params) {

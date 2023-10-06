@@ -29,7 +29,7 @@ class StudentVisitBehavior extends Behavior {
     {
         $model = $this->_table;
         $controller = $this->_table->controller;
-        $controllerName = $controller->name;
+        $controllerName = $controller->getName();
 
         // Breadcrumbs
         $navigation = $model->Navigation;
@@ -56,8 +56,8 @@ class StudentVisitBehavior extends Behavior {
     public function getVisitTab()
     {
         $controller = $this->_table->controller;
-        $plugin = $controller->plugin;
-        $controllerName = $controller->name;
+        $plugin = $controller->getPlugin();
+        $controllerName = $controller->getName();
 
         $urlBase = [
             'plugin' => $plugin,

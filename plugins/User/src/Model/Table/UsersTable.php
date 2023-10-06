@@ -399,8 +399,8 @@ class UsersTable extends AppTable
             return;
         }
 
-        $plugin = $this->controller->plugin;
-        $name = $this->controller->name;
+        $plugin = $this->controller->getPlugin();
+        $name = $this->controller->getName();
 
         // $id = $this->ControllerAction->buttons['view']['url'][0];
         $action = $this->ControllerAction->url('view');

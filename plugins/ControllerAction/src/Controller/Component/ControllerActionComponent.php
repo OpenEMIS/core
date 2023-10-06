@@ -435,7 +435,7 @@ class ControllerActionComponent extends Component
 
     private function mergeRequestParams(array &$url)
     {
-        $requestParams = $this->request->params;
+        $requestParams = $this->request->param;
         foreach ($requestParams as $key => $value) {
             if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
                 unset($requestParams[$key]);
@@ -447,7 +447,7 @@ class ControllerActionComponent extends Component
     public function url($action, $params = true /* 'PASS' | 'QUERY' | false */)
     {
         $controller = $this->controller;
-        $url = ['plugin' => $controller->plugin, 'controller' => $controller->name];
+        $url = ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName()];
 
         if ($this->triggerFrom == 'Model') {
             $url['action'] = $this->model->alias;
@@ -556,13 +556,13 @@ class ControllerActionComponent extends Component
     {
         $controller = $this->controller;
 
-        $named = $this->request->query;
-        $pass = $this->request->params['pass'];
+        $named = $this->request->getQuery();
+        $pass = $this->request->getParam('pass');
         $extra = new ArrayObject([]);
         if ($this->triggerFrom == 'Model') {
             unset($pass[0]);
         }
-        $defaultUrl = ['plugin' => $controller->plugin, 'controller' => $controller->name];
+        $defaultUrl = ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName()];
         $this->mergeRequestParams($defaultUrl);
 
         $buttons = new ArrayObject([]);
@@ -579,7 +579,7 @@ class ControllerActionComponent extends Component
             if ($action != 'index') {
                 if ($this->currentAction != 'index') {
                     $model = $this->model;
-                    $sessionKey = $model->registryAlias() . '.primaryKey';
+                    $sessionKey = $model->getRegistryAlias() . '.primaryKey';
                     $extra['primaryKeyValue'] = $this->paramsEncode($this->Session->read($sessionKey));
                     if (empty($pass)) {
                         if ($this->Session->check($sessionKey)) {
@@ -663,7 +663,7 @@ class ControllerActionComponent extends Component
         $event = new Event('ControllerAction.Model.beforeAction', $this);
         $event = $this->model->eventManager()->dispatch($event);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
         $this->buildDefaultValidation();
 
@@ -691,6 +691,7 @@ class ControllerActionComponent extends Component
                 return $result;
             }
         }
+        die('dd');
         $this->debug('processAction');
         $this->afterAction();
 
@@ -720,18 +721,24 @@ class ControllerActionComponent extends Component
             $event = new Event('ControllerAction.Model.afterAction', $this, [$this->config]);
             $event = $this->model->eventManager()->dispatch($event);
             if ($event->isStopped()) {
-                return $event->result;
+                return $event->getResult();
             }
 
             $this->renderFields();
 
-            $this->request->params['action'] = $action;
+            //$this->request->getParam('action') = $action;//comment cakephp4
+            $newParams = $this->request->getQueryParams();
+            $newParams['action'] = $action;
+
+            $newRequest = $this->request->withQueryParams($newParams);
+
+            // Replace the original request object with the new one
+            $this->request = $newRequest;
 
             uasort($this->model->fields, [$this, 'sortFields']);
             $this->config['fields'] = $this->model->fields;
 
             $controller->set('ControllerAction', $this->config);
-
             // deprecated: backward compatible
             $controller->set('action', $this->currentAction);
             $controller->set('model', $this->model->getAlias());
@@ -743,7 +750,7 @@ class ControllerActionComponent extends Component
         if (empty($this->getPlugin())) {
             $path = APP . 'templates' . DS . $this->controller->getName() . DS;
         } else {
-            $path = ROOT . DS . 'plugins' . DS . $this->plugin . DS . 'src' . DS . 'templates' . DS;
+            $path = ROOT . DS . 'plugins' . DS . $this->getPlugin() . DS . 'src' . DS . 'templates' . DS;
         }
         $ctp = $this->ctpFolder . DS . $this->currentAction;
 
@@ -1048,10 +1055,10 @@ class ControllerActionComponent extends Component
 
         $ids = !empty($id) ? $this->paramsDecode($id) : $id;
 
-        $sessionKey = $model->registryAlias() . '.primaryKey';
+        $sessionKey = $model->getRegistryAlias() . '.primaryKey';
         $contain = [];
 
-        foreach ($model->associations() as $assoc) {
+        foreach ($model->getAssociations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
                 $contain[] = $assoc->getName();
             }
@@ -1159,7 +1166,7 @@ class ControllerActionComponent extends Component
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.beforePatch');
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.addEdit.beforePatch', null, $params);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
                 // End Event
 
@@ -1167,7 +1174,7 @@ class ControllerActionComponent extends Component
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.beforePatch');
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.beforePatch', null, $params);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
                 // End Event
 
@@ -1179,7 +1186,7 @@ class ControllerActionComponent extends Component
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterPatch');
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.afterPatch', null, $params);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
                 // End Event
                 $request->data = $requestData->getArrayCopy();
@@ -1192,10 +1199,10 @@ class ControllerActionComponent extends Component
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.beforeSave');
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.beforeSave', null, [$entity, $requestData]);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
-                if (is_callable($event->result)) {
-                    $process = $event->result;
+                if (is_callable($event->getResult())) {
+                    $process = $event->getResult();
                 }
                 // End Event
 
@@ -1205,7 +1212,7 @@ class ControllerActionComponent extends Component
                     $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterSave');
                     $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.afterSave', null, [$entity, $requestData]);
                     if ($event->isStopped()) {
-                        return $event->result;
+                        return $event->getResult();
                     }
                     // End Event
 
@@ -1224,7 +1231,7 @@ class ControllerActionComponent extends Component
                 $method = 'addEdit' . ucfirst($methodKey);
                 $event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
                 // End Event
 
@@ -1234,7 +1241,7 @@ class ControllerActionComponent extends Component
                 $method = 'add' . ucfirst($methodKey);
                 $event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
                 if ($event->isStopped()) {
-                    return $event->result;
+                    return $event->getResult();
                 }
                 // End Event
 
@@ -1248,7 +1255,7 @@ class ControllerActionComponent extends Component
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.afterAction');
         $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.addEdit.afterAction', null, [$entity]);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
         // End Event
 
@@ -1256,7 +1263,7 @@ class ControllerActionComponent extends Component
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterAction');
         $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.afterAction', null, [$entity]);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
         // End Event
         $this->config['form'] = true;
@@ -1971,7 +1978,7 @@ class ControllerActionComponent extends Component
     {
         // $model = $this->model;
         $controller = $this->_registry->getController();
-        $plugin = $this->_registry->getController()->getRequest()->getAttribute('params')['plugin'];
+        $plugin = $this->_registry->getController()->getRequest()->getParam('params')['plugin'];
         $table = $this->_registry->getController()->getName();
         $model = TableRegistry::getTableLocator()->get($plugin.'.'.$table);
         $className = $model->getAlias();

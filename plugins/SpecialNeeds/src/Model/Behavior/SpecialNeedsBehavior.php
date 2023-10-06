@@ -34,7 +34,7 @@ class SpecialNeedsBehavior extends Behavior
     {
         $model = $this->_table;
         $controller = $this->_table->controller;
-        $controllerName = $controller->name;
+        $controllerName = $controller->getName();
 
         // Breadcrumbs
         $navigation = $model->Navigation;
@@ -61,8 +61,8 @@ class SpecialNeedsBehavior extends Behavior
     public function getSpecialNeedsTab()
     {
         $controller = $this->_table->controller;
-        $plugin = $controller->plugin;
-        $controllerName = $controller->name;
+        $plugin = $controller->getPlugin();
+        $controllerName = $controller->getName();
 
         $urlBase = [
             'plugin' => $plugin,

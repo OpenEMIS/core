@@ -24,7 +24,7 @@ $this->start('panelBody');
         if (isset($ControllerAction['url'])) {
             $formOptions['url'] = $ControllerAction['url'];
         }
-        echo $this->Form->create($ControllerAction['table']->newEntity(), $formOptions);
+        echo $this->Form->create($ControllerAction['table']->newEmptyEntity(), $formOptions);
     }
 
     $phpVersion = substr(phpversion(), 0, 1);

@@ -185,10 +185,12 @@ trait ControllerActionTrait {
             }
             $events[$event] = $method;
         }
+
         return $events;
     }
 
-	public function ComponentAction() { // Redirect logic to functions in Component or Model
+	public function ComponentAction() {
+	 // Redirect logic to functions in Component or Model
         return $this->ControllerAction->processAction();
     }
 }
