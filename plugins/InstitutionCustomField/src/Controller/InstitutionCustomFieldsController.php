@@ -31,11 +31,11 @@ class InstitutionCustomFieldsController extends AppController
 
         $tabElements = [
             'Fields' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Fields'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Fields'],
                 'text' => __('Fields')
             ],
             'Pages' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Pages'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Pages'],
                 'text' => __('Pages')
             ]
         ];
@@ -49,7 +49,7 @@ class InstitutionCustomFieldsController extends AppController
         $header = __('Custom Field (Institution)');
 
         $header .= ' - ' . $model->getHeader($model->alias);
-        $this->Navigation->addCrumb('Custom Field (Institution)', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
+        $this->Navigation->addCrumb('Custom Field (Institution)', ['plugin' => $this->plugin, 'controller' => $this->getName(), 'action' => $model->alias]);
         $this->Navigation->addCrumb($model->getHeader($model->alias));
 
         $this->set('contentHeader', $header);

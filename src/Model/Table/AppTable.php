@@ -312,7 +312,7 @@ class AppTable extends Table
 
     public function getFieldLabel($module, $field, $language, $autoHumanize = true)
     {
-        $Labels = TableRegistry::get('Labels');
+        $Labels = TableRegistry::getTableLocator()->get('Labels');
         $label = $Labels->getLabel($module, $field, $language);
         
         if ($label === false && $autoHumanize) {
@@ -400,7 +400,7 @@ class AppTable extends Table
                     'data' => ['url' => $buttons['index']['url']],
                     'options' => []
                 ];
-            }else if(($this->request->params['plugin'] == 'Security' && $this->request->params['controller'] == 'Securities' && $this->request->url == 'Securities/Users')){
+            }else if(($this->request->getParam('plugin') == 'Security' && $this->request->getParam('controller') == 'Securities' && $this->request->url == 'Securities/Users')){
                 $toolbarButtons['advance_search'] = [
                     'type' => 'button',
                     'attr' => [
@@ -456,7 +456,7 @@ class AppTable extends Table
         }
         
         // Start POCOR-5188
-        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Directory')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Reports/Directory')){
             $is_manual_exist = $this->getManualUrl('Reports','Directory');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -473,7 +473,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Institutions')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Reports/Institutions')){
             $is_manual_exist = $this->getManualUrl('Reports','Institution');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -490,7 +490,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Students')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Reports/Students')){
             $is_manual_exist = $this->getManualUrl('Reports','Students');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -507,7 +507,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Staff')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Reports/Staff')){
             $is_manual_exist = $this->getManualUrl('Reports','Staff');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -524,7 +524,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Textbooks')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Reports/Textbooks')){
             $is_manual_exist = $this->getManualUrl('Reports','Textbooks');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -541,7 +541,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Performance')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Reports/Performance')){
             $is_manual_exist = $this->getManualUrl('Reports','Performance');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -558,7 +558,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Examinations')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Reports/Examinations')){
             $is_manual_exist = $this->getManualUrl('Reports','Examinations');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -575,7 +575,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Trainings')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Reports/Trainings')){
             $is_manual_exist = $this->getManualUrl('Reports','Trainings');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -592,7 +592,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Scholarships')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Reports/Scholarships')){
             $is_manual_exist = $this->getManualUrl('Reports','Scholarships');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -609,7 +609,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Surveys')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Reports/Surveys')){
             $is_manual_exist = $this->getManualUrl('Reports','Surveys');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -626,7 +626,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/InstitutionRubrics')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Reports/InstitutionRubrics')){
             $is_manual_exist = $this->getManualUrl('Reports','Rubrics');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -643,7 +643,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/DataQuality')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Reports/DataQuality')){
             $is_manual_exist = $this->getManualUrl('Reports','Data Quality');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -660,7 +660,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Audits')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Reports/Audits')){
             $is_manual_exist = $this->getManualUrl('Reports','Audits');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -677,7 +677,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/Workflows')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Reports/Workflows')){
             $is_manual_exist = $this->getManualUrl('Reports','Workflows');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -694,7 +694,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/UisStatistics')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Reports/UisStatistics')){
             $is_manual_exist = $this->getManualUrl('Reports','UIS Statistics');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -711,7 +711,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Map')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Map')){
             $is_manual_exist = $this->getManualUrl('Reports','Map');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -728,7 +728,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Report' && $this->request->params['controller'] == 'Reports' && $this->request->url == 'Reports/CustomReports')){
+        if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Reports/CustomReports')){
             $is_manual_exist = $this->getManualUrl('Reports','Custom');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -746,7 +746,7 @@ class AppTable extends Table
             }
         }
         $parsedURL = explode('/',$this->request->url);
-        if(($this->request->params['plugin'] == 'Profile' && $this->request->params['controller'] == 'Profiles' && !empty($parsedURL) && $parsedURL[2] == 'Accounts')){
+        if(($this->request->getParam('plugin') == 'Profile' && $this->request->getParam('controller') == 'Profiles' && !empty($parsedURL) && $parsedURL[2] == 'Accounts')){
             $is_manual_exist = $this->getManualUrl('Personal','Accounts');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -763,7 +763,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Student' && $this->request->params['controller'] == 'Students' && !empty($parsedURL) && $parsedURL[1] == 'Behaviours')){
+        if(($this->request->getParam('plugin') == 'Student' && $this->request->getParam('controller') == 'Students' && !empty($parsedURL) && $parsedURL[1] == 'Behaviours')){
             $is_manual_exist = $this->getManualUrl('Guardian','Behaviours');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -780,7 +780,7 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        if(($this->request->params['plugin'] == 'Profile' && $this->request->params['controller'] == 'Profiles' && !empty($parsedURL) && $parsedURL[2] == 'History')){
+        if(($this->request->getParam('plugin') == 'Profile' && $this->request->getParam('controller') == 'Profiles' && !empty($parsedURL) && $parsedURL[2] == 'History')){
             $is_manual_exist = $this->getManualUrl('Personal','History');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -797,13 +797,13 @@ class AppTable extends Table
                 $toolbarButtons['help']['attr']['title'] = __('Help');
             }
         }
-        // echo $this->request->params['plugin'];
+        // echo $this->request->getParam('plugin');
         // echo '---';
-        // echo $this->request->params['controller'];
+        // echo $this->request->getParam('controller');
         // echo '<pre>';
         // print_r( $parsedURL ); die;
 
-        if(($this->request->params['plugin'] == 'Directory' && $this->request->params['controller'] == 'Directories' && !empty($parsedURL) && $parsedURL[2] == 'Accounts')){
+        if(($this->request->getParam('plugin') == 'Directory' && $this->request->getParam('controller') == 'Directories' && !empty($parsedURL) && $parsedURL[2] == 'Accounts')){
             $is_manual_exist = $this->getManualUrl('Directory','Accounts','General');
             if(!empty($is_manual_exist)){ 
                 $btnAttr = [
@@ -821,7 +821,7 @@ class AppTable extends Table
             }
         }
 
-        if(($this->request->params['plugin'] == 'Configuration' && $this->request->params['controller'] == 'Configurations' && !empty($parsedURL) && $parsedURL[0] == 'Configurations')){
+        if(($this->request->getParam('plugin') == 'Configuration' && $this->request->getParam('controller') == 'Configurations' && !empty($parsedURL) && $parsedURL[0] == 'Configurations')){
             $is_manual_exist = $this->getManualUrl('Administration','Configurations','System Configurations');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -840,7 +840,7 @@ class AppTable extends Table
         }
 
 
-        if(($this->request->params['plugin'] == 'Security' && $this->request->params['controller'] == 'Securities' && !empty($parsedURL) && $parsedURL[1] == 'Users')){
+        if(($this->request->getParam('plugin') == 'Security' && $this->request->getParam('controller') == 'Securities' && !empty($parsedURL) && $parsedURL[1] == 'Users')){
             $is_manual_exist = $this->getManualUrl('Administration','Users','Security');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -859,7 +859,7 @@ class AppTable extends Table
         }
 
 
-        if(($this->request->params['plugin'] == 'Workflow' && $this->request->params['controller'] == 'Workflows' && !empty($parsedURL) && $parsedURL[1] == 'Statuses')){
+        if(($this->request->getParam('plugin') == 'Workflow' && $this->request->getParam('controller') == 'Workflows' && !empty($parsedURL) && $parsedURL[1] == 'Statuses')){
             $is_manual_exist = $this->getManualUrl('Administration','Statuses','Workflows');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -877,7 +877,7 @@ class AppTable extends Table
             }
         }
 
-        if(($this->request->params['plugin'] == 'Workflow' && $this->request->params['controller'] == 'Workflows' && !empty($parsedURL) && $parsedURL[1] == 'Workflows')){
+        if(($this->request->getParam('plugin') == 'Workflow' && $this->request->getParam('controller') == 'Workflows' && !empty($parsedURL) && $parsedURL[1] == 'Workflows')){
             $is_manual_exist = $this->getManualUrl('Administration','Workflows','Workflows');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -895,7 +895,7 @@ class AppTable extends Table
             }
         }
 
-        if(($this->request->params['plugin'] == 'Workflow' && $this->request->params['controller'] == 'Workflows' && !empty($parsedURL) && $parsedURL[1] == 'Steps')){
+        if(($this->request->getParam('plugin') == 'Workflow' && $this->request->getParam('controller') == 'Workflows' && !empty($parsedURL) && $parsedURL[1] == 'Steps')){
             $is_manual_exist = $this->getManualUrl('Administration','Steps','Workflows');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -913,7 +913,7 @@ class AppTable extends Table
             }
         }
 
-        if(($this->request->params['plugin'] == 'Workflow' && $this->request->params['controller'] == 'Workflows' && !empty($parsedURL) && $parsedURL[1] == 'Actions')){
+        if(($this->request->getParam('plugin') == 'Workflow' && $this->request->getParam('controller') == 'Workflows' && !empty($parsedURL) && $parsedURL[1] == 'Actions')){
             $is_manual_exist = $this->getManualUrl('Administration','Actions','Workflows');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
