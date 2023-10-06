@@ -52,7 +52,6 @@ $tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
     <hr>
     <h3><?= $attr['attr']['label']; ?></h3>
     <div class="clearfix">
-        ?>
     </div>
     <div class="table-wrapper">
         <div class="table-responsive">
