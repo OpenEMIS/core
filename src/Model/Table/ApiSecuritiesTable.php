@@ -13,7 +13,6 @@ class ApiSecuritiesTable extends AppTable
     public function initialize(array $config)
     {
         parent::initialize($config);
-
         $this->belongsToMany('ApiScopes', [
             'className' => 'ApiScopes',
             'joinTable' => 'api_securities_scopes',
