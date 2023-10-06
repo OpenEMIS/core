@@ -330,8 +330,10 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function onUpdateFieldShiftOptionId(Event $event, array $attr, $action, $request)
     {
+        // POCOR-7840 COMMON VARIABLES
         $institutionId = $this->Session->read('Institution.Institutions.id');
-
+        $selectedAcademicPeriod = $this->getSelectedAcademicPeriod($this->request);
+        $checkisOccupier = $this->isOccupier($institutionId, $selectedAcademicPeriod);
         //this is default condition to get the all shift.
         $options = $this->ShiftOptions
             ->find('list')
@@ -339,8 +341,7 @@ class InstitutionShiftsTable extends ControllerActionTable
             ->find('order');
 
         if ($action == 'add') {
-            $selectedAcademicPeriod = $this->getSelectedAcademicPeriod($this->request);
-            $checkisOccupier = $this->isOccupier($institutionId, $selectedAcademicPeriod);
+
             if($checkisOccupier == 0){
                 if (!empty($selectedAcademicPeriod)) {
                     //during add then need to exclude used shifts based on school and academic period
@@ -374,21 +375,36 @@ class InstitutionShiftsTable extends ControllerActionTable
             // $attr['type'] = 'readonly';
             // $attr['attr']['value'] = __($options[$attr['entity']->shift_option_id]);
             // $attr['value'] = $attr['entity']->shift_option_id;
-            $institutionId = $this->Session->read('Institution.Institutions.id');
-            $selectedAcademicPeriod = $this->getSelectedAcademicPeriod($this->request);
-            $checkisOccupier = $this->isOccupier($institutionId, $selectedAcademicPeriod);
-            // if($checkisOccupier == 0){
-            //     $options = $options
-            //             ->find('availableShifts', ['institution_id' => $institutionId, 'academic_period_id' => $selectedAcademicPeriod])
-            //             ->toArray();
-            // }else{
-            //     $options = $options
-            //             ->find('availableShiftsOccupier', ['institution_id' => $institutionId, 'academic_period_id' => $selectedAcademicPeriod])
-            //             ->toArray();
-            // }
-            $options = $options
-                        ->find('all', ['institution_id' => $institutionId, 'academic_period_id' => $selectedAcademicPeriod])
-                        ->toArray();
+            // POCOR-7840 MOVED TO TOP
+//            $institutionId = $this->Session->read('Institution.Institutions.id');
+//            $selectedAcademicPeriod = $this->getSelectedAcademicPeriod($this->request);
+//            $checkisOccupier = $this->isOccupier($institutionId, $selectedAcademicPeriod);
+            // POCOR-7840 UNCOMMENTED AND EDITED
+            $selectedShiftId = $attr['entity']->shift_option_id;
+            $allOptions = $options
+                ->find('all')
+                ->toArray();
+             if($checkisOccupier == 0){
+                 $options = $options
+                     ->find('availableShifts', ['institution_id' => $institutionId, 'academic_period_id' => $selectedAcademicPeriod])
+                     ->toArray();
+             }else{
+                 $options = $options
+                     ->find('availableShiftsOccupier', ['institution_id' => $institutionId, 'academic_period_id' => $selectedAcademicPeriod])
+                     ->toArray();
+             }
+             $options[$selectedShiftId] = $allOptions[$selectedShiftId];
+            if (empty($options)) {
+                $this->Alert->warning('InstitutionShifts.allShiftsUsed');
+            }
+             $attr['attr']['value'] = $selectedShiftId;
+             $attr['select'] = false;
+             $attr['value'] = $selectedShiftId;
+            // POCOR-7840 COMMENTED
+//            $options = $options
+//                        ->find('all', ['institution_id' => $institutionId, 'academic_period_id' => $selectedAcademicPeriod])
+//                        ->toArray();
+            // POCOR-7840 END
             $attr['options'] = $options;
             $attr['onChangeReload'] = 'changeShiftOption';
         }
