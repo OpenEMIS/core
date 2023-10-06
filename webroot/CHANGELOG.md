@@ -1,3 +1,8 @@
+### [3.96.1] - 2023-10-06
+- Bug Fixed: OpenEMIS Registration: When institutions are inactive in OpenEMIS Core, the institutions still show in the dropdown list in OpenEMIS Registrations
+- Bug Fixed: Administration>Workflows: Users given permission for workflows not seeing assignee
+- Bug Fixed: Report > Student > Contacts : Report is taking too long for user
+
 ### [3.96.0] - 2023-10-05
 - Implemented: Develop OpenEMIS Core v4 APIs for the examination features
 - Bug Fixed: Administration>Data Management>Archive: Data is showing 0 but user is able to see archive when clicking archive button
