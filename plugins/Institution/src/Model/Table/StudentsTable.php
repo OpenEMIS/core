@@ -793,7 +793,7 @@ class StudentsTable extends ControllerActionTable
 //            $field_name = 'student_id';
 //            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
-            $table_name = 'User.UserActivities'
+            $table_name = 'User.UserActivities';
             $field_name = 'security_user_id';
             $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
@@ -853,7 +853,7 @@ class StudentsTable extends ControllerActionTable
             $field_name = 'student_id';
             $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
-            $table_name = 'Institution.StudentStatusUpdates'
+            $table_name = 'Institution.StudentStatusUpdates';
             $field_name = 'security_user_id';
             $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
@@ -3058,7 +3058,7 @@ class StudentsTable extends ControllerActionTable
     {
         $student_contacts = TableRegistry::getTableLocator()->get('UserContacts');
         $contact_types = TableRegistry::getTableLocator()->get('User.ContactTypes');
-        $contact_options = TableRegistry::getTableLocator()->get('User.ContactOptions')
+        $contact_options = TableRegistry::getTableLocator()->get('User.ContactOptions');
         $student_contacts->getAlias('student_contacts');
         $contact_types->getAlias('contact_types');
         $contact_options->getAlias('contact_options');
@@ -3307,7 +3307,7 @@ class StudentsTable extends ControllerActionTable
 
     private function setAcademicPeriodID()
     {
-        $periodId = $this->request->query['academic_period_id'];
+        $periodId = $this->request->getQuery('academic_period_id');
         if (!$periodId) {
             $periodId = $this->AcademicPeriods->getCurrent();
         }
@@ -3316,7 +3316,7 @@ class StudentsTable extends ControllerActionTable
 
     private function setInstitutionID()
     {
-        $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->Session->read('Institution.Institutions.id');
+        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->Session->read('Institution.Institutions.id');
         $this->institution_id = $institutionId;
     }
 
