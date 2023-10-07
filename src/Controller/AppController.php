@@ -760,6 +760,7 @@ class AppController extends Controller
 //            return $skip;
 //        }
 // END POCOR-7841
+
         if ($params['controller'] == 'Dashboard' &&
             $params['action'] == 'index') {
             return $skip;
@@ -768,6 +769,17 @@ class AppController extends Controller
             $params['action'] == 'translate') {
             return $skip;
         }
+
+// POCOR-7841 IF NO USER, EXIT
+        $session = $this->request->session();
+        $user_id = $session->read('Auth.User')['id'];
+        if(empty($user_id)){
+            $skip = false;
+            return $skip;
+        }
+// POCOR-7841
+
+
 // POCOR-7833 SKIP WORKFLOW AJAX REQUESTS
 // POCOR-7841 BIT CLEANER CODE
         if ($params['controller'] == 'Workflows' &&
