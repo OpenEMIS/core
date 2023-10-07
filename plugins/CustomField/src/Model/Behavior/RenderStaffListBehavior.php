@@ -401,7 +401,7 @@ class RenderStaffListBehavior extends RenderBehavior
                             ->find('list', ['keyField' => 'code', 'valueField' => 'value'])
                             ->toArray();
 
-                        foreach ($staffs as $rowKey => $staffs) {
+                        foreach ($staffs as $rowKey => $staff) {
                             $staffId = $staff->staff_id;
                             $rowPrefix = "$fieldPrefix.$staffId";
 
@@ -669,10 +669,10 @@ class RenderStaffListBehavior extends RenderBehavior
                         $staffsurveys->aliasField('status_id') => $status,
                         $staffsurveys->aliasField('institution_id') => $institutionId,
                         $staffsurveys->aliasField('academic_period_id') => $periodId,
-                        $staffsurveys->aliasField($formKey) => $formId
-                    ])
-                    ->all();
-
+                        $staffsurveys->aliasField($formKey) => $formId,
+                        $staffsurveys->aliasField('parent_form_id') => $entity->survey_form_id
+                    ])->all();
+                   
                 if (!$surveyResults->isEmpty()) {
                     foreach ($surveyResults as $survey) {
                         $answersArray = [];
@@ -744,8 +744,8 @@ class RenderStaffListBehavior extends RenderBehavior
 
                     if (!empty($surveyIds)) {
                         $staffsurveyAnswers->deleteAll([
-                            $staffsurveyAnswers->aliasField('institution_staff_survey_id IN ') => $surveyIds //,
-                            //$staffsurveyAnswers->aliasField('parent_survey_question_id') => $parentFormId //POCOR-7730
+                            $staffsurveyAnswers->aliasField('institution_staff_survey_id IN ') => $surveyIds ,
+                            $staffsurveyAnswers->aliasField('parent_survey_question_id') => $parentFormId 
                         ]);
                     }
                     // End
@@ -788,11 +788,10 @@ class RenderStaffListBehavior extends RenderBehavior
                                     ]);
 
                                     $answers[] = $answerObj;
-                                    //$answers[$ir]['parent_survey_question_id'] = $parentIdd; //POCOR-7730
-                                }
-                                $ir++;
+                                    $answers[$ir]['parent_survey_question_id'] = $parentIdd;
+                                    $ir++;                               
+                                 }
                             }
-
                             $surveyData['custom_field_values'] = $answers;
                             $surveyEntity = $staffsurveys->newEntity($surveyData);
                             // save staff by staff
