@@ -1787,10 +1787,11 @@ class InstitutionClassesTable extends ControllerActionTable
 
                             ->find('byInstitution', ['Institutions.id'=>$institutionId])
                             ->find('AcademicPeriod', ['academic_period_id'=>$academicPeriodId])
-                            ->join(
-                                ['InstitutionStaffShifts' => 'institution_staff_shifts'],
-                                ['InstitutionStaffShifts.staff_id = ' . $Staff->aliasField('staff_id')]
-                            )
+                            //POCOR-7790 :: Connented this join because now shift is not saved when we add staff.
+                            // ->join(
+                            //     ['InstitutionStaffShifts' => 'institution_staff_shifts'],
+                            //     ['InstitutionStaffShifts.staff_id = ' . $Staff->aliasField('staff_id')]
+                            // )
                             ->where($where)
                             ->where([
                                 $Staff->aliasField('staff_id NOT IN') => $staffIds,
