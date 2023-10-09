@@ -285,10 +285,13 @@ class InstitutionAssetsTable extends AppTable
 //        $this->log($this->currency, 'debug');
 
         $requestData = json_decode($settings['process']['params']);
+//        $this->log(__FUNCTION__, 'debug');
+//        $this->log($requestData, 'debug');
         $institutionId = $requestData->institution_id;
         $institutionTypeId = $requestData->institution_type_id;
         $areaId = $requestData->area_education_id;
-
+        $lastYearStartDate = $requestData->report_start_date;
+        $lastYearEndDate = $requestData->report_end_date;
         $query = $this->getBasicQuery($query, $institutionId, $institutionTypeId, $areaId);
         $query = $this->getInstitutionAreaQuery($query);
         $query = $this->getInstitutionParentAreaQuery($query);

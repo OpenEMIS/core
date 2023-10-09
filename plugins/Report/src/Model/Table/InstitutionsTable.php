@@ -1687,17 +1687,11 @@ class InstitutionsTable extends AppTable
                     $attr['value'] = $requestData['report_start_date'];
                 }else{
                     $currentDate = new \DateTime();
-
 // Subtract one year to get the previous year
                     $previousYear = $currentDate->sub(new \DateInterval('P1Y'));
-
 // Set the date to the first day of the year
                     $firstDayOfPreviousYear = $previousYear->setDate($previousYear->format('Y'), 1, 1);
-//                    $lastDayOfPreviousYear = $previousYear->setDate($previousYear->format('Y'), 12, 31);
-
 // Format the result if needed
-//                    $attr['date_options']['startDate'] = ($firstDayOfPreviousYear)->format('d-m-Y');
-//                    $attr['date_options']['endDate'] = ($lastDayOfPreviousYear)->format('d-m-Y');
                     $attr['value'] = $firstDayOfPreviousYear;
                 }
                 $attr['onChangeReload'] = false;
@@ -1802,21 +1796,15 @@ class InstitutionsTable extends AppTable
             ])
             ) {
                 $attr['type'] = 'date';
-                if ($requestData['report_start_date']) {
-                    $attr['value'] = $requestData['report_start_date'];
+                if ($requestData['report_end_date']) {
+                    $attr['value'] = $requestData['report_end_date'];
                 }else{
                     $currentDate = new \DateTime();
-
 // Subtract one year to get the previous year
                     $previousYear = $currentDate->sub(new \DateInterval('P1Y'));
-
 // Set the date to the first day of the year
-//                    $firstDayOfPreviousYear = $previousYear->setDate($previousYear->format('Y'), 1, 1);
                     $lastDayOfPreviousYear = $previousYear->setDate($previousYear->format('Y'), 12, 31);
-
 // Format the result if needed
-//                    $attr['date_options']['startDate'] = ($firstDayOfPreviousYear)->format('d-m-Y');
-//                    $attr['date_options']['endDate'] = ($lastDayOfPreviousYear)->format('d-m-Y');
                     $attr['value'] = $lastDayOfPreviousYear;
                 }
                 $attr['onChangeReload'] = false;
