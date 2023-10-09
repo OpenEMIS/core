@@ -42,4 +42,10 @@ class InstitutionStudent extends Model
     {
         return $this->hasMany(InstitutionClassStudents::class, 'institution_id', 'id');
     }
+
+
+    public function academicPeriod()
+    {
+        return $this->belongsTo(AcademicPeriod::class, 'academic_period_id', 'id');
+    }
 }

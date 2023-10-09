@@ -20,8 +20,9 @@ $this->start('toolbar');
 <?php endif; ?>
 
 <?php if ($_edit) : ?>
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" ng-click="$ctrl.onEditClick()">
-        <i class="fa kd-edit"></i> 
+    <!-- POCOR-7787 used ClosedPeriod -->
+    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit'); ?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && (!$ctrl.schoolClosed || !$ctrl.closedPeriod) && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" ng-click="$ctrl.onEditClick()">
+        <i class="fa kd-edit"></i>
     </button>
 
     <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="$ctrl.action == 'edit' && $ctrl.classStudentList.length > 0" ng-click="$ctrl.onBackClick()">
@@ -34,7 +35,7 @@ $this->start('toolbar');
     </button>
 <?php endif; ?>
 <?php 
-$session = $this->Session;
+$session = $this->request->session();
 $superAdmin = $session->read('Auth.User.super_admin');
 $is_connection_is_online = $session->read('is_connection_stablished');
 ?>
