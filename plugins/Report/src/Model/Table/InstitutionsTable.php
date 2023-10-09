@@ -322,7 +322,9 @@ class InstitutionsTable extends AppTable
 
     public function addAfterAction(Event $event, Entity $entity)
     {
-        if ($entity->has('feature')) { 
+        $this->log(__FUNCTION__, 'debug');
+        $this->log($this->fields, 'debug');
+        if ($entity->has('feature')) {
             $feature = $entity->feature;
 
             $fieldsOrder = ['feature'];
@@ -654,7 +656,6 @@ class InstitutionsTable extends AppTable
         }
     }
 
-
     public function onExcelGetClassification(Event $event, Entity $entity)
     {
         return __($this->classificationOptions[$entity->classification]);
@@ -912,6 +913,7 @@ class InstitutionsTable extends AppTable
                           'Report.InstitutionCases',
                           'Report.ClassAttendanceNotMarkedRecords',
                           'Report.InstitutionSubjects',
+                          'Report.InstitutionAssets',
                           'Report.StudentAttendanceSummary',
                           'Report.StudentAbsences',
                           'Report.StaffAttendances',
@@ -1603,7 +1605,7 @@ class InstitutionsTable extends AppTable
             if (in_array($feature, ['Report.ClassAttendanceNotMarkedRecords',
                                     'Report.InstitutionCases',
                                     //'Report.StudentAttendanceSummary',
-                                    //Report.StudentAbsences,
+//                                    'Report.InstitutionAssets',
                                     'Report.ClassAttendanceMarkedSummaryReport',
                                     'Report.StaffAttendances'
                 ]) && isset($this->request->data[$this->alias()]['academic_period_id'])
@@ -1638,6 +1640,32 @@ class InstitutionsTable extends AppTable
                         $attr['value'] = $selectedPeriod->start_date;
                     }
                 }
+            } elseif (in_array($feature, [
+                                    'Report.InstitutionAssets'
+                ]) && isset($this->request->data[$this->alias()]['academic_period_id'])
+                ) {
+
+                $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $selectedPeriod = $AcademicPeriods->get($academicPeriodId);
+                $selectedPeriodStart = $selectedPeriod->start_date;
+                $previousPeriodDay = $selectedPeriodStart->sub(new \DateInterval('P2M'));
+                $previousPeriodId = $AcademicPeriods->getAcademicPeriodIdByDate($previousPeriodDay);
+                $previousPeriod = $AcademicPeriods->get($previousPeriodId);
+                $attr['type'] = 'date';
+                $attr['date_options']['startDate'] = ($previousPeriod->start_date)->format('d-m-Y');
+                $attr['date_options']['endDate'] = ($previousPeriod->end_date)->format('d-m-Y');
+                $attr['attr']['default'] = $previousPeriod->start_date;
+                $attr['onChangeReload'] = true;
+//                if ($attr['value'] > 0) {
+//                    $attr['value'] = $this->request->data[$this->alias()]['report_start_date'];
+//                } else {
+//                    if ($this->request->data[$this->alias()]['report_start_date'] != 0) {
+//                       $attr['value'] = $this->request->data[$this->alias()]['report_start_date'];
+//                    } else {
+                        $attr['value'] = $previousPeriod->start_date;
+//                    }
+//                }
             } elseif (in_array($feature, ['Report.StaffLeave'])) {
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodId = $AcademicPeriods->getCurrent();
