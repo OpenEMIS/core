@@ -1738,10 +1738,8 @@ class StaffSalariesTable extends ControllerActionTable
             });
         }
         if (!is_null($isHomeroom)) {
-            $query->matching('Positions', function ($q) use ($isHomeroom) {
-                // homeroom teachers only
-                return $q->where(['Positions.is_homeroom' => $isHomeroom]);
-            });
+            // POCOR-7768
+            $query->where([$this->aliasField('is_homeroom') => $isHomeroom]);
         }
         if (!is_null($staffId)) {
             $query->where([$this->aliasField('staff_id') => $staffId]);
