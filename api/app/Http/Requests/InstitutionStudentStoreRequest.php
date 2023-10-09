@@ -34,7 +34,8 @@ class InstitutionStudentStoreRequest extends FormRequest
             'first_name' => 'required',
             'last_name' => 'required',
             'gender_id' => 'required',
-            'date_of_birth' => 'required'
+            'date_of_birth' => 'required',
+            //'custom_fields.*.file' => 'sometimes|file'
         ];
     }
 

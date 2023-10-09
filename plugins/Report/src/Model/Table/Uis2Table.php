@@ -94,7 +94,7 @@ class Uis2Table extends AppTable
             $extraField[] = ["key" => "", "field" => "student_gender_name2", "type" => "integer", "label" => "Gender"];
             $extraField[] = ["key" => "", "field" => "student_age2", "type" => "integer", "label" => "Age"];
             $extraField[] = ["key" => "", "field" => "total_students2", "type" => "integer", "label" => "Number of Students"];
-            $extraField[] = ["key" => "", "field" => "repeater_Student", "type" => "integer", "label" => "Repeater Stuents"];
+            $extraField[] = ["key" => "", "field" => "repeater_Student", "type" => "integer", "label" => "Repeater Students"];
 
         }
         if ($UISType == 'UIS-A6')
@@ -112,7 +112,7 @@ class Uis2Table extends AppTable
             $extraField[] = ["key" => "", "field" => "student_gender_name3", "type" => "integer", "label" => "Gender"];
             $extraField[] = ["key" => "", "field" => "student_age3", "type" => "integer", "label" => "Age"];
             $extraField[] = ["key" => "", "field" => "total_students3", "type" => "integer", "label" => "Number of Students"];
-            $extraField[] = ["key" => "", "field" => "repeater_Student1", "type" => "integer", "label" => "Repeater Stuents"];
+            $extraField[] = ["key" => "", "field" => "repeater_Student1", "type" => "integer", "label" => "Repeater Students"];
 
         }
         if ($UISType == 'UIS-A9')

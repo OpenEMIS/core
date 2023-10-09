@@ -193,7 +193,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function onUpdateFieldCategory(Event $event, array $attr, $action, Request $request)
     {
-        $categories = array(1 =>'Curricular', 0=>'Extracurricular');
+        $categories = array(1 =>'Co-Curricular', 0=>'Extracurricular'); //POCOR-7751
         $entity = $attr['entity'];
         if ($action == 'add') {
             $attr['type'] = 'chosenSelect';
@@ -484,5 +484,13 @@ class InstitutionCurricularsTable extends ControllerActionTable
              return 'Extracurricular';
         }
     }
-    
+    //POCOR-7691 start
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        if(!empty($this->request->pass[1])){
+            $curricularId = $this->paramsDecode($this->request->pass[1])['id'];
+            $_SESSION["curricularId"] = $curricularId;
+        }
+    }
+    //POCOR-7691 end
 }

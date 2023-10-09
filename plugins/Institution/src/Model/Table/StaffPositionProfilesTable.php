@@ -356,56 +356,68 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
                         ->first();
         //POCOR 7289 tables updation start for homeroom
-        if($entity->staff_change_type_id == 6){
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
-        $SecurityGroupUsers=TableRegistry::get('security_group_users');
-        //No homeroom teacher
-        if($entity->homeroom_teacher==0)
-        {
-        $count=$InstitutionStaff->find()
-                                ->where(["institution_id"=>$entity->institution_id,
-                                        "staff_id"=>$entity->staff_id,
-                                        "is_homeroom"=>1,
-                                        "staff_status_id"=>1,
-                                        "id !="=>$entity->institution_staff_id
+        if ($entity->staff_change_type_id == 6) {
+            $InstitutionStaff = TableRegistry::get('Institution.Staff');
+            $SecurityGroupUsers = TableRegistry::get('security_group_users');
+            $SecurityGroups = TableRegistry::get('security_groups');
+            $SecurityGroupInstitutions = TableRegistry::get(' security_group_institutions');
+            $SecurityGroupInstitutionData = $SecurityGroupInstitutions->find()
+                ->select(["security_group_id" => $SecurityGroups->aliasField('id')])
+                ->innerJoin(
+                    [$SecurityGroups->alias() => $SecurityGroups->table()],
+                    [
+                        $SecurityGroups->aliasField('id=') . $SecurityGroupInstitutions->aliasField('security_group_id')
+                    ]
+                )
+                ->where([$SecurityGroupInstitutions->aliasField('institution_id') => $entity->institution_id])
+                ->first();
+            $entity->security_group_id = $SecurityGroupInstitutionData->security_group_id;
+            //No homeroom teacher
+            if ($entity->homeroom_teacher == 0) {
+                $count = $InstitutionStaff->find()
+                    ->where([
+                        "institution_id" => $entity->institution_id,
+                        "staff_id" => $entity->staff_id,
+                        "is_homeroom" => 1,
+                        "staff_status_id" => 1,
+                        "id !=" => $entity->institution_staff_id
 
-                                ])->count();
+                    ])->count();
 
-        if($count==0){
+                if ($count == 0) {
 
-        $securityGroupEntry=$SecurityGroupUsers->find()
-                           ->where([
-                             'security_user_id' => $entity->staff_id,
-                             'security_group_id' => $entity->institution_id,
-                             'security_role_id' => 5
-                             ])->first();
-        if(isset($securityGroupEntry)){
-        $SecurityGroupUsers->delete($securityGroupEntry);
-                            }}
+                    $securityGroupEntry = $SecurityGroupUsers->find()
+                        ->where([
+                            'security_user_id' => $entity->staff_id,
+                            'security_group_id' => $entity->security_group_id,
+                            'security_role_id' => 5
+                        ])->first();
+                    if (isset($securityGroupEntry)) {
+                        $SecurityGroupUsers->delete($securityGroupEntry);
+                    }
+                }
+            }
+            // Homeroom Teacher
+            if ($entity->homeroom_teacher == 1) {
+                $id = $SecurityGroupUsers->find()
+                    ->where([
+                        'security_user_id' => $entity->staff_id,
+                        'security_group_id' =>  $entity->security_group_id,
+                        'security_role_id' => 5
+                    ])->first();
+                if (!isset($id)) {
 
-         }
-        // Homeroom Teacher
-         if($entity->homeroom_teacher==1)
-        {
-         $id=$SecurityGroupUsers->find()
-                             ->where([
-                         'security_user_id' => $entity->staff_id,
-                         'security_group_id' => $entity->institution_id,
-                         'security_role_id' => 5
-                           ])->first();
-        if(!isset($id)){
-
-            $user=$SecurityGroupUsers->newEntity();
-            $user->id=Text::uuid();
-            $user->security_user_id = $entity->staff_id;
-            $user->security_group_id =$entity->institution_id;
-            $user->created_user_id= $entity->created_user_id;
-            $user->security_role_id=5;
-            $user->created= $entity->created;
-            $SecurityGroupUsers->save($user);
-         }
-        }
-        //Both case
+                    $user = $SecurityGroupUsers->newEntity();
+                    $user->id = Text::uuid();
+                    $user->security_user_id = $entity->staff_id;
+                    $user->security_group_id = $entity->security_group_id;
+                    $user->created_user_id = $entity->created_user_id;
+                    $user->security_role_id = 5;
+                    $user->created = $entity->created;
+                    $SecurityGroupUsers->save($user);
+                }
+            } 
+             //Both case
         $query=$InstitutionStaff->query();
         $query ->update()
                ->set(['is_homeroom' => $entity->homeroom_teacher])
@@ -1547,7 +1559,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                        if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                         $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
                          $options = $attr['options'];
-                         $entity->is_homeroom =  ($entity->is_homeroom) ? __($entity->is_homeroom) : __("0") ;
+                         $entity->is_homeroom =  empty($entity->is_homeroom) ? 0 : __($entity->is_homeroom); // POCOR-7753
                          $attr['attr']['value'] = $options[strval($entity->is_homeroom)];
                        }
                 }

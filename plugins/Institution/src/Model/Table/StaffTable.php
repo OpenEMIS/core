@@ -2,6 +2,7 @@
 
 namespace Institution\Model\Table;
 
+use Cake\Collection\Collection;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use DateTime;
 use ArrayObject;
@@ -51,6 +52,8 @@ class StaffTable extends ControllerActionTable
     private $institution_id;
     private $academic_period_id;
     private $_dynamicFieldName = 'custom_field_data';
+    private $customFieldData = null;
+    private $customFieldTableName = 'staff_custom_fields';
 
     public function initialize(array $config)
     {
@@ -177,6 +180,27 @@ class StaffTable extends ControllerActionTable
         $this->addBehavior('ControllerAction.Image');
 
         $this->setDeleteStrategy('restrict');
+
+        $custom_fields = TableRegistry::get($this->customFieldTableName);
+        $bigCustomFieldData = $custom_fields->find('all')->select([
+            'custom_field_id' => $custom_fields->aliasfield('id'),
+            'custom_field_name' => $custom_fields->aliasfield('name'),
+            'custom_field_type' => $custom_fields->aliasfield('field_type'),
+            'custom_field_description' => $custom_fields->aliasfield('description')
+        ])->innerJoin(
+            ['StaffCustomFormsFields' => 'staff_custom_forms_fields'], // Class Object => table_name
+            ['StaffCustomFormsFields.staff_custom_field_id = ' . $custom_fields->aliasField('id'), // Where
+            ])
+            ->group($custom_fields->aliasfield('id'))
+            ->toArray();
+        $customFieldData = [];
+        foreach ($bigCustomFieldData as $customFieldDatum) {
+            $customFieldData[$customFieldDatum->custom_field_id] = $customFieldDatum;
+        }
+//        $this->log('$customFieldData', 'debug');
+//        $this->log($customFieldData, 'debug');
+        $this->customFieldData = $customFieldData;
+
     }
 
     public function implementedEvents()
@@ -469,34 +493,25 @@ class StaffTable extends ControllerActionTable
             'label' => __('Nationality')
         ];
 
-        //todo custom fields
         /**
-         * Get all those custom fields of a staff which are which are selected in "Parents and Guardian Informations" in page tab
-         * Page: Administartion > System Setup > Custom Fields > Staff > Page
+         * Get all those custom fields of a student
+         * Page: Administartion > System Setup > Custom Fields > Student > Page
          * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+         * @author Khindol Madraimov <khindol.madraimov@gmail.com>
          * Ticket: POCOR-6531
+         * Ticket: POCOR-7732
          */
-        // START: POCOR-6531 - Anand Malvi <anand.malvi@mail.valuecoders.com>
-        $custom_fields = TableRegistry::get('staff_custom_fields');
-        $customFieldData = $custom_fields->find()->select([
-            'custom_field_id' => $custom_fields->aliasfield('id'),
-            'custom_field' => $custom_fields->aliasfield('name')
-        ])->innerJoin(
-            ['StaffCustomFormsFields' => 'staff_custom_forms_fields'], // Class Object => table_name
-            ['StaffCustomFormsFields.staff_custom_field_id = ' . $custom_fields->aliasField('id'), // Where
-            ])
-            ->group($custom_fields->aliasfield('id'))
-            ->toArray();
-        // END: POCOR-6531 - Anand Malvi <anand.malvi@mail.valuecoders.com>
+
+        $customFieldData = $this->customFieldData;
         if (!empty($customFieldData)) {
             foreach ($customFieldData as $data) {
                 $custom_field_id = $data->custom_field_id;
-                $custom_field = $data->custom_field;
+                $custom_field_name = $data->custom_field_name;
                 $extraField[] = [
                     'key' => 'staff_id',
                     'field' => $this->_dynamicFieldName . '_' . $custom_field_id,
                     'type' => 'string',
-                    'label' => __($custom_field)
+                    'label' => __($custom_field_name)
                 ];
             }
         }
@@ -1514,6 +1529,90 @@ class StaffTable extends ControllerActionTable
         }
     }
 
+    /**
+     * @param Event $event
+     * @param Entity $entity
+     */
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+
+        $staff_id = !empty($entity->staff_id) ? $entity->staff_id : NULL;
+        $institution_id = !empty($entity->institution_id) ? $entity->institution_id : 0;
+        $affected = $this->removeIndividualChildRecords($staff_id, $institution_id);
+
+//        $this->log("deleted $affected children", 'debug');
+    }
+
+    /**
+     * @param $staff_id
+     * @param int $institution_id
+     * @return int
+     */
+    private function removeIndividualChildRecords($staff_id, $institution_id = 0)
+    {
+        $affected = 0;
+        if ($staff_id) {
+
+            $table_name = 'security_group_users';
+            $field_name = 'security_user_id';
+            $affected = $affected + $this->removeFromTable($staff_id, $table_name, $field_name);
+
+            $table_name = 'user_activities';
+            $field_name = 'security_user_id';
+            $affected = $affected + $this->removeFromTable($staff_id, $table_name, $field_name);
+
+            $table_name = 'staff_custom_field_values';
+            $field_name = 'staff_id';
+            $affected = $affected + $this->removeFromTable($staff_id, $table_name, $field_name);
+
+            $table_name = 'institution_staff_shifts';
+            $field_name = 'staff_id';
+            $affected = $affected + $this->removeFromTable($staff_id, $table_name, $field_name, $institution_id);
+
+        }
+
+        return $affected;
+
+    }
+
+    /**
+     * @param $user_id
+     * @param $table_name
+     * @param $field_name
+     * @param int $institution_id
+     * @return int
+     */
+    private function removeFromTable($user_id, $table_name, $field_name, $institution_id = 0)
+    {
+        $affected = 0;
+        try {
+
+
+            if($institution_id == 0){
+                $tableToClean = TableRegistry::get($table_name);
+            $where = [
+                $tableToClean->aliasField($field_name) => $user_id
+
+            ];
+            $affected = $tableToClean->deleteAll($where);
+            }
+
+            if($institution_id != 0){
+                if($table_name == 'institution_staff_shifts'){
+                    $affected = $this->deleteFromInstitutionStaffShifts($user_id, $table_name, $field_name, $institution_id);
+                }
+            }
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch remove from table',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+        }
+        return $affected;
+    }
+
+
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
         $broadcaster = $this;
@@ -2170,10 +2269,8 @@ class StaffTable extends ControllerActionTable
             });
         }
         if (!is_null($isHomeroom)) {
-            // $query->matching('Positions', function ($q) use ($isHomeroom) {
-            // homeroom teachers only
-            return $q->where([$this->aliasField('is_homeroom') => $institutionId]);
-            // });
+            // POCOR-7768
+            $query->where([$this->aliasField('is_homeroom') => $isHomeroom]);
         }
         if (!is_null($staffId)) {
             $query->where([$this->aliasField('staff_id') => $staffId]);
@@ -3761,8 +3858,22 @@ class StaffTable extends ControllerActionTable
      */
     private function getFormattedStaffAttendanceArchivedRow($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $day_id)
     {
-        return function (ResultSetInterface $results) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $day_id) {
-            return $results->map(function ($row) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
+        $AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
+        $absenceTypes = $AbsenceTypesTable->getAbsenceTypeList();
+        return function (ResultSetInterface $results) use (
+            $attendanceByStaffIdRecords,
+            $leaveByStaffIdRecords,
+            $workingDaysArr,
+            $day_id,
+            $absenceTypes
+        ) {
+            return $results->map(function ($row) use (
+                $attendanceByStaffIdRecords,
+                $leaveByStaffIdRecords,
+                $workingDaysArr,
+                $day_id,
+                $absenceTypes
+            ) {
                 $staffId = $row->staff_id;
                 $staffRecords = [];
                 $staffLeaveRecords = [];
@@ -3799,6 +3910,7 @@ class StaffTable extends ControllerActionTable
                                 'time_out' => $this->formatTime($attendanceRecord['time_out']),
                                 'comment' => $attendanceRecord['comment'],
                                 'absence_type_id' => $attendanceRecord['absence_type_id'],
+                                'absence_type' => __($absenceTypes[$attendanceRecord['absence_type_id']]),
                                 'isNew' => false
                             ];
                             break;
@@ -3816,7 +3928,7 @@ class StaffTable extends ControllerActionTable
                         ];
                     }
                     $staffTimeRecords[$dateStr] = $attendanceData;
-                    if ($dayId != -1) {
+                    if ($day_id != -1) {
                         $row->date = $dateStr;
                     }
                     $historyUrl = Router::url([
@@ -3833,6 +3945,7 @@ class StaffTable extends ControllerActionTable
 
                     $leaveRecords = [];
                     foreach ($staffLeaveRecords as $staffLeaveRecord) {
+
                         $dateFrom = $staffLeaveRecord['date_from']->format('Y-m-d');
                         $dateTo = $staffLeaveRecord['date_to']->format('Y-m-d');
                         $tableName = 'staff_leave_types';
@@ -3840,7 +3953,12 @@ class StaffTable extends ControllerActionTable
                         $leaveTypeName = self::getRelatedName($tableName, $relatedField);
 
                         if ($dateFrom <= $key && $dateTo >= $key) {
+                            $comment = $staffLeaveRecord['comments'];
+                            if ($comment) {
+                                $staffTimeRecords[$key]['comment'] = trim($staffTimeRecords[$key]['comment'] . " " . $comment);
+                            }
                             $leaveRecord['isFullDay'] = $staffLeaveRecord['full_day'];
+                            $leaveRecord['comment'] = $staffLeaveRecord['comments'];
                             $leaveRecord['startTime'] = $this->formatTime($staffLeaveRecord['start_time']);
                             $leaveRecord['endTime'] = $this->formatTime($staffLeaveRecord['end_time']);
                             $leaveRecord['staffLeaveTypeName'] = $leaveTypeName;
@@ -3850,7 +3968,7 @@ class StaffTable extends ControllerActionTable
                     $url = Router::url([
                         'plugin' => 'Institution',
                         'controller' => 'Institutions',
-                        'action' => 'StaffLeave',
+                        'action' => 'ArchivedStaffLeave',
                         'index',
                         'user_id' => $staffId
                     ]);
@@ -4077,12 +4195,12 @@ class StaffTable extends ControllerActionTable
             return;
         }
         $custom_field_values = TableRegistry::get('staff_custom_field_values');
-
         $custom_fields = TableRegistry::get('staff_custom_fields');
         $custom_options = self::getRelatedOptions('staff_custom_field_options');
+        $customFieldData = $this->customFieldData;
         $custom_values = $custom_field_values->find('all')->select([
             'staff_id' => $custom_field_values->aliasField('staff_id'),
-            'custom_field_id' => $custom_fields->aliasField('id'),
+            'custom_field_id' => $custom_field_values->aliasField('staff_custom_field_id'),
             'custom_field_value_id' => $custom_field_values->aliasField('id'),
             'custom_text_value' => $custom_field_values->aliasField('text_value'),
             'custom_number_value' => $custom_field_values->aliasField('number_value'),
@@ -4090,23 +4208,18 @@ class StaffTable extends ControllerActionTable
             'custom_textarea_value' => $custom_field_values->aliasField('textarea_value'),
             'custom_date_value' => $custom_field_values->aliasField('date_value'),
             'custom_time_value' => $custom_field_values->aliasField('time_value'),
-            'custom_field_name' => $custom_fields->aliasField('name'),
-            'custom_field_type' => $custom_fields->aliasField('field_type'),
-            'custom_field_description' => $custom_fields->aliasField('description'),
-        ])->where([$custom_field_values->aliasField('staff_id IN') => $staff_ids])
-            ->leftJoin(
-                [$custom_fields->alias() => $custom_fields->table()],
-                [
-                    $custom_fields->aliasField('id = ') . $custom_field_values->aliasField('staff_custom_field_id')
-                ]
-            )->toArray();
+        ])->innerJoin([$institution_staffs->alias() => $institution_staffs->table()],
+            [$custom_field_values->aliasField('staff_id = ') . $institution_staffs->aliasField('staff_id'),
+                $institution_staffs->aliasField('institution_id = ') . $this->institution_id])
+            ->toArray();
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
-        use ($custom_options, $custom_values) {
-            return $results->map(function ($row) use ($custom_options, $custom_values) {
+        use ($custom_options, $custom_values, $customFieldData) {
+            return $results->map(function ($row) use ($custom_options, $custom_values, $customFieldData) {
                 foreach ($custom_values as $custom_row) {
+                    $custom_field = $customFieldData[intval($custom_row->custom_field_id)];
                     if ($custom_row->staff_id == $row->staff_id) {
-                        $fieldType = $custom_row->custom_field_type;
+                        $fieldType = $custom_field->custom_field_type;
                         if ($fieldType == 'TEXT') {
                             $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_text_value;
                         }
@@ -4143,7 +4256,7 @@ class StaffTable extends ControllerActionTable
                             $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_text_value;
                         }
                         if ($fieldType == 'NOTE') {
-                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_field_description;
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_field->custom_field_description;
                         }
                     }
                 }
@@ -4202,6 +4315,30 @@ class StaffTable extends ControllerActionTable
             null;
         }
         return null;
+    }
+
+    /**
+     * @param $user_id
+     * @param $table_name
+     * @param $field_name
+     * @param $institution_id
+     * @return int
+     */
+    private function deleteFromInstitutionStaffShifts($user_id, $table_name, $field_name, $institution_id)
+    {
+        $tableToClean = TableRegistry::get($table_name);
+        $Shifts = TableRegistry::get('institution_shifts');
+        $allShifts = $Shifts
+            ->find('all')
+            ->select('id')
+            ->where([$Shifts->aliasField('institution_id') => $institution_id]);
+        $allShifts = new Collection($allShifts->toArray());
+        $where = [
+            $tableToClean->aliasField($field_name) => $user_id,
+            $tableToClean->aliasField('shift_id IN') => $allShifts->extract('id')->toArray()
+        ];
+        $affected = $tableToClean->deleteAll($where);
+        return $affected;
     }
 
 

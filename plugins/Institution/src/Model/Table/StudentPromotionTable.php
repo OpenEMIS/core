@@ -3,6 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
@@ -607,6 +608,23 @@ class StudentPromotionTable extends AppTable
             $studentStatusesList = $this->StudentStatuses->find('list')->toArray();
             $statusesCode = $this->statuses;
             $options = [];
+            //POCOR-7715 start
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $institutionId = $this->institutionId;  
+            $EducationProgrammeResult = $EducationGrades->find()
+                ->select(["same_grade_promotion"=>'EducationProgrammes.same_grade_promotion'])
+                ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+                ->LeftJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()], [
+                    $EducationGrades->aliasField('id') . ' = ' . $InstitutionGrades->aliasField('education_grade_id')
+                ])
+                ->where([
+                    'EducationSystems.academic_period_id' => $entity->from_academic_period_id,
+                    $InstitutionGrades->aliasField('institution_id') => $institutionId,
+                    $EducationGrades->aliasField('id')=> $educationGradeId
+                    
+                ])->first();
+            //POCOR-7715 end
             if (!empty($educationGradeId) && $educationGradeId != -1) {
                 $nextGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId);
                 $isLastGrade = $this->EducationGrades->isLastGradeInEducationProgrammes($educationGradeId);
@@ -617,7 +635,14 @@ class StudentPromotionTable extends AppTable
                 } else {
                     $options[$statusesCode['PROMOTED']] = __($studentStatusesList[$statusesCode['PROMOTED']]);
                 }
-                $options[$statusesCode['REPEATED']] = __($studentStatusesList[$statusesCode['REPEATED']]);
+                //POCOR-7715 start
+                if ($EducationProgrammeResult->same_grade_promotion == 1) {
+                    // $options[$statusesCode['GRADUATED']] = __($studentStatusesList[$statusesCode['GRADUATED']]);
+                }
+                else{
+                    $options[$statusesCode['REPEATED']] = __($studentStatusesList[$statusesCode['REPEATED']]);
+                }
+                //POCOR-7715 end
             }
 
             foreach ($options as $key => $value) {
@@ -1378,28 +1403,32 @@ class StudentPromotionTable extends AppTable
     {
         // list of grades available in the institution
         $today = date('Y-m-d');
-        $listOfInstitutionGrades = $this->InstitutionGrades
-        ->find('list', [
-            'keyField' => 'education_grade_id',
-            'valueField' => 'education_grade.programme_grade_name'])
-        ->contain(['EducationGrades.EducationProgrammes'])
-        ->where([
-            $this->InstitutionGrades->aliasField('institution_id') => $institutionId,
-            'OR' => [
-                [
-                    $this->InstitutionGrades->aliasField('end_date IS NULL'),
-                    $this->InstitutionGrades->aliasField('start_date <= ') => $today
-                ],
-                [
-                    $this->InstitutionGrades->aliasField('end_date IS NOT NULL'),
-                    $this->InstitutionGrades->aliasField('start_date <= ') => $today,
-                    $this->InstitutionGrades->aliasField('end_date >= ') => $today
-                ]
-            ]
-        ])
-        ->order(['EducationProgrammes.order', 'EducationGrades.order'])
-        ->toArray();
 
+        try {
+            $listOfInstitutionGrades = $this->InstitutionGrades
+                ->find('list', [
+                    'keyField' => 'education_grade_id',
+                    'valueField' => 'education_grade.programme_grade_name'])
+                ->contain(['EducationGrades.EducationProgrammes'])
+                ->where([
+                    $this->InstitutionGrades->aliasField('institution_id') => $institutionId,
+                    'OR' => [
+                        [
+                            $this->InstitutionGrades->aliasField('end_date IS NULL'),
+                            $this->InstitutionGrades->aliasField('start_date <= ') => $today
+                        ],
+                        [
+                            $this->InstitutionGrades->aliasField('end_date IS NOT NULL'),
+                            $this->InstitutionGrades->aliasField('start_date <= ') => $today,
+                            $this->InstitutionGrades->aliasField('end_date >= ') => $today
+                        ]
+                    ]
+                ])
+                ->order(['EducationProgrammes.order', 'EducationGrades.order'])
+                ->toArray();
+        } catch (RecordNotFoundException $e) {
+            return [];
+        }
         return $listOfInstitutionGrades;
     }
 

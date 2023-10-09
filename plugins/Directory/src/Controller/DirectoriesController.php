@@ -331,9 +331,14 @@ class DirectoriesController extends AppController
         $requestDataa = json_decode($requestDataa, true);
         $UsersTable = TableRegistry::get('User.Users');
         $InstitutionTable = TableRegistry::get('Institution.Institutions');
-        $UserData = $UsersTable->find('all',['conditions'=>['id'=>$requestDataa['student_id']]])->first();
-        $InstitutionData = $InstitutionTable->find('all',['conditions'=>['id'=>$requestDataa['institution_id']]])->first();
+        $student_id = $requestDataa['student_id'];
+        $institution_id = $requestDataa['institution_id'];
+        $UserData = $UsersTable->find('all',['conditions'=>['id'=> $student_id]])->first();
+        $InstitutionData = $InstitutionTable->find('all',['conditions'=>['id'=> $institution_id]])->first();
         $queryStng = $this->paramsEncode(['id' => $UserData->id]);
+//        $this->Navigation->addCrumb($student_name, ['plugin' => 'Directory',
+//            'controller' => 'Directories', 'action' => 'Directories', 'view', $this->ControllerAction->paramsEncode(['id' => $student_id])]);
+        $this->Navigation->addCrumb(__('Add Guardians'), []);
         $this->set('InstitutionData', $InstitutionData);
         $this->set('UserData', $UserData);
         $this->set('queryStng', $queryStng);//POCOR-7231 :: END
