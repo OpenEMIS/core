@@ -32,79 +32,7 @@ class StudentContactsTable extends AppTable  {
 		return $attr;
 	}
 
-    public function onExcelGetIdentityNumber(Event $event, Entity $entity)
-    {
-        $IdentityNumber = '';
-        $userIdentities = TableRegistry::get('User.Identities');
-        $result = $userIdentities
-                    ->find()
-                    ->where([
-                        $userIdentities->aliasField('security_user_id') => $entity->security_user_id,
-                    ])
-                    ->contain(['IdentityTypes'])
-                    ->select([
-                    'IdentityTypes' => $userIdentities->IdentityTypes->aliasField('name'),
-                    'IdentityNumber' => $userIdentities->aliasField('number'),
-                        ])
-                    ->toArray();
-
-        if(!empty($result)) {
-            foreach ($result as $single) {
-                if ($single->IdentityNumber == end($result)->IdentityNumber) {
-                    $IdentityNumber .= $single->IdentityNumber;
-                } else {
-                    $IdentityNumber .= $single->IdentityNumber;
-                }
-            }
-        }
-        return $IdentityNumber;
-    }
-
-    public function onExcelGetEducationName(Event $event, Entity $entity)
-    {
-        $educationName = '';
-        $institutionStudents = TableRegistry::get('Institution.Students');
-        $result = $institutionStudents
-                    ->find()
-                    ->where([
-                        $institutionStudents->aliasField('student_id') => $entity->security_user_id,
-                        $institutionStudents->aliasField('end_date >= Date("' . date("Y-m-d") . '")') ,
-                    ]) 
-                    ->select([
-                    'educationName' => 'EducationGrades.name'
-                        ])
-                    ->leftJoinWith('EducationGrades')
-                    ->all();
-
-        if (!$result->isEmpty()) {
-            $educationName = $result->first()->educationName;
-        }
-        return $educationName;
-    }
-
-    public function onExcelGetInstitutionName(Event $event, Entity $entity)
-    {
-        $institutionName = '';
-        $institutionStudents = TableRegistry::get('Institution.Students');
-        $result = $institutionStudents
-                    ->find()
-                    ->where([
-                        $institutionStudents->aliasField('student_id') => $entity->security_user_id,
-                        $institutionStudents->aliasField('end_date >= Date("' . date("Y-m-d") . '")') ,
-                    ]) 
-                    ->select([
-                    'institutionName' => 'Institutions.name'
-                        ])
-                    ->leftJoinWith('Institutions')
-                    ->all();
-
-        if (!$result->isEmpty()) {
-            $institutionName = $result->first()->institutionName;
-        }
-        return $institutionName;
-    }
-
-    //POCOR-7108
+    //POCOR-7491:: Start ---Changes in query remove extra function
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
         
         $requestData = json_decode($settings['process']['params']);
@@ -122,6 +50,9 @@ class StudentContactsTable extends AppTable  {
         $contactsType = TableRegistry::get('User.ContactTypes');
         $academicPeriods = TableRegistry::get('academic_periods');
 
+        $UserIdentities = TableRegistry::get('user_identities');
+        $IdentityTypes = TableRegistry::get('identity_types');
+
         $conditions = [];
         if (!empty($academicPeriodId)) {
             $conditions['InstitutionStudents.academic_period_id'] = $academicPeriodId;
@@ -134,23 +65,41 @@ class StudentContactsTable extends AppTable  {
         }
         $query
             ->select([
-                'institution_code' => 'Institutions.code',
-                'institution_name' => 'Institutions.name',
+                'institution_code' => $institutionIds->aliasField('code'),
+                'institution_name' => $institutionIds->aliasField('name'),
                 'student_id' => $institutionStudents->aliasField('student_id'),
                 'education_grade_id' => $institutionStudents->aliasField('education_grade_id'),
-                'education_name' => 'EducationGrades.name',
-                'education_code' => 'EducationGrades.code',
+                'education_name' => $educationGrades->aliasField('name'),
+                'education_code' => $educationGrades->aliasField('code'),
                 'openemis_no' => $this->aliasField('openemis_no'),
                 'security_user_id' => $this->aliasField('id'),
+                'identity_numberr' => $UserIdentities->aliasField('number'),
+                'identity_type' => $IdentityTypes->aliasField('name'),
                 'user_name' => $query->func()->concat([
                     $this->aliasField('first_name') => 'literal',
                     " ",
                     $this->aliasField('last_name') => 'literal'
                 ]),
             ])
+            ->leftJoin([$institutionStudents->alias() => $institutionStudents->table()],
+                [
+                $institutionStudents->aliasField('student_id') . ' = '. $this->aliasField('id')
+                ])
+            ->leftJoin([$institutionStudents->alias() => $institutionStudents->table()],
+                [
+                $institutionStudents->aliasField('student_id') . ' = '. $this->aliasField('id')
+                ])
            ->leftJoin([$institutionStudents->alias() => $institutionStudents->table()],
                 [
                 $institutionStudents->aliasField('student_id') . ' = '. $this->aliasField('id')
+                ])
+            ->leftJoin([$UserIdentities->alias() => $UserIdentities->table()],
+                [
+                $UserIdentities->aliasField('security_user_id') . ' = '. $this->aliasField('id')
+                ])
+            ->leftJoin([$IdentityTypes->alias() => $IdentityTypes->table()],
+                [
+                $IdentityTypes->aliasField('id') . ' = '. $UserIdentities->aliasField('identity_type_id')
                 ])
             ->innerJoin([$institutionIds->alias() => $institutionIds->table()],
                 [
@@ -197,13 +146,7 @@ class StudentContactsTable extends AppTable  {
                 ->where([$userContacts->aliasField('preferred') => 1, $conditions])
                 ->group(['Contacts.security_user_id']);
     }
-
-    //End of POCOR-7108
-
-	public function onExcelGetPreferred(Event $event, Entity $entity) {
-		$options = [0 => __('No'), 1 => __('Yes')];
-		return $options[$entity->preferred];
-	}
+    //POCOR-7491:: End
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
@@ -272,36 +215,6 @@ class StudentContactsTable extends AppTable  {
 
         $fields->exchangeArray($extraFields);
     }
-
-    //POCOR-7108
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
-    {
-        $IdentityType = '';
-        $userIdentities = TableRegistry::get('User.Identities');
-        $result = $userIdentities
-                    ->find()
-                    ->where([
-                        $userIdentities->aliasField('security_user_id') => $entity->security_user_id,
-                    ])
-                    ->contain(['IdentityTypes'])
-                    ->select([
-                    'IdentityTypes' => $userIdentities->IdentityTypes->aliasField('name'),
-                    'IdentityNumber' => $userIdentities->aliasField('number'),
-                        ])
-                    ->toArray();
-
-        if(!empty($result)) {
-            foreach ($result as $single) {
-                if ($single->IdentityNumber == end($result)->IdentityNumber) {
-                    $IdentityType .= $single->IdentityTypes;
-                } else {
-                    $IdentityType .= $single->IdentityTypes;
-                }
-            }
-        }
-        return $IdentityType;
-    }
-    //End of POCOR-7108
 
 
 }
