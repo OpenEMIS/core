@@ -704,57 +704,103 @@ class AppController extends Controller
         return count($dataArray);
     }//POCOR-7534 ends
 
+
+    private function skipCheckAccessControl($params){
+        $skip = true;
+        if ($params['controller'] == 'Errors') {
+            return $skip;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'logout'){
+            return $skip;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'forgotUsername'){
+            return $skip;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'postForgotUsername'){
+            return $skip;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'forgotPassword'){
+            return $skip;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'postForgotPassword'){
+            return $skip;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'login'){
+            return $skip;
+        }
+        if($params['controller'] == 'Users' &&
+            $params['action'] == 'postLogin'){
+            return $skip;
+        }
+        if($params['controller'] == 'Dashboard' &&
+            $params['action'] == 'index'){
+            return $skip;
+        }
+        if($params['controller'] == 'Translations' &&
+            $params['action'] == 'translate'){
+            return $skip;
+        }
+// POCOR-7833 SKIP WORKFLOW AJAX REQUESTS
+        if($params['controller'] == 'Workflows' &&
+            $params['action'] == 'ajaxGetCases'){
+            return $skip;
+        }
+
+        if($params['controller'] == 'Workflows' &&
+            $params['action'] == 'ajaxGetAssignees'){
+            return $skip;
+        }
+// POCOR-7833
+        $skip = false;
+        return $skip;
+
+    }
+
     private function checkAccessControl()
     {
 
         $params = $this->request->params;
-        $this->log($params, 'debug');
-        if ($params['controller'] == 'Errors') {
+
+// POCOR-7833 REMOVE UNNECESSARY LOGGING
+//        $this->log($params, 'debug');
+// END
+
+        // POCOR-7833 MOVE ALL SKIP ACCESS TO ONE FUNCTION
+        if($this->skipCheckAccessControl($params)){
             return;
         }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'logout'){
-            return;
-        }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'forgotUsername'){
-            return;
-        }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'postForgotUsername'){
-            return;
-        }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'forgotPassword'){
-            return;
-        }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'postForgotPassword'){
-            return;
-        }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'login'){
-            return;
-        }
-        if($params['controller'] == 'Users' &&
-            $params['action'] == 'postLogin'){
-            return;
-        }
-        if($params['controller'] == 'Dashboard' &&
+        // END
+
+        //POCOR-7731 start
+        if($params['controller'] == 'ApiSecurities' &&
             $params['action'] == 'index'){
-            return;
+            return $this->redirect(['controller' => 'Errors', 'action' => 'error404']);
         }
-        if($params['controller'] == 'Translations' &&
-            $params['action'] == 'translate'){
-            return;
-        }
+        //POCOR-7731 end
 
         $check = $this->AccessControl->check($params);
-        $this->log($check, 'debug');
+
+// POCOR-7833 REMOVE UNNECESSARY LOGGING
+//        $this->log($check, 'debug');
+// POCOR-7833 END
+
         if (!$check) {
-//            $this->log($params, 'debug');
-            $this->redirect($this->referer());
+
+// POCOR-7833 ADD CHECKING LOGGING
+            $this->log(__FUNCTION__, 'debug');
+            $this->log($params, 'debug');
+// POCOR-7833 END
+
+// POCOR-7833 REDIRECT TO DASHBOARD
             $this->Alert->warning('general.notAccess');
+            return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
+// POCOR-7833 END
 //            throw new \Exception("No Rights for $class!");
         }
     }
