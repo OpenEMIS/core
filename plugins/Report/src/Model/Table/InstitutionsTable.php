@@ -1709,12 +1709,12 @@ class InstitutionsTable extends AppTable
         $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
         if ($field == 'report_start_date') {
             if ($feature === 'Report.InstitutionAssets') {
-                return __('Previous Year First Day');
+                return __('Prior Year Start');
             }
         }
         if ($field == 'report_end_date') {
             if ($feature === 'Report.InstitutionAssets') {
-                return __('Previous Year Last Day');
+                return __('Prior Year End');
             }
         }
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
