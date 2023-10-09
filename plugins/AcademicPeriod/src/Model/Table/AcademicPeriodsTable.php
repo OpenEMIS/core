@@ -1,6 +1,8 @@
 <?php
+
 namespace AcademicPeriod\Model\Table;
 
+use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -15,8 +17,9 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
 use Cake\I18n\Date;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
+use Cake\Datasource\ConnectionManager;
 
-class AcademicPeriodsTable extends AppTable
+class AcademicPeriodsTable extends ControllerActionTable
 {
     private $_fieldOrder = ['visible', 'current', 'editable', 'code', 'name', 'start_date', 'end_date', 'academic_period_level_id'];
 
@@ -26,57 +29,146 @@ class AcademicPeriodsTable extends AppTable
         $this->belongsTo('Parents', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Levels', ['className' => 'AcademicPeriod.AcademicPeriodLevels', 'foreignKey' => 'academic_period_level_id']);
 
+
         // reference to itself
         $this->hasMany('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'parent_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        // other associated modules
+        $this->hasMany('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AssessmentAssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionAssessmentItemResults', ['className' => 'Institution.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Assessments', ['className' => 'Assessment.Assessments', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentAttendances', ['className' => 'Institution.StudentAttendances', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentClasses', ['className' => 'Student.StudentClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionFees', ['className' => 'Institution.InstitutionFees', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionRubrics', ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionQualityVisits', ['className' => 'Quality.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('RepeaterSurveys', ['className' => 'InstitutionRepeater.RepeaterSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionInstitutionSubjects', ['className' => 'Institution.InstitutionSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
-        // not required. left here for reference
-        // $this->hasMany('ReportInstitutionSubjects', ['className' => 'Report.InstitutionSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentTransferOut', ['className' => 'Institution.StudentTransferOut', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentTransferIn', ['className' => 'Institution.StudentTransferIn', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('WithdrawRequests', ['className' => 'Institution.WithdrawRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentWithdraw', ['className' => 'Institution.StudentWithdraw', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('Students', ['className' => 'Institution.Students', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentFees', ['className' => 'Institution.StudentFees', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentPromotion', ['className' => 'Institution.StudentPromotion', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentTransfer', ['className' => 'Institution.StudentTransfer', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('UndoStudentStatus', ['className' => 'Institution.UndoStudentStatus', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('Programmes', ['className' => 'Student.Programmes', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('RubricStatusPeriods', ['className' => 'Rubric.RubricStatusPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StaffExtracurriculars', ['className' => 'Staff.Extracurriculars', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentExtracurriculars', ['className' => 'Student.Extracurriculars', 'dependent' => true, 'cascadeCallbacks' => false]);//POCOR-6762
-        $this->hasMany('SurveyStatusPeriods', ['className' => 'Survey.SurveyStatusPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'dependent' => true]);
-        $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings', 'dependent' => true]);
-        $this->hasMany('InstitutionFloors', ['className' => 'Institution.InstitutionFloors', 'dependent' => true]);
-        $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true]);
-
-        $this->hasMany('Examinations', ['className' => 'Examination.Examinations', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('CalendarEvents', ['className' => 'calendar_events', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ClassAttendanceRecords', ['className' => 'Institution.ClassAttendanceRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ClassProfileProcesses', ['className' => 'class_profile_processes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ClassProfileTemplates', ['className' => 'class_profile_templates', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ClassProfiles', ['className' => 'class_profiles', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('CompetencyCriterias', ['className' => 'competency_criterias', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('CompetencyItems', ['className' => 'competency_items', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('CompetencyItemsPeriods', ['className' => 'competency_items_periods', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('CompetencyPeriods', ['className' => 'competency_periods', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('CompetencyTemplates', ['className' => 'competency_templates', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('EducationSystems', ['className' => 'education_systems', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentresExaminations', ['className' => 'Examination.ExaminationCentresExaminations', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentresExaminationsStudents', ['className' => 'Examination.ExaminationCentresExaminationsStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationStudentSubjectResults', ['className' => 'Examination.ExaminationStudentSubjectResults', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StaffBehaviours', ['className' => 'Institution.StaffBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('Scholarships', ['className' => 'Scholarship.Scholarships', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ClassAttendanceRecords', ['className' => 'Institution.ClassAttendanceRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Examinations', ['className' => 'Examination.Examinations', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('FeedersInstitutions', ['className' => 'feeders_institutions', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InfrastructureUtilityElectricities', ['className' => 'infrastructure_utility_electricities', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InfrastructureUtilityInternets', ['className' => 'infrastructure_utility_internets', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InfrastructureUtilityTelephones', ['className' => 'infrastructure_utility_telephones', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InfrastructureWashHygienes', ['className' => 'infrastructure_wash_hygienes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InfrastructureWashSanitations', ['className' => 'infrastructure_wash_sanitations', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InfrastructureWashSewages', ['className' => 'infrastructure_wash_sewages', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InfrastructureWashWastes', ['className' => 'infrastructure_wash_wastes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InfrastructureWashWaters', ['className' => 'infrastructure_wash_waters', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionAssessmentItemResults', ['className' => 'Institution.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionAssociationStudent', ['className' => 'institution_association_student', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionAssociations', ['className' => 'institution_associations', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionBudgets', ['className' => 'institution_budgets', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings', 'dependent' => true]);
+        $this->hasMany('InstitutionClassAttendanceRecords', ['className' => 'institution_class_attendance_records', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionCommittees', ['className' => 'Institution.InstitutionCommittees', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionCompetencyItemComments', ['className' => 'institution_competency_item_comments', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionCompetencyPeriodComments', ['className' => 'institution_competency_period_comments', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionCompetencyResults', ['className' => 'institution_competency_results', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionExpenditures', ['className' => 'institution_expenditures', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionFees', ['className' => 'Institution.InstitutionFees', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionFloors', ['className' => 'Institution.InstitutionFloors', 'dependent' => true]);
+        $this->hasMany('InstitutionIncomes', ['className' => 'institution_incomes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionInstitutionSubjects', ['className' => 'Institution.InstitutionSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'dependent' => true]);
+        $this->hasMany('InstitutionMealProgrammes', ['className' => 'institution_meal_programmes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionMealStudents', ['className' => 'institution_meal_students', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionOutcomeResults', ['className' => 'institution_outcome_results', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionOutcomeSubjectComments', ['className' => 'institution_outcome_subject_comments', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionQualityRubrics', ['className' => 'institution_quality_rubrics', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionQualityVisits', ['className' => 'Quality.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionRepeaterSurveys', ['className' => 'institution_repeater_surveys', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionReportCardProcesses', ['className' => 'institution_report_card_processes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionReportCards', ['className' => 'institution_report_cards', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true]);
+        $this->hasMany('InstitutionRubrics', ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionScheduleIntervals', ['className' => 'institution_schedule_intervals', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionScheduleTerms', ['className' => 'institution_schedule_terms', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionScheduleTimetableCustomizes', ['className' => 'institution_schedule_timetable_customizes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionScheduleTimetables', ['className' => 'institution_schedule_timetables', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStaffAttendances', ['className' => 'institution_staff_attendances', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStaffDuties', ['className' => 'institution_staff_duties', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStaffLeave', ['className' => 'institution_staff_leave', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStudentAbsenceDetails', ['className' => 'institution_student_absence_details', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStudentAbsences', ['className' => 'institution_student_absences', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStudentRisks', ['className' => 'institution_student_risks', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStudentSurveys', ['className' => 'institution_student_surveys', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStudentTransfers', ['className' => 'institution_student_transfers', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStudentTransfers', ['className' => 'institution_student_transfers', 'foreignKey' => 'previous_academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStudentVisitRequests', ['className' => 'institution_student_visit_requests', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStudentVisits', ['className' => 'institution_student_visits', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStudentWithdraw', ['className' => 'institution_student_withdraw', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStudentsReportCards', ['className' => 'institution_students_report_cards', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStudentsReportCardsComments', ['className' => 'institution_students_report_cards_comments', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionSubjects', ['className' => 'institution_subjects', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionTextbooks', ['className' => 'institution_textbooks', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionTripPassengers', ['className' => 'institution_trip_passengers', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionTrips', ['className' => 'institution_trips', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionVisitRequests', ['className' => 'institution_visit_requests', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('MealProgrammes', ['className' => 'meal_programmes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('OutcomeCriterias', ['className' => 'outcome_criterias', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('OutcomePeriods', ['className' => 'outcome_periods', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('OutcomeTemplates', ['className' => 'outcome_templates', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ProfileTemplates', ['className' => 'profile_templates', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Programmes', ['className' => 'Student.Programmes', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RepeaterSurveys', ['className' => 'InstitutionRepeater.RepeaterSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ReportCardEmailProcesses', ['className' => 'report_card_email_processes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ReportCardProcesses', ['className' => 'report_card_processes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ReportCards', ['className' => 'report_cards', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Risks', ['className' => 'risks', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('RubricStatusPeriods', ['className' => 'Rubric.RubricStatusPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ScholarshipRecipientAcademicStandings', ['className' => 'scholarship_recipient_academic_standings', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ScholarshipRecipientCollections', ['className' => 'scholarship_recipient_collections', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ScholarshipRecipientPaymentStructures', ['className' => 'scholarship_recipient_payment_structures', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Scholarships', ['className' => 'Scholarship.Scholarships', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffBehaviours', ['className' => 'Institution.StaffBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffExtracurriculars', ['className' => 'student_extracurriculars', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffProfileTemplates', ['className' => 'staff_profile_templates', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffReportCardEmailProcesses', ['className' => 'staff_report_card_email_processes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffReportCardProcesses', ['className' => 'staff_report_card_processes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffReportCards', ['className' => 'staff_report_cards', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentAttendanceMarkTypes', ['className' => 'student_attendance_mark_types', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentAttendanceMarkedRecords', ['className' => 'student_attendance_marked_records', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentAttendances', ['className' => 'Institution.StudentAttendances', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentBehaviours', ['className' => 'student_behaviours', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentClasses', ['className' => 'Student.StudentClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentExtracurriculars', ['className' => 'staff_extracurriculars', 'dependent' => true, 'cascadeCallbacks' => false]);//POCOR-6762
+        $this->hasMany('StudentFees', ['className' => 'Institution.StudentFees', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentMarkTypeStatuses', ['className' => 'student_mark_type_statuses', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentMealMarkedRecords', ['className' => 'student_meal_marked_records', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentProfileTemplates', ['className' => 'student_profile_templates', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentPromotion', ['className' => 'Institution.StudentPromotion', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentReportCardEmailProcesses', ['className' => 'student_report_card_email_processes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentReportCardProcesses', ['className' => 'student_report_card_processes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentReportCards', ['className' => 'student_report_cards', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentStatusUpdates', ['className' => 'student_status_updates', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentTransfer', ['className' => 'Institution.StudentTransfer', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentTransferIn', ['className' => 'Institution.StudentTransferIn', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentTransferOut', ['className' => 'Institution.StudentTransferOut', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentWithdraw', ['className' => 'Institution.StudentWithdraw', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Students', ['className' => 'Institution.Students', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('SummaryAssessmentItemResults', ['className' => 'summary_assessment_item_results', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('SurveyStatusPeriods', ['className' => 'Survey.SurveyStatusPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Textbooks', ['className' => 'textbooks', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('TransferLogs', ['className' => 'transfer_logs', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('UndoStudentStatus', ['className' => 'Institution.UndoStudentStatus', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('UserBodyMasses', ['className' => 'user_body_masses', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('UserSpecialNeedsReferrals', ['className' => 'user_special_needs_referrals', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('UserSpecialNeedsServices', ['className' => 'user_special_needs_services', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('WithdrawRequests', ['className' => 'Institution.WithdrawRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
+
         $this->addBehavior('Tree');
 
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -89,8 +181,9 @@ class AcademicPeriodsTable extends AppTable
             'StudentAttendances' => ['index', 'view'],
             'ScheduleTimetable' => ['index']
         ]);
-        
+
         $this->addBehavior('Institution.Calendar');
+        $this->setDeleteStrategy('restrict');
     }
 
     public function validationDefault(Validator $validator)
@@ -110,8 +203,7 @@ class AcademicPeriodsTable extends AppTable
             ])//POCOR-5917 ends
             ->add('current', 'ruleValidateNeeded', [
                 'rule' => ['validateNeeded', 'current', $additionalParameters],
-            ])
-            ;
+            ]);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
@@ -139,36 +231,36 @@ class AcademicPeriodsTable extends AppTable
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
-    {   
+    {
         // Webhook Academic Period Delete -- Start
         $body = array();
         $body = [
             'academic_period_id' => $entity->id,
-            'parent_id' => $entity->parent_id 
+            'parent_id' => $entity->parent_id
         ];
 
         $Webhooks = TableRegistry::get('Webhook.Webhooks');
-        if($this->Auth->user()){
+        if ($this->Auth->user()) {
             $Webhooks->triggerShell('academic_period_delete', [], $body);
         }
         // Webhook Academic Period Delete -- End
     }
 
-    public function onBeforeDelete(Event $event, ArrayObject $options, $ids)
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $entity = $this->find()->select(['current'])->where($ids)->first();
+//        $entity = $this->find()->select(['current'])->where($ids)->first();
 
         // die silently when a non super_admin wants to delete
         if (!$this->AccessControl->isAdmin()) {
             $event->stopPropagation();
-            $this->controller->redirect($this->ControllerAction->url('index'));
+            $this->controller->redirect($this->url('index'));
         }
 
         // do not allow for deleting of current
         if (!empty($entity) && $entity->current == 1) {
             $event->stopPropagation();
             $this->Alert->warning('general.currentNotDeletable');
-            $this->controller->redirect($this->ControllerAction->url('index'));
+            $this->controller->redirect($this->url('index'));
         }
     }
 
@@ -185,20 +277,20 @@ class AcademicPeriodsTable extends AppTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
-    
-        if($entity->isNew()){
-          
+
+        if ($entity->isNew()) {
+
             $body = array();
             $body = [
-                'academic_period_level_id' =>$entity->academic_period_level_id,
-                'code' =>$entity->code,
-                'name' =>$entity->name,
-                'start_date' =>$entity->start_date,
-                'end_date' =>$entity->end_date,
-                'current' =>$entity->start_date,
-                'academic_period_id' =>'',
+                'academic_period_level_id' => $entity->academic_period_level_id,
+                'code' => $entity->code,
+                'name' => $entity->name,
+                'start_date' => $entity->start_date,
+                'end_date' => $entity->end_date,
+                'current' => $entity->start_date,
+                'academic_period_id' => '',
             ];
-          
+
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $Webhooks->triggerShell('academic_period_create', ['username' => $username], $body);
@@ -206,16 +298,16 @@ class AcademicPeriodsTable extends AppTable
         }
 
         //webhook academic period update starts
-        if(!$entity->isNew()) {
+        if (!$entity->isNew()) {
             $body = array();
             $updateBody = [
-                'academic_period_level_id' =>$entity->academic_period_level_id,
-                'code' =>$entity->code,
-                'name' =>$entity->name,
-                'start_date' =>$entity->start_date,
-                'end_date' =>$entity->end_date,
-                'current' =>$entity->start_date,
-                'academic_period_id' =>$entity->id,
+                'academic_period_level_id' => $entity->academic_period_level_id,
+                'code' => $entity->code,
+                'name' => $entity->name,
+                'start_date' => $entity->start_date,
+                'end_date' => $entity->end_date,
+                'current' => $entity->start_date,
+                'academic_period_id' => $entity->id,
             ];
             $Webhooks = TableRegistry::get('Webhook.Webhooks');
             if ($this->Auth->user()) {
@@ -226,42 +318,39 @@ class AcademicPeriodsTable extends AppTable
         // webhook academic period update ends
 
 
-      
-
     }
-    
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
-      
-       
+
+
         //POCOR-5917 starts
-        if(isset($entity->old_end_date) && !empty($entity->old_end_date) && isset($entity->old_end_year) && !empty($entity->old_end_year)){ //when edit academic period
-            $academic_end_date = (new Date($entity->old_end_date))->format('Y-m-d'); 
-            $academic_end_year = $entity->old_end_year; 
+        if (isset($entity->old_end_date) && !empty($entity->old_end_date) && isset($entity->old_end_year) && !empty($entity->old_end_year)) { //when edit academic period
+            $academic_end_date = (new Date($entity->old_end_date))->format('Y-m-d');
+            $academic_end_year = $entity->old_end_year;
             $institutionStudents = TableRegistry::get('institution_students');
-       
+
             $institutionStudentsData = $institutionStudents
-                                            ->find()
-                                            ->where([
-                                                $institutionStudents->aliasField('end_date') => $academic_end_date,
-                                                $institutionStudents->aliasField('end_year') => $academic_end_year,
-                                                $institutionStudents->aliasField('student_status_id') => 1
-                                            ])->toArray();
-            if(!empty($institutionStudentsData)){
-               
+                ->find()
+                ->where([
+                    $institutionStudents->aliasField('end_date') => $academic_end_date,
+                    $institutionStudents->aliasField('end_year') => $academic_end_year,
+                    $institutionStudents->aliasField('student_status_id') => 1
+                ])->toArray();
+            if (!empty($institutionStudentsData)) {
+
                 foreach ($institutionStudentsData as $key => $val) {
                     $institution_students_end_date = (new Date($entity->end_date))->format('Y-m-d');
                     $institution_students_end_year = $entity->end_year;
-                    $institutionStudentsEntity = $this->patchEntity($val, ['end_date' => $institution_students_end_date, 'end_year' =>$institution_students_end_year], ['validate' =>false]);
+                    $institutionStudentsEntity = $this->patchEntity($val, ['end_date' => $institution_students_end_date, 'end_year' => $institution_students_end_year], ['validate' => false]);
 
-                    $institutionStudents->save($institutionStudentsEntity);  
+                    $institutionStudents->save($institutionStudentsEntity);
                 }
-            }                                
+            }
         }
         //POCOR-5917 ends
         //POCOR-6825[START] : this functionality is moved to Administrations > Data management >Copy
-        
+
         // $canCopy = $this->checkIfCanCopy($entity);
 
         // $shells = ['Infrastructure', 'Shift'];
@@ -295,15 +384,26 @@ class AcademicPeriodsTable extends AppTable
         }
     }
 
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        if ($parentId != null) {
+            $query->where([$this->aliasField('parent_id') => $parentId]);
+        } else {
+            $query->where([$this->aliasField('parent_id') . ' IS NULL']);
+        }
+    }
+
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
-     
+
         $this->addAfterSave($event, $entity, $requestData);
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->ControllerAction->field('academic_period_level_id');
+//        $this->log('before', 'debug');
+        $this->field('academic_period_level_id');
         $this->fields['start_year']['visible'] = false;
         $this->fields['end_year']['visible'] = false;
         $this->fields['school_days']['visible'] = false;
@@ -311,21 +411,22 @@ class AcademicPeriodsTable extends AppTable
         $this->fields['rght']['visible'] = false;
     }
 
-    public function afterAction(Event $event)
+    public function afterAction(Event $event, ArrayObject $extra)
     {
-        $this->ControllerAction->field('current');
-        // $this->ControllerAction->field('copy_data_from', [
-        //     'type' => 'hidden',
-        //     'value' => 0,
-        //     'after' => 'current'
-        // ]);
-        $this->ControllerAction->field('editable');
+//        $this->log('after', 'debug');
+        $this->field('current');
+//        $this->field('copy_data_from', [
+//            'type' => 'hidden',
+//            'value' => 0,
+//            'after' => 'current'
+//        ]);
+        $this->field('editable');
         foreach ($this->_fieldOrder as $key => $value) {
             if (!in_array($value, array_keys($this->fields))) {
                 unset($this->_fieldOrder[$key]);
             }
         }
-        $this->ControllerAction->setFieldOrder($this->_fieldOrder);
+        $this->setFieldOrder($this->_fieldOrder);
     }
 
     public function editBeforeQuery(Event $event, Query $query)
@@ -336,7 +437,7 @@ class AcademicPeriodsTable extends AppTable
     public function editAfterAction(Event $event, Entity $entity)
     {
         $this->request->data[$this->alias()]['current'] = $entity->current;
-        $this->ControllerAction->field('visible');
+        $this->field('visible');
 
         // set academic_period_level_id to not editable to prevent any classes/subjects to not in Year level
         $this->fields['academic_period_level_id']['type'] = 'readonly';
@@ -344,8 +445,9 @@ class AcademicPeriodsTable extends AppTable
         $this->fields['academic_period_level_id']['attr']['value'] = $entity->level->name;
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+//        $this->log('indexBeforeAction', 'debug');
         // Add breadcrumb
         $toolbarElements = [
             ['name' => 'AcademicPeriod.breadcrumb', 'data' => [], 'options' => []]
@@ -373,7 +475,7 @@ class AcademicPeriodsTable extends AppTable
                     ->first()
                     ->id;
 
-                $action = $this->ControllerAction->url('index');
+                $action = $this->url('index');
                 $action['parent'] = $parentId;
                 return $this->controller->redirect($action);
             }
@@ -386,7 +488,7 @@ class AcademicPeriodsTable extends AppTable
         $query->where([$this->aliasField('parent_id') => $parentId]);
     }
 
-    public function addEditBeforeAction(Event $event)
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         //Setup fields
         $this->_fieldOrder = ['academic_period_level_id', 'code', 'name'];
@@ -410,10 +512,8 @@ class AcademicPeriodsTable extends AppTable
                 $parentPath .= $crumb === end($crumbs) ? '' : ' > ';
             }
 
-            $this->ControllerAction->field('parent', [
-                'type' => 'readonly',
-                'attr' => ['value' => $parentPath]
-            ]);
+            $this->fields['parent']['type'] = 'readonly';
+            $this->fields['parent']['attr']['value'] = $parentPath;
 
             array_unshift($this->_fieldOrder, 'parent');
         }
@@ -438,6 +538,7 @@ class AcademicPeriodsTable extends AppTable
     {
         return $entity->editable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
+
     // End PHPOE-1916
 
     public function onGetName(Event $event, Entity $entity)
@@ -466,19 +567,19 @@ class AcademicPeriodsTable extends AppTable
             $levelId = $data->academic_period_level_id;
 
             $levelResults = $this->Levels
-                        ->find()
-                        ->select([$this->Levels->aliasField('level')])
-                        ->where([$this->Levels->aliasField('id') => $levelId])
-                        ->all();
+                ->find()
+                ->select([$this->Levels->aliasField('level')])
+                ->where([$this->Levels->aliasField('id') => $levelId])
+                ->all();
 
             if (!$levelResults->isEmpty()) {
                 $levelData = $levelResults->first();
                 $level = $levelData->level;
 
                 $levelOptions = $this->Levels
-                            ->find('list')
-                            ->where([$this->Levels->aliasField('level >') => $level])
-                            ->toArray();
+                    ->find('list')
+                    ->where([$this->Levels->aliasField('level >') => $level])
+                    ->toArray();
                 $attr['options'] = $levelOptions;
             }
         }
@@ -607,9 +708,9 @@ class AcademicPeriodsTable extends AppTable
             ->first();
         $where = [
             $this->aliasField('current !=') => 1,
-            $this->aliasField('id IN')  => $academicPeriod
+            $this->aliasField('id IN') => $academicPeriod
         ];
-        
+
 
         $data = $this
             ->find('list')
@@ -675,22 +776,29 @@ class AcademicPeriodsTable extends AppTable
     {
 //        $this->log('findAcademicPeriodStaffAttendanceArchived', 'debug');
 //        $this->log($options, 'debug');
-        $academicPeriodStaffAttendanceArrayId = [];
+        $academicPeriodStaffAttendanceArrayId = [0];
         $academicPeriodStaffAttendanceArray = ArchiveConnections::getArchiveYears('institution_staff_attendances',
             ['institution_id' => $options['institution_id']]);
-        if(sizeof($academicPeriodStaffAttendanceArray) > 0){
+        $academicPeriodStaffLeaveArray = ArchiveConnections::getArchiveYears('institution_staff_leave',
+            ['institution_id' => $options['institution_id']]);
+        $academicPeriodStaffAttendanceArray = array_unique(
+            array_merge(
+                $academicPeriodStaffAttendanceArray, $academicPeriodStaffLeaveArray
+            )
+        );
+        if (sizeof($academicPeriodStaffAttendanceArray) > 0) {
             $academicPeriodStaffAttendanceArrayId = $academicPeriodStaffAttendanceArray;
         }
 //        $this->log('$academicPeriodStaffAttendanceArchived', 'debug');
 //        $this->log("$academicPeriodStaffAttendanceArray", 'debug');
         $where = [
             $this->aliasField('current !=') => 1,
-            $this->aliasField('id IN')  => $academicPeriodStaffAttendanceArrayId
+            $this->aliasField('id IN') => $academicPeriodStaffAttendanceArrayId
         ];
         return $query->where($where);
     }
 
-    public function getList($params=[])
+    public function getList($params = [])
     {
         $withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : true;
         $withSelect = array_key_exists('withSelect', $params) ? $params['withSelect'] : false;
@@ -755,7 +863,7 @@ class AcademicPeriodsTable extends AppTable
         }
 
         if ($withSelect) {
-            $data = ['' => '-- ' . __('Select Period') .' --'] + $data;
+            $data = ['' => '-- ' . __('Select Period') . ' --'] + $data;
         }
 
         return $data;
@@ -805,7 +913,7 @@ class AcademicPeriodsTable extends AppTable
         $daysPerWeek = $ConfigItems->value('days_per_week');
         $lastDayIndex = ($firstDayOfWeek + $daysPerWeek - 1) % 7;
         $week = [];
-        for ($i=0; $i<$daysPerWeek; $i++) {
+        for ($i = 0; $i < $daysPerWeek; $i++) {
             $week[] = $weekdays[$firstDayOfWeek++];
             $firstDayOfWeek = $firstDayOfWeek % 7;
         }
@@ -906,7 +1014,7 @@ class AcademicPeriodsTable extends AppTable
         }
     }
 
-    public function getAvailableAcademicPeriods($list = true, $order='DESC')
+    public function getAvailableAcademicPeriods($list = true, $order = 'DESC')
     {
         if ($list) {
             $query = $this->find('list', ['keyField' => 'id', 'valueField' => 'name']);
@@ -914,19 +1022,20 @@ class AcademicPeriodsTable extends AppTable
             $query = $this->find();
         }
         $result = $query->where([
-                        $this->aliasField('editable') => 1,
-                        $this->aliasField('visible') . ' >' => 0,
-                        $this->aliasField('parent_id') . ' >' => 0
-                    ])
-                    ->order($this->aliasField('name') . ' ' . $order);
+            $this->aliasField('editable') => 1,
+            $this->aliasField('visible') . ' >' => 0,
+            $this->aliasField('parent_id') . ' >' => 0
+        ])
+            ->order($this->aliasField('name') . ' ' . $order);
         if ($result) {
             return $result->toArray();
         } else {
             return false;
         }
     }
+
     //POCOR-6347 starts
-    public function getAvailableAcademicPeriodsById($id, $list = true, $order='DESC')
+    public function getAvailableAcademicPeriodsById($id, $list = true, $order = 'DESC')
     {
         if ($list) {
             $query = $this->find('list', ['keyField' => 'id', 'valueField' => 'name']);
@@ -934,12 +1043,12 @@ class AcademicPeriodsTable extends AppTable
             $query = $this->find();
         }
         $result = $query->where([
-                        $this->aliasField('editable') => 1,
-                        $this->aliasField('visible') . ' >' => 0,
-                        $this->aliasField('parent_id') . ' >' => 0,
-                        $this->aliasField('id') => $id
-                    ])
-                    ->order($this->aliasField('name') . ' ' . $order);
+            $this->aliasField('editable') => 1,
+            $this->aliasField('visible') . ' >' => 0,
+            $this->aliasField('parent_id') . ' >' => 0,
+            $this->aliasField('id') => $id
+        ])
+            ->order($this->aliasField('name') . ' ' . $order);
         if ($result) {
             return $result->toArray();
         } else {
@@ -950,27 +1059,27 @@ class AcademicPeriodsTable extends AppTable
     public function getCurrent()
     {
         $query = $this->find()
-                    ->select([$this->aliasField('id')])
-                    ->where([
-                        $this->aliasField('editable') => 1,
-                        $this->aliasField('visible').' > 0',
-                        $this->aliasField('current') => 1,
-                        $this->aliasField('parent_id').' > 0',
-                    ])
-                    ->order(['start_date DESC']);
+            ->select([$this->aliasField('id')])
+            ->where([
+                $this->aliasField('editable') => 1,
+                $this->aliasField('visible') . ' > 0',
+                $this->aliasField('current') => 1,
+                $this->aliasField('parent_id') . ' > 0',
+            ])
+            ->order(['start_date DESC']);
         $countQuery = $query->count();
         if ($countQuery > 0) {
             $result = $query->first();
             return $result->id;
         } else {
             $query = $this->find()
-                    ->select([$this->aliasField('id')])
-                    ->where([
-                        $this->aliasField('editable') => 1,
-                        $this->aliasField('visible').' > 0',
-                        $this->aliasField('parent_id').' > 0',
-                    ])
-                    ->order(['start_date DESC']);
+                ->select([$this->aliasField('id')])
+                ->where([
+                    $this->aliasField('editable') => 1,
+                    $this->aliasField('visible') . ' > 0',
+                    $this->aliasField('parent_id') . ' > 0',
+                ])
+                ->order(['start_date DESC']);
             $countQuery = $query->count();
             if ($countQuery > 0) {
                 $result = $query->first();
@@ -1117,8 +1226,8 @@ class AcademicPeriodsTable extends AppTable
 
     public function triggerCopyShell($shellName, $copyFrom, $copyTo)
     {
-        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$copyFrom.' '.$copyTo;
-        $logs = ROOT . DS . 'logs' . DS . $shellName.'_copy.log & echo $!';
+        $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $shellName . ' ' . $copyFrom . ' ' . $copyTo;
+        $logs = ROOT . DS . 'logs' . DS . $shellName . '_copy.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
         $pid = exec($shellCmd);
         Log::write('debug', $shellCmd);
@@ -1127,14 +1236,14 @@ class AcademicPeriodsTable extends AppTable
     public function getLatest()
     {
         $query = $this->find()
-                ->select([$this->aliasField('id')])
-                ->where([
-                    $this->aliasField('editable') => 1,
-                    $this->aliasField('visible').' > 0',
-                    $this->aliasField('parent_id').' > 0',
-                    $this->aliasField('academic_period_level_id') => 1
-                ])
-                ->order(['start_date DESC']);
+            ->select([$this->aliasField('id')])
+            ->where([
+                $this->aliasField('editable') => 1,
+                $this->aliasField('visible') . ' > 0',
+                $this->aliasField('parent_id') . ' > 0',
+                $this->aliasField('academic_period_level_id') => 1
+            ])
+            ->order(['start_date DESC']);
         $countQuery = $query->count();
         if ($countQuery > 0) {
             $result = $query->first();
@@ -1181,60 +1290,59 @@ class AcademicPeriodsTable extends AppTable
         return $academicPeriodId;
     }
 
-    public function getMealWeeksForPeriod($academicPeriodId){
+    public function getMealWeeksForPeriod($academicPeriodId)
+    {
         $model = $this;
         $query = $this->AcademicPeriods->find()
-                ->where([$this->aliasField('id') => $academicPeriodId])
-                 ->all();
-     
+            ->where([$this->aliasField('id') => $academicPeriodId])
+            ->all();
 
 
-         $todayDate = date("Y-m-d");
-                    $weekOptions = [];
-                    $selectedIndex = 0;
+        $todayDate = date("Y-m-d");
+        $weekOptions = [];
+        $selectedIndex = 0;
 
-                    $weeks = $model->getAttendanceWeeks($academicPeriodId);
+        $weeks = $model->getAttendanceWeeks($academicPeriodId);
 
-                    $weekStr = __('Week') . ' %d (%s - %s)';
-                    $currentWeek = null;
+        $weekStr = __('Week') . ' %d (%s - %s)';
+        $currentWeek = null;
 
-                    foreach ($weeks as $index => $dates) {
-                        $startDay = $dates[0]->format('Y-m-d');
-                        $endDay = $dates[1]->format('Y-m-d');
-                        $weekAttr = [];
-                        if ($todayDate >= $startDay && $todayDate <= $endDay) {
-                            $weekStr = __('Current Week') . ' %d (%s - %s)';
-                            // $weekAttr['selected'] = true;
-                            $currentWeek = $index;
-                        } else {
-                            $weekStr = __('Week') . ' %d (%s - %s)';
-                        }
+        foreach ($weeks as $index => $dates) {
+            $startDay = $dates[0]->format('Y-m-d');
+            $endDay = $dates[1]->format('Y-m-d');
+            $weekAttr = [];
+            if ($todayDate >= $startDay && $todayDate <= $endDay) {
+                $weekStr = __('Current Week') . ' %d (%s - %s)';
+                // $weekAttr['selected'] = true;
+                $currentWeek = $index;
+            } else {
+                $weekStr = __('Week') . ' %d (%s - %s)';
+            }
 
-                        $weekAttr['name'] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
-                        $weekAttr['start_day'] = $startDay;
-                        $weekAttr['end_day'] = $endDay;
-                        $weekAttr['id'] = $index;
-                        $weekOptions[] = $weekAttr;
+            $weekAttr['name'] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
+            $weekAttr['start_day'] = $startDay;
+            $weekAttr['end_day'] = $endDay;
+            $weekAttr['id'] = $index;
+            $weekOptions[] = $weekAttr;
 
-                        if ($todayDate >= $startDay && $todayDate <= $endDay) {
-                            end($weekOptions);
-                            $selectedIndex = key($weekOptions);
-                        }
-                    }
+            if ($todayDate >= $startDay && $todayDate <= $endDay) {
+                end($weekOptions);
+                $selectedIndex = key($weekOptions);
+            }
+        }
 
-                    $weekOptions[$selectedIndex]['selected'] = true;
-                   
-                    
-            return $weekOptions;
-       
+        $weekOptions[$selectedIndex]['selected'] = true;
+
+
+        return $weekOptions;
+
     }
 
-    
     public function findWeeksForPeriod(Query $query, array $options)
     {
         $academicPeriodId = $options['academic_period_id'];
         $model = $this;
-        
+
         return $query
             ->where([$this->aliasField('id') => $academicPeriodId])
             ->formatResults(function (ResultSetInterface $results) use ($model) {
@@ -1375,7 +1483,6 @@ class AcademicPeriodsTable extends AppTable
             });
     }
 
-
     public function findPeriodHasClass(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
@@ -1401,32 +1508,65 @@ class AcademicPeriodsTable extends AppTable
             });
     }
 
-    public function findPeriodHasClassArchive(Query $query, array $options)
+    /**
+     * @param Query $query
+     * @param array $options
+     * @return Query
+     * @throws \Exception
+     */
+    public function findPeriodHasClassArchived(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
-        $currentYearId = $this->getCurrent();
-        $currentYear = date('Y');
+        $institutionClassIds = $this->getInstitutionClasses($institutionId);
+        $academicPeriodArrayOne =
+            ArchiveConnections::getArchiveYears('institution_class_attendance_records',
+                ['institution_class_id IN' => $institutionClassIds]);
+        $academicPeriodArrayTwo =
+            ArchiveConnections::getArchiveYears('institution_student_absences',
+                ['institution_id' => $institutionId]);
+        $academicPeriodArrayThree =
+            ArchiveConnections::getArchiveYears('institution_student_absence_details',
+                ['institution_id' => $institutionId]);
+        $academicPeriodArrayFour =
+            ArchiveConnections::getArchiveYears('student_attendance_marked_records',
+                ['institution_id' => $institutionId]);
 
-        return $query
-            ->select([
-                $this->aliasField('id'),
-                $this->aliasField('name')
-            ])
-            ->find('years')
-            ->matching('InstitutionClasses', function ($q) use ($institutionId) {
-                return $q->where(['InstitutionClasses.institution_id' => $institutionId]);
-            })
-            ->where([$this->aliasField('current') => 0 , $this->aliasField('name <> ') => $currentYear])
-            ->group([$this->aliasField('id')])
-            ->formatResults(function (ResultSetInterface $results) use ($currentYearId) {
-                return $results->map(function ($row) use ($currentYearId) {
-                    if ($row->id == $currentYearId) {
-                        $row->selected = true;
-                    }
-                    return $row;
-                });
-            });
+        $academicPeriodWithArchiveArrayId = [0];
+        $academicPeriodWithArchiveArray = array_unique(
+            array_merge($academicPeriodArrayOne,
+                $academicPeriodArrayTwo,
+                $academicPeriodArrayThree,
+                $academicPeriodArrayFour)
+        );
+        if (sizeof($academicPeriodWithArchiveArray) > 0) {
+            $academicPeriodWithArchiveArrayId = $academicPeriodWithArchiveArray;
+        }
+//        $this->log('$academicPeriodWithArchiveArrayId', 'debug');
+//        $this->log($academicPeriodWithArchiveArrayId, 'debug');
+        $where = [
+            $this->aliasField('current !=') => 1,
+            $this->aliasField('id IN') => $academicPeriodWithArchiveArrayId
+        ];
+        return $query->where($where);
     }
+
+    /**
+     * @param $institutionId
+     * @return array
+     */
+    private function getInstitutionClasses($institutionId)
+    {
+        $tableClasses = TableRegistry::get('institution_classes');
+        $distinctClasses = $tableClasses->find('all')
+            ->where(['institution_id' => $institutionId])
+            ->select(['id'])
+            ->distinct(['id'])
+            ->toArray();
+        $distinctClassValues = array_column($distinctClasses, 'id');
+        $institutionClassIds = array_unique($distinctClassValues);
+        return $institutionClassIds;
+    }
+
 
     public function findWorkingDayOfWeek(Query $query, array $options)
     {
@@ -1439,7 +1579,7 @@ class AcademicPeriodsTable extends AppTable
                 'day' => $day
             ];
         }
-        
+
         return $query->formatResults(function (ResultSetInterface $results) use ($dayOfWeek) {
             return $dayOfWeek;
         });
@@ -1492,6 +1632,25 @@ class AcademicPeriodsTable extends AppTable
                     $schoolClosed = false;
                 } else {
                     $schoolClosed = $this->isSchoolClosed($firstDayOfWeek, $institutionId);
+                    //POCOR-7787 start
+                    if ($schoolClosed) {
+                        $connection = ConnectionManager::get('default');
+                        $sql = "SELECT institution_shift_periods.period_id  FROM calendar_event_dates
+                            INNER JOIN calendar_events ON calendar_events.id = calendar_event_dates.calendar_event_id 
+                            INNER JOIN institution_shifts ON calendar_events.academic_period_id = institution_shifts.academic_period_id 
+                                    AND calendar_events.institution_id = institution_shifts.institution_id 
+                                    AND calendar_events.institution_shift_id = institution_shifts.shift_option_id 
+                            INNER JOIN calendar_types ON calendar_types.id = calendar_events.calendar_type_id
+                            INNER JOIN institution_shift_periods ON institution_shift_periods.institution_shift_period_id = institution_shifts.id 
+                            WHERE calendar_event_dates.date = '" . $firstDayOfWeek->format('Y-m-d') . "' AND calendar_types.is_attendance_required = 0";
+
+                        $result = $connection->execute($sql)->fetchAll('assoc');
+                        $closedPeriods = [];
+                        foreach ($result as $data) {
+                            $closedPeriods[] = $data['period_id'];
+                        }
+                    }
+                    //POCOR-7787 end
                 }
                 $suffix = $schoolClosed ? __('School Closed') : '';
 
@@ -1506,6 +1665,7 @@ class AcademicPeriodsTable extends AppTable
 
                 if ($schoolClosed) {
                     $data['closed'] = true;
+                    $data['periods'] = $closedPeriods;//POCOR-7787
                 }
 
                 $dayOptions[] = $data;
@@ -1537,10 +1697,7 @@ class AcademicPeriodsTable extends AppTable
         $lastDay = new Date($options['end_date']);
         $institutionId = $options['institution_id'];
         $today = null;
-//        $this->log('findDaysForPeriodWeekArchive', 'debug');
-//        $this->log($firstDay, 'debug');
-//        $this->log($lastDay, 'debug');
-//        $this->log($institutionId, 'debug');
+
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
         $daysPerWeek = $ConfigItems->value('days_per_week');
@@ -1559,7 +1716,7 @@ class AcademicPeriodsTable extends AppTable
                 $data = [
                     'id' => $firstDay->dayOfWeek,
                     'day' => __($firstDay->format('l')),
-                    'name' => __($firstDay->format('l')) . ' (' . $this->formatDate($firstDay) . ') ' . $suffix ,
+                    'name' => __($firstDay->format('l')) . ' (' . $this->formatDate($firstDay) . ') ' . $suffix,
                     'date' => $firstDay->format('Y-m-d'),
                     'day_number' => $firstDay->isToday() //POCOR-6723
                 ];
@@ -1584,16 +1741,15 @@ class AcademicPeriodsTable extends AppTable
             ->limit(1)
             ->formatResults(function (ResultSetInterface $results) use ($dayOptions) {
                 return $dayOptions;
-            })
-        ;
-//        return $dayOptions;
+            });
+
     }
 
     public function getNextAcademicPeriodId($id)
     {
         $selectedPeriod = $id;
-        $periodLevelId= $this->get($selectedPeriod)->academic_period_level_id;
-        $startDate= $this->get($selectedPeriod)->start_date->format('Y-m-d');
+        $periodLevelId = $this->get($selectedPeriod)->academic_period_level_id;
+        $startDate = $this->get($selectedPeriod)->start_date->format('Y-m-d');
 
         $where = [
             $this->aliasField('id <>') => $selectedPeriod,

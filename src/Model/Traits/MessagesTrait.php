@@ -131,7 +131,8 @@ trait MessagesTrait
                     'telephone' => 'Telephone cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
                     'fax' => 'Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
                     'both' => 'Telephone & Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution'
-            ]
+            ],
+            'dateCheck' =>'Please enter effective date.' //POCOR-7769
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
@@ -183,7 +184,7 @@ trait MessagesTrait
             'change_in_building_type' => [
                 'restrictEdit' => 'Not allowed to change building type in the same day.'
             ],
-            'sizeGreater' => 'Please adjust the building size to be smaller than the land size to proceed.'
+            'sizeGreater' => 'Please adjust the building size to be smaller than or equal to the land size to proceed.' //POCOR-7826
         ],
         'InstitutionFloors' => [
             'noFloors' => 'No Floor found',
@@ -198,7 +199,7 @@ trait MessagesTrait
             'change_in_floor_type' => [
                 'restrictEdit' => 'Not allowed to change floor type in the same day.'
             ],
-            'sizeGreater' => 'Please adjust the floor size to be smaller than the building size to proceed.'
+            'sizeGreater' => 'Please adjust the floor size to be smaller than or equal to the building size to proceed.' //POCOR-7826
         ],
         'InstitutionRooms' => [
             'noRooms' => 'No Room found',
@@ -214,7 +215,7 @@ trait MessagesTrait
                 'restrictEdit' => 'Not allowed to change room type in the same day.'
             ],
             'select_subject' => 'Select Subject',
-            'sizeGreater' => 'Please adjust the room size to be smaller than the floor size to proceed.'
+            'sizeGreater' => 'Please adjust the room size to be smaller or equal to the floor size to proceed.' //POCOR-7826
         ],
         'InfrastructureCustomFields' => [
             'infrastructure_level_id' => 'Level Name'
@@ -398,7 +399,9 @@ trait MessagesTrait
                 'fail' => 'You have entered an invalid username or password.',
                 'inactive' => 'Your account has been disabled.',
                 'remoteFail' => 'Remote authentication failed, please try local login.',
-                'changePassword' => 'This is the first time that you are logging in, please change your password.'
+                'changePassword' => 'This is the first time that you are logging in, please change your password.',
+                'locked_account'=> 'Your account has been locked. Please contact system administrator for assistance.'//POCOR-2976
+            
             ],
             'noAccess' => 'You do not have access to this location.',
             'emptyFields' => 'Some of the required fields for this authentication type are empty.'
@@ -514,6 +517,11 @@ trait MessagesTrait
         'WorkflowStatuses' => [
             'noSteps' => 'No Available Workflow Steps'
         ],
+        //POCOR-7613 start
+        'Cases'=>[
+            'noAssignee' => 'Configuration for Workflow Assignee is incomplete. Please contact System Administrator.'
+        ],
+        //POCOR-7613 end
         'InstitutionQualityVisits' => [
             'noPeriods' => 'No Available Periods',
             'noClasses' => 'No Available Classes',
@@ -2574,6 +2582,7 @@ trait MessagesTrait
             ]
         ],
         'Archive' => [
+            'notSuperAdmin' => 'You have no permission to archive.',
             'lessSpace' => 'Please make sure there is enough space for backup.',
             'backupReminder' => 'Please remember to backup first before you proceed to transfer this data. Transfer is not possible for the current Academic Period. After the transfer is completed, the Academic Period will be updated to non-editable and non-visible.',
             'currentAcademic' => 'Please do not transfer data of current Academic Period.'

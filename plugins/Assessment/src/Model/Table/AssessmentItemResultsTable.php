@@ -668,17 +668,128 @@ class AssessmentItemResultsTable extends AppTable
 
     /**
      * @param $options
+     * @param $archive
+     * @return array
+     */
+    public static function getClassAssessmentItemResults($options, $archive)
+    {
+        $marks = self::getMarksForClass($options, $archive);
+        $marksWithSubjectClassificationWeight = self::getMarksWithSimpleMarks($marks);
+        $marksPerStudent = self::getMarksPerStudentPerSubjectArray($marksWithSubjectClassificationWeight);
+        return $marksPerStudent;
+    }
+
+    /**
+     * @param array $params
+     * @param bool $archive
      * @return float|null
      */
-    public static function getLastMark($options, $archive=false)
+
+    private static function getMarksForClass(array $params, $archive = false)
+    {
+        $academic_period_id = self::getFromArray($params, 'academic_period_id');
+        $institution_id = self::getFromArray($params, 'institution_id');
+        $institution_class_id = self::getFromArray($params, 'class_id');
+        if (!$institution_class_id) {
+            $institution_class_id = self::getFromArray($params, 'institution_class_id');
+        }
+        if (!$institution_class_id) {
+            $institution_class_id = self::getFromArray($params, 'institution_classes_id');
+
+        }
+        $assessment_id = self::getFromArray($params, 'assessment_id');
+        $education_grade_id = self::getFromArray($params, 'grade_id');
+        $student_id = self::getFromArray($params, 'student_id');
+        $education_subject_id = self::getFromArray($params, 'education_subject_id');
+        if (!$education_subject_id) {
+            $education_subject_id = -1;
+        }
+        $assessment_period_id = self::getFromArray($params, 'assessment_period_id');
+        if (!$assessment_period_id) {
+            $assessment_period_id = -1;
+        }
+        $assessment_grading_option_id = self::getFromArray($params, 'assessment_grading_option_id');
+        if (!$assessment_grading_option_id) {
+            $assessment_grading_option_id = -1;
+        }
+        if (!$education_grade_id) {
+            $education_grade_id = -1;
+        }
+        if (!$academic_period_id) {
+            $academic_period_id = -1;
+        }
+        if (!$institution_id) {
+            $institution_id = -1;
+        }
+        if (!$assessment_id ) {
+            $assessment_id = -1;
+        }
+        if (!$student_id) {
+            $student_id = -1;
+        }
+        $id = -1;
+        $options = ["student_id" => $student_id,
+            "institution_id" => $institution_id,
+            "institution_class_id" => $institution_class_id,
+            "academic_period_id" => $academic_period_id,
+            "education_grade_id" => $education_grade_id,
+            "education_subject_id" => $education_subject_id,
+            "id" => $id,
+            'assessment_grading_option_id' => $assessment_grading_option_id,
+            "assessment_period_id" => $assessment_period_id,
+            'assessment_id' => $assessment_id,
+            'archive' => $archive];
+        $marks = self::getLastMark($options);
+        return $marks;
+    }
+
+    /**
+     * @param array $marksWithSubjectClassificationWeight
+     * @return array
+     */
+    private static function getMarksPerStudentPerSubjectArray(array $marksWithSubjectClassificationWeight)
+    {
+        $marksPerStudent = [];
+        foreach ($marksWithSubjectClassificationWeight as $record) {
+            $studentId = $record['student_id'];
+            $assessment_period_id = $record['assessment_period_id'];
+            $subject_id = $record['education_subject_id'];
+            $marksPerStudent[$studentId][$subject_id][$assessment_period_id][] = $record;
+        }
+        return $marksPerStudent;
+    }
+
+    /**
+     * @param array $marks
+     * @return array
+     */
+    private static function getMarksWithSimpleMarks(array $marks)
+    {
+        $new_marks = [];
+        foreach ($marks as $mark) {
+            $simple_mark = floatval($mark['marks']);
+            $mark['simple_mark'] = $simple_mark;
+            $new_marks[] = $mark;
+        }
+//        }
+        return $new_marks;
+    }
+
+    /**
+     * @param $options
+     * @return |null
+     * @throws \Exception
+     */
+    public static function getLastMark($options)
     {
 //        echo('$options');
 //        Log::write('debug', $options);
         $id = $options['id'];
-        $student_id = self::getFromArray($options,'student_id');
-        $academic_period_id = self::getFromArray($options,'academic_period_id');
-        $education_grade_id = self::getFromArray($options,'education_grade_id');
-        if($education_grade_id == null){
+        $student_id = self::getFromArray($options, 'student_id');
+        $archive = self::getFromArray($options, 'archive');
+        $academic_period_id = self::getFromArray($options, 'academic_period_id');
+        $education_grade_id = self::getFromArray($options, 'education_grade_id');
+        if (!$education_grade_id) {
             $education_grade_id = self::getFromArray($options, 'grade_id');
         }
         $education_subject_id = self::getFromArray($options,'education_subject_id');
@@ -687,11 +798,16 @@ class AssessmentItemResultsTable extends AppTable
         $assessment_grading_option_id = self::getFromArray($options, 'assessment_grading_option_id');
         $institution_id = self::getFromArray($options, 'institution_id');
         $institution_classes_id = self::getFromArray($options, 'institution_class_id');
-        if($institution_classes_id == null){
+        $institution_class_students_where = 'INNER JOIN institution_class_students on institution_class_students.student_id
+            = all_results.student_id';
+        if (!$institution_classes_id) {
             $institution_classes_id = self::getFromArray($options, 'class_id');
         }
-        if($institution_classes_id == null){
+        if (!$institution_classes_id) {
             $institution_classes_id = self::getFromArray($options, 'institution_classes_id');
+        }
+        if (!$institution_classes_id) {
+            $institution_classes_id = self::getFromArray($options, 'institution_class_id');
         }
         $select = 'all_results.marks, ';
         if ($id) {
@@ -724,42 +840,50 @@ class AssessmentItemResultsTable extends AppTable
         if ($institution_classes_id) {
             $select = $select . 'all_results.institution_classes_id, ';
         }
-        $where = "WHERE 1 = 1";
+        $last_mark_where = "WHERE 1 = 1";
         if ($id > 0) {
-            $where = $where . " AND latest_grades.id = $id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.id = $id ";
         }
         if ($student_id > 0) {
-            $where = $where . " AND latest_grades.student_id = $student_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.student_id = $student_id ";
         }
         if ($academic_period_id > 0) {
-            $where = $where . " AND latest_grades.academic_period_id = $academic_period_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.academic_period_id = $academic_period_id ";
+            $institution_class_students_where = $institution_class_students_where . " AND institution_class_students.academic_period_id = $academic_period_id ";
         }
         if ($education_grade_id > 0) {
-            $where = $where . " AND latest_grades.education_grade_id = $education_grade_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.education_grade_id = $education_grade_id ";
+            $institution_class_students_where = $institution_class_students_where . " AND institution_class_students.education_grade_id = $education_grade_id ";
         }
         if ($education_subject_id > 0) {
-            $where = $where . " AND latest_grades.education_subject_id = $education_subject_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.education_subject_id = $education_subject_id ";
         }
         if ($assessment_id > 0) {
-            $where = $where . " AND latest_grades.assessment_id = $assessment_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.assessment_id = $assessment_id ";
         }
         if ($assessment_period_id > 0) {
-            $where = $where . " AND latest_grades.assessment_period_id = $assessment_period_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.assessment_period_id = $assessment_period_id ";
         }
         if ($assessment_grading_option_id > 0) {
-            $where = $where . " AND latest_grades.assessment_grading_option_id = $assessment_grading_option_id ";
+            $last_mark_where = $last_mark_where . " AND latest_grades.assessment_grading_option_id = $assessment_grading_option_id ";
         }
-        if ($institution_id > 0) {
-            $where = $where . " AND latest_grades.institution_id = $institution_id ";
+        if ($institution_id > 0 and $academic_period_id > 0) {
+            $last_mark_where = $last_mark_where . " AND latest_grades.student_id IN 
+            (select student_id FROM institution_class_students ics 
+            where ics.academic_period_id = $academic_period_id and ics.institution_id = $institution_id)";
+            $institution_class_students_where = $institution_class_students_where . " AND institution_class_students.institution_id = $institution_id ";
         }
         if ($institution_classes_id > 0) {
-            $where = $where . " AND latest_grades.institution_classes_id = $institution_classes_id";
+            $last_mark_where = $last_mark_where . " AND latest_grades.student_id IN
+            (select student_id FROM institution_class_students icss
+            where icss.institution_class_id = $institution_classes_id)";
+            $institution_class_students_where = $institution_class_students_where . " AND institution_class_students.institution_class_id = $institution_classes_id";
         }
 
         $select = rtrim($select, ', ');
         $assessment_item_results_table_name = 'assessment_item_results';
         $connection_name = 'default';
-        if($archive){
+        if ($archive) {
             $archiveTableAndConnection = ArchiveConnections::getArchiveTableAndConnection($assessment_item_results_table_name);
             $assessment_item_results_table_name = $archiveTableAndConnection[0];
             $connection_name = $archiveTableAndConnection[1];
@@ -774,7 +898,7 @@ INNER JOIN
         ,latest_grades.assessment_period_id
         ,MAX(latest_grades.created) latest_created
     FROM $assessment_item_results_table_name latest_grades
-    $where    
+    $last_mark_where    
     GROUP BY latest_grades.student_id
         ,latest_grades.assessment_id
         ,latest_grades.education_subject_id
@@ -785,7 +909,7 @@ AND latest_grades.assessment_id = all_results.assessment_id
 AND latest_grades.education_subject_id = all_results.education_subject_id
 AND latest_grades.assessment_period_id = all_results.assessment_period_id
 AND latest_grades.latest_created = all_results.created
-
+$institution_class_students_where 
 GROUP BY all_results.student_id
     ,all_results.assessment_id
     ,all_results.education_subject_id

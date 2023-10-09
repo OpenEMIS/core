@@ -1,3 +1,113 @@
+### [3.96.1] - 2023-10-06
+- Bug Fixed: OpenEMIS Registration: When institutions are inactive in OpenEMIS Core, the institutions still show in the dropdown list in OpenEMIS Registrations
+- Bug Fixed: Administration>Workflows: Users given permission for workflows not seeing assignee
+- Bug Fixed: Report > Student > Contacts : Report is taking too long for user
+
+### [3.96.0] - 2023-10-05
+- Implemented: Develop OpenEMIS Core v4 APIs for the examination features
+- Bug Fixed: Administration>Data Management>Archive: Data is showing 0 but user is able to see archive when clicking archive button
+- Bug Fixed: Institutions > Infrastructures > Overview: Change warning message
+- Bug Fixed: Institution > Statistics > Standard: The report is stuck in progress
+- Bug Fixed: Institutions > Contacts > People: The preferred field is showing as number text
+- Bug Fixed: Administration>System Setup>API>Securities: Page should be removed
+- Bug Fixed: Administration > System Setup > Field Options > Curricular Types: Change Curriculars to Co-curricular
+- Bug Fixed: Directory > Delete users: Not able to delete user (staff specifically) as the associated records "Institutions Staff Shifts" are showing even though the user is no longer assigned to an institution
+- Bug Fixed: Reports > Staff>Staff Subjects: The report is stuck in progress when generating 
+- Bug Fixed: Institutions>Performance>Assessments: When an user did not enter marks, it should not show as 0.00
+- Bug Fixed: Reports > Institutions> Classes: The data in the report is inconsistent
+- Bug Fixed: Reports > Surveys: Institutions - Not Completed are not showing
+- Bug Fixed: OpenEMIS Core(Security): Security Fixes Part 4
+- Bug Fixed: Institutions > Students > Import: Not able to import students
+- Bug Fixed: Institutions > Students > Promote: 404 error when promoting students
+- Bug Fixed: Institutions > Staff>Position: When changing from not homeroom teacher staff type to homeroom teacher staff type, there is an error message
+- Bug Fixed: Institutions > Students/Staff > Export: Less queries to run to get better results and high system performance
+- Bug Fixed: Administration>Data Management>Archive: Data is showing 0 but user is able to see archive when clicking archive button
+- Bug Fixed: Institutions > Appointments > Positions: When permission is given to a security role to delete delete institution positions, users is still unable to delete institution positions
+
+### [3.95.2] - 2023-09-28
+- Bug Fixed: OpenEMIS Core(Security): Security Fixes
+- Bug Fixed: Institutions > Survey > Forms: The date field for repeater form alignment seems to be out
+- Bug Fixed: Institutions > Positions > Import: The error message displaying is empty when importing institutions position fail
+- Bug Fixed: OpenEMIS Core(Security): Security Fixes Part 3
+
+### [3.95.1] - 2023-09-26
+- Implemented: Create a config item to lock an account after "n" number of failed login attempts
+- Implemented: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 2
+- Bug Fixed: Institutions>Staff>Import: User is not able to import staff
+- Bug Fixed: Administration > System Setup > Academic Periods: When deleting academic period, the page goes to 404 error
+- Bug Fixed: Directory > Professional > Licenses: 404 error when approving licenses
+- Bug Fixed: Institutions > Infrastructures > Overview: When adding Infrastructure, they face with a 404 error
+- Bug Fixed: Institutions>Survey>Forms: User should be able to submit multiple entries for different classes without saving and uploading
+- Bug Fixed: Institutions > Attendance: Not able to mark attendance even though calender have indicated that is half day
+- Bug Fixed: Institutions > Students>Export: Student who is repeated from previous academic year is showing as "Enrolled"
+- Bug Fixed: Webhook is triggering multiple sleep processes
+
+### [3.95.0] - 2023-09-20
+- Implemented: Develop type and priority fields for the cases feature
+- Implemented: Develop a function to copy Institution > Performance > Assessments from one academic period to another-Copy of assessment periods
+- Implemented: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Adding page, order and limit to get apis
+- Bug Fixed: Staff > Professional > Awards: When adding the staff awards, even when there is successful message, the record is not showing
+- Bug Fixed: Students > General > Nationalities: The page gives a 404 error
+- Bug Fixed: OpenEMIS Registrations: Other countries is not showing in the drop down list for address area and birthplace area
+- Bug Fixed: Registration: Age validation is not working
+- Bug Fixed: Institutions>Students>Pending Admission: Add another row for OpenEMIS ID and allow user to click on it
+- Bug Fixed: Reports > UIS Statistics: The column "Repeater Students" for all UIS Statistic Report is spell wrongly
+- Bug Fixed: Institution: When only given permission to view the Institutions General page (for example), the user is also able to see other modules for which permission is not given
+- Bug Fixed: Institutions>Students>Add: Education grade is not showing in this school
+- Bug Fixed: Institutions>Performance>Report Cards: Superadmin should be able to generate report cards even if it is not within generate start and end date
+- Bug Fixed: Administrations > System Setup > Education Structure > Cycle Tab > Admission Age: When adding the students, the system will ensure that the Students Age falls between the range of the education grade admission
+- Bug Fixed: Directory>Student>General > Contacts: The system does not allow user to remove email as the following message "There should be atleast one Email record"
+- Bug Fixed: Personal > Contacts> Edit: When editing contact, they face with a 404 error
+- Bug Fixed: Administration > System Setup > Education Structure: When adding the next programme, Education Programmes not seeing other Education System Education Programmes
+- Bug Fixed: Institutions>Performance>Assessments: Report is getting gateway error
+- Bug Fixed: Report>Institutions>Cases: Existing Filters does not cater to Personal > Cases
+
+### [3.94.4] - 2023-09-15
+- Bug Fixed: Administration>Data Management>Archive: Archive is stuck in progress
+- Bug Fixed: Institutions > Survey > Forms: The date field for repeater form alignment seems to be out
+- Bug Fixed: Institutions > Performance > Report Cards: The generated PDF report card format is not as per the desired format
+
+### [3.94.3] - 2023-09-14
+- Bug Fixed: Institutions>Survey>Forms: Survey form that are uploaded in survey app are not reflected correctly in core interface
+
+### [3.94.2] - 2023-09-14
+- Implemented: Develop changes to the OpenEMIS Core (CakePHP) v2 upload survey API to include the student list question
+- Bug Fixed: Institutions > Students > Import: Not able to import students
+- Bug Fixed: Institutions > Students: The institutions showing for the selected area are not showing correctly
+- Bug Fixed: Improvements to Tertiary Education feature
+- Bug Fixed: Administrations > Workflows > Student Transfer > Receiving/Sending : Remove Option from Post Event
+- Bug Fixed: Institutions>Survey>Forms: When a user answers a survey question for Student A, then all other questions for the same student get marked simultaneously
+- Bug Fixed: Institutions > Students > Add: Academic Period is showing wrongly when transferred from older academic period to current academic period
+- Bug Fixed: OpenEMIS Registration: Assignee for Pending Approval should follow the security role in workflow step
+- Bug Fixed: Institutions > Students> Add: When adding the students, the page load very slow/does not load at all
+
+### [3.94.1] - 2023-09-08
+- Implemented: Development of OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 4
+- Bug Fixed: Institutions>Performance>Assessments: Duplicate queries are found
+- Bug Fixed: Institutions > Academic > Curriculars: When editing, the page goes to 404 error page
+- Bug Fixed: OpenEMIS Registration: The student's custom field for the field type "File" configured in OpenEMIS Core is not working in OpenEMIS Registration
+- Bug Fixed: Migration fix : Renaming POCOR-7395 to run earlier as it affects other migration files
+- Bug Fixed: Administration>Data Management>Copy: Infrastructure custom fields are not copied over
+- Bug Fixed: Home Page > Workbench: Workbench for behaviour is not showing up for assign user in their profile
+- Bug Fixed: Institutions>Students>Add: Other countries is not showing in the drop down list for address area and birthplace area
+- Bug Fixed: Administration > System Setup > Custom Field: When deleting options for the checkbox field type under the institutions custom field, the page gives a successful message but records were not deleted
+- Bug Fixed: Not able to delete users
+
+### [3.94.0] - 2023-08-31
+- Implemented: Develop APIs for OpenEMIS Core add student/staff/guardian functions
+- Implemented: Develop updates for institution student and institution student absence APIs
+- Implemented: Develop a function to copy Institution > Performance > Assessments from one academic period to another
+- Bug Fixed: Administration > Data Management > Copy : Competencies
+- Bug Fixed: Staff > Career > Attendances: The record did not get deleted even when successful message display
+- Bug Fixed: Administration > Security > Groups > Edit Group: When editing the user group page, the records showing is different from the view page and instead it shows empty records
+- Bug Fixed: Institutions > Students>Promote: There is no option for no grade when promoting student
+- Bug Fixed: Institutions>Performance>Assessments: Report is showing empty for transferred students
+- Bug Fixed: Administration > Data Management > Copy: Unable to copy shifts
+- Bug Fixed: Institutions > Appointments > Positions: The column Institutions in the report when exporting Institutions Positions is showing wrong data
+- Bug Fixed: Institutions>Staff>Add: When adding staff thru the api, core does not link staff to the institution
+- Bug Fixed: Institutions > Students > General > Guardian: When clicking the following: Student Name, Students, Institution Name, Institution, the breadcrumbs do not work and it navigates to a page that says page not found
+- Bug Fixed: Institutions > Students > Add: The system should allow the transferred for academic period 2022 to academic period 2023
+
 ### [3.93.0] - 2023-08-25
 - Implemented: Develop Tertiary Education feature
 - Implemented: Move copy function from Administration > System Setup > Education Structure to Data Management > Copy
