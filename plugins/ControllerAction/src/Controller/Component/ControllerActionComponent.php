@@ -424,7 +424,7 @@ class ControllerActionComponent extends Component
 
     public function paramsQuery()
     {
-        return $this->request->query;
+        return $this->request->getQuery();
     }
 
     public function params()
@@ -435,7 +435,7 @@ class ControllerActionComponent extends Component
 
     private function mergeRequestParams(array &$url)
     {
-        $requestParams = $this->request->param;
+        $requestParams = $this->request->getParam();
         foreach ($requestParams as $key => $value) {
             if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
                 unset($requestParams[$key]);
@@ -605,7 +605,7 @@ class ControllerActionComponent extends Component
         $backUrl = $defaultUrl;
         $backUrl['action'] = $backAction;
         if ($this->triggerFrom == 'Model') {
-            $backUrl['action'] = $this->model->alias;
+            $backUrl['action'] = $this->model->getAlias();
             $backUrl[] = $backAction;
         }
         if ($backAction != 'index') {
@@ -705,7 +705,7 @@ class ControllerActionComponent extends Component
     {
         $controller = $this->controller;
         if (!is_null($this->model) && !empty($this->model->fields)) {
-            $action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
+            $action = $this->triggerFrom == 'Model' ? $this->model->getAlias() : $this->currentAction;
 
             $this->initButtons();
 

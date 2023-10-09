@@ -63,6 +63,7 @@ trait SecurityTrait
         if (count($paramArr) != 2) {
             throw new SecurityException('Wrong number of segments');
         }
+        
         list($payload, $signature) = $paramArr;
         $payload = $this->urlsafeB64Decode($payload);
         $signature = $this->urlsafeB64Decode($signature);
