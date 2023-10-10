@@ -193,7 +193,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function onUpdateFieldCategory(Event $event, array $attr, $action, Request $request)
     {
-        $categories = array(1 =>'Curricular', 0=>'Extracurricular');
+        $categories = array(1 =>'Co-Curricular', 0=>'Extracurricular'); //POCOR-7751
         $entity = $attr['entity'];
         if ($action == 'add') {
             $attr['type'] = 'chosenSelect';

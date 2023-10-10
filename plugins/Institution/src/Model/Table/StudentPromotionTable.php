@@ -3,6 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
@@ -1402,28 +1403,32 @@ class StudentPromotionTable extends AppTable
     {
         // list of grades available in the institution
         $today = date('Y-m-d');
-        $listOfInstitutionGrades = $this->InstitutionGrades
-        ->find('list', [
-            'keyField' => 'education_grade_id',
-            'valueField' => 'education_grade.programme_grade_name'])
-        ->contain(['EducationGrades.EducationProgrammes'])
-        ->where([
-            $this->InstitutionGrades->aliasField('institution_id') => $institutionId,
-            'OR' => [
-                [
-                    $this->InstitutionGrades->aliasField('end_date IS NULL'),
-                    $this->InstitutionGrades->aliasField('start_date <= ') => $today
-                ],
-                [
-                    $this->InstitutionGrades->aliasField('end_date IS NOT NULL'),
-                    $this->InstitutionGrades->aliasField('start_date <= ') => $today,
-                    $this->InstitutionGrades->aliasField('end_date >= ') => $today
-                ]
-            ]
-        ])
-        ->order(['EducationProgrammes.order', 'EducationGrades.order'])
-        ->toArray();
 
+        try {
+            $listOfInstitutionGrades = $this->InstitutionGrades
+                ->find('list', [
+                    'keyField' => 'education_grade_id',
+                    'valueField' => 'education_grade.programme_grade_name'])
+                ->contain(['EducationGrades.EducationProgrammes'])
+                ->where([
+                    $this->InstitutionGrades->aliasField('institution_id') => $institutionId,
+                    'OR' => [
+                        [
+                            $this->InstitutionGrades->aliasField('end_date IS NULL'),
+                            $this->InstitutionGrades->aliasField('start_date <= ') => $today
+                        ],
+                        [
+                            $this->InstitutionGrades->aliasField('end_date IS NOT NULL'),
+                            $this->InstitutionGrades->aliasField('start_date <= ') => $today,
+                            $this->InstitutionGrades->aliasField('end_date >= ') => $today
+                        ]
+                    ]
+                ])
+                ->order(['EducationProgrammes.order', 'EducationGrades.order'])
+                ->toArray();
+        } catch (RecordNotFoundException $e) {
+            return [];
+        }
         return $listOfInstitutionGrades;
     }
 

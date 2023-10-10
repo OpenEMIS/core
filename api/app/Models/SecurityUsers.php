@@ -20,6 +20,8 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     ];
     protected $table = "security_users";
 
+    protected $appends = ['full_name'];
+
 
 
     /**
@@ -75,5 +77,10 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     public function identityType()
     {
         return $this->belongsTo(IdentityTypes::class, 'identity_type_id', 'id');
+    }
+
+    public function getFullNameAttribute()
+    {
+        return $this->attributes['first_name'] . ' ' . $this->attributes['middle_name'] . $this->attributes['third_name']  . ' ' . $this->attributes['last_name'];
     }
 }

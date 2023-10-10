@@ -11,7 +11,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     vm.institutionId;
     vm.schoolClosed = true;
-
+    vm.closedPeriod = false;//POCOR-7787
     vm.absenceTypeOptions = [];
     vm.studentAbsenceReasonOptions = [];
     vm.isMarked = false;
@@ -298,6 +298,24 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
         vm.attendancePeriodOptions = attendancePeriodOptions;
         if (attendancePeriodOptions.length > 0) {
             vm.selectedAttendancePeriod = attendancePeriodOptions[0].id;
+            // POCOR-7787 start
+            vm.selectedAttendancePeriod = attendancePeriodOptions[0].id;
+            var closedPeriod = false;
+                    for (var i = 0; i < vm.dayListOptions.length; i++) {
+                        if (vm.dayListOptions[i].date === vm.selectedDay) {//check date
+                            if (vm.dayListOptions[i].closed == true && vm.dayListOptions[i].periods.length!=0) {
+                                for (var j = 0; j < vm.dayListOptions[i].periods.length; j++){
+                                    //   console.log(vm.selectedAttendancePeriod);
+                                    if (vm.dayListOptions[i].periods[j] == vm.selectedAttendancePeriod) {//check period
+                                        closedPeriod = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+            vm.closedPeriod = closedPeriod; 
+            // POCOR-7787 end
             vm.gridOptions.context.period = vm.selectedAttendancePeriod;
         }
     }
@@ -745,6 +763,23 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
     vm.changeAttendancePeriod = function() {
         vm.gridOptions.context.period = vm.selectedAttendancePeriod;
+        //POCOR_7787 start
+        var closedPeriod = false;
+        vm.gridOptions.context.period = vm.selectedAttendancePeriod;
+                    for (var i = 0; i < vm.dayListOptions.length; i++) {
+                        if (vm.dayListOptions[i].date === vm.selectedDay) {
+                            if (vm.dayListOptions[i].closed == true && vm.dayListOptions[i].periods.length!=0) {
+                                for (var j = 0; j < vm.dayListOptions[i].periods.length; j++){
+                                    if (vm.dayListOptions[i].periods[j] == vm.selectedAttendancePeriod) {
+                                        closedPeriod = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+        vm.closedPeriod = closedPeriod;
+        //POCOR_7787 end
         UtilsSvc.isAppendLoader(true);
         InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams())
         .then(function(isMarked) {
