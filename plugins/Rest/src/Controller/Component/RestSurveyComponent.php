@@ -2371,9 +2371,9 @@ class RestSurveyComponent extends Component
         $final['data'] = $finalData;
         $final['survey_answer_arr'] = $AnswerKeyArr;
 
-        echo "<pre>";
-        print_r($final);
-        die;
+        // echo "<pre>";
+        // print_r($final);
+        // die;
 
         $params = json_encode($final, true);
         echo $params;
@@ -2412,8 +2412,6 @@ class RestSurveyComponent extends Component
                     'parent_form_id' => $staff['institution_form_id'],
                     'created_user_id' => 2,
                     'created' => date('Y-m-d H:i:s')
-
-
                 ]);
                 $successData = $InstitutionStaffSurveysTbl->save($nEntity);
             } else {
