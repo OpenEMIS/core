@@ -2050,6 +2050,7 @@ class RestSurveyComponent extends Component
     //POCOR-7857 start
     public function stafflist($format = "xform", $id = 0, $insCode = 0, $academicPeriod = 0, $surveyQuesId = 0, $output = true)
     {
+
         switch ($format) {
             case 'xform':
                 $result = $this->getYList($format, $id, $insCode, $academicPeriod, $surveyQuesId);
@@ -2098,41 +2099,74 @@ class RestSurveyComponent extends Component
         $apId = $apData->id;
 
         $join = [];
-
         $join['staff_info'] = [
             'type' => 'left',
-            'table' => "(SELECT academic_periods.id academic_period_id
-                        ,institutions.id institution_id
-                        ,institution_staff.staff_id
-                        ,security_users.openemis_no openemis_no
-                        ,REPLACE(CONCAT_WS(' ',security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name), '  ', ' ') staff_name
-                        FROM institution_staff
-                        INNER JOIN academic_periods 
-                            ON (((`institution_staff`.`end_date` IS NOT NULL AND 
-                                 `institution_staff`.`start_date` <= `academic_periods`.`start_date` AND 
-                                 `institution_staff`.`end_date` >= `academic_periods`.`start_date`) 
-                            OR (`institution_staff`.`end_date` IS NOT NULL 
-                            AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`
-                            AND `institution_staff`.`end_date` >= `academic_periods`.`end_date`)
-                            OR (`institution_staff`.`end_date` IS NOT NULL 
-                            AND `institution_staff`.`start_date` >= `academic_periods`.`start_date`
-                            AND `institution_staff`.`end_date` <= `academic_periods`.`end_date`)) 
-                            OR (`institution_staff`.`end_date` IS NULL 
-                            AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`))
-                       INNER JOIN institutions
-                          ON institutions.id = institution_staff.institution_id
-                       INNER JOIN security_users
-                          ON security_users.id = institution_staff.staff_id
-
-                    WHERE institution_staff.staff_status_id = 1
-                    AND academic_periods.id = $apId
-                    AND institution_id = $insId,
-                ) staff_info)",
+            'table' => "(SELECT academic_periods.id academic_period_id,
+                        institutions.id institution_id,
+                        institution_staff.staff_id staff_id,
+                        security_users.openemis_no openemis_no,
+                        REPLACE(CONCAT_WS(' ', security_users.first_name, security_users.middle_name, security_users.third_name, security_users.last_name), '  ', ' ') staff_name
+                   FROM institution_staff
+                   INNER JOIN academic_periods 
+                       ON (((`institution_staff`.`end_date` IS NOT NULL AND 
+                            `institution_staff`.`start_date` <= `academic_periods`.`start_date` AND 
+                            `institution_staff`.`end_date` >= `academic_periods`.`start_date`) 
+                           OR (`institution_staff`.`end_date` IS NOT NULL 
+                           AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`
+                           AND `institution_staff`.`end_date` >= `academic_periods`.`end_date`)
+                           OR (`institution_staff`.`end_date` IS NOT NULL 
+                           AND `institution_staff`.`start_date` >= `academic_periods`.`start_date`
+                           AND `institution_staff`.`end_date` <= `academic_periods`.`end_date`)) 
+                           OR (`institution_staff`.`end_date` IS NULL 
+                           AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`))
+                   INNER JOIN institutions
+                       ON institutions.id = institution_staff.institution_id
+                   INNER JOIN security_users
+                       ON security_users.id = institution_staff.staff_id
+                   WHERE institution_staff.staff_status_id = 1
+                   AND academic_periods.id = $apId
+                   AND institution_id = $insId
+               )",
             'conditions' => [
                 'staff_info.academic_period_id = main_query.academic_period_id',
                 'staff_info.institution_id = main_query.institution_id'
             ]
         ];
+
+        // $join['staff_info'] = [
+        //     'type' => 'left',
+        //     'table' => "(SELECT academic_periods.id academic_period_id
+        //                 ,institutions.id institution_id
+        //                 ,institution_staff.staff_id staff_is
+        //                 ,security_users.openemis_no openemis_no
+        //                 ,REPLACE(CONCAT_WS(' ',security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name), '  ', ' ') staff_name
+        //                 FROM institution_staff
+        //                 INNER JOIN academic_periods 
+        //                     ON (((`institution_staff`.`end_date` IS NOT NULL AND 
+        //                          `institution_staff`.`start_date` <= `academic_periods`.`start_date` AND 
+        //                          `institution_staff`.`end_date` >= `academic_periods`.`start_date`) 
+        //                     OR (`institution_staff`.`end_date` IS NOT NULL 
+        //                     AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`
+        //                     AND `institution_staff`.`end_date` >= `academic_periods`.`end_date`)
+        //                     OR (`institution_staff`.`end_date` IS NOT NULL 
+        //                     AND `institution_staff`.`start_date` >= `academic_periods`.`start_date`
+        //                     AND `institution_staff`.`end_date` <= `academic_periods`.`end_date`)) 
+        //                     OR (`institution_staff`.`end_date` IS NULL 
+        //                     AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`))
+        //                INNER JOIN institutions
+        //                   ON institutions.id = institution_staff.institution_id
+        //                INNER JOIN security_users
+        //                   ON security_users.id = institution_staff.staff_id
+
+        //             WHERE institution_staff.staff_status_id = 1
+        //             AND academic_periods.id = $apId
+        //             AND institution_id = $insId,
+        //         )",
+        //     'conditions' => [
+        //         'staff_info.academic_period_id = main_query.academic_period_id',
+        //         'staff_info.institution_id = main_query.institution_id'
+        //     ]
+        // ];
         $join['staff_survey_answers_info'] = [
             'type' => 'left',
             'table' => "(SELECT institution_staff_surveys.academic_period_id
@@ -2207,8 +2241,6 @@ class RestSurveyComponent extends Component
             ->select([
                 'academic_period_id' => 'main_query.academic_period_id', 'institution_id' => 'main_query.institution_id', 'institution_form_id' => 'main_query.institution_survey_form_id', 'institution_form_name' => 'main_query.institution_survey_form_name', 'institutiton_survey_question_id' => 'main_query.institution_survey_question_id', 'section' => 'main_query.section', 'name' => 'main_query.institution_survey_question_name', 'staff_list_form_id' => 'main_query.staff_list_survey_form_id', 'staff_list_form_name' => 'main_query.staff_list_survey_form_name', 'staff_list_survey_question_id' => 'main_query.staff_list_survey_question_id', 'staff_list_survey_question_name' => 'main_query.staff_list_survey_question_name',
                 'staff_list_survey_question_type' => 'main_query.staff_list_survey_question_type',
-                'institution_class_id' => 'staff_info.institution_class_id',
-                'class_name' => 'staff_info.institution_class_name',
                 'staff_id' => 'staff_info.staff_id',
                 'openemis_no' => 'staff_info.openemis_no',
                 'staff_name' => 'staff_info.staff_name',
@@ -2339,7 +2371,9 @@ class RestSurveyComponent extends Component
         $final['data'] = $finalData;
         $final['survey_answer_arr'] = $AnswerKeyArr;
 
-        //echo "<pre>";print_r($final);die;
+        echo "<pre>";
+        print_r($final);
+        die;
 
         $params = json_encode($final, true);
         echo $params;
@@ -2471,3 +2505,4 @@ class RestSurveyComponent extends Component
     }
     //POCOR-7857 end
 }
+
