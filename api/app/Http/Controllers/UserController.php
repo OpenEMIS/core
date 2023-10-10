@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Requests\SaveStudentDataRequest;
 use App\Http\Requests\SaveStaffDataRequest;
 use App\Http\Requests\SaveGuardianDataRequest;
+use App\Http\Requests\UsersAddRequest;
 
 class UserController extends Controller
 {
@@ -150,4 +151,31 @@ class UserController extends Controller
             return $this->sendErrorResponse('Failed to store guardian data.');
         }
     }
+
+
+
+    //pocor-7545 starts
+    public function addUsers(UsersAddRequest $request)
+    {
+        try {
+            $data = $this->userService->addUsers($request);
+            
+            if($data == 1){
+                return $this->sendSuccessResponse("User is created/updated successfully.");
+            } elseif($data == 2){
+                return $this->sendErrorResponse("Invalid user id.");
+            } else {
+                return $this->sendErrorResponse("User is not created/updated successfully.");
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'User is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('User is not created/updated successfully.');
+        }
+    }
+    //pocor-7545 ends
 }
