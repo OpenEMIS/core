@@ -1687,12 +1687,10 @@ class InstitutionsTable extends AppTable
                     $attr['value'] = $requestData['report_start_date'];
                 }else{
                     $currentDate = new \DateTime();
-// Subtract one year to get the previous year
-                    $previousYear = $currentDate->sub(new \DateInterval('P1Y'));
 // Set the date to the first day of the year
-                    $firstDayOfPreviousYear = $previousYear->setDate($previousYear->format('Y'), 1, 1);
+                    $firstDayOfTheYear = $currentDate->setDate($currentDate->format('Y'), 1, 1);
 // Format the result if needed
-                    $attr['value'] = $firstDayOfPreviousYear;
+                    $attr['value'] = $firstDayOfTheYear;
                 }
                 $attr['onChangeReload'] = false;
             }
@@ -1709,12 +1707,12 @@ class InstitutionsTable extends AppTable
         $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
         if ($field == 'report_start_date') {
             if ($feature === 'Report.InstitutionAssets') {
-                return __('Prior Year Start');
+                return __('Year Start');
             }
         }
         if ($field == 'report_end_date') {
             if ($feature === 'Report.InstitutionAssets') {
-                return __('Prior Year End');
+                return __('Year End');
             }
         }
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
@@ -1800,12 +1798,10 @@ class InstitutionsTable extends AppTable
                     $attr['value'] = $requestData['report_end_date'];
                 }else{
                     $currentDate = new \DateTime();
-// Subtract one year to get the previous year
-                    $previousYear = $currentDate->sub(new \DateInterval('P1Y'));
 // Set the date to the first day of the year
-                    $lastDayOfPreviousYear = $previousYear->setDate($previousYear->format('Y'), 12, 31);
+                    $lastDayOfTheYear = $currentDate->setDate($currentDate->format('Y'), 12, 31);
 // Format the result if needed
-                    $attr['value'] = $lastDayOfPreviousYear;
+                    $attr['value'] = $lastDayOfTheYear;
                 }
                 $attr['onChangeReload'] = false;
             }
