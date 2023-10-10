@@ -291,7 +291,8 @@ Route::group(
         
         //POCOR-7754 starts
         Route::get('notices', 'WorkbenchController@getNoticesList');
-        Route::get('workbench/{openemisId}', 'WorkbenchController@getWorkbenchList');
+        Route::get('staff/career/leave', 'WorkbenchController@getInstitutionStaffLeave');
+        Route::get('institutions/survey/forms', 'WorkbenchController@getInstitutionStaffSurveys');
         //POCOR-7754 ends
 
     }
