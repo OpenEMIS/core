@@ -11,4 +11,9 @@ class WorkflowSteps extends Model
 
     public $timestamps = false;
     protected $table = "workflow_steps";
+
+    public function workflows()
+    {
+        return $this->belongsTo(Workflows::class, 'workflow_id', 'id');
+    }
 }

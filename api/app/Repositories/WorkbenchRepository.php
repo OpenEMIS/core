@@ -10,6 +10,7 @@ use JWTAuth;
 use App\Models\AcademicPeriod;
 use App\Models\Notice;
 use App\Models\Workflows;
+use App\Models\InstitutionStaffLeave;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
@@ -41,21 +42,59 @@ class WorkbenchRepository extends Controller
         }
     }
 
-
-    public function getWorkbenchList($request)
+    public function getInstitutionStaffLeave($request)
     {
         try {
-            $params = $request->all();
-            
+            $param = $request->all();
+            $assigneeId = JWTAuth::user()->id;
+
             $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
             }
 
+            $list = InstitutionStaffLeave::with(
+                        'institution:id,name', 
+                        'staff',
+                        'assignee',
+                        'securityUser',
+                        'status:id,name',
+                        'staffLeaveType:id,name'
+                    )
+                    ->whereHas(
+                        'status', function ($q) {
+                            $q->where('workflow_id', 20)
+                                ->whereHas(
+                                    'workflows', function($query){
+                                        $query->where('category', '!=', 3);
+                                    }
+                                );
+                        }        
+                    )
+                    ->where('assignee_id', $assigneeId)
+                    ->paginate($limit)
+                    ->toArray();
 
-            $list = Workflows::paginate($limit)->toArray();
             return $list;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getInstitutionStaffSurveys(Request $request)
+    {
+        try {
+            $data = $this->workbenchRepository->getInstitutionStaffSurveys($request);
+            
+            return $data;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
