@@ -138,7 +138,7 @@ class SingleGradeBehavior extends Behavior
         //POCOR-7680 end
 
         //POCOR-7803::Start
-        $configItems = TableRegistry::get('config_items');
+        $configItems = TableRegistry::get('Configuration.ConfigItems');
         $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page'])->toArray();
         foreach($configItemsData as $configItemsData1){
             if(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 0)){
