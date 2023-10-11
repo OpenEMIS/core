@@ -301,7 +301,7 @@ class InstitutionAssetsTable extends ControllerActionTable
             'key' => 'InstitutionAssets.depreciation',
             'field' => 'depreciation',
             'type' => 'string',
-            'label' => __('Depreciation')
+            'label' => __('Disposal')
         ];
 
         $extraField[] = [
@@ -537,6 +537,9 @@ class InstitutionAssetsTable extends ControllerActionTable
         }
         if ($field == 'institution_room_id') {
             return __('Location');
+        }
+        if ($field == 'depreciation') {
+            return __('Disposal');
         }
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
