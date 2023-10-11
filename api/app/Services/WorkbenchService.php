@@ -71,13 +71,68 @@ class WorkbenchService extends Controller
     }
 
 
-    public function getInstitutionStaffSurveys(Request $request)
+    public function getInstitutionStaffSurveys($request)
     {
         try {
             $data = $this->workbenchRepository->getInstitutionStaffSurveys($request);
             
+            $resp = [];
+
+            foreach($data['data'] as $k=> $d){
+                $resp[$k]['id'] = $d['id'];
+                $resp[$k]['institution_id'] = $d['institution_id'];
+                $resp[$k]['institution'] = $d['institution']['name'];
+                $resp[$k]['request_title'] = $d['survey_form']['name']. ' of ' .$d['academic_period']['name'];
+                $resp[$k]['received_date'] = Carbon::create($d['created'])->toFormattedDateString();
+                $resp[$k]['requester'] = $d['security_user']['name_with_id'];
+                $resp[$k]['status_id'] = $d['status_id'];
+                $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['survey_form'] = $d['survey_form'];
+                $resp[$k]['academic_period'] = $d['academic_period'];
+                $resp[$k]['created_user'] = $d['security_user'];
+
+            }
+
+            $data['data'] = $resp; 
+            
             return $data;
         } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getInstitutionStudentWithdraw($request)
+    {
+        try {
+            $data = $this->workbenchRepository->getInstitutionStudentWithdraw($request);
+            
+            $resp = [];
+
+            foreach($data['data'] as $k=> $d){
+                $resp[$k]['id'] = $d['id'];
+                $resp[$k]['institution_id'] = $d['institution_id'];
+                $resp[$k]['institution'] = $d['institution']['name'];
+                $resp[$k]['request_title'] = 'Withdraw request of ' .$d['user']['name_with_id'];
+                $resp[$k]['received_date'] = Carbon::create($d['created'])->toFormattedDateString();
+                $resp[$k]['requester'] = $d['security_user']['name_with_id'];
+                $resp[$k]['status_id'] = $d['status_id'];
+                $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['user'] = $d['user'];
+                $resp[$k]['created_user'] = $d['security_user'];
+
+            }
+
+            $data['data'] = $resp; 
+            
+            return $data;
+        } catch (\Exception $e) {
+            dd($e);
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]

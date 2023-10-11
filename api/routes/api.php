@@ -293,6 +293,7 @@ Route::group(
         Route::get('notices', 'WorkbenchController@getNoticesList');
         Route::get('staff/career/leave', 'WorkbenchController@getInstitutionStaffLeave');
         Route::get('institutions/survey/forms', 'WorkbenchController@getInstitutionStaffSurveys');
+        Route::get('institutions/students/withdraw', 'WorkbenchController@getInstitutionStudentWithdraw');
         //POCOR-7754 ends
 
     }

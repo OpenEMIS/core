@@ -65,4 +65,21 @@ class WorkbenchController extends Controller
             return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }
+
+
+    public function getInstitutionStudentWithdraw(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getInstitutionStudentWithdraw($request);
+            
+            return $this->sendSuccessResponse("Student Withdraw List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
 }
