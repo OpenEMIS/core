@@ -11,6 +11,9 @@ use App\Models\AcademicPeriod;
 use App\Models\Notice;
 use App\Models\Workflows;
 use App\Models\InstitutionStaffLeave;
+use App\Models\SecurityGroupUsers;
+use App\Models\InstitutionSurvey;
+use App\Models\InstitutionStudentWithdraw;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
@@ -64,12 +67,8 @@ class WorkbenchRepository extends Controller
                     )
                     ->whereHas(
                         'status', function ($q) {
-                            $q->where('workflow_id', 20)
-                                ->whereHas(
-                                    'workflows', function($query){
-                                        $query->where('category', '!=', 3);
-                                    }
-                                );
+                            $q->where('workflow_id', 20) // For staff leave
+                            ->where('category', '!=', 3); //For done status
                         }        
                     )
                     ->where('assignee_id', $assigneeId)
@@ -89,13 +88,93 @@ class WorkbenchRepository extends Controller
     }
 
 
-    public function getInstitutionStaffSurveys(Request $request)
+    public function getInstitutionStaffSurveys($request)
     {
         try {
-            $data = $this->workbenchRepository->getInstitutionStaffSurveys($request);
+            $params = $request->all();
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+
+            $userId = JWTAuth::user()->id;
+            $roles = SecurityGroupUsers::where('security_user_id', $userId)->pluck('security_role_id');
+
+            //dd($userId, $roles);
             
-            return $data;
+            $list = InstitutionSurvey::with(
+                        'institution:id,name,code',
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id',
+                        'surveyForm:id,name',
+                        'academicPeriod:id,name'
+                    )
+                    ->whereHas(
+                        'status', function ($q) use($roles) {
+                            $q->where('workflow_id', 1) //For institution survey
+                            ->where('category', '!=', 3) //For done status
+                            ->whereHas(
+                                'workflowStepRole', function($query) use($roles) {
+                                    $query->whereIn('security_role_id', $roles);
+                                }
+                            );
+                        }        
+                    )
+                    ->where('assignee_id', $userId)
+                    ->paginate($limit)
+                    ->toArray();
+
+            return $list;
+
         } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+
+    public function getInstitutionStudentWithdraw($request)
+    {
+        try {
+            $params = $request->all();
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $userId = JWTAuth::user()->id;
+
+            $list = InstitutionStudentWithdraw::with(
+                        'institution:id,name,code',
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id',
+                        'user:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name'
+                    )
+                    ->whereHas(
+                        'status', function ($q) {
+                            $q->where('workflow_id', 15) //For student withdraw.
+                            ->where('category', '!=', 3);
+                        }        
+                    )
+                    ->where('assignee_id', $userId)
+                    ->paginate($limit)
+                    ->toArray();
+
+            
+            return $list;
+
+        } catch (\Exception $e) {
+            dd($e);
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
