@@ -44,7 +44,7 @@ class ExcelBehavior extends Behavior
     public function initialize(array $config)
     {
         $this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
-        if (!array_key_exists('filename', $config)) {
+        if (!isset($config['filename'])) {
             $this->config('filename', $this->_table->alias());
         }
         $folder = WWW_ROOT . $this->config('folder');
@@ -211,7 +211,7 @@ class ExcelBehavior extends Behavior
             $baseSheetName = $sheetName;
 
             // if the primary key of the record is given, only generate that record
-            if (array_key_exists('id', $settings)) {
+            if (isset($settings['id'])) {
                 $id = $settings['id'];
                 if ($id != 0) {
                     $primaryKey = $table->primaryKey();
@@ -272,7 +272,7 @@ class ExcelBehavior extends Behavior
                     foreach ($fields as $index => $attr) {
                         $subjectsHeaderRow[$index] = "";
 
-                        if (array_key_exists('group', $attr)) {
+                        if (isset($attr['group'])) {
                             if ($groupName !== $attr['group']) {
                                 $groupStartingIndex = $index;
                                 $groupName = $attr['group'];
@@ -280,7 +280,7 @@ class ExcelBehavior extends Behavior
 
                             $groupKey = $groupName . $groupStartingIndex;
 
-                            if (!array_key_exists($groupKey, $subjectsColWidth)) {
+                            if (!isset($subjectsColWidth[$groupKey])) {
                                 $subjectsColWidth[$groupKey] = [];
                                 $subjectsColWidth[$groupKey]['start_col'] = $index;
                                 $subjectsHeaderRow[$index]  = $attr['group'];
