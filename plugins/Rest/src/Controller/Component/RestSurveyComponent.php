@@ -2285,7 +2285,7 @@ class RestSurveyComponent extends Component
 
                 // $finalData[$tbDta->section]['staffs'][$ke]['questions'] = $questions;
                 foreach ($questions as $ques1) {
-                    $finalData[$tbDta->section]['staff'][$ke]['questions'][] = $ques1;
+                    $finalData[$tbDta->section]['staffs'][$ke]['questions'][] = $ques1;
                 }
                 $ins_sta_survey = $institutionStaffSurveysTbl->find('all', ['conditions' => [
                     'status_id' => 1,
@@ -2295,12 +2295,12 @@ class RestSurveyComponent extends Component
                     'survey_form_id' => $staff['staff_list_form_id'],
                     'parent_form_id' => $staff['institution_form_id'],
                 ]])->first();
-                $finalData[$tbDta->section]['staff'][$ke]['institution_staff_survey_id'] = $ins_sta_survey['id'];
-                foreach ($finalData[$tbDta->section]['staff'][$ke]['questions'] as $jk => $ques) {
+                $finalData[$tbDta->section]['staffs'][$ke]['institution_staff_survey_id'] = $ins_sta_survey['id'];
+                foreach ($finalData[$tbDta->section]['staffs'][$ke]['questions'] as $jk => $ques) {
 
                     $options = $surveyQuestionChoicesTbl->find('all', ['fields' => ['id', 'name']])
                         ->where(['survey_question_id' => $ques['staff_list_survey_question_id']])->toArray();
-                    $finalData[$tbDta->section]['staff'][$ke]['questions'][$jk]['options'] = $options;
+                    $finalData[$tbDta->section]['staffs'][$ke]['questions'][$jk]['options'] = $options;
 
 
                     if (!empty($ins_sta_survey)) {
@@ -2332,7 +2332,7 @@ class RestSurveyComponent extends Component
                     $AnswerKeyArr['server_key'][$tbDta->section][$ke][$jk]['answer'][] = $selectVAlue;
                     // echo $selectVAlue."=="."<br>";
 
-                    $finalData[$tbDta->section]['staff'][$ke]['questions'][$jk]['survey_answer'] = $selectVAlue;
+                    $finalData[$tbDta->section]['staffs'][$ke]['questions'][$jk]['survey_answer'] = $selectVAlue;
 
                     //echo "<pre>";print_r($dataExistAns->original());die;
 
