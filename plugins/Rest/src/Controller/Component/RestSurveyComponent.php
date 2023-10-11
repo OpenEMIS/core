@@ -2283,10 +2283,8 @@ class RestSurveyComponent extends Component
 
             foreach ($finalData[$tbDta->section]['staffs'] as $ke => $staff) {
 
-                // $finalData[$tbDta->section]['staffs'][$ke]['questions'] = $questions;
-                foreach ($questions as $ques1) {
-                    $finalData[$tbDta->section]['staffs'][$ke]['questions'][] = $ques1;
-                }
+                $finalData[$tbDta->section]['staffs'][$ke]['questions'] = $questions;
+
                 $ins_sta_survey = $institutionStaffSurveysTbl->find('all', ['conditions' => [
                     'status_id' => 1,
                     'institution_id' => $staff['institution_id'],
