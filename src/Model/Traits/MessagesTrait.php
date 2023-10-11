@@ -184,7 +184,7 @@ trait MessagesTrait
             'change_in_building_type' => [
                 'restrictEdit' => 'Not allowed to change building type in the same day.'
             ],
-            'sizeGreater' => 'Please adjust the building size to be smaller than the land size to proceed.'
+            'sizeGreater' => 'Please adjust the building size to be smaller than or equal to the land size to proceed.' //POCOR-7826
         ],
         'InstitutionFloors' => [
             'noFloors' => 'No Floor found',
@@ -199,7 +199,7 @@ trait MessagesTrait
             'change_in_floor_type' => [
                 'restrictEdit' => 'Not allowed to change floor type in the same day.'
             ],
-            'sizeGreater' => 'Please adjust the floor size to be smaller than the building size to proceed.'
+            'sizeGreater' => 'Please adjust the floor size to be smaller than or equal to the building size to proceed.' //POCOR-7826
         ],
         'InstitutionRooms' => [
             'noRooms' => 'No Room found',
@@ -215,7 +215,7 @@ trait MessagesTrait
                 'restrictEdit' => 'Not allowed to change room type in the same day.'
             ],
             'select_subject' => 'Select Subject',
-            'sizeGreater' => 'Please adjust the room size to be smaller than the floor size to proceed.'
+            'sizeGreater' => 'Please adjust the room size to be smaller or equal to the floor size to proceed.' //POCOR-7826
         ],
         'InfrastructureCustomFields' => [
             'infrastructure_level_id' => 'Level Name'

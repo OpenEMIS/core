@@ -261,7 +261,14 @@ Route::group(
         Route::post('institutions/{institutionId}/textbooks', 'TextbookController@addInstitutionTextbooks');
         // POCOR-7368 ends
 
-
+        Route::group(
+            ["namespace" => "Administration\Examinations\Exams"],
+            function () {
+                Route::get("exams/{examId}", 'ExaminationController@getExaminationDetails');
+                Route::get("exams/{examId}/centres/{centreId}", 'ExaminationController@getCenterExaminationDetails');
+                Route::get("exams/{examId}/centres/{centreId}/students/{studentId}", 'ExaminationController@getCenterExaminationStudentDetails');
+            }
+        );
 
         // POCOR-7545 starts
 
@@ -282,6 +289,3 @@ Route::group(
 
     }
 );
-
-
-

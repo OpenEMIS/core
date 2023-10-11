@@ -2,6 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use Cake\Network\Request;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
@@ -10,11 +11,13 @@ use App\Model\Table\AppTable;
 use Cake\Network\Response;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry; // POCOR-5188
+use App\Model\Traits\OptionsTrait;
 
 class InstitutionContactPersonsTable extends ControllerActionTable {
-
+    use OptionsTrait;
     public function initialize(array $config)
     {
+
         parent::initialize($config);
 	
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -129,6 +132,32 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
     }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('preferred', ['type' => 'select', 'after' => 'contact_person']);
+    }
+
+
+    public function onUpdateFieldPreferred(Event $event, array $attr, $action, Request $request)
+    {
+//        $functionName = __FUNCTION__;
+//        $this->log($functionName, 'debug');
+        if ($action == 'view' || $action == 'add' || $action == 'edit') {
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = $this->getSelectOptions('general.yesno');
+        }
+
+        return $attr;
+    }
+
+    public function onGetPreferred(Event $event, Entity $entity)
+    {
+        $options = $this->getSelectOptions('general.yesno');
+        return $options[$entity->preferred];
+    }
+
     // End POCOR-5188
     
 }
