@@ -290,8 +290,8 @@ class InstitutionAssetsTable extends AppTable
         $institutionId = $requestData->institution_id;
         $institutionTypeId = $requestData->institution_type_id;
         $areaId = $requestData->area_education_id;
-        $lastYearStartDate = $requestData->report_start_date;
-        $lastYearEndDate = $requestData->report_end_date;
+        $yearStartDay = $requestData->report_start_date;
+        $yearEndDay = $requestData->report_end_date;
         $query = $this->getBasicQuery($query, $institutionId, $institutionTypeId, $areaId);
         $query = $this->getInstitutionAreaQuery($query);
         $query = $this->getInstitutionParentAreaQuery($query);
@@ -303,7 +303,7 @@ class InstitutionAssetsTable extends AppTable
         $query = $this->getAssetConditionQuery($query);
         $query = $this->getAssetLocationQuery($query);
         $query = $this->getAssetUserQuery($query);
-        $query = $this->getCalculatedFieldsQuery($query);
+        $query = $this->getCalculatedFieldsQuery($query, $yearStartDay);
 //        $this->log($query->sql(), 'debug');
         return $query;
     }
@@ -526,39 +526,52 @@ class InstitutionAssetsTable extends AppTable
 
     /**
      * @param Query $query
-     * @return Query
+     * @param $yearStartDay
+     * @return array|Query
      */
-    private function getCalculatedFieldsQuery(Query $query)
+    private function getCalculatedFieldsQuery(Query $query, $yearStartDay)
     {
         $currency = $this->currency;
-        $query = $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($currency) {
-            return $results->map(function ($row) use ($currency) {
+        $query = $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($currency, $yearStartDay) {
+            return $results->map(function ($row) use ($currency, $yearStartDay) {
 //                $this->log($currency, 'debug');
                 $cost = isset($row['cost']) ? floatval($row['cost']) : 0;
                 $salvageValue = isset($row['salvage_value']) ? floatval($row['salvage_value']) : 0;
                 $row['cost'] = $currency . '' . number_format($cost, 2);
-                $row['depreciation'] = $currency . '' . number_format($salvageValue, 2);
+
+                $row['depreciation'] = number_format($row['depreciation'], 2) . '%';
 //                return $row;
                 if (!$cost) { return $row; }
                 $lifespan = $row['lifespan'];
+                $depreciation = 1.0/$lifespan;
                 if (!$lifespan) { return $row;}
                 $purchaseDate = $row['purchase_date'];
                 if (!$purchaseDate) { return $row; }
-                $currentYear = date('Y');
+
                 $currentTimestamp = time();
                 $purchaseTimestamp = strtotime($purchaseDate);
-                $purchaseYear = date('Y', $purchaseTimestamp);
-                $fullYears = $currentYear - $purchaseYear;
-                $actual_cost = $cost - $salvageValue;
-                $depreciation = ($actual_cost) / $lifespan;
+                $yearStartTimestamp = strtotime($yearStartDay);
+
+                $secsinday = 86400;
+                $secsinyear = 31536000;
+                $fullYears = ($yearStartDay - $yearStartTimestamp - $secsinday) / $secsinyear;
+                $actual_cost = $cost; // - $salvageValue;
+
                 $monthlyDepreciation = $depreciation / 12;
                 $fullMonths = date('n', $currentTimestamp)
-                    - date('n', $purchaseTimestamp)
+                    - date('n', $yearStartTimestamp)
                     + ($fullYears * 12);
-                $priorYearAccumulatedDepreciation = $depreciation * $fullYears;
-                if($priorYearAccumulatedDepreciation > $actual_cost){
-                    $priorYearAccumulatedDepreciation = ($actual_cost);
+                if ($fullYears > $lifespan) {
+                    $priorYearAccumulatedDepreciation = $actual_cost;
+                } else {
+                    $priorYearAccumulatedDepreciation = (($fullYears * $actual_cost * $depreciation) / 100);
                 }
+
+                // Ensure the result is non-negative
+                if($priorYearAccumulatedDepreciation > $actual_cost){
+                    $priorYearAccumulatedDepreciation = $actual_cost;
+                }
+                $priorYearAccumulatedDepreciation = max(0, $priorYearAccumulatedDepreciation);
                 $accumulatedDepreciation = $monthlyDepreciation * $fullMonths;
                 if($accumulatedDepreciation > ($actual_cost)){
                     $accumulatedDepreciation = ($actual_cost);
