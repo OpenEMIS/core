@@ -2303,7 +2303,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     * POCOR-7318
     * query again change in POCOR-7628
     **/
-    private function addGpaReportCards($checkgpaStudent, $reportCardId,$selectedAcademicPeriod)//POCOR-7807
+    private function addGpaReportCards($checkgpaStudent, $reportCardId,$selectedAcademicPeriodId)//POCOR-7807
     {
         $studentId = $checkgpaStudent;//POCOR-7656
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods'); 
