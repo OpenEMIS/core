@@ -200,7 +200,7 @@ class PerformanceAssessmentShell extends Shell
                             INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
                             where academic_period_id=$copyTo
                             ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq2
-                            on subq1.grade_name=subq2.grade_name and subq1.programme_name=subq2.programme");
+                            on (subq1.grade_name=subq2.grade_name and subq1.programme_name=subq2.programme_name)");
             $statementLast->execute();
             $row = $statementLast->fetchAll(\PDO::FETCH_ASSOC);
             if (!empty($row)) {
