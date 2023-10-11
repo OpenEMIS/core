@@ -1303,7 +1303,29 @@ class InstitutionClassesTable extends ControllerActionTable
         ];
         $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
-
+        //POCOR-7803 :: start
+        $configItems = TableRegistry::get('Configuration.ConfigItems');
+        $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page'])->toArray();
+        foreach($configItemsData as $configItemsData1){
+            if(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 0)){
+                $unitEnable = 0;
+            }elseif(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 1)){
+                $unitEnable = 1;
+            }
+            if(($configItemsData1['code'] == 'class_ins_course') && ($configItemsData1['value'] == 0)){
+                $courseEnable = 0;
+            }elseif(($configItemsData1['code'] == 'class_ins_course') && ($configItemsData1['value'] == 1)){
+                $courseEnable = 1;
+            }
+        }
+        if($unitEnable == 0){
+            $this->field('institution_unit_id', ['visible' => false]);
+        }
+        if($courseEnable == 0){
+            $this->field('institution_course_id', ['visible' => false]);
+        }
+        //POCOR-7803 :: start
+        
         $this->field('multigrade', ['visible' => false]);
     }
 
