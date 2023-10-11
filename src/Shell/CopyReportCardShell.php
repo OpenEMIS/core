@@ -139,7 +139,7 @@ class CopyReportCardShell extends Shell
                                 "education_subject_id" => $SubjectData->education_subject_id,
                                 "education_grade_id" => $educationGradeList[$SubjectData->education_grade_id],
                                 "created_user_id" => $SubjectData->created_user_id,
-                                "created" => $SubjectData->created,
+                                "created" => date("Y-m-d H:i:s", strtotime($SubjectData->created)),
                             ));
                         } 
                     }
