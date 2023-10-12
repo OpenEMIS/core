@@ -11,9 +11,9 @@ use App\Model\Table\ControllerActionTable;
 
 class GuardianRelationsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('guardian_relations');
+        $this->setTable('guardian_relations');
         parent::initialize($config);
 
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
@@ -22,7 +22,7 @@ class GuardianRelationsTable extends ControllerActionTable
         $this->addBehavior('FieldOption.FieldOption');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
   
         $validator = parent::validationDefault($validator);

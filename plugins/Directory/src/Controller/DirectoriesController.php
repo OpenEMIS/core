@@ -230,7 +230,7 @@ class DirectoriesController extends AppController
     }
     public function StudentOutcomes()
     {
-        $comment = $this->request->query['comment'];
+        $comment = $this->request->getQuery['comment'];
         if(!empty($comment) && $comment == 1){ 
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
         
@@ -346,7 +346,7 @@ class DirectoriesController extends AppController
     // AngularJS
     public function StudentResults()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
         if ($session->check('Directory.Directories.id')) {
             $studentId = $session->read('Directory.Directories.id');
@@ -805,14 +805,14 @@ class DirectoriesController extends AppController
 
     public function getUserTabElements($options = [])
     {
-        if (array_key_exists('queryString', $this->request->query)) { //to filter if the URL already contain querystring
+        if (array_key_exists('queryString', $this->request->getQuery())) { //to filter if the URL already contain querystring
             $id = $this->ControllerAction->getQueryString('security_user_id');
         }
 
         $plugin = $this->plugin;
         $name = $this->name;
 
-        $id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($plugin.'.'.$name.'.id');
+        $id = (array_key_exists('id', $options))? $options['id']: $this->request->getSession()->read($plugin.'.'.$name.'.id');
 
         if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians' && array_key_exists('entity', $options)) {
             $session = $this->request->session();
@@ -1013,7 +1013,7 @@ class DirectoriesController extends AppController
     public function getProfessionalTabElements($options = [])
     {
 
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $isStudent = $session->read('Directory.Directories.is_student');
         $isStaff = $session->read('Directory.Directories.is_staff');
 

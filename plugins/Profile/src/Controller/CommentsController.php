@@ -9,12 +9,13 @@ use App\Controller\PageController;
 
 class CommentsController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
         $this->loadModel('Security.Users');
         $this->loadModel('User.Comments');
+        $this->loadComponent('Page.Page');
         $this->Page->loadElementsFromTable($this->Comments);
     }
 

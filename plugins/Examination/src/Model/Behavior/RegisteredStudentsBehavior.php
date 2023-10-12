@@ -180,7 +180,7 @@ class RegisteredStudentsBehavior extends Behavior {
 
         // Academic Period
         $academicPeriodOptions = $model->AcademicPeriods->getYearList();
-        $selectedAcademicPeriod = !is_null($model->request->query('academic_period_id')) ? $model->request->query('academic_period_id') : $model->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($model->request->getQuery('academic_period_id')) ? $model->request->getQuery('academic_period_id') : $model->AcademicPeriods->getCurrent();
         $model->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$model->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         $extra['selectedAcademicPeriod'] = $selectedAcademicPeriod;
@@ -190,7 +190,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $institutionId = $session->read('Institution.Institutions.id');
         $examinationOptions = $this->getExaminationOptions($selectedAcademicPeriod, $institutionId);
         $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
-        $selectedExamination = !is_null($model->request->query('examination_id')) ? $model->request->query('examination_id') : -1;
+        $selectedExamination = !is_null($model->request->getQuery('examination_id')) ? $model->request->getQuery('examination_id') : -1;
         $model->controller->set(compact('examinationOptions', 'selectedExamination'));
         $where[$model->aliasField('examination_id')] = $selectedExamination;
         $extra['selectedExamination'] = $selectedExamination;
@@ -250,11 +250,11 @@ class RegisteredStudentsBehavior extends Behavior {
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $model = $this->_table;
-        $session = $model->request->session();
+        $session = $model->request->getSession();
 
-        $successSessionKey = $model->registryAlias() . '.success';
-        $errorSessionKey = $model->registryAlias() . '.error';
-        $warningSessionKey = $model->registryAlias() . '.warning';
+        $successSessionKey = $model->getRegistryAlias() . '.success';
+        $errorSessionKey = $model->getRegistryAlias() . '.error';
+        $warningSessionKey = $model->getRegistryAlias() . '.warning';
 
         if ($session->check($successSessionKey)) {
             $successKey = $session->read($successSessionKey);
@@ -555,7 +555,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return implode(", ", $specialNeeds);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
+    // public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action) {
         if ($action == 'unregister'||$action=="edit") {//POCOR-7512 
             $entity = $attr['entity'];
 
@@ -568,7 +569,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, Request $request) {
+    // public function onUpdateFieldExaminationId(Event $event, array $attr, $action, Request $request) {
+        public function onUpdateFieldExaminationId(Event $event, array $attr, $action) {
         if ($action == 'unregister'||$action=="edit") {//POCOR-7512 
             $entity = $attr['entity'];
 
@@ -581,7 +583,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, Request $request) {
+    // public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action) {
         if ($action == 'unregister'||$action=="edit") {//POCOR-7512 
             $entity = $attr['entity'];
 
@@ -595,7 +598,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request) {
+    // public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request) {
+        public function onUpdateFieldStudentId(Event $event, array $attr, $action) {
         if ($action == 'unregister'||$action=="edit") {//POCOR-7512 
             $entity = $attr['entity'];
 
@@ -608,7 +612,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    public function onUpdateFieldDateOfBirth(Event $event, array $attr, $action, Request $request) {
+    // public function onUpdateFieldDateOfBirth(Event $event, array $attr, $action, Request $request) {
+        public function onUpdateFieldDateOfBirth(Event $event, array $attr, $action) {
         if ($action == 'unregister') {
             $entity = $attr['entity'];
             $dateOfBirth = $entity->user->date_of_birth;
@@ -622,7 +627,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    public function onUpdateFieldGenderId(Event $event, array $attr, $action, Request $request) {
+    // public function onUpdateFieldGenderId(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldGenderId(Event $event, array $attr, $action) {
         if ($action == 'unregister') {
             $entity = $attr['entity'];
 
@@ -635,7 +641,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request) {
+    // public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request) {
+        public function onUpdateFieldInstitutionId(Event $event, array $attr, $action) {
         if ($action == 'unregister') {
             $entity = $attr['entity'];
 
@@ -654,7 +661,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action, Request $request) {
+    // public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action) {
         if ($action == 'unregister') {
             $entity = $attr['entity'];
 
@@ -670,7 +678,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    public function onUpdateFieldRegistrationNumber(Event $event, array $attr, $action, Request $request) {
+    // public function onUpdateFieldRegistrationNumber(Event $event, array $attr, $action, Request $request) {
+        public function onUpdateFieldRegistrationNumber(Event $event, array $attr, $action) {
         if ($action == 'unregister') {
             $entity = $attr['entity'];
 
@@ -691,7 +700,7 @@ class RegisteredStudentsBehavior extends Behavior {
             ->where([$model->Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod]);
 
         // in institutions, only show examinations for grades available in the institution
-        if (in_array($model->alias(), ['InstitutionExaminationStudents', 'ExaminationResults']) && !is_null($institutionId)) {
+        if (in_array($model->getAlias(), ['InstitutionExaminationStudents', 'ExaminationResults']) && !is_null($institutionId)) {
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
             $availableGrades = $InstitutionGrades
                 ->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade_id'])

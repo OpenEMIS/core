@@ -14,9 +14,9 @@ use App\Model\Table\ControllerActionTable;
 
 class StudentRisksTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_risks');
+        $this->setTable('institution_student_risks');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
@@ -48,7 +48,7 @@ class StudentRisksTable extends ControllerActionTable
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
 
         $selectedAcademicPeriodId = !empty($requestQuery) && array_key_exists('academic_period_id', $requestQuery) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
@@ -175,7 +175,7 @@ class StudentRisksTable extends ControllerActionTable
         $conditions[$this->aliasField('academic_period_id')] = $extra['selectedAcademicPeriodId'];
         $user = $this->Auth->user();
 
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if ($session->read('Auth.User.is_guardian') == 1) {
             /*POCOR-6267 starts*/
             if ($this->request->controller == 'GuardianNavs') {

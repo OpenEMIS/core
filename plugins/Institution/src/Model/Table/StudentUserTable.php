@@ -27,10 +27,10 @@ class StudentUserTable extends ControllerActionTable
     private $_dynamicFieldName = 'custom_field_data';
     // POCOR-6130 custome fields code
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
-        $this->entityClass('User.User');
+        $this->setTable('security_users');
+        $this->setEntityClass('User.User');
         parent::initialize($config);
 
         // Associations
@@ -50,7 +50,7 @@ class StudentUserTable extends ControllerActionTable
                 'formKey' => 'student_custom_form_id',
                 'filterKey' => 'student_custom_filter_id',
                 'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
-                'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+                // 'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
                 'recordKey' => 'student_id',
                 'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
                 'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
@@ -63,7 +63,7 @@ class StudentUserTable extends ControllerActionTable
             'pages' => ['view']
         ]);
 
-        $this->addBehavior('Configuration.Pull');
+        // $this->addBehavior('Configuration.Pull');
 
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -150,7 +150,7 @@ class StudentUserTable extends ControllerActionTable
         $model->hasMany('Extracurriculars', ['className' => 'Student.Extracurriculars',    'foreignKey' => 'security_user_id', 'dependent' => true]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Students.afterSave'] = 'studentsAfterSave';
@@ -158,7 +158,7 @@ class StudentUserTable extends ControllerActionTable
         return $events;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $BaseUsers = TableRegistry::get('User.Users');

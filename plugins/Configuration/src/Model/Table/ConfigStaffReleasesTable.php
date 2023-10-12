@@ -23,9 +23,9 @@ class ConfigStaffReleasesTable extends ControllerActionTable
     CONST RESTRICT_STAFF_RELEASE_BETWEEN_DIFFERENT_PROVIDER = 'restrict_staff_release_between_different_provider';
     CONST SELECTION_DISABLE = "0";
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('config_items');
+        $this->setTable('config_items');
         parent::initialize($config);
 
         $this->addBehavior('Configuration.ConfigItems');

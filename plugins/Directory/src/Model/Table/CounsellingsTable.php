@@ -24,9 +24,9 @@ use Cake\I18n\Time;
 class CounsellingsTable extends ControllerActionTable
 {
     const ASSIGNED = 1;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('counsellings');
+        $this->setTable('counsellings');
         parent::initialize($config);
         $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
         $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
@@ -43,7 +43,7 @@ class CounsellingsTable extends ControllerActionTable
         $this->toggle('edit', true);
       
     }
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

@@ -254,7 +254,7 @@ class DirectoriesTable extends ControllerActionTable
             $event->stopPropagation();
             return [];
         } else {
-            $this->behaviors()->get('AdvanceSearch')->config([
+            $this->behaviors()->get('AdvanceSearch')->setConfig([
                 'showOnLoad' => 0,
             ]);
         }
@@ -424,7 +424,7 @@ class DirectoriesTable extends ControllerActionTable
                         'formKey' => 'student_custom_form_id',
                         'filterKey' => 'student_custom_filter_id',
                         'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
-                        'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+                        // 'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
                         'recordKey' => 'student_id',
                         'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
                         'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
@@ -463,7 +463,7 @@ class DirectoriesTable extends ControllerActionTable
             $this->field('openemis_no', ['user_type' => $userType]);
             $this->addCustomUserBehavior($userType);
         } elseif ($this->action == 'view') {
-            $encodedParam = $this->request->params['pass'][1];
+            $encodedParam = $this->request->getParam('pass')[1];
             $securityUserId = $this->ControllerAction->paramsDecode($encodedParam)['id'];
             $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
             if ($userInfo->is_student) {
@@ -717,7 +717,7 @@ class DirectoriesTable extends ControllerActionTable
                     'formKey' => 'student_custom_form_id',
                     'filterKey' => 'student_custom_filter_id',
                     'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
-                    'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+                    // 'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
                     'recordKey' => 'student_id',
                     'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
                     'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
@@ -853,7 +853,7 @@ class DirectoriesTable extends ControllerActionTable
                 $buttons['history']['label'] = $icon . __('History');
                 $buttons['history']['url'] = $this->ControllerAction->setQueryString($url, [
                     'security_user_id' => $userId,
-                    'user_type' => $this->alias()
+                    'user_type' => $this->getAlias()
                 ]);
             }
             // end history button
@@ -1242,7 +1242,7 @@ class DirectoriesTable extends ControllerActionTable
 
     private function setupTabElements($entity)
     {
-        $id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
+        $id = !is_null($this->request->getQuery('id')) ? $this->request->getQuery('id') : 0;
 
         $options = [
             // 'userRole' => 'Student',
@@ -1250,10 +1250,9 @@ class DirectoriesTable extends ControllerActionTable
             // 'id' => $id,
             // 'userId' => $entity->id
         ];
-
         $tabElements = $this->controller->getUserTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function onGetInstitution(Event $event, Entity $entity)

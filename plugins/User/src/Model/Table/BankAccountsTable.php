@@ -15,9 +15,9 @@ use App\Model\Table\ControllerActionTable;
 class BankAccountsTable extends ControllerActionTable
 {
     use OptionsTrait;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_bank_accounts');
+        $this->setTable('user_bank_accounts');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
@@ -30,7 +30,7 @@ class BankAccountsTable extends ControllerActionTable
         $this->fields['active']['options'] = $this->getSelectOptions('general.yesno');
 
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){
+        if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Bank Accounts','Staff - Finance');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -48,7 +48,7 @@ class BankAccountsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
+        }elseif($this->request->getParam('controller') == 'Students'){
             $is_manual_exist = $this->getManualUrl('Institutions','Bank Accounts','Students - Finance');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -67,7 +67,7 @@ class BankAccountsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories' && $this->request->params['action'] == 'StaffBankAccounts'){ 
+        }elseif($this->request->getParam('controller') == 'Directories' && $this->request->getParam('action') == 'StaffBankAccounts'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Bank Accounts','Staff - Finance');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -86,7 +86,7 @@ class BankAccountsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories' && $this->request->params['action'] == 'StudentBankAccounts'){ 
+        }elseif($this->request->getParam('controller') == 'Directories' && $this->request->getParam('action') == 'StudentBankAccounts'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Bank Accounts','Students - Finance');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -145,7 +145,7 @@ class BankAccountsTable extends ControllerActionTable
         $this->setFieldOrder(['account_name', 'account_number', 'active', 'bank_name', 'bank_branch_id']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -197,7 +197,8 @@ class BankAccountsTable extends ControllerActionTable
         $this->setupTabElements();
     }
 
-    public function onUpdateFieldBankName(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldBankName(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldBankName(Event $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
             $bankId = $request->query('bank_option');
@@ -218,7 +219,8 @@ class BankAccountsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldBankBranchId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldBankBranchId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldBankBranchId(Event $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
             if (array_key_exists('bank_option', $request->query)) {

@@ -5,7 +5,7 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
 class StudentGuardiansTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 
 		$this->belongsTo('StudentUsers', ['className' => 'User.Users', 'foreignKey' => 'student_user_id']);
@@ -14,7 +14,7 @@ class StudentGuardiansTable extends AppTable {
 		// $this->belongsTo('GuardianEducationLevels', ['className' => 'FieldOption.GuardianEducationLevels']); // Not in used currently
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 
 		return $validator

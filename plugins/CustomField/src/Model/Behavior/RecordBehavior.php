@@ -16,6 +16,7 @@ use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\Datasource\ConnectionManager;
 use Cake\Http\ServerRequest;
+use Cake\Utility\Text;
 
 class RecordBehavior extends Behavior
 {
@@ -797,7 +798,7 @@ class RecordBehavior extends Behavior
             foreach ($customFields as $key => $obj) {
                 $customField = $obj->custom_field;
                 $fieldTypeCode = $customField->field_type;
-				$section = Inflector::slug($obj->section);
+				$section = Text::slug($obj->section);
 				
                 // only apply for field type store in custom_field_values
                 if (in_array($fieldTypeCode, $this->fieldValueArray)) {
@@ -865,7 +866,7 @@ class RecordBehavior extends Behavior
                 if (isset($obj->section)) {
                     if ($sectionName != $obj->section) {
                         $sectionName = $obj->section;
-                        $tabName = Inflector::slug($sectionName);
+                        $tabName = Text::slug($sectionName);
                         // set the first tab section into a global variable
                         if (is_null($this->firstTabName)) {
                             $this->firstTabName = $tabName;
@@ -934,9 +935,9 @@ class RecordBehavior extends Behavior
             $cells = new ArrayObject([]);
 
             if (isset($entity->id)) {
-                $fieldKey = $this->config('fieldKey');
-                $tableRowKey = $this->config('tableRowKey');
-                $tableColumnKey = $this->config('tableColumnKey');
+                $fieldKey = $this->getConfig('fieldKey');
+                $tableRowKey = $this->getConfig('tableRowKey');
+                $tableColumnKey = $this->getConfig('tableColumnKey');
 
                 if ($entity->has('custom_field_values')) {
                     foreach ($entity->custom_field_values as $key => $obj) {
@@ -1000,13 +1001,13 @@ class RecordBehavior extends Behavior
             foreach ($customFields as $key => $obj) {
                 // If tabSection is not set, setup Section Header
                 //POCOR-7600
-                if ((!$this->config('tabSection'))||$model->request->params['action']=="Surveys") {
+                if ((!$this->getConfig('tabSection'))|| $model->request->getParam('action')=="Surveys") {
                     if (isset($obj->section)) {
                         if (!in_array($obj->section, $sectionName)) {
                             $sectionName[$key] = $obj->section;
                             $fieldName = "section_".$key."_header";
                             
-                            if (!empty($sectionName)&&$model->request->params['action']!="Surveys") {
+                            if (!empty($sectionName)&&$model->request->getParam('action')!="Surveys") {
                                 $ControllerAction->field($fieldName, ['type' => 'section', 'title' => $sectionName[$key]]);
                                 $fieldOrder[++$order] = $fieldName;
                                // echo "<pre>";print_r($customFields);die;
@@ -1024,10 +1025,10 @@ class RecordBehavior extends Behavior
                                         'type' => 'custom_'. strtolower($fieldType),
                                         'attr' => [
                                             'label' => $customField->name,
-                                            'fieldKey' => $this->config('fieldKey'),
-                                            'formKey' => $this->config('formKey'),
-                                            'tableColumnKey' => $this->config('tableColumnKey'),
-                                            'tableRowKey' => $this->config('tableRowKey')
+                                            'fieldKey' => $this->getConfig('fieldKey'),
+                                            'formKey' => $this->getConfig('formKey'),
+                                            'tableColumnKey' => $this->getConfig('tableColumnKey'),
+                                            'tableRowKey' => $this->getConfig('tableRowKey')
                                         ],
                                         'valueClass' => $valueClass,
                                         'customField' => $customField,
@@ -1049,7 +1050,7 @@ class RecordBehavior extends Behavior
             
                                     // For survey only
                                     // To show the field in the view page base on the rules
-                                    if (is_null($this->config('moduleKey')) && $this->_table->action == 'view') {
+                                    if (is_null($this->getConfig('moduleKey')) && $this->_table->action == 'view') {
                                         $id = $attr['customField']['id'];
                                         if (isset($rules[$id])) {
                                             $answer = $this->_table->array_column($attr['customFieldValues'], 'number_value');

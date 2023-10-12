@@ -593,9 +593,9 @@ class ControllerActionHelper extends Helper
                         $table = TableRegistry::getTableLocator()->get($attr['className']);
                         $associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($_field);
                     }
-
                     if (!empty($associatedObject) && $data->has($associatedObject)) {
-                        $value = __($data->{$associatedObject}->name);
+                        // $value = __($data->{$associatedObject}->name);
+                        $value = $data->{$associatedObject}->name;
                         $associatedFound = true;
                     }
                 }

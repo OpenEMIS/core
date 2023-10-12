@@ -2142,7 +2142,8 @@ class InstitutionsController extends AppController
         } elseif ($action == 'StudentUser') {
             $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
         } elseif ($action == 'StaffUser') {
-            $session->write('Staff.Staff.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
+            // $session->write('Staff.Staff.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
+            $session->write('Staff.Staff.id', $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1]));
         }
 
         if (($session->check('Institution.Institutions.id')
@@ -3531,7 +3532,7 @@ class InstitutionsController extends AppController
 
     public function getUserTabElements($options = [])
     {
-        $encodedParam = $this->request->params['pass'][1]; //get the encoded param from URL
+        $encodedParam = $this->request->getParam('pass')[1]; //get the encoded param from URL
 
         $userRole = (array_key_exists('userRole', $options)) ? $options['userRole'] : null;
         $action = (array_key_exists('action', $options)) ? $options['action'] : 'add';
@@ -3617,7 +3618,7 @@ class InstitutionsController extends AppController
                     );
 
                 if ($key == 'Comments') {
-                    $institutionId = $this->request->session()->read('Institution.Institutions.id');
+                    $institutionId = $this->request->getSession()->read('Institution.Institutions.id');
 
                     $url = [
                         'plugin' => 'Institution',
@@ -3647,7 +3648,7 @@ class InstitutionsController extends AppController
 
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
 
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $session->write('Institution.' . $type . '.tabElements', $tabElements);
 
         return $tabElements;

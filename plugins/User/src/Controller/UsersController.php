@@ -489,11 +489,9 @@ class UsersController extends AppController
     public function postLogin($authenticationType = 'Local', $code = null)
     {
         $request = new ServerRequest();
-        if ($_SERVER['REQUEST_METHOD']=='POST' && $this->getRequest()->getData('submit') == 'reload') {
-            // echo "<pre>";print_r("Hii");die();
+        if (($_SERVER['REQUEST_METHOD']=='POST' && $this->getRequest()->getData('submit') == 'reload')) {
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
         }
-        // echo "<pre>";print_r("Hello");die();
        
         //POCOR-7156 starts
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');

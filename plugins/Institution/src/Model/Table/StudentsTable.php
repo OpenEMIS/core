@@ -45,7 +45,7 @@ class StudentsTable extends ControllerActionTable
         $this->setTable('institution_students');
         parent::initialize($config);
         // Associations
-        $this->hasOne('Users', ['className' => 'Security.Users', 'foreignKey' => 'id']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id', 'joinType' => 'RIGHT']);
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -3284,10 +3284,10 @@ class StudentsTable extends ControllerActionTable
         $transferredStatusID = $statuses['TRANSFERRED'];
         $promotedStatusID = $statuses['PROMOTED'];
         $current_year_id = $this->academic_period_id;
-        $InstitutionStudents = TableRegistry::get('institution_students');
+        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $this->previousStudents = $InstitutionStudents
             ->find('list', ['keyField' => 'id', 'valueField' => 'student_status_id'])
-            ->innerJoin([$this->alias() => $this->table()],
+            ->innerJoin([$this->getAlias() => $this->getTable()],
                 [$InstitutionStudents->aliasField('id = ')
                     . $this->aliasField('previous_institution_student_id')
                 ])
@@ -3302,7 +3302,7 @@ class StudentsTable extends ControllerActionTable
 
     private function setAcademicPeriodID()
     {
-        $periodId = $this->request->query['academic_period_id'];
+        $periodId =$this->request->getQuery('academic_period_id');
         if (!$periodId) {
             $periodId = $this->AcademicPeriods->getCurrent();
         }
@@ -3311,7 +3311,8 @@ class StudentsTable extends ControllerActionTable
 
     private function setInstitutionID()
     {
-        $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->Session->read('Institution.Institutions.id');
+        // echo "<pre>";print_r($this->request);die;
+        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->Session->read('Institution.Institutions.id');
         $this->institution_id = $institutionId;
     }
 

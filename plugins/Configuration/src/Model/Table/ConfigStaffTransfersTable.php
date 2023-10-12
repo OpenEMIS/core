@@ -22,9 +22,9 @@ class ConfigStaffTransfersTable extends ControllerActionTable
     CONST SELECT_INSTITUTION_SECTORS = 1;
     CONST SELECT_ALL_INSTITUTION_SECTORS = '-1';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('config_items');
+        $this->setTable('config_items');
         parent::initialize($config);
  
         $this->addBehavior('Configuration.ConfigItems');

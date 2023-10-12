@@ -1768,6 +1768,7 @@ class NavigationComponent extends Component
         //POCOR-5886 starts
         $session = $this->getController()->getRequest()->getSession();
         $profileUserId = $this->controller->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        // echo "<pre>";print_r($profileUserId);die;
         
         //POCOR-5886 ends
         $navigation = [
@@ -2565,14 +2566,14 @@ class NavigationComponent extends Component
             }
             if(!empty($rowId)){
                 $SecurityReportFunctions = $SecurityRoleFunctions->find()
-                    ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                    ->LeftJoin([$securityFunctions->getAlias() => $securityFunctions->getTable()],
                             [
                                 $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
                             ]
                         )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
                         $securityFunctions->aliasField('module') => 'Reports', $SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
                 $SecurityAdminFunctions = $SecurityRoleFunctions->find()
-                    ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                    ->LeftJoin([$securityFunctions->getAlias() => $securityFunctions->getTable()],
                             [
                                 $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
                             ]
@@ -2673,21 +2674,21 @@ class NavigationComponent extends Component
 
             if(!empty($rowId)){
                 $SecurityCustomFunctions = $SecurityRoleFunctions->find()
-                    ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                    ->LeftJoin([$securityFunctions->getAlias() => $securityFunctions->getTable()],
                             [
                                 $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
                             ]
                         )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
                         $securityFunctions->aliasField('category') => 'Custom Fields',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
                 $SecuritylocalizationFunctions = $SecurityRoleFunctions->find()
-                    ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                    ->LeftJoin([$securityFunctions->getAlias() => $securityFunctions->getTable()],
                             [
                                 $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
                             ]
                         )->where([$SecurityRoleFunctions->aliasField('security_role_id IN')=>$rowId, 
                         $securityFunctions->aliasField('category') => 'Localization',$SecurityRoleFunctions->aliasField('_view') =>1])->toArray();
                 $SecurityApiFunctions = $SecurityRoleFunctions->find()
-                    ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                    ->LeftJoin([$securityFunctions->getAlias() => $securityFunctions->getTable()],
                             [
                                 $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
                             ]
@@ -3105,7 +3106,7 @@ class NavigationComponent extends Component
         }
         if(!empty($rowId)){
             $SecurityFunctions = $SecurityRoleFunctions->find()
-                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                ->LeftJoin([$securityFunctions->getAlias() => $securityFunctions->getTable()],
                         [
                             $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
                         ]
@@ -3213,7 +3214,7 @@ class NavigationComponent extends Component
         }
         if(!empty($rowId)){
             $SecurityProfilesFunctions = $SecurityRoleFunctions->find()
-                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                ->LeftJoin([$securityFunctions->getAlias() => $securityFunctions->getTable()],
                         [
                             $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
                         ]
@@ -3348,7 +3349,7 @@ class NavigationComponent extends Component
         }
         if(!empty($rowId)){
             $SecuritySurveyFunctions = $SecurityRoleFunctions->find()
-                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                ->LeftJoin([$securityFunctions->getAlias() => $securityFunctions->getTable()],
                         [
                             $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
                         ]
@@ -3451,7 +3452,7 @@ class NavigationComponent extends Component
         }
         if(!empty($rowId)){
             $SecurityCommunicationsFunctions = $SecurityRoleFunctions->find()
-                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                ->LeftJoin([$securityFunctions->getAlias() => $securityFunctions->getTable()],
                         [
                             $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
                         ]
@@ -3603,7 +3604,7 @@ class NavigationComponent extends Component
 
         if(!empty($rowId)){
             $SecurityExaminationsFunctions = $SecurityRoleFunctions->find()
-                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                ->LeftJoin([$securityFunctions->getAlias() => $securityFunctions->getTable()],
                         [
                             $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
                         ]
@@ -3738,7 +3739,7 @@ class NavigationComponent extends Component
         }
         if(!empty($rowId)){
             $SecurityScholarshipsFunctions = $SecurityRoleFunctions->find()
-                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                ->LeftJoin([$securityFunctions->getAlias() => $securityFunctions->getTable()],
                         [
                             $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
                         ]
@@ -3922,7 +3923,7 @@ class NavigationComponent extends Component
         }
         if(!empty($rowId)){
             $SecurityMoodleFunctions = $SecurityRoleFunctions->find()
-                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                ->LeftJoin([$securityFunctions->getAlias() => $securityFunctions->getTable()],
                         [
                             $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
                         ]
@@ -4001,7 +4002,7 @@ class NavigationComponent extends Component
         }
         if(!empty($rowId)){
             $SecurityMoodleFunctions = $SecurityRoleFunctions->find()
-                ->LeftJoin([$securityFunctions->alias() => $securityFunctions->table()],
+                ->LeftJoin([$securityFunctions->getAlias() => $securityFunctions->getTable()],
                         [
                             $securityFunctions->aliasField('id = ') . $SecurityRoleFunctions->aliasField('security_function_id'),
                         ]
@@ -4092,7 +4093,7 @@ class NavigationComponent extends Component
     {
 //        $this->log('user_id', 'debug');
 //        $this->log($user_id, 'debug');
-        $GroupUsers = TableRegistry::get('security_group_users');
+        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $distinctResults = $GroupUsers->find('all')
             ->where(['security_user_id' => $user_id])
             ->select(['security_role_id'])
@@ -4121,10 +4122,10 @@ class NavigationComponent extends Component
             $category = [$category];
         }
         $has_user_permission = false;
-        $securityRoleFunctions = TableRegistry::get('security_role_functions');
-        $securityFunctions = TableRegistry::get('security_functions');
+        $securityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
+        $securityFunctions = TableRegistry::get('Security.SecurityFunctions');
         $SecurityTrainingFunctions = $securityRoleFunctions->find()
-            ->InnerJoin([$securityFunctions->alias() => $securityFunctions->table()],
+            ->InnerJoin([$securityFunctions->getAlias() => $securityFunctions->getTable()],
                 [
                     $securityFunctions->aliasField('id = ') .
                     $securityRoleFunctions->aliasField('security_function_id'),
