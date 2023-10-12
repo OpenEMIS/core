@@ -10,7 +10,7 @@ class CustomModule extends Entity
         'Institution.Institutions' => [
             'filter' => 'Institution.Types',
             'behavior' => null,
-            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','STUDENT_LIST','FILE','COORDINATES','REPEATER','NOTE']
+            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','STUDENT_LIST','STAFF_LIST','FILE','COORDINATES','REPEATER','NOTE']
         ],
         'Student.Students' => [
             'filter' => null,
@@ -27,6 +27,13 @@ class CustomModule extends Entity
             'behavior' => null,
             'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','DATE','TIME']
         ],
+        //POCOR-2135 start
+        'Staff.StaffSurveys' => [
+            'filter' => null,
+            'behavior' => null,
+            'supported_field_types' => ['TEXT', 'NUMBER', 'DECIMAL', 'TEXTAREA', 'DROPDOWN', 'DATE', 'TIME']
+        ],
+        //POCOR-2135 end
         'InstitutionRepeater.RepeaterSurveys' => [
             'filter' => null,
             'behavior' => null,

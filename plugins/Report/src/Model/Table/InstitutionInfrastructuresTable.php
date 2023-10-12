@@ -36,7 +36,7 @@ class InstitutionInfrastructuresTable extends AppTable
         //$this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
         $this->addBehavior('Excel', ['excludes' => ['security_group_id', 'logo_name'], 'pages' => false]);
         $this->addBehavior('Report.ReportList');
-     
+        $this->addBehavior('Report.AreaList');//POCOR-7794
 
     }
 
@@ -307,7 +307,7 @@ class InstitutionInfrastructuresTable extends AppTable
         $infrastructureType = $requestData->infrastructure_type;
         $institutionTypeId = $requestData->institution_type_id;
         $areaId = $requestData->area_education_id;
-        
+        $areaLevelId = $requestData->area_level_id; //POCOR-7794
         $institutionLands = TableRegistry::get('Institution.InstitutionLands');
         $institutionFloors = TableRegistry::get('Institution.InstitutionFloors');
         $institutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
@@ -334,9 +334,23 @@ class InstitutionInfrastructuresTable extends AppTable
         if (!empty($institutionId)) {
             $conditions[$this->aliasField('id')] = $institutionId;
         }
-        if (!empty($areaId) && $areaId != -1) {
-            $conditions[$this->aliasField('area_id')] = $areaId;
+        //POCOR-7794 start
+        $areaList = [];
+        if (
+            $areaLevelId > 1 && $areaId > 1
+        ) {
+            $areaList = $this->getAreaList($areaLevelId, $areaId);
+        } elseif ($areaLevelId > 1) {
+
+            $areaList = $this->getAreaList($areaLevelId, 0);
+        } elseif ($areaId > 1) {
+            $areaList = $this->getAreaList(0, $areaId);
         }
+        if (!empty($areaList)) {
+            $conditions[$this->aliasField('area_id IN')] = $areaList;
+        }
+        //POCOR-7794 end
+
         $institutions = TableRegistry::get('Institution.Institutions');
         $institutionIds = $institutions->find('list', [
                                                     'keyField' => 'id',

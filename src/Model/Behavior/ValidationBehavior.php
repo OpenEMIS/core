@@ -2756,7 +2756,7 @@ class ValidationBehavior extends Behavior
         $StaffPositionGrades = TableRegistry::get('Institution.StaffPositionGrades');
 
         $institutionPositionGrades = $InstitutionPositions->find()
-                            ->distinct('staff_position_grade_id')
+                            //->distinct('staff_position_grade_id') //POCOR-7839
                             ->where([
                                 $InstitutionPositions->aliasField('staff_position_title_id') => $globalData['data']['id']
                             ])

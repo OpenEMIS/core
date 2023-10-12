@@ -46,6 +46,7 @@ class InstitutionClassesTable extends AppTable
             ],
             'autoFields' => false
         ]);
+        $this->addBehavior('Report.AreaList');//POCOR-7794
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.InstitutionSecurity');
     }
@@ -102,13 +103,27 @@ class InstitutionClassesTable extends AppTable
         $institution_id = $requestData->institution_id;
         $gradesId = $requestData->education_grade_id;
         $areaId = $requestData->area_education_id;
+        $areaLevelId = $requestData->area_level_id;//POCOR-7794
         $where = [];
         if ($institution_id != 0) {
             $where['Institutions.id'] = $institution_id;
         }
-        if ($areaId != -1) {
-            $where['Institutions.area_id'] = $areaId;
+        //POCOR-7794 start
+        $areaList = [];
+        if (
+            $areaLevelId > 1 && $areaId > 1
+        ) {
+            $areaList = $this->getAreaList($areaLevelId, $areaId);
+        } elseif ($areaLevelId > 1) {
+
+            $areaList = $this->getAreaList($areaLevelId, 0);
+        } elseif ($areaId > 1) {
+            $areaList = $this->getAreaList(0, $areaId);
         }
+        if (!empty($areaList)) {
+            $where['Institutions.area_id IN'] = $areaList;
+        }
+        //POCOR-7794 end
         if ($gradesId != -1) {
             $where['InstitutionClassGrades.education_grade_id'] = $gradesId;
         }
