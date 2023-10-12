@@ -76,10 +76,7 @@ class ProfilesController extends AppController
         $this->set('contentHeader', 'Personal');
     }
 
-    public function Accounts() 
-    {
-        return $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Accounts', 'actions' => ['index', 'view']]);
-    }
+    public function Accounts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Accounts', 'actions' => ['index', 'view']]); }
     public function Personal() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
     //public function Profiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
 
@@ -619,8 +616,7 @@ class ProfilesController extends AppController
         }
     }
 
-    public
-    function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         $session = $this->request->getSession();
 

@@ -13,7 +13,7 @@ use App\Controller\PageController;
 
 class LocaleContentsController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
@@ -32,7 +32,7 @@ class LocaleContentsController extends PageController
 			 */
 		// Starts POCOR-6626
 	   
-	   
+        $this->loadComponent('Page.Page');
 	    $this->Page->disable(['delete']);
 		
 		// End POCOR-6626

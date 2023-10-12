@@ -14,9 +14,9 @@ use App\Model\Table\ControllerActionTable;
 class StudentSubjectsTable extends ControllerActionTable
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_subject_students');
+        $this->setTable('institution_subject_students');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -95,7 +95,7 @@ class StudentSubjectsTable extends ControllerActionTable
 
 
    		// Start POCOR-5188
-		if($this->request->params['controller'] == 'Students'){
+		if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Subjects','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -113,7 +113,7 @@ class StudentSubjectsTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Subjects','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -141,7 +141,7 @@ class StudentSubjectsTable extends ControllerActionTable
     {
         // Academic Periods filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
@@ -174,7 +174,7 @@ class StudentSubjectsTable extends ControllerActionTable
         }
 
         $institutionOptions = ['-1' => __('All Institutions')] + $institutionOptions;
-        $selectedInstitution = !is_null($this->request->query('institution_id')) ? $this->request->query('institution_id') : -1;
+        $selectedInstitution = !is_null($this->request->getQuery('institution_id')) ? $this->request->getQuery('institution_id') : -1;
         $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
 
         if ($selectedInstitution != -1) {
@@ -196,7 +196,7 @@ class StudentSubjectsTable extends ControllerActionTable
         }
 
         $gradeOptions = ['-1' => __('All Grades')] + $gradeOptions;
-        $selectedGrade = !is_null($this->request->query('education_grade_id')) ? $this->request->query('education_grade_id') : -1;
+        $selectedGrade = !is_null($this->request->getQuery('education_grade_id')) ? $this->request->getQuery('education_grade_id') : -1;
         $this->controller->set(compact('gradeOptions', 'selectedGrade'));
 
         if ($selectedGrade != -1) {
@@ -206,7 +206,7 @@ class StudentSubjectsTable extends ControllerActionTable
         
         
         $userData = $this->Session->read();
-        $session = $this->request->session();//POCOR-6267
+        $session = $this->request->getSession();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) {
             //$sId = $userData['Student']['ExaminationResults']['student_id'];//POCOR-6267
             //$studentId = $this->ControllerAction->paramsDecode($sId)['id'];//POCOR-6267
@@ -232,7 +232,7 @@ class StudentSubjectsTable extends ControllerActionTable
         //POCOR-6468
         if(isset($userData['Institution']['StudentUser']['primaryKey']['id'])){
             $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');//POCOR-6468 starts
-            $InstitutionClassStudents = TableRegistry::get('institution_class_students');
+            $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
             $InstitutionClassStudentsQuery = $InstitutionClassStudents->find()
                                 ->where([
                                     $InstitutionClassStudents->aliasField('student_id') => $userData['Institution']['StudentUser']['primaryKey']['id'],
@@ -245,14 +245,14 @@ class StudentSubjectsTable extends ControllerActionTable
                 $where[$this->aliasField('institution_class_id')] = $InstitutionClassStudentsQuery->institution_class_id;
             }
         }
-        $InstitutionClassStudents = TableRegistry::get('institution_class_students');
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         //POCOR-6468
       //  $where[$this->aliasField('student_status_id')] = $enrolledStatus; //POCOR-7111
         
         $query
             ->matching('InstitutionClasses.ClassGrades')
             ->innerJoin(//POCOR-6468
-                [$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()],
+                [$InstitutionClassStudents->getAlias() => $InstitutionClassStudents->getTable()],
                 [
                     $InstitutionClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $InstitutionClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),

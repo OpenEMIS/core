@@ -16,10 +16,10 @@ use App\Model\Table\ControllerActionTable;
 
 class StaffUserTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
-        $this->entityClass('User.User');
+        $this->setTable('security_users');
+        $this->getEntityClass('User.User');
         parent::initialize($config);
         self::handleAssociations($this);
         // Behaviors
@@ -38,7 +38,7 @@ class StaffUserTable extends ControllerActionTable
             'formKey' => 'staff_custom_form_id',
             'filterKey' => 'staff_custom_filter_id',
             'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
-            'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
+            // 'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
             'recordKey' => 'staff_id',
             'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
             'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
@@ -55,7 +55,7 @@ class StaffUserTable extends ControllerActionTable
                 '_function' => 'getNumberOfStaffByGender'
             ]
         ]);
-        $this->addBehavior('Configuration.Pull');
+        // $this->addBehavior('Configuration.Pull');
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Staff' => ['index', 'add', 'edit'],
@@ -120,7 +120,7 @@ class StaffUserTable extends ControllerActionTable
         $model->hasMany('InstitutionRubrics', ['className' => 'Institution.InstitutionRubrics', 'foreignKey' => 'staff_id', 'dependent' => true]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Staff.afterSave'] = 'staffAfterSave';
@@ -142,7 +142,7 @@ class StaffUserTable extends ControllerActionTable
         $this->field('username', ['visible' => false]);
         $toolbarButtons = $extra['toolbarButtons'];
         if ($this->action == 'view') {
-            $id = $this->request->query('id');
+            $id = $this->request->getQuery('id');
             $this->Session->write('Institution.Staff.id', $id);
             if ($toolbarButtons->offsetExists('back')) {
                 $toolbarButtons['back']['url']['action'] = 'Staff';
@@ -319,7 +319,7 @@ class StaffUserTable extends ControllerActionTable
     }
 
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $BaseUsers = TableRegistry::get('User.Users');
@@ -393,7 +393,7 @@ class StaffUserTable extends ControllerActionTable
     {
         if($this->AccessControl->check([$this->controller->name, 'StaffRelease', 'add'])) {
 
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $toolbarButtons = $extra['toolbarButtons'];
             $StaffTable = TableRegistry::get('Institution.Staff');
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
@@ -437,7 +437,7 @@ class StaffUserTable extends ControllerActionTable
     private function addTransferButton(Entity $entity, ArrayObject $extra)
     {
         if ($this->AccessControl->check([$this->controller->name, 'StaffTransferOut', 'add'])) {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $toolbarButtons = $extra['toolbarButtons'];
             $StaffTable = TableRegistry::get('Institution.Staff');
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
@@ -743,18 +743,17 @@ class StaffUserTable extends ControllerActionTable
 
     private function setupTabElements($entity)
     {
-        $id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
+        $id = !is_null($this->request->getQuery('id')) ? $this->request->getQuery('id') : 0;
         $options = [
             'userRole' => 'Staff',
             'action' => $this->action,
             'id' => $id,
             'userId' => $entity->id
         ];
-
         $tabElements = $this->controller->getUserTabElements($options);
 
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function staffAfterSave(Event $event, $staff)
@@ -918,7 +917,7 @@ class StaffUserTable extends ControllerActionTable
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
         $userNationalities = TableRegistry::get('StaffUser.userNationalities');
         $userContacts = TableRegistry::get('StaffUser.userContacts');

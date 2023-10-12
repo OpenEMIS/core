@@ -10,9 +10,9 @@ use App\Model\Table\ControllerActionTable;
 
 class LicenseTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('license_types');
+        $this->setTable('license_types');
         parent::initialize($config);
 
 		$this->hasMany('LicenseClassifications', ['className' => 'FieldOption.LicenseClassifications', 'foreignKey' => 'license_type_id']);

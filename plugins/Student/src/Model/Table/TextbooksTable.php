@@ -8,9 +8,9 @@ use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
 
 class TextbooksTable extends ControllerActionTable {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_textbooks');
+        $this->setTable('institution_textbooks');
         parent::initialize($config);
 
         $this->belongsTo('MainTextbooks',       ['className' => 'Textbook.Textbooks', 'foreignKey' => ['textbook_id', 'academic_period_id']]);
@@ -54,7 +54,7 @@ class TextbooksTable extends ControllerActionTable {
         $this->fields['textbook_id']['sort'] = ['field' => 'MainTextbooks.title'];
 
         // Start POCOR-5188
-		if($this->request->params['controller'] == 'Students'){
+		if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Textbooks','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -72,7 +72,7 @@ class TextbooksTable extends ControllerActionTable {
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Textbooks','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -97,7 +97,7 @@ class TextbooksTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $userData = $this->Session->read(); //# [POCOR-6548] Check if user data not found then add current login user data
 
         // POCOR-1893 Profile using loginId as studentId
@@ -173,7 +173,7 @@ class TextbooksTable extends ControllerActionTable {
         $options['type'] = 'student';
         $tabElements = $this->controller->getAcademicTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function onGetTextbookId(Event $event, Entity $entity)

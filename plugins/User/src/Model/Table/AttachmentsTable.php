@@ -14,9 +14,9 @@ use App\Model\Table\ControllerActionTable;
 
 class AttachmentsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_attachments');
+        $this->setTable('user_attachments');
         parent::initialize($config);
 
         $this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all', 'useDefaultName' => true]);
@@ -38,18 +38,20 @@ class AttachmentsTable extends ControllerActionTable
 
                 //change behaviour config
         if ($this->behaviors()->has('ControllerAction')) {
-            $this->behaviors()->get('ControllerAction')->config([
-                'actions' => [
-                    'download' => ['show' => true] //to show download on toolbar
-                ]
-            ]);
+            // $this->behaviors()->get('ControllerAction')->config([
+            //     'actions' => [
+            //         'download' => ['show' => true] //to show download on toolbar
+            //     ]
+            // ]);
+            $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
+            $controllerActionBehavior->setConfig(['actions' => ['download' => ['show' => true]]]);
         }
     }
 
     //START:POCOR-5067
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
-        $UserTable = TableRegistry::get('security_users');
+        $UserTable = TableRegistry::getTableLocator()->get('User.Users');
         $queryString = $this->ControllerAction->getQueryString();
         $user = $UserTable->find()->where(['id'=>$queryString['security_user_id']])->first();
         if($user->is_staff == 1){
@@ -92,8 +94,9 @@ class AttachmentsTable extends ControllerActionTable
         $this->field('created', ['visible' => true]);
         $this->field('created_user_id', ['visible' => true]);
         $this->field('security_roles', ['attr' => ['label' => __('Shared')]]);
-        $UserTable = TableRegistry::get('security_users');
+        $UserTable = TableRegistry::getTableLocator()->get('User.Users');
         $queryString = $this->ControllerAction->getQueryString();
+        // echo "<pre>";print_r($queryString);die;
         $user = $UserTable->find()->where(['id'=>$queryString['security_user_id']])->first();
         if($user->is_staff == 1){
             $this->field('staff_attachment_type_id',  ['attr' => ['label' => __('Type')],'visible' => true]);
@@ -291,7 +294,8 @@ class AttachmentsTable extends ControllerActionTable
         return $this->getFileTypeForView($entity->file_name);
     }
 
-    public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['options'] = TableRegistry::get('Security.SecurityRoles')->getSystemRolesList();
@@ -330,7 +334,7 @@ class AttachmentsTable extends ControllerActionTable
 ******************************************************************************************************************/
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
-        $UserTable = TableRegistry::get('security_users');
+        $UserTable = TableRegistry::getTableLocator()->get('User.Users');
         $queryString = $this->ControllerAction->getQueryString();
         $user = $UserTable->find()->where(['id'=>$queryString['security_user_id']])->first();
 

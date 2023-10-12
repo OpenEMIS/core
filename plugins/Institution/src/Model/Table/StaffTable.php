@@ -525,7 +525,7 @@ class StaffTable extends ControllerActionTable
 
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
 
-        $selectedStatus = $this->request->query('staff_status_id');
+        $selectedStatus = $this->request->getQuery('staff_status_id');
 
         switch ($selectedStatus) {
             case self::PENDING_PROFILE:
@@ -675,11 +675,12 @@ class StaffTable extends ControllerActionTable
         $periodOptions = $AcademicPeriodTable->getYearList();
 
         if (empty($request->query['academic_period_id'])) {
-            $request->query['academic_period_id'] = $AcademicPeriodTable->getCurrent();
+            // $request->query['academic_period_id'] = $AcademicPeriodTable->getCurrent();
+            $this->request = $this->request->withQueryParams(['academic_period_id' =>  $AcademicPeriodTable->getCurrent()]);
         }
 
         // Positions
-        $session = $request->session();
+        $session = $request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
 
         $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
@@ -693,7 +694,7 @@ class StaffTable extends ControllerActionTable
                 ]);
                 return $q;
             })
-            ->group([$StaffPositionTitles->aliasField($StaffPositionTitles->primaryKey())])
+            ->group([$StaffPositionTitles->aliasField($StaffPositionTitles->getPrimaryKey())])
             ->order([$StaffPositionTitles->aliasField('order')])
             ->toArray();
 
@@ -721,7 +722,8 @@ class StaffTable extends ControllerActionTable
             $extra['toolbarButtons']['export']['url']['academic_period_id'] = $selectedPeriod;
         }
 
-        $request->query['academic_period_id'] = $selectedPeriod;
+        // $request->query['academic_period_id'] = $selectedPeriod;
+        $this->request = $this->request->withQueryParams(['academic_period_id' =>  $selectedPeriod]);
 
         $this->advancedSelectOptions($positionOptions, $selectedPosition);
 
@@ -741,7 +743,7 @@ class StaffTable extends ControllerActionTable
         $statusOptions = $this->StaffStatuses->find('list')->toArray();
 
         $approvedStatus = $this->Workflow->getStepsByModelCode('Institution.StaffPositionProfiles', 'APPROVED');
-        $closedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'CLOSED');
+        $closedStatus = $this->Workflow->getStepsByModelCode($this->getRegistryAlias(), 'CLOSED');
         $staffPositionProfileStatuses = array_merge($approvedStatus, $closedStatus);
 
         $StaffPositionProfilesTable = TableRegistry::get('Institution.StaffPositionProfiles');
@@ -783,7 +785,8 @@ class StaffTable extends ControllerActionTable
 
         $selectedStatus = $this->queryString('staff_status_id', $statusOptions);
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
-        $request->query['staff_status_id'] = $selectedStatus;
+        // $request->query['staff_status_id'] = $selectedStatus;
+        $this->request = $this->request->withQueryParams(['academic_period_id' =>  $selectedStatus]);
         $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
 
         // POCOR-2547 sort list of staff and student by name
@@ -857,14 +860,14 @@ class StaffTable extends ControllerActionTable
                         "`" . $typesIdentity->identity_type . "`" => $UserIdentities->aliasField('number') //POCRO-6583 added single quote as identity_type was not working for some clients
                     ])
                     ->leftJoin(
-                        [$UserIdentities->alias() => $UserIdentities->table()],
+                        [$UserIdentities->getAlias() => $UserIdentities->getTable()],
                         [
                             $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
                             $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id
                         ]
                     )
                     ->leftJoin(
-                        [$IdentityTypes->alias() => $IdentityTypes->table()],
+                        [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
                         [
                             $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
                             //$IdentityTypes->aliasField('id = ') . $typesIdentity->id
@@ -1228,7 +1231,7 @@ class StaffTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (isset($buttons['view'])) {
-            $primaryKey = is_array($this->primaryKey()) ? array_flip($this->primaryKey()) : [0 => $this->primaryKey()];
+            $primaryKey = is_array($this->getPrimaryKey()) ? array_flip($this->getPrimaryKey()) : [0 => $this->getPrimaryKey()];
             $entityArr = $entity->getOriginalValues();
             $primaryKeyValues = array_intersect_key($entityArr, $primaryKey);
             $encodeValue = $this->paramsEncode($primaryKeyValues);
@@ -1263,7 +1266,7 @@ class StaffTable extends ControllerActionTable
         }
 
         if (isset($buttons['edit'])) {
-            $primaryKey = is_array($this->primaryKey()) ? array_flip($this->primaryKey()) : [0 => $this->primaryKey()];
+            $primaryKey = is_array($this->getPrimaryKey()) ? array_flip($this->getPrimaryKey()) : [0 => $this->getPrimaryKey()];
             $url = $this->url('add');
             $url['action'] = 'StaffPositionProfiles';
             $url['institution_staff_id'] = $this->paramsEncode(['id' => $entity->id]);
@@ -1328,13 +1331,13 @@ class StaffTable extends ControllerActionTable
             $session = $this->Session;
             $institutionId = $session->read('Institution.Institutions.id');
 
-            $periodId = $this->request->query('academic_period_id');
+            $periodId = $this->request->getQuery('academic_period_id');
             $conditions = ['institution_id' => $institutionId];
 
-            $positionId = $this->request->query('position');
+            $positionId = $this->request->getQuery('position');
 
-            $searchConditions = $this->getSearchConditions($this->Users, $this->request->data['Search']['searchField']);
-            $searchConditions['OR'] = array_merge($searchConditions['OR'], $this->advanceNameSearch($this->Users, $this->request->data['Search']['searchField']));
+            $searchConditions = $this->getSearchConditions($this->Users, $this->request->getData['Search']['searchField']);
+            $searchConditions['OR'] = array_merge($searchConditions['OR'], $this->advanceNameSearch($this->Users, $this->request->getData['Search']['searchField']));
 
             $institutionStaffQuery = clone $this->dashboardQuery;
             // Get Number of staff in an institution
@@ -1362,7 +1365,7 @@ class StaffTable extends ControllerActionTable
             if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
                 $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $currentYearId = $AcademicPeriod->getCurrent();
-                $periodId = $this->request->query['academic_period_id'];
+                $periodId = $this->request->getQuery['academic_period_id'];
                 if ($currentYearId == $periodId) {
                     $indexElements['mini_dashboard'] = [
                         'name' => $indexDashboard,
@@ -1409,8 +1412,8 @@ class StaffTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $institutionId = !empty($this->request->getparam('institutionId')) ? $this->paramsDecode($this->request->getparam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
         $assignedStudentToInstitution = $this->find()->where(['institution_id' => $institutionId])->count();
         $session->write('is_any_student', $assignedStudentToInstitution);
 

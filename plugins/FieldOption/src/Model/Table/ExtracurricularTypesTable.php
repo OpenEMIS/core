@@ -7,9 +7,9 @@ use App\Model\Table\ControllerActionTable;
 
 class ExtracurricularTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('extracurricular_types');
+        $this->setTable('extracurricular_types');
         parent::initialize($config);
 
         $this->hasMany('StaffExtracurricular', ['className' => 'Staff.Extracurriculars', 'foreignKey' => 'extracurricular_type_id']);

@@ -16,7 +16,7 @@ class MandatoryBehavior extends Behavior
     protected $_roleFields;
     protected $_currentNationality;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->_userRole = (array_key_exists('userRole', $config))? $config['userRole']: null;
         $this->_roleFields = (array_key_exists('roleFields', $config))? $config['roleFields']: [];
@@ -37,7 +37,7 @@ class MandatoryBehavior extends Behavior
         $this->_table->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [

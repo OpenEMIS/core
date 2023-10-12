@@ -105,7 +105,7 @@ class UsersTable extends AppTable
             foreach ($fields as $key => $field) {
                 //POCOR-6380 - added OR condition to unset pre-defined fields only for Administration >> Security> Users listing
                 if ($schema->getColumn($field)['type'] == 'binary') {
-                    if ($this->table() == 'security_users' || $this->action == 'index') {
+                    if ($this->getTable() == 'security_users' || $this->action == 'index') {
                         unset($fields[$key]);
                     }
                 }

@@ -14,6 +14,7 @@ use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\Utility\Security;
+use Cake\Http\ServerRequest;
 
 class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable {
     use OptionsTrait;
@@ -132,7 +133,8 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
         }
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    // public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, ServerRequest $persona)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation)
     {
         if ($this->action == 'add') {
             $Navigation->substituteCrumb('Registered Students', 'Single Student Registration');

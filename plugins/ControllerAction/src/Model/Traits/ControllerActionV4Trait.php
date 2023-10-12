@@ -40,7 +40,7 @@ trait ControllerActionV4Trait {
 		}
 		$this->ctpFolder = $model->getAlias();
 		$ctp = $this->ctpFolder . DS . $model->action;
-
+		// echo "<pre>";print_r($this->view);die;
 		if (file_exists($path . DS . $ctp . '.php')) {
 			if ($this->autoRender) {
 				$this->autoRender = false;

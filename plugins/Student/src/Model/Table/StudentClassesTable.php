@@ -15,9 +15,9 @@ class StudentClassesTable extends ControllerActionTable
 {
     use MessagesTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_class_students');
+        $this->setTable('institution_class_students');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -97,7 +97,7 @@ class StudentClassesTable extends ControllerActionTable
         }
 
 		// Start POCOR-5188
-		if($this->request->params['controller'] == 'Students'){
+		if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Classes','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -115,7 +115,7 @@ class StudentClassesTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Classes','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -142,7 +142,7 @@ class StudentClassesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
 		$userData = $this->Session->read();
-        $session = $this->request->session();//POCOR-6267
+        $session = $this->request->getSession();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) { 
             /*POCOR-6267 starts*/
             if ($this->request->controller == 'GuardianNavs') {

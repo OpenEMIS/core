@@ -386,7 +386,7 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : null;
         if ($parentId != null) {
             $query->where([$this->aliasField('parent_id') => $parentId]);
         } else {
@@ -456,7 +456,7 @@ class AcademicPeriodsTable extends ControllerActionTable
 
         $this->fields['parent_id']['visible'] = false;
 
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : 0;
+        $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : 0;
         if ($parentId != 0) {
             $crumbs = $this
                 ->find('path', ['for' => $parentId])
@@ -552,9 +552,10 @@ class AcademicPeriodsTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodLevelId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAcademicPeriodLevelId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodLevelId(Event $event, array $attr, $action)
     {
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : 0;
+        $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : 0;
         $results = $this
             ->find()
             ->select([$this->aliasField('academic_period_level_id')])
@@ -587,7 +588,8 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCurrent(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldCurrent(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCurrent(Event $event, array $attr, $action)
     {
         $attr['options'] = $this->getSelectOptions('general.yesno');
         $attr['onChangeReload'] = 'changeCurrent';
@@ -633,9 +635,10 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEditable(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldEditable(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEditable(Event $event, array $attr, $action)
     {
-        if (isset($request->data[$this->alias()]['current'])) {
+        if (isset($request->data[$this->getAlias()]['current'])) {
             if ($request->data[$this->alias()]['current'] == 1) {
                 $attr['type'] = 'hidden';
             }
@@ -646,7 +649,7 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function onUpdateFieldVisible(Event $event, array $attr, $action, Request $request)
     {
-        if (isset($request->data[$this->alias()]['current'])) {
+        if (isset($request->data[$this->getAlias()]['current'])) {
             if ($request->data[$this->alias()]['current'] == 1) {
                 $attr['type'] = 'hidden';
             }

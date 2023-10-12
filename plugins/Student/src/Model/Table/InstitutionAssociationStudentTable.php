@@ -14,7 +14,7 @@ use App\Model\Table\ControllerActionTable;
 
 class InstitutionAssociationStudentTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         //$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -36,7 +36,7 @@ class InstitutionAssociationStudentTable extends ControllerActionTable
     }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
-		$session = $this->request->session();
+		$session = $this->request->getSession();
 		if ($this->controller->name == 'Profiles') {
             if ($session->read('Auth.User.is_guardian') == 1) {
                 $sId = $session->read('Student.ExaminationResults.student_id');

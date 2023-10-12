@@ -69,7 +69,7 @@ class LicensesTable extends ControllerActionTable
         $this->field('license_type_id', ['after' => 'assignee_id']);
 
 		// Start POCOR-5188
-		if($this->request->params['controller'] == 'Staff'){
+		if($this->request->getParam('controller') == 'Staff'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Licenses','Staff - Professional');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -87,7 +87,7 @@ class LicensesTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Licenses','Professional');   //POCOR-7528
           
 			if(!empty($is_manual_exist)){
@@ -152,7 +152,8 @@ class LicensesTable extends ControllerActionTable
         $this->setupTabElements();
     }
 
-    public function onUpdateFieldLicenseTypeId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldLicenseTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldLicenseTypeId(Event $event, array $attr, $action)
     {
         if ($action == 'add') {
             $attr['onChangeReload'] = 'changeLicenseType';
@@ -268,7 +269,7 @@ class LicensesTable extends ControllerActionTable
     {
         $tabElements = $this->controller->getProfessionalTabElements();
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     private function setupFields(Entity $entity)

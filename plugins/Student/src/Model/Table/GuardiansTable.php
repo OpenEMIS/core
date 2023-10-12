@@ -17,9 +17,9 @@ class GuardiansTable extends ControllerActionTable
 {
     private $editButtonAction = 'GuardianUser';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_guardians');
+        $this->setTable('student_guardians');
         parent::initialize($config);
 
         $this->belongsTo('StudentUser', ['className' => 'Institution.StudentUser', 'foreignKey' => 'student_id']);
@@ -36,7 +36,7 @@ class GuardiansTable extends ControllerActionTable
         $this->addBehavior('ControllerAction.Image');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -80,7 +80,7 @@ class GuardiansTable extends ControllerActionTable
         }
 
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
@@ -122,7 +122,7 @@ class GuardiansTable extends ControllerActionTable
         $this->field('guardian_id');
 
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Students'){ 
+        if($this->request->getParam('controller') == 'Students'){ 
             $is_manual_exist = $this->getManualUrl('Institutions','Guardian Languages','Students - Guardians');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -140,7 +140,7 @@ class GuardiansTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getParam('controller') == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Guardian Relation','Students - Guardians');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -219,7 +219,8 @@ class GuardiansTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldGuardianId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldGuardianId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldGuardianId(Event $event, array $attr, $action)
     {
         if ($action == 'add') {
             //POCOR-7093 starts
@@ -317,9 +318,9 @@ class GuardiansTable extends ControllerActionTable
             $this->Session->write('Student.Guardians.new', $data[$this->alias()]);
             $event->stopPropagation();
 
-            $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'GuardianUser', 'add'];
+            $action = ['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'GuardianUser', 'add'];
             if ($this->controller->name == 'Directories') {
-                $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentGuardianUser', 'add'];
+                $action = ['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'StudentGuardianUser', 'add'];
             }
             return $this->controller->redirect($action);
         } else {
@@ -397,8 +398,8 @@ class GuardiansTable extends ControllerActionTable
             $newButtons['editProfile'] = $editProfile;
             $newButtons['editRelation'] = $editRelation;
             $newButtons['editProfile']['url'] = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => $this->editButtonAction(),
                 'edit',
                 $this->paramsEncode(['id' =>  $entity->_matchingData['Users']->id, 'StudentGuardians.id' => $entity->id])

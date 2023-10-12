@@ -287,7 +287,7 @@ class AdvanceSearchBehavior extends Behavior
         }
 
         if ($model->Session->check($alias.'.advanceSearch')) {
-            $request->data['AdvanceSearch'][$alias] = $model->Session->read($alias.'.advanceSearch');
+            $request->getData['AdvanceSearch'][$alias] = $model->Session->read($alias.'.advanceSearch');
         }
 
         $areaKeys[] = 'shift_type'; //POCOR-6764
@@ -340,8 +340,8 @@ class AdvanceSearchBehavior extends Behavior
                     }
                 } else {
                     $modifiedCondition = $model->dispatchEvent('AdvanceSearch.onModifyConditions', [$key, $value], $this);
-                    if ($modifiedCondition->result) {
-                        $result = $modifiedCondition->result;
+                    if ($modifiedCondition->getResult()) {
+                        $result = $modifiedCondition->getResult();
                         $conditions = array_merge($conditions, $result);
                     } else {
                         $conditions[$model->aliasField($key)] = $value;

@@ -5,13 +5,13 @@ use App\Model\Table\ControllerActionTable;
 
 class CommentTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('comment_types');
+        $this->setTable('comment_types');
         parent::initialize($config);
 
         $this->hasMany('Comments', ['className' => 'User.Comments', 'foreignKey' => 'comment_type_id']);
-        $this->behaviors()->get('ControllerAction')->config('actions.remove', 'transfer');
+        $this->behaviors()->get('ControllerAction')->setConfig('actions.remove', 'transfer');
 
         $this->addBehavior('FieldOption.FieldOption');
     }

@@ -25,7 +25,7 @@ class ControllerActionBehavior extends Behavior
             'edit' => true,
             'remove' => 'cascade',
             'search' => ['orderField' => 'order'],
-            'reorder' => ['orderField' => 'order'],
+            // 'reorder' => ['orderField' => 'order'],
             'download' => ['show' => false, 'name' => 'file_name', 'content' => 'file_content']
         ],
         'fields' => [
@@ -459,7 +459,7 @@ class ControllerActionBehavior extends Behavior
                 if ($field === $assoc->getForeignKey()) {
                     $model = $assoc;
                     break;
-                } elseif (is_array($assoc->getForeignKey()) && in_array($field, $assoc->foreignKey())) {
+                } elseif (is_array($assoc->getForeignKey()) && in_array($field, $assoc->getForeignKey())) {
                     $model = $assoc;
                     break;
                 }

@@ -15,9 +15,9 @@ use App\Model\Table\ControllerActionTable;
 
 class ProgrammesTable extends ControllerActionTable
 {
-	public function initialize(array $config)
+	public function initialize(array $config): void
 	{
-		$this->table('institution_students');
+		$this->setTable('institution_students');
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -46,7 +46,7 @@ class ProgrammesTable extends ControllerActionTable
 		$studentId = $entity->student_id;
 		$gradeId = $entity->education_grade->id;
 		$periodId = $entity->academic_period_id;
-		$studentWithdraw = TableRegistry::get('institution_student_withdraw');
+		$studentWithdraw = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw');
 		$record = $studentWithdraw->find()
 					->select([$studentWithdraw->aliasField('effective_date')])
 					->where([
@@ -92,7 +92,7 @@ class ProgrammesTable extends ControllerActionTable
 		]);
 
 		// Start POCOR-5188
-		if($this->request->params['controller'] == 'Institutions'){
+		if($this->request->getParam('controller') == 'Institutions'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Programmes','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -110,7 +110,7 @@ class ProgrammesTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}else if($this->request->params['controller'] == 'Students'){
+		}else if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Programmes','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -128,7 +128,7 @@ class ProgrammesTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Programmes','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -153,7 +153,7 @@ class ProgrammesTable extends ControllerActionTable
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{	
-		$session = $this->request->session();
+		$session = $this->request->getSession();
 		if ($this->controller->name == 'Profiles') {
 			if ($session->read('Auth.User.is_guardian') == 1) {
 				$sId = $session->read('Student.ExaminationResults.student_id');
@@ -303,7 +303,7 @@ class ProgrammesTable extends ControllerActionTable
 		$options['type'] = 'student';
 		$tabElements = $this->controller->getAcademicTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
 	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)

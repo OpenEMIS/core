@@ -10,9 +10,9 @@ use App\Model\Table\ControllerActionTable;
 
 class StudentReportCardsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_students_report_cards');
+        $this->setTable('institution_students_report_cards');
 
         parent::initialize($config);
         $this->belongsTo('ReportCards', ['className' => 'ReportCard.ReportCards']);
@@ -56,7 +56,7 @@ class StudentReportCardsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'institution_id', 'report_card_id', 'education_grade_id', 'institution_class_id']);
 
         // Start POCOR-5188
-		if($this->request->params['controller'] == 'Students'){
+		if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Report Cards (PDF)','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -73,7 +73,7 @@ class StudentReportCardsTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Report Cards (PDF)','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -101,7 +101,7 @@ class StudentReportCardsTable extends ControllerActionTable
         $user = $this->Auth->user();
        
         $InstitutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-        $StudentGuardians = TableRegistry::get('student_guardians');
+        $StudentGuardians = TableRegistry::get('Student.StudentGuardians');
 
         //Start POCOR-7055
         if ($user['is_student'] == 1 && $user['is_guardian'] == 1 && $user['is_staff'] == 1) {

@@ -140,8 +140,12 @@ class HighChartBehavior extends Behavior
             }
         }
         $conditions = [];
+
+        // Get the connection
+        $connection = $this->_table->getConnection();
+        $driverName = $connection->config()['driver'];
         // note that CONCAT_WS is not supported by cakephp and also not supported by some dbs like sqlite and mysqlserver, thus this condition
-        if ($this->_table->connection()->getConfig()['driver'] == 'Cake\Database\Driver\Mysql') {
+        if ($driverName == 'Cake\Database\Driver\Mysql') {
             switch (count($searchParams)) {
                 case 1:
                     // 1 word - search by openemis id or 1st or middle or third or last
