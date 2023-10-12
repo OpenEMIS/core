@@ -54,7 +54,7 @@ class WorkbenchService extends Controller
                     $date = $d['created'];
                 }
                 $resp[$k]['received_date'] = Carbon::create($date)->toFormattedDateString();
-                
+
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
                 $resp[$k]['staff_id'] = $d['staff_id'];
                 $resp[$k]['status_id'] = $d['status_id'];
@@ -275,6 +275,48 @@ class WorkbenchService extends Controller
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
                 $resp[$k]['user'] = $d['user'];
+                $resp[$k]['created_user'] = $d['security_user'];
+
+            }
+
+            $data['data'] = $resp; 
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+
+    public function getInstitutionStudentBehaviour($request)
+    {
+        try {
+            $data = $this->workbenchRepository->getInstitutionStudentBehaviour($request);
+            
+            $resp = [];
+
+            foreach($data['data'] as $k=> $d){
+                $resp[$k]['id'] = $d['id'];
+                $resp[$k]['institution_id'] = $d['institution_id'];
+                $resp[$k]['institution'] = $d['institution']['code_name'];
+                $resp[$k]['request_title'] = 'Behavour request of ' .$d['user']['name_with_id'];
+
+                if(!is_null($d['modified'])){
+                    $date = $d['modified'];
+                } else {
+                    $date = $d['created'];
+                }
+                $resp[$k]['received_date'] = Carbon::create($date)->toFormattedDateString();
+                $resp[$k]['requester'] = $d['security_user']['name_with_id'];
+                $resp[$k]['status_id'] = $d['status_id'];
+                $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['student'] = $d['user'];
                 $resp[$k]['created_user'] = $d['security_user'];
 
             }

@@ -297,6 +297,7 @@ Route::group(
         Route::get('institutions/students/admission', 'WorkbenchController@getInstitutionStudentAdmission');
         Route::get('institutions/students/transferout', 'WorkbenchController@getInstitutionStudentTransferOut');
         Route::get('institutions/students/transferin', 'WorkbenchController@getInstitutionStudentTransferIn');
+        Route::get('institutions/behaviour/students', 'WorkbenchController@getInstitutionStudentBehaviour');
         //POCOR-7754 ends
 
     }
