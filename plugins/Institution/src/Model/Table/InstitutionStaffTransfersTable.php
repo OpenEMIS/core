@@ -347,6 +347,9 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     private function removeStaffFromSecurityGroups(\Cake\Datasource\EntityInterface $oldRecord)
     {
         $security_group_user_id = $oldRecord->security_group_user_id;
+        $StaffTable = TableRegistry::get('Institution.Staff');
+        $oldRecord->security_group_user_id = null;
+        $StaffTable->save($oldRecord);
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $SecurityGroupUsers->deleteAll([
             $SecurityGroupUsers->aliasField($SecurityGroupUsers->primaryKey()) => $security_group_user_id
