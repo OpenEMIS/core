@@ -171,13 +171,6 @@ class InstitutionAssetsTable extends AppTable
 
         $newFields[] = [
             'key' => '',
-            'field' => 'lifespan',
-            'type' => 'string',
-            'label' => __('Lifespan')
-        ];
-
-        $newFields[] = [
-            'key' => '',
             'field' => 'institution_room',
             'type' => 'string',
             'label' => __('Location')
@@ -190,7 +183,7 @@ class InstitutionAssetsTable extends AppTable
             'label' => __('User')
         ];
 
-       $newFields[] = [
+        $newFields[] = [
             'key' => '',
             'field' => 'accessibility',
             'type' => 'string',
@@ -227,52 +220,73 @@ class InstitutionAssetsTable extends AppTable
 
         $newFields[] = [
             'key' => '',
-            'field' => 'cost',
+            'field' => 'purchase_cost',
             'type' => 'string',
-            'label' => __('Cost')
+            'label' => __('Purchase Cost')
         ];
 
         $newFields[] = [
             'key' => '',
-            'field' => 'salvage_value',
+            'field' => 'lifespan',
             'type' => 'string',
-            'label' => __('Salvage Value')
+            'label' => __('Lifespan')
         ];
 
-//        $newFields[] = [
-//            'key' => '',
-//            'field' => 'salvage_value',
-//            'type' => 'string',
-//            'label' => __('Salvage Value')
-//        ];
-//
-       $newFields[] = [
+        $newFields[] = [
             'key' => '',
-            'field' => 'monthly_depreciation',
+            'field' => 'depreciation_percent',
             'type' => 'string',
-            'label' => __('Monthly Depreciation')
+            'label' => __('Depreciation %')
         ];
 
         $newFields[] = [
             'key' => '',
             'field' => 'prior_year_accumulated_depreciation',
             'type' => 'string',
-            'label' => __('Prior Year Accumulated Depreciation')
+            'label' => __('Prior Year Acc. Dep')
+        ];
+
+        $newFields[] = [
+            'key' => '',
+            'field' => 'depreciation_sum',
+            'type' => 'string',
+            'label' => __('Depreciation $')
         ];
 
         $newFields[] = [
             'key' => '',
             'field' => 'accumulated_depreciation',
             'type' => 'string',
-            'label' => __('Accumulated Depreciation')
+            'label' => __('Accumulated depreciation $')
         ];
 
         $newFields[] = [
             'key' => '',
             'field' => 'book_value',
             'type' => 'string',
-            'label' => __('Book Value')
+            'label' => __('Book value')
         ];
+
+//        $newFields[] = [
+//            'key' => '',
+//            'field' => 'prior_year_accumulated_depreciation',
+//            'type' => 'string',
+//            'label' => __('Prior Year Accumulated Depreciation')
+//        ];
+//
+//        $newFields[] = [
+//            'key' => '',
+//            'field' => 'accumulated_depreciation',
+//            'type' => 'string',
+//            'label' => __('Accumulated Depreciation')
+//        ];
+//
+//        $newFields[] = [
+//            'key' => '',
+//            'field' => 'book_value',
+//            'type' => 'string',
+//            'label' => __('Book Value')
+//        ];
 
         $fields->exchangeArray($newFields);
     }
@@ -303,7 +317,7 @@ class InstitutionAssetsTable extends AppTable
         $query = $this->getAssetConditionQuery($query);
         $query = $this->getAssetLocationQuery($query);
         $query = $this->getAssetUserQuery($query);
-        $query = $this->getCalculatedFieldsQuery($query, $yearStartDay);
+        $query = $this->getCalculatedFieldsQuery($query, $yearStartDay, $yearEndDay);
 //        $this->log($query->sql(), 'debug');
         return $query;
     }
@@ -349,7 +363,7 @@ class InstitutionAssetsTable extends AppTable
             'asset_status_id' => $institutionAssets->aliasField('asset_status_id'),
             'asset_type_id' => $institutionAssets->aliasField('asset_type_id'),
             'asset_condition_id' => $institutionAssets->aliasField('asset_condition_id'),
-            'salvage_value' => $institutionAssets->aliasField('depreciation'),
+//            'salvage_value' => $institutionAssets->aliasField('depreciation'),
             $this->aliasField('area_id'),
         ])
             ->leftJoin([$institutionAssets->alias() => $institutionAssets->table()],
@@ -527,67 +541,120 @@ class InstitutionAssetsTable extends AppTable
     /**
      * @param Query $query
      * @param $yearStartDay
+     * @param $yearEndDay
      * @return array|Query
      */
-    private function getCalculatedFieldsQuery(Query $query, $yearStartDay)
+    private function getCalculatedFieldsQuery(Query $query, $yearStartDay, $yearEndDay)
     {
         $currency = $this->currency;
-        $query = $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($currency, $yearStartDay) {
-            return $results->map(function ($row) use ($currency, $yearStartDay) {
+        $query = $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($currency, $yearStartDay, $yearEndDay) {
+            return $results->map(function ($row) use ($currency, $yearStartDay, $yearEndDay) {
 //                $this->log($currency, 'debug');
-                $cost = isset($row['cost']) ? floatval($row['cost']) : 0;
-                $salvageValue = isset($row['salvage_value']) ? floatval($row['salvage_value']) : 0;
-                $row['cost'] = $currency . '' . number_format($cost, 2);
+                $actual_cost = isset($row['cost']) ? floatval($row['cost']) : 0;
+                $total_cost = $actual_cost;
+//                $salvageValue = isset($row['salvage_value']) ? floatval($row['salvage_value']) : 0;
+                $row['purchase_cost'] = $currency . '' . number_format($actual_cost, 2);
+                $row['total_cost'] = $currency . '' . number_format($actual_cost, 2);
 
-                $row['depreciation'] = number_format($row['depreciation'], 2) . '%';
+//                $row['depreciation'] = number_format($row['depreciation'], 2) . '%';
 //                return $row;
-                if (!$cost) { return $row; }
-                $lifespan = $row['lifespan'];
-                $depreciation = 1.0/$lifespan;
-                if (!$lifespan) { return $row;}
+                if ($actual_cost == 0) {
+                    return $row;
+                }
+
+                $lifespan = isset($row['lifespan']) ? floatval($row['lifespan']) : 0;
+                if ($lifespan == 0) {
+                    return $row;
+                }
+
+                $depreciation = 1.0 / $lifespan ;
+                $row['depreciation_percent'] = number_format($depreciation, 2) . "%";
                 $purchaseDate = $row['purchase_date'];
-                if (!$purchaseDate) { return $row; }
+                if (!$purchaseDate) {
+                    return $row;
+                }
 
                 $currentTimestamp = time();
                 $purchaseTimestamp = strtotime($purchaseDate);
                 $yearStartTimestamp = strtotime($yearStartDay);
-
+                $yearEndTimestamp = strtotime($yearEndDay);
+                $purchasedate = date_create($purchaseDate);
+                $yearstartdate = date_create($yearStartDay);
+                $prevyearstartdate = date_create($yearStartDay . ' -1 day');
                 $secsinday = 86400;
                 $secsinyear = 31536000;
-                $fullYears = ($yearStartDay - $yearStartTimestamp - $secsinday) / $secsinyear;
-                $actual_cost = $cost; // - $salvageValue;
+                $fullYears = ($yearStartTimestamp - $secsinday - $purchaseTimestamp) / $secsinyear;
+                $fullYearsDaily = intval(date_diff($prevyearstartdate, $purchasedate)->format("%a")) / 365;
+//                $row['full_years'] = $fullYears;
+//                $row['full_years_daily'] = $fullYearsDaily;
 
-                $monthlyDepreciation = $depreciation / 12;
-                $fullMonths = date('n', $currentTimestamp)
-                    - date('n', $yearStartTimestamp)
-                    + ($fullYears * 12);
-                if ($fullYears > $lifespan) {
-                    $priorYearAccumulatedDepreciation = $actual_cost;
-                } else {
-                    $priorYearAccumulatedDepreciation = (($fullYears * $actual_cost * $depreciation) / 100);
+                /**
+                 * =IF(
+                 * IFERROR(
+                 *  IF(($B$6-1-A10)/365>I10
+                 * ,H10,
+                 * (($B$6-1-A10)/365*H10*J10))
+                 *  ,""
+                 * )<0,
+                 * 0,
+                 * IFERROR(IF(($B$6-1-A10)/365>I10,H10,(($B$6-1-A10)/365*H10*J10)),""))
+                 */
+
+                if ($fullYears > $lifespan){
+                    $priorYearDepreciation = $total_cost;
+                }else{
+//                    $priorYearDepreciation = $total_cost * $fullYears * $depreciation;
+                    $priorYearDepreciation = $total_cost * $fullYearsDaily * $depreciation;
+                }
+                if($priorYearDepreciation > $total_cost){
+                    $priorYearDepreciation = $total_cost;
+                }
+                if($fullYears < 0){
+                    $priorYearDepreciation = 0;
                 }
 
-                // Ensure the result is non-negative
-                if($priorYearAccumulatedDepreciation > $actual_cost){
-                    $priorYearAccumulatedDepreciation = $actual_cost;
+                $row['prior_year_accumulated_depreciation'] =
+                    $currency . '' . number_format($priorYearDepreciation, 2);
+//                $row['prior_year_accumulated_depreciation_daily'] =
+//                    $currency . '' . number_format($priorYearDepreciationDaily, 2);
+
+                /**
+                 * =IFERROR(
+                 * IF((H10-K10)<(H10*J10),
+                 * H10-K10,
+                 * (IF(($B$5-A10)<365,(A10-$B$6)/365*H10*J10,H10*J10))),"")
+                 */
+                $fromthestart = ($yearEndTimestamp - $purchaseTimestamp);
+                $yearlyDepreciation = $total_cost * $depreciation;
+                $left_cost = $total_cost - $priorYearDepreciation;
+                if($left_cost < $yearlyDepreciation ){
+                    $depreciationSum = $left_cost;
+                }else{
+                    if($fromthestart < $secsinyear){
+                        $depreciationSum = (($purchaseTimestamp - $yearStartTimestamp) / $secsinyear) * $yearlyDepreciation;
+                    }else{
+                        $depreciationSum = $yearlyDepreciation;
+                    }
                 }
-                $priorYearAccumulatedDepreciation = max(0, $priorYearAccumulatedDepreciation);
-                $accumulatedDepreciation = $monthlyDepreciation * $fullMonths;
-                if($accumulatedDepreciation > ($actual_cost)){
+                $row['depreciation_sum'] = $currency . '' . number_format($depreciationSum, 2);
+
+                $accumulatedDepreciation = $priorYearDepreciation + $depreciationSum;
+                if ($accumulatedDepreciation > ($actual_cost)) {
                     $accumulatedDepreciation = ($actual_cost);
                 }
-                $bookValue = $actual_cost - $accumulatedDepreciation;
-                if ($bookValue < 0) { $bookValue = 0; }
-                $row['prior_year_accumulated_depreciation'] =
-                    $currency . '' . number_format($priorYearAccumulatedDepreciation, 2);
-                $row['monthly_depreciation'] =
-                    $currency . '' . number_format($monthlyDepreciation, 2);
+                if ($accumulatedDepreciation < 0) {
+                    $accumulatedDepreciation = 0;
+                }
                 $row['accumulated_depreciation'] =
                     $currency . '' . number_format($accumulatedDepreciation, 2);
-                $row['book_value'] =
-                    $currency . '' . number_format($bookValue, 2);
-                $row['depreciation'] = $currency . '' . number_format($salvageValue, 2);
-                $row['salvage_value'] = $currency . '' . number_format($salvageValue, 2);
+
+
+                $bookValue = $actual_cost - $accumulatedDepreciation;
+                if ($bookValue < 0) {
+                    $bookValue = 0;
+                }
+
+                $row['book_value'] = $currency . '' . number_format($bookValue, 2);
 
                 return $row;
             });
