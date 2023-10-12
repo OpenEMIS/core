@@ -20,7 +20,7 @@ class CustomFieldsTable extends ControllerActionTable
 
     protected $fieldTypeFormat = ['OpenEMIS'];
     // Supported Field Types contain full list by default and can by override in individual model extends CustomFieldsTable
-    protected $supportedFieldTypes = ['TEXT', 'NUMBER', 'DECIMAL', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'TABLE', 'DATE', 'TIME', 'STUDENT_LIST', 'FILE', 'COORDINATES', 'REPEATER', 'NOTE'];
+    protected $supportedFieldTypes = ['TEXT', 'NUMBER', 'DECIMAL', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'TABLE', 'DATE', 'TIME', 'STUDENT_LIST', 'FILE', 'COORDINATES', 'REPEATER', 'NOTE', 'PLACEHOLDER_DOB', 'PLACEHOLDER_GENDER'];//POCOR-7743
 
     private $fieldTypes = [];
     private $fieldTypeOptions = [];
