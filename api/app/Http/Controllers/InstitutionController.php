@@ -67,19 +67,7 @@ class InstitutionController extends Controller
     public function getGradesList(Request $request)
     {
         try {
-            //For POCOR-7772 Start
-            $permissions = checkAccess();
             
-            if(JWTAuth::user()->id > 2){
-                if($permissions){
-                    if(!isset($permissions['permissions']['Institutions']['Institutions']['index'])){
-                        return $this->sendErrorResponse('The user is not authorized to access this API.');
-                    }
-                } else {
-                    return $this->sendErrorResponse('The user is not authorized to access this API.');
-                }  
-            }
-            //For POCOR-7772 End
 
             $data = $this->institutionService->getGradesList($request);
             return $this->sendSuccessResponse("Grades List Found", $data);
