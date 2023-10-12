@@ -294,6 +294,9 @@ Route::group(
         Route::get('staff/career/leave', 'WorkbenchController@getInstitutionStaffLeave');
         Route::get('institutions/survey/forms', 'WorkbenchController@getInstitutionStaffSurveys');
         Route::get('institutions/students/withdraw', 'WorkbenchController@getInstitutionStudentWithdraw');
+        Route::get('institutions/students/admission', 'WorkbenchController@getInstitutionStudentAdmission');
+        Route::get('institutions/students/transferout', 'WorkbenchController@getInstitutionStudentTransferOut');
+        Route::get('institutions/students/transferin', 'WorkbenchController@getInstitutionStudentTransferIn');
         //POCOR-7754 ends
 
     }

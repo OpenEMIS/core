@@ -22,4 +22,10 @@ class WorkflowSteps extends Model
     {
         return $this->belongsTo(WorkflowStepRole::class, 'id', 'workflow_step_id');
     }
+
+
+    public function workflowStepParam()
+    {
+        return $this->belongsTo(WorkflowStepParam::class, 'id', 'workflow_step_id');
+    }
 }

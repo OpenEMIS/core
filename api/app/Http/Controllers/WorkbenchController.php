@@ -82,4 +82,56 @@ class WorkbenchController extends Controller
             return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }
+
+
+    public function getInstitutionStudentAdmission(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getInstitutionStudentAdmission($request);
+            
+            return $this->sendSuccessResponse("Student Admission List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+
+    public function getInstitutionStudentTransferOut(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getInstitutionStudentTransferOut($request);
+            
+            return $this->sendSuccessResponse("Student Transfer Out List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getInstitutionStudentTransferIn(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getInstitutionStudentTransferIn($request);
+            
+            return $this->sendSuccessResponse("Student Transfer In List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
 }

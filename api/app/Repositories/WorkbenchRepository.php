@@ -14,6 +14,8 @@ use App\Models\InstitutionStaffLeave;
 use App\Models\SecurityGroupUsers;
 use App\Models\InstitutionSurvey;
 use App\Models\InstitutionStudentWithdraw;
+use App\Models\InstitutionStudentAdmission;
+use App\Models\InstitutionStudentTransfers;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
@@ -174,7 +176,99 @@ class WorkbenchRepository extends Controller
             return $list;
 
         } catch (\Exception $e) {
-            dd($e);
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+
+    public function getInstitutionStudentAdmission($request)
+    {
+        try {
+            $params = $request->all();
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $userId = JWTAuth::user()->id;
+
+            $list = InstitutionStudentAdmission::with(
+                        'institution:id,name,code',
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id',
+                        'user:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name'
+                    )
+                    ->whereHas(
+                        'status', function ($q) {
+                            $q->where('workflow_id', 16) //For student admission.
+                            ->where('category', '!=', 3);
+                        }        
+                    )
+                    ->where('assignee_id', $userId)
+                    ->paginate($limit)
+                    ->toArray();
+
+            
+            return $list;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+
+    public function getInstitutionStudentTransferOut($request)
+    {
+        try {
+            $params = $request->all();
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $userId = JWTAuth::user()->id;
+
+            $list = InstitutionStudentTransfers::with(
+                        'institution:id,name,code',
+                        'previousInstitution:id,name,code',
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id',
+                        'user:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name'
+                    )
+                    ->whereHas(
+                        'status', function ($q) {
+                            $q->where('workflow_id', 18)//For transfer out.
+                            ->where('category', '!=', 3)
+                            ->whereHas(
+                                'workflowStepParam', function($query){
+                                    $query->where('name', 'institution_owner')
+                                        ->where('value', 2); //for transfer out.
+                                }
+                            );
+                        }        
+                    )
+                    ->where('assignee_id', $userId)
+                    ->paginate($limit)
+                    ->toArray();
+
+            return $list;
+        } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -183,6 +277,54 @@ class WorkbenchRepository extends Controller
             return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }    
+
+
+    public function getInstitutionStudentTransferIn(Request $request)
+    {
+        try {
+            $params = $request->all();
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $userId = JWTAuth::user()->id;
+
+            $list = InstitutionStudentTransfers::with(
+                        'institution:id,name,code',
+                        'previousInstitution:id,name,code',
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id',
+                        'user:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name'
+                    )
+                    ->whereHas(
+                        'status', function ($q) {
+                            $q->where('workflow_id', 17)//For transfer out.
+                            ->where('category', '!=', 3)
+                            ->whereHas(
+                                'workflowStepParam', function($query){
+                                    $query->where('name', 'institution_owner')
+                                        ->where('value', 1); //for transfer in.
+                                }
+                            );
+                        }        
+                    )
+                    ->where('assignee_id', $userId)
+                    ->paginate($limit)
+                    ->toArray();
+
+            return $list;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
 
 }
 
