@@ -231,6 +231,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $broadcaster = $this;
         $listeners = [];
         $listeners[] = TableRegistry::get('Student.StudentSurveys');
+        $listeners[] = TableRegistry::get('Staff.StaffSurveys');//POCOR-2315
         $listeners[] = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
         $listeners[] = TableRegistry::get('Institution.InstitutionSurveyTableCells');
         if (!empty($listeners)) {

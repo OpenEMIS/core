@@ -39,6 +39,7 @@ class InstitutionStaffTable extends AppTable
             'autoFields' => false
         ]);
         $this->addBehavior('Report.InstitutionSecurity');
+        $this->addBehavior('Report.AreaList');//POCOR-7794
     }
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
@@ -59,6 +60,7 @@ class InstitutionStaffTable extends AppTable
         $typeId = $requestData->type;
         $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
+        $areaLevelId = $requestData->area_level_id;//POCOR-7794
         $academicPeriodId = $requestData->academic_period_id;
 
         if ($statusId != 0) {
@@ -77,9 +79,22 @@ class InstitutionStaffTable extends AppTable
                 $this->aliasField('institution_id') => $institutionId
             ]);
         }
-        if ($areaId != -1) {
-            $query->where(['Institutions.area_id' => $areaId]);
+        //POCOR-7794 start
+        $areaList = [];
+        if (
+            $areaLevelId > 1 && $areaId > 1
+        ) {
+            $areaList = $this->getAreaList($areaLevelId, $areaId);
+        } elseif ($areaLevelId > 1) {
+
+            $areaList = $this->getAreaList($areaLevelId, 0);
+        } elseif ($areaId > 1) {
+            $areaList = $this->getAreaList(0, $areaId);
         }
+        if (!empty($areaList)) {
+            $query->where(['Institutions.area_id IN' => $areaList]);
+        }
+        //POCOR-7794 end
 
         $query
             ->select([

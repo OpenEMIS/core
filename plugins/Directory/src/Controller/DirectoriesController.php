@@ -2106,6 +2106,7 @@ class DirectoriesController extends AppController
         $guardian_relations_result = $guardian_relations
             ->find()
             ->where(['visible' => 1])
+            ->order(['order' =>'ASC']) //POCOR-7704
             ->toArray();
         foreach($guardian_relations_result AS $result){
             $result_array[] = array("id" => $result['id'], "name" => $result['name']);

@@ -22,8 +22,12 @@
 				<thead>
 					<tr>
 						<th><?= $this->Label->get('InstitutionClasses.class'); ?></th>
+						<?php if($attr['unitEnable'] == 1){ ?>
 						<th><?= $this->Label->get('InstitutionClasses.unit'); ?></th>
+						<?php } ?>
+						<?php if($attr['courseEnable'] == 1){ ?>
 						<th><?= $this->Label->get('InstitutionClasses.course'); ?> </th>
+						<?php } ?>
 						<th><?= $this->Label->get('InstitutionClasses.staff_id'); ?></th>
 						<th><?= $this->Label->get('InstitutionClasses.secondary_staff_id'); ?> </th>
 					</tr>
@@ -96,27 +100,30 @@
 								'value' => $startingClassNumber
 							));?>
 						</td>
+						<?php if($attr['unitEnable'] == 1){ ?>
+							<td><?php
+								echo $this->Form->input(sprintf('MultiClasses.%d.institution_unit_id', $i), array(
+									'options' => $attr['data']['unitOptions'],
+									'label' => false,
+									'div' => false,
+									'between' => false,
+									'after' => false
+								));
 
-						<td><?php
-						echo $this->Form->input(sprintf('MultiClasses.%d.institution_unit_id', $i), array(
-							'options' => $attr['data']['unitOptions'],
-							'label' => false,
-							'div' => false,
-							'between' => false,
-							'after' => false
-						));
+								?>
+						<?php } ?>
+						<?php if($attr['courseEnable'] == 1){ ?>
+							<td><?php
+							echo $this->Form->input(sprintf('MultiClasses.%d.institution_course_id', $i), array(
+								'options' => $attr['data']['courseOptions'],
+								'label' => false,
+								'div' => false,
+								'between' => false,
+								'after' => false
+							));
 
-						?>
-						<td><?php
-						echo $this->Form->input(sprintf('MultiClasses.%d.institution_course_id', $i), array(
-							'options' => $attr['data']['courseOptions'],
-							'label' => false,
-							'div' => false,
-							'between' => false,
-							'after' => false
-						));
-
-						?>
+							?>
+						<?php } ?>
 
 						<td><?php
 						echo $this->Form->input(sprintf('MultiClasses.%d.staff_id', $i), array(

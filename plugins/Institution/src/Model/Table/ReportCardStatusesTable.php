@@ -1866,7 +1866,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $this->ReportCardEmailProcesses->delete($reportCardEmailProcessEntity);
             }
             // end
-            $getGpa = $this->addGpaReportCards($checkgpaStudent, $reportCardId);//POCOR-7318 get student GPA//POCOR-7656
+            $getGpa = $this->addGpaReportCards($checkgpaStudent, $reportCardId,$student->academic_period_id);//POCOR-7318 get student GPA//POCOR-7656
             // Student report card
             $recordIdKeys = [
                 'report_card_id' => $reportCardId,
@@ -2303,12 +2303,12 @@ class ReportCardStatusesTable extends ControllerActionTable
     * POCOR-7318
     * query again change in POCOR-7628
     **/
-    private function addGpaReportCards($checkgpaStudent, $reportCardId)
+    private function addGpaReportCards($checkgpaStudent, $reportCardId,$selectedAcademicPeriodId)//POCOR-7807
     {
         $studentId = $checkgpaStudent;//POCOR-7656
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods'); 
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriodId =  $this->AcademicPeriods->getCurrent();
+        // $selectedAcademicPeriodId =  $this->AcademicPeriods->getCurrent();//POCOR-7807 to check fot previous academic periods
         $gpa = 0.00;
         $connection = ConnectionManager::get('default');
         $statement = $connection->prepare("SELECT subq1.report_card_code
@@ -2404,7 +2404,7 @@ FROM
         AND student_subject_info.subject_mark <= assessment_grading_options.max
         AND student_subject_info.assessment_grading_type_id = assessment_grading_options.assessment_grading_type_id
         WHERE IF(student_subject_info.report_card_code IS NULL, 0, assessment_grading_options.point) IS NOT NULL
-        AND institution_subject_students.student_status_id = 1
+        -- AND institution_subject_students.student_status_id = 1//POCOR-7807-To generate gpa for past assessment  
         AND institution_subject_students.student_id = $studentId
         AND institution_subject_students.academic_period_id = $selectedAcademicPeriodId
         GROUP BY institution_subject_students.academic_period_id
@@ -2506,7 +2506,7 @@ LEFT JOIN
         AND student_subject_info.subject_mark <= assessment_grading_options.max
         AND student_subject_info.assessment_grading_type_id = assessment_grading_options.assessment_grading_type_id
         WHERE IF(student_subject_info.report_card_code IS NULL, 0, assessment_grading_options.point) IS NOT NULL
-        AND institution_subject_students.student_status_id = 1
+        -- AND institution_subject_students.student_status_id = 1//POCOR-7807-To generate gpa for past assessment 
         AND institution_subject_students.student_id = $studentId
         AND institution_subject_students.academic_period_id = $selectedAcademicPeriodId
         GROUP BY institution_subject_students.academic_period_id

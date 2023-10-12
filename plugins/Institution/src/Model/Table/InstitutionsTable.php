@@ -133,7 +133,8 @@ class InstitutionsTable extends ControllerActionTable
         $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationStudentSubjectResults', ['className' => 'Examination.ExaminationStudentSubjectResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionCommittees', ['className' => 'Institution.InstitutionCommittees', 'dependent' => true, 'cascadeCallbacks' => true]);
-
+        $this->hasMany('StaffSurveys', ['className' => 'Staff.StaffSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+       
 
         $this->belongsToMany('ExaminationCentresExaminations', [
             'className' => 'Examination.ExaminationCentresExaminations',
@@ -1998,6 +1999,7 @@ class InstitutionsTable extends ControllerActionTable
     {
         $extra['excludedModels'] = [
             $this->SecurityGroups->alias(), $this->InstitutionSurveys->alias(), $this->StudentSurveys->alias(),
+            $this->StaffSurveys->alias(),
             $this->StaffPositionProfiles->alias(), $this->InstitutionActivities->alias(), $this->StudentPromotion->alias(),
             $this->StudentAdmission->alias(), $this->StudentWithdraw->alias(), $this->StudentTransferIn->alias(), $this->StudentTransferOut->alias(),
             $this->CustomFieldValues->alias(), $this->CustomTableCells->alias()

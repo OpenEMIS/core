@@ -290,6 +290,8 @@ class SurveyFormsTable extends CustomFormsTable
             $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
         } elseif ($model == 'Student.Students') {
             $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+        } elseif ($model == 'Staff.Staff') {
+            $this->hasMany('StaffSurveys', ['className' => 'Staff.StaffSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
         }
     }
 

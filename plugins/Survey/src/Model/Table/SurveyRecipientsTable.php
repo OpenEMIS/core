@@ -30,7 +30,7 @@ class SurveyRecipientsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         //custom module option in toolbar
-        $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey');
+        $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey','Institution > Staff > Survey');
         $CustomModules = TableRegistry::get('custom_modules');
         $moduleOptions =  $CustomModules
             ->find('list', ['keyField' => 'id', 'valueField' => 'code']) 

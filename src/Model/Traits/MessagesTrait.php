@@ -757,6 +757,7 @@ trait MessagesTrait
         'Templates' => [
             'addSuccess' => 'Competency Template was added successfully, please set up the Competency Items',
             'alreadyexist' => 'The competency for the education grade has been added.',
+            'specialCharr' => 'Special characters are not allowed in name.', //POCOR-7860
         ],
         'Items' => [
             'addSuccess' => 'Competency Item was added successfully, please set up the Competency Criterias'
