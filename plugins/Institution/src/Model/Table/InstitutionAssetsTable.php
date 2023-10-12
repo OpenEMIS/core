@@ -297,12 +297,12 @@ class InstitutionAssetsTable extends ControllerActionTable
             'label' => __('Condition')
         ];
 
-        $extraField[] = [
-            'key' => 'InstitutionAssets.depreciation',
-            'field' => 'depreciation',
-            'type' => 'string',
-            'label' => __('Disposal')
-        ];
+//        $extraField[] = [
+//            'key' => 'InstitutionAssets.depreciation',
+//            'field' => 'depreciation',
+//            'type' => 'string',
+//            'label' => __('Disposal')
+//        ];
 
         $extraField[] = [
             'key' => 'InstitutionAssets.asset_status_id',
@@ -538,9 +538,9 @@ class InstitutionAssetsTable extends ControllerActionTable
         if ($field == 'institution_room_id') {
             return __('Location');
         }
-        if ($field == 'depreciation') {
-            return __('Disposal');
-        }
+//        if ($field == 'depreciation') {
+//            return __('Disposal');
+//        }
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
@@ -596,20 +596,20 @@ class InstitutionAssetsTable extends ControllerActionTable
 
     public function onGetDepreciation(Event $event, Entity $entity)
     {
-        if (!$entity->depreciation) {
+//        if (!$entity->depreciation) {
             return "";
-        }
-        $formattedAmount = $this->currency . ' ' . number_format($entity->depreciation, 2);
-        return $formattedAmount; // Output: $1,234.56
+//        }
+//        $formattedAmount = $this->currency . ' ' . number_format($entity->depreciation, 2);
+//        return $formattedAmount; // Output: $1,234.56
     }
 
     public function onExcelGetDepreciation(Event $event, Entity $entity)
     {
-        if (!$entity->depreciation) {
+//        if (!$entity->depreciation) {
             return "";
-        }
-        $formattedAmount = $this->currency . '' . number_format($entity->depreciation, 2);
-        return $formattedAmount; // Output: $1,234.56
+//        }
+//        $formattedAmount = $this->currency . '' . number_format($entity->depreciation, 2);
+//        return $formattedAmount; // Output: $1,234.56
     }
 
     /**
@@ -716,7 +716,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         $this->field('user_id', ['visible' => true]);
         $this->field('accessibility', ['visible' => true]);
         $this->field('asset_condition_id', ['visible' => true]);
-        $this->field('depreciation', ['visible' => true]);
+        $this->field('depreciation', ['visible' => false]);
         $this->field('asset_status_id', ['visible' => true]);
     }
 
