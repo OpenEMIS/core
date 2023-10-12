@@ -16,6 +16,7 @@ use App\Models\InstitutionSurvey;
 use App\Models\InstitutionStudentWithdraw;
 use App\Models\InstitutionStudentAdmission;
 use App\Models\InstitutionStudentTransfers;
+use App\Models\StudentBehaviours;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
@@ -316,6 +317,49 @@ class WorkbenchRepository extends Controller
                     ->toArray();
 
             return $list;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+
+    public function getInstitutionStudentBehaviour($request)
+    {
+        try {
+            $params = $request->all();
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $userId = JWTAuth::user()->id;
+            
+            $list = StudentBehaviours::with(
+                        'institution:id,name,code',
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id',
+                        'user:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name'
+                    )
+                    ->whereHas(
+                        'status', function ($q) {
+                            $q->where('workflow_id', 24)//For transfer out.
+                            ->where('category', '!=', 3);
+                        }        
+                    )
+                    ->where('assignee_id', $userId)
+                    ->paginate($limit)
+                    ->toArray();
+            dd($list);
+            return $list;
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
