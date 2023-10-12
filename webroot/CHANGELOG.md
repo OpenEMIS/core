@@ -1,3 +1,18 @@
+### [3.97.0] - 2023-10-12
+- Implemented: Develop staff list survey question type
+- Implemented: Develop staff list survey v2 (CakePHP) API
+- Bug Fixed: Institutions > Students > General > Guardian: When adding guardians, the relation type ordering does not match according to the order that was configured in guardian relations in field options
+- Bug Fixed: Institutions>Academic>Classes: Staff is set "Yes" to homeroom teacher but not showing in the list of either homeroom teacher or secondary teacher
+- Bug Fixed: Report>Institution>Cases: Filters for area education do not take consideration for parent_id
+- Bug Fixed: Institutions > Academic > Classes: When disabling the fields for unit and course for Institutions, the page still shows the fields for unit and course
+- Bug Fixed: Institution > Statistics > Standard: The report is stuck in progress
+- Bug Fixed: Institutions > Performance > Report Cards: When generating student report cards for past academic periods, GPA is not showing
+- Bug Fixed: Institutions > Academic > Subjects: When adding more subjects under Institutions Programmes, the subjects is not showing for other classes except for first class
+- Bug Fixed: Administration > System Setup > Field Options > Staff Position Titles: Page gives 404 error
+- Bug Fixed: Institutions > General > Shifts: System allows user to add Same Shift more than once.
+- Bug Fixed: Administration>Performance>Report Cards: User should be able to edit the name of the report card
+- Bug Fixed: Institutions > Staff > Transfer: When staff is transferred, the staff position in the previous institution is still linked to the staff
+
 ### [3.96.1] - 2023-10-06
 - Bug Fixed: OpenEMIS Registration: When institutions are inactive in OpenEMIS Core, the institutions still show in the dropdown list in OpenEMIS Registrations
 - Bug Fixed: Administration>Workflows: Users given permission for workflows not seeing assignee
