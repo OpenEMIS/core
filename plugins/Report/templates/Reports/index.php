@@ -25,6 +25,8 @@ $this->start('panelBody');
 		__('Action')
 	];
 
+	//$params = $this->request->params;
+	// Access parameters from the request
 	$params = $this->request->getAttribute('params');
 	$url = ['plugin' => $params['plugin'], 'controller' => $params['controller'], 'action' => 'ajaxGetReportProgress'];
 	$url = $this->Url->build($url);

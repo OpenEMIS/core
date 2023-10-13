@@ -13,9 +13,9 @@ use Cake\ORM\ResultSet;
 
 class InstitutionTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('manuals');
+        $this->setTable('manuals');
         parent::initialize($config);
 
         $this->toggle('add', false);

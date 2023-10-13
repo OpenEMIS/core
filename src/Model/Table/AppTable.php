@@ -213,7 +213,7 @@ class AppTable extends Table
      */
     public function formatDate($dateObject)
     {
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $format = $ConfigItem->value('date_format');
         $value = '';
         if (is_object($dateObject)) {
@@ -235,7 +235,7 @@ class AppTable extends Table
      */
     public function formatTime($timeObject)
     {
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $format = $ConfigItem->value('time_format');
         $value = '';
         if (is_object($timeObject)) {
@@ -257,7 +257,7 @@ class AppTable extends Table
      */
     public function formatDateTime($dateObject)
     {
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
         $value = '';
         if (is_object($dateObject)) {
@@ -1094,7 +1094,7 @@ class AppTable extends Table
     // Start POCOR-5188
 	public function getManualUrl($module, $function, $category='')
     {
-        $manualTable = TableRegistry::getTableLocator()->get('Manuals'); //TableRegistry::get('Manuals');
+        $manualTable = TableRegistry::getTableLocator()->get('Manuals'); //TableRegistry::getTableLocator()->get('Manuals');
         if ($category == ''){
             // $ManualContent =   $manualTable->find()->select(['url'])->where([
             //         $manualTable->aliasField('function') => $function,

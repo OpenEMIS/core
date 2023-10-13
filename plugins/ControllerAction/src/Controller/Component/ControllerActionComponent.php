@@ -439,9 +439,9 @@ class ControllerActionComponent extends Component
 
     public function paramsPass()
     { 
-
         $request = $this->getController()->getRequest();
-        $requestParams = $request->getParam('pass');
+        $params = $request->getParam('pass');
+       // $params = $this->request->pass;
         if ($this->triggerFrom == 'Model') {
             unset($params[0]);
         }
@@ -450,7 +450,6 @@ class ControllerActionComponent extends Component
 
     public function paramsQuery()
     {
-
         return $this->getController()->getRequest()->getQuery();
     }
 
@@ -497,7 +496,6 @@ class ControllerActionComponent extends Component
 
     public function buildDefaultValidation()
     {
-
         $action = $this->currentAction;
         if ($action != 'index' && $action != 'view') {
             $validator = $this->model->getValidator();
@@ -771,8 +769,9 @@ class ControllerActionComponent extends Component
     public function render()
     {
         if (empty($this->plugin)) {
-            $path = APP . 'templates' . DS . $this->getController()->getName() . DS;
+             $path = APP . 'templates' . DS . $this->getController()->getName() . DS;
         } else {
+            //$path = ROOT . DS . 'plugins' . DS . $this->plugin . DS . 'src' . DS . 'templates' . DS;
             $path = ROOT . DS . 'plugins' . DS . $this->plugin . DS . 'templates' . DS;
         }
         $ctp = $this->ctpFolder . DS . $this->currentAction;
@@ -2003,7 +2002,6 @@ class ControllerActionComponent extends Component
     public function field($field, $attr=[])
     {
         $model = $this->model;
-        
         if($model == NULL){
             $controller = $this->_registry->getController();
             $plugin = $this->_registry->getController()->getRequest()->getParam('action');

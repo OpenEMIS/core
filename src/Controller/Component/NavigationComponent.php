@@ -117,7 +117,7 @@ class NavigationComponent extends Component
      */
     private static function isSuperUser($user_id)
     {
-        $users = TableRegistry::get('User.Users');
+        $users = TableRegistry::getTableLocator()->get('User.Users');
         $is_super_user = $users->find()->where([$users->aliasField('super_admin') => 1,
             $users->aliasField('id') => $user_id])->first();
         return $is_super_user;
@@ -226,11 +226,8 @@ class NavigationComponent extends Component
 
     public function checkPermissions(array &$navigations)
     {
-        //echo "<pre>";print_r($navigations);die;
         $linkOnly = [];
-
         //$ignoredPlugin = ['Profile']; // Plugin that will be excluded from checking //POCOR-5312
-
         $roles = [];
         $restrictedTo = [];
         $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
@@ -322,7 +319,7 @@ class NavigationComponent extends Component
         $institutionId = $session->read('Institution.Institutions.id');
 
         if (!empty($institutionId)) {
-            //$Institutions = TableRegistry::get('Institution.Institutions');
+            //$Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
             if ($Institutions->exists([$Institutions->getPrimaryKey() => $institutionId])) {
@@ -478,32 +475,32 @@ class NavigationComponent extends Component
                 if (!empty($encodedParam)) {
                     //POCOR-6202 start
                     if ($action == 'GuardianStudents') {
-                        $userInfo = TableRegistry::get('student_guardians')->get($securityUserId);
+                        $userInfo = TableRegistry::getTableLocator()->get('student_guardians')->get($securityUserId);
                     } else if ($action == 'StudentGuardians') {
                         $securityUserId = $this->controller->paramsDecode($this->request->params['pass'][1]);
-                        $userInfo = TableRegistry::get('Student.StudentGuardians')->get($securityUserId);//POCOR-6453 ends
+                        $userInfo = TableRegistry::getTableLocator()->get('Student.StudentGuardians')->get($securityUserId);//POCOR-6453 ends
                         $securityUserId = $userInfo->guardian_id;
-                        $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);//POCOR-6453 ends
+                        $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);//POCOR-6453 ends
                     } else if ($action == 'Identities') {//POCOR-6453 starts
                         $securityUserId = $this->controller->paramsDecode($this->request->query['queryString']);
-                        $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);//POCOR-6453 ends
+                        $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);//POCOR-6453 ends
                     } /*POCOR-6286 : added condition to get selected student id */
                     elseif ($action == 'StudentProfiles') {
                         $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
-                        $userInfo = TableRegistry::get('Security.Users')->get($userId);
+                        $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     } //Start POCOR-7055
                     elseif ($action == 'StudentReportCards') {
                         $userId = $this->controller->paramsDecode($this->request->params['pass'][1])['student_id'];
-                        $userInfo = TableRegistry::get('Security.Users')->get($userId);
+                        $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     }//End POCOR-7055
                     /*POCOR-6286 ends*/
                     // Start POCOR-7384
                     elseif ($this->request->params['plugin'] == 'Directory' && $this->request->params['controller'] == 'Directories' && $this->request->params['pass'][0] == 'download' && $action == 'Attachments') {
                         $userId = $this->controller->paramsDecode($this->request->params['pass'][2])['security_user_id'];
-                        $userInfo = TableRegistry::get('Security.Users')->get($userId);
+                        $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     } // End POCOR-7384
                     else {
-                        $userInfo = TableRegistry::get('Security.Users')->get($securityUserId);
+                        $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);
                     }
                     //POCOR-6202 end
                 }
@@ -2409,7 +2406,7 @@ class NavigationComponent extends Component
     public function getAdministrationNavigation()
     {
         //for POCOR-5674 requirement
-        $connectionTable = TableRegistry::get('Archive.DataManagementConnections');
+        $connectionTable = TableRegistry::getTableLocator()->get('Archive.DataManagementConnections');
         $connectionData = $connectionTable->find()->select(['id'])->first()->toArray();
         $connectionId = $this->controller->paramsEncode(['id' => $connectionData['id']]);
         /*for POCOR-5674 */
@@ -2653,7 +2650,7 @@ class NavigationComponent extends Component
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
-        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
             ->matching('SecurityRoles')
@@ -3086,7 +3083,7 @@ class NavigationComponent extends Component
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
-        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
             ->matching('SecurityRoles')
@@ -3194,7 +3191,7 @@ class NavigationComponent extends Component
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
-        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
             ->matching('SecurityRoles')
@@ -3329,7 +3326,7 @@ class NavigationComponent extends Component
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
-        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
             ->matching('SecurityRoles')
@@ -3432,7 +3429,7 @@ class NavigationComponent extends Component
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
-        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
             ->matching('SecurityRoles')
@@ -3583,7 +3580,7 @@ class NavigationComponent extends Component
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
-        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
             ->matching('SecurityRoles')
@@ -3719,7 +3716,7 @@ class NavigationComponent extends Component
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
-        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
             ->matching('SecurityRoles')
@@ -3903,7 +3900,7 @@ class NavigationComponent extends Component
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
-        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
             ->matching('SecurityRoles')
@@ -3982,7 +3979,7 @@ class NavigationComponent extends Component
         $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $securityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
-        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $groupUserRecords = $GroupUsers->find()
             ->matching('SecurityGroups')
             ->matching('SecurityRoles')
@@ -4092,7 +4089,7 @@ class NavigationComponent extends Component
     {
 //        $this->log('user_id', 'debug');
 //        $this->log($user_id, 'debug');
-        $GroupUsers = TableRegistry::get('security_group_users');
+        $GroupUsers = TableRegistry::getTableLocator()->get('security_group_users');
         $distinctResults = $GroupUsers->find('all')
             ->where(['security_user_id' => $user_id])
             ->select(['security_role_id'])
@@ -4121,8 +4118,8 @@ class NavigationComponent extends Component
             $category = [$category];
         }
         $has_user_permission = false;
-        $securityRoleFunctions = TableRegistry::get('security_role_functions');
-        $securityFunctions = TableRegistry::get('security_functions');
+        $securityRoleFunctions = TableRegistry::getTableLocator()->get('security_role_functions');
+        $securityFunctions = TableRegistry::getTableLocator()->get('security_functions');
         $SecurityTrainingFunctions = $securityRoleFunctions->find()
             ->InnerJoin([$securityFunctions->alias() => $securityFunctions->table()],
                 [

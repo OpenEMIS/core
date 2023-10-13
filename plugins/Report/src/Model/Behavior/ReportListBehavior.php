@@ -242,7 +242,7 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {
-		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 		$setTime= $ConfigItems->value("time_zone");
 		$timeZone= !empty($setTime) ? $setTime : 'UTC'; //POCOR-6732
 		date_default_timezone_set($timeZone);
@@ -292,7 +292,7 @@ class ReportListBehavior extends Behavior {
 		$featureList = $this->_table->fields['feature']['options'];
 		$feature = $data[$alias]['feature'];
 		$fields = $this->_table->fields;
-		$table = TableRegistry::get($feature);
+		$table = TableRegistry::getTableLocator()->get($feature);
 
 		// Event:
 		// $eventKey = 'Model.Report.onGetName';
@@ -353,9 +353,9 @@ class ReportListBehavior extends Behavior {
 
 		}
 		/*POCOR-6304 starts*/
-		$Institutions = TableRegistry::get('Institution.Institutions');
-		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$EducationGrades = TableRegistry::get('Education.EducationGrades');
+		$Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+		$AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+		$EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
 		if (array_key_exists('institution_id', $data['InstitutionStatistics'])) {
 			$institutionId = $data['InstitutionStatistics']['institution_id'];
 	        $institutionData = $Institutions->get($institutionId);
@@ -401,7 +401,7 @@ class ReportListBehavior extends Behavior {
 
 		$params = $data[$alias];
 		
-		$ReportProgress = TableRegistry::get('Report.ReportProgress');
+		$ReportProgress = TableRegistry::getTableLocator()->get('Report.ReportProgress');
 		$obj = ['name' => $name, 'module' => $alias, 'params' => $params];
 		$id = $ReportProgress->addReport($obj);
 
