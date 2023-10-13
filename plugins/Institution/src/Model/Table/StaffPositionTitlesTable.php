@@ -61,6 +61,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		$validator = parent::validationDefault($validator);
 		return $validator
 			->requirePresence('position_grades')
+		    ->allowEmpty('file_content')//POCOR-7758
 			->add('position_grades', 'ruleCheckPositionGrades', [
 				'rule' => ['checkPositionGrades'],
 				'provider' => 'table',
