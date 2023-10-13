@@ -190,7 +190,7 @@ trait ControllerActionTrait {
     }
 
 	public function ComponentAction() {
-	 // Redirect logic to functions in Component or Model
+		// Redirect logic to functions in Component or Model
         return $this->ControllerAction->processAction();
     }
 }

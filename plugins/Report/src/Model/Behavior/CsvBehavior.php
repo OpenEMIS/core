@@ -25,7 +25,8 @@ class CsvBehavior extends Behavior
         if (!array_key_exists('filename', $config)) {
             $this->getConfig('filename', $this->_table->getAlias());
         }
-        $folder = WWW_ROOT . $this->setConfig('folder');
+        
+        $folder = WWW_ROOT . $this->getConfig('folder');
 
         if (!file_exists($folder)) {
             umask(0);

@@ -39,12 +39,11 @@ class ReportsController extends AppController
         $this->loadComponent('Training.Training');
         $this->loadComponent('Navigation');
     }
-
     public function beforeFilter(Event $event)
     { 
         parent::beforeFilter($event);
         $header = 'Reports';
-        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' =>$this->getRequest()->getParam('action')]);
+        $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' =>$this->getRequest()->getParam('action')]);
         $this->Navigation->addCrumb($this->getRequest()->getParam('action'));
     }
 
@@ -230,10 +229,10 @@ class ReportsController extends AppController
                 'Report.Uis13' => __('UIS-A13'),
             ];
         } elseif ($module == 'Workflows') {
-        $options = [
-            'Report.WorkflowRecords' => __('Workflow Records')
-        ];
-    } /*POCOR-6513 starts - added feature's option for Performance report*/
+            $options = [
+                'Report.WorkflowRecords' => __('Workflow Records')
+            ];
+        } /*POCOR-6513 starts - added feature's option for Performance report*/
         elseif ($module == 'Performance') {
             $options = [
                 'Report.Performance' => __('Assessment Missing Mark Entry')
@@ -254,10 +253,8 @@ class ReportsController extends AppController
         $this->autoRender = false;
         $userId = $this->Auth->user('id');
         $dataSet = [];
-
         if ($this->getRequest()->getQuery('ids')!=null) {
             $ids = $this->getRequest()->getQuery('ids');
-
             $fields = array(
                 'ReportProgress.status',
                 'ReportProgress.modified',
@@ -320,14 +317,14 @@ class ReportsController extends AppController
         //POCOR-7000
         // $explode_data = explode("/", $data['file_path']);
         $replace_data = str_replace('\\', '/', $data['file_path']);
-        if (!empty($this->request->param('institutionId'))) {
-            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        if (!empty($this->request->getParam('institutionId'))) {
+            $institutionId = $this->ControllerAction->paramsDecode($this->request->getParam('institutionId'))['id'];
         } else {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $institutionId = $session->read('Institution.Institutions.id');
         }
 
-        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
         $this->Navigation->addCrumb($data['module']);
         $header = __('Reports') . ' - ' .$data['module'];
 
