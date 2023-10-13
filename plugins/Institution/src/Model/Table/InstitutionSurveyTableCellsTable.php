@@ -5,7 +5,7 @@ use Cake\ORM\Entity;
 use CustomField\Model\Table\CustomTableCellsTable;
 use Cake\Log\Log;
 class InstitutionSurveyTableCellsTable extends CustomTableCellsTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->belongsTo('CustomFields', ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id']);
 		$this->belongsTo('CustomRecords', ['className' => 'Institution.InstitutionSurveys', 'foreignKey' => 'institution_survey_id']);
@@ -13,7 +13,7 @@ class InstitutionSurveyTableCellsTable extends CustomTableCellsTable {
 		$this->belongsTo('CustomTableColumns', ['className' => 'Survey.SurveyTableColumns', 'foreignKey' => 'survey_table_column_id']);
 	}
 
-	public function implementedEvents()
+	public function implementedEvents(): array
 	{
 		$events = parent::implementedEvents();
 		$events['Model.InstitutionSurveys.afterSave'] = 'institutionSurveyAfterSave';

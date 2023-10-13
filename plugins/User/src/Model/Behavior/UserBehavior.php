@@ -262,10 +262,10 @@ class UserBehavior extends Behavior
     //POCOR-5668 add identity section starts
     public function getViewUserIdentities($security_users_id)
     {
-        $UserIdentities = TableRegistry::get('user_identities');
-        $IdentityTypes = TableRegistry::get('identity_types');
-        $UserNationalities = TableRegistry::get('user_nationalities');
-        $Nationalities = TableRegistry::get('nationalities');
+        $UserIdentities = TableRegistry::getTableLocator()->get('user_identities');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types');
+        $UserNationalities = TableRegistry::getTableLocator()->get('user_nationalities');
+        $Nationalities = TableRegistry::getTableLocator()->get('nationalities');
        
         $data = $UserIdentities->find()
                 ->select([
@@ -564,7 +564,7 @@ class UserBehavior extends Behavior
 
     public function getUniqueOpenemisId($options = [])
     {
-        $prefix = TableRegistry::get('Configuration.ConfigItems')->value('openemis_id_prefix');
+        $prefix = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('openemis_id_prefix');
         $prefix = explode(",", $prefix);
         $prefix = ($prefix[1] > 0)? $prefix[0]: '';
         

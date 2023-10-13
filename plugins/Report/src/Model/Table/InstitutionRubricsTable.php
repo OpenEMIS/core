@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
@@ -17,8 +17,8 @@ class InstitutionRubricsTable extends AppTable {
 	const DRAFT = 1;
 	const COMPLETED = 2;
 
-	public function initialize(array $config) {
-		$this->table('institution_quality_rubrics');
+	public function initialize(array $config): void {
+		$this->setTable('institution_quality_rubrics');
 		parent::initialize($config);
 
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -38,9 +38,9 @@ class InstitutionRubricsTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$controllerName = $this->controller->name;
+		$controllerName = $this->controller->getName();
 		$reportName = __('Rubrics');
-		$this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
+		$this->controller->Navigation->substituteCrumb($this->getAlias(), $reportName);
 		$this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
 		$this->fields = [];
 		$this->ControllerAction->field('feature', ['select' => false]);
@@ -59,28 +59,28 @@ class InstitutionRubricsTable extends AppTable {
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['label'=>'Area Name']]);
     }
     //POCOR - 7415 end
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'add') {
 			$attr['options'] = $this->controller->getFeatureOptions($this->alias());
 			$attr['onChangeReload'] = true;
-			if (!(isset($this->request->data[$this->alias()]['feature']))) {
+			if (!(isset($this->request->getData($this->getAlias())['feature']))) {
 				$option = $attr['options'];
 				reset($option);
-				$this->request->data[$this->alias()]['feature'] = key($option);
+				$this->request->getData($this->getAlias())['feature'] = key($option);
 			}
 			return $attr;
 		}
 	}
 
-	public function onUpdateFieldRubricTemplateId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldRubricTemplateId(Event $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'add') {
-			if (isset($this->request->data[$this->alias()]['feature'])) {
-				$feature = $this->request->data[$this->alias()]['feature'];
-				$periodId = $this->request->data[$this->alias()]['academic_period_id'];
-				$institutionId = $this->request->data[$this->alias()]['institution_id'];
-				$areaId = $this->request->data[$this->alias()]['area_education_id'];
-				$Institutions = TableRegistry::get('Institution.Institutions');
-				$Areas = TableRegistry::get('Institution.Institutions');
+			if (isset($this->request->getData($this->getAlias())['feature'])) {
+				$feature = $this->request->getData($this->getAlias())['feature'];
+				$periodId = $this->request->getData($this->getAlias())['academic_period_id'];
+				$institutionId = $this->request->getData($this->getAlias())['institution_id'];
+				$areaId = $this->request->getData($this->getAlias())['area_education_id'];
+				$Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+				$Areas = TableRegistry::getTableLocator()->get('Institution.Institutions');
 				//echo "<pre>";print_r($areaId);die();
 				$where = [];
 				if (!empty($institutionId) && $institutionId != 0) {
@@ -109,10 +109,10 @@ class InstitutionRubricsTable extends AppTable {
 					$attr['options'] = $templateOptions;
 					$attr['onChangeReload'] = true;
 					$attr['type'] = 'select';
-					if (empty($this->request->data[$this->alias()]['rubric_template_id'])) {
+					if (empty($this->request->getData($this->getAlias())['rubric_template_id'])) {
 						$option = $attr['options'];
 						reset($option);
-						$this->request->data[$this->alias()]['rubric_template_id'] = key($option);
+						$this->request->getData($this->getAlias())['rubric_template_id'] = key($option);
 					}
 					return $attr;
 				}
@@ -120,21 +120,21 @@ class InstitutionRubricsTable extends AppTable {
 		}
 	}
 
-	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'add') {
-			if (isset($this->request->data[$this->alias()]['feature'])) {
-				$feature = $this->request->data[$this->alias()]['feature'];
-				$periodId = $this->request->data[$this->alias()]['academic_period_id'];
+			if (isset($this->request->getData($this->getAlias())['feature'])) {
+				$feature = $this->request->getData($this->getAlias())['feature'];
+				$periodId = $this->request->getData($this->getAlias())['academic_period_id'];
 				if ($feature == $this->registryAlias()) {
-					$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+					$AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 					$academicPeriodOptions = $AcademicPeriodTable->getYearList();
 					$attr['options'] = $academicPeriodOptions;
 					$attr['onChangeReload'] = true;
 					$attr['type'] = 'select';
-					if (empty($this->request->data[$this->alias()]['academic_period_id'])) {
+					if (empty($this->request->getData($this->getAlias())['academic_period_id'])) {
 						$option = $attr['options'];
 						reset($option);
-						$this->request->data[$this->alias()]['academic_period_id'] = key($option);
+						$this->request->getData($this->getAlias())['academic_period_id'] = key($option);
 					}
 					return $attr;
 				}
@@ -142,16 +142,16 @@ class InstitutionRubricsTable extends AppTable {
 		}
 	}
 
-	public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'add') {
 
-			if (isset($this->request->data[$this->alias()]['feature'])
-				&& isset($this->request->data[$this->alias()]['rubric_template_id'])
-				&& isset($this->request->data[$this->alias()]['academic_period_id'])) {
+			if (isset($this->request->getData($this->getAlias())['feature'])
+				&& isset($this->request->getData($this->getAlias())['rubric_template_id'])
+				&& isset($this->request->getData($this->getAlias())['academic_period_id'])) {
 
-				$feature = $this->request->data[$this->alias()]['feature'];
-				$templateId = $this->request->data[$this->alias()]['rubric_template_id'];
-				$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+				$feature = $this->request->getData($this->getAlias())['feature'];
+				$templateId = $this->request->getData($this->getAlias())['rubric_template_id'];
+				$academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
 
 				if ($feature == $this->registryAlias() && !empty($academicPeriodId)) {
 
@@ -211,10 +211,10 @@ class InstitutionRubricsTable extends AppTable {
 		}
 	}
 	/*POCOR-6176 starts*/
-	public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
+	public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
     	if ($action == 'add') {
-    		$Areas = TableRegistry::get('AreaLevel.AreaLevels');
+    		$Areas = TableRegistry::getTableLocator()->get('AreaLevel.AreaLevels');
             $entity = $attr['entity'];
             $areaOptions = $Areas
                            ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -232,9 +232,9 @@ class InstitutionRubricsTable extends AppTable {
         return $attr;
     }
 
-    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, ServerRequest $request)
     {
-    	$Areas = TableRegistry::get('Area.Areas');
+    	$Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $entity = $attr['entity'];
 
         if ($action == 'add') {
@@ -253,12 +253,12 @@ class InstitutionRubricsTable extends AppTable {
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
 		$institutionList = [];
-		$areaId = $request->data[$this->alias()]['area_education_id'];
-        if (array_key_exists('area_education_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['area_education_id']) && $areaId != -1) {
-            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+		$areaId = $request->getData($this->getAlias())['area_education_id'];
+        if (array_key_exists('area_education_id', $request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['area_education_id']) && $areaId != -1) {
+            $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
@@ -278,7 +278,7 @@ class InstitutionRubricsTable extends AppTable {
             }
 			$institutionList = $institutionQuery->toArray();
             } else {
-				$InstitutionsTable = TableRegistry::get('Institution.Institutions');
+				$InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
                 $institutionQuery = $InstitutionsTable
                         ->find('list', [
                            'keyField' => 'id',

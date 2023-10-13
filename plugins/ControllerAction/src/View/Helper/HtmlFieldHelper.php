@@ -760,8 +760,7 @@ class HtmlFieldHelper extends Helper
                 $table = TableRegistry::getTableLocator()->get($attr['className']);
                 $event = new Event('ControllerAction.Model.onFormatTime', $this, compact('value'));
                 $event = $table->getEventManager()->dispatch($event);
-                /*echo "<pre>"; print_r($event);
-die;*/
+               // echo "<pre>"; print_r($event);die;
                 if (strlen($event->getResult()) > 0) {
                     $value = $event->getResult();
                 }

@@ -5,23 +5,23 @@
        max-width: 100% !important;
    }
 </style>
-<?php $comment = $this->request->getQuery['comment']; ?>
+<?php $comment = $this->request->query['comment']; ?>
 <?php if (!empty($academicPeriodOptions) || !empty($templateOptions)) : ?>
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
                 if(!empty($comment) && $comment == 1){
                     $baseUrl = $this->Url->build([
-                        'plugin' => $this->request->getParam('plugin'),
-                        'controller' => $this->request->getParam('controller'),
-                        'action' => $this->request->getParam('action'),
+                        'plugin' => $this->request->params['plugin'],
+                        'controller' => $this->request->params['controller'],
+                        'action' => $this->request->params['action'],
                         'comment' => 1
                     ]);
                 }else{
                     $baseUrl = $this->Url->build([
-                        'plugin' => $this->request->getParam('plugin'),
-                        'controller' => $this->request->getParam('controller'),
-                        'action' => $this->request->getParam('action')
+                        'plugin' => $this->request->params['plugin'],
+                        'controller' => $this->request->params['controller'],
+                        'action' => $this->request->params['action']
                     ]);
                 }
                 
@@ -81,14 +81,14 @@
 
 <div id="tabs" class="nav nav-tabs horizontal-tabs">
 <span role="presentation" class="<?php echo (empty($comment))?'tab-active':''; ?>"><a href="<?php echo $this->Url->build([
-                        'plugin' => $this->request->getParam('plugin'),
-                        'controller' => $this->request->getParam('controller'),
-                        'action' => $this->request->getParam('action')
+                        'plugin' => $this->request->params['plugin'],
+                        'controller' => $this->request->params['controller'],
+                        'action' => $this->request->params['action']
                     ]); ?>"><?php echo __('Results') ?></a></span>
 <span role="presentation" class="<?php echo (!empty($comment) && $comment == 1)?'tab-active':''; ?>"><a href="<?php echo $this->Url->build([
-                        'plugin' => $this->request->getParam('plugin'),
-                        'controller' => $this->request->getParam('controller'),
-                        'action' => $this->request->getParam('action'),
+                        'plugin' => $this->request->params['plugin'],
+                        'controller' => $this->request->params['controller'],
+                        'action' => $this->request->params['action'],
                         'comment' => 1
                     ]); ?>"><?php echo __('Comments'); ?></a></span>
 </div>
