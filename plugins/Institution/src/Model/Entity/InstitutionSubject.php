@@ -36,7 +36,7 @@ class InstitutionSubject extends Entity
         if ($this->has('education_subject')) {
             $value = $this->education_subject->code;
         } else {
-            $table = TableRegistry::get('Education.EducationSubjects');
+            $table = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
             $id = $this->education_subject_id;
             $value = $table->get($id)->code;
         }

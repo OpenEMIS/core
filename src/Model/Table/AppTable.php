@@ -212,7 +212,7 @@ class AppTable extends Table
      */
     public function formatDate($dateObject)
     {
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $format = $ConfigItem->value('date_format');
         $value = '';
         if (is_object($dateObject)) {
@@ -234,7 +234,7 @@ class AppTable extends Table
      */
     public function formatTime($timeObject)
     {
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $format = $ConfigItem->value('time_format');
         $value = '';
         if (is_object($timeObject)) {
@@ -256,7 +256,7 @@ class AppTable extends Table
      */
     public function formatDateTime($dateObject)
     {
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
         $value = '';
         if (is_object($dateObject)) {
@@ -355,7 +355,7 @@ class AppTable extends Table
         // echo $this->request->url;
         // die;
         // needs clean up
-        $controller = $event->subject()->_registry->getController();
+        $controller = $event->getSubject()->_registry->getController();
         $access = $controller->AccessControl;
 
         $toolbarButtons = new ArrayObject([]);
@@ -367,8 +367,8 @@ class AppTable extends Table
         // Set for roles belonging to the controller
         $roles = [];
         $event = $controller->dispatchEvent('Controller.Buttons.onUpdateRoles', null, $this);
-        if ($event->result) {
-            $roles = $event->result;
+        if ($event->getResult()) {
+            $roles = $event->getResult();
         }
         if ($action != 'index') {
             $toolbarButtons['back'] = $buttons['back'];
@@ -956,7 +956,7 @@ class AppTable extends Table
         }
 
         $event = new Event('Model.custom.onUpdateToolbarButtons', $this, [$buttons, $toolbarButtons, $toolbarAttr, $action, $isFromModel]);
-        $this->eventManager()->dispatch($event);
+        $this->getEventManager()->dispatch($event);
 
         if ($toolbarButtons->offsetExists('back')) {
             $controller->set('backButton', $toolbarButtons['back']);
@@ -1093,7 +1093,7 @@ class AppTable extends Table
     // Start POCOR-5188
 	public function getManualUrl($module, $function, $category='')
     {
-        $manualTable = TableRegistry::getTableLocator()->get('Manuals'); //TableRegistry::get('Manuals');
+        $manualTable = TableRegistry::getTableLocator()->get('Manuals'); //TableRegistry::getTableLocator()->get('Manuals');
         if ($category == ''){
             // $ManualContent =   $manualTable->find()->select(['url'])->where([
             //         $manualTable->aliasField('function') => $function,

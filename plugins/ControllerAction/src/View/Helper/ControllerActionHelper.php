@@ -394,7 +394,6 @@ class ControllerActionHelper extends Helper
         $html = '';
         $model = $config['table']->getAlias();
         $displayFields = $_fields;
-
         if (!empty($fields)) { // if we only want specific fields to be displayed
             foreach ($displayFields as $_field => $attr) {
                 if (!in_array($displayFields, $fields)) {
