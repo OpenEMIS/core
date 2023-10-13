@@ -301,13 +301,13 @@ class LocalizationComponent extends Component
         $htmlLang = $this->language;
         $languages = $this->languages;
         $request = new ServerRequest();
-        if ($request->is('post') && array_key_exists('System', $this->request->data)) {
-            if (isset($this->request->data['System']['language'])) {
-                $htmlLang = $this->request->data['System']['language'];
+        if ($_SERVER['REQUEST_METHOD'] && array_key_exists('System', $this->getController()->getRequest()->getData())) {
+            if (isset($this->getController()->getRequest()->getData()['System']['language'])) {
+                $htmlLang = $this->getController()->getRequest()->getData()['System']['language'];
                 $this->Cookie->write('System.language', $htmlLang);
             }
         }
-
+        // echo "<pre>";print_r('ddddd');die;
         $this->Session->write('System.language', $htmlLang);
 
         // get direction from locales table.
