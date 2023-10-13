@@ -8,20 +8,20 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\I18n\Time;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\OptionsTrait;
 use Cake\Http\Client;
-use Cake\Network\Session;
+use Cake\Http\Session;
 
 class UserNationalitiesTable extends ControllerActionTable {
     use OptionsTrait;
     use MessagesTrait;
    
-	public function initialize(array $config)
+	public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -39,7 +39,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         $this->addBehavior('CompositeKey');
 	}
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $newEvent = [
             'Model.Users.afterSave' => 'afterSaveUsers'
@@ -93,7 +93,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         $this->setupFields($entity);
     }
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 		$validator
             ->add('nationality_id', 'notBlank', ['rule' => 'notBlank'])
@@ -161,7 +161,7 @@ class UserNationalitiesTable extends ControllerActionTable {
 
                 //update information on security user table
                 $listeners = [
-                    TableRegistry::get('User.Users')
+                    TableRegistry::getTableLocator()->get('User.Users')
                 ];
                 $this->dispatchEventToModels('Model.UserNationalities.onChange', [$entity], $this, $listeners);
             }
@@ -171,7 +171,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             if ($entity->has('identity_type_id') && $entity->has('number') && $entity->has('validate_number'))
             {
                 if($entity->validate_number == 1){
-                    $UserIdentities = TableRegistry::get('User.Identities');
+                    $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
                     $newEntity = $UserIdentities->newEntity([
                         'identity_type_id' => $entity->identity_type_id,
                         'number' => $entity->number,
@@ -183,7 +183,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                     $UserIdentities->save($newEntity);
 
                     //update identity_type_id in nationalities table
-                    $Nationalities = TableRegistry::get('nationalities');
+                    $Nationalities = TableRegistry::getTableLocator()->get('nationalities');
                     $updateEntity = $Nationalities->newEntity([
                         'id' => $entity->nationality_id,
                         'identity_type_id' => $entity->identity_type_id,
@@ -199,7 +199,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                 $UserIdentitiesData = $this->findDataExistInUserIdentityTable($entity->identity_type_id, $entity->nationality_id, $entity->security_user_id);
                 if($UserIdentitiesData->number != $entity->number){
 
-                    $UserIdentities = TableRegistry::get('User.Identities');
+                    $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
                     $update_identity_data = [
                         'id' => $UserIdentitiesData->id,
                         'identity_type_id' => $entity->identity_type_id,
@@ -215,7 +215,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                     $UserIdentities->save($newEntity);
 
                     //update identity_type_id in nationalities table
-                    $Nationalities = TableRegistry::get('nationalities');
+                    $Nationalities = TableRegistry::getTableLocator()->get('nationalities');
                     $updateEntity = $Nationalities->newEntity([
                         'id' => $entity->nationality_id,
                         'identity_type_id' => $entity->identity_type_id,
@@ -241,7 +241,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         //         ])
         //         ->count();
 
-        $UserNationalities = TableRegistry::get('user_identities');
+        $UserNationalities = TableRegistry::getTableLocator()->get('user_identities');
         $checkexistingNationalities = $UserNationalities->find()
             ->where([
                 $UserNationalities->aliasField('nationality_id') => $entity->nationality_id,
@@ -276,7 +276,7 @@ class UserNationalitiesTable extends ControllerActionTable {
 
                 //update information on security user table
                 $listeners = [
-                    TableRegistry::get('User.Users')
+                    TableRegistry::getTableLocator()->get('User.Users')
                 ];
                 $this->dispatchEventToModels('Model.UserNationalities.onChange', [$entity], $this, $listeners);
             }
@@ -300,7 +300,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                     }else{
                         $nationalityId = $attr['entity']->nationality_id;
                     }
-                    $IdentityTypes = TableRegistry::get('identity_types')->find('list',
+                    $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types')->find('list',
                                         ['keyField' => 'id','valueField' => 'name'
                                     ])->toArray();
 
@@ -326,8 +326,8 @@ class UserNationalitiesTable extends ControllerActionTable {
                 }
             } else if ($action == 'edit') {
                 if(!empty($userId)){
-                    $IdentityTypes = TableRegistry::get('identity_types');
-                    $nationality = TableRegistry::get('Nationalities');
+                    $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types');
+                    $nationality = TableRegistry::getTableLocator()->get('Nationalities');
                     $nationalityTable = $nationality
                                         ->find()
                                         ->select([
@@ -355,7 +355,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                         $attr['value'] = $nationalityTable->identity_types['id'];
                         $attr['attr']['value'] = $nationalityTable->identity_types['name'];
                     }else{
-                        $IdentityTypes = TableRegistry::get('identity_types')->find('list',
+                        $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types')->find('list',
                                             ['keyField' => 'id','valueField' => 'name'
                                         ])->toArray();
                         $attr['options'] = $IdentityTypes;
@@ -382,7 +382,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             } else if ($action == 'edit') {
                 if(!empty($userId)){
                     //first check nationality have default or not
-                    $nationalityTable = TableRegistry::get('Nationalities')
+                    $nationalityTable = TableRegistry::getTableLocator()->get('Nationalities')
                                     ->find()
                                     ->where([
                                         'Nationalities.default' => 1,
@@ -427,7 +427,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         }  else if ($action == 'edit') {
             if(!empty($userId)){
                 //first check nationality have default or not
-                $nationalityTable = TableRegistry::get('Nationalities')
+                $nationalityTable = TableRegistry::getTableLocator()->get('Nationalities')
                                 ->find()
                                 ->where([
                                     'Nationalities.default' => 1,
@@ -531,7 +531,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             $userId = $queryString['security_user_id'];
         }
 
-        $nationalityTable = TableRegistry::get('Nationalities')
+        $nationalityTable = TableRegistry::getTableLocator()->get('Nationalities')
                             ->find()
                             ->where([
                                 'Nationalities.id' => $nationalityId
@@ -585,13 +585,13 @@ class UserNationalitiesTable extends ControllerActionTable {
         if (isset($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
         }
-        $userData = TableRegistry::get('security_users')
+        $userData = TableRegistry::getTableLocator()->get('security_users')
                     ->find()
                     ->where([
                         'id' => $userId
                     ])->first();
         $this->autoRender = false;
-        $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        $ExternalAttributes = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
         $attributes = $ExternalAttributes
             ->find('list', [
                 'keyField' => 'attribute_field',
@@ -608,7 +608,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         $tokenUri = $attributes['token_uri'];
         $privateKey = $attributes['private_key'];
         //POCOR-7727 start
-        $ConfigItems = TableRegistry::get('config_items');
+        $ConfigItems = TableRegistry::getTableLocator()->get('config_items');
         $config_item_result = $ConfigItems->find()->select(["config_value" => $ConfigItems->aliasField('value')])
         ->where([$ConfigItems->aliasField('code') => 'external_data_source_type'])->first();
         
@@ -720,8 +720,8 @@ class UserNationalitiesTable extends ControllerActionTable {
     }
 
     public function getNationalityTableData($nationalityId){
-        $IdentityTypes = TableRegistry::get('identity_types');
-        $nationality = TableRegistry::get('Nationalities');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types');
+        $nationality = TableRegistry::getTableLocator()->get('Nationalities');
         $nationalityTable = $nationality
                             ->find()
                             ->select([
@@ -745,8 +745,8 @@ class UserNationalitiesTable extends ControllerActionTable {
     }
 
     public function findDataExistInUserIdentityTable($nationality_table_identity_type_id, $nationality_table_id, $userId){
-        $IdentityTypes = TableRegistry::get('identity_types');
-        $UserIdentities = TableRegistry::get('UserIdentities');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types');
+        $UserIdentities = TableRegistry::getTableLocator()->get('UserIdentities');
         $identityTypeData = $UserIdentities
                                 ->find()
                                 ->select([
@@ -804,7 +804,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function showIdentityTypeAndNumber(){
         $count = 0;
         $nationalityId = $identityName ='';
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         //$arr = array('StudentIdentities', 'StaffIdentities','GuardianIdentities','OtherIdentities');
         if(isset($this->request)){
             if($this->request->params['controller'] == 'Students'){

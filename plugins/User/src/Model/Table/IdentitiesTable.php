@@ -164,7 +164,7 @@ class IdentitiesTable extends ControllerActionTable
         $this->fields['comments']['visible'] = 'false';
 
         // Start POCOR-5188
-        if ($this->request->params['controller'] == 'Staff') {
+        if ($this->request->getParam('controller') == 'Staff') {
             $is_manual_exist = $this->getManualUrl('Institutions', 'Identities', 'Staff - General');
             if (!empty($is_manual_exist)) {
                 $btnAttr = [
@@ -182,7 +182,7 @@ class IdentitiesTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        } elseif ($this->request->params['controller'] == 'Students') {
+        } elseif ($this->request->getParam('controller') == 'Students') {
             $is_manual_exist = $this->getManualUrl('Institutions', 'Identities', 'Students - General');
             if (!empty($is_manual_exist)) {
                 $btnAttr = [
@@ -201,7 +201,7 @@ class IdentitiesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        } elseif ($this->request->params['controller'] == 'Directories') {
+        } elseif ($this->request->getParam('controller') == 'Directories') {
             $is_manual_exist = $this->getManualUrl('Directory', 'Identities', 'General');
             if (!empty($is_manual_exist)) {
                 $btnAttr = [
@@ -220,7 +220,7 @@ class IdentitiesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        } elseif ($this->request->params['controller'] == 'Profiles') {
+        } elseif ($this->request->getParam('controller') == 'Profiles') {
             $is_manual_exist = $this->getManualUrl('Personal', 'Identities', 'General');
             if (!empty($is_manual_exist)) {
                 $btnAttr = [
@@ -247,14 +247,14 @@ class IdentitiesTable extends ControllerActionTable
     /*POCOR-6267 Starts*/
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $queryString = $this->getQueryString();
         if (!empty($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
         } else {
             $userId = $session->read('Student.Students.id');
         }
-
+        $userId  = $this->request->getSession()->read('Auth.User.id');
         $query->where([$this->aliasField('security_user_id') => $userId]);
     }
 

@@ -28,6 +28,7 @@ use Cake\Cache\Cache;
 use Cake\Filesystem\File;
 use Cake\Filesystem\Folder;
 use Cake\ORM\Table;
+use Cake\Http\ServerRequest;
 
 /**
  * Application Controller
@@ -119,7 +120,7 @@ class AppController extends Controller
 
         $this->loadComponent('Paginator');
 
-         $this->Auth->getConfig('authorize', ['Security']);
+         $this->Auth->SetConfig('authorize', ['Security']);
 
         // Custom Components
         $this->loadComponent('Navigation');
