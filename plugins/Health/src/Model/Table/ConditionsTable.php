@@ -5,9 +5,9 @@ use App\Model\Table\ControllerActionTable;
 
 class ConditionsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('health_conditions');
+        $this->setTable('health_conditions');
         parent::initialize($config);
 
         $this->hasMany('Families', ['className' => 'Health.Families', 'foreignKey' => 'health_condition_id']);

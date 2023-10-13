@@ -5,9 +5,9 @@ use App\Model\Table\ControllerActionTable;
 
 class ImmunizationTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('health_immunization_types');
+        $this->setTable('health_immunization_types');
         parent::initialize($config);
 
         $this->hasMany('Immunizations', ['className' => 'Health.Immunizations', 'foreignKey' => 'health_immunization_type_id']);

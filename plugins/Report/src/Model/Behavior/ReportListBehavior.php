@@ -8,11 +8,11 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Network\Response;
 use Report\Model\Table\ReportProgressTable as Process;
 use Cake\I18n\I18n;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\I18n\Time;
 use Cake\FileSystem\File;
 use DateTime;
@@ -51,7 +51,7 @@ class ReportListBehavior extends Behavior {
 	        	$userRole = $SecurityGroupUsers->find()->select([
 	                        	$SecurityGroupUsers->aliasField('security_role_id'),
 	                        	$SecurityRoles->aliasField('name')
-	                    	])->leftJoin([$SecurityRoles->alias() => $SecurityRoles->table()], [
+	                    	])->leftJoin([$SecurityRoles->getAlias() => $SecurityRoles->getTable()], [
 	                       		'security_role_id = ' . $SecurityRoles->aliasField('id')
 	                    	])->where(['security_user_id' => $this->_table->Auth->user()['id']])
 	                    	->toArray(); 
@@ -65,12 +65,12 @@ class ReportListBehavior extends Behavior {
 					'InstitutionStatistics',
 					'InstitutionStandards',
 				];
-				if ( in_array($this->_table->alias(), $permission_check_array) ) {
+				if ( in_array($this->_table->getAlias(), $permission_check_array) ) {
 	        		$function = $securityFunctions->find()
 	        				->select([$securityFunctions->aliasField('id')])
 	        				->where([
 	        					$securityFunctions->aliasField('module') => 'Institutions',
-	        					$securityFunctions->aliasField('_delete') => $this->_table->alias() .'.'.'remove'
+	        					$securityFunctions->aliasField('_delete') => $this->_table->getAlias() .'.'.'remove'
 	        				])
 	        				->first();
 	        	} else {
@@ -78,7 +78,7 @@ class ReportListBehavior extends Behavior {
 	        				->select([$securityFunctions->aliasField('id')])
 	        				->where([
 	        					$securityFunctions->aliasField('module') => 'Reports',
-	        					$securityFunctions->aliasField('_delete') => $this->_table->alias() .'.'.'delete'
+	        					$securityFunctions->aliasField('_delete') => $this->_table->getAlias() .'.'.'delete'
 	        				])
 	        				->first();
 	        	}
@@ -107,7 +107,7 @@ class ReportListBehavior extends Behavior {
 
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		//print_r($this->ReportProgress); die;
-		//print_r($this->_table->alias());die;
+		//print_r($this->_table->getAlias());die;
 		$query = $settings['query'];
 		$settings['pagination'] = false;
 		$fields = $this->_table->ControllerAction->getFields($this->ReportProgress);
@@ -130,7 +130,7 @@ class ReportListBehavior extends Behavior {
 
 		// beside super user, report can only be seen by the one who generate it.
 		$conditions = [
-			$this->ReportProgress->aliasField('module') => $this->_table->alias()
+			$this->ReportProgress->aliasField('module') => $this->_table->getAlias()
 		];
 		
 		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
@@ -140,7 +140,7 @@ class ReportListBehavior extends Behavior {
 		//POCOR-6621 fetch report listing based on module and current institute
 		$session = new Session();
 	    $institutionId  = $session->read('Institution.Institutions.id'); 
-		if($this->_table->alias() == 'InstitutionStandards'){ // Inside the institution module report listing
+		if($this->_table->getAlias() == 'InstitutionStandards'){ // Inside the institution module report listing
 			$query = $this->ReportProgress->find('all')
 			//START:POCOR-6629
 			// ->where(['JSON_EXTRACT(params, "$.current_institution_id")=' . "'".$institutionId."'",'module'=>'InstitutionStandards'])
@@ -150,7 +150,7 @@ class ReportListBehavior extends Behavior {
 				$this->ReportProgress->aliasField('created') => 'DESC',
 				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
 			]);				
-		}elseif($this->_table->alias() == 'InstitutionStatistics'){ // Inside the institution module report listing
+		}elseif($this->_table->getAlias() == 'InstitutionStatistics'){ // Inside the institution module report listing
 			$query = $this->ReportProgress->find('all')
 			//START:POCOR-6629
 			// ->where(['JSON_EXTRACT(params, "$.institution_id")=' . "'".$institutionId."'",'module'=>'InstitutionStatistics'])
@@ -192,10 +192,10 @@ class ReportListBehavior extends Behavior {
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		
-		$data[$this->_table->alias()]['locale'] = I18n::locale();
+		$data[$this->_table->getAlias()]['locale'] = I18n::locale();
 		$session = new Session();
-		$data[$this->_table->alias()]['user_id'] = $session->read('Auth.User.id');
-		$data[$this->_table->alias()]['super_admin'] = $session->read('Auth.User.super_admin');
+		$data[$this->_table->getAlias()]['user_id'] = $session->read('Auth.User.id');
+		$data[$this->_table->getAlias()]['super_admin'] = $session->read('Auth.User.super_admin');
 		$process = function($model, $entity) use ($data) {
 			$errors = $entity->errors();
 			if (empty($errors)) {
@@ -242,7 +242,7 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {
-		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 		$setTime= $ConfigItems->value("time_zone");
 		$timeZone= !empty($setTime) ? $setTime : 'UTC'; //POCOR-6732
 		date_default_timezone_set($timeZone);
@@ -288,11 +288,11 @@ class ReportListBehavior extends Behavior {
 	}
 
 	protected function _generate($data) {
-		$alias = $this->_table->alias();
+		$alias = $this->_table->getAlias();
 		$featureList = $this->_table->fields['feature']['options'];
 		$feature = $data[$alias]['feature'];
 		$fields = $this->_table->fields;
-		$table = TableRegistry::get($feature);
+		$table = TableRegistry::getTableLocator()->get($feature);
 
 		// Event:
 		// $eventKey = 'Model.Report.onGetName';
@@ -353,9 +353,9 @@ class ReportListBehavior extends Behavior {
 
 		}
 		/*POCOR-6304 starts*/
-		$Institutions = TableRegistry::get('Institution.Institutions');
-		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$EducationGrades = TableRegistry::get('Education.EducationGrades');
+		$Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+		$AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+		$EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
 		if (array_key_exists('institution_id', $data['InstitutionStatistics'])) {
 			$institutionId = $data['InstitutionStatistics']['institution_id'];
 	        $institutionData = $Institutions->get($institutionId);
@@ -401,7 +401,7 @@ class ReportListBehavior extends Behavior {
 
 		$params = $data[$alias];
 		
-		$ReportProgress = TableRegistry::get('Report.ReportProgress');
+		$ReportProgress = TableRegistry::getTableLocator()->get('Report.ReportProgress');
 		$obj = ['name' => $name, 'module' => $alias, 'params' => $params];
 		$id = $ReportProgress->addReport($obj);
 
@@ -436,7 +436,7 @@ class ReportListBehavior extends Behavior {
 		} else {
 			$this->ReportProgress->delete($entity);
 			$controller = $this->_table->controller->name;
-			$table = $this->_table->alias();
+			$table = $this->_table->getAlias();
 			$this->_table->Alert->error('general.noFile', ['reset'=>true]);
 			$url = ['controller' => $controller, 'action' => $table, 'index'];
 			return $this->_table->controller->redirect($url);
@@ -499,7 +499,7 @@ class ReportListBehavior extends Behavior {
 
         } else {
 			$controller = $this->_table->controller->name;
-			$table = $this->_table->alias();
+			$table = $this->_table->getAlias();
 			$this->_table->Alert->error('general.noFile', ['reset'=>true]);
 			$url = ['controller' => $controller, 'action' => $table, 'index'];
 			return $this->_table->controller->redirect($url);
@@ -514,7 +514,7 @@ class ReportListBehavior extends Behavior {
     	unlink($file);
         $this->ReportProgress->delete($entity);
 		$controller = $this->_table->controller->name;
-		$table = $this->_table->alias();
+		$table = $this->_table->getAlias();
 		$this->_table->Alert->success('general.delete.success');
 		$url = ['controller' => $controller, 'action' => $table, 'index'];
 		

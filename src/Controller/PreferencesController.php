@@ -37,7 +37,7 @@ class PreferencesController extends AppController {
 		parent::beforeFilter($event);
 		$header = __('Preferences');
 
-		$action = $this->request->params['action'];
+		$action = $this->request->getParam('action');
 
         $Preferences = TableRegistry::get('Preferences');
         $loginUserId = $this->Auth->user('id');

@@ -1,4 +1,4 @@
-<?php
+<?php 
 $this->start('toolbar');
 	foreach ($toolbarButtons as $key => $btn) {
 		if ($btn['type'] == 'button') {

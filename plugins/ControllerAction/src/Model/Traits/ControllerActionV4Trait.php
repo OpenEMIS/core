@@ -9,6 +9,7 @@ use Cake\Event\Event;
 use Cake\Network\Response;
 use Cake\Controller\Exception\MissingActionException;
 use Cake\Http\Session;
+use Cake\Http\ServerRequest;
 
 //use ControllerAction\Model\Traits\ControllerActionV4Trait;
 //use ControllerActionV4Trait; // extended functionality from v4

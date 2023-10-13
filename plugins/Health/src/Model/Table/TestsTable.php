@@ -12,9 +12,9 @@ use App\Model\Table\ControllerActionTable;
 
 class TestsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_health_tests');
+        $this->setTable('user_health_tests');
         parent::initialize($config);
 
         $this->belongsTo('TestTypes', ['className' => 'Health.TestTypes', 'foreignKey' => 'health_test_type_id']);
@@ -49,7 +49,7 @@ class TestsTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
         
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){
+        if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Tests','Staff - Health');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -67,7 +67,7 @@ class TestsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
+        }elseif($this->request->getParam('controller') == 'Students'){
             $is_manual_exist = $this->getManualUrl('Institutions','Tests','Students - Health');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -86,7 +86,7 @@ class TestsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getParam('controller') == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Tests','Health');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -105,7 +105,7 @@ class TestsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Profiles'){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){ 
             $is_manual_exist = $this->getManualUrl('Personal','Tests','Health');       
             if(!empty($is_manual_exist)){ 
                 $btnAttr = [
@@ -134,7 +134,7 @@ class TestsTable extends ControllerActionTable
         $this->field('file_content', ['after' => 'health_test_type_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator->allowEmpty('file_content');

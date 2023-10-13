@@ -31,7 +31,7 @@ class SetupTabBehavior extends Behavior
                     $options['userRole'] = 'Staff';
                     break;
             }
-            $session = $this->_table->request->session();
+            $session = $this->_table->request->getSession();
             $guardianId = $session->read('Guardian.Guardians.id');
             $studentId = $session->read('Student.Students.id');
             $isStudent = $session->read('Directory.Directories.is_student');
@@ -39,7 +39,7 @@ class SetupTabBehavior extends Behavior
             $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
             $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
 
-            if ($this->_table->controller->name == 'Directories') {
+            if ($this->_table->controller->getName() == 'Directories') {
                 if (!empty($isGuardian) && !empty($studentId) && !empty($guardianToStudent)) {
                     $tabElements = $this->_table->controller->getUserTabElements(['id' => $studentId, 'userRole' => 'Students']);
                 } elseif (!empty($isStudent) && !empty($guardianId) && !empty($studentToGuardian)) {
@@ -47,7 +47,7 @@ class SetupTabBehavior extends Behavior
                 } else {
                     $tabElements = $this->_table->controller->getUserTabElements();
                 }
-            } elseif ($this->_table->controller->name == 'Guardians') {
+            } elseif ($this->_table->controller->getName() == 'Guardians') {
                 $tabElements = $this->_table->controller->getGuardianTabElements();
             } else {
                 $tabElements = $this->_table->controller->getUserTabElements($options);
@@ -55,10 +55,10 @@ class SetupTabBehavior extends Behavior
         }
 
         $this->_table->controller->set('tabElements', $tabElements);
-        if ($this->_table->alias() == 'UserLanguages') {
+        if ($this->_table->getAlias() == 'UserLanguages') {
             $this->_table->controller->set('selectedAction', 'Languages');
         }else {
-            $this->_table->controller->set('selectedAction', $this->_table->alias());
+            $this->_table->controller->set('selectedAction', $this->_table->getAlias());
         }
 
     }

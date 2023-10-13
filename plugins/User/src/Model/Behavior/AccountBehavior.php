@@ -8,7 +8,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 
@@ -50,17 +50,19 @@ class AccountBehavior extends Behavior
 
     private function setupTabElements($entity)
     {
+        //print_r($this->userRole);die;
         if ($this->userRole == 'Preferences') {
             return; // has its own setupTabElements
         }
-        $id = !is_null($this->_table->request->query('id')) ? $this->_table->request->query('id') : 0;
-
-        $options = [
-            'userRole' => Inflector::singularize($this->userRole),
-            'action' => $this->_table->action,
-            'id' => $id,
-            'userId' => $entity->id
-        ];
+        $id = !is_null($this->_table->request->getQuery('id')) ? $this->_table->request->getQuery('id') : 0;
+        if(isset($this->userRole)){
+            $options = [
+                'userRole' => Inflector::singularize($this->userRole),
+                'action' => $this->_table->action,
+                'id' => $id,
+                'userId' => $entity->id
+            ];
+        }
 
         if ($this->_table->action != 'add') {
             if ($this->isInstitution) {
@@ -77,7 +79,7 @@ class AccountBehavior extends Behavior
         }
 
         $this->_table->controller->set('tabElements', $tabElements);
-        $this->_table->controller->set('selectedAction', $this->_table->alias());
+        $this->_table->controller->set('selectedAction', $this->_table->getAlias());
     }
 
     public function viewAfterAction(Event $event, Entity $entity)
@@ -194,34 +196,34 @@ class AccountBehavior extends Behavior
         $tableCells = [];
         $key = 'roles';
         if ($action == 'view') {
-            $session = $this->_table->request->session();
+            $session = $this->_table->request->getSession();
             $institutionId = $session->read('Institution.Institutions.id');
-            $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-            $SecurityGroupInstitutions = TableRegistry::get('security_group_institutions');//POCOR-7309
+            $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+            $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');//POCOR-7309
             //POCOR-7309 starts
-            if($this->_table->alias() == 'StaffAccount'){
-                $InstitutionStaff = TableRegistry::get('Institution.Staff');
-                $SecurityGroups = TableRegistry::get('Security.SecurityGroups');
-                $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+            if($this->_table->getAlias() == 'StaffAccount'){
+                $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
+                $SecurityGroups = TableRegistry::getTableLocator()->get('Security.SecurityGroups');
+                $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
                 $groupUserRecords = $InstitutionStaff->find()
                     ->select(['group_name' => 'SecurityGroups.name', 'role_name' => 'SecurityRoles.name'])
-                    ->LeftJoin([$GroupUsers->alias() => $GroupUsers->table()],
+                    ->LeftJoin([$GroupUsers->getAlias() => $GroupUsers->getTable()],
                         [
                             $GroupUsers->aliasField('security_user_id = ') . $InstitutionStaff->aliasField('staff_id'),
                         ]
                     )
-                    ->LeftJoin([$SecurityGroups->alias() => $SecurityGroups->table()],
+                    ->LeftJoin([$SecurityGroups->getAlias() => $SecurityGroups->getTable()],
                         [
                             $SecurityGroups->aliasField('id = ') . $GroupUsers->aliasField('security_group_id')
                         ]
                     )
-                    ->LeftJoin([$SecurityGroupInstitutions->alias() => $SecurityGroupInstitutions->table()],
+                    ->LeftJoin([$SecurityGroupInstitutions->getAlias() => $SecurityGroupInstitutions->getTable()],
                         [
                             $SecurityGroupInstitutions->aliasField('security_group_id = ') . $GroupUsers->aliasField('security_group_id'),
                             $SecurityGroupInstitutions->aliasField('institution_id = ') . $institutionId,
                         ]
                     )
-                    ->LeftJoin([$SecurityRoles->alias() => $SecurityRoles->table()],
+                    ->LeftJoin([$SecurityRoles->getAlias() => $SecurityRoles->getTable()],
                         [
                             $SecurityRoles->aliasField('id = ') . $GroupUsers->aliasField('security_role_id')
                         ]
@@ -230,7 +232,7 @@ class AccountBehavior extends Behavior
                     ->group([$GroupUsers->aliasField('security_role_id'),$SecurityGroupInstitutions->aliasField('institution_id')]) //POCOR-7477
                     ->all();
             }else{//POCOR-7309 ends
-                $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
                 $groupUserRecords = $GroupUsers->find()
                     ->matching('SecurityGroups')
                     ->matching('SecurityRoles')
@@ -252,6 +254,6 @@ class AccountBehavior extends Behavior
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->subject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
+        return $event->getSubject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
     }
 }
