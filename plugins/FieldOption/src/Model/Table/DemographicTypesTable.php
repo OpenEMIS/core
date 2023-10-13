@@ -7,9 +7,9 @@ use ArrayObject;
 
 class DemographicTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('demographic_types');
+        $this->setTable('demographic_types');
         parent::initialize($config);
 
         $this->hasMany('UserDemographics', ['className' => 'Student.StudentDemographics']);

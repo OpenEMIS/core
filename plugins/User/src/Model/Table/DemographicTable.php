@@ -17,7 +17,7 @@ class DemographicTable extends ControllerActionTable
         $this->setTable('user_demographics');
         parent::initialize($config);
 
-        $this->belongsTo('DemographicTypes', ['className' => 'Student.DemographicTypes', 'foreignKey' => 'demographic_types_id']);
+        $this->belongsTo('DemographicTypes', ['className' => 'FieldOption.DemographicTypes', 'foreignKey' => 'demographic_types_id']);
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->addBehavior('User.SetupTab');
         $this->excludeDefaultValidations(['security_user_id']);
@@ -26,10 +26,9 @@ class DemographicTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $requestQuery = $this->request->getQuery();
-         print_r($requestQuery);die;
-        $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
-       
+        //$requestQuery = $this->request->getQuery();
+        //$userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];*/
+        $userId  = $this->request->getSession()->read('Auth.User.id');
         $query = $this
             ->find()
             ->where([$this->aliasField('security_user_id') => $userId])
@@ -40,7 +39,7 @@ class DemographicTable extends ControllerActionTable
         }
 
  		// Start POCOR-5188
-         if($this->request->params['controller'] == 'Staff'){
+         if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Demographic','Staff - General');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -58,7 +57,7 @@ class DemographicTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
+        }elseif($this->request->getParam('controller') == 'Students'){
             $is_manual_exist = $this->getManualUrl('Institutions','Demographic','Students - General');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -77,7 +76,7 @@ class DemographicTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories'){
+        }elseif($this->request->getParam('controller') == 'Directories'){
             $is_manual_exist = $this->getManualUrl('Directory','Demographic','General');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -96,7 +95,7 @@ class DemographicTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Profiles'){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){ 
             $is_manual_exist = $this->getManualUrl('Personal','Demographic','General');       
             if(!empty($is_manual_exist)){ 
                 $btnAttr = [
@@ -121,7 +120,7 @@ class DemographicTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $demographicTypes = TableRegistry::get('FieldOption.DemographicTypes');
+        $demographicTypes = TableRegistry::getTableLocator()->get('FieldOption.DemographicTypes');
         $demographicTypesArray = $demographicTypes
             ->find()
             ->toArray();
@@ -174,8 +173,9 @@ class DemographicTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $requestQuery = $this->request->query;
-        $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
+        $requestQuery = $this->request->getQuery();
+        $userId  = $this->request->getSession()->read('Auth.User.id');
+        //$userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
         $query->where([$this->aliasField('security_user_id') => $userId])
         ->orderDesc($this->aliasField('id'));
     }
