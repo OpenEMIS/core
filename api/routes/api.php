@@ -42,7 +42,7 @@ Route::group(
         Route::get('institutions/{institutionId}/students/absences', 'StudentController@getInstitutionStudentAbsences');
         Route::get('institutions/{institutionId}/students/{studentId}/absences', 'StudentController@getInstitutionStudentAbsencesData');
         Route::get('institutions/students', 'StudentController@getStudents');
-        Route::get('institutions/{institutionId}/students', 'StudentController@getInstitutionStudents');
+        Route::get('institutions/{institutionId}/students', 'StudentController@getInstitutionStudents')->where('institutionId', '[0-9]+');
         Route::get('institutions/{institutionId}/students/{studentId}', 'StudentController@getInstitutionStudentData');
         Route::get('institutions/students/absences', 'StudentController@getStudentAbsences');
         
@@ -131,7 +131,7 @@ Route::group(
          Route::get('users/{userId}', 'UserController@getUsersData');
 
 
-        Route::get('institutions/{id}/staff', 'InstitutionController@getInstitutionStaffList');
+        Route::get('institutions/{id}/staff', 'InstitutionController@getInstitutionStaffList')->where('id', '[0-9]+');
         Route::get('institutions/{id}/staff/{staffId}', 'InstitutionController@getInstitutionStaffData');
 
 
@@ -291,13 +291,17 @@ Route::group(
         
         //POCOR-7754 starts
         Route::get('notices', 'WorkbenchController@getNoticesList');
-        Route::get('staff/career/leave', 'WorkbenchController@getInstitutionStaffLeave');
+        
         Route::get('institutions/survey/forms', 'WorkbenchController@getInstitutionStaffSurveys');
         Route::get('institutions/students/withdraw', 'WorkbenchController@getInstitutionStudentWithdraw');
         Route::get('institutions/students/admission', 'WorkbenchController@getInstitutionStudentAdmission');
         Route::get('institutions/students/transferout', 'WorkbenchController@getInstitutionStudentTransferOut');
         Route::get('institutions/students/transferin', 'WorkbenchController@getInstitutionStudentTransferIn');
         Route::get('institutions/behaviour/students', 'WorkbenchController@getInstitutionStudentBehaviour');
+
+        Route::get('institutions/behaviour/staff', 'WorkbenchController@getInstitutionStaffBehaviour');
+        Route::get('staff/career/leave', 'WorkbenchController@getInstitutionStaffLeave');
+        Route::get('staff/career/appraisals', 'WorkbenchController@getStaffAppraisals');
         //POCOR-7754 ends
 
     }

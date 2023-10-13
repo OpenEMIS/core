@@ -122,10 +122,44 @@ class WorkbenchController extends Controller
     public function getInstitutionStudentBehaviour(Request $request)
     {
         try {
-            dd("qwqww");
             $data = $this->workbenchService->getInstitutionStudentBehaviour($request);
             
             return $this->sendSuccessResponse("Student Behaviour List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+
+    public function getInstitutionStaffBehaviour(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getInstitutionStaffBehaviour($request);
+            
+            return $this->sendSuccessResponse("Staff Behaviour List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getStaffAppraisals(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getStaffAppraisals($request);
+            
+            return $this->sendSuccessResponse("Staff Appraisals List Found", $data);
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
