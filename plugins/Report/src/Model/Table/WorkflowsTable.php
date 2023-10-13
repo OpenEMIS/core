@@ -12,6 +12,7 @@ use Cake\Log\Log;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
+use Cake\Http\ServerRequest;
 
 class WorkflowsTable extends AppTable
 {
@@ -45,7 +46,7 @@ class WorkflowsTable extends AppTable
 
     public function initialize(array $config): void
     {
-        $this->table("workflow_models");
+        $this->setTable("workflow_models");
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('Area', ['className' => 'Area.Areas', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods',     ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -87,10 +88,10 @@ class WorkflowsTable extends AppTable
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_id', ['type' => 'hidden']);
 
-        if (!isset($this->request->data[$this->alias()]['feature'])) {
+        if (!isset($this->request->getData($this->getAlias())['feature'])) {
             $selectedFeature = key($this->modelList);
         } else {
-            $selectedFeature = $this->request->data[$this->alias()]['model'];
+            $selectedFeature = $this->request->getData($this->getAlias())['model'];
         }
         if (in_array($selectedFeature,
         [
@@ -120,20 +121,20 @@ class WorkflowsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $featureOptions = $this->controller->getFeatureOptions($this->alias());
+        $featureOptions = $this->controller->getFeatureOptions($this->getAlias());
 
         $attr['options'] = $featureOptions;
         return $attr;
     }
 
-    public function onUpdateFieldModel(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldModel(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (!isset($this->request->data[$this->alias()]['feature'])) {
+        if (!isset($this->request->getData($this->getAlias())['feature'])) {
             $selectedFeature = key($this->modelList);
         } else {
-            $selectedFeature = $this->request->data[$this->alias()]['feature'];
+            $selectedFeature = $this->request->getData($this->getAlias())['feature'];
         }
 
         $attr['options'] = $this->modelList[$selectedFeature];
@@ -141,7 +142,7 @@ class WorkflowsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldCategory(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCategory(Event $event, array $attr, $action, ServerRequest $request)
     {
         $categoryOptions = $this->getSelectOptions('WorkflowSteps.category');
         $categoryOptions = ['-1' => __('All Categories')] + $categoryOptions;
@@ -149,7 +150,8 @@ class WorkflowsTable extends AppTable
         return $attr;
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator
+    {
         $validator = parent::validationDefault($validator);
         $validator
             ->notEmpty('institution_id');
@@ -162,10 +164,10 @@ class WorkflowsTable extends AppTable
         return $validator;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->data[$this->alias()]['model'])) {
-            $feature = $this->request->data[$this->alias()]['model'];
+        if (isset($request->getData($this->getAlias())['model'])) {
+            $feature = $this->request->getData($this->getAlias())['model'];
             if (in_array($feature, ['Report.WorkflowInstitution', 'Report.WorkflowInstitutionPosition', 'Report.WorkflowStaffPositionProfile'
                 , 'Report.WorkflowVisitRequest', 'Report.WorkflowInstitutionCase', 'Report.WorkflowStaffTransferIn',
                 'Report.WorkflowStaffTransferOut', 'Report.WorkflowStudentWithdraw', 'Report.WorkflowStudentAdmission',
@@ -176,15 +178,15 @@ class WorkflowsTable extends AppTable
         }
         return $attr;
     }
-    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->data[$this->alias()]['model'])) {
-            $feature = $this->request->data[$this->alias()]['model'];
+        if (isset($request->getData($this->getAlias())['model'])) {
+            $feature = $this->request->getData($this->getAlias())['model'];
             if (in_array($feature, ['Report.WorkflowInstitution','Report.WorkflowInstitutionPosition','Report.WorkflowStaffPositionProfile'
                 ,'Report.WorkflowVisitRequest','Report.WorkflowInstitutionCase','Report.WorkflowStaffTransferIn',
                 'Report.WorkflowStaffTransferOut','Report.WorkflowStudentWithdraw','Report.WorkflowStudentAdmission',
                 'Report.WorkflowStudentTransferIn','Report.WorkflowStudentTransferOut'])) {
-                $Areas = TableRegistry::get('AreaLevel.AreaLevels');
+                $Areas = TableRegistry::getTableLocator()->get('AreaLevel.AreaLevels');
                 $entity = $attr['entity'];
 
                 if ($action == 'add') {
@@ -205,17 +207,17 @@ class WorkflowsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldArea(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldArea(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->data[$this->alias()]['model'])) {
-            $feature = $this->request->data[$this->alias()]['model'];
+        if (isset($request->getData($this->getAlias())['model'])) {
+            $feature = $this->request->getData($this->getAlias())['model'];
             if (in_array($feature, ['Report.WorkflowInstitution', 'Report.WorkflowInstitutionPosition', 'Report.WorkflowStaffPositionProfile'
                 , 'Report.WorkflowVisitRequest', 'Report.WorkflowInstitutionCase', 'Report.WorkflowStaffTransferIn',
                 'Report.WorkflowStaffTransferOut', 'Report.WorkflowStudentWithdraw', 'Report.WorkflowStudentAdmission',
                 'Report.WorkflowStudentTransferIn', 'Report.WorkflowStudentTransferOut'])) {
-                $Areas = TableRegistry::get('AreaLevel.AreaLevels');
+                $Areas = TableRegistry::getTableLocator()->get('AreaLevel.AreaLevels');
                 $entity = $attr['entity'];
-                $Areas = TableRegistry::get('Area.Areas');
+                $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                 $entity = $attr['entity'];
 
                 if ($action == 'add') {
@@ -236,12 +238,12 @@ class WorkflowsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $areaId = $request['data']['Workflows']['area'];
-        $feature = $this->request->data[$this->alias()]['model'];
+        $feature = $this->request->getData($this->getAlias())['model'];
         if(!empty($areaId) && $areaId != 0) {
-            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $institutionQuery = $InstitutionsTable
                             ->find('list', [
                             'keyField' => 'id',
@@ -261,7 +263,7 @@ class WorkflowsTable extends AppTable
 
             $institutionList = $institutionQuery->toArray();
         } else {
-            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $institutionQuery = $InstitutionsTable
                             ->find('list', [
                             'keyField' => 'id',
@@ -360,17 +362,17 @@ class WorkflowsTable extends AppTable
     {
 
         if (isset($requestData['submit']) && $requestData['submit'] == 'save') {
-            if (isset($requestData[$this->alias()]['feature']) && isset($requestData[$this->alias()]['model'])) {
-                $requestData[$this->alias()]['feature'] = $requestData[$this->alias()]['model'];
+            if (isset($requestData[$this->getAlias()]['feature']) && isset($requestData[$this->getAlias()]['model'])) {
+                $requestData[$this->getAlias()]['feature'] = $requestData[$this->getAlias()]['model'];
 
                 $this->fields['feature']['options'] = [
-                    $requestData[$this->alias()]['feature'] => __('Workflow Records')
+                    $requestData[$this->getAlias()]['feature'] => __('Workflow Records')
                 ];
             }
         }
     }
 
-     public function onUpdateFieldReportStartDate(Event $event, array $attr, $action, Request $request)
+     public function onUpdateFieldReportStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($request['data']['Workflows']['institution_id'] == 0) {
             $attr['type'] = 'date';
@@ -382,7 +384,7 @@ class WorkflowsTable extends AppTable
     }
 
 
-    public function onUpdateFieldReportEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldReportEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
        if ($request['data']['Workflows']['institution_id'] == 0) {
             $attr['type'] = 'date';

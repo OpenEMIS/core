@@ -183,7 +183,7 @@ class AppController extends Controller
         ]);
         $this->loadComponent('Csrf');
         if ($this->request->action == 'postLogin') {
-            $this->eventManager()->off($this->Csrf);
+            $this->getEventManager()->off($this->Csrf);
         }
         $this->loadComponent('TabPermission');
         // START: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
