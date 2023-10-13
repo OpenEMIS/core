@@ -11,9 +11,9 @@ use App\Model\Table\ControllerActionTable;
 
 class MedicationsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_health_medications');
+        $this->setTable('user_health_medications');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
@@ -34,7 +34,7 @@ class MedicationsTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -52,7 +52,7 @@ class MedicationsTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
 
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){
+        if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Medications','Staff - Health');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -70,7 +70,7 @@ class MedicationsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
+        }elseif($this->request->getParam('controller') == 'Students'){
             $is_manual_exist = $this->getManualUrl('Institutions','Medications','Students - Health');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -89,7 +89,7 @@ class MedicationsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getParam('controller') == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Medications','Health');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -108,7 +108,7 @@ class MedicationsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Profiles'){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){ 
             $is_manual_exist = $this->getManualUrl('Personal','Medications','Health');       
             if(!empty($is_manual_exist)){ 
                 $btnAttr = [

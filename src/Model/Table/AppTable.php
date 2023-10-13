@@ -17,6 +17,7 @@ use ControllerAction\Model\Traits\ControllerActionTrait;
 use Page\Traits\OptionListTrait;
 use Cake\I18n\I18n;
 use Cake\Database\Schema\TableSchema;
+use Cake\Http\ServerRequest;
 
 class AppTable extends Table
 {
@@ -91,10 +92,10 @@ class AppTable extends Table
         $this->addBehavior('TrackAdd');
         $this->addBehavior('TrackDelete');
         $this->addBehavior('ControllerAction.Security');
-
         $this->_controllerActionEvents['Restful.Model.onRenderDatetime'] = 'onRestfulRenderDatetime';
         $this->_controllerActionEvents['Restful.Model.onRenderDate'] = 'onRestfulRenderDate';
         $this->_controllerActionEvents['Restful.Model.onRenderTime'] = 'onRestfulRenderTime';
+
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -355,7 +356,7 @@ class AppTable extends Table
         // echo $this->request->url;
         // die;
         // needs clean up
-        $controller = $event->subject()->_registry->getController();
+        $controller = $event->getSubject()->_registry->getController();
         $access = $controller->AccessControl;
 
         $toolbarButtons = new ArrayObject([]);
@@ -367,8 +368,8 @@ class AppTable extends Table
         // Set for roles belonging to the controller
         $roles = [];
         $event = $controller->dispatchEvent('Controller.Buttons.onUpdateRoles', null, $this);
-        if ($event->result) {
-            $roles = $event->result;
+        if ($event->getResult()) {
+            $roles = $event->getResult();
         }
         if ($action != 'index') {
             $toolbarButtons['back'] = $buttons['back'];
@@ -956,7 +957,7 @@ class AppTable extends Table
         }
 
         $event = new Event('Model.custom.onUpdateToolbarButtons', $this, [$buttons, $toolbarButtons, $toolbarAttr, $action, $isFromModel]);
-        $this->eventManager()->dispatch($event);
+        $this->getEventManager()->dispatch($event);
 
         if ($toolbarButtons->offsetExists('back')) {
             $controller->set('backButton', $toolbarButtons['back']);
@@ -1036,9 +1037,9 @@ class AppTable extends Table
         }
         $relatedModel = null;
 
-        foreach ($table->associations() as $assoc) {
+        foreach ($table->getAssociations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     $relatedModel = $assoc;
                     break;
                 }

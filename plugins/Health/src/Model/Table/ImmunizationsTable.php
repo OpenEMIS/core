@@ -10,9 +10,9 @@ use App\Model\Table\ControllerActionTable;
 
 class ImmunizationsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_health_immunizations');
+        $this->setTable('user_health_immunizations');
         parent::initialize($config);
 
         $this->belongsTo('ImmunizationTypes', ['className' => 'Health.ImmunizationTypes', 'foreignKey' => 'health_immunization_type_id']);
@@ -76,7 +76,7 @@ class ImmunizationsTable extends ControllerActionTable
     }
     //POCOR-5890 ends
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator->allowEmpty('file_content');
@@ -118,7 +118,7 @@ class ImmunizationsTable extends ControllerActionTable
 
      // POCOR-6131
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
         $studentUserId = $session->read('Student.Students.id');
 
@@ -132,7 +132,7 @@ class ImmunizationsTable extends ControllerActionTable
     // Start POCOR-5188
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-		if($this->request->params['controller'] == 'Staff'){
+		if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Vaccinations','Staff - Health');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -150,7 +150,7 @@ class ImmunizationsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
+        }elseif($this->request->getParam('controller') == 'Students'){
             $is_manual_exist = $this->getManualUrl('Institutions','Vaccinations','Students - Health');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -169,7 +169,7 @@ class ImmunizationsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getParam('controller') == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Vaccinations','Health');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -188,7 +188,7 @@ class ImmunizationsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Profiles'){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){ 
             $is_manual_exist = $this->getManualUrl('Personal','Vaccinations','Health');       
             if(!empty($is_manual_exist)){ 
                 $btnAttr = [

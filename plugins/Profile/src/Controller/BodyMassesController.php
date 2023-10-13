@@ -4,11 +4,11 @@ namespace Profile\Controller;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use App\Controller\PageController;
-use Page\Model\Entity\PageElement;//POCOR-6255
+use Page\Model\Entity\PageElement; //POCOR-6255
 
 class BodyMassesController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('AcademicPeriod.AcademicPeriods');
@@ -23,7 +23,7 @@ class BodyMassesController extends PageController
         $page = $this->Page;
         $page->exclude(['comment', 'security_user_id', 'file_name', 'file_content']);//POCOR-6255
 
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         if (array_key_exists('sort', $requestQuery)) {
             $page->setQueryOption('sort', $requestQuery['sort']);
             $page->setQueryOption('direction', $requestQuery['direction']);

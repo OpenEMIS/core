@@ -57,6 +57,7 @@ namespace ControllerAction\Controller\Component;
 use ArrayObject;
 use Cake\Controller\Component;
 use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;
@@ -168,10 +169,14 @@ class ControllerActionComponent extends Component
 
             if (in_array($action, $this->defaultActions)) { // default actions
                 $this->currentAction = $action;
-                $this->request->params['action'] = 'ComponentAction';
+                //$this->request->params['action'] = 'ComponentAction'; //comment cakpehp4
+                $request = $this->getController()->getRequest();
+                $newRequest = $request->withParam('action', 'ComponentAction');
+                $this->getController()->setRequest($newRequest);
                 $this->initComponentsForModel();
             } else { // check if it's a model action
                 $this->debug(__METHOD__, ': Searching Models');
+                //echo "<pre>"; print_r($this->models);die;
                 foreach ($this->models as $name => $attr) {
                     if (strtolower($action) === strtolower($name)) { // model class found
                         $this->debug(__METHOD__, ': ' . $name . ' found');
@@ -192,18 +197,28 @@ class ControllerActionComponent extends Component
                         $this->model->alias = $name;
                         $this->currentAction = $currentAction;
                         $this->ctpFolder = $this->model->getAlias();
-                        $this->request->params['action'] = 'ComponentAction';
+                        //$this->request->params['action'] = 'ComponentAction'; // comment cakephp 4
+                        $request = $this->getController()->getRequest();
+                        // Create a new request object with the modified "action" parameter
+                        $newRequest = $request->withParam('action', 'ComponentAction');
+
+                        // Update the request object in your controller
+                        $this->getController()->setRequest($newRequest);
+  
                         $this->initComponentsForModel();
 
                         $this->debug(__METHOD__, ': Event -> ControllerAction.Controller.onInitialize');
                         $event = new Event('ControllerAction.Controller.onInitialize', $this, [$this->model, new ArrayObject([])]);
                         $event = $this->controller->getEventManager()->dispatch($event);
+
                         if ($event->isStopped()) {
                             return $event->getResult();
                         }
 
                         $this->triggerFrom = 'Model';
+
                         break;
+
                     }
                 }
             }
@@ -231,7 +246,8 @@ class ControllerActionComponent extends Component
     }
 
     public function renderFields()
-    {
+    { 
+
         foreach ($this->model->fields as $key => $attr) {
             if ($key == $this->orderField) {
                 $this->model->fields[$this->orderField]['visible'] = ['view' => false];
@@ -340,6 +356,7 @@ class ControllerActionComponent extends Component
 
     public function model($model=null, $actions=[], $options=[])
     {
+
         if (array_key_exists('deleteStrategy', $options)) {
             $this->deleteStrategy = $options['deleteStrategy'];
         }
@@ -347,12 +364,14 @@ class ControllerActionComponent extends Component
         if (is_null($model)) {
             return $this->model;
         } else {
+
             if (!empty($actions)) {
                 // removing actions
                 // may not be the perfect solution yet
                 foreach ($actions as $action) {
                     $splitStr = str_split($action);
                     if ($splitStr[0] == '!') {
+                        
                         foreach ($this->defaultActions as $i => $val) {
                             if ($val == substr($action, 1, strlen($action))) {
                                 unset($this->defaultActions[$i]);
@@ -365,7 +384,9 @@ class ControllerActionComponent extends Component
                     }
                 }
             }
+
             $this->plugin = $this->getPlugin($model);
+
             $this->model = $this->getController()->loadModel($model);
             $this->model->alias = $this->model->getAlias();
             $this->getFields($this->model);
@@ -374,6 +395,7 @@ class ControllerActionComponent extends Component
 
     public function action()
     {
+
         return $this->currentAction;
     }
 
@@ -390,6 +412,7 @@ class ControllerActionComponent extends Component
 
     public function addDefaultActions(array $actions)
     {
+
         $defaultActions = $this->defaultActions;
         foreach ($actions as $action) {
             if (! array_search($action, $defaultActions)) {
@@ -400,7 +423,8 @@ class ControllerActionComponent extends Component
     }
 
     public function vars()
-    {
+    { 
+
         return $this->getController()->viewVars;
     }
 
@@ -414,8 +438,10 @@ class ControllerActionComponent extends Component
     }
 
     public function paramsPass()
-    {
-        $params = $this->request->pass;
+    { 
+
+        $request = $this->getController()->getRequest();
+        $requestParams = $request->getParam('pass');
         if ($this->triggerFrom == 'Model') {
             unset($params[0]);
         }
@@ -424,7 +450,8 @@ class ControllerActionComponent extends Component
 
     public function paramsQuery()
     {
-        return $this->request->query;
+
+        return $this->getController()->getRequest()->getQuery();
     }
 
     public function params()
@@ -470,9 +497,10 @@ class ControllerActionComponent extends Component
 
     public function buildDefaultValidation()
     {
+
         $action = $this->currentAction;
         if ($action != 'index' && $action != 'view') {
-            $validator = $this->model->validator();
+            $validator = $this->model->getValidator();
             foreach ($this->model->fields as $key => $attr) {
                 if ($validator->hasField($key)) {
                     $set = $validator->field($key);
@@ -508,7 +536,7 @@ class ControllerActionComponent extends Component
         $model = $this->model;
         foreach ($model->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     return true;
                 }
             }
@@ -556,8 +584,8 @@ class ControllerActionComponent extends Component
     {
         $controller = $this->controller;
 
-        $named = $this->request->getQuery();
-        $pass = $this->request->getParam('pass');
+        $named = $this->getController()->getRequest()->getQuery();
+        $pass = $this->getController()->getRequest()->getParam('pass');
         $extra = new ArrayObject([]);
         if ($this->triggerFrom == 'Model') {
             unset($pass[0]);
@@ -661,7 +689,7 @@ class ControllerActionComponent extends Component
 
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.beforeAction');
         $event = new Event('ControllerAction.Model.beforeAction', $this);
-        $event = $this->model->eventManager()->dispatch($event);
+        $event = $this->model->getEventManager()->dispatch($event);
         if ($event->isStopped()) {
             return $event->getResult();
         }
@@ -691,7 +719,6 @@ class ControllerActionComponent extends Component
                 return $result;
             }
         }
-        die('dd');
         $this->debug('processAction');
         $this->afterAction();
 
@@ -699,6 +726,7 @@ class ControllerActionComponent extends Component
             $this->render();
         }
         return $result;
+
     }
 
     public function afterAction()
@@ -719,7 +747,7 @@ class ControllerActionComponent extends Component
 
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.afterAction');
             $event = new Event('ControllerAction.Model.afterAction', $this, [$this->config]);
-            $event = $this->model->eventManager()->dispatch($event);
+            $event = $this->model->getEventManager()->dispatch($event);
             if ($event->isStopped()) {
                 return $event->getResult();
             }
@@ -727,33 +755,27 @@ class ControllerActionComponent extends Component
             $this->renderFields();
 
             //$this->request->getParam('action') = $action;//comment cakephp4
-            $newParams = $this->request->getQueryParams();
-            $newParams['action'] = $action;
-
-            $newRequest = $this->request->withQueryParams($newParams);
-
-            // Replace the original request object with the new one
-            $this->request = $newRequest;
+            $this->request = $this->getController()->getRequest()->withParam('action', $action);
+            $this->getController()->setRequest($this->request);
 
             uasort($this->model->fields, [$this, 'sortFields']);
             $this->config['fields'] = $this->model->fields;
 
             $controller->set('ControllerAction', $this->config);
             // deprecated: backward compatible
-            $controller->set('action', $this->currentAction);
+            $controller->set('action' ,$this->currentAction);
             $controller->set('model', $this->model->getAlias());
         }
     }
 
     public function render()
     {
-        if (empty($this->getPlugin())) {
-            $path = APP . 'templates' . DS . $this->controller->getName() . DS;
+        if (empty($this->plugin)) {
+            $path = APP . 'templates' . DS . $this->getController()->getName() . DS;
         } else {
-            $path = ROOT . DS . 'plugins' . DS . $this->getPlugin() . DS . 'src' . DS . 'templates' . DS;
+            $path = ROOT . DS . 'plugins' . DS . $this->plugin . DS . 'templates' . DS;
         }
         $ctp = $this->ctpFolder . DS . $this->currentAction;
-
         if (file_exists($path . DS . $ctp . '.php')) {
             if ($this->autoRender) {
                 $this->autoRender = false;
@@ -802,6 +824,7 @@ class ControllerActionComponent extends Component
 
     public function getContains($model, $type = 'belongsTo')
     { // type is not being used atm
+
         $contain = [];
         foreach ($model->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
@@ -980,9 +1003,10 @@ class ControllerActionComponent extends Component
 
     public function index()
     {
+        
         $model = $this->model;
 
-        $settings = new ArrayObject(['pagination' => true, 'model' => $model->registryAlias()]);
+        $settings = new ArrayObject(['pagination' => true, 'model' => $model->getRegistryAlias()]);
         $query = $model->find();
 
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.index.beforeAction');
@@ -992,7 +1016,7 @@ class ControllerActionComponent extends Component
         if ($event->isStopped()) {
             return $event->getResult();
         }
-        if ($event->result) {
+        if ($event->getResult()) {
             $query = $event->getResult();
         }
 
@@ -1002,7 +1026,7 @@ class ControllerActionComponent extends Component
 
         try {
             if ($settings['pagination']) {
-                if ($settings['model'] != $model->registryAlias()) {
+                if ($settings['model'] != $model->getRegistryAlias()) {
                     $model = TableRegistry::getTableLocator()->get($settings['model']);
                 }
                 $data = $this->search($model);
@@ -1025,7 +1049,7 @@ class ControllerActionComponent extends Component
 
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.index.afterAction');
         $event = new Event('ControllerAction.Model.index.afterAction', $this, [$data]);
-        $event = $this->model->eventManager()->dispatch($event);
+        $event = $this->model->getEventManager()->dispatch($event);
         if (!empty($event->getResult())) {
             $data = $event->getResult();
         }
@@ -1048,7 +1072,7 @@ class ControllerActionComponent extends Component
         if ($event->isStopped()) {
             return $event->getResult();
         }
-        if ($event->result instanceof Table) {
+        if ($event->getResult() instanceof Table) {
             $model = $event->getResult();
         }
         // End Event
@@ -1058,7 +1082,7 @@ class ControllerActionComponent extends Component
         $sessionKey = $model->getRegistryAlias() . '.primaryKey';
         $contain = [];
 
-        foreach ($model->getAssociations() as $assoc) {
+        foreach ($model->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
                 $contain[] = $assoc->getName();
             }
@@ -1120,7 +1144,7 @@ class ControllerActionComponent extends Component
     public function add()
     {
         $model = $this->model;
-        $request = $this->request;
+        $request = $this->getController()->getRequest();
 
         // Event: addEditBeforeAction
         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.beforeAction');
@@ -1139,12 +1163,12 @@ class ControllerActionComponent extends Component
         if ($event->isStopped()) {
             return $event->getResult();
         }
-        if ($event->result instanceof Table) {
+        if ($event->getResult() instanceof Table) {
             $model = $event->getResult();
         }
         // End Event
 
-        $entity = $model->newEntity();
+        $entity = $model->newEmptyEntity();
 
         if ($request->is(['get'])) {
             // Event: addOnInitialize
@@ -1942,6 +1966,7 @@ class ControllerActionComponent extends Component
 
     public function getPlugin($model)
     {
+       
         $array = $this->getModel($model);
         return $array['plugin'];
     }
@@ -1951,6 +1976,7 @@ class ControllerActionComponent extends Component
         $split = explode('.', $model);
         $plugin = null;
         $modelClass = $model;
+
         if (count($split) > 1) {
             $plugin = $split[0];
             $modelClass = $split[1];
@@ -1976,12 +2002,15 @@ class ControllerActionComponent extends Component
 
     public function field($field, $attr=[])
     {
-        // $model = $this->model;
-        $controller = $this->_registry->getController();
-        $plugin = $this->_registry->getController()->getRequest()->getParam('params')['plugin'];
-        $table = $this->_registry->getController()->getName();
-        $model = TableRegistry::getTableLocator()->get($plugin.'.'.$table);
-        $className = $model->getAlias();
+        $model = $this->model;
+        
+        if($model == NULL){
+            $controller = $this->_registry->getController();
+            $plugin = $this->_registry->getController()->getRequest()->getParam('action');
+            $className = $plugin;
+        }else{
+            $className = $model->getAlias();
+        }
 
         if (!isset($model->fieldOrder)) {
             $model->fieldOrder = 0;
@@ -2021,7 +2050,7 @@ class ControllerActionComponent extends Component
 
         $method = 'onUpdateField' . Inflector::camelize($field);
         $eventKey = 'ControllerAction.Model.' . $method;
-        $params = [$attr, $this->currentAction, $this->request];
+        $params = [$attr, $this->currentAction, $this->getController()->getRequest()];
         $this->debug(__METHOD__, ': Event -> ' . $eventKey);
         $event = $this->dispatchEvent($model, $eventKey, $method, $params);
         if (is_array($event->getResult())) {
@@ -2033,11 +2062,13 @@ class ControllerActionComponent extends Component
 
     public function getFields($model)
     {
+
         $ignoreFields = $this->ignoreFields;
         $className = $model->getAlias();
         if (!empty($this->plugin)) {
             $className = $this->plugin . '.' . $className;
         }
+
         $fields = $this->getSchema($model);
         $visibility = ['view' => true, 'edit' => true, 'index' => true];
 
@@ -2084,6 +2115,7 @@ class ControllerActionComponent extends Component
 
     public function setFieldOrder($field, $order=0)
     {
+
         $fields = $this->model->fields;
 
         if (is_array($field)) {
@@ -2146,7 +2178,7 @@ class ControllerActionComponent extends Component
 
         if (!array_key_exists($eventKey, $eventMap) && !is_null($method)) {
             if (method_exists($subject, $method) || $subject->behaviors()->hasMethod($method)) {
-                $subject->eventManager()->on($eventKey, [], [$subject, $method]);
+                $subject->getEventManager()->on($eventKey, [], [$subject, $method]);
             }
         }
         return $subject->getEventManager()->dispatch($event);

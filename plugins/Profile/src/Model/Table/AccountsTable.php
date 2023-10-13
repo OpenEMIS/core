@@ -8,15 +8,17 @@ use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
-
+use Cake\Http\ServerRequest;
 class AccountsTable extends AppTable
 {
     private $targetField = null;
 
 	public function initialize(array $config): void
     {
-        $this->addBehavior('User.Account');
+        
+        $this->setTable('security_users');
 		parent::initialize($config);
+        $this->addBehavior('User.Account');
 	}
 
 	public function validationDefault(Validator $validator): Validator

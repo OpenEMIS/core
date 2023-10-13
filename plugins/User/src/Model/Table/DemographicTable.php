@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
 use Cake\ORM\Query;
+use Cake\Http\ServerRequest;
 
 class DemographicTable extends ControllerActionTable
 {
@@ -26,7 +27,9 @@ class DemographicTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $requestQuery = $this->request->getQuery();
+         print_r($requestQuery);die;
         $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
+       
         $query = $this
             ->find()
             ->where([$this->aliasField('security_user_id') => $userId])

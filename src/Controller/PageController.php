@@ -64,10 +64,10 @@ class PageController extends Controller
                         ->group([$GroupRoles->aliasField('security_role_id')])
                         ->toArray();
             
-            if(!empty($this->request->params['controller']) && !empty($userRole)){
+            if(!empty($this->request->getParam('controller') && !empty($userRole))){
                 $RoleIds = [];
                 foreach ($userRole as $Role_key => $Role_val) {  $RoleIds[] = $Role_val->security_role_id; }
-                $SecurityFunctionIds = $this->getIdBySecurityFunctionName($this->request->params['action'], $this->request->params['controller']);
+                $SecurityFunctionIds = $this->getIdBySecurityFunctionName($this->request->getParam('action'), $this->request->getParam('controller'));
                 if(!empty($SecurityFunctionIds)){
                     $result = $this->checkAuthrizationForRoles($SecurityFunctionIds, $RoleIds);
                     if($result == 0){

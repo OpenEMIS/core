@@ -277,7 +277,7 @@ class AccessControlComponent extends Component
 
         // exclude profile controllers
         /*commenting Profiles, ProfileInsurances and ProfileBodyMasses as per task POCOR-5312 permission requirement*/
-        if($this->request->params['action'] == 'TrainingNeeds'){//POCOR-6292 starts
+        if($this->request->getParam('action') == 'TrainingNeeds'){//POCOR-6292 starts
            $excludedController = ['ProfileApplicationAttachments',
                'ProfileApplicationInstitutionChoices'
                /*'ProfileBodyMasses'*/,
