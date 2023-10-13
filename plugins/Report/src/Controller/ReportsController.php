@@ -8,6 +8,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\ORM\ResultSet;
+use Cake\Http\ServerRequest;
 use PHPExcel_IOFactory;
 
 class ReportsController extends AppController
@@ -15,33 +16,29 @@ class ReportsController extends AppController
     public function initialize(): void
     {
         parent::initialize();
-        // $this->ControllerAction->models = [
-        //     'Directory'  => ['className' => 'Report.Directory', 'actions' => ['index', 'add']],
-        //     'Institutions'	=> ['className' => 'Report.Institutions', 'actions' => ['index', 'add']],
-        //     'Profiles'	=> ['className' => 'Report.Profiles', 'actions' => ['index', 'add']],
-        //     'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],
-        //     'Staff'	 		=> ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
-        //     'Textbooks'     => ['className' => 'Report.Textbooks', 'actions' => ['index', 'add']],
-        //     'Trainings' 	=> ['className' => 'Report.Trainings', 'actions' => ['index', 'add']],
-        //     'Examinations'	=> ['className' => 'Report.Examinations', 'actions' => ['index', 'add']],
-        //     'Scholarships'  => ['className' => 'Report.Scholarships', 'actions' => ['index', 'add']],
-        //     'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
-        //     'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
-        //     'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
-        //     'Audits' => ['className' => 'Report.Audits', 'actions' => ['index', 'add']],
-        //     'Workflows' => ['className' => 'Report.Workflows', 'actions' => ['index', 'add']],
-        //     'UisStatistics'	=> ['className' => 'Report.UisStatistics', 'actions' => ['index', 'add']],
-        //     'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']],
-        //     'Performance' => ['className' => 'Report.Performance', 'actions' => ['index', 'add']]
-        // ];
+        $this->ControllerAction->models = [
+            'Directory'  => ['className' => 'Report.Directory', 'actions' => ['index', 'add']],
+            'Institutions'	=> ['className' => 'Report.Institutions', 'actions' => ['index', 'add']],
+            'Profiles'	=> ['className' => 'Report.Profiles', 'actions' => ['index', 'add']],
+            'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],
+            'Staff'	 		=> ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
+            'Textbooks'     => ['className' => 'Report.Textbooks', 'actions' => ['index', 'add']],
+            'Trainings' 	=> ['className' => 'Report.Trainings', 'actions' => ['index', 'add']],
+            'Examinations'	=> ['className' => 'Report.Examinations', 'actions' => ['index', 'add']],
+            'Scholarships'  => ['className' => 'Report.Scholarships', 'actions' => ['index', 'add']],
+            'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
+            'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
+            'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
+            'Audits' => ['className' => 'Report.Audits', 'actions' => ['index', 'add']],
+            'Workflows' => ['className' => 'Report.Workflows', 'actions' => ['index', 'add']],
+            'UisStatistics'	=> ['className' => 'Report.UisStatistics', 'actions' => ['index', 'add']],
+            'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']],
+            'Performance' => ['className' => 'Report.Performance', 'actions' => ['index', 'add']]
+        ];
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
         $this->loadComponent('Navigation');
     }
-
-    // CAv4
-    public function Directory() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Report.Directory']); }
-    // End
 
     public function beforeFilter(Event $event)
     { 
@@ -258,8 +255,8 @@ class ReportsController extends AppController
         $userId = $this->Auth->user('id');
         $dataSet = [];
 
-        if (isset($this->request->query['ids'])) {
-            $ids = $this->request->query['ids'];
+        if ($this->getRequest()->getQuery('ids')!=null) {
+            $ids = $this->getRequest()->getQuery('ids');
 
             $fields = array(
                 'ReportProgress.status',

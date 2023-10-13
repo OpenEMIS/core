@@ -151,8 +151,13 @@ class InstitutionCasesTable extends ControllerActionTable
         } else {
             $selectedFeature = key($featureOptions);
            // $this->request->getQuery('feature') = $selectedFeature; cakephp4  
-            $newRequest = $this->request->withQueryParams(['feature' => $selectedFeature]);
-            $this->request = $newRequest;       
+            // Get the current request object
+            $queryParams = $this->request->getQueryParams();
+            $queryParams['feature'] = $selectedFeature;
+            // Create a new request object with the modified "action" parameter
+            $newRequest  = $this->request->withQueryParams($queryParams);
+            // Update the request object in your controller
+            $this->request->setQueryParams($newRequest);     
         }
 
         $this->controller->set(compact('featureOptions', 'selectedFeature'));

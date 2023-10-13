@@ -8,7 +8,7 @@ use Page\Model\Entity\PageElement;//POCOR-6255
 
 class InsurancesController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Health.InsuranceProviders');

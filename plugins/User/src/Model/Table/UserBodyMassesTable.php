@@ -16,9 +16,9 @@ use App\Model\Table\ControllerActionTable;
 class UserBodyMassesTable extends ControllerActionTable
 {
     const POWER = 2;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_body_masses');
+        $this->setTable('user_body_masses');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
@@ -39,7 +39,7 @@ class UserBodyMassesTable extends ControllerActionTable
         // ]);//POCOR-6255 end
     }
     //POCOR-6255 start
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
@@ -55,7 +55,7 @@ class UserBodyMassesTable extends ControllerActionTable
         }
     }//POCOR-6255 end
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

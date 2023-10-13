@@ -17,9 +17,9 @@ class PermissionsTable extends ControllerActionTable
 {
     private $operations = ['_view', '_edit', '_add', '_delete', '_execute'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_role_functions');
+        $this->setTable('security_role_functions');
         parent::initialize($config);
 
         $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
@@ -88,7 +88,7 @@ class PermissionsTable extends ControllerActionTable
         $query = $extra['query'];
         $controller = $this->controller;
 
-        if (count($this->request->pass) != 2) {
+        if (count($this->request->getParam('pass') != 2) {
             $event->stopPropagation();
             return $this->controller->redirect(['action' => 'Roles']);
         }

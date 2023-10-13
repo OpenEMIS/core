@@ -182,8 +182,8 @@ class AppController extends Controller
             ]
         ]);
         $this->loadComponent('Csrf');
-        if ($this->request->action == 'postLogin') {
-            $this->eventManager()->off($this->Csrf);
+        if ($this->request->getParam('action') == 'postLogin') {
+            $this->getEventManager()->off($this->Csrf);
         }
         $this->loadComponent('TabPermission');
         // START: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
@@ -339,13 +339,13 @@ class AppController extends Controller
                 ->group([$GroupRoles->aliasField('security_role_id')])
                 ->toArray();
 
-            if (!empty($this->request->params['controller']) && !empty($userRole)) {
+            if (!empty($this->request->getParam('controller')) && !empty($userRole)) {
                 $RoleIds = [];
                 foreach ($userRole as $Role_key => $Role_val) {
                     $RoleIds[] = $Role_val->security_role_id;
                 }
-                $SecurityFunctionIds = $this->getIdBySecurityFunctionName($this->request->params['action'],
-                    $this->request->params['controller']);
+                $SecurityFunctionIds = $this->getIdBySecurityFunctionName($this->request->getParam('action'),
+                    $this->request->getParam('controller'));
                 if (!empty($SecurityFunctionIds)) {
                     $result = $this->checkAuthrizationForRoles($SecurityFunctionIds, $RoleIds);
                     if ($result == 0) {
@@ -362,7 +362,7 @@ class AppController extends Controller
     public function getIdBySecurityFunctionName($actionParam, $controllerParam)
     {
         //POCOR-7562 start
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $superAdmin = $session->read('Auth.User.super_admin');
         //POCOR-7562 end
         $name = '';
@@ -689,7 +689,7 @@ class AppController extends Controller
             }
         }
         $module = 'Administration';
-        $SecurityFunctionsTbl = TableRegistry::get('security_functions');
+        $SecurityFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $SecurityFunctionsData = $SecurityFunctionsTbl->find()->where([
             $SecurityFunctionsTbl->aliasField('name') => $name,
             $SecurityFunctionsTbl->aliasField('controller') => $controllerParam,
@@ -706,7 +706,7 @@ class AppController extends Controller
 
     public function checkAuthrizationForRoles($securityFunctionsId, $roleId)
     {
-        $SecurityRoleFunctionsTbl = TableRegistry::get('security_role_functions');
+        $SecurityRoleFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $SecurityRoleFunctionsTblData = $SecurityRoleFunctionsTbl->find()->where([
             $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $roleId,
             $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $securityFunctionsId,

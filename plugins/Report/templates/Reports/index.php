@@ -25,7 +25,7 @@ $this->start('panelBody');
 		__('Action')
 	];
 
-	$params = $this->request->params;
+	$params = $this->request->getAttribute('params');
 	$url = ['plugin' => $params['plugin'], 'controller' => $params['controller'], 'action' => 'ajaxGetReportProgress'];
 	$url = $this->Url->build($url);
 	$table = $ControllerAction['table'];
@@ -95,7 +95,7 @@ $this->start('panelBody');
 						 <?php
 							$downloadUrl = ['plugin' => $params['plugin'],
 								'controller' => $params['controller'],
-								'action' =>  $ControllerAction['table']->alias(),
+								'action' =>  $ControllerAction['table']->getAlias(),
 								'download',$obj->id
 							];
 							$viewUrl = ['plugin' => $params['plugin'],
@@ -107,7 +107,7 @@ $this->start('panelBody');
 							];
 							$deleteUrl = ['plugin' => $params['plugin'],
 								'controller' => $params['controller'],
-								'action' =>  $ControllerAction['table']->alias(),
+								'action' =>  $ControllerAction['table']->getAlias(),
 								'removeReport',$obj->id
 							];
 						?>	
@@ -138,7 +138,7 @@ $this->start('panelBody');
 								<?php
 									$deleteUrl = ['plugin' => $params['plugin'],
 										'controller' => $params['controller'],
-										'action' =>  $ControllerAction['table']->alias(),
+										'action' =>  $ControllerAction['table']->getAlias(),
 										'removeReport',$obj->id
 									];
 								?>
