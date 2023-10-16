@@ -19,6 +19,8 @@ use App\Models\InstitutionStudentTransfers;
 use App\Models\StudentBehaviours;
 use App\Models\StaffBehaviour;
 use App\Models\InstitutionStaffAppraisal;
+use App\Models\InstitutionStaffRelease;
+use App\Models\InstitutionStaffTransfers;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
@@ -304,7 +306,7 @@ class WorkbenchRepository extends Controller
                     )
                     ->whereHas(
                         'status', function ($q) {
-                            $q->where('workflow_id', 17)//For transfer out.
+                            $q->where('workflow_id', 17)//For transfer in.
                             ->where('category', '!=', 3)
                             ->whereHas(
                                 'workflowStepParam', function($query){
@@ -352,7 +354,7 @@ class WorkbenchRepository extends Controller
                     )
                     ->whereHas(
                         'status', function ($q) {
-                            $q->where('workflow_id', 24)//For transfer out.
+                            $q->where('workflow_id', 24)//For student behaviour.
                             ->where('category', '!=', 3);
                         }        
                     )
@@ -394,7 +396,7 @@ class WorkbenchRepository extends Controller
                     )
                     ->whereHas(
                         'status', function ($q) {
-                            $q->where('workflow_id', 25)//For transfer out.
+                            $q->where('workflow_id', 25)//For staff behaviour.
                             ->where('category', '!=', 3);
                         }        
                     )
@@ -438,7 +440,7 @@ class WorkbenchRepository extends Controller
                     )
                     ->whereHas(
                         'status', function ($q) {
-                            $q->where('workflow_id', 19)//For transfer out.
+                            $q->where('workflow_id', 19)//For staff appraisal.
                             ->where('category', '!=', 3);
                         }        
                     )
@@ -464,7 +466,142 @@ class WorkbenchRepository extends Controller
     public function getStaffRelease($request)
     {
         try {
-            dd("API Called.");
+            $params = $request->all();
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $userId = JWTAuth::user()->id;
+
+
+            $list = InstitutionStaffRelease::with(
+                        'newInstitution:id,name,code',
+                        'previousInstitution:id,name,code',
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id',
+                        'user:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name'
+                    )
+                    ->whereHas(
+                        'status', function ($q) {
+                            $q->where('workflow_id', 23)//For staff release.
+                            ->where('category', '!=', 3)
+                            ->whereHas(
+                                'workflowStepParam', function($query){
+                                    $query->where('name', 'institution_owner')
+                                        ->where('value', 2);
+                                }
+                            );
+                        }        
+                    )
+                    ->where('assignee_id', $userId)
+                    ->paginate($limit)
+                    ->toArray();
+
+            return $list;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+
+    public function getStaffTransferOut($request)
+    {
+        try {
+            $params = $request->all();
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $userId = JWTAuth::user()->id;
+
+
+            $list = InstitutionStaffTransfers::with(
+                        'newInstitution:id,name,code',
+                        'previousInstitution:id,name,code',
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id',
+                        'user:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name'
+                    )
+                    ->whereHas(
+                        'status', function ($q) {
+                            $q->where('workflow_id', 14)//For staff transfer out.
+                            ->where('category', '!=', 3)
+                            ->whereHas(
+                                'workflowStepParam', function($query){
+                                    $query->where('name', 'institution_owner')
+                                        ->where('value', 2);
+                                }
+                            );
+                        }        
+                    )
+                    ->where('assignee_id', $userId)
+                    ->paginate($limit)
+                    ->toArray();
+
+            return $list;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+
+    public function getStaffTransferIn($request)
+    {
+        try {
+            $params = $request->all();
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $userId = JWTAuth::user()->id;
+
+
+            $list = InstitutionStaffTransfers::with(
+                        'newInstitution:id,name,code',
+                        'previousInstitution:id,name,code',
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id',
+                        'user:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name'
+                    )
+                    ->whereHas(
+                        'status', function ($q) {
+                            $q->where('workflow_id', 13)//For staff transfer out.
+                            ->where('category', '!=', 3)
+                            ->whereHas(
+                                'workflowStepParam', function($query){
+                                    $query->where('name', 'institution_owner')
+                                        ->where('value', 1);
+                                }
+                            );
+                        }        
+                    )
+                    ->where('assignee_id', $userId)
+                    ->paginate($limit)
+                    ->toArray();
+
+            return $list;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
