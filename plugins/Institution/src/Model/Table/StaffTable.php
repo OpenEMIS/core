@@ -53,7 +53,7 @@ class StaffTable extends ControllerActionTable
     private $academic_period_id;
     private $_dynamicFieldName = 'custom_field_data';
     private $customFieldData = null;
-    private $customFieldTableName = 'staff_custom_fields';
+    private $customFieldTableName = 'StaffCustomField.StaffCustomFields';
 
     public function initialize(array $config): void
     {
