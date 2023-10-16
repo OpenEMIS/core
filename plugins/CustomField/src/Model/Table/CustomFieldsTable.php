@@ -101,6 +101,18 @@ class CustomFieldsTable extends ControllerActionTable
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
         $url = $this->request->here();
+         //POCOR-7872::Start //update student_custom_forms_fields if student_custom_field_id exist in table
+         if (strpos($url, "StudentCustomFields")!==false){
+            $student_custom_forms_fieldsT = TableRegistry::get('student_custom_forms_fields');
+            $student_custom_fieldsT = TableRegistry::get('student_custom_fields');
+            $student_custom_fields_data = $student_custom_fieldsT->get($entity->id);
+            $student_custom_forms_fields_data = $student_custom_forms_fieldsT->find()->where(['student_custom_field_id'=> $entity->id])->first();
+            if(!empty($student_custom_forms_fields_data)){
+                $student_custom_forms_fields_data->name = $student_custom_fields_data->name;
+                $student_custom_forms_fieldsT->save($student_custom_forms_fields_data);
+            }
+        }
+        //POCOR-7872::End
 //        $this->log('entity', 'debug');
 //        $this->log($entity, 'debug');
 //        $this->log($url, 'debug');
