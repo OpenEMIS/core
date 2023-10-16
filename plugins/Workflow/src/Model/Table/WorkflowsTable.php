@@ -305,6 +305,7 @@ class WorkflowsTable extends AppTable {
         $featureList[] = $registryAlias;
         if ($registryAlias == 'Institution.InstitutionSurveys') {
             $featureList[] = 'Student.StudentSurveys';
+            $featureList[] = 'Staff.StaffSurveys';
         }
 
         foreach ($featureList as $key => $feature) {

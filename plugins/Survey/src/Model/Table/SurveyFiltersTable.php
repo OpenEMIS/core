@@ -65,7 +65,7 @@ class SurveyFiltersTable extends ControllerActionTable
         }
 
         //custom module option in toolbar
-        $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey');
+        $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey', 'Institution > Staff > Survey');
         $CustomModules = TableRegistry::get('CustomField.CustomModules');
         $moduleOptions =  $CustomModules
             ->find('list', ['keyField' => 'id', 'valueField' => 'code']) 
@@ -328,7 +328,7 @@ class SurveyFiltersTable extends ControllerActionTable
     // public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request)
     public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action)
     {
-        $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey');
+        $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey','Institution > Staff > Survey');
         $CustomModules = TableRegistry::get('CustomField.CustomModules');
         $moduleOptions =  $CustomModules
             ->find('list', ['keyField' => 'id', 'valueField' => 'code']) 

@@ -24,6 +24,7 @@ class InstitutionSubjectsTable extends AppTable  {
         ]);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.InstitutionSecurity');
+        $this->addBehavior('Report.AreaList');//POCOR-7794
     }
 
     public function beforeAction(Event $event) {
@@ -38,6 +39,7 @@ class InstitutionSubjectsTable extends AppTable  {
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
+        $areaLevelId = $requestData->area_level_id;//POCOR-7794
         $conditions = [];
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
@@ -45,13 +47,25 @@ class InstitutionSubjectsTable extends AppTable  {
         if (!empty($institutionId) && $institutionId > 0) {
             $conditions['Institutions.id'] = $institutionId;
         }
-        if (!empty($areaId) && $areaId != -1) {
-            $conditions['Institutions.area_id'] = $areaId;
-        }
         if (!empty($requestData->education_subject_id)) {
             $conditions[$this->aliasField('education_subject_id')] = $requestData->education_subject_id;
         }
-        
+        //POCOR-7794 start
+        $areaList = [];
+        if (
+            $areaLevelId > 1 && $areaId > 1
+        ) {
+            $areaList = $this->getAreaList($areaLevelId, $areaId);
+        } elseif ($areaLevelId > 1) {
+
+            $areaList = $this->getAreaList($areaLevelId, 0);
+        } elseif ($areaId > 1) {
+            $areaList = $this->getAreaList(0, $areaId);
+        }
+        if (!empty($areaList)) {
+            $conditions['Institutions.area_id IN'] = $areaList;
+        }
+        //POCOR-7794 end
         $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
