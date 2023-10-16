@@ -345,7 +345,12 @@ class RenderStudentListBehavior extends RenderBehavior
                                                     if ($answerValue instanceof Time || $answerValue instanceof Date) {
                                                         $attr['value'] = $answerValue->format('d-m-Y');
                                                     } else {
-                                                        $attr['value'] = date('d-m-Y', strtotime($answerValue));
+                                                        //POCOR-7858 start
+                                                        if ($answerValue != null) {
+                                                            $attr['value'] = date('d-m-Y', strtotime($answerValue));
+                                                        }
+                                                        //POCOR-7858 end
+                                                      
                                                     }
                                                 } else if ($attr['default_date']) {
                                                     $attr['value'] = date('d-m-Y');
@@ -693,7 +698,11 @@ class RenderStudentListBehavior extends RenderBehavior
                                                     if ($answerValue instanceof Time || $answerValue instanceof Date) {
                                                         $attr['value'] = $answerValue->format('d-m-Y');
                                                     } else {
-                                                        $attr['value'] = date('d-m-Y', strtotime($answerValue));
+                                                        //POCOR-7858 start
+                                                        if ($answerValue != null) {
+                                                            $attr['value'] = date('d-m-Y', strtotime($answerValue));
+                                                        }
+                                                        //POCOR-7858 end
                                                     }
                                                 } else if ($attr['default_date']) {
                                                     $attr['value'] = date('d-m-Y');
