@@ -20,7 +20,7 @@ class CustomFieldsTable extends ControllerActionTable
 
     protected $fieldTypeFormat = ['OpenEMIS'];
     // Supported Field Types contain full list by default and can by override in individual model extends CustomFieldsTable
-    protected $supportedFieldTypes = ['TEXT', 'NUMBER', 'DECIMAL', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'TABLE', 'DATE', 'TIME', 'STUDENT_LIST', 'FILE', 'COORDINATES', 'REPEATER', 'NOTE'];
+    protected $supportedFieldTypes = ['TEXT', 'NUMBER', 'DECIMAL', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'TABLE', 'DATE', 'TIME', 'STUDENT_LIST', 'STAFF_LIST','FILE', 'COORDINATES', 'REPEATER', 'NOTE'];
 
     private $fieldTypes = [];
     private $fieldTypeOptions = [];
@@ -250,8 +250,7 @@ class CustomFieldsTable extends ControllerActionTable
 
     public function getSupportedFieldTypesByModel($model)
     {
-        $CustomModules = TableRegistry::get('CustomField.CustomModules');
-
+        $CustomModules = TableRegistry::get('CustomField.CustomModules');//status save krte time idr ata hai
         $supportedFieldTypes = $CustomModules
             ->find()
             ->where([$CustomModules->aliasField('model') => $model])

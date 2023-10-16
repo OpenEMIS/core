@@ -451,7 +451,16 @@ class StudentRepository extends Controller
     public function getEducationGrades($request)
     {
         try {
-            $sql = 'SELECT
+
+            $params = $request->all();
+
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            /*$sql = 'SELECT
                 academic_periods.name as academic_period_name
                 ,student_mark_type_statuses.academic_period_id
                 ,education_grades.name as education_grade_name
@@ -473,10 +482,43 @@ class StudentRepository extends Controller
                 LEFT JOIN student_attendance_per_day_periods ON student_attendance_per_day_periods.student_attendance_mark_type_id = student_attendance_mark_types.id
                 ORDER BY education_grades.id ASC,student_attendance_per_day_periods.id ASC';
 
-            $list = DB::select(DB::raw($sql));
-            return $list;
+            $list = DB::select(DB::raw($sql));*/
+            
+
+
+            $lists = DB::table('student_mark_type_status_grades')
+                ->join('education_grades', 'education_grades.id', '=', 'student_mark_type_status_grades.education_grade_id')
+                ->join('student_mark_type_statuses', 'student_mark_type_statuses.id', '=', 'student_mark_type_status_grades.student_mark_type_status_id')
+                ->join('student_attendance_mark_types', 'student_attendance_mark_types.id', '=', 'student_mark_type_statuses.student_attendance_mark_type_id')
+                ->join('academic_periods', 'academic_periods.id', '=', 'student_mark_type_statuses.academic_period_id')
+                ->join('student_attendance_types', 'student_attendance_types.id', '=', 'student_attendance_mark_types.student_attendance_type_id')
+                ->join('config_items', function ($q){
+                    $q->where('config_items.code', '=', 'calculate_daily_attendance');
+                })
+                ->leftjoin('student_attendance_per_day_periods', 'student_attendance_per_day_periods.student_attendance_mark_type_id', '=', 'student_attendance_mark_types.id')
+                ->select(
+                    'academic_periods.name as academic_period_name',
+                    'student_mark_type_statuses.academic_period_id',
+                    'education_grades.name as education_grade_name',
+                    'student_mark_type_status_grades.education_grade_id',
+                    'student_attendance_types.code as attendance_by',
+                    'student_attendance_per_day_periods.id',
+                    'student_attendance_types.code',
+                    'student_attendance_per_day_periods.name',
+                    'attendance_per_day',
+                    'date_enabled',
+                    'date_disabled',
+                    'config_items.value'
+                )
+                ->orderBy('education_grades.id', 'ASC')
+                ->orderBy('student_attendance_per_day_periods.id', 'ASC')
+                ->paginate($limit)
+                ->toArray();
+
+            return $lists;
             
         } catch (\Exception $e) {
+            
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -500,12 +542,14 @@ class StudentRepository extends Controller
                 }
             }
             //For POCOR-7772 End
+            $params = $request->all();
 
             $limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
             }
+
 
             $data = InstitutionClasses::select(
                     'institution_classes.academic_period_id',
@@ -532,10 +576,15 @@ class StudentRepository extends Controller
                 $data = $data->whereIn('institution_classes.institution_id', $institution_Ids);
             }
             //For POCOR-7772 End
-            
-            //$data = $data->get();
-            $data = $data->paginate($limit);
+                 
 
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $data = $data->orderBy($col, $orderBy);
+            }
+
+            $data = $data->paginate($limit)->toArray();
             return $data;
         } catch (\Exception $e) {
             Log::error(
