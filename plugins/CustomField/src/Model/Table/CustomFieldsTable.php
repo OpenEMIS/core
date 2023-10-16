@@ -109,6 +109,8 @@ class CustomFieldsTable extends ControllerActionTable
             $student_custom_forms_fields_data = $student_custom_forms_fieldsT->find()->where(['student_custom_field_id'=> $entity->id])->first();
             if(!empty($student_custom_forms_fields_data)){
                 $student_custom_forms_fields_data->name = $student_custom_fields_data->name;
+                $student_custom_forms_fields_data->is_mandatory = $student_custom_fields_data->is_mandatory;
+                $student_custom_forms_fields_data->is_unique = $student_custom_fields_data->is_unique;
                 $student_custom_forms_fieldsT->save($student_custom_forms_fields_data);
             }
         }
