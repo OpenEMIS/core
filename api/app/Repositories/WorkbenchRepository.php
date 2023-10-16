@@ -451,7 +451,21 @@ class WorkbenchRepository extends Controller
             return $list;
 
         } catch (\Exception $e) {
-            dd($e);
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getStaffRelease($request)
+    {
+        try {
+            dd("API Called.");
+        } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]

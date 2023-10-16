@@ -169,4 +169,21 @@ class WorkbenchController extends Controller
             return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }
+
+
+    public function getStaffRelease(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getStaffRelease($request);
+            
+            return $this->sendSuccessResponse("Staff Release List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
 }
