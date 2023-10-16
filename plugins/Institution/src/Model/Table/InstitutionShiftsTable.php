@@ -318,11 +318,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-<<<<<<< HEAD
-        if($this->request->getParam['pass'][0] == 'add' || $this->request->getParam['pass'][0] == 'edit'){
-=======
         if ($this->request->params['pass'][0] == 'add' || $this->request->params['pass'][0] == 'edit') {
->>>>>>> origin/master
             switch ($field) {
                 case 'location_institution_id':
                     return __('Owner');
@@ -611,17 +607,10 @@ class InstitutionShiftsTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //POCOR-6618 starts 
-<<<<<<< HEAD
         if(!empty($entity->id) && $entity->location){ //this will work when edit any shift 
             $institutionShifts = TableRegistry::getTableLocator()->get('institution_shifts')
                                     ->find()
                                     ->where(['id'=>$entity->id])->first();
-=======
-        if (!empty($entity->id) && $entity->location) { //this will work when edit any shift
-            $institutionShifts = TableRegistry::get('institution_shifts')
-                ->find()
-                ->where(['id' => $entity->id])->first();
->>>>>>> origin/master
             //location_institution_id belongs to `occupier` and  institution_id belongs to `owner`
             if ($entity->location == 'OTHER' && ($institutionShifts->location_institution_id == $this->request->data['InstitutionShifts']['location_institution_id'])) {
                 $entity->institution_id = $entity->location_institution_id;
@@ -640,19 +629,11 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-<<<<<<< HEAD
        //Start:POCOR-5281
         $PeriodShiftTable = TableRegistry::getTableLocator()->get('institution_shift_periods');
         if($this->request->params['pass'][0] == 'edit'){
             $PeriodShiftData = $PeriodShiftTable->find()->where(['institution_shift_period_id'=>$entity->id])->toArray();
             foreach($PeriodShiftData as $PeriodShiftDataEntity){
-=======
-        //Start:POCOR-5281
-        $PeriodShiftTable = TableRegistry::get('institution_shift_periods');
-        if ($this->request->params['pass'][0] == 'edit') {
-            $PeriodShiftData = $PeriodShiftTable->find()->where(['institution_shift_period_id' => $entity->id])->toArray();
-            foreach ($PeriodShiftData as $PeriodShiftDataEntity) {
->>>>>>> origin/master
                 $deleteEntity = $PeriodShiftTable->delete($PeriodShiftDataEntity);
             }
         }
@@ -799,20 +780,11 @@ class InstitutionShiftsTable extends ControllerActionTable
 
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
-<<<<<<< HEAD
        
         $institutionClasses = TableRegistry::getTableLocator()->get('institution_units');
        // $query11 = $institutionClasses->find('list',['keyField' => 'id', 'valueField' => 'name']);
         $query11 = $institutionClasses->find('all',['fields' => ['id', 'name']]);
         echo json_encode($query11->toArray());die;
-=======
-
-        $institutionClasses = TableRegistry::get('institution_units');
-        // $query11 = $institutionClasses->find('list',['keyField' => 'id', 'valueField' => 'name']);
-        $query11 = $institutionClasses->find('all', ['fields' => ['id', 'name']]);
-        echo json_encode($query11->toArray());
-        die;
->>>>>>> origin/master
 
         //return $query11;
     }
@@ -1116,56 +1088,24 @@ class InstitutionShiftsTable extends ControllerActionTable
     public function findStaffShiftsAttendancedata(Query $query, array $options)
     {
         $staffId = $options['staff_id'];
-<<<<<<< HEAD
-        $institutionStaffShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffShifts');
-        $institutionStaff = TableRegistry::getTableLocator()->get('institution_staff');
-        $positions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
-        $shiftOption = TableRegistry::getTableLocator()->get('shift_options');
-        $staffShiftsData   = $query
-                           ->leftJoin(
-                                [$institutionStaffShifts->alias() => $institutionStaffShifts->table()],
-                                [
-                                    $institutionStaffShifts->aliasField('shift_id = ') . $this->aliasField('id')
-                                ]
-                            )->
-                           leftJoin(
-                                [$positions->alias() => $positions->table()],
-                                [
-                                    $positions->aliasField('id = ') . $institutionStaff->aliasField('institution_position_id')
-                                ])
-                           ->leftJoin(
-                                [$shiftOption->alias() => $shiftOption->table()],
-                                [
-                                    $shiftOption->aliasField('id = ') . $positions->aliasField('shift_id')
-                                ]
-                            )
-                           ->select([
-                                'institutionShiftId' => $this->aliasField('id'),
-                                'startTime' => $this->aliasField('start_time'),
-                                'endTime'   => $this->aliasField('end_time'),
-                             ])
-                            ->where([
-                             $institutionStaffShifts->aliasField('staff_id') => $staffId
-                            ])->first();
-=======
         $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
         $institutionStaff = TableRegistry::get('institution_staff');
         $positions = TableRegistry::get('Institution.InstitutionPositions');
         $shiftOption = TableRegistry::get('shift_options');
         $staffShiftsData = $query
             ->leftJoin(
-                [$institutionStaffShifts->alias() => $institutionStaffShifts->table()],
+                [$institutionStaffShifts->getAlias() => $institutionStaffShifts->getTable()],
                 [
                     $institutionStaffShifts->aliasField('shift_id = ') . $this->aliasField('id')
                 ]
             )->
             leftJoin(
-                [$positions->alias() => $positions->table()],
+                [$positions->getAlias() => $positions->getTable()],
                 [
                     $positions->aliasField('id = ') . $institutionStaff->aliasField('institution_position_id')
                 ])
             ->leftJoin(
-                [$shiftOption->alias() => $shiftOption->table()],
+                [$shiftOption->getAlias() => $shiftOption->getTable()],
                 [
                     $shiftOption->aliasField('id = ') . $positions->aliasField('shift_id')
                 ]
@@ -1178,7 +1118,6 @@ class InstitutionShiftsTable extends ControllerActionTable
             ->where([
                 $institutionStaffShifts->aliasField('staff_id') => $staffId
             ])->first();
->>>>>>> origin/master
 
         return $staffShiftsData;
     }
