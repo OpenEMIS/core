@@ -21,11 +21,11 @@ class UserNationalitiesTable extends ControllerActionTable {
     use OptionsTrait;
     use MessagesTrait;
    
-	public function initialize(array $config): void
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('NationalitiesLookUp', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
 
         $this->securityUserId = $this->getQueryString('security_user_id');
@@ -37,7 +37,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         $this->addBehavior('User.SetupTab');
         $this->addBehavior('User.CreateUser');//POCOR-7727
         $this->addBehavior('CompositeKey');
-	}
+    }
 
     public function implementedEvents(): array {
         $events = parent::implementedEvents();
@@ -76,26 +76,31 @@ class UserNationalitiesTable extends ControllerActionTable {
         }
     }
 
-	public function beforeAction(Event $event) {
-        unset($this->request->getQuery['nationality_id']);
-        unset($this->request->getQuery['validate_number']);
-        unset($this->request->getQuery['number']);
+    public function beforeAction(Event $event) {
+       $query = $this->request->getQuery(); // Get the query parameters as an array
+        unset($query['nationality_id']); // Unset the specific parameter you want to remove
+        unset($query['validate_number']); // Unset the specific parameter you want to remove
+        unset($query['number']); // Unset the specific parameter you want to remove
+        $this->request = $this->request->withQueryParams($query);
+        $this->getController()->setRequest($this->request);
+      //  unset($this->request->getQuery('validate_number'));
+        //unset($this->request->getQuery('number'));
 
         $this->fields['nationality_id']['type'] = 'select';
         $this->fields['identity_type_id']['type'] = 'select';
         $this->setFieldOrder([
             'nationality_id', 'comment', 'preferred','identity_type_id','number','validate_number'
         ]);
-	}
+    }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-	public function validationDefault(Validator $validator): Validator {
-		$validator = parent::validationDefault($validator);
-		$validator
+    public function validationDefault(Validator $validator): Validator {
+        $validator = parent::validationDefault($validator);
+        $validator
             ->add('nationality_id', 'notBlank', ['rule' => 'notBlank'])
             ->add('preferred', 'ruleValidatePreferredNationality', [
                 'rule' => ['validatePreferredNationality'],
@@ -117,18 +122,18 @@ class UserNationalitiesTable extends ControllerActionTable {
             }
             // task POCOR-5668 ends
         return $validator;
-	}
+    }
 
-	public function validationNonMandatory(Validator $validator) {
-		$validator = $this->validationDefault($validator);
-		return $validator->allowEmpty('nationality_id');
-	}
+    public function validationNonMandatory(Validator $validator) {
+        $validator = $this->validationDefault($validator);
+        return $validator->allowEmpty('nationality_id');
+    }
 
-	public function validationAddByAssociation(Validator $validator)
-	{
-		$validator = $this->validationDefault($validator);
-		return $validator->requirePresence('security_user_id', false);
-	}
+    public function validationAddByAssociation(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        return $validator->requirePresence('security_user_id', false);
+    }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -295,8 +300,8 @@ class UserNationalitiesTable extends ControllerActionTable {
             if ($action == 'add') {
                 if(!empty($userId)){
                     //nationality_id
-                    if(!empty($request->query['nationality_id'])){
-                        $nationalityId = $request->query['nationality_id'];
+                    if(!empty($request->getQuery('nationality_id'))){
+                        $nationalityId = $request->getQuery('nationality_id');
                     }else{
                         $nationalityId = $attr['entity']->nationality_id;
                     }
@@ -376,7 +381,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                 $userId = $queryString['security_user_id'];
             }
 
-            $identity_number = !empty($request->query['number']) ? trim($request->query['number']) : '';
+            $identity_number = !empty($request->getQuery('number')) ? trim($request->getQuery('number')) : '';
             if ($action == 'add') {
                 $attr['attr']['value'] = $identity_number;
             } else if ($action == 'edit') {
@@ -421,7 +426,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         if (isset($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
         }
-        $validate_number = !empty($request->query['validate_number']) ? $request->query['validate_number'] : 0;
+        $validate_number = !empty($request->getQuery('validate_number')) ? $request->getQuery('validate_number') : 0;
         if ($action == 'add') {
             $attr['attr']['value'] = $validate_number;
         }  else if ($action == 'edit') {
@@ -492,12 +497,19 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function addEditOnChangeIdentityTypeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['nationality_id']);
+        $query = $this->request->getQuery(); // Get the query parameters as an array
+        unset($query['nationality_id']); // Unset the specific parameter you want to remove
+        $newRequest = $this->request->withQueryParams($query);
+        $this->getController()->setRequest($newRequest);
+        //unset($request->getQuery('nationality_id'));
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('nationality_id', $request->data[$this->alias()])) {
-                    $request->query['nationality_id'] = $request->data[$this->alias()]['nationality_id'];
+                if (array_key_exists('nationality_id', $request->getData($this->getAlias()))) {
+                    $data = $this->request->getData($this->getAlias()); // Retrieve data from the request
+                    $nationalityId = $data['nationality_id']; // Get the 'nationality_id' value
+                    $this->request = $this->request->withQueryParams(['nationality_id' => $nationalityId]); // Set the 'nationality_id' as a query parameter
+
                 }
             }
         }
@@ -518,12 +530,12 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {   
         $nationalityId = '';
-        if(array_key_exists('nationality_id',$this->request->getQuery())){ //when add nationality
-            $nationalityId = $this->request->getQuery['nationality_id'];
-        } else if(isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'edit'){ //when edit nationality
-            $nationalityId = $this->paramsDecode($this->request->getParam('pass')['1'])['nationality_id'];
+        if(array_key_exists('nationality_id',$this->request->query)){ //when add nationality
+            $nationalityId = $this->request->getQuery('nationality_id');
+        } else if(isset($this->request->params['pass'][0]) && $this->request->params['pass'][0] == 'edit'){ //when edit nationality
+            $nationalityId = $this->paramsDecode($this->request->params['pass']['1'])['nationality_id'];
         }else { //when add nationality
-            $nationalityId = $this->request->getData['UserNationalities']['nationality_id'];
+            $nationalityId = $this->request->data['UserNationalities']['nationality_id'];
         } 
         $userId = null;
         $queryString = $this->getQueryString();
@@ -531,11 +543,11 @@ class UserNationalitiesTable extends ControllerActionTable {
             $userId = $queryString['security_user_id'];
         }
 
-        $nationalityTable = TableRegistry::getTableLocator()->get('User.Nationalities')
+        $nationalityTable = TableRegistry::getTableLocator()->get('Nationalities')
                             ->find()
-                            // ->where([
-                            //     'Nationalities.id' => $nationalityId
-                            // ]) // POCOR-7485
+                            ->where([
+                                'Nationalities.id' => $nationalityId
+                            ])
                             ->first();
         // validate button when external validation is enable and it has identity link added                       
         if(!empty($nationalityId) && ($nationalityTable['external_validation'] == 1) && ($nationalityTable['identity_type_id'] != '')){
@@ -619,14 +631,20 @@ class UserNationalitiesTable extends ControllerActionTable {
             'assertion' => $token
             ];
         } 
-        $this->request->query['number'] = $this->request->data['UserNationalities']['number'];
-        $this->request->query['identity_number'] =  trim($this->request->query['number']);
-        if($this->request->query['identity_number'] == ''){
-            $this->request->query['validate_number'] = 0;
+       // $this->request->getQuery('number') = $this->request->data['UserNationalities']['number'];
+        $number = $this->request->getData('UserNationalities.number'); // Assuming the data is structured as an array
+        $this->request = $this->request->withQueryParams(['number' => $number]);
+       // $this->request->getQuery('identity_number') =  trim($this->request->getQuery('number'));
+        $number = trim($this->request->getQuery('number')); // Retrieve the 'number' query parameter and trim it
+        $this->request = $this->request->withQueryParams(['identity_number' => $number]);
+
+        if($this->request->getQuery('identity_number') == ''){
+            //$this->request->getQuery('validate_number') = 0;
+            $this->request = $this->request->withQueryParams(['validate_number' => 0]);
             $this->Alert->error('UserNationalities.IdentityNumberNotExist', ['reset' => true]);
         }elseif($config_item_result->config_value == "Jordan CSPD"){//POCOR-7727 start
             if (!empty($attributes['username']) && !empty($attributes['password']) && !empty($attributes['url'])) {
-                $national_no= $this->request->query['identity_number'];
+                $national_no= $this->request->getQuery('identity_number');
                 $soapUrl = $attributes['url'];
                 $soapUser = $attributes['username'];
                 $soapPassword = $attributes['password'];
@@ -651,15 +669,19 @@ class UserNationalitiesTable extends ControllerActionTable {
                 $response = $this->getResponseForJordanCSPD($soapUrl, $soapUser, $soapPassword, $xml_post_string);
                 $nationalNumberExist=$this->getXmlResponseTextNodeCount($response);
                 if ($nationalNumberExist) {
-                    $this->request->query['validate_number'] = 1;
+                    $this->request = $this->request->withQueryParams(['validate_number' => 0]);
+                    //$this->request->getQuery('validate_number') = 1;
                     $this->Alert->success('UserNationalities.ValidateNumberSuccess', ['reset' => true]);
                 } else {
-                    $this->request->query['validate_number'] = 0;
+                    //$this->request->getQuery('validate_number') = 0;
+                    $this->request = $this->request->withQueryParams(['validate_number' => 0]);
+
                     $this->Alert->error('UserNationalities.ValidateNumberFail', ['reset' => true]);
                 }
                
             } else {
-                $this->request->query['validate_number'] = 0;
+                $this->request = $this->request->withQueryParams(['validate_number' => 0]);
+                //$this->request->getQuery('validate_number') = 0;
                 $this->Alert->error('UserNationalities.ValidateNumberFail', ['reset' => true]);
             }
         } //POCOR-7727 end
@@ -702,18 +724,21 @@ class UserNationalitiesTable extends ControllerActionTable {
                     }
 
                     if($countVal > 0){
-                        $this->request->query['validate_number'] = 1;
+                        //$this->request->getQuery('validate_number') = 1;
+                        $this->request = $this->request->withQueryParams(['validate_number' => 1]);
                         $this->Alert->success('UserNationalities.ValidateNumberSuccess', ['reset' => true]);
                     }else{
-                        $this->request->query['validate_number'] = 0;
+                        //$this->request->getQuery('validate_number') = 0;
+                        $this->request = $this->request->withQueryParams(['validate_number' => 0]);
                         $this->Alert->error('UserNationalities.ValidateNumberFail', ['reset' => true]);
                     }
                 }else{
-                    $this->request->query['validate_number'] = 0;
+                    //$this->request->getQuery('validate_number') = 0;
+                    $this->request = $this->request->withQueryParams(['validate_number' => 0]);
                     $this->Alert->error('UserNationalities.ValidateNumberFail', ['reset' => true]);
                 }    
             } else {
-                $this->request->query['validate_number'] = 0;
+                $this->request->getQuery('validate_number') = 0;
                 $this->Alert->error('UserNationalities.ValidateNumberFail', ['reset' => true]);
             }
         }
@@ -807,16 +832,16 @@ class UserNationalitiesTable extends ControllerActionTable {
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         //$arr = array('StudentIdentities', 'StaffIdentities','GuardianIdentities','OtherIdentities');
         if(isset($this->request)){
-            if($this->request->params['controller'] == 'Students'){
+            if($this->request->getParam('controller') == 'Students'){
                 $identityName = 'StudentIdentities';
-            } elseif ($this->request->params['controller'] == 'Staff') {
+            } elseif ($this->request->getParam('controller') == 'Staff') {
                 $identityName = 'StaffIdentities';
             } else {
                 $session = $this->request->getSession();
                 $isStudent = $session->read('Directory.Directories.is_student');
                 $isStaff = $session->read('Directory.Directories.is_staff');
                 $isGuardian = $session->read('Directory.Directories.is_guardian');
-                if($this->request->params['controller'] == 'Directories'){
+                if($this->request->getParam('controller') == 'Directories'){
                     if($isStudent == 1){
                         $identityName = 'StudentIdentities';    
                     }elseif ($isStaff == 1) {
@@ -866,7 +891,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             $userId = $session->read('Student.Students.id');
         }
 
-        // $query->where([$this->aliasField('security_user_id') => $userId]); //POCOR-7485
+        $query->where([$this->aliasField('security_user_id') => $userId]);
 
         // Start POCOR-5188
         if($this->request->getParam('controller') == 'Staff'){
