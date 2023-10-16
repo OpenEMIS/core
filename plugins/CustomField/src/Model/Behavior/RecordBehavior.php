@@ -113,6 +113,7 @@ class RecordBehavior extends Behavior
         $this->_table->addBehavior('CustomField.RenderFile');
         $this->_table->addBehavior('CustomField.RenderRepeater');
         $this->_table->addBehavior('CustomField.RenderNote');
+        $this->_table->addBehavior('CustomField.RenderStaffList');//POCOR-2135
         // End
 
         // If tabSection is not set, added to handle Section Header
@@ -1452,7 +1453,7 @@ class RecordBehavior extends Behavior
     {
         return null;
     }
-
+ 
     // private function table($data, $fieldInfo, $options = [])
     // {
     //     $id = $fieldInfo['id'];
@@ -1463,17 +1464,6 @@ class RecordBehavior extends Behavior
     //     }
     //     return '';
     // }
-
-    public function table($data, $fieldInfo, $options = []): Table
-    {
-        $id = $fieldInfo['id'];
-        $colId = $fieldInfo['col_id'];
-        $rowId = $fieldInfo['row_id'];
-        if (isset($data[$id][$colId][$rowId])) {
-            return $data[$id][$colId][$rowId];
-        }
-        return '';
-    }
 
     private function coordinates($data, $fieldInfo, $options = [])
     {
@@ -1486,5 +1476,11 @@ class RecordBehavior extends Behavior
 
         return $coordinates;
     }
+    //POCOR-2135 start
+    private function staff_list($data, $fieldInfo, $options = [])
+    {
+        return null;
+    }
+    //POCOR-2135 end
 
 }

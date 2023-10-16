@@ -1,3 +1,44 @@
+### [3.97.0] - 2023-10-12
+- Implemented: Develop staff list survey question type
+- Implemented: Develop staff list survey v2 (CakePHP) API
+- Bug Fixed: Institutions > Students > General > Guardian: When adding guardians, the relation type ordering does not match according to the order that was configured in guardian relations in field options
+- Bug Fixed: Institutions>Academic>Classes: Staff is set "Yes" to homeroom teacher but not showing in the list of either homeroom teacher or secondary teacher
+- Bug Fixed: Report>Institution>Cases: Filters for area education do not take consideration for parent_id
+- Bug Fixed: Institutions > Academic > Classes: When disabling the fields for unit and course for Institutions, the page still shows the fields for unit and course
+- Bug Fixed: Institution > Statistics > Standard: The report is stuck in progress
+- Bug Fixed: Institutions > Performance > Report Cards: When generating student report cards for past academic periods, GPA is not showing
+- Bug Fixed: Institutions > Academic > Subjects: When adding more subjects under Institutions Programmes, the subjects is not showing for other classes except for first class
+- Bug Fixed: Administration > System Setup > Field Options > Staff Position Titles: Page gives 404 error
+- Bug Fixed: Institutions > General > Shifts: System allows user to add Same Shift more than once.
+- Bug Fixed: Administration>Performance>Report Cards: User should be able to edit the name of the report card
+- Bug Fixed: Institutions > Staff > Transfer: When staff is transferred, the staff position in the previous institution is still linked to the staff
+
+### [3.96.1] - 2023-10-06
+- Bug Fixed: OpenEMIS Registration: When institutions are inactive in OpenEMIS Core, the institutions still show in the dropdown list in OpenEMIS Registrations
+- Bug Fixed: Administration>Workflows: Users given permission for workflows not seeing assignee
+- Bug Fixed: Report > Student > Contacts : Report is taking too long for user
+
+### [3.96.0] - 2023-10-05
+- Implemented: Develop OpenEMIS Core v4 APIs for the examination features
+- Bug Fixed: Administration>Data Management>Archive: Data is showing 0 but user is able to see archive when clicking archive button
+- Bug Fixed: Institutions > Infrastructures > Overview: Change warning message
+- Bug Fixed: Institution > Statistics > Standard: The report is stuck in progress
+- Bug Fixed: Institutions > Contacts > People: The preferred field is showing as number text
+- Bug Fixed: Administration>System Setup>API>Securities: Page should be removed
+- Bug Fixed: Administration > System Setup > Field Options > Curricular Types: Change Curriculars to Co-curricular
+- Bug Fixed: Directory > Delete users: Not able to delete user (staff specifically) as the associated records "Institutions Staff Shifts" are showing even though the user is no longer assigned to an institution
+- Bug Fixed: Reports > Staff>Staff Subjects: The report is stuck in progress when generating 
+- Bug Fixed: Institutions>Performance>Assessments: When an user did not enter marks, it should not show as 0.00
+- Bug Fixed: Reports > Institutions> Classes: The data in the report is inconsistent
+- Bug Fixed: Reports > Surveys: Institutions - Not Completed are not showing
+- Bug Fixed: OpenEMIS Core(Security): Security Fixes Part 4
+- Bug Fixed: Institutions > Students > Import: Not able to import students
+- Bug Fixed: Institutions > Students > Promote: 404 error when promoting students
+- Bug Fixed: Institutions > Staff>Position: When changing from not homeroom teacher staff type to homeroom teacher staff type, there is an error message
+- Bug Fixed: Institutions > Students/Staff > Export: Less queries to run to get better results and high system performance
+- Bug Fixed: Administration>Data Management>Archive: Data is showing 0 but user is able to see archive when clicking archive button
+- Bug Fixed: Institutions > Appointments > Positions: When permission is given to a security role to delete delete institution positions, users is still unable to delete institution positions
+
 ### [3.95.2] - 2023-09-28
 - Bug Fixed: OpenEMIS Core(Security): Security Fixes
 - Bug Fixed: Institutions > Survey > Forms: The date field for repeater form alignment seems to be out

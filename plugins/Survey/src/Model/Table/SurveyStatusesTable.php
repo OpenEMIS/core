@@ -78,7 +78,7 @@ class SurveyStatusesTable extends ControllerActionTable
         // End POCOR-5188
 
         //custom module option in toolbar
-        $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey');
+        $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey','Institution > Staff > Survey');
         $CustomModules = TableRegistry::get('CustomField.CustomModules');
         $moduleOptions =  $CustomModules
             ->find('list', ['keyField' => 'id', 'valueField' => 'code']) 

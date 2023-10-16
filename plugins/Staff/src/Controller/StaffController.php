@@ -75,6 +75,9 @@ class StaffController extends AppController
 
         $this->ControllerAction->models = [
             'Accounts' => ['className' => 'Staff.Accounts', 'actions' => ['view', 'edit']],
+            'StaffSurveys' => ['className' => 'Staff.StaffSurveys', 'actions' => ['view', 'edit']],//POCOR-2315
+            'StaffSurveyAnswers' => ['className' => 'Staff.StaffSurveyAnswers', 'actions' => ['index','view', 'edit']],//POCOR-2315
+            'StaffSurveyTableCells'=> ['className' => 'Staff.StaffSurveyTableCells', 'actions' => ['view', 'edit']],//POCOR-2315
             'Nationalities' => ['className' => 'User.Nationalities'],
             'Positions' => ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
             'Duties' => ['className' => 'Staff.Duties', 'actions' => ['index', 'view']],
@@ -164,6 +167,14 @@ class StaffController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']);
     }
 
+    public function StaffSurveys()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSurveys']);
+    }
+    public function StaffSurveyAnswers()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSurveyAnswers']);
+    }
     public function Contacts()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']);

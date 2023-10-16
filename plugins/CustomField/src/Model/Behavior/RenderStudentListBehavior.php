@@ -791,7 +791,8 @@ class RenderStudentListBehavior extends RenderBehavior
                         $StudentSurveys->aliasField('status_id') => $status,
                         $StudentSurveys->aliasField('institution_id') => $institutionId,
                         $StudentSurveys->aliasField('academic_period_id') => $periodId,
-                        $StudentSurveys->aliasField($formKey) => $formId
+                        $StudentSurveys->aliasField($formKey) => $formId,
+                        $StudentSurveys->aliasField('parent_form_id') => $entity->survey_form_id
                     ])
                     ->all();
 
@@ -938,7 +939,7 @@ class RenderStudentListBehavior extends RenderBehavior
                 $institutionId = $entity->institution_id;
                 $periodId = $entity->academic_period_id;
                 $parentFormId = $entity->{$formKey};
-                $parentIdd = (array_key_first($entity['institution_student_surveys']));//POCOR-7730
+                $parentIdd = array_keys($entity['institution_student_surveys'])[0];//POCOR-7730
     
                 foreach ($entity->institution_student_surveys as $fieldId => $fieldObj) {
                     $formId = $fieldObj[$formKey];
@@ -1009,9 +1010,9 @@ class RenderStudentListBehavior extends RenderBehavior
                                     $answers[] = $answerObj;
                                     $answers[$ir]['parent_survey_question_id'] = $parentIdd; //POCOR-7730
                                 }
-                                $ir++;
+                               
                             }
-    
+                            $ir++;
                             $surveyData['custom_field_values'] = $answers;
                             $surveyEntity = $StudentSurveys->newEntity($surveyData);
                             // save student by student

@@ -46,9 +46,9 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         // Previous institution data
         $this->belongsTo('PreviousInstitutionStaff', ['className' => 'Institution.Staff', 'foreignKey' => 'previous_institution_staff_id']);
         $this->belongsTo('PreviousStaffTypes', ['className' => 'Staff.StaffTypes', 'foreignKey' => 'previous_staff_type_id']);
-        
+
         $this->belongsTo('InstitutionStaffShifts', ['className' => 'Institution.InstitutionStaffShifts','foreignKey' => 'staff_id']);
-        
+
         $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
         $this->addBehavior('OpenEmis.Section');
@@ -126,6 +126,8 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
                      // end previous institution staff record
                      $oldRecord->end_date = $entity->previous_end_date;
                      $StaffTable->save($oldRecord);
+                     $this->removeStaffFromSecurityGroups($oldRecord);
+
                 } else if ($transferType == self::PARTIAL_TRANSFER) {
                     // end previous institution staff record
                     $oldRecord->end_date = $entity->previous_end_date;
@@ -277,7 +279,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
             $saveShift = $this->InstitutionStaffShifts->newEntity($shiftData);
             $this->InstitutionStaffShifts->save($saveShift);
         }
-        
+
         if (!$entity->isNew() && $entity->dirty('status_id')) {
             if (!$entity->all_visible) {
                 $currentInstitutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
@@ -337,6 +339,21 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
             $query->where(['Statuses.category <> ' => self::DONE]);
         }
         return $query;
+    }
+
+    /**
+     * @param \Cake\Datasource\EntityInterface $oldRecord
+     */
+    private function removeStaffFromSecurityGroups(\Cake\Datasource\EntityInterface $oldRecord)
+    {
+        $security_group_user_id = $oldRecord->security_group_user_id;
+        $StaffTable = TableRegistry::get('Institution.Staff');
+        $oldRecord->security_group_user_id = null;
+        $StaffTable->save($oldRecord);
+        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers->deleteAll([
+            $SecurityGroupUsers->aliasField($SecurityGroupUsers->primaryKey()) => $security_group_user_id
+        ]);
     }
 
 }
