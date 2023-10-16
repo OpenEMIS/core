@@ -91,7 +91,8 @@ class ControllerActionHelper extends Helper
 
         // save button
         $buttons[] = [
-            'name' => '<i class="fa fa-check"></i> ' . __('Save'),
+            //$btn = '<i class="fa fa-check"></i>',
+            'name' => ('Save'),
             'attr' => ['class' => 'btn btn-default btn-save', 'div' => false, 'name' => 'submit', 'value' => 'save']
         ];
 
