@@ -186,4 +186,38 @@ class WorkbenchController extends Controller
             return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }
+
+
+    public function getStaffTransferOut(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getStaffTransferOut($request);
+            
+            return $this->sendSuccessResponse("Staff Transfer Out List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getStaffTransferIn(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getStaffTransferIn($request);
+            
+            return $this->sendSuccessResponse("Staff Transfer In List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
 }

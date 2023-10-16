@@ -303,6 +303,8 @@ Route::group(
         Route::get('staff/career/leave', 'WorkbenchController@getInstitutionStaffLeave');
         Route::get('staff/career/appraisals', 'WorkbenchController@getStaffAppraisals');
         Route::get('institutions/staff/release', 'WorkbenchController@getStaffRelease');
+        Route::get('institutions/staff/transferout', 'WorkbenchController@getStaffTransferOut');
+        Route::get('institutions/staff/transferin', 'WorkbenchController@getStaffTransferIn');
         //POCOR-7754 ends
 
     }
