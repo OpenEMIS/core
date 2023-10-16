@@ -84,7 +84,7 @@ class HealthBehavior extends Behavior
         }
 
         if ($name == 'Students' && $controller->AccessControl->check([$name, 'StudentBodyMasses', 'index'])) {
-            $session = $this->_table->request->session();
+            $session = $this->_table->request->getSession();
             $institutionId = $session->read('Institution.Institutions.id');
             $params = $this->_table->paramsEncode(['id' => $institutionId]);
 
@@ -93,7 +93,7 @@ class HealthBehavior extends Behavior
                 'text' => __('Body Mass')
             ];
         } elseif ($name == 'Staff' && $controller->AccessControl->check([$name, 'StaffBodyMasses', 'index'])) {
-            $session = $this->_table->request->session();
+            $session = $this->_table->request->getSession();
             $institutionId = $session->read('Institution.Institutions.id');
             $params = $this->_table->paramsEncode(['id' => $institutionId]);
 
@@ -114,7 +114,7 @@ class HealthBehavior extends Behavior
         }
 
         if ($name == 'Students' && $controller->AccessControl->check([$name, 'StudentInsurances', 'index'])) {
-            $session = $this->_table->request->session();
+            $session = $this->_table->request->getSession();
             $institutionId = $session->read('Institution.Institutions.id');
             $params = $this->_table->paramsEncode(['id' => $institutionId]);
 
@@ -123,7 +123,7 @@ class HealthBehavior extends Behavior
                 'text' => __('Insurances')
             ];
         } elseif ($name == 'Staff' && $controller->AccessControl->check([$name, 'StaffInsurances', 'index'])) {
-            $session = $this->_table->request->session();
+            $session = $this->_table->request->getSession();
             $institutionId = $session->read('Institution.Institutions.id');
             $params = $this->_table->paramsEncode(['id' => $institutionId]);
             /*$tabElements['StaffInsurances'] = [

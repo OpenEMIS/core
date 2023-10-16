@@ -13,9 +13,9 @@ use App\Model\Table\ControllerActionTable;
 
 class HistoricalStaffPositionsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('historical_staff_positions');
+        $this->setTable('historical_staff_positions');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -57,7 +57,7 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

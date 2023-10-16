@@ -17,9 +17,9 @@ class StaffClassesTable extends ControllerActionTable
 
     private $InstitutionClassStudents;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_classes');
+        $this->setTable('institution_classes');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -87,7 +87,7 @@ class StaffClassesTable extends ControllerActionTable
         ]);
 
         // Start POCOR-5188
-		if($this->request->params['controller'] == 'Staff'){
+		if($this->request->getParam('controller') == 'Staff'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Classes','Staff - Career');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -105,7 +105,7 @@ class StaffClassesTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Classes','Staff - Career');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -165,10 +165,10 @@ class StaffClassesTable extends ControllerActionTable
             'Institutions'
         ])
         // POCOR-5914
-        ->leftJoin([$InstitutionClassesSecondaryStaff->alias() => $InstitutionClassesSecondaryStaff->table()], [
+        ->leftJoin([$InstitutionClassesSecondaryStaff->getAlias() => $InstitutionClassesSecondaryStaff->getTable()], [
             $InstitutionClassesSecondaryStaff->aliasField('institution_class_id = ') . $this->aliasField('id')
-        ])
-        ->orWhere($where);
+        ]);
+        // ->orWhere($where); // POCOR-7485
         // POCOR-5914
     }
 

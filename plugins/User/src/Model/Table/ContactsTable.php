@@ -41,7 +41,7 @@ class ContactsTable extends ControllerActionTable
         $this->setFieldOrder(['description', 'value', 'preferred']);
 		
  		// Start POCOR-5188
-         if($this->request->params['controller'] == 'Staff'){
+         if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Contacts','Staff - General');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -59,7 +59,7 @@ class ContactsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
+        }elseif($this->request->getParam('controller') == 'Students'){
             $is_manual_exist = $this->getManualUrl('Institutions','Contacts','Students - General');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -78,7 +78,7 @@ class ContactsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getParam('controller') == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Contacts','General');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -97,7 +97,7 @@ class ContactsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Profiles'){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){ 
             $is_manual_exist = $this->getManualUrl('Personal','Contacts','General');       
             if(!empty($is_manual_exist)){ 
                 $btnAttr = [
@@ -417,7 +417,7 @@ class ContactsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldContactTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldContactTypeId(Event $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
             if (array_key_exists('contact_option', $request->query)) {
@@ -452,7 +452,7 @@ class ContactsTable extends ControllerActionTable
     /*POCOR-6267 Starts*/
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $queryString = $this->getQueryString();
         if (!empty($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
@@ -460,7 +460,7 @@ class ContactsTable extends ControllerActionTable
             $userId = $session->read('Student.Students.id');
         }
 
-        $query->where([$this->aliasField('security_user_id') => $userId]);
+        // $query->where([$this->aliasField('security_user_id') => $userId]); //POCOR-7485
     }
     /*POCOR-6267 Ends*/
 }

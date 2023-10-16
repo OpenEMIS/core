@@ -44,7 +44,7 @@ class StudentsTable extends ControllerActionTable
         $this->setTable('institution_students');
         parent::initialize($config);
         // Associations
-        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'id']);
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);

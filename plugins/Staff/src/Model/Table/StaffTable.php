@@ -15,10 +15,10 @@ class StaffTable extends AppTable
 {
     public $InstitutionStaff;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
-        $this->entityClass('User.User');
+        $this->setTable('security_users');
+        $this->getEntityClass('User.User');
         parent::initialize($config);
 
         // Associations
@@ -42,7 +42,7 @@ class StaffTable extends AppTable
             'formKey' => 'staff_custom_form_id',
             'filterKey' => 'staff_custom_filter_id',
             'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
-            'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
+            // 'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
             'recordKey' => 'staff_id',
             'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
             'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
@@ -96,7 +96,7 @@ class StaffTable extends AppTable
     }
 
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $BaseUsers = TableRegistry::get('User.Users');

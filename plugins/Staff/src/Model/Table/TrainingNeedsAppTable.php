@@ -185,7 +185,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
         // POCOR-1893
         if ($this->controller->name == 'Profiles') {
@@ -206,7 +206,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         $query
             ->contain(['TrainingNeedSubStandards.TrainingNeedStandards'])
             ->where([$this->aliasField('staff_id') => $staffId])
-            ->autoFields(true);
+            ->enableAutoFields(true);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
@@ -419,7 +419,8 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingNeedCompetencyId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldTrainingNeedCompetencyId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTrainingNeedCompetencyId(Event $event, array $attr, $action)
     {
         $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
         $isNeed = $this->isNeed($entity);
@@ -466,7 +467,8 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingNeedSubStandardId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldTrainingNeedSubStandardId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTrainingNeedSubStandardId(Event $event, array $attr, $action)
     {
         $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
         $isNeed = $this->isNeed($entity);
@@ -507,7 +509,8 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffId(Event $event, array $attr, $action)
     {
         if ($action == 'add') {
             $session = $request->session();
@@ -680,7 +683,8 @@ class TrainingNeedsAppTable extends ControllerActionTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Staff > Training > Needs';

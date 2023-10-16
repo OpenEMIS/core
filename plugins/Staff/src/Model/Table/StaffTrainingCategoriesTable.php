@@ -12,9 +12,9 @@ use App\Model\Table\ControllerActionTable;
 
 class StaffTrainingCategoriesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_training_categories');
+        $this->setTable('staff_training_categories');
         parent::initialize($config);
 
         $this->hasMany('StaffTrainings', ['className' => 'Staff.StaffTrainings', 'foreignKey' => 'staff_training_category_id']);

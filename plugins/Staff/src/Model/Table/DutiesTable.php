@@ -14,9 +14,9 @@ use App\Model\Table\ControllerActionTable;
 class DutiesTable extends ControllerActionTable
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff_duties');
+        $this->setTable('institution_staff_duties');
         parent::initialize($config);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);

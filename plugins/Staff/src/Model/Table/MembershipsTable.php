@@ -7,14 +7,14 @@ use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
 
 class MembershipsTable extends ControllerActionTable {
-	public function initialize(array $config) {
-		$this->table('staff_memberships');
+	public function initialize(array $config): void {
+		$this->setTable('staff_memberships');
 		parent::initialize($config);
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 
 		return $validator
@@ -26,7 +26,7 @@ class MembershipsTable extends ControllerActionTable {
 	private function setupTabElements() {
 		$tabElements = $this->controller->getProfessionalTabElements();
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
 	public function afterAction(Event $event, ArrayObject $extra) {
@@ -34,7 +34,7 @@ class MembershipsTable extends ControllerActionTable {
 		$this->setupTabElements();
 
 		// Start POCOR-5188
-		if($this->request->params['controller'] == 'Staff'){
+		if($this->request->getParam('controller') == 'Staff'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Memberships','Staff - Professional');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -52,7 +52,7 @@ class MembershipsTable extends ControllerActionTable {
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Memberships','Staff - Professional');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [

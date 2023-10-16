@@ -36,7 +36,7 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
         $this->controller->changeUserHeader($this, $modelAlias, $userType);
 
         // redirect to staff index page if session not found
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $sessionKey = 'Staff.Staff.id';
 
         if (!$session->check($sessionKey)) {
@@ -86,7 +86,7 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
     {
         $tabElements = $this->controller->getTrainingTabElements();
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     // POCOR-6137 start
