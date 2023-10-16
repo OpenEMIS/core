@@ -1,0 +1,1 @@
+UPDATE `field_options` SET `visible` = '0' WHERE `field_options`.`code` = 'StaffStatuses';

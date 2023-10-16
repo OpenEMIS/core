@@ -1,0 +1,8 @@
+v1.1.2
+- Added left join with so that developers can make use of left join associated queries to filter their results
+
+v1.0.2
+- Added Session Controller
+
+v1.0.1
+- Initial setup

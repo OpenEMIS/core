@@ -1,0 +1,922 @@
+/*
+Core Overwrites: v.1.0.15
+*/
+
+
+/* Homepage Background */
+
+.body-wrapper {
+    background-image: url('../../../img/core-login-bg.jpg') !important;
+}
+
+
+/* Tooltip */
+
+.tooltip-blue .tooltip {
+    margin-left: 53px !important;
+}
+
+tbody tr:first-child .tooltip-blue .tooltip {
+    margin-top: 20px !important;
+    margin-left: 80px !important;
+}
+
+.rtl .tooltip-blue .tooltip {
+    margin-left: -50px !important;
+}
+
+.rtl tbody tr:first-child .tooltip-blue .tooltip {
+    margin-left: -80px !important;
+}
+
+
+/* Tooltip Width to be larger in Import Page */
+
+.tooltip-inner {
+    max-width: 800px !important;
+}
+
+@media only screen and (max-width: 1024px) {
+    .tooltip-inner {
+        max-width: 450px !important;
+    }
+}
+
+@media only screen and (max-width: 480px) {
+    .tooltip-inner {
+        max-width: 250px !important;
+    }
+}
+
+
+/* Pagination */
+
+@media only screen and (max-width: 800px) {
+    .pagination-wrapper .counter {
+        clear: both !important;
+    }
+}
+
+
+/* Remove Underline */
+
+a.btn-red:hover,
+a.btn-green:hover {
+    text-decoration: none;
+}
+
+
+/* Highcharts */
+
+.highcharts-container {
+    position: relative !important;
+}
+
+
+/* Table Tfoot */
+
+.table-in-view tfoot td {
+    border-top: 1px solid #DDD !important;
+}
+
+.table-in-view tfoot td {
+    border-bottom: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+}
+
+
+/* Layout Splitter */
+
+.rtl .left-menu {
+    left: 0;
+}
+
+
+/* IE9 */
+
+.rtl .input-select-wrapper:before {
+    left: 22px !important;
+    top: 2px;
+}
+
+
+/* Add Class for Overflow Menu in Chrome */
+
+@media only screen and (max-width: 1024px) {
+    .enable-overflow {
+        overflow: hidden !important;
+    }
+}
+
+@media only screen and (max-width: 800px) {
+    .page-header h2:hover + .toolbar {
+        display: inline-block !important;
+    }
+}
+
+
+/* Scrollable Tabs */
+
+.scrolltabs .nav > li:hover {
+    font-weight: normal;
+}
+
+.scrolltabs.sticky-content .tab-content {
+    padding: 0;
+}
+
+.rtl .horizontal-tabs span a,
+.rtl .horizontal-tabs span a:focus,
+.rtl .horizontal-tabs span a:visited,
+.rtl .horizontal-tabs span.tab-active a,
+.rtl .horizontal-tabs span.tab-active a:hover,
+.rtl .horizontal-tabs span.tab-active a:focus {
+    height: 30px;
+    line-height: 31px;
+}
+
+
+/* About Page */
+
+.about-container {
+    border-top: 0 !important;
+}
+
+.about-wrapper {
+    background-color: #FFF;
+    border-top: 0;
+}
+
+
+/* RTL Table - Temporary Fix for the extra padding/margin within the table */
+
+.rtl .table-curved,
+.rtl .table {
+    border-collapse: collapse !important;
+}
+
+
+/* Fix RTL brackets */
+
+p,
+a,
+.breadcrumb.panel-breadcrumb li,
+.rtl .breadcrumb.panel-breadcrumb li {
+    unicode-bidi: plaintext;
+    unicode-bidi: -moz-plaintext;
+    unicode-bidi: -webkit-plaintext;
+}
+
+.breadcrumb.panel-breadcrumb li {
+    direction: ltr;
+}
+
+
+/* Fix header more menu icon alignment */
+
+.rtl .more-menu-item i {
+    float: right;
+}
+
+
+/* Fix Old Tabs Line Height */
+
+.rtl .horizontal-tabs span a {
+    line-height: 31px;
+}
+
+
+/* Ag-Grid Overwrites */
+
+.ag-height-fixed {
+    height: 650px;
+    min-height: 200px;
+}
+
+.ag-header-icon {
+    display: inline;
+}
+
+.ag-header-cell-menu-button svg,
+.ag-sort-none-icon svg {
+    display: none;
+}
+
+.ag-filter select {
+    -webkit-appearance: auto !important;
+    -moz-appearance: auto !important;
+    appearance: auto !important;
+}
+
+/* Error message on the fileinput */
+
+.fileinput-preview {
+    width: 25% !important;
+}
+
+
+/* Advanced Search alignment */
+
+.adv-search {
+    margin: 14px 0 !important;
+}
+
+
+/* Set opacity to left pane */
+
+.left-pane {
+    opacity: 0;
+}
+
+
+/* Highcharts Border */
+
+.institution-dashboard .highcharts-background {
+    stroke-width: 1px;
+}
+
+
+/* Date/Time Picker inside Table */
+
+.table .input-group-addon {
+    position: absolute;
+    right: 0;
+    line-height: 0;
+    cursor: pointer;
+    font-size: 15px;
+    width: 52px;
+    height: 30px;
+}
+
+.rtl .table .input-group-addon {
+    left: 0;
+    right: auto !important;
+}
+
+
+/* Style for the coordinates; latitude and longitude */
+
+
+.input-value-wrapper {
+    display: inline-block;
+    margin-right: 15px;
+}
+
+.input-value-wrapper .status-grey-border {
+    border-left: 0;
+    border-color: #DDD;
+    -webkit-border-top-left-radius: 0 !important;
+    -moz-border-top-left-radius: 0 !important;
+    -ms-border-top-left-radius: 0 !important;
+    border-top-left-radius: 0 !important;
+    -webkit-border-bottom-left-radius: 0 !important;
+    -moz-border-bottom-left-radius: 0 !important;
+    -ms-border-bottom-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+.input-value-wrapper .past {
+    -webkit-border-top-right-radius: 0 !important;
+    -moz-border-top-right-radius: 0 !important;
+    -ms-border-top-right-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    -webkit-border-bottom-right-radius: 0 !important;
+    -moz-border-bottom-right-radius: 0 !important;
+    -ms-border-bottom-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+.rtl .input-value-wrapper {
+    margin-right: 0;
+    margin-left: 15px;
+}
+
+.rtl .input-value-wrapper .status-grey-border {
+    border-left: 1px solid #DDD;
+    border-right: 0;
+    border-color: #DDD;
+    -webkit-border-top-left-radius: 3px !important;
+    -moz-border-top-left-radius: 3px !important;
+    -ms-border-top-left-radius: 3px !important;
+    border-top-left-radius: 3px !important;
+    -webkit-border-bottom-left-radius: 3px !important;
+    -moz-border-bottom-left-radius: 3px !important;
+    -ms-border-bottom-left-radius: 3px !important;
+    border-bottom-left-radius: 3px !important;
+    -webkit-border-top-right-radius: 0 !important;
+    -moz-border-top-right-radius: 0 !important;
+    -ms-border-top-right-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    -webkit-border-bottom-right-radius: 0 !important;
+    -moz-border-bottom-right-radius: 0 !important;
+    -ms-border-bottom-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+.rtl .input-value-wrapper .past {
+    -webkit-border-top-right-radius: 3px !important;
+    -moz-border-top-right-radius: 3px !important;
+    -ms-border-top-right-radius: 3px !important;
+    border-top-right-radius: 3px !important;
+    -webkit-border-bottom-right-radius: 3px !important;
+    -moz-border-bottom-right-radius: 3px !important;
+    -ms-border-bottom-right-radius: 3px !important;
+    border-bottom-right-radius: 3px !important;
+    -webkit-border-top-left-radius: 0 !important;
+    -moz-border-top-left-radius: 0 !important;
+    -ms-border-top-left-radius: 0 !important;
+    border-top-left-radius: 0 !important;
+    -webkit-border-bottom-left-radius: 0 !important;
+    -moz-border-bottom-left-radius: 0 !important;
+    -ms-border-bottom-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+/* Fixed for POCOR-3001, select option order is not consistent in RTL */
+
+.rtl .form-horizontal option {
+    direction: ltr;
+}
+
+/* End of Fixed for POCOR-3001, select option order is not consistent in RTL */
+
+
+/* Enable Search for Chosen Select */
+
+.chosen-container-single .chosen-single abbr,
+.chosen-container-single .chosen-search {
+    display: block !important;
+}
+
+.form-horizontal .input-select-wrapper .chosen-container,
+.input-select-wrapper .chosen-container {
+    width: 100% !important;
+}
+
+.chosen-container-single .chosen-single div b {
+    display: none !important;
+}
+
+/* End of Enable Search for Chosen Select */
+
+/* Add style for text input in filter */
+
+.dropdown-filter .text input {
+    background-color: #FFF;
+    width: 100%;
+    min-width: 150px;
+    height: 25px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    border: 1px solid #CCC;
+    padding: 3px 25px 4px 5px!important;
+}
+
+.chrome .dropdown-filter .text input,
+.safari .dropdown-filter .text input {
+    padding: 4px 25px 4px 5px!important;
+}
+
+.dropdown-filter .text {
+    display: inline-block;
+    margin-right: 10px;
+    width: 15%;
+}
+
+/* End of Add style for text input in filter */
+
+/* Temporary fix for POCOR-1855 */
+
+.form-horizontal input[type="checkbox"],
+.form-horizontal input[type="radio"] {
+    width: 18px !important;
+    min-width: 18px !important;
+}
+
+/* End of Temporary fix for POCOR-1855 */
+
+/* Fixed Navigation Menu in RTL (Force font to always align right) */
+
+.rtl .left-menu .nav-level-1 i {
+    float: right;
+}
+
+/* End of Fixed Navigation Menu in RTL (Force font to always align right) */
+
+
+/* Temporary Overwrites (to remove after 2.5.1 new components is implemented) */
+
+.rtl .toolbar-wrapper .form-control {
+    height: 25px;
+    padding: 2px 6px 2px 25px !important;
+    font-size: 11px;
+    margin: 3px 0;
+}
+
+/* End of Temporary Overwrites (to remove after 2.5.1 new components is implemented) */
+
+/* Fix for Datepicker inside Filter - POCOR-2827 */
+
+.dropdown-filter .date {
+    position: relative;
+    display: inline-block;
+    margin-right: 10px;
+    margin-bottom: 15px !important;
+    margin-left: 5px;
+    width: 15%;
+    vertical-align: top;
+    min-width: 150px;
+}
+
+.dropdown-filter .date .input-group.date {
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+.dropdown-filter .date input {
+    background-color: #FFF;
+    width: 100%;
+    height: 25px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    border: 1px solid #CCC;
+    padding: 3px 25px 4px 5px!important;
+}
+
+.dropdown-filter .date .input-group-addon {
+    font-size: 12px;
+    position: absolute;
+    right: 0;
+    height: 25px;
+    width: 25px;
+    padding: 4px;
+    margin: 0 !important;
+    cursor: pointer;
+}
+
+.chrome .dropdown-filter .date input,
+.safari .dropdown-filter .date input {
+    padding: 4px 25px 4px 5px !important;
+}
+
+.datepicker table tr td span.active,
+.datepicker table tr td span.active:hover,
+.datepicker table tr td span.active.disabled,
+.datepicker table tr td span.active.disabled:hover {
+    background-image: none !important;
+}
+
+.sg-theme #btNext {
+    margin-left: 5px;
+}
+
+.sg-theme .ag-cell {
+    border-right: 1px dotted #DDD !important;
+}
+
+.sg-theme .selection-wrapper {
+    margin-top: -3px;
+    margin-left: -1px;
+}
+
+.sg-theme #south {
+    height: 42px;
+}
+
+.sg-theme #pageRowSummaryPanel {
+    display: inline-block;
+    margin: 7px 0;
+}
+
+.sg-theme .ag-paging-button {
+    background-color: #FFF;
+    border: 1px solid #CCC;
+    border-radius: 3px;
+}
+
+.sg-theme .ag-paging-button#btFirst,
+.sg-theme .ag-paging-button#btPrevious,
+.sg-theme .ag-paging-button#btNext,
+.sg-theme .ag-paging-button#btLast {
+    position: relative;
+    font-size: 0;
+    height: 30px;
+    width: 30px;
+    vertical-align: middle;
+    padding: 0;
+}
+
+.sg-theme .ag-paging-button#btFirst:before,
+.sg-theme .ag-paging-button#btPrevious:before,
+.sg-theme .ag-paging-button#btNext:before,
+.sg-theme .ag-paging-button#btLast:before {
+    font-family: "FontAwesome";
+    font-size: 14px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.sg-theme .ag-paging-button#btFirst {
+    margin: 0 5px 0 0;
+}
+
+.sg-theme .ag-paging-button#btFirst:before {
+    content: "\f100";
+}
+
+.sg-theme .ag-paging-button#btPrevious {
+    margin: 0 10px 0 0;
+}
+
+.sg-theme .ag-paging-button#btPrevious:before {
+    content: "\f104";
+}
+
+.sg-theme .ag-paging-button#btNext {
+    margin: 0 0 0 10px;
+}
+
+.sg-theme .ag-paging-button#btNext:before {
+    content: "\f105";
+}
+
+.sg-theme .ag-paging-button#btLast {
+    margin: 0 0 0 5px;
+}
+
+.sg-theme .ag-paging-button#btLast:before {
+    content: "\f101";
+}
+
+.sg-theme .ag-overlay-no-rows-center,
+.sg-theme .ag-overlay-loading-center {
+    padding: 10px;
+}
+
+.rtl .dropdown-filter .text,
+.rtl .dropdown-filter .date {
+    margin-right: 0 !important;
+    margin-left: 10px;
+}
+
+.rtl .dropdown-filter .date .input-group-addon {
+    right: auto !important;
+    left: 0;
+}
+
+.rtl.chrome .dropdown-filter .date input,
+.rtl.safari .dropdown-filter .date input,
+.rtl.chrome .dropdown-filter .text input,
+.rtl.safari .dropdown-filter .text input {
+    padding: 4px 5px 4px 25px !important;
+}
+
+.rtl .sg-theme .ag-paging-button#btFirst:before {
+    content: "\f101";
+}
+
+.rtl .sg-theme .ag-paging-button#btPrevious:before {
+    content: "\f105";
+}
+
+.rtl .sg-theme .ag-paging-button#btNext:before {
+    content: "\f104";
+}
+
+.rtl .sg-theme .ag-paging-button#btLast:before {
+    content: "\f100";
+}
+
+.rtl .sg-theme .ag-paging-button#btPrevious {
+    margin: 0 0 0 10px !important;
+}
+
+.rtl .sg-theme .ag-paging-button#btFirst {
+    margin: 0 0 0 5px !important;
+}
+
+.rtl .sg-theme .ag-paging-button#btNext {
+    margin: 0 10px 0 0 !important;
+}
+
+.rtl .sg-theme .ag-paging-button#btLast {
+    margin: 0 5px 0 0 !important;
+}
+
+@media only screen and (max-width: 1240px) {
+    .dropdown-filter .date,
+    .dropdown-filter .text {
+        width: 30%;
+    }
+}
+
+@media only screen and (max-width: 800px) {
+    .dropdown-filter .date,
+    .dropdown-filter .text {
+        width: 45%;
+    }
+
+    .sg-theme #south {
+        height: 80px;
+        padding: 5px;
+    }
+
+    .sg-theme .ag-paging-page-summary-panel {
+        width: 100%;
+        text-align: center;
+    }
+
+    .sg-theme #pageRowSummaryPanel {
+        display: block;
+        text-align: center;
+    }
+}
+
+@media only screen and (max-width: 480px) {
+    .dropdown-filter .date,
+    .dropdown-filter .text {
+        width: 100%;
+    }
+
+    .dropdown-filter .date {
+        margin-left: 0 !important;
+    }
+}
+/* End of Fix for Datepicker inside Filter - POCOR-2827 */
+
+/* Fix for POCOR-1908 */
+
+.rtl #workbench .list-group-item > .badge {
+    float: left;
+}
+
+#workbench .list-group-item:first-child,
+#workbench .list-group-item:last-child {
+    -webkit-border-radius: 0 !important;
+            border-radius: 0 !important;
+}
+
+#workbench .dashboard-content {
+    background-color: #FFF;
+}
+
+#workbench .list-group-item {
+    border-left: 0;
+    border-right: 0;
+    /* temp fixtd to add in the padding [vincent] */
+    /*padding: 10px;*/
+}
+
+#workbench .list-group-item:first-child {
+    border-top: 0;
+}
+
+.wrapper {
+    height: calc(100% - 76px);
+}
+
+.wrapper.no-breadcrumb {
+    height: calc(100% - 39px);
+    padding: 0;
+}
+
+.content-splitter.split-panes.horizontal > .split-handler,
+.rtl .content-splitter.split-panes.horizontal > .split-handler {
+    top: 0 !important;
+    bottom: 0 !important;
+}
+
+.split-content-header,
+.split-content-area {
+    padding: 0;
+}
+
+/* End of Fix for POCOR-1908 */
+
+/* Fix for POCOR-3658 */
+
+.rtl .treemap-breadcrumb li:not(:first-child) {
+    direction: ltr;
+}
+
+/* End of fix for POCOR-3658 */
+
+/* Security Permission font-size fix for POCOR-3877 */
+
+.security-permission-checkbox label{
+    font-size: 13px !important;
+}
+
+/* End of security permission font-size fix */
+
+/* Temp fix by KK POCOR-3880 */
+
+.ag-menu input.ag-filter-filter {
+    width: 89% !important;
+}
+
+/* End of fix for POCOR-3880 */
+
+/* verify and check to remove - kk */
+/* Fix for normal table sorting issue in POCOR-2547 */
+
+.rtl .table-sortable th > a.asc:after {
+    content: "\f0dd";
+}
+
+.rtl .table-sortable th > a.desc:after {
+    content: "\f0de";
+}
+
+/* End of fix for normal table sorting */
+
+/* verify and check to remove - kk */
+/* Temp fix for adding error border in ag Grid for task POCOR-4010 */
+/* Temp fix for adding error border in ag Grid (last child for pinned and not pinned) for task POCOR-4260 */
+
+.ag-fresh .ag-cell-no-focus.oe-cell-error,
+.ag-fresh .ag-cell-no-focus.oe-cell-error:last-child,
+.ag-fresh .ag-cell-no-focus.oe-cell-error.ag-cell-last-left-pinned,
+.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error,
+.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error:last-child,
+.rtl .ag-fresh .ag-cell-no-focus.oe-cell-error.ag-cell-last-left-pinned {
+    border: 2px solid #CC5C5C !important;
+    border-radius: 0px !important;
+}
+
+/* End of fix for adding error border */
+
+/* verify and check to remove - kk */
+/* Temp fix for core error border for POCOR-3783 */
+
+.table .error input, 
+.table .error .input-select-wrapper,
+.table .error textarea {
+    border-color: #CC5C5C !important;
+}
+
+.table div.input > label {
+    display: none !important;
+}
+
+/* End of temp fix for error border */
+
+
+
+/* Overwrites for POCOR-3233 task */
+
+/* Error */
+.sg-theme .oe-cell-error,
+.rtl .sg-theme .oe-cell-error {
+    border: 2px solid #CC5C5C !important;
+    border-radius: 0px !important;
+}
+/* End of error */
+
+/* Fix for required label:before in table affecting input checkbox label:before
+    - Proper fix in styleguide - required > label:before instead of required label:before
+*/
+[type="checkbox"]:not(:checked) + label:before,
+[type="checkbox"]:checked + label:before,
+[type="checkbox"]:not(:checked) + .ag-cell-value:before,
+[type="checkbox"]:checked + .ag-cell-value:before,
+[type="checkbox"]:not(:checked) + .ag-filter-value:before,
+[type="checkbox"]:checked + .ag-filter-value:before,
+[type="radio"]:not(:checked) + label:before,
+[type="radio"]:checked + label:before,
+[type="radio"]:not(:checked) + .ag-cell-value:before,
+[type="radio"]:checked + .ag-cell-value:before,
+[type="radio"]:not(:checked) + .ag-filter-value:before,
+[type="radio"]:checked + .ag-filter-value:before,
+.rtl [type="checkbox"]:not(:checked) + label:before,
+.rtl [type="checkbox"]:checked + label:before,
+.rtl [type="checkbox"]:not(:checked) + .ag-cell-value:before,
+.rtl [type="checkbox"]:checked + .ag-cell-value:before,
+.rtl [type="checkbox"]:not(:checked) + .ag-filter-value:before,
+.rtl [type="checkbox"]:checked + .ag-filter-value:before,
+.rtl [type="radio"]:not(:checked) + label:before,
+.rtl [type="radio"]:checked + label:before,
+.rtl [type="radio"]:not(:checked) + .ag-cell-value:before,
+.rtl [type="radio"]:checked + .ag-cell-value:before,
+.rtl [type="radio"]:not(:checked) + .ag-filter-value:before,
+.rtl [type="radio"]:checked + .ag-filter-value:before {
+    margin: 0 !important;
+    color: transparent;
+    float: none;
+}
+
+.rtl table .selection-wrapper .no-selection-label[type="checkbox"]:not(:checked) + label:before,
+.rtl table .selection-wrapper .no-selection-label[type="checkbox"]:checked + label:before,
+.rtl table .selection-wrapper .no-selection-label[type="checkbox"]:not(:checked) + label:after,
+.rtl table .selection-wrapper .no-selection-label[type="checkbox"]:checked + label:after,
+.rtl table .selection-wrapper .no-selection-label[type="radio"]:not(:checked) + label:before,
+.rtl table .selection-wrapper .no-selection-label[type="radio"]:checked + label:before,
+.rtl table .selection-wrapper .no-selection-label[type="radio"]:not(:checked) + label:after,
+.rtl table .selection-wrapper .no-selection-label[type="radio"]:checked + label:after {
+    margin: 0 !important;
+}
+/* End of fix for required label:before */
+
+/* Fix for #south styling in styleguide requires to update to [ref="south"]*/
+.sg-theme div[ref="south"] {
+    background-color: #F9F9F9;
+    border-top: 1px solid #DDD;
+    padding: 5px;
+    height: 42px;
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btFirst"] {
+    margin: 0 0 0 5px;
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btFirst"]:before {
+    content: "\f101";
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btPrevious"] {
+    margin: 0 0 0 10px;
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btPrevious"]:before {
+    content: "\f105";
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btNext"] {
+    margin: 0 10px 0 0;
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btNext"]:before {
+    content: "\f104";
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btLast"]:before {
+    margin: 0 5px 0 0;
+}
+
+.rtl .sg-theme [ref="south"] .ag-paging-button[ref="btLast"]:before {
+    content: "\f100";
+}
+/* End of fix for #south styling */
+
+/* Temp fix for radio in ag-Grid not style */
+.ag-radio-wrapper input.ag-grid-radio {
+    top: 10px;
+    left: 10px;
+}
+
+.ag-radio-wrapper label.ag-cell-label {
+    top: -6px !important;
+    left: 2px !important;
+}
+
+.rtl .ag-radio-wrapper label.ag-cell-label {
+    right: 5px !important;
+    top: -10px !important;
+}
+
+.ag-header-cell-label > span[ref='eText'] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: auto;
+}
+
+.ag-header-cell-resize:hover {
+    width: 8px;
+    right: -5px;
+    border: none;
+}
+
+.ag-rtl .ag-header-cell-resize {
+    position: relative;
+}
+/* End of fix for radio */ 
+
+/* Temp fix for dropdown editing cell*/
+.oe-cell-editable.oe-select-wrapper {
+    height: 100%;
+}
+.oe-cell-editable.oe-select-wrapper select {
+    height: 100%;
+}
+.rtl .sg-theme .oe-cell-editable.oe-select-wrapper:after {
+    right: auto;
+    left: 0;
+    margin-left: 10px;
+    margin-right: 0;
+}
+/* End of fix for dropdown editing cell */
+
+/* End of overwrites for POCOR-3233 */
+
+
+/* fix for POCOR-4896 */
+.input-group-addon.disabled,
+.input-group-addon.disabled:hover {
+    background: #ccc !important;
+    border-color: #9a9a9a !important;
+}
+/* end fix for POCOR-4896 */

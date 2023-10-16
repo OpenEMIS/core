@@ -1,0 +1,25 @@
+/* HYPERLINK v.1.0.1 */
+
+a,
+a:active,
+a:focus {
+    color: #999;
+    outline: 0 !important;
+    -webkit-box-sizing: 0 !important;
+    -moz-box-sizing: 0 !important;
+    box-sizing: 0 !important;
+}
+
+a:hover {
+    color: #6B6B6B;
+    text-decoration: none;
+}
+
+a.btn-red:hover,
+a.btn-green:hover {
+    text-decoration: none;
+}
+
+.panel-body a:hover {
+    text-decoration: underline;
+}

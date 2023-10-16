@@ -1,0 +1,3481 @@
+swagger: "2.0"
+info:
+  description: "The [OpenEMIS](https://www.openemis.org/) initiative aims to deploy a high-quality Education Management Information System (EMIS) designed to collect and report data on schools, students, teachers and staff. The system was conceived by `UNESCO` to be a royalty-free system that can be easily customized to meet the specific needs of member countries."
+  version: "3.0.0"
+  title: "OpenEMIS Core"
+  termsOfService: "https://demo.openemis.org/core/About/license"
+  contact:
+    email: "support@openemis.org"
+  license:
+    name: "GNU General Public License V3.0"
+    url: "https://www.gnu.org/licenses/gpl-3.0.en.html"
+host: "demo.openemis.org"
+basePath: "/core"
+tags:
+- name: "CORE"
+  description: "Everything about Core APIs"
+- name: "Meals"
+  description: "Everything about Meals APIs"  
+- name: "Assessments"
+  description: "Student Assessments Module APIs"
+- name: "Student Behaviours"
+  description: "Student Behaviours Module APIs"
+- name: "Students Attendance"
+  description: "Students Attendance Module APIs"
+- name: "Staff Attendance"
+  description: "Staff Attendance Module APIs"
+schemes:
+- "https"
+paths:
+  /oauth/login:
+    post:
+      tags:
+      - "CORE"
+      summary: "User Authentification"
+      description: "Returned User Authentification Token. This token would be use in all Core APIs as **Bearer JWT Authentication**."
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Returned User Authentification"
+        required: true
+        schema:
+          $ref: "#/definitions/login"
+      responses:
+        default:
+          description: "Successful Operation"
+        "405":
+          description: "Invalid Input"
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/login-output"
+          
+  /restful/v2/Security-Users/{userId}.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get security user info"
+      description: "Returns security user info - Get the value of super_admin and is_staff  to identify logged in user  role (admin or staff), There values can be further used to mark conditional checks"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "userId"
+        in: "path"
+        description: "ID of user to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      - name: "_action"
+        in: "query"
+        description: "eg: custom"
+        type: string
+        # required: true
+      - name: "_contain"
+        in: "query"
+        description: "eg: Identities,Nationalities,Roles,Genders"
+        type: string
+        # required: true
+      - name: "_limit"
+        in: "query"
+        description: "To limit the data eg: 0"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Security-Users"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+      
+  /restful/v2/Institution-Institutions.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get Institutions list "
+      description: "Returns Institution info - Pass _finder=ByAccess to get User Authenticated data when the user logged In"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "_action"
+        in: "query"
+        description: "eg: custom"
+        type: string
+        # required: true
+      - name: "code"
+        in: "query"
+        description: "eg: P1002 (if you need institutions info)"
+        type: string
+        # required: true
+      - name: "_contain"
+        in: "query"
+        description: "eg: Types,Areas"
+        type: string
+        # required: true
+      - name: "_limit"
+        in: "query"
+        description: "To limit the data eg: 50"
+        type: string
+      - name: "_finder"
+        in: "query"
+        description: "eg: ByAccess"
+        type: string
+      - name: "_order"
+        in: "query"
+        description: "eg: Institutions.name"
+        type: string
+      - name: "_page"
+        in: "query"
+        description: "eg: 1"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Institution-Institutions"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+    post:
+      tags:
+      - "CORE"
+      summary: "Post  specific institution  (Add/Edit)"
+      description: "Post  specific institution  (Add/Edit)"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - in: "body"
+        name: "body"
+        description: "Created student Records object"
+        required: true
+        schema:
+          $ref: "#/definitions/Institution-Institutions-Post"
+      responses:
+        default:
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Institution-Institutions-Output"
+        "405":
+          description: "Invalid Input"
+  
+  /restful/v2/Security-SecurityRoleFunctions.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get list of user role permission "
+      description: "From this API get the value of view, edit  and pass these value in Attendance list, mark attendance and staff profile respectively. You can find following params passed in given below API’s -own_attendance_view - own_attendance_edit - other_attendance_view - other_attendance_edit"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "_action"
+        in: "query"
+        description: "eg: custom"
+        type: string
+        # required: true
+      - name: "_limit"
+        in: "query"
+        description: "To limit the data eg: 50"
+        type: string
+      - name: "_finder"
+        in: "query"
+        description: "eg: AllSecurityRoleFunctions[institution_id:6]"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Security-SecurityRoleFunctions"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+
+  /restful/v2/Security-SecurityGroupUsers.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get list of security group user"
+      description: "Returns Security Group User info - Pass _finder=ByAccess to get User Authenticated data when the user logged In"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "_action"
+        in: "query"
+        description: "eg: custom"
+        type: string
+        # required: true
+      - name: "_limit"
+        in: "query"
+        description: "To limit the data eg: 50"
+        type: string
+      - name: "_finder"
+        in: "query"
+        description: "eg: AllSecurityGroupUsers[security_user_id:669]"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Security-SecurityGroupUsers"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/AcademicPeriod-AcademicPeriods.json:
+    get:
+      tags:
+      - "Students Attendance"
+      summary: "Get list of Academic Period"
+      description: "Pass any one params as per your need: \n  Staffroon: \n\n **Get list of Academic Period** \n _finder=SchoolAcademicPeriod \n\n **Get Week by Academic Period** \n _finder=weeksForPeriod[academic_period_id:29]  \n\n **Get Day by week** \n _finder=DaysForPeriodWeek[academic_period_id:29;week_id:24;institution_id:6] \n Calssroom: \n\n **Academic Period by Institution:** \n _finder=periodHasClass[institution_id:6] \n\n **Get Weeks by Academic Period:** \n _finder=weeksForPeriod[academic_period_id:27] \n\n **Get Days by Week:** \n _finder=daysForPeriodWeek[academic_period_id:29;week_id:50;institution_id:6;school_closed_required:true]"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "StudentAttendances"
+        type: string
+      - name: "_action"
+        in: "query"
+        description: "eg: custom"
+        type: string
+      - name: "_finder"
+        in: "query"
+        description: "eg: WeeksForPeriod[academic_period_id:29]"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "To limit the data eg: 0 for all"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/AcademicPeriod-AcademicPeriods"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Institution-Staff.json:
+    get:
+      tags:
+      - "Staff Attendance"
+      summary: "Get list of Academic Period"
+      description: "Pass params  [institution_id:6;academic_period_id:29;week_id:24;week_start_day:2020-06-08;week_end_day:2020-06-12;day_id:1;day_date:2020-06-08;own_attendance_view:1;own_attendance_edit:1;other_attendance_view:1;other_attendance_edit:1] AND Pass params  in URL _device=true to get user_avatar image"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "_action"
+        in: "query"
+        description: "eg: custom"
+        type: string
+        # required: true
+      - name: "_finder"
+        in: "query"
+        description: "eg: AllStaffAttendances[institution_id:6;academic_period_id:29;week_id:24;week_start_day:2020-06-08;week_end_day:2020-06-12;day_id:1;day_date:2020-06-08;own_attendance_view:1;own_attendance_edit:1;other_attendance_view:1;other_attendance_edit:1]"
+        type: string
+      - name: "_contain"
+        in: "query"
+        description: "eg: Institutions,Users,Users.Genders,StaffStatuses"
+        type: string
+      - name: "id"
+        in: "query"
+        description: "eg staff id: 449"
+        type: string
+      - name: "_order"
+        in: "query"
+        description: "eg: first_name"
+        type: string
+      - name: "institution_id"
+        in: "query"
+        description: "eg: 6"
+        type: string
+      - name: "staff_status_id"
+        in: "query"
+        description: "eg: 1"
+        type: string
+      - name: "_device"
+        in: "query"
+        description: "eg: true"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Institution-Staff"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+    post:
+      tags:
+      - "Staff Attendance"
+      summary: "Post data to update STAFF profile information"
+      description: "Update data to update STAFF profile information"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - in: "body"
+        name: "body"
+        description: "Created staff profile information object"
+        required: true
+        schema:
+          $ref: "#/definitions/Institution-Staff-Post-Body"
+      responses:
+        default:
+          description: "Successful Operation"
+        "405":
+          description: "Invalid Input"
+          
+  /restful/v2/Staff-InstitutionStaffAttendances.json:
+    post:
+      tags:
+      - "Staff Attendance"
+      summary: "Update Mark Attendance of Staff"
+      description: "Update Mark Attendance of Staff (POST Method)"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - in: "body"
+        name: "body"
+        description: "Created Mark Attendance of Staff object"
+        required: true
+        schema:
+          $ref: "#/definitions/Staff-InstitutionStaffAttendances"
+      responses:
+        default:
+          description: "Successful Operation"
+        "405":
+          description: "Invalid Input"
+          
+  /restful/v2/User-Users.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get image of profile user"
+      description: "Pass params UserAvatar[staff_id:1744] - Replace with correct staff_id"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "_action"
+        in: "query"
+        description: "eg: custom"
+        type: string
+        # required: true
+      - name: "_finder"
+        in: "query"
+        description: "eg: UserAvatar[staff_id:1744]"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/User-Users"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+    post:
+      tags:
+      - "CORE"
+      summary: "Post user Details (Add/Edit)"
+      description: "Post user Details (Add/Edit)"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - in: "body"
+        name: "body"
+        description: "Created student Records object"
+        required: true
+        schema:
+          $ref: "#/definitions/User-Users-Post"
+      responses:
+        default:
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/User-Users-Output"
+        "405":
+          description: "Invalid Input"
+          
+  /restful/v2/Area-AreaAdministratives.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get User Area address info"
+      description: "Get User Area address info"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "_action"
+        in: "query"
+        description: "eg: custom"
+        type: string
+      - name: "_contain"
+        in: "query"
+        description: "eg: AreaAdministrativeLevels"
+        type: string
+      - name: "level"
+        in: "query"
+        description: "eg: 0"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Area-AreaAdministratives"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/User-Genders.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get list User gender"
+      description: "Get list User gender"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "_action"
+        in: "query"
+        description: "eg: custom"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/User-Genders"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Meal-StudentMealMarkedRecords.json:
+    post:
+      tags:
+      - "Meals"
+      summary: "Add Meals"
+      description: "Add Meals"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "StudentMeals"
+        type: string  
+      - in: "body"
+        name: "body"
+        description: "Meals Added"
+        required: true
+        schema:
+          $ref: "#/definitions/meals"
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found" 
+    
+    get:
+      tags:
+      - "Meals"
+      summary: "Marking 'Free' for All Students on a particular date"
+      description: "Marking 'Free' for All Students on a particular date"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "StudentMeals"
+        type: string
+      - name: "_finder"
+        in: "query"
+        description: "eg: MealIsMarked[institution_id:6;institution_class_id:526;meal_programmes_id:0;academic_period_id:29;day_id:2020-01-20]"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+    
+  /restful/v2/Institution-InstitutionMealStudents.json:
+    post:
+      tags:
+      - "Meals"
+      summary: "Mark Meal benefit (paid, free) for a Student on a particular date"
+      description: "Mark Meal benefit (paid, free) for a Student on a particular date"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "StudentMeals"
+        type: string  
+      - in: "body"
+        name: "body"
+        description: "Meals Added"
+        required: true
+        schema:
+          $ref: "#/definitions/meal-benefit"
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Institution-StudentMeals.json:
+    get:
+      tags:
+      - "Meals"
+      summary: " Get students meal list  (read)"
+      description: " Get students meal list  (read)"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "StudentMeals"
+        type: string
+        # required: true
+      - name: "_limit"
+        in: "query"
+        description: "0"
+        type: string
+      - name: "_finder"
+        in: "query"
+        description: "eg: classStudentsWithMeal[institution_id:6;institution_class_id:525;academic_period_id:29;day_id:2020-12-29;week_id:2020-12-28;week_start_day:2020-12-31;week_end_day:53;subject_id:undefined]"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Meal-MealBenefit.json:
+    get:
+      tags:
+      - "Meals"
+      summary: "Benefit type option"
+      description: "Benefit type option"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "StudentMeals"
+        type: string
+      - name: "_fields"
+        in: "query"
+        description: "eg: id,name"
+        type: string
+      - name: "_order"
+        in: "query"
+        description: "eg: order"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string  
+      responses:
+        "200":
+          description: "Successful Operation"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Meal-MealProgrammes.json:
+    get:
+      tags:
+      - "Meals"
+      summary: "Meal programme option"
+      description: "Meal programme option"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "StudentMeals"
+        type: string
+      - name: "_fields"
+        in: "query"
+        description: "eg: id,name"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"         
+          
+  /restful/v2/Institution-InstitutionClasses.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Getting Class List/ Grades for an Institute"
+      description: "Getting Class/ Grades List for an Institute \n\n **Classes By Institution And AcademicPeriod** \n _finder=classesByInstitutionAndAcademicPeriod[institution_id:6;academic_period_id:29] \n \n **Grades By Institution, AcademicPeriod AND InstitutionClass** \n _finder=gradesByInstitutionAndAcademicPeriodAndInstitutionClass[institution_id:6;academic_period_id:29;institution_class_id:496]"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "_finder"
+        in: "query"
+        description: "eg: classesByInstitutionAndAcademicPeriod[institution_id:6;academic_period_id:29]"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Attendance-StudentAttendanceMarkTypes.json:
+    get:
+      tags:
+      - "Students Attendance"
+      summary: "Get Period by class and academic period"
+      description: "Get Period by class and academic period - replace with the correct institution_class_id - replace with the correct academic_period_id"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "StudentAttendances"
+        type: string
+      - name: "_finder"
+        in: "query"
+        description: "eg: periodByClass[institution_class_id:496;academic_period_id:29;day_id:2020-12-09;education_grade_id:59]"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Attendance-StudentAttendanceMarkTypes"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Attendance-StudentAttendanceTypes.json:
+    get:
+      tags:
+      - "Students Attendance"
+      summary: "Getting Student Attendance Types"
+      description: "Getting Student Attendance Types"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "StudentAttendances"
+        type: string
+      - name: "_finder"
+        in: "query"
+        description: "eg: attendanceTypeCode[institution_id:6;academic_period_id:29;institution_class_id:496;day_id:2020-12-09]"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Institution-InstitutionClassSubjects.json:
+    get:
+      tags:
+      - "Students Attendance"
+      summary: "Getting Class Subjects List"
+      description: "Getting Class Subjects List"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "StudentAttendances"
+        type: string
+      - name: "_finder"
+        in: "query"
+        description: "eg: allSubjectsByClassPerAcademicPeriod[institution_id:6;institution_class_id:496;academic_period_id:29;day_id:2020-12-09]"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+  
+  /restful/v2/Institution-StudentAttendances.json:
+    get:
+      tags:
+      - "Students Attendance"
+      summary: "Get Student Attendances by all id"
+      description: "Get students attendance status list on a perticular day (read)"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "StudentAttendances"
+        type: string
+      - name: "_finder"
+        in: "query"
+        description: "eg: classStudentsWithAbsence[institution_id:6;institution_class_id:496;education_grade_id:59;academic_period_id:29;attendance_period_id:1;day_id:2020-12-09;week_id:50;week_start_day:2020-12-07;week_end_day:2020-12-13;subject_id:0]"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Institution-StudentAttendances"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Institution-AbsenceTypes.json:
+    get:
+      tags:
+      - "Students Attendance"
+      summary: "Get Absence Type List"
+      description: "Get Absence Type List"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "StudentAttendances"
+        type: string
+      - name: "_finder"
+        in: "query"
+        description: "eg: absenceTypeList"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Institution-AbsenceTypes"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Institution-StudentAbsenceReasons.json:
+    get:
+      tags:
+      - "Students Attendance"
+      summary: "Get Student Absence Reasons"
+      description: "Get Student Absence Reasons"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "StudentAttendances"
+        type: string
+      - name: "_fields"
+        in: "query"
+        description: "eg: id,name"
+        type: string
+      - name: "_order"
+        in: "query"
+        description: "eg: order"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Institution-StudentAbsenceReasons"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Attendance-StudentAttendanceMarkedRecords.json:
+    post:
+      tags:
+      - "Students Attendance"
+      summary: "Post Student Attendance Marked 'Present' for All Students"
+      description: "POST API: Marking 'Present' for All Students on a perticular date. Update student Attendance Marked Records (Add) - All data cannot be null, because five of them are primary key \n - subject_id should be <subject_id> or 0 (in case attendence by period)"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "StudentAttendances"
+        type: string
+      - in: "body"
+        name: "body"
+        description: "Created student Attendance Marked Records object"
+        required: true
+        schema:
+          $ref: "#/definitions/Attendance-StudentAttendanceMarkedRecords"
+      responses:
+        default:
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Attendance-StudentAttendanceMarkedRecords-Output"
+        "405":
+          description: "Invalid Input"
+          
+  /restful/v2/Institution-StudentAbsencesPeriodDetails.json:
+    post:
+      tags:
+      - "Students Attendance"
+      summary: "Post Student Absences Period Details (Add/Edit). Mark Attendance for a Student on a particular date"
+      description: "Update Attendance for a Student on a particular date (Add/Edit) \n -  Comment can be null. \n -  If absence_type_id is 1(EXCUSED), student_absence_reason_id cannot be null. \n -  If absence_type_id is 0(PRESENT), Comment must be null. \n -  Student_id, institution_id, academic_period_id, institution_class_id, data, period cannot be null, because six of them are primary key \n - subject_id should be <subject_id> or 0 (in case attendence by period)"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "StudentAttendances"
+        type: string
+      - in: "body"
+        name: "body"
+        description: "Created student Attendance Marked Records object"
+        required: true
+        schema:
+          $ref: "#/definitions/Institution-StudentAbsencesPeriodDetails"
+      responses:
+        default:
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Institution-StudentAbsencesPeriodDetails-Output"
+        "405":
+          description: "Invalid Input"
+          
+  /restful/v2/Education-EducationGrades/{Id}.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get education grade by its id."
+      description: "Get education grade by its id."
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "Id"
+        in: "path"
+        description: "ID of user to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Education-EducationGrades"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Student-StudentStatuses/{Id}.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get Student Status by its id."
+      description: "Get Student Status by its id."
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "Id"
+        in: "path"
+        description: "ID of user to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Student-StudentStatuses"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/User-NationalityNames/{Id}.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get Nationality details with name  by id."
+      description: "Get Nationality details with name  by id."
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "Id"
+        in: "path"
+        description: "ID of data to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/User-NationalityNames"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/FieldOption-IdentityTypes.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get list of Identity types."
+      description: "Get list of Identity types."
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/FieldOption-IdentityTypes"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Institution-AreaAdministratives/{Id}.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get Institution areaAdministratives by id."
+      description: "Get Institution areaAdministratives by id."
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "Id"
+        in: "path"
+        description: "ID of data to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Institution-AreaAdministrativesID"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Area-Areas/{Id}.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get Areas by id."
+      description: "Get Areas by id."
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "Id"
+        in: "path"
+        description: "ID of data to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Area-Areas"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Institution-Genders.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get Institution genders."
+      description: "Get Institution genders."
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Institution-Genders"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Institution-Localities/{Id}.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get institution localities by its id."
+      description: "Get institution localities by its id."
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "Id"
+        in: "path"
+        description: "ID of data to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Institution-Localities"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Institution-Ownerships/{Id}.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get institution ownerships by its id."
+      description: "Get institution ownerships by its id."
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "Id"
+        in: "path"
+        description: "ID of data to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Institution-Ownerships"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Institution-Sectors/{Id}.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get institution sectors by its id."
+      description: "Get institution sectors by its id."
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "Id"
+        in: "path"
+        description: "ID of data to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Institution-Sectors"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Institution-Providers/{Id}.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get institution providers by its id."
+      description: "Get institution providers by its id."
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "Id"
+        in: "path"
+        description: "ID of data to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Institution-Providers"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Institution-Types/{Id}.json:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get Institution types by its id."
+      description: "Get Institution types by its id."
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "Id"
+        in: "path"
+        description: "ID of data to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Institution-Types"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/getProvider/{Id}:
+    get:
+      tags:
+      - "CORE"
+      summary: "Get Provider on the basis of sectors  id."
+      description: "Get Provider on the basis of sectors  id.(onchange html function)"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "Id"
+        in: "path"
+        description: "ID of data to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/getProvider"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Institution-Students.json:
+    post:
+      tags:
+      - "CORE"
+      summary: "Post student in specific institution (Add)"
+      description: "Post student in specific institution (Add)"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - in: "body"
+        name: "body"
+        description: "Created student Records object"
+        required: true
+        schema:
+          $ref: "#/definitions/Institution-Students"
+      responses:
+        default:
+          description: "Successful Operation"
+          schema:
+            $ref: "#/definitions/Institution-Students-Output"
+        "405":
+          description: "Invalid Input"
+      
+  /restful/v2/Staff-Payslips.json:
+    post:
+      tags:
+      - "CORE"
+      summary: "Post staff payslips (Add)"
+      description: "Post  staff payslips (Add)"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "StaffPayslips"
+        type: string  
+      - in: "body"
+        name: "body"
+        description: "Payslips Added"
+        required: true
+        schema:
+          $ref: "#/definitions/payslips"
+      responses:
+        default:
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "405":
+          description: "Invalid Input"
+          
+          
+  /restful/v2/Assessment-Assessments.json:
+    get:
+      tags:
+      - "Assessments"
+      summary: "Get Assessessment ID for a Class"
+      description: "Returns Class wise Assessessment ID"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "controllerAction"
+        in: "header"
+        description: "OpenEMIS_Classroom"
+        type: string
+        required: true
+      - name: "_action"
+        in: "query"
+        description: "eg: index"
+        type: string
+        # required: true
+      - name: "_contain"
+        in: "query"
+        description: "eg (not needed): EducationGrades,AssessmentItems.EducationSubjects"
+        type: string
+      - name: "_finder"
+        in: "query"
+        description: "eg: byClass[institution_class_id:496]"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Assessment-AssessmentItems.json:
+    get:
+      tags:
+      - "Assessments"
+      summary: "Get Assessment Subjects Items List"
+      description: "Returns Assessment Subjects Items List \n\n New finder with updated subject list _finder = subjectNewTab[class_id:496;assessment_id:29;academic_period_id:29;institution_id:6] \n\n Old finder _finder = AssessmentItemsInClass[class_id:496;assessment_id:29]"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "Results"
+        type: string
+        required: true
+      - name: "_finder"
+        in: "query"
+        description: "eg: subjectNewTab[class_id:496;assessment_id:29;academic_period_id:29;institution_id:6]"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Assessment-AssessmentPeriods.json:
+    get:
+      tags:
+      - "Assessments"
+      summary: "Get Assessment Periods List"
+      description: "Returns Assessment Periods List"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "Results"
+        type: string
+        required: true
+      - name: "assessment_id"
+        in: "query"
+        description: "eg: 29"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Assessment-AssessmentItemsGradingTypes.json:
+    get:
+      tags:
+      - "Assessments"
+      summary: "Get Assessessment Items Grading Types List"
+      description: "Returns Get Assessessment Items Grading Types List"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "controllerAction"
+        in: "header"
+        description: "OpenEMIS_Classroom"
+        type: string
+        required: true
+      - name: "_action"
+        in: "query"
+        description: "eg: index"
+        type: string
+        # required: true
+      - name: "_contain"
+        in: "query"
+        description: "eg: AssessmentGradingTypes,EducationSubjects,AssessmentPeriods"
+        type: string
+      - name: "_order"
+        in: "query"
+        description: "eg: AssessmentPeriods.start_date"
+        type: string
+      - name: "assessment_id"
+        in: "query"
+        description: "eg: 29"
+        type: string
+      - name: "education_subject_id"
+        in: "query"
+        description: "eg: 97"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Institution-InstitutionSubjectStudents.json:
+    get:
+      tags:
+      - "Assessments"
+      summary: "Get Institution Subject Students List"
+      description: "Returns Institution Subject Students List"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "controllerAction"
+        in: "header"
+        description: "OpenEMIS_Classroom"
+        type: string
+        required: true
+      - name: "_action"
+        in: "query"
+        description: "eg: custom"
+        type: string
+        # required: true
+      - name: "_contain"
+        in: "query"
+        description: "eg: Users.Genders"
+        type: string
+      - name: "_finder"
+        in: "query"
+        description: "eg: assessmentResults[institution_id:6;academic_period_id:29;institution_class_id:496;assessment_id:29;education_grade_id:59;education_subject_id:97;assessment_period_id:25]"
+        type: string
+      - name: "_order"
+        in: "query"
+        description: "eg: Users.first_name"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Assessment-AssessmentGradingOptions.json:
+    get:
+      tags:
+      - "Assessments"
+      summary: "Get Assessment Grading Options List"
+      description: "Returns Get Assessment Grading Options List"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "controllerAction"
+        in: "header"
+        description: "OpenEMIS_Classroom"
+        type: string
+        required: true
+      - name: "_action"
+        in: "query"
+        description: "eg: index"
+        type: string
+        # required: true
+      - name: "_contain"
+        in: "query"
+        description: "eg: AssessmentGradingTypes"
+        type: string
+      - name: "_finder"
+        in: "query"
+        description: "eg: visible,order"
+        type: string
+      - name: "assessment_grading_type_id"
+        in: "query"
+        description: "eg: 2"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+           
+  /restful/v2/Assessment-AssessmentItemResults.json:
+    post:
+      tags:
+      - "Assessments"
+      summary: "Post Assessment Item Results"
+      description: "Post Assessment Item Results"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "controllerAction"
+        in: "header"
+        description: "OpenEMIS_Classroom"
+        type: string
+        required: true
+      - in: "body"
+        name: "body"
+        description: "Created Assessment Item Results Records object"
+        required: true
+        schema:
+          $ref: "#/definitions/Assessment-AssessmentItemResults"
+      responses:
+        default:
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "405":
+          description: "Invalid Input"
+    # author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    # POCOR-6870 - modified 6806 ticket's api desciprtion in this ticket
+    get:
+      tags:
+      - "Assessments"
+      summary: "Get Assessment Item Results"
+      description: "Get Assessment Item Results"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "controllerAction"
+        in: "header"
+        description: "OpenEMIS_Classroom OR Results" # POCOR-6912:modified controllerAction description 
+        type: string
+        required: true
+      - name: "_finder"
+        in: "query"
+        description: "eg: assessmentGradesOptions[academic_period_id:31;education_grade_id:104;education_subject_id:60;student_id:11005]" # POCOR-6912:removed assessment_grading_option_id from mandatory field as suggested by client
+        type: string
+        required: true
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Institution-InstitutionClassStudents.json:
+    get:
+      tags:
+      - "Student Behaviours"
+      summary: "Get List of Students for a Class"
+      description: "Get List of Students for a Class (By Student)"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "OpenEMIS_Classroom"
+        type: string
+        required: true
+      - name: "_action"
+        in: "query"
+        description: "eg: index"
+        type: string
+      - name: "_contain"
+        in: "query"
+        description: "eg: Users.Genders"
+        type: string
+      - name: "_order"
+        in: "query"
+        description: "eg: Users.first_name"
+        type: string
+      - name: "institution_class_id"
+        in: "query"
+        description: "eg: 496"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Institution-StudentBehaviours.json:
+    get:
+      tags:
+      - "Student Behaviours"
+      summary: "Get all Behaviours of a Student/Institute"
+      description: "Get List of Behaviours of a Student/Institute"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "OpenEMIS_Classroom"
+        type: string
+        required: true
+      - name: "_action"
+        in: "query"
+        description: "eg: custom"
+        type: string
+      - name: "_order"
+        in: "query"
+        description: "eg: -StudentBehaviours.date_of_behaviour"
+        type: string
+      - name: "institution_id"
+        in: "query"
+        description: "eg: 6"
+        type: string
+      - name: "student_id"
+        in: "query"
+        description: "eg: 11011"
+        type: string
+      - name: "academic_period_id"
+        in: "query"
+        description: "eg: 29"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+    post:
+      tags:
+      - "Student Behaviours"
+      summary: "Post a Student Behaviour"
+      description: "Post a Student Behaviour"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "OpenEMIS_Classroom"
+        type: string
+        required: true
+      - in: "body"
+        name: "body"
+        description: "Student Behaviours Object"
+        required: true
+        schema:
+          $ref: "#/definitions/Institution-StudentBehaviours"
+      responses:
+        default:
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "405":
+          description: "Invalid Input"
+    delete:
+      tags:
+      - "Student Behaviours"
+      summary: "Delete a Student Behaviour"
+      description: "Delete a Student Behaviour"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "OpenEMIS_Classroom"
+        type: string
+        required: true
+      - in: "body"
+        name: "body"
+        description: "Student Behaviours Object"
+        required: true
+        schema:
+          $ref: "#/definitions/Institution-StudentBehaviours-Delete"
+      responses:
+        default:
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "405":
+          description: "Invalid Input"
+          
+  /restful/v2/Institution-StudentBehaviours.json/{BehaviourID}}.json:
+    get:
+      tags:
+      - "Student Behaviours"
+      summary: "Get Behaviour Detail"
+      description: "Get List of all Behaviours for an Institute (By Behaviours)"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "OpenEMIS_Classroom"
+        type: string
+        required: true
+      - name: "BehaviourID"
+        in: "path"
+        description: "ID of Behaviour to return eg: 112"
+        required: true
+        type: "integer"
+        format: "int64"
+      - name: "_action"
+        in: "query"
+        description: "eg: custom"
+        type: string
+      - name: "_contain"
+        in: "query"
+        description: "eg: StudentBehaviourCategories"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Student-StudentBehaviourCategories.json:
+    get:
+      tags:
+      - "Student Behaviours"
+      summary: "Get Behaviours Categories"
+      description: "Get Behaviours Categories (used in dropdown)"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "ControllerAction"
+        in: "header"
+        description: "OpenEMIS_Classroom"
+        type: string
+        required: true
+      - name: "_action"
+        in: "query"
+        description: "eg: custom"
+        type: string
+      - name: "_finder"
+        in: "query"
+        description: "eg: visible,order"
+        type: string
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+  /restful/v2/Institution-InstitutionSubjectStaff.json:
+    get:
+      tags:
+      - "Institution"
+      summary: "Get Staff's Subjects detail"
+      description: "Get staff's subjects details on the bases of institution"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "bearer token"
+        type: string
+        required: true
+      - name: "controllerAction"
+        in: "header"
+        description: "OpenEMIS_Classroom"
+        type: string
+        required: true
+      - name: "_finder"
+        in: "query"
+        description: "eg: staffInstitutionSubjects[staff_id:578;institution_id:6]"
+        type: string
+        required: true
+      - name: "_limit"
+        in: "query"
+        description: "eg: 0 (for all)"
+        type: string
+      responses:
+        "200":
+          description: "Successful Operation"
+          schema:
+            $ref: ""
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "404 Not Found"
+          
+definitions:
+  login:
+    type: "object"
+    properties:
+      username:
+        type: "string"
+        example: "admin"
+      password:
+        type: "string"
+        example: "demo"
+  login-output:
+    type: "object"
+    properties:
+      token:
+        type: "string"
+        example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOjIsImV4cCI6MTYwNjgyMjk3Nn0.Pn7HoWazm_C7RwqgN8ZI7_aQIPyDT0pW53PYmE6us0bKIh5PleBP9XZsFPXyGi0hHu6R-fKoijr4i9YlEddHZvL3TZWubTbeLsx4pihMrvnPLgmWFcEVpfQYpW5mQQk5_MNhoXdTsm9Zr6l3P_VoTw8dxNcGI0bWJr7gHG3gI7o"
+      message:
+        type: "string"
+        example: "Logged in successfuly."
+       
+  Security-Users:
+    type: "object"
+    properties:
+      id: 
+        example: "2"
+      username: 
+        type: "string"
+        example: "admin"
+      openemis_no: 
+       example: "admin1"
+      first_name: 
+       example: "System"
+      middle_name: 
+       example: ""
+      third_name: 
+        example: ""
+      last_name: 
+       example: "Administrator"
+      preferred_name: 
+       example: ""
+      email: 
+        example: ""
+      address: 
+       example: ""
+      postal_code: 
+       example: ""
+      address_area_id: 
+        example: 1
+      birthplace_area_id: 
+        example: 1
+      gender_id: 
+        example: 1
+      date_of_birth: 
+        example: "January 01, 2000"
+      date_of_death: 
+        example: ""
+      nationality_id: 
+       example: ""
+      identity_type_id: 
+       example: ""
+      identity_number: 
+       example: ""
+      external_reference: 
+       example: ""
+      super_admin: 
+       example: 1
+      status: 
+       example: 1
+      last_login: 
+        example: "June 15, 2020 - 21:51:54"
+      photo_name: 
+        example: ""
+      preferred_language: 
+        example: "en"
+      is_student: 
+       example: 0
+      is_staff: 
+       example: 0
+      is_guardian: 
+        example: 0
+      modified_user_id: 
+        example: 2
+      modified: 
+        example: "December 01, 2016 - 09:31:06"
+      created_user_id: 
+        example: 0
+      created: 
+        example: "January 01, 1990 - 00:00:00"
+      roles: 
+        example: []
+      nationalities: 
+        example: []
+      identities: 
+       example: []
+      name: 
+       example: "System Administrator"
+      name_with_id: 
+        example: "admin - System Administrator"
+      default_identity_type: 
+        example: ""
+      has_special_needs: 
+        example: "false"
+        
+  Institution-Institutions:
+    type: "object"
+    properties:
+      id:
+       example: 6
+      name:
+        example: "Avory Primary School"
+      alternative_name:
+       example: ""
+      code:
+       example: "P1002"
+      address:
+        example: "270 Duke Lane"
+      postal_code:
+        example: ""
+      contact_person:
+       example: ""
+      telephone:
+        example: "83948723"
+      fax:
+        example: '83948723'
+      email:
+        example: "contact@avoryprimary.com"
+      website:
+        example: "avoryprimary.com"
+      date_opened:
+        example: "December 01, 2014"
+      year_opened:
+        example: "2014"
+      date_closed:
+        example: ""
+      year_closed:
+        example: ""
+      longitude:
+       example: "76.76315917262934"
+      latitude:
+        example: "-15.378664747523954"
+      logo_name:
+        example: ""
+      logo_content:
+       example: ""
+      shift_type:
+       example: "3"
+      classification:
+       example: "1"
+      area_id:
+       example: "11"
+      area_administrative_id:
+       example: "23"
+      institution_locality_id:
+       example: "1"
+      institution_type_id:
+       example: "2"
+      institution_ownership_id:
+       example: "4"
+      institution_status_id:
+        example: "1"
+      institution_sector_id:
+       example: "1"
+      institution_provider_id:
+       example: "2"
+      institution_gender_id:
+       example: "1"
+      security_group_id:
+       example: "6"
+      modified_user_id:
+        example: "1"
+      modified:
+       example: "June 03, 2020 - 17:34:42"
+      created_user_id:
+       example: "2"
+      created:
+        example: "March 26, 2018 - 00:09:19"
+      area:
+       example: "{...}"
+      type1:
+        example: "{...}"
+      code_name:
+       example: "P1002 - Avory Primary School"
+       
+  Institution-Institutions-Post:
+    type: "object"
+    properties:    
+      name:
+        example: "Redhaven Preschool Brij test case"
+      alternative_name:
+        example: ''
+      address:
+        example: "2175 Vasnt kunj Drive"
+      postal_code:
+        example: '110070'
+      contact_person:
+        example: 
+      telephone:
+       example: 
+      fax:
+       example: 
+      email:
+        example: 
+      website:
+        example: 
+      date_opened:
+        example: "01-12-2014"
+      year_opened:
+        example: "2014"
+      date_closed:
+       example: 
+      year_closed:
+       example: 
+      longitude:
+        example: "77.92770995387934"
+      latitude:
+        example: "-13.27113968324186"
+      logo_name:
+        example: 
+      logo_content:
+        example: 
+      shift_type:
+        example: 1
+      classification:
+       example: 1
+      area_id:
+       example: 4
+      area_administrative_id:
+       example: 22
+      institution_locality_id:
+       example: 1
+      institution_type_id:
+       example: 1
+      institution_ownership_id:
+       example: 4
+      institution_status_id:
+        example: 1
+      institution_sector_id:
+        example: 1
+      institution_provider_id:
+        example: 2
+      institution_gender_id:
+        example: 1
+      security_group_id:
+        example: 4
+      modified:
+       example: "18-04-2018 - 04:38:15"
+      created:
+        example: "26-03-2018 - 00:09:18"
+      code_name:
+        example: "Kb0004 - Redhaven Preschool Brij test case"
+      superAdmin:
+        example: 1
+      userId:
+        example: 2
+        
+  Institution-Institutions-Output:
+    type: "object"
+    properties:    
+      name:
+        example: "Redhaven Preschool Brij test case"
+      alternative_name:
+        example: ''
+      address:
+        example: "2175 Vasnt kunj Drive"
+      postal_code:
+        example: '110070'
+      contact_person:
+        example: 
+      telephone:
+       example: 
+      fax:
+       example: 
+      email:
+        example: 
+      website:
+        example: 
+      date_opened:
+        example: "01-12-2014"
+      year_opened:
+        example: "2014"
+      date_closed:
+       example: 
+      year_closed:
+       example: 
+      longitude:
+        example: "77.92770995387934"
+      latitude:
+        example: "-13.27113968324186"
+      logo_name:
+        example: 
+      logo_content:
+        example: 
+      shift_type:
+        example: 1
+      classification:
+       example: 1
+      area_id:
+       example: 4
+      area_administrative_id:
+       example: 22
+      institution_locality_id:
+       example: 1
+      institution_type_id:
+       example: 1
+      institution_ownership_id:
+       example: 4
+      institution_status_id:
+        example: 1
+      institution_sector_id:
+        example: 1
+      institution_provider_id:
+        example: 2
+      institution_gender_id:
+        example: 1
+      security_group_id:
+        example: 4
+      modified:
+       example: "18-04-2018 - 04:38:15"
+      created:
+        example: "26-03-2018 - 00:09:18"
+      code_name:
+        example: "Kb0004 - Redhaven Preschool Brij test case"
+      superAdmin:
+        example: 1
+      userId:
+        example: 2
+      action_type:
+        example: "third_party"
+      created_user_id:
+        example: 1
+      id:
+        example: 36
+      modified_user_id:
+        example: 1
+       
+  Security-SecurityRoleFunctions:
+    type: "object"
+    properties:
+      _view:
+        example: 0
+      _edit:
+        example: 0
+      _add:
+        example: 0
+      _delete:
+        example: 0
+      _execute:
+       example: 0
+      security_role_id:
+       example: 6
+      security_function_id:
+        example: 1018
+      modified_user_id:
+       example: 2
+      modified:
+        example: "June 08, 2020 - 19:29:02"
+      created_user_id:
+       example: 2
+      created:
+        example: "July 19, 2016 - 07:08:33"
+      security_function:
+        example: "{...}"
+      security_role:
+        example: "{...}"
+        
+  AcademicPeriod-AcademicPeriods:
+    type: "object"
+    properties:
+      id:
+       example: 27
+      code:
+        example: "YR2018"
+      name:
+       example: "2018"
+      start_date:
+       example: "January 01, 2018"
+      start_year:
+       example: 2018
+      end_date:
+       example: "December 31, 2018"
+      end_year:
+       example: 2018
+      school_days:
+       example: 0
+      current:
+       example: 0
+      editable:
+        example: 1
+      parent_id:
+        example: 9
+      lft:
+        example: 22
+      rght:
+        example: 23
+      academic_period_level_id:
+       example: 1
+      order:
+        example: 5
+      visible:
+        example: 1
+      modified_user_id:
+        example: 1
+      modified:
+       example: "June 03, 2020 - 17:58:52"
+      created_user_id:
+        example: 2
+      created:
+        example: "March 28, 2018 - 21:45:18"
+        
+  Institution-Staff:
+    type: "object"
+    properties:
+      id:
+        example: 395
+      FTE:
+       example: 1
+      start_date:
+       example: "February 02, 2017"
+      start_year:
+       example: 2017
+      end_date:
+       example: 
+      end_year:
+       example: 
+      staff_id:
+       example: 8815
+      staff_type_id:
+        example: 3
+      staff_status_id:
+        example: 1
+      institution_id:
+        example: 6
+      institution_position_id:
+        example: 220
+      #security_group_user_id:
+       #example: "1ec69383-7703-43fb-a568-d87bb1da2949"
+      modified_user_id:
+       example: 
+      modified:
+       example: 
+      created_user_id:
+       example: 2
+      created:
+       example: "April 05, 2018 - 18:57:20"
+      _matchingData:
+        example: "{...}"
+      photo_content:
+       example: "IMAGE-BASE-64-DATA /9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB"
+      date:
+       example: "2020-06-08"
+      historyUrl:
+       example: "/core/Staff/InstitutionStaffAttendanceActivities/index?user_id=8815"
+      attendance:
+       example: "{...}"
+      name:
+       example: "Amanda Wells"
+      staff_name:
+       example: "1522952436 - Amanda Wells"
+       
+  Institution-Staff-Post-Body:
+    type: "object"
+    properties:
+      id:
+        example: 8810
+      first_name:
+        example: "Amandaa"
+      middle_name:
+        example: ''
+      third_name:
+        example: ''
+      last_name:
+       example: "Woods"
+      preferred_name:
+       example: ''
+      gender_id:
+       example: 2
+      date_of_birth:
+       example: '1982-03-02'
+      address:
+       example: ''
+      address_area_id:
+       example: 16
+      postal_code:
+        example: ''
+      photo_content:
+        example: "IMAGE-BASE-64-DATA %2F9j%2F4QBqRXhpZgAATU0AKgAAAAgABAEAAAQAAAABAAAAswEBAAQAAAABAAAAs4dpAAQAAAABAAAAPgESAAMADAsKCwsNDhIZMSLAXHNM8Ce0Fn0SXzY7VCAGiDytDm6TFGd6VNMurvhSCX6jMFRamimUAQBwqEQz6qKIvVFiA1riKMSuPprVFFpRRoEzAk%2F%2B1bSADAUUWa0zOcQVFFEp%2F9k%3D"
+      photo_name:
+        example: "Amandaa_Woods_1592196985371.jpg"
+       
+  Staff-InstitutionStaffAttendances:
+    type: "object"
+    properties:
+      academic_period_id:
+        example: 29
+      action_type:
+        example: "default"
+      comment:
+        example: 
+      date:
+        example: "2020-06-12"
+      institution_id:
+        example: 6
+      staff_id:
+        example: 8815
+      time_in:
+        example: "01:00:00"
+      time_out:
+        example: 
+        
+  User-Users:
+    type: "object"
+    properties:
+      status:
+        example: 200
+      user_avatar:
+       example: "IMAGE-BASE-64-DATA /9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ"
+       
+  User-Users-Post:
+    type: "object"
+    properties:
+      username:
+        example: "fhgfhfhaghhi"
+      openemis_no:
+        example: "1588229739"
+      first_name:
+        example: "Brij kumar"
+      last_name:
+        example: "Singh"
+      gender_id:
+        example: 3
+      date_of_birth:
+        example: "April 01, 1985"
+      
+        
+  User-Users-Output:
+    type: "object"
+    properties:
+      username:
+        example: "fhgfhfhaghhi"
+      openemis_no:
+        example: "1588229739"
+      first_name:
+        example: "Brij kumar"
+      last_name:
+        example: "Singh"
+      gender_id:
+        example: 3
+      date_of_birth:
+        example: "April 01, 1985"
+      token:
+        example: "lYcQJ8fVagKU0PFDbaX1BxdCVAYmLIVLRWpsu9Vo"
+      action_type:
+        example: "third_party"
+      created_user_id:
+        example: 1
+      created:
+        example: "August 18, 2020 - 09:45:58"
+      id:
+        example: "13140"
+      name:
+        example: "Brij kumar Singh"
+      name_with_id:
+        example: "1588229739 - Brij kumar Singh"
+      default_identity_type:
+       example: ''
+      has_special_needs:
+       example: "false"
+       
+  Area-AreaAdministratives:
+    type: "object"
+    properties:
+      id:
+        example: 2
+      code:
+        example: "END"
+      name:
+        example: "Endor"
+      is_main_country:
+       example: 1
+      parent_id:
+       example: 1
+      lft:
+       example: 2
+      rght:
+       example: 449
+      area_administrative_level_id:
+       example: 1
+      order:
+       example: 1
+      visible:
+       example: 1
+      modified_user_id:
+       example: 2
+      modified:
+       example: "March 26, 2018 - 23:44:41"
+      created_user_id:
+       example: 1
+      created:
+        example: "January 01, 2015 - 00:00:00"
+      area_administrative_level:
+        example: "{...}"
+        
+  User-Genders:
+    type: "object"
+    properties:
+      id:
+        example: "1"
+      name:
+       example: "Male"
+      code:
+       example: "M"
+      order:
+        example: 1
+      created_user_id:
+        example: 1
+      created:
+        example: "April 13, 2017 - 00:00:00"
+        
+  Attendance-StudentAttendanceMarkTypes:
+    type: "object"
+    properties:
+      id:
+        example: 1
+      name:
+        example: "Period 1"
+        
+  Institution-StudentAttendances:
+    type: "object"
+    properties:
+      academic_period_id:
+        example: 27
+      institution_class_id:
+        example: 240
+      institution_id:
+        example: 2
+      student_id:
+        example: 8831
+      user:
+        example: "{...}"
+      institution_student_absences:
+        example: "{...}"
+        
+  Institution-AbsenceTypes:
+    type: "object"
+    properties:
+      data:
+        type: "array"
+        items:
+          example: "{ 'id': 0, 'name': 'Present', 'code': 'PRESENT'}, { 'id': 1, 'name': 'Absence - Excused', 'code': 'EXCUSED'}, { 'id': 2, 'name': 'Absence - Unexcused', 'code': 'UNEXCUSED'}, { 'id': 3, 'name': 'Late', 'code': 'LATE'}"
+          
+  Institution-StudentAbsenceReasons:
+    type: "object"
+    properties:
+      data:
+        type: "array"
+        items:
+          example: " { 'id': 1, 'name': 'Illness' }, { 'id': 3, 'name': 'Emergency' }, { 'id': 4, 'name': 'Weather' }, { 'id': 5, 'name': 'Family Matter' }, { 'id': 7, 'name': 'Personal Reasons' }, { 'id': 8, 'name': 'Transportation' }"
+          
+  Attendance-StudentAttendanceMarkedRecords:
+    type: "object"
+    properties:
+      institution_id:
+        example: 6
+      institution_class_id:
+        example: 496
+      education_grade_id:
+        example: 59
+      academic_period_id:
+       example: 29
+      date:
+        example: "2020-12-12"
+      period:
+        example: 1 
+      subject_id:
+        example: 0
+      action_type:
+        example: "third_party"
+        
+  Attendance-StudentAttendanceMarkedRecords-Output:
+    type: "object"
+    properties:
+      institution_id:
+        example: 6
+      institution_class_id:
+        example: 496
+      education_grade_id:
+        example: 59
+      academic_period_id:
+        example: 27
+      date:
+        example: "November 26, 2020"
+      period:
+        example: 1
+      subject_id:
+        example: "3831"
+      action_type:
+        example: "third_party"
+        
+  Institution-StudentAbsencesPeriodDetails:
+    type: "object"
+    properties:
+      student_id:
+        example: 11025
+      institution_id:
+        example: 6
+      academic_period_id:
+        example: 29
+      education_grade_id:
+        example: 59
+      institution_class_id:
+        example: 496
+      absence_type_id:
+        example: 1
+      student_absence_reason_id:
+        example: 1
+      comment:
+        example: "Student on Leave"
+      period:
+        example: 1
+      subject_id:
+        example: "3832"
+      date:
+        example: "2020-12-09"
+      action_type:
+        example: "third_party"
+        
+  Institution-StudentAbsencesPeriodDetails-Output:
+    type: "object"
+    properties:
+      student_id:
+        example: "8831"
+      institution_id:
+        example: 2
+      academic_period_id:
+        example: 27
+      education_grade_id:
+        example: 59
+      institution_class_id:
+        example: 240
+      absence_type_id:
+        example: 1
+      student_absence_reason_id:
+        example: 4
+      comment:
+        example: "KORD IT"
+      period:
+        example: 1
+      subject_id:
+        example: "3832"
+      date:
+        example: '2018-08-23'
+        
+  Education-EducationGrades:
+    type: "object"
+    properties:
+      id:
+        example: 59
+      code:
+        example: "Primary1"
+      name:
+        example: "Primary1"
+      admission_age:
+        example: 7
+      order:
+       example: 1
+      visible:
+       example: 1
+      education_stage_id:
+       example: 1
+      education_programme_id:
+       example: 9
+      modified_user_id:
+       example: null
+      modified:
+       example: "September302015-10:51:18"
+      created_user_id:
+       example: 1
+      created:
+       example: "September202014-22:36:24"
+      programme_name:
+        example: "Primary"
+      programme_grade_name:
+       example: "Primary Primary1"
+      programme_order:
+       example: "2-Primary1"
+      code_name:
+       example: "Primary1-Primary 1"
+       
+  Student-StudentStatuses:
+    type: "object"
+    properties:
+      id:
+        example: 1
+      code:
+        example: "CURRENT"
+      name:
+        example: "Enrolled"
+        
+  User-NationalityNames:
+    type: "object"
+    properties:
+      id:
+        example: 1
+      name:
+        example: "Maldivian"
+      order:
+        example: 7
+      visible:
+       example: 1
+      editable:
+        example: 1
+      identity_type_id:
+        example: null
+      default:
+        example: 0
+      international_code:
+        example: 
+      national_code:
+        example: 
+      modified_user_id:
+       example: null
+      modified:
+        example: null
+      created_user_id:
+       example: 2
+      created:
+        example: "April 19 2018 - 02:32:18"
+        
+  FieldOption-IdentityTypes:
+    type: "object"
+    properties:
+      id:
+        example: 160
+      name:
+       example: "Birth Certificate"
+      validation_pattern:
+       example: null
+      order:
+        example: 3
+      visible:
+       example: 1
+      editable:
+       example: 1
+      default:
+        example: 1
+      international_code:
+        example: 
+      national_code:
+        example: 
+      modified_user_id:
+        example: 2
+      modified:
+        example: "October 01 2015 - 03:51:16"
+      created_user_id:
+        example: 2
+      created:
+        example: "November 29 2013 - 11:21:13"
+        
+  Institution-AreaAdministrativesID:
+    type: "object"
+    properties:
+      id:
+        example: 1
+      code:
+        example: "World"
+      name:
+        example: "World"
+      is_main_country:
+        example: 0
+      parent_id:
+        example: null
+      lft:
+        example: 1
+      rght:
+        example: 450
+      area_administrative_level_id:
+        example: 6
+      order:
+        example: 1
+      visible:
+        example: 1
+      modified_user_id:
+        example: 0
+      modified:
+        example: "1990-01-01T00:00:00+01:00"
+      created_user_id:
+        example: 1
+      created:
+        example: "2015-01-01T00:00:00+01:00"
+        
+  Area-Areas:
+    type: "object"
+    properties:
+      id:
+        example: 1
+      code:
+       example: "END"
+      name:
+       example: "Endor"
+      parent_id:
+       example: null
+      lft:
+       example: 1
+      rght:
+       example: 136
+      area_level_id:
+        example: 1
+      order:
+       example: 1
+      visible:
+       example: 1
+      modified_user_id:
+        example: 2
+      modified:
+        example: "March 09 2020 - 09:11:56"
+      created_user_id:
+        example: 1
+      created:
+        example: "January 01 2015 - 00:00:00"
+      code_name:
+        example: "END - Endor"
+        
+  Institution-Genders:
+    type: "object"
+    properties:    
+      id:
+        example: 1
+      name:
+        example: "Mixed"
+      code:
+        example: "X"
+      order:
+        example: 1
+      created_user_id:
+        example: 1
+      created:
+        example: "April 13, 2017 - 00:00:00"
+        
+  Institution-Localities:
+    type: "object"
+    properties:
+      id:
+        example: 1
+      name:
+        example: "Urban"
+      order:
+        example: 1
+      visible:
+        example: 1
+      editable:
+        example: 1
+      default:
+        example: 0
+      international_code:
+        example: ""
+      national_code:
+        example: ""
+      modified_user_id:
+        example: 
+      modified:
+        example: 
+      created_user_id:
+        example: 2
+      created:
+        example: "April 26, 2016 - 08:51:01"
+        
+  Institution-Ownerships:
+    type: "object"
+    properties:      
+      id:
+        example: 1
+      name:
+        example: "Customary (Disputed)"
+      order:
+        example: 3
+      visible:
+        example: 1
+      editable:
+        example: 1
+      default:
+        example: 0
+      international_code:
+        example: ''
+      national_code:
+        example: ''
+      modified_user_id:
+        example: 
+      modified:
+        example: 
+      created_user_id:
+        example: 2
+      created:
+        example: "April 26, 2016 - 08:58:20"  
+        
+  Institution-Sectors:
+    type: "object"
+    properties:    
+      id:
+        example: 1
+      name:
+        example: "Public"
+      order:
+        example: 1
+      visible:
+        example: 1
+      editable:
+        example: 1
+      default:
+        example: 1
+      international_code:
+        example: ''
+      national_code:
+        example: ''
+      modified_user_id:
+        example: 2
+      modified:
+        example: "March 26, 2018 - 17:58:21"
+      created_user_id:
+        example: 2
+      created:
+        example: "April 26, 2016 - 09:04:40"
+        
+  Institution-Providers:
+    type: "object"
+    properties:      
+      id:
+        example: 1
+      name:
+        example: "Religious"
+      order:
+        example: 2
+      visible:
+       example: 1
+      editable:
+        example: 1
+      default:
+       example: 0
+      institution_sector_id:
+       example: 2
+      international_code:
+        example: ''
+      national_code:
+       example: ''
+      modified_user_id:
+        example: 2
+      modified:
+        example: "April 18, 2018 - 03:30:01"
+      created_user_id:
+        example: 2
+      created:
+        example: "April 26, 2016 - 09:03:39"
+        
+  Institution-Types:
+    type: "object"
+    properties:    
+      id:
+        example: 1
+      name:
+       example: "Pre-primary"
+      order:
+       example: 1
+      visible:
+       example: 1
+      editable:
+       example: 1
+      default:
+       example: 0
+      international_code:
+       example: ""
+      national_code:
+       example: ""
+      modified_user_id:
+       example: 
+      modified:
+       example: 
+      created_user_id:
+       example: 2
+      created:
+       example: "April 26, 2016 - 09:05:34"
+       
+  getProvider:
+    type: "object"
+    properties:
+      id:
+        example: 1
+      name:
+        example: "Religious"
+      order:
+        example: 2
+      visible:
+        example: 1
+      editable:
+        example: 1
+      default:
+        example: 0
+      institution_sector_id:
+        example: 2
+      international_code:
+        example: ''
+      national_code:
+        example: ''
+      modified_user_id:
+        example: 2
+      modified:
+        example: "April 18, 2018 - 03:30:01"
+      created_user_id:
+        example: 2
+      created:
+        example: "April 26, 2016 - 09:03:39"
+        
+  payslips:
+    type: "object"
+    properties:
+      name:
+        example: "test"
+      openemis_id:
+        example: "1522272092"
+      description:
+        example: "Testing (This is optional filed)"
+      file_name:
+        example: "acb.pdf"
+      staff_id:
+        example: 123
+      file_content:
+        example: "<base64 value of pdf>"
+      modified_user_id:
+        example: "2"
+        
+        
+  meals:
+    type: "object"
+    properties:
+      institution_id:
+        example: "6"
+      institution_class_id:
+        example: "526"
+      meal_programmes_id:
+        example: "1"
+      academic_period_id:
+        example: "20"
+      action_type:
+        example: "default"
+  
+  meal-benefit:
+    type: "object"
+    properties:
+      student_id:
+        example: "12012"
+      institution_id:
+        example: "6"
+      academic_period_id:
+        example: "29"
+      institution_class_id:
+        example: "526"
+      date:
+        example: "2020-01-20"
+      meal_programmes_id:
+        example: "1"
+      action_type:
+        example: "default"
+      meal_benefit_id:
+        example: "1"
+      meal_received_id:
+        example: "3"  
+      paid:
+        example: "10"  
+        
+  Institution-Students:
+    type: "object"
+    properties:
+      username:
+        example: "fhgfhfhaghhi"
+      openemis_no:
+        example: "1588229739"
+      first_name:
+        example: "Brij kumar"
+      last_name:
+        example: "Singh"
+      gender_id:
+       example: 3
+      date_of_birth:
+       example: "1985-04-01"
+      token:
+       example: "lYcQJ8fVagKU0PFDbaX1BxdCVAYmLIVLRWpsu9Vo"
+      student_id:
+       example: 13140
+      student_status_id:
+        example: 1
+      academic_period_id:
+        example: 27
+      education_grade_id:
+        example: 59
+      end_year:
+       example: "2020"
+      start_year:
+       example: "2020"
+      end_date:
+       example: "December 31, 2020"
+      institution_id:
+        example: 1
+      start_date:
+        example: "January 01, 2020"
+        
+  Institution-Students-Output:
+    type: "object"
+    properties:
+      username:
+        example: "fhgfhfhaghhi"
+      openemis_no:
+        example: '1588229739'
+      first_name:
+        example: "Brij kumar"
+      last_name:
+        example: "Singh"
+      gender_id:
+       example: '3'
+      date_of_birth:
+       example: '1985-04-01'
+      token:
+       example: "lYcQJ8fVagKU0PFDbaX1BxdCVAYmLIVLRWpsu9Vo"
+      student_id:
+       example: 13140
+      student_status_id:
+        example: 1
+      academic_period_id:
+        example: 27
+      education_grade_id:
+        example: 59
+      end_year:
+       example: 2020
+      start_year:
+       example: 2020
+      end_date:
+       example: "December 31, 2020"
+      institution_id:
+        example: 1
+      start_date:
+        example: "January 01, 2020"
+      action_type:
+        example: third_party
+      created_user_id:
+        example: 1
+      created:
+        example: "August 20, 2020 - 07:46:03"
+      preferred_language:
+       example: "en"
+      id:
+        example: "5732afe8-72a9-426f-8cf7-6807c3576ae3"
+      institution_student_status:
+        example: " - "
+      education_grade_student_status:
+        example: " - "
+        
+  Assessment-AssessmentItemResults:
+    type: "object"
+    properties:
+      academic_period_id:
+        example: 29
+      action_type:
+        example: "default"
+      assessment_grading_option_id:
+        example: null
+      assessment_id: 
+        example: 29
+      assessment_period_id:
+        example: 25
+      education_grade_id: 
+        example: 59
+      education_subject_id:
+        example: 97
+      institution_id:
+        example: 6
+      marks:
+        example: "69"
+      student_id: 
+        example: 11025
+      institution_classes_id: 
+        example: 550
+        
+  Institution-StudentBehaviours:
+    type: "object"
+    properties:
+      academic_period_id:
+        example: 29
+      action_type:
+        example: "third_party"
+      action:
+        example: "Take a regular sport class"
+      date_of_behaviour: 
+        example: "2020-12-09"
+      description:
+        example: "Good in playing cricket"
+      institution_id:
+        example: 6
+      student_behaviour_category_id:
+        example: 237
+      student_id:
+        example: 11011
+      time_of_behaviour:
+        example: "05:48:00"
+      title:
+        example: "Good in Sports"
+        
+  Institution-StudentBehaviours-Delete:
+    type: "object"
+    properties:
+      id:
+        example: 133
+      
+
+
+externalDocs:
+  description: "Find out more about OpenEMIS"
+  url: "https://www.openemis.org/"

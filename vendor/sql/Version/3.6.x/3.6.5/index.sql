@@ -1,0 +1,13 @@
+ALTER TABLE `user_identities` ADD INDEX(`number`);
+ALTER TABLE `security_users` ADD INDEX(`username`);
+ALTER TABLE `institution_staff` ADD INDEX(`start_date`);
+ALTER TABLE `institution_staff` ADD INDEX(`end_date`);
+ALTER TABLE `institution_subject_students` ADD INDEX(`institution_class_id`);
+ALTER TABLE `institution_subject_students` ADD INDEX(`student_id`);
+ALTER TABLE `institution_subject_students` ADD INDEX(`institution_id`);
+ALTER TABLE `institution_subject_students` ADD INDEX(`academic_period_id`);
+ALTER TABLE `institution_subject_students` ADD INDEX(`education_subject_id`);
+ALTER TABLE `institution_rooms` ADD INDEX(`previous_room_id`);
+ALTER TABLE `institution_rooms` ADD INDEX(`code`);
+ALTER TABLE `institution_positions` ADD INDEX(`position_no`);
+ALTER TABLE `institution_positions` ADD INDEX(`is_homeroom`);
