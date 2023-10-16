@@ -600,9 +600,9 @@ class InstitutionsController extends AppController
             $institutionId = $this->ControllerAction->getQueryString('institution_id');
             $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
             $myClassName = $this->getInstitutionClassName($classId);
-            $this->Navigation->addCrumb('Assessments', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Assessments', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
+            $this->Navigation->addCrumb('Assessments', ['plugin' => $this->getPlugin(), 'controller' => 'Institutions', 'action' => 'Assessments', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
             $this->Navigation->addCrumb('Assessment Archives',
-                ['plugin' => $this->plugin,
+                ['plugin' => $this->getPlugin(),
                     'controller' => 'Institutions',
                     'action' => 'AssessmentArchives',
                     'academic_period_id' => $academicPeriodId]);
@@ -685,7 +685,7 @@ class InstitutionsController extends AppController
 //         if (!empty($this->request->param('institutionId'))) {
 //             $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
 //         } else {
-//             $session = $this->request->session();
+//             $session = $this->request->getSession();
 //             $institutionId = $session->read('Institution.Institutions.id');
 //         }
 //
@@ -1054,8 +1054,8 @@ class InstitutionsController extends AppController
         $institutionId = $this->getInstitutionId();
 
         $backUrl = [
-            'plugin' => $this->plugin,
-            'controller' => $this->name,
+            'plugin' => $this->getPlugin(),
+            'controller' => $this->getName(),
             'action' => 'ScheduleTimetableOverview',
             'institutionId' => $institutionId,
             'view',
@@ -1442,7 +1442,7 @@ class InstitutionsController extends AppController
                 $AccessControl = $this->AccessControl;
                 $action = 'edit';
                 if (!$AccessControl->check(['Institutions', 'StudentCompetencies', $action], $roles)) {
-                    $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'StudentCompetencies'];
+                    $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'StudentCompetencies'];
                     return $this->redirect($url);
                 }
             }
@@ -1491,7 +1491,7 @@ class InstitutionsController extends AppController
                 $AccessControl = $this->AccessControl;
                 $action = 'edit';
                 if (!$AccessControl->check(['Institutions', 'StudentCompetencyComments', $action], $roles)) {
-                    $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'StudentCompetencies'];
+                    $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'StudentCompetencies'];
                     return $this->redirect($url);
                 }
             }
@@ -1540,7 +1540,7 @@ class InstitutionsController extends AppController
                 $AccessControl = $this->AccessControl;
                 $action = 'edit';
                 if (!$AccessControl->check(['Institutions', 'StudentOutcomes', $action], $roles)) {
-                    $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'StudentOutcomes'];
+                    $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'StudentOutcomes'];
                     return $this->redirect($url);
                 }
             }
@@ -1596,11 +1596,11 @@ class InstitutionsController extends AppController
                             ->all();
 
                         if ($classResults->isEmpty()) {
-                            $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'Classes'];
+                            $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'Classes'];
                             return $this->redirect($url);
                         }
                     } else {
-                        $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'Classes'];
+                        $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'Classes'];
                         return $this->redirect($url);
                     }
                 }
@@ -1637,7 +1637,7 @@ class InstitutionsController extends AppController
     public function Subjects($subaction = 'index', $institutionSubjectId = null)
     {
         if ($subaction == 'edit') {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $roles = [];
             $institutionSubjectId = $this->ControllerAction->paramsDecode($institutionSubjectId);
             $institutionId = !empty($this->request->getParam('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
@@ -1651,11 +1651,11 @@ class InstitutionsController extends AppController
                         $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
                         $subjectRecord = $InstitutionSubjects->get($institutionSubjectId, ['contain' => ['Teachers']])->toArray();
                         if (in_array($userId, array_column($subjectRecord['teachers']), 'id')) {
-                            $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
+                            $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
                             return $this->redirect($url);
                         }
                     } else {
-                        $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
+                        $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
                         return $this->redirect($url);
                     }
                 }
@@ -1689,7 +1689,7 @@ class InstitutionsController extends AppController
     public function Students($pass = 'index')
     {
         if ($pass == 'add') {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $roles = [];
 
             if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')) {
@@ -1744,7 +1744,7 @@ class InstitutionsController extends AppController
     public function Associations($subaction = 'index', $associationId = null)
     {
         if ($subaction == 'add') {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $roles = [];
             $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
             $viewUrl = $this->ControllerAction->url('view');
@@ -1788,7 +1788,7 @@ class InstitutionsController extends AppController
 
             $this->render('institution_associations');
         } else if ($subaction == 'edit') {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $roles = [];
             $associationId = $this->ControllerAction->paramsDecode($associationId);
             $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
@@ -2072,7 +2072,7 @@ class InstitutionsController extends AppController
             $name = $entity->name;
             $crumb = Inflector::humanize(Inflector::underscore($modelAlias));
             $header = $name . ' - ' . __($crumb);
-            $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+            $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
             $this->Navigation->addCrumb('Staff', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff']);
             $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $userType, 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
             $this->Navigation->addCrumb($crumb);
@@ -2087,7 +2087,7 @@ class InstitutionsController extends AppController
 
             if (!array_key_exists($id, $institutionIds)) {
                 $this->Alert->error('security.noAccess');
-                $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'index'];
+                $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'index'];
                 $event->stopPropagation();
 
                 return $this->redirect($url);
@@ -2465,8 +2465,8 @@ class InstitutionsController extends AppController
                     $studentId = $session->read('Student.Students.id');
 
                     // Breadcrumb
-                    $this->Navigation->addCrumb('Students', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Students', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
-                    $this->Navigation->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
+                    $this->Navigation->addCrumb('Students', ['plugin' => $this->getPlugin(), 'controller' => 'Institutions', 'action' => 'Students', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
+                    $this->Navigation->addCrumb($studentName, ['plugin' => $this->getPlugin(), 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
                     $this->Navigation->addCrumb($studentModels[$alias]);
 
                     // header name
@@ -3518,7 +3518,7 @@ class InstitutionsController extends AppController
         $Institutions = TableRegistry::get('Institution.Institutions');
         if ($this->request->is(['ajax'])) {
             $term = trim($this->request->query['term']);
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $institutionId = $session->read('Institution.Institutions.id');
             $params['conditions'] = [$Institutions->aliasField('id') . ' IS NOT ' => $institutionId];
             if (!empty($term)) {
@@ -3550,7 +3550,7 @@ class InstitutionsController extends AppController
                 break;
         }
 
-        $url = ['plugin' => $this->plugin, 'controller' => $this->name];
+        $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName()];
         $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
 
         $tabElements = [
@@ -3566,8 +3566,8 @@ class InstitutionsController extends AppController
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' => [
                 'url' => [
-                    'plugin' => $this->plugin,
-                    'controller' => $this->name,
+                    'plugin' => $this->getPlugin(),
+                    'controller' => $this->getName(),
                     'action' => 'Nationalities',
                     $id
                 ],
@@ -3699,7 +3699,7 @@ class InstitutionsController extends AppController
     public function getCareerTabElements($options = [])
     {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
             $options['institution_id'] = $institutionId;
@@ -8265,7 +8265,7 @@ class InstitutionsController extends AppController
     public
     function Addguardian()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         $studentId = $session->read('Student.Students.id');
         $studentName = $session->read('Student.Students.name');
@@ -8553,7 +8553,7 @@ class InstitutionsController extends AppController
             $institutionId = $this->getInstitutionId();
 
             $this->Navigation->addCrumb('Staff Attendance',
-                ['plugin' => $this->plugin,
+                ['plugin' => $this->getPlugin(),
                     'controller' => 'Institutions',
                     'action' => 'InstitutionStaffAttendances',
                     'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);

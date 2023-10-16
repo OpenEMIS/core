@@ -51,15 +51,15 @@ class HistoricalBehavior extends Behavior
         $action = $this->_table->action;
 
         // To only show the historical edit/remove button if the current plugin is the allowedController
-        if (!in_array($controller, $this->config('allowedController')) && $this->_table->registryAlias() == $this->config('model')) {
+        if (!in_array($controller, $this->getConfig('allowedController')) && $this->_table->getRegistryAlias() == $this->getConfig('model')) {
             $this->_table->toggle('edit', false);
             $this->_table->toggle('remove', false);
         }
 
-        if (in_array($controller, $this->config('allowedController')) && in_array($action, $this->config('pages'))) {
+        if (in_array($controller, $this->getConfig('allowedController')) && in_array($action, $this->getConfig('pages'))) {
             $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
-            $historicalUrl = $this->config('historicalUrl');
+            $historicalUrl = $this->getConfig('historicalUrl');
             $historicalUrl[] = 'add';
 
             $toolbarButtonsArray['HistoricalAdd']['attr'] = [
@@ -115,7 +115,7 @@ class HistoricalBehavior extends Behavior
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $controller = $this->_table->controller->name;
-        if ($this->checkHasAccess('remove') && in_array($controller, $this->config('allowedController'))) {
+        if ($this->checkHasAccess('remove') && in_array($controller, $this->getConfig('allowedController'))) {
             $model = $this->_table;
             $removeUrl = $this->config('historicalUrl');
             $removeUrl[] = 'remove';
@@ -128,7 +128,7 @@ class HistoricalBehavior extends Behavior
         try {
             $model = $this->_table;
             $mainQuery = $model->find();
-            $HistoricalModelTable = TableRegistry::get($this->config('model'));
+            $HistoricalModelTable = TableRegistry::get($this->getConfig('model'));
             $historicalQuery = $HistoricalModelTable->find();
 
             $selectList = new ArrayObject([]);
@@ -158,11 +158,11 @@ class HistoricalBehavior extends Behavior
 
             $query
                 ->select($selectedFields, true)
-                ->from([$model->alias() => $mainQuery])
+                ->from([$model->getAlias() => $mainQuery])
                 ->where(['1 = 1'], [], true);
 
             $request = $this->_table->request;
-            if (is_null($request->query('sort')) && !empty($defaultOrder)) {
+            if (is_null($request->getQuery('sort')) && !empty($defaultOrder)) {
                 // default display sort
                 $order = $defaultOrder->getArrayCopy();
                 $query->order($order);

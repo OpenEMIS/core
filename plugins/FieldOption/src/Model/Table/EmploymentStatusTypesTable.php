@@ -7,9 +7,9 @@ use App\Model\Table\ControllerActionTable;
 
 class EmploymentStatusTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('employment_status_types');
+        $this->setTable('employment_status_types');
         parent::initialize($config);
         $this->hasMany('EmploymentStatuses', ['className' => 'Staff.EmploymentStatuses', 'foreignKey' => 'status_type_id']);
         $this->addBehavior('FieldOption.FieldOption');

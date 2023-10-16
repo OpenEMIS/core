@@ -13,9 +13,9 @@ use App\Model\Table\ControllerActionTable;
 //POCOR-6673
 class StaffCurricularsTable extends ControllerActionTable {
 
-	public function initialize(array $config) 
+	public function initialize(array $config): void 
 	{
-		$this->table('institution_curricular_staff');
+		$this->setTable('institution_curricular_staff');
 		$this->belongsTo('InstitutionCurriculars', ['className' => 'Institution.InstitutionCurriculars']);
 		parent::initialize($config);
 		$this->toggle('view', true);
@@ -25,7 +25,7 @@ class StaffCurricularsTable extends ControllerActionTable {
         $this->toggle('search', true);
 	}
 
-	public function implementedEvents()
+	public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
@@ -50,7 +50,7 @@ class StaffCurricularsTable extends ControllerActionTable {
         $options['type'] = 'staff';
         $tabElements = $this->controller->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
     
 
@@ -64,8 +64,8 @@ class StaffCurricularsTable extends ControllerActionTable {
         }
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $InstitutionCurriculars = TableRegistry::get('institution_curriculars');
-        $curricular_types = TableRegistry::get('curricular_types');
+        $InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
+        $curricular_types = TableRegistry::get('FieldOption.CurricularTypes');
         $academicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         if($this->controller->name == 'Profiles'){
             $query
@@ -77,13 +77,13 @@ class StaffCurricularsTable extends ControllerActionTable {
                             'total_male_students'=>$InstitutionCurriculars->aliasField('total_male_students'),
                             'total_female_students'=>$InstitutionCurriculars->aliasField('total_female_students'),
                     ])
-                ->LeftJoin([$InstitutionCurriculars->alias() => $InstitutionCurriculars->table()],
+                ->LeftJoin([$InstitutionCurriculars->getAlias() => $InstitutionCurriculars->getTable()],
                         [$InstitutionCurriculars->aliasField('id').' = ' . $this->aliasField('institution_curricular_id')
                     ])
-                ->LeftJoin([$academicPeriods->alias() => $academicPeriods->table()],
+                ->LeftJoin([$academicPeriods->getAlias() => $academicPeriods->getTable()],
                         [$academicPeriods->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('academic_period_id')
                         ])
-                ->LeftJoin([$curricular_types->alias() => $curricular_types->table()],
+                ->LeftJoin([$curricular_types->getAlias() => $curricular_types->getTable()],
                         [$curricular_types->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('curricular_type_id')
                 ])->where([$this->aliasField('staff_id')=>$staffId]);
         }else{
@@ -97,13 +97,13 @@ class StaffCurricularsTable extends ControllerActionTable {
                             'total_male_students' => $InstitutionCurriculars->aliasField('total_male_students'),
                             'total_female_students' => $InstitutionCurriculars->aliasField('total_female_students'),
                     ])
-                ->LeftJoin([$InstitutionCurriculars->alias() => $InstitutionCurriculars->table()],
+                ->LeftJoin([$InstitutionCurriculars->getAlias() => $InstitutionCurriculars->getTable()],
                         [$InstitutionCurriculars->aliasField('id').' = ' . $this->aliasField('institution_curricular_id')
                     ])
-                ->LeftJoin([$academicPeriods->alias() => $academicPeriods->table()],
+                ->LeftJoin([$academicPeriods->getAlias() => $academicPeriods->getTable()],
                         [$academicPeriods->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('academic_period_id')
                         ])
-                ->LeftJoin([$curricular_types->alias() => $curricular_types->table()],
+                ->LeftJoin([$curricular_types->getAlias() => $curricular_types->getTable()],
                         [$curricular_types->aliasField('id').' = ' . $InstitutionCurriculars->aliasField('curricular_type_id')
                 ])->where([$this->aliasField('staff_id')=>$staffId,
                 $InstitutionCurriculars->aliasField('institution_id')=>$institutionId]);

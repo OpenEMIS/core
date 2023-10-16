@@ -440,35 +440,35 @@ class DataManagementConnectionsTable extends ControllerActionTable
      * @throws \Exception
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public static function hasArchiveRecords(string $table_name, array $where = [])
-    {
-        $is_archive_exists = false;
-        $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
-        $targetTableName = $targetTableNameAndConnection[0];
-        $targetTableConnection = $targetTableNameAndConnection[1];
-        $archiveConnection = ConnectionManager::get($targetTableConnection);
-        if($targetTableName == 'assessment_item_results_archived'){
-            $targetTableName = 'AssessmentItemResultsArchived';
-        }        
-        /*echo "<pre>"; print_r($targetTableName);
-        echo "<pre>"; print_r($archiveConnection);
-die;*/
-        $tableArchived = TableRegistry::getTableLocator()->get('Institution.'.$targetTableName, [
-            'connection' => $archiveConnection,
-        ]);
-        $count = $tableArchived->find('all')
-//            ->select('*')// POCOR-7339-HINDOL
-            ->where($where)->first();
-//        Log::write('debug', 'hasArchiveRecords');
-//        Log::write('debug', $count);
-        if ($count) {
-            $is_archive_exists = true;
-        }
-        if (!$count) {
-            $is_archive_exists = false;
-        }
-        return $is_archive_exists;
-    }
+//     public static function hasArchiveRecords(string $table_name, array $where = [])
+//     {
+//         $is_archive_exists = false;
+//         $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
+//         $targetTableName = $targetTableNameAndConnection[0];
+//         $targetTableConnection = $targetTableNameAndConnection[1];
+//         $archiveConnection = ConnectionManager::get($targetTableConnection);
+//         if($targetTableName == 'assessment_item_results_archived'){
+//             $targetTableName = 'AssessmentItemResultsArchived';
+//         }        
+//         /*echo "<pre>"; print_r($targetTableName);
+//         echo "<pre>"; print_r($archiveConnection);
+// die;*/
+//         $tableArchived = TableRegistry::getTableLocator()->get('Institution.'.$targetTableName, [
+//             'connection' => $archiveConnection,
+//         ]);
+//         $count = $tableArchived->find('all')
+// //            ->select('*')// POCOR-7339-HINDOL
+//             ->where($where)->first();
+// //        Log::write('debug', 'hasArchiveRecords');
+// //        Log::write('debug', $count);
+//         if ($count) {
+//             $is_archive_exists = true;
+//         }
+//         if (!$count) {
+//             $is_archive_exists = false;
+//         }
+//         return $is_archive_exists;
+//     }
 
     /**
      * common function to get archive table name and connection

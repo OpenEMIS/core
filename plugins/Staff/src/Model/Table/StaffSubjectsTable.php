@@ -14,8 +14,8 @@ use App\Model\Table\ControllerActionTable;
 class StaffSubjectsTable extends ControllerActionTable {
     use MessagesTrait;
 
-    public function initialize(array $config) {
-        $this->table('institution_subject_staff');
+    public function initialize(array $config): void {
+        $this->setTable('institution_subject_staff');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -35,7 +35,7 @@ class StaffSubjectsTable extends ControllerActionTable {
         $this->toggle('remove', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
@@ -63,7 +63,7 @@ class StaffSubjectsTable extends ControllerActionTable {
         ]);
 
         // Start POCOR-5188
-		if($this->request->params['controller'] == 'Staff'){
+		if($this->request->getParam('controller') == 'Staff'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Subjects','Staff - Career');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -81,7 +81,7 @@ class StaffSubjectsTable extends ControllerActionTable {
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Subjects','Staff - Career');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -108,7 +108,7 @@ class StaffSubjectsTable extends ControllerActionTable {
         $data = $query->toArray() ;
         $institutionId = $data[0]['institution_id'];
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $academicPeriodId = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriods->getCurrent();
+        $academicPeriodId = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $AcademicPeriods->getCurrent();
         $query->contain([
             'InstitutionSubjects'
         ]);
@@ -131,8 +131,8 @@ class StaffSubjectsTable extends ControllerActionTable {
         $academicPeriodOptions = $AcademicPeriods->getYearList();
         $academicPeriodOptions += ['0'=>'All Acedemic Period'];
         //end:POCOR-5274
-        if(!empty($this->request->query('academic_period_id'))){
-            $academicPeriodId = $this->request->query('academic_period_id');                     
+        if(!empty($this->request->getQuery('academic_period_id'))){
+            $academicPeriodId = $this->request->getQuery('academic_period_id');                     
         }    
         //start:POCOR-5274
         if($academicPeriodId == 0){
@@ -158,13 +158,13 @@ class StaffSubjectsTable extends ControllerActionTable {
         return $query
             ->select([$Classes->aliasField('name')])
             ->leftJoin(
-                [$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()],
+                [$InstitutionClassSubjects->getAlias() => $InstitutionClassSubjects->getTable()],
                 [
                     $InstitutionClassSubjects->aliasField('institution_subject_id = ') . $this->aliasField('institution_subject_id')
                 ]
             )
             ->leftJoin(
-                [$Classes->alias() => $Classes->table()],
+                [$Classes->getAlias() => $Classes->getTable()],
                 [
                     $Classes->aliasField('id = ') . $InstitutionClassSubjects->aliasField('institution_class_id')
                 ]

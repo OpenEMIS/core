@@ -14,8 +14,8 @@ use Cake\Database\Schema\Table;
 
 class StaffTrainingResultsTable extends ControllerActionTable
 {
-	public function initialize(array $config) {
-		$this->table('training_session_trainee_results');
+	public function initialize(array $config): void {
+		$this->setTable('training_session_trainee_results');
 		parent::initialize($config);
 		$this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
 		$this->belongsTo('Trainees', ['className' => 'User.Users', 'foreignKey' => 'trainee_id']);
@@ -53,7 +53,7 @@ class StaffTrainingResultsTable extends ControllerActionTable
 
 	public function onGetStartDate(Event $event, Entity $entity)
 	{
-		$training_sessions = TableRegistry::get('training_sessions');
+		$training_sessions = TableRegistry::get('Training.TrainingSessions');
 		$attendanceType = $training_sessions
                               ->find()
                               ->where([$training_sessions->aliasField('id') => $entity->training_session_id])
@@ -68,7 +68,7 @@ class StaffTrainingResultsTable extends ControllerActionTable
 
 	public function onGetEndDate(Event $event, Entity $entity)
 	{
-		$training_sessions = TableRegistry::get('training_sessions');
+		$training_sessions = TableRegistry::get('Training.TrainingSessions');
 		$attendanceType = $training_sessions
                               ->find()
                               ->where([$training_sessions->aliasField('id') => $entity->training_session_id])
@@ -82,7 +82,7 @@ class StaffTrainingResultsTable extends ControllerActionTable
 
 	public function onGetCreditHours(Event $event, Entity $entity)
 	{
-		$training_courses = TableRegistry::get('training_courses');
+		$training_courses = TableRegistry::get('Training.TrainingCourses');
 		$attendanceType = $training_courses
                               ->find()
                               ->where([$training_courses->aliasField('id') => $entity['session']['training_course_id']])
@@ -120,7 +120,7 @@ class StaffTrainingResultsTable extends ControllerActionTable
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-		$session = $this->request->session();
+		$session = $this->request->getSession();
 		$sessionKey = 'Staff.Staff.id';
 		if ($session->check($sessionKey)) {
 			$userId = $session->read($sessionKey);
@@ -186,7 +186,7 @@ class StaffTrainingResultsTable extends ControllerActionTable
 	{
 		$tabElements = $this->controller->getTrainingTabElements();
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
 	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)

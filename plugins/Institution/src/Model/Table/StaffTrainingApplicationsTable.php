@@ -17,9 +17,9 @@ use Cake\Datasource\ConnectionManager; // POCOR-7578
 
 class StaffTrainingApplicationsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_training_applications');
+        $this->setTable('staff_training_applications');
         parent::initialize($config);
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -57,7 +57,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $extra['institutionId'] = $session->read('Institution.Institutions.id');
         */
 
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if (isset($this->request->url) && $this->request->url == 'Profiles/Profiles/StaffTrainingApplications/index') {
             $session->write('Staff.Staff.id', $this->Auth->user('id'));
             $session->write('Institution.Institutions.id', $this->getInstitutionIdOfLoggedStaff());
@@ -486,7 +486,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     {
         $tabElements = $this->controller->getTrainingTabElements();
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {

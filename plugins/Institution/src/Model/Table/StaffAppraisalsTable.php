@@ -118,10 +118,10 @@ class StaffAppraisalsTable extends ControllerActionTable
         }
 
         if ($this->action != 'download') {
-            if (!is_null($this->request->query('user_id'))) {
-                $userId = $this->request->query('user_id');
+            if (!is_null($this->request->getQuery('user_id'))) {
+                $userId = $this->request->getQuery('user_id');
             } else {
-                $session = $this->request->session();
+                $session = $this->request->getSession();
                 if ($session->check('Staff.Staff.id')) {
                     $userId = $session->read('Staff.Staff.id');
                 }
@@ -301,7 +301,7 @@ class StaffAppraisalsTable extends ControllerActionTable
     private function setupTabElements()
     {
         $options['type'] = 'staff';
-        $userId = $this->request->query('user_id');
+        $userId = $this->request->getQuery('user_id');
         if (!is_null($userId)) {
             $options['user_id'] = $userId;
         }

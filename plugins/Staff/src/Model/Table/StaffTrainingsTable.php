@@ -13,7 +13,7 @@ use App\Model\Table\ControllerActionTable;
 
 class StaffTrainingsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -36,7 +36,7 @@ class StaffTrainingsTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -67,7 +67,7 @@ class StaffTrainingsTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
 
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){ 
+        if($this->request->getParam('controller') == 'Staff'){ 
             $is_manual_exist = $this->getManualUrl('Institutions','Courses','Staff - Training');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -85,7 +85,7 @@ class StaffTrainingsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getParam('controller') == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Courses','Staff - Training');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [

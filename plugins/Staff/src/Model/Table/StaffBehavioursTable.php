@@ -12,7 +12,7 @@ use App\Model\Table\ControllerActionTable;
 
 class StaffBehavioursTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -48,7 +48,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->controller->set('selectedAction', 'Behaviours');
 
         // Start POCOR-5188
-		if($this->request->params['controller'] == 'Staff'){
+		if($this->request->getParam('controller') == 'Staff'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Behaviour','Staff - Career');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -66,7 +66,7 @@ class StaffBehavioursTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Behaviours','Staff - Career');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [

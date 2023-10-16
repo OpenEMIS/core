@@ -106,7 +106,7 @@ class UserLanguagesTable extends ControllerActionTable
     /*POCOR-6267 Starts*/
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $queryString = $this->getQueryString();
         if (!empty($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
@@ -114,9 +114,10 @@ class UserLanguagesTable extends ControllerActionTable
             $userId = $session->read('Student.Students.id');
         }
 
-        $query->where([$this->aliasField('security_user_id') => $userId]);
+        // $query->where([$this->aliasField('security_user_id') => $userId]); // POCOR-7485
+
         // Start POCOR-5188
-        if ($this->request->params['controller'] == 'Staff') {
+        if ($this->request->getParam('controller') == 'Staff') {
             $is_manual_exist = $this->getManualUrl('Institutions', 'Languages', 'Staff - General');
             if (!empty($is_manual_exist)) {
                 $btnAttr = [
@@ -134,7 +135,7 @@ class UserLanguagesTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        } elseif ($this->request->params['controller'] == 'Students') {
+        } elseif ($this->request->getParam('controller') == 'Students') {
             $is_manual_exist = $this->getManualUrl('Institutions', 'Languages', 'Students - General');
             if (!empty($is_manual_exist)) {
                 $btnAttr = [
@@ -153,7 +154,7 @@ class UserLanguagesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        } elseif ($this->request->params['controller'] == 'Directories') {
+        } elseif ($this->request->getParam('controller') == 'Directories') {
             $is_manual_exist = $this->getManualUrl('Directory', 'Languages', 'General');
             if (!empty($is_manual_exist)) {
                 $btnAttr = [
@@ -172,7 +173,7 @@ class UserLanguagesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        } elseif ($this->request->params['controller'] == 'Profiles') {
+        } elseif ($this->request->getParam('controller') == 'Profiles') {
             $is_manual_exist = $this->getManualUrl('Personal', 'Languages', 'General');
             if (!empty($is_manual_exist)) {
                 $btnAttr = [

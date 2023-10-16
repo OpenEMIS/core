@@ -8,14 +8,14 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class EmploymentStatusesTable extends ControllerActionTable {
-	public function initialize(array $config) {
-		$this->table('staff_employment_statuses');
+	public function initialize(array $config): void {
+		$this->setTable('staff_employment_statuses');
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 	    $this->belongsTo('EmploymentStatusTypes', ['className' => 'FieldOption.EmploymentStatusTypes', 'foreignKey' => 'status_type_id']);
 
-		$this->behaviors()->get('ControllerAction')->config('actions.search', false);
+		$this->behaviors()->get('ControllerAction')->getConfig('actions.search', false);
 		$this->addBehavior('ControllerAction.FileUpload', [
 			// 'name' => 'file_name',
 			// 'content' => 'file_content',
@@ -26,7 +26,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
 		]);
 	}
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -49,7 +49,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
 
         $this->setupTabElements();
 
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $controllerName = $this->controller->name;     
         if ($controllerName == 'Profiles')
         {
@@ -64,7 +64,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
         $this->controller->Navigation->substituteCrumb($this->getHeader($alias), __('Statuses'));
 
         // Start POCOR-5188
-		if($this->request->params['controller'] == 'Staff'){
+		if($this->request->getParam('controller') == 'Staff'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Employment Status','Staff - Career');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -82,7 +82,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Employment Status','Staff - Career');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -110,7 +110,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
 		$options['type'] = 'staff';
 		$tabElements = $this->controller->getCareerTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
     public function getModelAlertData($threshold)

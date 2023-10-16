@@ -22,9 +22,9 @@ class StaffAttachmentTypesTable extends ControllerActionTable
     //     $this->addBehavior('FieldOption.FieldOption');
     // }
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_attachment_types');
+        $this->setTable('staff_attachment_types');
         parent::initialize($config);
 
         // $this->hasMany('StudentBehaviours', ['className' => 'Student.StudentBehaviours', 'foreignKey' => 'student_behaviour_category_id']);

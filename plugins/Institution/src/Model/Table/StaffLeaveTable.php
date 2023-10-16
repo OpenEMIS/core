@@ -290,7 +290,7 @@ class StaffLeaveTable extends ControllerActionTable
                 $where //POCOR-5364
             ]);
 
-        $HistoricalTable = $historicalQuery->repository();
+        $HistoricalTable = $historicalQuery->getRepository();
         $historicalQuery
             ->select([
                 'id' => $HistoricalTable->aliasField('id'),
@@ -430,7 +430,8 @@ class StaffLeaveTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldFileName(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldFileName(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFileName(Event $event, array $attr, $action)
     {
         if ($action == 'view') {
             $attr['type'] = 'hidden';
@@ -441,7 +442,8 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffId(Event $event, array $attr, $action)
     {
         if ($action == 'add') {
             $userId = $this->getStaffId();
@@ -480,7 +482,8 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldFullDay(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldFullDay(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFullDay(Event $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
             // $attr['type'] = 'select';
@@ -491,7 +494,8 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStartTime(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldStartTime(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStartTime(Event $event, array $attr, $action)
     {
         if ($action == 'add') {
             if (isset($request->data[$this->alias()]['full_day'])) {
@@ -510,7 +514,8 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEndTime(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldEndTime(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEndTime(Event $event, array $attr, $action)
     {
         if ($action == 'add') {
             if (isset($request->data[$this->alias()]['full_day'])) {
@@ -539,16 +544,16 @@ class StaffLeaveTable extends ControllerActionTable
 
         $tabElements = $this->controller->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function getStaffId()
     {
         $userId = null;
-        if (!is_null($this->request->query('user_id'))) {
-            $userId = $this->request->query('user_id');
+        if (!is_null($this->request->getQuery('user_id'))) {
+            $userId = $this->request->getQuery('user_id');
         } else {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             if ($session->check('Staff.Staff.id')) {
                 $userId = $session->read('Staff.Staff.id');
             }
@@ -954,7 +959,7 @@ class StaffLeaveTable extends ControllerActionTable
 
         $toolbarButtons = $extra['toolbarButtons'];
         $this->addManualButton($toolbarButtons);
-        $this->addArchiveButton($toolbarButtons);
+        // $this->addArchiveButton($toolbarButtons);
     }
 
     /**
@@ -989,25 +994,25 @@ class StaffLeaveTable extends ControllerActionTable
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      * @param $toolbarButtons
      */
-    private function addArchiveButton($toolbarButtons)
-    {
+    // private function addArchiveButton($toolbarButtons)
+    // {
 
-        $is_archive_exists = $this->isArchiveExists();
-        if ($is_archive_exists) {
-            $customButtonName = 'archive';
-            $customButtonUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'ArchivedStaffLeave',
-                0=>'index',
-                'user_id' => $this->staffId,
+    //     $is_archive_exists = $this->isArchiveExists();
+    //     if ($is_archive_exists) {
+    //         $customButtonName = 'archive';
+    //         $customButtonUrl = [
+    //             'plugin' => 'Institution',
+    //             'controller' => 'Institutions',
+    //             'action' => 'ArchivedStaffLeave',
+    //             0=>'index',
+    //             'user_id' => $this->staffId,
 
-            ];
-            $customButtonLabel = '<i class="fa fa-folder"></i>';
-            $customButtonTitle = __('Archive');
-            $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl);
-        }
-    }
+    //         ];
+    //         $customButtonLabel = '<i class="fa fa-folder"></i>';
+    //         $customButtonTitle = __('Archive');
+    //         $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl);
+    //     }
+    // }
 
     /**
      * common proc to check if there is an archive
@@ -1071,15 +1076,15 @@ class StaffLeaveTable extends ControllerActionTable
     {
 
         $institutionId = $staffId = null;
-        $session = $this->controller->request->session();
+        $session = $this->controller->getRequest()->getSession();
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
         }
-        if (!is_null($this->request->query('user_id'))) {
-            $staffId = $this->request->query('user_id');
+        if (!is_null($this->request->getQuery('user_id'))) {
+            $staffId = $this->request->getQuery('user_id');
         }
-        if (!$staffId & !is_null($this->request->query('staff_id'))) {
-            $staffId = $this->request->query('staff_id');
+        if (!$staffId & !is_null($this->request->getQuery('staff_id'))) {
+            $staffId = $this->request->getQuery('staff_id');
         }
         if (!$staffId) {
             $staffId = $session->read('Staff.Staff.id');

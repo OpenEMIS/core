@@ -24,8 +24,8 @@ class AttachmentsTable extends ControllerActionTable
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         //START:POCOR-5067
-        $this->belongsTo('StaffAttachmentTypes', ['className' => 'StaffAttachmentTypes', 'foreignKey' => 'staff_attachment_type_id']);
-        $this->belongsTo('StudentAttachmentTypes', ['className' => 'StudentAttachmentTypes', 'foreignKey' => 'student_attachment_type_id']);
+        $this->belongsTo('StaffAttachmentTypes', ['className' => 'Staff.StaffAttachmentTypes', 'foreignKey' => 'staff_attachment_type_id']);
+        $this->belongsTo('StudentAttachmentTypes', ['className' => 'Student.StudentAttachmentTypes', 'foreignKey' => 'student_attachment_type_id']);
         //END:POCOR-5067
         $this->belongsToMany('SecurityRoles', [
             'className' => 'Security.SecurityRoles',
@@ -97,7 +97,7 @@ class AttachmentsTable extends ControllerActionTable
         $UserTable = TableRegistry::getTableLocator()->get('User.Users');
         $queryString = $this->ControllerAction->getQueryString();
         // echo "<pre>";print_r($queryString);die;
-        $user = $UserTable->find()->where(['id'=>$queryString['security_user_id']])->first();
+        // $user = $UserTable->find()->where(['id'=>$queryString['security_user_id']])->first(); // POCOR-7485
         if($user->is_staff == 1){
             $this->field('staff_attachment_type_id',  ['attr' => ['label' => __('Type')],'visible' => true]);
             $this->field('student_attachment_type_id', ['visible' => false]);
@@ -113,7 +113,7 @@ class AttachmentsTable extends ControllerActionTable
         }
 
         // Start POCOR-5188
-		if($this->request->params['controller'] == 'Students'){
+		if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Attachments','Students - General');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -130,7 +130,7 @@ class AttachmentsTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}else if($this->request->params['controller'] == 'Staff'){
+		}else if($this->request->getParam('controller') == 'Staff'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Attachments','Staff - General');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -147,7 +147,7 @@ class AttachmentsTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Attachments','General');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -166,7 +166,7 @@ class AttachmentsTable extends ControllerActionTable
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
 
-		}elseif($this->request->params['controller'] == 'Profiles'){ 
+		}elseif($this->request->getParam('controller') == 'Profiles'){ 
             $is_manual_exist = $this->getManualUrl('Personal','Attachments','General');       
             if(!empty($is_manual_exist)){ 
                 $btnAttr = [
@@ -340,7 +340,7 @@ class AttachmentsTable extends ControllerActionTable
 
         if($user->is_staff == 1){
 
-            $staffAttachmentTypesTable = TableRegistry::get('staff_attachment_types');
+            $staffAttachmentTypesTable = TableRegistry::getTableLocator()->get('Staff.StaffAttachmentTypes');
             $staffAttachmentTypeOptions = $staffAttachmentTypesTable->find('list',['keyField'=>'id','valueField'=>'name'])->toArray();
             $this->fields['staff_attachment_type_id']['type'] = 'select';
             $this->fields['staff_attachment_type_id']['default'] = '1';

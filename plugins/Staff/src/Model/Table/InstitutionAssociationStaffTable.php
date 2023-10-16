@@ -14,9 +14,9 @@ use App\Model\Table\ControllerActionTable;
 class InstitutionAssociationStaffTable extends ControllerActionTable
 {
     private $InstitutionAssociationStudent;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_associations');
+        $this->setTable('institution_associations');
         parent::initialize($config);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -28,7 +28,7 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
              
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
@@ -99,8 +99,8 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
                 $this->aliasField('id IN') => $Ids,
             ];
         } 
-        $query
-        ->orWhere($where);
+        // $query
+        // ->orWhere($where); // POCOR-7485
     }
   
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
@@ -128,10 +128,10 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
      public function getUserId()
     {
         $userId = null;
-        if (!is_null($this->request->query('user_id'))) {
-            $userId = $this->request->query('user_id');
+        if (!is_null($this->request->getQuery('user_id'))) {
+            $userId = $this->request->getQuery('user_id');
         } else {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             if ($session->check('Staff.Staff.id')) {
                 $userId = $session->read('Staff.Staff.id');
             }

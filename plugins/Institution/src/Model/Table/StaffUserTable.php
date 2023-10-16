@@ -415,8 +415,8 @@ class StaffUserTable extends ControllerActionTable
 
             if ($enableStaffRelease && $assignedStaffRecords > 0) {
                 $url = [
-                    'plugin' => $this->controller->plugin,
-                    'controller' => $this->controller->name,
+                    'plugin' => $this->controller->getPlugin(),
+                    'controller' => $this->controller->getName(),
                     'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                     'action' => 'StaffRelease',
                     'add'
@@ -459,8 +459,8 @@ class StaffUserTable extends ControllerActionTable
 
             if ($enableStaffTransfer && $assignedStaffRecords > 0) {
                 $url = [
-                    'plugin' => $this->controller->plugin,
-                    'controller' => $this->controller->name,
+                    'plugin' => $this->controller->getPlugin(),
+                    'controller' => $this->controller->getName(),
                     'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                     'action' => 'StaffTransferOut',
                     'add'

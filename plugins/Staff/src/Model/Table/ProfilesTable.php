@@ -39,9 +39,9 @@ class ProfilesTable extends ControllerActionTable
         'zip'   => 'application/zip'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_report_cards');
+        $this->setTable('staff_report_cards');
 
         parent::initialize($config);
 		
@@ -52,7 +52,7 @@ class ProfilesTable extends ControllerActionTable
 		$this->StaffReportCards = TableRegistry::get('Institution.StaffReportCards');
     }
 	
-	public function implementedEvents()
+	public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.downloadExcel'] = 'downloadExcel';
@@ -117,17 +117,17 @@ class ProfilesTable extends ControllerActionTable
                 'academic_period' => $AcademicPeriods->aliasField('name'),
                 'profile_name' => $StaffProfileTemplates->aliasField('name'),
             ])
-			->innerJoin([$AcademicPeriods->alias() => $AcademicPeriods->table()],
+			->innerJoin([$AcademicPeriods->getAlias() => $AcademicPeriods->getTable()],
                 [
                     $AcademicPeriods->aliasField('id = ') . $this->aliasField('academic_period_id'),
                 ]
             )
-			->innerJoin([$StaffProfileTemplates->alias() => $StaffProfileTemplates->table()],
+			->innerJoin([$StaffProfileTemplates->getAlias() => $StaffProfileTemplates->getTable()],
                 [
                     $StaffProfileTemplates->aliasField('id = ') . $this->aliasField('staff_profile_template_id'),
                 ]
             )
-            ->autoFields(true)
+            ->enableAutoFields(true)
 			->order([
                 $this->aliasField('file_name'),
             ])

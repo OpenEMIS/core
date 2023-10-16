@@ -14,8 +14,8 @@ use App\Model\Table\ControllerActionTable;
 class PositionsTable extends ControllerActionTable {
     use MessagesTrait;
 
-    public function initialize(array $config) {
-        $this->table('institution_staff');
+    public function initialize(array $config): void {
+        $this->setTable('institution_staff');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -50,7 +50,7 @@ class PositionsTable extends ControllerActionTable {
         $this->toggle('remove', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Behavior.Historical.index.beforeQuery'] = 'indexHistoricalBeforeQuery';
@@ -198,7 +198,7 @@ class PositionsTable extends ControllerActionTable {
         ]);
 
         // Start POCOR-5188
-		if($this->request->params['controller'] == 'Staff'){
+		if($this->request->getParam('controller') == 'Staff'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Positions','Staff - Career');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -216,7 +216,7 @@ class PositionsTable extends ControllerActionTable {
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Positions','Staff - Career');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -241,7 +241,7 @@ class PositionsTable extends ControllerActionTable {
 
     public function indexHistoricalBeforeQuery(Event $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
         switch ($this->controller->name) {
             case 'Directories':

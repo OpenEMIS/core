@@ -17,9 +17,9 @@ use App\Model\Table\ControllerActionTable;
 class HistoricalStaffLeaveTable extends ControllerActionTable
 {
     use OptionsTrait;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('historical_staff_leave');
+        $this->setTable('historical_staff_leave');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('StaffLeaveTypes', ['className' => 'Staff.StaffLeaveTypes']);
@@ -40,7 +40,7 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
 
         $this->toggle('index', false);
     }
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator

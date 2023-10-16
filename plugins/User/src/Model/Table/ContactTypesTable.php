@@ -11,18 +11,20 @@ use Cake\ORM\Query;
 
 class ContactTypesTable extends ControllerActionTable
 {
-	public function initialize(array $config)
+	public function initialize(array $config): void
 	{
-		$this->table('contact_types');
+		$this->setTable('contact_types');
 		parent::initialize($config);
 
 		$this->belongsTo('ContactOptions', ['className' => 'User.ContactOptions']);
 		$this->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'contact_type_id'])
 		;
 		if ($this->behaviors()->has('Reorder')) {
-			$this->behaviors()->get('Reorder')->config([
-				'filter' => 'contact_option_id',
-			]);
+			// $this->behaviors()->get('Reorder')->config([
+			// 	'filter' => 'contact_option_id',
+			// ]);
+			$reorderBehavior = $this->behaviors()->get('Reorder');
+			$reorderBehavior->setConfig('filter', 'contact_option_id');
 		}
 
 		$this->addBehavior('FieldOption.FieldOption');
@@ -38,7 +40,7 @@ class ContactTypesTable extends ControllerActionTable
 			->contain(['ContactOptions']);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 		return $validator;
 	}
