@@ -565,4 +565,108 @@ class WorkbenchService extends Controller
             return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }
+
+
+
+    public function getChangeInAssignment($request)
+    {
+        try {
+            $data = $this->workbenchRepository->getChangeInAssignment($request);
+            
+            $resp = [];
+
+            foreach($data['data'] as $k=> $d){
+                $resp[$k]['id'] = $d['id'];
+                $resp[$k]['institution_id'] = $d['institution_id'];
+                $resp[$k]['institution'] = $d['institution']['code_name'];
+
+                $resp[$k]['request_title'] = $d['user']['name_with_id'];
+
+                if(!is_null($d['modified'])){
+                    $date = $d['modified'];
+                } else {
+                    $date = $d['created'];
+                }
+                $resp[$k]['received_date'] = Carbon::create($date)->toFormattedDateString();
+                $resp[$k]['requester'] = $d['user']['name_with_id'];
+                $resp[$k]['status_id'] = $d['status_id'];
+                $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['user'] = $d['user'];
+                $resp[$k]['created_user'] = $d['security_user'];
+
+            }
+            
+            $data['data'] = $resp; 
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+
+    public function getStaffTrainingNeeds($request)
+    {
+        try {
+            $data = $this->workbenchRepository->getStaffTrainingNeeds($request);
+            
+            $resp = [];
+
+            foreach($data['data'] as $k=> $d){
+                $preTitle = '';
+                $type = '';
+
+                if($d['type'] == 'CATALOGUE'){
+                    $type = 'Course '. ucfirst($d['type']);
+                    $preTitle = $d['training_course']['code_name']??"";
+                } elseif($d['type'] == 'NEED'){
+                    $type = ucfirst($d['type']). " Category";
+                    $preTitle = $d['training_need_category']['name']??"";
+                }
+                
+                $resp[$k]['id'] = $d['id'];
+
+                $resp[$k]['request_title'] = $preTitle.' from '. $type. ' of '.$d['user']['name_with_id'];
+
+                if(!is_null($d['modified'])){
+                    $date = $d['modified'];
+                } else {
+                    $date = $d['created'];
+                }
+                $resp[$k]['received_date'] = Carbon::create($date)->toFormattedDateString();
+
+                $resp[$k]['requester'] = $d['user']['name_with_id'];
+
+                $resp[$k]['training_course'] = $d['training_course'];
+                $resp[$k]['training_course_id'] = $d['training_course_id'];
+
+                $resp[$k]['training_need_category'] = $d['training_need_category'];
+                $resp[$k]['training_need_category_id'] = $d['training_need_category_id'];
+
+                $resp[$k]['type'] = $d['type'];
+                $resp[$k]['status_id'] = $d['status_id'];
+                $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['staff'] = $d['user'];
+                $resp[$k]['created_user'] = $d['security_user'];
+
+            }
+            
+            $data['data'] = $resp; 
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
 }
