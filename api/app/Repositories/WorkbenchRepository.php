@@ -21,6 +21,8 @@ use App\Models\StaffBehaviour;
 use App\Models\InstitutionStaffAppraisal;
 use App\Models\InstitutionStaffRelease;
 use App\Models\InstitutionStaffTransfers;
+use App\Models\InstitutionStaffPositionProfile;
+use App\Models\StaffTrainingNeed;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
@@ -595,6 +597,90 @@ class WorkbenchRepository extends Controller
                                         ->where('value', 1);
                                 }
                             );
+                        }        
+                    )
+                    ->where('assignee_id', $userId)
+                    ->paginate($limit)
+                    ->toArray();
+
+            return $list;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getChangeInAssignment($request)
+    {
+        try {
+            $params = $request->all();
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $userId = JWTAuth::user()->id;
+
+            $list = InstitutionStaffPositionProfile::with(
+                        'institution:id,name,code',
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id',
+                        'user:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name'
+                    )
+                    ->whereHas(
+                        'status', function ($q) {
+                            $q->where('workflow_id', 7)//For change in assignment.
+                            ->where('category', '!=', 3);
+                        }        
+                    )
+                    ->where('assignee_id', $userId)
+                    ->paginate($limit)
+                    ->toArray();
+
+            return $list;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getStaffTrainingNeeds($request)
+    {
+        try {
+            $params = $request->all();
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $userId = JWTAuth::user()->id;
+
+            $list = StaffTrainingNeed::with(
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id',
+                        'user:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'trainingCourse:id,name,code',
+                        'trainingNeedCategory:id,name'
+                    )
+                    ->whereHas(
+                        'status', function ($q) {
+                            $q->where('workflow_id', 5)//For staff training needs.
+                            ->where('category', '!=', 3);
                         }        
                     )
                     ->where('assignee_id', $userId)
