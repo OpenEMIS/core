@@ -669,4 +669,251 @@ class WorkbenchService extends Controller
             return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }
+
+
+    public function getStaffLicenses($request)
+    {
+        try {
+            $data = $this->workbenchRepository->getStaffLicenses($request);
+            
+            $resp = [];
+
+            foreach($data['data'] as $k => $d){
+                $resp[$k]['id'] = $d['id'];
+
+                $resp[$k]['license_type'] = $d['license_type'];
+                $resp[$k]['license_type_id'] = $d['license_type_id'];
+
+
+                if(isset($d['license_number']) && strlen($d['license_number']) > 0){
+                    
+                    $resp[$k]['request_title'] = $d['license_type']['name'].' of '.$d['license_number'].' for '.$d['user']['name_with_id'];
+                } else {
+                    $resp[$k]['request_title'] = $d['license_type']['name'].' for '.$d['user']['name_with_id'];
+                }
+
+
+                if(!is_null($d['modified'])){
+                    $date = $d['modified'];
+                } else {
+                    $date = $d['created'];
+                }
+                $resp[$k]['received_date'] = Carbon::create($date)->toFormattedDateString();
+
+                $resp[$k]['requester'] = $d['security_user']['name_with_id'];
+                $resp[$k]['security_user_id'] = $d['security_user_id'];
+                
+                $resp[$k]['status_id'] = $d['status_id'];
+                $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['user'] = $d['user'];
+                $resp[$k]['created_user'] = $d['security_user'];
+
+            }
+            
+            $data['data'] = $resp; 
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getTrainingCourses($request)
+    {
+        try {
+            $data = $this->workbenchRepository->getTrainingCourses($request);
+            
+            $resp = [];
+
+            foreach($data['data'] as $k => $d){
+                $resp[$k]['id'] = $d['id'];
+
+
+                $resp[$k]['name'] = $d['name'];
+                $resp[$k]['code'] = $d['code'];
+                $resp[$k]['code_name'] = $d['code_name'];
+                $resp[$k]['request_title'] = $d['code_name'];
+
+
+                if(!is_null($d['modified'])){
+                    $date = $d['modified'];
+                } else {
+                    $date = $d['created'];
+                }
+
+                $resp[$k]['received_date'] = Carbon::create($date)->toFormattedDateString();
+
+                $resp[$k]['requester'] = $d['security_user']['name_with_id'];
+                
+                $resp[$k]['status_id'] = $d['status_id'];
+                $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['created_user'] = $d['security_user'];
+
+            }
+            
+            $data['data'] = $resp; 
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getTrainingSessions($request)
+    {
+        try {
+            $data = $this->workbenchRepository->getTrainingSessions($request);
+            
+            $resp = [];
+
+            foreach($data['data'] as $k => $d){
+                $resp[$k]['id'] = $d['id'];
+
+
+                $resp[$k]['name'] = $d['name'];
+                $resp[$k]['code'] = $d['code'];
+                $resp[$k]['code_name'] = $d['code_name'];
+                $resp[$k]['request_title'] = $d['code_name'];
+
+
+                if(!is_null($d['modified'])){
+                    $date = $d['modified'];
+                } else {
+                    $date = $d['created'];
+                }
+
+                $resp[$k]['received_date'] = Carbon::create($date)->toFormattedDateString();
+
+                $resp[$k]['requester'] = $d['security_user']['name_with_id'];
+                
+                $resp[$k]['status_id'] = $d['status_id'];
+                $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['created_user'] = $d['security_user'];
+
+            }
+            
+            $data['data'] = $resp; 
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getTrainingResults($request)
+    {
+        try {
+            $data = $this->workbenchRepository->getTrainingResults($request);
+            
+            $resp = [];
+
+            foreach($data['data'] as $k => $d){
+                $resp[$k]['id'] = $d['id'];
+                $resp[$k]['training_session_id'] = $d['training_session_id'];
+
+                $resp[$k]['request_title'] = 'Results of '.$d['training_session']['code_name'];
+
+
+                if(!is_null($d['modified'])){
+                    $date = $d['modified'];
+                } else {
+                    $date = $d['created'];
+                }
+
+                $resp[$k]['received_date'] = Carbon::create($date)->toFormattedDateString();
+
+                $resp[$k]['session'] = $d['training_session'];
+                $resp[$k]['requester'] = $d['security_user']['name_with_id'];
+                
+                $resp[$k]['status_id'] = $d['status_id'];
+                $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['created_user'] = $d['security_user'];
+
+            }
+            
+            $data['data'] = $resp; 
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+
+    public function getVisitRequests($request)
+    {
+        try {
+            $data = $this->workbenchRepository->getVisitRequests($request);
+            
+            $resp = [];
+
+            foreach($data['data'] as $k => $d){
+                $resp[$k]['id'] = $d['id'];
+                $resp[$k]['institution'] = $d['institution']['name'];
+                $resp[$k]['institution_id'] = $d['institution_id'];
+
+                $date_of_visit = Carbon::create($d['date_of_visit'])->toFormattedDateString();
+
+                $resp[$k]['request_title'] = $d['quality_visit_type']['name'].' in '.$d['academic_period']['name'].' on '. $date_of_visit;
+
+
+                if(!is_null($d['modified'])){
+                    $date = $d['modified'];
+                } else {
+                    $date = $d['created'];
+                }
+
+
+
+                $resp[$k]['date_of_visit'] = $date_of_visit;
+
+                $resp[$k]['received_date'] = Carbon::create($date)->toFormattedDateString();
+
+                $resp[$k]['quality_visit_type'] = $d['quality_visit_type'];
+                $resp[$k]['academic_period'] = $d['academic_period'];
+                $resp[$k]['academic_period_id'] = $d['academic_period_id'];
+                $resp[$k]['requester'] = $d['security_user']['name_with_id'];
+                
+                $resp[$k]['status_id'] = $d['status_id'];
+                $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['created_user'] = $d['security_user'];
+
+            }
+            
+            $data['data'] = $resp; 
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
 }

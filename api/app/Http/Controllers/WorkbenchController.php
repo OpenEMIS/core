@@ -254,4 +254,89 @@ class WorkbenchController extends Controller
             return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }
+
+
+    public function getStaffLicenses(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getStaffLicenses($request);
+            
+            return $this->sendSuccessResponse("Staff Licenses List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getTrainingCourses(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getTrainingCourses($request);
+            
+            return $this->sendSuccessResponse("Training Courses List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getTrainingSessions(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getTrainingSessions($request);
+            
+            return $this->sendSuccessResponse("Training Sessions List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getTrainingResults(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getTrainingResults($request);
+            
+            return $this->sendSuccessResponse("Training Results List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getVisitRequests(Request $request)
+    {
+        try {
+            $data = $this->workbenchService->getVisitRequests($request);
+            
+            return $this->sendSuccessResponse("Visit Request List Found", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
 }

@@ -23,6 +23,11 @@ use App\Models\InstitutionStaffRelease;
 use App\Models\InstitutionStaffTransfers;
 use App\Models\InstitutionStaffPositionProfile;
 use App\Models\StaffTrainingNeed;
+use App\Models\StaffLicense;
+use App\Models\TrainingCourse;
+use App\Models\TrainingSession;
+use App\Models\TrainingSessionResult;
+use App\Models\InstitutionVisitRequest;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
@@ -680,6 +685,209 @@ class WorkbenchRepository extends Controller
                     ->whereHas(
                         'status', function ($q) {
                             $q->where('workflow_id', 5)//For staff training needs.
+                            ->where('category', '!=', 3);
+                        }        
+                    )
+                    ->where('assignee_id', $userId)
+                    ->paginate($limit)
+                    ->toArray();
+
+            return $list;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getStaffLicenses($request)
+    {
+        try {
+            $params = $request->all();
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $userId = JWTAuth::user()->id;
+
+            $list = StaffLicense::with(
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id',
+                        'user:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'licenseType:id,name'
+                    )
+                    ->whereHas(
+                        'status', function ($q) {
+                            $q->where('workflow_id', 11)//For staff license.
+                            ->where('category', '!=', 3);
+                        }        
+                    )
+                    ->where('assignee_id', $userId)
+                    ->paginate($limit)
+                    ->toArray();
+
+            return $list;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+
+    public function getTrainingCourses($request)
+    {
+        try {
+            $params = $request->all();
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $userId = JWTAuth::user()->id;
+
+            $list = TrainingCourse::with(
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id'
+                    )
+                    ->whereHas(
+                        'status', function ($q) {
+                            $q->where('workflow_id', 2)//For training courses.
+                            ->where('category', '!=', 3);
+                        }        
+                    )
+                    ->where('assignee_id', $userId)
+                    ->paginate($limit)
+                    ->toArray();
+
+            return $list;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getTrainingSessions($request)
+    {
+        try {
+            $params = $request->all();
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $userId = JWTAuth::user()->id;
+
+            $list = TrainingSession::with(
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id'
+                    )
+                    ->whereHas(
+                        'status', function ($q) {
+                            $q->where('workflow_id', 3)//For training sessions.
+                            ->where('category', '!=', 3);
+                        }        
+                    )
+                    ->where('assignee_id', $userId)
+                    ->paginate($limit)
+                    ->toArray();
+
+            return $list;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getTrainingResults($request)
+    {
+        try {
+            $params = $request->all();
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $userId = JWTAuth::user()->id;
+
+            $list = TrainingSessionResult::with(
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id',
+                        'trainingSession:id,code,name'
+                    )
+                    ->whereHas(
+                        'status', function ($q) {
+                            $q->where('workflow_id', 4)//For training results.
+                            ->where('category', '!=', 3);
+                        }        
+                    )
+                    ->where('assignee_id', $userId)
+                    ->paginate($limit)
+                    ->toArray();
+
+            return $list;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+
+
+    public function getVisitRequests($request)
+    {
+        try {
+            $params = $request->all();
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+            $userId = JWTAuth::user()->id;
+
+            $list = InstitutionVisitRequest::with(
+                        'institution:id,name,code',
+                        'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
+                        'status:id,name,workflow_id',
+                        'qualityVisitType:id,name',
+                        'academicPeriod:id,name'
+                    )
+                    ->whereHas(
+                        'status', function ($q) {
+                            $q->where('workflow_id', 9)//For visit request.
                             ->where('category', '!=', 3);
                         }        
                     )

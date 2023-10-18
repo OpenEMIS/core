@@ -5,21 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class TrainingCourse extends Model
+class TrainingSessionResult extends Model
 {
     use HasFactory;
 
     public $timestamps = false;
-    protected $table = "training_courses";
-
-    protected $appends = ['code_name'];
-
-
-    public function getCodeNameAttribute()
-    {
-        return $this->attributes['code']. ' - ' .$this->attributes['name'];
-    }
-
+    protected $table = "training_session_results";
 
     public function assignee()
     {
@@ -34,5 +25,10 @@ class TrainingCourse extends Model
     public function status()
     {
         return $this->belongsTo(WorkflowSteps::class, 'status_id', 'id');
+    }
+
+    public function trainingSession()
+    {
+        return $this->belongsTo(TrainingSession::class, 'training_session_id', 'id');
     }
 }
