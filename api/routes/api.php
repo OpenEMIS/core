@@ -307,6 +307,12 @@ Route::group(
         Route::get('institutions/staff/transferin', 'WorkbenchController@getStaffTransferIn');
         Route::get('institutions/staff/changeinassignment', 'WorkbenchController@getChangeInAssignment');
         Route::get('staff/training/needs', 'WorkbenchController@getStaffTrainingNeeds');
+        Route::get('staff/professionaldevelopment/licenses', 'WorkbenchController@getStaffLicenses');
+
+        Route::get('administration/training/courses', 'WorkbenchController@getTrainingCourses');
+        Route::get('administration/training/sessions', 'WorkbenchController@getTrainingSessions');
+        Route::get('administration/training/results', 'WorkbenchController@getTrainingResults');
+        Route::get('institutions/visits/requests', 'WorkbenchController@getVisitRequests');
         //POCOR-7754 ends
 
     }
