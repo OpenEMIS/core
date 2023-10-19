@@ -888,7 +888,6 @@ class WorkbenchService extends Controller
                 }
 
 
-
                 $resp[$k]['date_of_visit'] = $date_of_visit;
 
                 $resp[$k]['received_date'] = Carbon::create($date)->toFormattedDateString();
