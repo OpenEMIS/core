@@ -41,6 +41,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         $this->belongsTo('AssetConditions', ['className' => 'Institution.AssetConditions']);
         $this->belongsTo('InstitutionRooms', ['className' => 'Institution.InstitutionRooms']);
 
+        $this->addBehavior('Import.ImportLink');
         // POCOR-6152 export button <vikas.rathore@mail.valuecoders.com>
         $this->addBehavior('Excel', [
             'excludes' => [
@@ -137,28 +138,30 @@ class InstitutionAssetsTable extends ControllerActionTable
     // POCOR-6152 Export Functionality 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        $query->select([
+        ]);
+        if(isset( $this->request)){
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
+            $query->where([
+                    $this->aliasField('institution_id') => $institutionId,
+                ]);
+            $assetType = ($this->request->query('asset_type_id')) ? $this->request->query('asset_type_id') : 0;
+            $accessibility = $this->request->query('accessibility');
+
+
+            if ($assetType > 0) {
+                $query->where([
+                    $this->aliasField('asset_type_id') => $assetType
+                ]);
+            }
+            if ($accessibility != "") {
+                $query->where([
+                    $this->aliasField('accessibility') => $accessibility
+                ]);
+            }
+        }
 //        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
-        $assetType = ($this->request->query('asset_type_id')) ? $this->request->query('asset_type_id') : 0;
-        $accessibility = $this->request->query('accessibility');
-
-        $query->select([
-        ])
-            ->where([
-                $this->aliasField('institution_id') => $institutionId,
-            ]);
-
-        if ($assetType > 0) {
-            $query->where([
-                $this->aliasField('asset_type_id') => $assetType
-            ]);
-        }
-        if ($accessibility != "") {
-            $query->where([
-                $this->aliasField('accessibility') => $accessibility
-            ]);
-        }
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
@@ -294,12 +297,12 @@ class InstitutionAssetsTable extends ControllerActionTable
             'label' => __('Condition')
         ];
 
-        $extraField[] = [
-            'key' => 'InstitutionAssets.depreciation',
-            'field' => 'depreciation',
-            'type' => 'string',
-            'label' => __('Depreciation')
-        ];
+//        $extraField[] = [
+//            'key' => 'InstitutionAssets.depreciation',
+//            'field' => 'depreciation',
+//            'type' => 'string',
+//            'label' => __('Disposal')
+//        ];
 
         $extraField[] = [
             'key' => 'InstitutionAssets.asset_status_id',
@@ -535,6 +538,9 @@ class InstitutionAssetsTable extends ControllerActionTable
         if ($field == 'institution_room_id') {
             return __('Location');
         }
+//        if ($field == 'depreciation') {
+//            return __('Disposal');
+//        }
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
@@ -553,9 +559,9 @@ class InstitutionAssetsTable extends ControllerActionTable
     public function onGetPurpose(Event $event, Entity $entity)
     {
         if ($entity->purpose) {
-            $purpose = 'Non-Teaching';
-        } else {
             $purpose = 'Teaching';
+        } else {
+            $purpose = 'Non-Teaching';
         }
         return $purpose;
     }
@@ -590,20 +596,20 @@ class InstitutionAssetsTable extends ControllerActionTable
 
     public function onGetDepreciation(Event $event, Entity $entity)
     {
-        if (!$entity->depreciation) {
+//        if (!$entity->depreciation) {
             return "";
-        }
-        $formattedAmount = $this->currency . ' ' . number_format($entity->depreciation, 2);
-        return $formattedAmount; // Output: $1,234.56
+//        }
+//        $formattedAmount = $this->currency . ' ' . number_format($entity->depreciation, 2);
+//        return $formattedAmount; // Output: $1,234.56
     }
 
     public function onExcelGetDepreciation(Event $event, Entity $entity)
     {
-        if (!$entity->depreciation) {
+//        if (!$entity->depreciation) {
             return "";
-        }
-        $formattedAmount = $this->currency . '' . number_format($entity->depreciation, 2);
-        return $formattedAmount; // Output: $1,234.56
+//        }
+//        $formattedAmount = $this->currency . '' . number_format($entity->depreciation, 2);
+//        return $formattedAmount; // Output: $1,234.56
     }
 
     /**
@@ -629,7 +635,13 @@ class InstitutionAssetsTable extends ControllerActionTable
 
     public function onUpdateFieldAssetTypeId(Event $event, array $attr, $action, $request)
     {
+        $optionsTable = TableRegistry::get('asset_types');
+        $getOptions = $optionsTable->find('list')->select(['id','name'])->toArray();
         if ($action == 'add' || $action == 'edit') {
+            $attr['type'] = 'select';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = false;
+            $attr['options'] = $getOptions;
             $attr['onChangeReload'] = 'changeAssetTypeId';
         }
         return $attr;
@@ -642,8 +654,41 @@ class InstitutionAssetsTable extends ControllerActionTable
 
     public function onUpdateFieldAssetMakeId(Event $event, array $attr, $action, $request)
     {
+        $data = isset($this->request->data) ? $this->request->data : null;
+        $data = isset($data[$this->alias()]) ? $data[$this->alias()] : null;
+        $where = ["1=1"];
+        $option = isset($data['asset_type_id']) ? $data['asset_type_id'] : null;
+        $optionsTable = TableRegistry::get('asset_makes');
+        if($option){
+            $where = [$optionsTable->aliasField('asset_type_id') => $option];
+        }
+        $getOptions = $optionsTable->find('list')->select(['id','name'])->where($where)->toArray();
         if ($action == 'add' || $action == 'edit') {
-            $attr['onChangeReload'] = 'changeAssetMakeId';
+            $attr['type'] = 'select';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = true;
+            $attr['options'] = $getOptions;
+            $attr['onChangeReload'] = 'changeAssetTypeId';
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldAssetModelId(Event $event, array $attr, $action, $request)
+    {
+        $data = isset($this->request->data) ? $this->request->data : null;
+        $data = isset($data[$this->alias()]) ? $data[$this->alias()] : null;
+        $where = ["1=1"];
+        $option = isset($data['asset_make_id']) ? $data['asset_make_id'] : null;
+        $optionsTable = TableRegistry::get('asset_models');
+        if($option){
+            $where = [$optionsTable->aliasField('asset_make_id') => $option];
+        }
+        $getOptions = $optionsTable->find('list')->select(['id','name'])->where($where)->toArray();
+        if ($action == 'add' || $action == 'edit') {
+            $attr['type'] = 'select';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = true;
+            $attr['options'] = $getOptions;
         }
         return $attr;
     }
@@ -671,7 +716,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         $this->field('user_id', ['visible' => true]);
         $this->field('accessibility', ['visible' => true]);
         $this->field('asset_condition_id', ['visible' => true]);
-        $this->field('depreciation', ['visible' => true]);
+        $this->field('depreciation', ['visible' => false]);
         $this->field('asset_status_id', ['visible' => true]);
     }
 
