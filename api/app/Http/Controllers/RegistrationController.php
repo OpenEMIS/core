@@ -239,6 +239,8 @@ class RegistrationController extends Controller
                 return $this->sendErrorResponse("Not able to create new student.");
             }elseif($resp == 7){
                 return $this->sendErrorResponse("Invalid OTP.");
+            }elseif($resp == 8){
+                return $this->sendErrorResponse("Please fill required custom fields.");
             }else{
                 return $this->sendErrorResponse("Something went wrong.");
             }
