@@ -375,6 +375,12 @@ class RegistrationRepository extends Controller
                 return $validateAge;
             }
 
+            $validateCustomField = $this->validateCustomField($request);
+            
+            if($validateCustomField == 0){
+                return 8;
+            }
+
             if($request['openemis_id'] != ""){
                 Log::info('For User Registration using openemis id.');
                 $student = SecurityUsers::with(
@@ -675,6 +681,63 @@ class RegistrationRepository extends Controller
             );
             DB::rollback();
             return $this->sendErrorResponse('Failed to register student.');
+        }
+    }
+
+
+    public function validateCustomField($request)
+    {
+        try {
+            $param = $request->all();
+            
+            $customFields = $this->getStudentCustomFields();
+
+            
+            $requiredCfArray = [];
+            $requiredCfIds = [];
+            $allCfIds = [];
+            foreach($customFields as $k => $cf){
+                if(is_numeric($cf['is_mandatory']) && $cf['is_mandatory'] == 1){
+                    
+                    //array_push($requiredCfArray, $cf);
+                    array_push($requiredCfIds, $cf['student_custom_field_id']);
+                }
+            }
+            
+
+            if(count($requiredCfIds) > 0){
+                if(isset($param['custom_fields']) && count($param['custom_fields']) > 0){
+                    $customField = $param['custom_fields'];
+                    
+                    foreach($customField as $cf){
+                        array_push($allCfIds, $cf['custom_field_id']);
+                    }
+                    
+
+                    foreach($requiredCfIds as $reqCfId){
+                        if(in_array($reqCfId, $allCfIds)){
+                            $key = array_search($reqCfId, array_column($customField, 'custom_field_id'));
+                            
+                            if($key !== false){
+                                $array = $customField[$key];
+                                if($array['text_value'] != null || $array['number_value'] != null || $array['decimal_value'] != null || $array['textarea_value'] != null || $array['time_value'] != null || $array['dropdown_value'] != null || $array['checkbox_value'] != null){
+                                    //
+                                } else {
+                                    return 0;
+                                }
+                            }
+                        } else {
+                            return 0;
+                        }
+                    }
+
+                } else {
+                    return 0;
+                }
+            }
+            return 1;
+        } catch (\Exception $e) {
+            return 0;
         }
     }
 
