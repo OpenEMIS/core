@@ -404,8 +404,12 @@ class DataManagementCopyTable extends ControllerActionTable
             $AssessmentRecords = $AssessmentData
                 ->find('all')
                 ->where(['academic_period_id ' => $entity->to_academic_period])
-                ->toArray();
-            if (!empty($AssessmentRecords)) {
+                ->count();
+            $PreviousAssessmentRecords = $AssessmentData
+                ->find('all')
+                ->where(['academic_period_id ' => $entity->from_academic_period])
+                ->count();
+            if($AssessmentRecords>= $PreviousAssessmentRecords) {
                 $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
                 return false;
             }
