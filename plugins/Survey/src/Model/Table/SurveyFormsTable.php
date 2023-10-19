@@ -513,6 +513,7 @@ class SurveyFormsTable extends CustomFormsTable
                     ]
                 )
                 ->where([$SurveyStatuses->aliasField('date_disabled >=') => $todayTimestamp])//POCOR-7681
+                ->andWhere([$SurveyStatuses->aliasField('date_enabled <=') => $todayTimestamp])//POCOR-7884
                 ->group($this->aliasField('id'));
 
             $CustomModules = TableRegistry::get('CustomField.CustomModules');
