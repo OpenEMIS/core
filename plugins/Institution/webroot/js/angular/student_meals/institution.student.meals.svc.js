@@ -5,6 +5,7 @@ angular
 InstitutionStudentMealsSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc', 'AlertSvc', 'UtilsSvc'];
 
 function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
+    var tempp //POCOR-7662
    const attendanceType = {
         'NOTMARKED': {
             code: 'NOTMARKED',
@@ -511,7 +512,15 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
                 deferred.reject('There was an error when retrieving the class student list');
             }
         };
-
+        //POCOR-7662
+        var stuMealData= StudentMeals
+            .find('classStudentsWithMeal', extra)
+            .ajax({success: success, defer: true});
+       
+        stuMealData.then((value) => {
+            tempp=value;
+        });
+        //POCOR-7662
         return StudentMeals
             .find('classStudentsWithMeal', extra)
             .ajax({success: success, defer: true});
@@ -833,7 +842,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         eCell.setAttribute("id", dataKey);
         console.log('onedit', data.institution_student_meal[dataKey]);
         if (data.institution_student_meal[dataKey] == null) {
-            data.institution_student_meal[dataKey] = 3;
+            data.institution_student_meal[dataKey] = tempp[0].default_meal_select_id; //POCOR-7662
         }
 
         var eSelect = document.createElement("select");
