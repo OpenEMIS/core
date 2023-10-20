@@ -12,7 +12,7 @@ class UserContactsTable extends BaseTable
 	public function initialize(array $config)
 	{
 		parent::initialize($config);
-		$this->entityClass('User.Contact');
+		$this->setEntityClass('User.Contact');
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra)

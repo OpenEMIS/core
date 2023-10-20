@@ -159,15 +159,7 @@ class DemographicTable extends ControllerActionTable
             return __('Wealth Quintile');
         } elseif ($field == 'indigenous') {
             return __('Indigenous People');
-        }elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        }elseif ($field == 'created_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        }else {
+        } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }

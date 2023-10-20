@@ -17,7 +17,7 @@ class UsersDirectoryTable extends AppTable
         $this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
         $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
-        $this->entityClass('User.User');
+        $this->setEntityClass('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
     }
 

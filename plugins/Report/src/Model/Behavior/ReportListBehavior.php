@@ -9,13 +9,14 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
-use Cake\Network\Response;
+// use Cake\Network\Response;
 use Report\Model\Table\ReportProgressTable as Process;
 use Cake\I18n\I18n;
 use Cake\Http\Session;
 use Cake\I18n\Time;
 use Cake\FileSystem\File;
 use DateTime;
+use Cake\Http\Response;
 
 class ReportListBehavior extends Behavior {
 	public $ReportProgress;
@@ -192,12 +193,12 @@ class ReportListBehavior extends Behavior {
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
 		
-		$data[$this->_table->getAlias()]['locale'] = I18n::locale();
+		$data[$this->_table->getAlias()]['locale'] = I18n::getLocale();
 		$session = new Session();
 		$data[$this->_table->getAlias()]['user_id'] = $session->read('Auth.User.id');
 		$data[$this->_table->getAlias()]['super_admin'] = $session->read('Auth.User.super_admin');
 		$process = function($model, $entity) use ($data) {
-			$errors = $entity->errors();
+			$errors = $entity->getErrors();
 			if (empty($errors)) {
 				$this->_generate($data);
 				return true;
@@ -212,7 +213,7 @@ class ReportListBehavior extends Behavior {
 	public function onExcelGenerate(Event $event, $settings) {
 		$requestData = json_decode($settings['process']['params']);
 		$locale = $requestData->locale;
-		I18n::locale($locale);
+		I18n::getLocale($locale);
 	}
 
 	public function onExcelStartSheet(Event $event, ArrayObject $settings, $totalCount) {
@@ -420,18 +421,33 @@ class ReportListBehavior extends Behavior {
 		if (!empty($path) && $file->exists()) {
 			$pathInfo = pathinfo($path);
 			$ext = $pathInfo['extension'];
-
 			// set name of report (with filters and translation)
 			$filename = $entity->name . ' - ' . date('Ymd') . 'T' . date('His') . '.' . $ext;
-
 			// Syntax will change in v3.4.x
-			$response = $this->_table->controller->response;
-			$response->file($path, [
-				'name' => $filename,
-				'download' => true
-			]);
+			
+			// $response = $this->_table->controller->getResponse();
+			// // $response = new Response();
+			// // echo "<pre>";print_r($response);die;
+			// $response->withFile($path, [
+			// 	'name' => $filename,
+			// 	'download' => true
+			// ]);
+			// // echo "<pre>";print_r($response);die;
 
-			return $response;
+			// $name= $filename;
+			header('Content-Description: File Transfer');
+			header('Content-Type: application/force-download');
+			header("Content-Disposition: attachment; filename=\"" . basename($filename) . "\";");
+			header('Content-Transfer-Encoding: binary');
+			header('Expires: 0');
+			header('Cache-Control: must-revalidate');
+			header('Pragma: public');
+			header('Content-Length: ' . filesize($filename));
+			ob_clean();
+			flush();
+			readfile($path); //showing the path to the server where the file is to be download
+			exit;
+			// return $response;
 
 		} else {
 			$this->ReportProgress->delete($entity);
@@ -513,7 +529,7 @@ class ReportListBehavior extends Behavior {
     	$file = $entity->file_path;
     	unlink($file);
         $this->ReportProgress->delete($entity);
-		$controller = $this->_table->controller->name;
+		$controller = $this->_table->controller->getName();
 		$table = $this->_table->getAlias();
 		$this->_table->Alert->success('general.delete.success');
 		$url = ['controller' => $controller, 'action' => $table, 'index'];

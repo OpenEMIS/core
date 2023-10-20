@@ -19,7 +19,7 @@ class StaffUserTable extends ControllerActionTable
     public function initialize(array $config): void
     {
         $this->setTable('security_users');
-        $this->getEntityClass('User.User');
+        $this->setEntityClass('User.User');
         parent::initialize($config);
         self::handleAssociations($this);
         // Behaviors

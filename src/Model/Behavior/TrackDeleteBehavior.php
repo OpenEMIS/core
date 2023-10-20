@@ -54,9 +54,9 @@ class TrackDeleteBehavior extends Behavior
             }
             // catering for 'binary' field type start
             $binaryDataFieldNames = [];
-            $schema = $entityTable->schema();
+            $schema = $entityTable->getSchema();
             foreach ($schema->columns() as $key => $value) {
-                $schemaColumnData = $schema->column($value);
+                $schemaColumnData = $schema->getColumn($value);
                 if (array_key_exists('type', $schemaColumnData) && $schemaColumnData['type'] == 'binary') {
                     $binaryDataFieldNames[] = $value;
                 }

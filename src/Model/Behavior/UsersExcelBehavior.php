@@ -41,13 +41,13 @@ class UsersExcelBehavior extends Behavior
         'auto_contain' => true
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
+        $this->getConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
         if (!array_key_exists('filename', $config)) {
-            $this->config('filename', $this->_table->alias());
+            $this->getConfig('filename', $this->_table->getAlias());
         }
-        $folder = WWW_ROOT . $this->config('folder');
+        $folder = WWW_ROOT . $this->getConfig('folder');
 
         if (!file_exists($folder)) {
             umask(0);
@@ -61,9 +61,9 @@ class UsersExcelBehavior extends Behavior
             //  $this->deleteOldFiles($folder, $format);
             // }
         }
-        $pages = $this->config('pages');
+        $pages = $this->getConfig('pages');
         if ($pages !== false && empty($pages)) {
-            $this->config('pages', ['index', 'view']);
+            $this->getConfig('pages', ['index', 'view']);
         }
     }
 
@@ -504,7 +504,7 @@ class UsersExcelBehavior extends Behavior
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 0];

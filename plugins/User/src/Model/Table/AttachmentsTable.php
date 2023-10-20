@@ -53,7 +53,7 @@ class AttachmentsTable extends ControllerActionTable
     {
         $UserTable = TableRegistry::getTableLocator()->get('User.Users');
         $queryString = $this->ControllerAction->getQueryString();
-        $user = $UserTable->find()->where(['id'=>$queryString['security_user_id']])->first();
+        $user = 2;
         if($user->is_staff == 1){
             $validator->requirePresence('staff_attachment_type_id', 'create')->notEmpty('staff_attachment_type_id');
         }elseif($user->is_student == 1){
@@ -231,10 +231,18 @@ class AttachmentsTable extends ControllerActionTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
-            case 'staff_attachment_type_id':
-                return __('Type');
             case 'student_attachment_type_id':
                 return __('Type');
+            case 'file_content':
+                return __('File Content');
+            case 'date_on_file':
+                return __('Date On File');
+            case 'name':
+                return __('Name');
+            case 'created':
+                return __('Created On');
+            case 'created_user_id':
+                return __('Created By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -255,7 +263,7 @@ class AttachmentsTable extends ControllerActionTable
         $this->field('created', ['attr' => ['label' => __('Created On')]]);
         $this->field('student_attachment_type_id', ['attr' => ['label' => __('Type')]]);
 
-        $UserTable = TableRegistry::get('security_users');
+        $UserTable = TableRegistry::get('User.Users');
         $queryString = $this->ControllerAction->getQueryString();
         $user = $UserTable->find()->where(['id'=>$queryString['security_user_id']])->first();
 
