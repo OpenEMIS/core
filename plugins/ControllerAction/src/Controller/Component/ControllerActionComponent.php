@@ -1168,7 +1168,6 @@ class ControllerActionComponent extends Component
         // End Event
 
         $entity = $model->newEmptyEntity();
-
         if ($request->is(['get'])) {
             // Event: addOnInitialize
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.onInitialize');
@@ -1178,7 +1177,7 @@ class ControllerActionComponent extends Component
             }
             // End Event
         } elseif ($request->is(['post', 'put'])) {
-            $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
+            $submit = $request->getData('submit') !==null ? $request->getData('submit') : 'save';
             $patchOptions = new ArrayObject([]);
             $requestData = new ArrayObject($request->getData());
 
@@ -1202,9 +1201,8 @@ class ControllerActionComponent extends Component
                 // End Event
 
                 $patchOptionsArray = $patchOptions->getArrayCopy();
-                $request->data = $requestData->getArrayCopy();
-                $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
-
+                $requestCopydata = $requestData->getArrayCopy();
+                $entity = $model->patchEntity($entity,$requestCopydata, $patchOptionsArray);
                 // Event: addAfterPatch
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.afterPatch');
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.afterPatch', null, $params);
@@ -1212,12 +1210,11 @@ class ControllerActionComponent extends Component
                     return $event->getResult();
                 }
                 // End Event
-                $request->data = $requestData->getArrayCopy();
-
+                $requestCopydata = $requestData->getArrayCopy();
                 $process = function ($model, $entity) {
                     return $model->save($entity);
                 };
-
+                
                 // Event: onBeforeSave
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.beforeSave');
                 $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.beforeSave', null, [$entity, $requestData]);
@@ -1238,8 +1235,9 @@ class ControllerActionComponent extends Component
                         return $event->getResult();
                     }
                     // End Event
-
-                    return $this->controller->redirect($this->url('index'));
+                    // echo "<pre>";print_r($this->url('index'));die;
+                    // return $this->controller->redirect($this->url('index'));
+                    
                 } else {
                     $this->log($entity->errors(), 'debug');
                     $this->Alert->error('general.add.failed');
@@ -1269,8 +1267,10 @@ class ControllerActionComponent extends Component
                 // End Event
 
                 $patchOptionsArray = $patchOptions->getArrayCopy();
-                $request->data = $requestData->getArrayCopy();
-                $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+                $requestCopyData = $requestData->getArrayCopy();
+                
+                $entity = $model->patchEntity($entity, $requestCopyData, $patchOptionsArray);
+                
             }
         }
 

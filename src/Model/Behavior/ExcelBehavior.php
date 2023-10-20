@@ -133,10 +133,10 @@ class ExcelBehavior extends Behavior
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (is_callable($event->result)) {
-            $generate = $event->result;
+        if (is_callable($event->getResult())) {
+            $generate = $event->getResult();
         }
 
         $generate($_settings);
@@ -168,7 +168,7 @@ class ExcelBehavior extends Behavior
 
         if (count($sheets->getArrayCopy())==0) {
             $sheets[] = [
-                'name' => $this->_table->alias(),
+                'name' => $this->_table->getAlias(),
                 'table' => $this->_table,
                 'query' => $this->_table->find(),
             ];
@@ -356,7 +356,7 @@ class ExcelBehavior extends Behavior
                         $sheetRowCount++;
                         $rowCount++;
                         $event = $this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
-                        if (!$event->result) {
+                        if (!$event->getResult()) {
                             $writer->writeSheetRow($sheetName, $row, $rowStyle);
                         }
                     }
@@ -408,19 +408,19 @@ class ExcelBehavior extends Behavior
         }
 
         $fields = new ArrayObject();
-        $module = $table->alias();
-        $language = I18n::locale();
+        $module = $table->getAlias();
+        $language = I18n::getLocale();
         $excludedTypes = ['binary'];
         $columns = array_diff($columns, $excludes);
 
         foreach ($columns as $col) {
-            $field = $schema->column($col);
+            $field = $schema->getColumn($col);
             if (!in_array($field['type'], $excludedTypes)) {
                 $label = $table->aliasField($col);
 
                 $event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $col, $language], true);
-                if (strlen($event->result)) {
-                    $label = $event->result;
+                if (strlen($event->getResult())) {
+                    $label = $event->getResult();
                 }
 
                 $fields[] = [
@@ -444,8 +444,8 @@ class ExcelBehavior extends Behavior
                 $column = $key[1];
                 // Redispatch get label
                 $event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $column, $language], true);
-                if (strlen($event->result)) {
-                    $field['label'] = $event->result;
+                if (strlen($event->getResult())) {
+                    $field['label'] = $event->getResult();
                 }
             }
             $newFields[] = $field;
@@ -497,8 +497,8 @@ class ExcelBehavior extends Behavior
                 } else {
                     $event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
                 }
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -509,8 +509,8 @@ class ExcelBehavior extends Behavior
             } else {
                 $method = 'onExcelGet' . Inflector::camelize($field);
                 $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -544,7 +544,7 @@ class ExcelBehavior extends Behavior
     {
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     return true;
                 }
             }
@@ -558,7 +558,7 @@ class ExcelBehavior extends Behavior
 
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     $relatedModel = $assoc;
                     break;
                 }
@@ -572,7 +572,7 @@ class ExcelBehavior extends Behavior
         $tableObj = $this->getAssociatedTable($table, $field);
         $key = null;
         if (is_object($tableObj)) {
-            $key = Inflector::underscore(Inflector::singularize($tableObj->alias()));
+            $key = Inflector::underscore(Inflector::singularize($tableObj->getAlias()));
         }
         return $key;
     }
@@ -583,7 +583,7 @@ class ExcelBehavior extends Behavior
         foreach ($fields as $attr) {
             $field = $attr['field'];
             if ($this->isForeignKey($table, $field)) {
-                $contain[] = $this->getAssociatedTable($table, $field)->alias();
+                $contain[] = $this->getAssociatedTable($table, $field)->getAlias();
             }
         }
         $query->contain($contain);

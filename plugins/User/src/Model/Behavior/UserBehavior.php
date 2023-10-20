@@ -133,6 +133,7 @@ class UserBehavior extends Behavior
             $this->_table->fields['identity_number']['visible'] = ['index' => false, 'view' => false, 'edit' => false, 'add' => false];
 
             $i = 10;
+            $this->_table->fields['photo_content']['visible'] = true;
             $this->_table->fields['first_name']['order'] = $i++;
             $this->_table->fields['middle_name']['order'] = $i++;
             $this->_table->fields['third_name']['order'] = $i++;
@@ -146,6 +147,7 @@ class UserBehavior extends Behavior
                     ],
                     'default_date' => false,
                 ]);
+                $this->_table->field('photo_content');
             } else {
                 $this->_table->ControllerAction->field('date_of_birth', [
                         'date_options' => [
@@ -154,6 +156,8 @@ class UserBehavior extends Behavior
                         'default_date' => false,
                     ]
                 );
+
+                $this->_table->ControllerAction->field('photo_content');
             }
 
             $this->_table->fields['date_of_birth']['order'] = $i++;
@@ -204,9 +208,10 @@ class UserBehavior extends Behavior
                     $this->_table->field('identity_section', ['type' => 'section', 'title' => __('Identities / Nationalities'), 'after' => 'email', 'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]]);
                     $security_users_id = '';
                     $model = $this->_table;
-                    if($this->_table->controller->request->params['pass'][0] == 'view'){
-                        $security_users_id = $model->paramsDecode($this->_table->controller->request->params['pass']['1'])['id'];
+                    if($this->_table->controller->getRequest()->getAttribute('params')['pass'][0]){
+                        $security_users_id = $model->paramsDecode($this->_table->controller->getRequest()->getAttribute('params')['pass'][1]);
                     }
+                    // echo "<pre>";print_r($security_users_id);die;
                     if($security_users_id > 0){
                         $this->_table->field('details', [
                             'type' => 'element',
@@ -232,8 +237,8 @@ class UserBehavior extends Behavior
                     $this->_table->field('identity_section', ['type' => 'section', 'title' => __('Identities / Nationalities'), 'after' => 'email', 'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]]);
                     $security_users_id = '';
                     $model = $this->_table;
-                    if($this->_table->controller->request->params['pass'][0] == 'view'){
-                        $security_users_id = $model->paramsDecode($this->_table->controller->request->params['pass']['1'])['id'];
+                    if($this->_table->controller->getRequest()->getAttribute('params')['pass'][0] == 'view'){
+                        $security_users_id = $model->paramsDecode($this->_table->controller->getRequest()->getAttribute('params')['pass'][1]);
                     }
                     if($security_users_id > 0){
                         $this->_table->field('details', [
@@ -262,34 +267,34 @@ class UserBehavior extends Behavior
     //POCOR-5668 add identity section starts
     public function getViewUserIdentities($security_users_id)
     {
-        $UserIdentities = TableRegistry::getTableLocator()->get('user_identities');
-        $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types');
-        $UserNationalities = TableRegistry::getTableLocator()->get('user_nationalities');
-        $Nationalities = TableRegistry::getTableLocator()->get('nationalities');
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+        $UserNationalities = TableRegistry::getTableLocator()->get('User.UserNationalities');
+        $Nationalities = TableRegistry::getTableLocator()->get('User.Nationalities');
        
         $data = $UserIdentities->find()
                 ->select([
                     $UserIdentities->aliasField('id'),
                     $UserIdentities->aliasField('identity_type_id'),
-                    $IdentityTypes->aliasField('name'),
+                    // $IdentityTypes->aliasField('name'),
                     $UserIdentities->aliasField('number'),
                     $UserIdentities->aliasField('nationality_id'),
-                    $Nationalities->aliasField('name'),
+                    // $Nationalities->aliasField('name'),
                     $UserNationalities->aliasField('preferred')
                 ])
                 ->leftJoin(
-                    [$IdentityTypes->alias() => $IdentityTypes->table()], [
+                    [$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
                         $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
                     ]
                 )
                 ->leftJoin(
-                    [$UserNationalities->alias() => $UserNationalities->table()], [
+                    [$UserNationalities->getAlias() => $UserNationalities->getTable()], [
                         $UserNationalities->aliasField('security_user_id = ') . $UserIdentities->aliasField('security_user_id'),
                         $UserNationalities->aliasField('nationality_id = ') . $UserIdentities->aliasField('nationality_id')
                     ]
                 )
                 ->leftJoin(
-                    [$Nationalities->alias() => $Nationalities->table()], [
+                    [$Nationalities->getAlias() => $Nationalities->getTable()], [
                         $Nationalities->aliasField('id = ') . $UserIdentities->aliasField('nationality_id')
                     ]
                 )

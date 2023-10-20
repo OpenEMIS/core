@@ -83,4 +83,18 @@ class AccountsTable extends AppTable
         $save =  $userActivities->save($entity);
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'username') {
+            return __('Username');
+        }else if ($field == 'last_login') {
+            return __('Last Login');
+        }else if ($field == 'roles') {
+            return __('Roles');
+        }
+        else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

@@ -32,7 +32,7 @@ class ProfilesTable extends ControllerActionTable
 
     public function initialize(array $config): void {
         $this->setTable('security_users');
-        $this->getEntityClass('User.User');
+        $this->setEntityClass('User.User');
         parent::initialize($config);
 
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
@@ -610,7 +610,22 @@ class ProfilesTable extends ControllerActionTable
             return  __('Gender');
         }  else if ($field == 'date_of_birth') {
             return  __('Date of Birth');
-        }else {
+        }else if ($field == 'photo_content') {
+            return  __('Photo Content');
+        }else if ($field == 'details') {
+            return  __('Details');
+        }else if ($field == 'address') {
+            return  __('Address');
+        }else if ($field == 'postal_code') {
+            return  __('Postal Code');
+        }else if ($field == 'address_area_id') {
+            return  __('Address Area');
+        }else if ($field == 'birthplace_area_id') {
+            return  __('Birthplace Area');
+        }else if ($field == 'birthplace_area_id') {
+            return  __('Birthplace Area');
+        }
+        else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }

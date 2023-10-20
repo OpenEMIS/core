@@ -388,6 +388,7 @@ class ControllerActionHelper extends Helper
         $_fields = $config['fields'];
 
         $html = '';
+        // echo "<pre>";print_r($config);die;
         $model = $config['table']->alias();
         $displayFields = $_fields;
 
