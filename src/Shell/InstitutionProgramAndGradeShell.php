@@ -59,6 +59,7 @@ class InstitutionProgramAndGradeShell extends Shell
             
             if (!empty($InstitutionGradesdatasToInsert)) {
                 $data= $this->updateEducationGrade($copyFrom, $copyTo);
+             
                 //Copy Institution Grade Data start
                 foreach ($InstitutionGradesdatasToInsert as $key => $gradeData) {
                     $statementa = $connection->prepare('SELECT id FROM institution_grades WHERE
@@ -72,6 +73,7 @@ class InstitutionProgramAndGradeShell extends Shell
                         'institution_id' => $gradeData['institution_id'],
                     ]);
                     if ($statementa->rowCount() == 0) {
+                       
                         // If no matching records exist, you can proceed with the INSERT.
                         $statementb = $connection->prepare('INSERT INTO institution_grades( education_grade_id, academic_period_id, 
                                             start_date, start_year, end_date, end_year, institution_id, modified_user_id, 
@@ -203,7 +205,10 @@ class InstitutionProgramAndGradeShell extends Shell
 
             }
         } catch (\Exception $e) {
-            pr($e->getMessage());
+            echo "<pre>";
+            print_R($e);
+            exit;
+            // pr($e->getMessage());
         }
     }
     public function updateEducationGrade($copyFrom,$copyTo){
@@ -234,7 +239,7 @@ class InstitutionProgramAndGradeShell extends Shell
         $row = $statement1->fetchAll(\PDO::FETCH_ASSOC);
         $data=[];
         foreach ($row as $rowData) {
-           $data[$rowData['wrong_grade_id']][] =  $rowData['correct_grade_id'];
+           $data[$rowData['wrong_grade_id']] =  $rowData['correct_grade_id'];
         }
         return $data;
     }
