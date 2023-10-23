@@ -545,7 +545,10 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCurricularStudents']);
     }
-
+    public function Messaging()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Messaging']);
+    }
     public function changePageHeaderTrips($model, $modelAlias, $userType)
     {
         $session = $this->request->session();
