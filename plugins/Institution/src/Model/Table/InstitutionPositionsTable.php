@@ -728,12 +728,20 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event)
     {
+        $this->field('staff_position_title_type', ['visible' => true]);//POCOR-7758 
+        $this->field('staff_position_title_category', ['visible' => true]);//POCOR-7758
+        $this->field('grade', ['visible' => true]);//POCOR-7758
+        $this->field('staff_position_title_description', ['visible' => true]);//POCOR-7758
         $this->setFieldOrder([
             //'staff_position_grade_id',POCOR-5069
             'position_no',
             'staff_position_title_id',
+            'staff_position_title_type',//POCOR-7758
+            'staff_position_title_category',//POCOR-7758
+            'grade',//POCOR-7758
+            'staff_position_title_description',//POCOR-7758
             'modified_user_id', 'modified', 'created_user_id', 'created',
-            'current_staff_list', 'past_staff_list','shift_id'
+            'current_staff_list', 'past_staff_list', 'shift_id'
         ]);
 
         $session = $this->Session;
@@ -1438,6 +1446,52 @@ class InstitutionPositionsTable extends ControllerActionTable
             $attr['onChangeReload'] = 'changeStatus';
             return $attr;
         }
-
     }
+    //POCOR-7758 start
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        $this->field('staff_position_title_type', ['visible' => true]);
+        $this->field('staff_position_title_category', ['visible' => true]);
+        $this->field('staff_position_title_grade', ['visible' => true]);
+        $this->field('staff_position_title_description', ['visible' => true]);
+        switch ($field) {
+            case 'staff_position_title_type':
+                return __('Type');
+            case 'staff_position_title_category':
+                return __('Category');
+            case 'staff_position_title_grade':
+                return __('Grade');
+            case 'staff_position_title_description':
+                return __('Description');
+
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    public function onGetStaffPositionTitleType(Event $event, Entity $entity)
+    {
+        if ($entity->has('staff_position_title')) {
+            $value = $entity->staff_position_title->type == 1 ? "Teaching" : "Non-Teaching";
+            return $value;
+        }
+    }
+    public function onGetStaffPositionTitleCategory(Event $event, Entity $entity)
+    {
+        if ($entity->has('staff_position_title')) {
+            $value = TableRegistry::get('Staff.StaffPositionCategories')->get($entity->staff_position_title->staff_position_categories_id)->name;
+            return $value;
+        }
+    }
+    public function onGetStaffPositionTitleDescription(Event $event, Entity $entity)
+    {
+        if ($entity->has('staff_position_title')) {
+            $value = $entity->staff_position_title->file_name;
+            $ControllerActionHelper = $event->subject();
+            $htmlHelper = $event->subject()->Html;
+            $url = ['plugin' => 'FieldOption', 'controller' => 'FieldOptions', 'action' => 'StaffPositionTitles', 'download'];
+            $url[] = $this->paramsEncode(['id' => $entity->staff_position_title->id]);
+            return $htmlHelper->link(__($value), $url);
+        }
+    }
+    //POCOR-7758 end
 }
