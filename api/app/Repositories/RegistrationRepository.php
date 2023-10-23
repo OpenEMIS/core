@@ -361,7 +361,7 @@ class RegistrationRepository extends Controller
             //dd($request->all());
 
             $encodedOtp = base64_encode($request['otp']??"");
-            //dd($encodedOtp);
+            
             //$otpData = RegistrationOtp::where('otp', $encodedOtp)->first();
             $userData = SecurityUserCode::select('security_users.id as user_id')->join('security_users', 'security_users.id', '=', 'security_user_codes.security_user_id')->where('verification_otp', $encodedOtp)->first();
 
@@ -376,6 +376,10 @@ class RegistrationRepository extends Controller
             }
 
             $validateCustomField = $this->validateCustomField($request);
+
+            if(is_array($validateCustomField) && count($validateCustomField) > 0){
+                return $validateCustomField;
+            }
             
             if($validateCustomField == 0){
                 return 8;
@@ -691,8 +695,14 @@ class RegistrationRepository extends Controller
             $param = $request->all();
             
             $customFields = $this->getStudentCustomFields();
-
             
+            
+            $validationRule = $this->checkValidationRule($customFields, $param);
+            
+            if(is_array($validationRule) && count($validationRule) > 0){
+                return $validationRule;
+            }
+
             $requiredCfArray = [];
             $requiredCfIds = [];
             $allCfIds = [];
@@ -738,6 +748,256 @@ class RegistrationRepository extends Controller
             return 1;
         } catch (\Exception $e) {
             return 0;
+        }
+    }
+
+
+    public function checkValidationRule($customFields, $param)
+    {
+        try {
+            $error = [];
+            if(isset($param['custom_fields'])  && count($param['custom_fields']) > 0){
+
+                foreach($param['custom_fields'] as $k => $cF){
+                    $key = array_search($cF['custom_field_id'], array_column($customFields, 'student_custom_field_id'));
+                    
+                    if($key !== false){
+                        $customFieldData = $customFields[$key]['student_custom_field'];
+
+                        if(count($customFieldData) > 0){
+                            $fieldType = $customFieldData['field_type'];
+                            $params = $customFieldData['params'];
+                            if(isset($params)){
+                                
+                                $paramArr = json_decode($params);
+
+                                //Validating Date field type...
+                                if($fieldType == 'DATE'){
+                                    $dateErr = $this->validateDate($paramArr, $cF, $customFieldData['name']);
+
+                                    if(is_array($dateErr) && count($dateErr) >0){
+                                        return $dateErr;
+                                    }
+                                }
+
+                                //Validating Time field type...
+                                if($fieldType == 'TIME'){
+                                    $timeErr = $this->validateTime($paramArr, $cF, $customFieldData['name']);
+
+                                    if(is_array($timeErr) && count($timeErr) >0){
+                                        return $timeErr;
+                                    }
+                                }
+
+
+                                //Validating Number field type...
+                                if($fieldType == 'NUMBER'){
+                                    $numErr = $this->validateNumber($paramArr, $cF, $customFieldData['name']);
+
+                                    if(is_array($numErr) && count($numErr) >0){
+                                        return $numErr;
+                                    }
+                                }
+
+
+                                //Validating Decimal field type...
+                                if($fieldType == 'DECIMAL'){
+                                    $decErr = $this->validateDecimal($paramArr, $cF, $customFieldData['name']);
+
+                                    if(is_array($decErr) && count($decErr) >0){
+                                        return $decErr;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+                
+            }
+
+            return $error;
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+
+
+    public function validateDate($paramArr, $cF, $cFName)
+    {
+        try {
+            $resp = [];
+
+            $date_val = $cF['date_value']??"";
+            $start_date = $paramArr->start_date??"";
+            $end_date = $paramArr->end_date??"";
+
+            if(!strtotime($date_val)){
+                $resp['msg'] = $cFName. ' should be a date value.';
+                return $resp;
+            }
+            
+            if(isset($date_val) && $date_val != ""){
+                if($start_date != "" && $end_date == ""){
+                    if($date_val < $start_date){
+                        $resp['msg'] = $cFName. ' should be earlier than '.$start_date;
+                    }
+                }
+
+                if($start_date == "" && $end_date != ""){
+                    if($date_val > $end_date){
+                        $resp['msg'] = $cFName. ' should be later than '.$end_date;
+                    }
+                }
+
+                if($start_date != "" && $end_date != ""){
+                    if($date_val < $start_date || $date_val > $end_date){
+                        $resp['msg'] = $cFName. ' should be between '.$start_date.' and '.$end_date;
+                    }
+                }
+                
+            }
+
+            return $resp;
+        } catch (\Exception $e){
+            return [];
+        }
+    }
+
+    public function validateTime($paramArr, $cF, $cFName)
+    {
+        try {
+            $resp = [];
+
+            $time_val = $cF['time_value']??"";
+            $start_time = $paramArr->start_time??"";
+            $end_time = $paramArr->end_time??"";
+
+            if(!strtotime($time_val)){
+                $resp['msg'] = $cFName. ' should be a time value.';
+                return $resp;
+            }
+
+            if(isset($time_val) && $time_val != ""){
+                $time_val = strtotime($time_val);
+
+                $start_time_val = explode(" ", $start_time)[0]; //Removing AM/PM
+                $end_time_val = explode(" ", $end_time)[0]; //Removing AM/PM
+
+                
+                if($start_time_val != "" && $end_time_val == ""){
+                    $start_time_str = strtotime($start_time_val);
+
+                    if($time_val < $start_time_str){
+                        $resp['msg'] = $cFName. ' should be later than '.$start_time;
+                    }
+                }
+
+                if($start_time_val == "" && $end_time_val != ""){
+                    $end_time_str = strtotime($end_time_val);
+
+                    if($time_val > $end_time_str){
+                        $resp['msg'] = $cFName. ' should be earlier than '.$end_time;
+                    }
+                }
+
+                if($start_time_val != "" && $end_time_val != ""){
+                    $start_time_str = strtotime($start_time_val);
+                    $end_time_str = strtotime($end_time_val);
+
+                    if($time_val < $start_time_str || $time_val > $end_time_str){
+                        $resp['msg'] = $cFName. ' should be between '.$start_time.' and '.$end_time;
+                    }
+                }
+            }
+            return $resp;
+
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    public function validateNumber($paramArr, $cF, $cFName)
+    {
+        try {
+            $resp = [];
+
+            $num_val = $cF['number_value']??"";
+            
+            $range = $paramArr->range??"";
+            $min_value = $paramArr->min_value??"";
+            $max_value = $paramArr->max_value??"";
+
+            if(!is_numeric($num_val)){
+                $resp['msg'] = $cFName. ' should be a numeric value.';
+                return $resp;
+            }
+            
+            
+            if(isset($range) && $range != ""){
+                if(isset($num_val) && $num_val != ""){
+
+                    $lower = $range->lower??"";
+                    $upper = $range->upper??"";
+
+                    if($num_val < $lower || $num_val > $upper){
+                        $resp['msg'] = $cFName. ' should be between '.$lower.' and '.$upper;
+                    }
+                }
+            }
+
+            if(isset($num_val) && $num_val != ""){
+
+                if($min_value != "" && $max_value == ""){
+                    if($num_val < $min_value){
+                        $resp['msg'] = $cFName. ' should be greater than '.$min_value;
+                    }
+                }
+
+                if($min_value == "" && $max_value != ""){
+                    if($num_val > $max_value){
+                        $resp['msg'] = $cFName. ' should be less than '.$max_value;
+                    }
+                }
+            }
+
+            return $resp;
+        } catch (\Exception $e){
+            return [];
+        }
+    }
+
+
+    public function validateDecimal($paramArr, $cF, $cFName)
+    {
+        try {
+            $resp = [];
+
+            $dec_val = $cF['decimal_value']??"";
+            $length = $paramArr->length??"";
+            $precision = $paramArr->precision??"";
+            
+
+            if(isset($dec_val) && $dec_val != ""){
+                $dec_val_arr = explode(".", $dec_val);
+                if(count($dec_val_arr) == 1){
+                    $resp['msg'] = $cFName. ' should be a decimal value.';
+                    return $resp;
+                }
+
+                $dec_val_place = strlen($dec_val_arr[1]);
+                
+                if($dec_val_place > $precision) {
+                    $resp['msg'] = $cFName. ' should have '.$precision.' decimal places.';
+
+                    return $resp;
+                }
+
+            }
+            return $resp;
+        } catch (\Exception $e){
+            return [];
         }
     }
 
@@ -1099,8 +1359,10 @@ class RegistrationRepository extends Controller
                 $upperLimit = $admissionAge + $agePlusVal;
 
                 if(($studentAge < $lowerLimit) || ($studentAge > $upperLimit)){
-                    $arr['loweAgeLimit'] = $lowerLimit;
-                    $arr['upperAgeLimit'] = $upperLimit;
+                    //$arr['loweAgeLimit'] = $lowerLimit;
+                    //$arr['upperAgeLimit'] = $upperLimit;
+
+                    $arr['msg'] = "The student should be between ".$lowerLimit." to ".$upperLimit. " years old.";
 
                     return $arr;
                 } else {
