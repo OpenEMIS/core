@@ -33,7 +33,7 @@ class InstitutionCasesTable extends AppTable
         $this->addBehavior('Report.InstitutionSecurity');
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('AcademicPeriod.Period');
-
+        $this->addBehavior('Report.AreaList');//POCOR-7851
         $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
         $this->features = $WorkflowRules->getFeatureOptionsWithClassName();
     }
@@ -66,13 +66,30 @@ class InstitutionCasesTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
+        $areaLevelId = $requestData->area_level_id;//POCOR-7851
         $where = [];
         if ($institution_id != 0) {
             $where['Institutions.id'] = $institution_id;
         }
-        if ($areaId != -1) {
-            $where['Institutions.area_id'] = $areaId;
+        //POCOR-7851 start
+        $areaList = [];
+        if (
+            $areaLevelId > 1 && $areaId > 1
+        ) {
+            $areaList = $this->getAreaList($areaLevelId, $areaId);
+        } elseif ($areaLevelId > 1) {
+
+            $areaList = $this->getAreaList($areaLevelId, 0);
+        } elseif ($areaId > 1) {
+            $areaList = $this->getAreaList(0, $areaId);
         }
+        if (!empty($areaList)) {
+            $where['Institutions.area_id IN'] = $areaList;
+        }
+        //POCOR-7851 end
+        // if ($areaId != -1) {
+        //     $where['Institutions.area_id'] = $areaId;
+        // }
         //POCOR-7786 start
         // $module = $requestData->module;
         // $listener = TableRegistry::get(]);
